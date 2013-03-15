@@ -6,5 +6,8 @@ sourcePaths:
   - [more paths...]
 # this is where output files go
 destinationPath: [path]
-steps:
+steps: |
   - cutadapt
+    - remove_empty_fastq_sequences
+      - segemehl
+    - analyze_cutadapt
