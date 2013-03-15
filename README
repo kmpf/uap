@@ -1,4 +1,8 @@
 RNASeq pipeline
 ===============
 
+After cloning the repository, run the bootstrapping script to create the required Python environment:
+
+$ ./bootstrap.sh
+
 
