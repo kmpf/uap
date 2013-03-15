@@ -1,0 +1,7 @@
+# This is the rnaseq-pipeline configuration file. Important: rename this file to config.yaml!
+
+sourcePaths:
+  - [path 1]
+  - [...]
+
+destinationPath: [path]

@@ -1,1 +1,3 @@
 python_env
+config.yaml
+*.pyc
