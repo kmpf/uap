@@ -8,7 +8,10 @@ import pipeline
 import yaml
 
 p = pipeline.Pipeline()
-print("")
-print(p)
-print("Detailed information:")
-print(yaml.dump(p.all_samples))
+
+if len(sys.argv) > 1 and sys.argv[1] == '--detailed':
+    print(yaml.dump(p.all_samples))
+else:
+    print(p)
+    print("Configuration is good, no errors were found.")
+    

@@ -24,6 +24,8 @@ class Pipeline:
         self.read_config()
         self.gather_information()
         
+        print >> sys.stderr, ""
+        
     # read configuration and make sure it's good
     def read_config(self):
         print >> sys.stderr, "Reading configuration..."
@@ -62,10 +64,8 @@ class Pipeline:
 
     def __str__(self):
         s = ''
-        s += 'Pipeline information\n'
-        s += '--------------------\n'
-        s += "Number of samples: " + str(len(self.all_samples)) + ".\n"
+        s += "Number of samples: " + str(len(self.all_samples)) + "\n"
         for sample in sorted(self.all_samples.keys()):
-            s += sample + "\n"
+            s += "- " + sample + "\n"
         return s
     

@@ -1,8 +1,15 @@
 h1. RNASeq pipeline
 
-After cloning the repository, run the bootstrapping script to create the required Python environment:
+After cloning the repository, run the bootstrapping script to create the 
+required Python environment:
 
 bc. $ ./bootstrap.sh
 
+Next, edit config.yaml.sample and save it as config.yaml. Now you can try
+whether the configuration is in a good state:
 
+bc. $ ./check.py
 
+Or get more detailed information with:
+
+bc. $ ./check.py --detailed
