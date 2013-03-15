@@ -4,7 +4,9 @@ import os
 import sys
 import yaml
 
-class Pipeline:
+import abstract_step
+
+class Pipeline(object):
 
     # an exception class for reporting configuration errors
     class ConfigurationException(Exception):
@@ -23,8 +25,7 @@ class Pipeline:
         
         self.read_config()
         self.gather_information()
-        
-        print >> sys.stderr, ""
+        self.build_steps()
         
     # read configuration and make sure it's good
     def read_config(self):
@@ -39,6 +40,8 @@ class Pipeline:
             raise ConfigurationException("Missing key: destinationPath")
         if not os.path.exists(self.config['destinationPath']):
             raise ConfigurationException("Destination path does not exist: " + self.config['destinationPath'])
+        if not 'steps' in self.config:
+            raise ConfigurationException("Missing key: steps")
         
     # for every source path, look for samples in [path]/Unaligned/Project_*/Sample_*
     def gather_information(self):
@@ -61,7 +64,13 @@ class Pipeline:
             self.all_samples[sample_name]['lanes'] = {}
             for row in reader:
                 self.all_samples[sample_name]['lanes'][row['Lane']] = row
+                
+    def build_steps(self):
+        self.steps = []
+        for key in self.config['steps']:
+            self.steps.append(abstract_step.get_step_class_for_key(key))
 
+    # returns a short description of the configured pipeline
     def __str__(self):
         s = ''
         s += "Number of samples: " + str(len(self.all_samples)) + "\n"

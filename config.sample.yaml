@@ -6,3 +6,5 @@ sourcePaths:
   - [more paths...]
 # this is where output files go
 destinationPath: [path]
+steps:
+  - cutadapt

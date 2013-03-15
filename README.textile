@@ -5,7 +5,9 @@ required Python environment:
 
 bc. $ ./bootstrap.sh
 
-Next, edit config.yaml.sample and save it as config.yaml. Now you can try
+There's no harm in accidentally running this script multiple times.
+
+Next, edit @config.sample.yaml@ and save it as @config.yaml@. Now you can try
 whether the configuration is in a good state:
 
 bc. $ ./check.py
