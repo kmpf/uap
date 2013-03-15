@@ -2,8 +2,7 @@
 
 # paths to flow cell directories
 sourcePaths:
-  - [path 1]
-  - [...]
-
+  - /gpfs1/data/bioinf/Data/120809_SN928_0081_AD11Y3ACXX_Keep
+  - [more paths...]
 # this is where output files go
 destinationPath: [path]
