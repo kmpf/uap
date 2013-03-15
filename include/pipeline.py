@@ -1,5 +1,6 @@
-import os
+import csv
 import glob
+import os
 import sys
 import yaml
 
@@ -40,6 +41,8 @@ class Pipeline:
     # for every source path, look for samples in [path]/Unaligned/Project_*/Sample_*
     def gather_information(self):
         print >> sys.stderr, "Gathering information..."
+        
+        # find all samples
         self.all_samples = {}
         for path in self.config['sourcePaths']:
             for samplePath in glob.glob(os.path.join(path, 'Unaligned', 'Project_*', 'Sample_*')):
@@ -48,9 +51,19 @@ class Pipeline:
                     raise ConfigurationException("Duplicate sample: " + sample_name)
                 self.all_samples[sample_name] = {}
                 self.all_samples[sample_name]['path'] = samplePath
+                
+        # read sample sheets
+        for sample_name, sample in self.all_samples.items():
+            sample_sheet_path = os.path.join(sample['path'], 'SampleSheet.csv')
+            reader = csv.DictReader(open(sample_sheet_path))
+            self.all_samples[sample_name]['lanes'] = {}
+            for row in reader:
+                self.all_samples[sample_name]['lanes'][row['Lane']] = row
 
     def __str__(self):
         s = ''
+        s += 'Pipeline information\n'
+        s += '--------------------\n'
         s += "Number of samples: " + str(len(self.all_samples)) + ".\n"
         for sample in sorted(self.all_samples.keys()):
             s += sample + "\n"

@@ -1,7 +1,9 @@
-# This is the rnaseq-pipeline configuration file. Important: rename this file to config.yaml!
+# This is the rnaseq-pipeline configuration file. Important: save this file as config.yaml!
 
+# paths to flow cell directories
 sourcePaths:
   - [path 1]
   - [...]
 
+# this is where output files go
 destinationPath: [path]

@@ -5,6 +5,10 @@
 import sys
 sys.path.append('./include')
 import pipeline
+import yaml
 
 p = pipeline.Pipeline()
-print >> sys.stderr, p
+print("")
+print(p)
+print("Detailed information:")
+print(yaml.dump(p.all_samples))
