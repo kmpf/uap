@@ -1,6 +1,8 @@
 import csv
 import glob
 import os
+import re
+import StringIO
 import sys
 import yaml
 
@@ -70,6 +72,17 @@ class Pipeline(object):
         self.steps = []
         if not 'steps' in self.config:
             raise ConfigurationException("Missing key: steps")
+        for line in StringIO.StringIO(self.config['steps']):
+            sys.stdout.write(line)
+            regex = re.compile('(\s*)-\s([^\s]+)(\s\{([^\}]+)\})?')
+            match = regex.match(line)
+            if match:
+                indent = len(match.group(1))
+                step_name = match.group(2)
+                options = yaml.load(match.group(3)) if match.group(3) else {}
+                #print(indent, step_name, options)
+            else:
+                raise ConfigurationException("Invalid steps definition.")
         #for key in self.config['steps']:
             #self.steps.append(abstract_step.get_step_class_for_key(key))
 
