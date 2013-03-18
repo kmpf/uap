@@ -1,6 +1,6 @@
 import sys
 from abstract_step import *
 
-class Step(AbstractStep):
+class Cutadapt(AbstractStep):
     def __init__(self):
-        super(Step, self).__init__()
+        super(Cutadapt, self).__init__()
