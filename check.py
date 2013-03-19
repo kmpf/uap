@@ -8,3 +8,4 @@ import pipeline
 import yaml
 
 p = pipeline.Pipeline()
+p.print_tasks()

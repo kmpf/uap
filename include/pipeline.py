@@ -39,18 +39,6 @@ class Pipeline(object):
                 info['run_id'] = run_id
                 self.all_tasks.append(info)
 
-        for task_info in self.all_tasks:
-            task_state = task_info['step'].get_run_state(task_info['run_id'])
-            print('[' + task_state + '] ' + task_info['step'].get_step_id() + '/' + task_info['run_id'])
-
-        #for step in self.steps:
-            #print(str(step) + ': ' + step.get_output_directory())
-
-        #print("Querying all steps...")
-        #for step in self.steps:
-            #print(str(step))
-            #print(yaml.dump(step.get_run_info(), default_flow_style=False))
-
     # read configuration and make sure it's good
     def read_config(self):
         print >> sys.stderr, "Reading configuration..."
@@ -152,6 +140,12 @@ class Pipeline(object):
 
             else:
                 raise ConfigurationException("Invalid steps definition, error in line: '" + line + "'.")
+
+    def print_tasks(self):
+        print("task states: [w]aiting, [r]eady, [f]inished")
+        for task_info in self.all_tasks:
+            task_state = task_info['step'].get_run_state(task_info['run_id'])
+            print('[' + task_state + '] ' + task_info['step'].get_step_id() + '/' + task_info['run_id'])
 
     # returns a short description of the configured pipeline
     def __str__(self):
