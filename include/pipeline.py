@@ -25,11 +25,31 @@ class Pipeline(object):
         # dictionary of sample names => information
         self.all_samples = {}
 
-        # list of steps
+        # list of steps, steps are objects with inter-dependencies
         self.steps = []
 
         self.read_config()
-        self.gather_information()
+
+        # collect all tasks
+        self.all_tasks = []
+        for step in self.steps:
+            for run_id in step.get_run_ids():
+                info = {}
+                info['step'] = step
+                info['run_id'] = run_id
+                self.all_tasks.append(info)
+
+        for task_info in self.all_tasks:
+            task_state = task_info['step'].get_run_state(task_info['run_id'])
+            print('[' + task_state + '] ' + task_info['step'].get_step_id() + '/' + task_info['run_id'])
+
+        #for step in self.steps:
+            #print(str(step) + ': ' + step.get_output_directory())
+
+        #print("Querying all steps...")
+        #for step in self.steps:
+            #print(str(step))
+            #print(yaml.dump(step.get_run_info(), default_flow_style=False))
 
     # read configuration and make sure it's good
     def read_config(self):
@@ -44,6 +64,8 @@ class Pipeline(object):
             raise ConfigurationException("Missing key: destinationPath")
         if not os.path.exists(self.config['destinationPath']):
             raise ConfigurationException("Destination path does not exist: " + self.config['destinationPath'])
+
+        self.gather_information()
         self.build_steps()
 
     # for every source path, look for samples in [path]/Unaligned/Project_*/Sample_*
@@ -78,6 +100,9 @@ class Pipeline(object):
         indent_stack = []
         last_indent = None
 
+        source_step = abstract_step.get_step_class_for_key('source')(self)
+        self.steps.append(source_step)
+
         for line in StringIO.StringIO(self.config['steps']):
             #sys.stdout.write(line)
             regex = re.compile('(\s*)-\s([^\s]+)(\s\{([^\}]+)\})?')
@@ -86,11 +111,13 @@ class Pipeline(object):
                 indent = len(match.group(1))
                 step_name = match.group(2)
                 options = yaml.load(match.group(3)) if match.group(3) else {}
-                print(indent, step_name, options)
+
+                if step_name == 'source':
+                    raise ConfigurationException("You cannot use 'source' as a step, it's included automatically.")
 
                 # determine class and instatiate it with options
                 step_class = abstract_step.get_step_class_for_key(step_name)
-                step = step_class()
+                step = step_class(self)
                 step.set_options(options)
 
                 # append step to steps list
@@ -114,17 +141,17 @@ class Pipeline(object):
                             raise ConfigurationException("invalid indentation: '" + line + "'")
 
                 # if there is an upstream step, add it as a dependency
+                # otherwise, link it to the source step which provides the
+                # input files
                 if len(step_stack) > 0:
                     step.add_dependency(step_stack[-1])
+                else:
+                    step.add_dependency(source_step)
 
                 last_indent = indent
 
             else:
                 raise ConfigurationException("Invalid steps definition, error in line: '" + line + "'.")
-        for step in self.steps:
-            print(abstract_step.AbstractStep.__str__(step))
-        #for key in self.config['steps']:
-            #self.steps.append(abstract_step.get_step_class_for_key(key))
 
     # returns a short description of the configured pipeline
     def __str__(self):
