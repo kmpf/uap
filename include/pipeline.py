@@ -1,4 +1,6 @@
+import copy
 import csv
+import datetime
 import glob
 import os
 import re
@@ -7,6 +9,14 @@ import sys
 import yaml
 
 import abstract_step
+import task as task_module
+
+# an enum class, yanked from http://stackoverflow.com/questions/36932/whats-the-best-way-to-implement-an-enum-in-python
+class Enum(set):
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
 
 # an exception class for reporting configuration errors
 class ConfigurationException(Exception):
@@ -16,6 +26,8 @@ class ConfigurationException(Exception):
         return repr(self.value)
 
 class Pipeline(object):
+
+    states = Enum(['WAITING', 'READY', 'FINISHED'])
 
     def __init__(self):
 
@@ -34,10 +46,8 @@ class Pipeline(object):
         self.all_tasks = []
         for step in self.steps:
             for run_id in step.get_run_ids():
-                info = {}
-                info['step'] = step
-                info['run_id'] = run_id
-                self.all_tasks.append(info)
+                task = task_module.Task(self, step, run_id)
+                self.all_tasks.append(task)
 
     # read configuration and make sure it's good
     def read_config(self):
@@ -143,9 +153,40 @@ class Pipeline(object):
 
     def print_tasks(self):
         print("task states: [w]aiting, [r]eady, [f]inished")
-        for task_info in self.all_tasks:
-            task_state = task_info['step'].get_run_state(task_info['run_id'])
-            print('[' + task_state + '] ' + task_info['step'].get_step_id() + '/' + task_info['run_id'])
+        for task in self.all_tasks:
+            print(task)
+
+    def dry_run(self):
+        temp_task_list = copy.copy(self.all_tasks)
+
+        # the dry_run_cache contains all files which are created during the process
+        dry_run_cache = {}
+        # fill dry_run_cache with source files
+        for run_id, files in self.steps[0].get_run_info().items():
+            for path in files.keys():
+                dry_run_cache[path] = datetime.datetime.now()
+
+        while len(temp_task_list) > 0:
+            # find a task which is ready
+            ready_tasks = [_ for _ in temp_task_list if _['step'].get_run_state(_['run_id'], dry_run_cache) == 'r']
+            if len(ready_tasks) == 0:
+                raise StandardError("Unable to find a task which is ready.")
+            picked_task = ready_tasks[0]
+            # now dry-run the taks
+            print("now dry running: " + str(picked_task))
+            temp_task_list = [_ for _ in temp_task_list if _ != picked_task]
+            picked_task['step'].dry_run(picked_task['run_id'], dry_run_cache)
+        print("Dry run finished successfully.")
+
+    def has_unfinished_tasks(self, task_list):
+        unfinished_tasks = [task for task in task_list if task.step.get_run_state(task.run_id) != self.states.FINISHED]
+        return len(unfinished_tasks) > 0
+
+    def pick_next_ready_task(self, task_list):
+        ready_tasks = [task for task in task_list if task.step.get_run_state(task.run_id) == self.states.READY]
+        picked_task = ready_tasks[0]
+        task_list.remove(picked_task)
+        return picked_task
 
     # returns a short description of the configured pipeline
     def __str__(self):

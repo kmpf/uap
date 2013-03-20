@@ -1,6 +1,7 @@
 import sys
 sys.path.append('./include/steps')
 import copy
+import datetime
 import inspect
 import os
 import yaml
@@ -94,24 +95,67 @@ class AbstractStep(object):
     def get_output_directory(self):
         return os.path.join(self.pipeline.config['destinationPath'], *self.get_dependency_path())
 
-    def get_run_state(self, run_id):
+    def get_run_state(self, run_id, dry_run_cache = None):
+
+        def path_up_to_date(outpath, inpaths = [], dry_run_cache = None):
+            if dry_run_cache == None:
+                # check the file system
+                if not os.path.exists(outpath):
+                    return False
+                for inpath in inpaths:
+                    if not os.path.exists(inpath):
+                        return False
+                    if os.path.getmtime(inpath) > os.path.getmtime(outpath):
+                        return False
+                return True
+            else:
+                # this is a dry run, use the dry run cache
+                if not outpath in dry_run_cache:
+                    return False
+                for inpath in inpaths:
+                    if not inpath in dry_run_cache:
+                        return False
+                    if dry_run_cache[inpath] > dry_run_cache[outpath]:
+                        return False
+                return True
+
         run_info = self.get_run_info()
         all_output_files_exist = True
         all_input_files_exist = True
+        # TODO: check whether output files are up-to-date regarding their input files
         for output_file, input_files in run_info[run_id].items():
-            if not os.path.exists(output_file):
+            if not path_up_to_date(output_file, input_files, dry_run_cache):
                 all_output_files_exist = False
             for input_file in input_files:
-                if not os.path.exists(input_file):
+                if not path_up_to_date(input_file, [], dry_run_cache):
                     all_input_files_exist = False
 
         if all_input_files_exist:
             if all_output_files_exist:
-                return 'f'
+                return self.pipeline.states.FINISHED
             else:
-                return 'r'
+                return self.pipeline.states.READY
         else:
-            return 'w'
+            return self.pipeline.states.WAITING
+
+    def dry_run(self, run_id, dry_run_cache):
+        run_info = self.get_run_info()[run_id]
+        for path in run_info.keys():
+            dry_run_cache[path] = datetime.datetime.now()
+
+    def run(self, run_id):
+        print("Now running " + self.get_step_id() + "/" + run_id)
+        # create the output directory if it doesn't exist yet
+        if not os.path.isdir(self.get_output_directory()):
+            os.makedirs(self.get_output_directory())
+        self.execute(run_id)
+
+    def execute(self, run_id):
+        print("WARNING: Just creating empty output files for " + self.get_step_id() + "/" + run_id + " due to missing implementation.")
+        run_info = self.get_run_info()[run_id]
+        for path in run_info.keys():
+            with open(path, 'w') as f:
+                pass
 
     def __str__(self):
         s = self.step_name

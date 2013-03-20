@@ -30,6 +30,5 @@ class Cutadapt(AbstractStep):
                     raise StandardError("Expected input files with _R1_ or _R2_.")
         return output_run_info
 
-    def command_line(self, key):
-        command = ''
-        command = "\"" + self.options['path'] + "\""
+    def execute(self, run_id):
+        super(Cutadapt, self).execute(run_id)
