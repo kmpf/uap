@@ -5,6 +5,7 @@ import glob
 import os
 import re
 import StringIO
+import subprocess
 import sys
 import yaml
 
@@ -49,9 +50,11 @@ class Pipeline(object):
                 task = task_module.Task(self, step, run_id)
                 self.all_tasks.append(task)
 
+        self.check_tools()
+
     # read configuration and make sure it's good
     def read_config(self):
-        print >> sys.stderr, "Reading configuration..."
+        #print >> sys.stderr, "Reading configuration..."
         self.config = yaml.load(open('config.yaml'))
         if not 'sourcePaths' in self.config:
             raise ConfigurationException("Missing key: sourcePaths")
@@ -68,7 +71,7 @@ class Pipeline(object):
 
     # for every source path, look for samples in [path]/Unaligned/Project_*/Sample_*
     def gather_information(self):
-        print >> sys.stderr, "Gathering information..."
+        #print >> sys.stderr, "Gathering information..."
 
         # find all samples
         self.all_samples = {}
@@ -184,9 +187,18 @@ class Pipeline(object):
 
     def pick_next_ready_task(self, task_list):
         ready_tasks = [task for task in task_list if task.step.get_run_state(task.run_id) == self.states.READY]
-        picked_task = ready_tasks[0]
-        task_list.remove(picked_task)
-        return picked_task
+        return ready_tasks[0]
+
+    def check_tools(self):
+        if not 'tools' in self.config:
+            return
+        for tool_id, info in self.config['tools'].items():
+            command = [info['path'], info['get_version']]
+            exit_code = None
+            with open(os.devnull, 'w') as devnull:
+                exit_code = subprocess.call(command, stdout = devnull, stderr = devnull)
+            if exit_code != 0:
+                raise ConfigurationException("Tool check failed for " + tool_id + ": " + ' '.join(command))
 
     # returns a short description of the configured pipeline
     def __str__(self):

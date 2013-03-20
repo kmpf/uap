@@ -4,6 +4,8 @@ import copy
 import datetime
 import inspect
 import os
+import random
+import string
 import yaml
 
 def get_step_class_for_key(key):
@@ -95,6 +97,13 @@ class AbstractStep(object):
     def get_output_directory(self):
         return os.path.join(self.pipeline.config['destinationPath'], *self.get_dependency_path())
 
+    def get_temp_output_directory(self):
+        while True:
+            token = ''.join(random.choice(string.ascii_lowercase + string.digits) for x in range(8))
+            path = os.path.join(self.pipeline.config['destinationPath'], 'temp', 'temp-' + token)
+            if not os.path.exists(path):
+                return path
+
     def get_run_state(self, run_id, dry_run_cache = None):
 
         def path_up_to_date(outpath, inpaths = [], dry_run_cache = None):
@@ -144,15 +153,36 @@ class AbstractStep(object):
             dry_run_cache[path] = datetime.datetime.now()
 
     def run(self, run_id):
-        print("Now running " + self.get_step_id() + "/" + run_id)
         # create the output directory if it doesn't exist yet
         if not os.path.isdir(self.get_output_directory()):
             os.makedirs(self.get_output_directory())
-        self.execute(run_id)
+        # also create a temporary directory for the output file
+        temp_directory = self.get_temp_output_directory()
+        os.makedirs(temp_directory)
 
-    def execute(self, run_id):
+        # call execute() but pass output file paths with the temporary directory
+        temp_run_info = {}
+        for out_path, in_paths in self.get_run_info()[run_id].items():
+            temp_out_path = os.path.join(temp_directory, os.path.basename(out_path))
+            temp_run_info[temp_out_path] = in_paths
+
+        self.execute(run_id, temp_run_info)
+
+        # if we're here, we can assume the step has finished successfully
+        # now rename the output files (move from temp directory to
+        # destination directory)
+        for out_path in temp_run_info.keys():
+            destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
+            os.rename(out_path, destination_path)
+
+        # finally, remove the temporary directory if it's empty
+        try:
+            os.rmdir(temp_directory)
+        except OSError:
+            pass
+
+    def execute(self, run_id, run_info):
         print("WARNING: Just creating empty output files for " + self.get_step_id() + "/" + run_id + " due to missing implementation.")
-        run_info = self.get_run_info()[run_id]
         for path in run_info.keys():
             with open(path, 'w') as f:
                 pass

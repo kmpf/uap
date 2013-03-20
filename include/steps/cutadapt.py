@@ -30,5 +30,11 @@ class Cutadapt(AbstractStep):
                     raise StandardError("Expected input files with _R1_ or _R2_.")
         return output_run_info
 
-    def execute(self, run_id):
-        super(Cutadapt, self).execute(run_id)
+    def execute(self, run_id, run_info):
+        print("executing " + self.get_step_id() + " " + run_id)
+        print(yaml.dump(run_info, default_flow_style = False))
+
+        #index = ''
+        #adapter = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC" + index + "ATCTCGTATGCCGTCTTCTGCTTG"
+        #command = "python2.7 ../../tools/cutadapt/cutadapt-1.2.1/bin/cutadapt -a " + adapter + " \"" + sourcePath + "\" 2> \"" + logPath + "\" | pigz --processes 3 --blocksize 4096 -c > \"" + destinationPath + ".tmp\""
+        super(Cutadapt, self).execute(run_id, run_info)
