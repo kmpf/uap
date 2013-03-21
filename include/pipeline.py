@@ -29,8 +29,9 @@ class ConfigurationException(Exception):
 class Pipeline(object):
 
     states = Enum(['WAITING', 'READY', 'FINISHED'])
+    run_modes = Enum(['DRY_RUN', 'TEST_RUN', 'FULL'])
 
-    def __init__(self):
+    def __init__(self, run_mode = run_modes.FULL):
 
         # the configuration as read from config.yaml
         self.config = {}
@@ -40,6 +41,9 @@ class Pipeline(object):
 
         # list of steps, steps are objects with inter-dependencies
         self.steps = []
+
+        # the run mode of the pipeline
+        self.run_mode = run_mode
 
         self.read_config()
 
@@ -105,6 +109,16 @@ class Pipeline(object):
 
         source_step = abstract_step.get_step_class_for_key('source')(self)
         self.steps.append(source_step)
+
+        if (self.run_mode == self.run_modes.TEST_RUN):
+            # this is a test run, append a head step which boild the
+            # problem down to 1000 lines per input file
+            head_step = abstract_step.get_step_class_for_key('head')(self)
+            head_step.add_dependency(source_step)
+            self.steps.append(head_step)
+            source_step = head_step
+            # now source_step points to head_step and everything else
+            # depends on it, HARR HARR!
 
         steps_definition = self.config['steps']
         steps_definition_offset = 0

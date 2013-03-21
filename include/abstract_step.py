@@ -101,6 +101,8 @@ class AbstractStep(object):
         # a different directory
         options_checksum = hashlib.sha1(json.dumps(self.options, sort_keys=True)).hexdigest()[0:8]
         dependency_path = self.get_dependency_path()
+        if (self.pipeline.run_mode == pipeline.Pipeline.TEST_RUN):
+            dependency_path[-1] += '-test-run'
         dependency_path[-1] += '-' + options_checksum
         return os.path.join(self.pipeline.config['destinationPath'], *dependency_path)
 
