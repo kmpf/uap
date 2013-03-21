@@ -43,23 +43,27 @@ class Cutadapt(AbstractStep):
 
         basename = os.path.basename(run_info.keys()[0])
         options = self.options_for_output_file[basename]
+        adapter = ''
         if options['read'] == 'R1':
-            index = ''
-            adapter = 'AGACTGATCGATCGATCGATCA'
+            adapter = self.options['adapter-R1']
+        elif options['read'] == 'R2':
+            adapter = self.options['adapter-R2']
 
-            pigz1 = [self.pipeline.config['tools']['pigz']['path'], '-d', '-c']
-            pigz1.extend(run_info.values()[0])
+        # TODO: replace ((INDEX)) in adapter
 
-            cutadapt = [self.pipeline.config['tools']['cutadapt']['path'], '-a',
-                adapter, '-']
+        pigz1 = [self.pipeline.config['tools']['pigz']['path'], '-d', '-c']
+        pigz1.extend(run_info.values()[0])
 
-            pigz2 = [self.pipeline.config['tools']['pigz']['path'],
-                '--blocksize', '4096', '--processes', '3', '-c']
+        cutadapt = [self.pipeline.config['tools']['cutadapt']['path'], '-a',
+            adapter, '-']
 
-            with open(run_info.keys()[0], 'w') as fout:
-                fd, pids = pooryorick_pipeline.pipeline(pigz1, cutadapt, pigz2)
-                while True:
-                    block = os.read(fd, 4096 * 1024)
-                    if len(block) == 0:
-                        break
-                    fout.write(block)
+        pigz2 = [self.pipeline.config['tools']['pigz']['path'],
+            '--blocksize', '4096', '--processes', '3', '-c']
+
+        with open(run_info.keys()[0], 'w') as fout:
+            fd, pids = pooryorick_pipeline.pipeline(pigz1, cutadapt, pigz2)
+            while True:
+                block = os.read(fd, 4096 * 1024)
+                if len(block) == 0:
+                    break
+                fout.write(block)

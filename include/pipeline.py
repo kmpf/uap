@@ -76,6 +76,8 @@ class Pipeline(object):
         # find all samples
         self.all_samples = {}
         for path in self.config['sourcePaths']:
+            if not os.path.exists(path):
+                raise ConfigurationException("Source path does not exist: " + path)
             for samplePath in glob.glob(os.path.join(path, 'Unaligned', 'Project_*', 'Sample_*')):
                 sample_name = os.path.basename(samplePath).replace('Sample_', '')
                 if sample_name in self.all_samples:
