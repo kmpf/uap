@@ -2,7 +2,9 @@ import sys
 sys.path.append('./include/steps')
 import copy
 import datetime
+import hashlib
 import inspect
+import json
 import os
 import random
 import string
@@ -95,7 +97,12 @@ class AbstractStep(object):
         return '/'.join(self.get_dependency_path())
 
     def get_output_directory(self):
-        return os.path.join(self.pipeline.config['destinationPath'], *self.get_dependency_path())
+        # add the options to the output path so that different options result in
+        # a different directory
+        options_checksum = hashlib.sha1(json.dumps(self.options, sort_keys=True)).hexdigest()[0:8]
+        dependency_path = self.get_dependency_path()
+        dependency_path[-1] += '-' + options_checksum
+        return os.path.join(self.pipeline.config['destinationPath'], *dependency_path)
 
     def get_temp_output_directory(self):
         while True:
@@ -166,6 +173,7 @@ class AbstractStep(object):
             temp_out_path = os.path.join(temp_directory, os.path.basename(out_path))
             temp_run_info[temp_out_path] = in_paths
 
+        print("executing " + self.get_step_id() + " " + run_id)
         self.execute(run_id, temp_run_info)
 
         # if we're here, we can assume the step has finished successfully
