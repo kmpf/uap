@@ -104,14 +104,42 @@ class Pipeline(object):
         source_step = abstract_step.get_step_class_for_key('source')(self)
         self.steps.append(source_step)
 
-        for line in StringIO.StringIO(self.config['steps']):
-            #sys.stdout.write(line)
+        steps_definition = self.config['steps']
+        steps_definition_offset = 0
+        while steps_definition_offset < len(steps_definition):
+            # find next newline
+            newline_index = steps_definition.find("\n", steps_definition_offset)
+            # if there's no newline, use the rest of the string
+            if newline_index < 0:
+                newline_index = len(steps_definition) - 1
+            line = steps_definition[steps_definition_offset:(newline_index + 1)]
+            steps_definition_offset = newline_index + 1
+            if len(line.strip()) == 0:
+                continue
+            block_mapping = False
+            if line.strip()[-1] == '{':
+                block_mapping = True
+                # line ends with a { --> find matching } and extend line
+                level = 1
+                while level > 0:
+                    c = steps_definition[steps_definition_offset]
+                    if c == '{':
+                        level += 1
+                    elif c == '}':
+                        level -= 1
+                    line += c
+                    steps_definition_offset += 1
             regex = re.compile('(\s*)-\s([^\s]+)(\s\{([^\}]+)\})?')
             match = regex.match(line)
             if match:
                 indent = len(match.group(1))
                 step_name = match.group(2)
-                options = yaml.load(match.group(3)) if match.group(3) else {}
+                options_def = match.group(3)
+                options = {}
+                if options_def:
+                    if block_mapping:
+                        options_def = options_def.strip()[1:-1]
+                    options = yaml.load(options_def)
 
                 if step_name == 'source':
                     raise ConfigurationException("You cannot use 'source' as a step, it's included automatically.")
