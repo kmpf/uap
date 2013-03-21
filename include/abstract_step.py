@@ -80,18 +80,25 @@ class AbstractStep(object):
         run_info = self.get_run_info()
         return run_info.keys()
 
-    def get_dependency_path(self):
+    def get_dependency_path(self, with_options = False):
         path = []
         p = self
         path.append(p.__module__)
+        if with_options:
+            path[-1] += '-' + p.get_options_hashtag()
         while len(p.dependencies) > 0:
             if len(p.dependencies) > 1:
                 raise NotImplementedError("Full DAG not implemented yet, trees only for now.")
             p = p.dependencies[0]
             if p.__module__ != 'source':
                 path.append(p.__module__)
+                if with_options:
+                    path[-1] += '-' + p.get_options_hashtag()
         path.reverse()
         return path
+
+    def get_options_hashtag(self):
+        return hashlib.sha1(json.dumps(self.options, sort_keys=True)).hexdigest()[0:8]
 
     def get_step_id(self):
         return '/'.join(self.get_dependency_path())
@@ -99,11 +106,9 @@ class AbstractStep(object):
     def get_output_directory(self):
         # add the options to the output path so that different options result in
         # a different directory
-        options_checksum = hashlib.sha1(json.dumps(self.options, sort_keys=True)).hexdigest()[0:8]
-        dependency_path = self.get_dependency_path()
+        dependency_path = self.get_dependency_path(True)
         if (self.pipeline.run_mode == self.pipeline.run_modes.TEST_RUN):
-            dependency_path[-1] += '-test-run'
-        dependency_path[-1] += '-' + options_checksum
+            dependency_path.insert(0, 'test')
         return os.path.join(self.pipeline.config['destinationPath'], *dependency_path)
 
     def get_temp_output_directory(self):
