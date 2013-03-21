@@ -121,6 +121,15 @@ class Pipeline(object):
             # depends on it, HARR HARR!
 
         steps_definition = self.config['steps']
+
+        # remove comments (from # to EOL)
+        while '#' in steps_definition:
+            p0 = steps_definition.index('#')
+            p1 = steps_definition.index("\n", p0)
+            temp = bytearray(steps_definition)
+            temp[p0:(p1 + 1)] = ''
+            steps_definition = str(temp)
+
         steps_definition_offset = 0
         while steps_definition_offset < len(steps_definition):
             # find next newline
