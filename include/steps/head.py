@@ -14,7 +14,7 @@ class Head(AbstractStep):
                 k = key
                 if not k in output_run_info:
                     output_run_info[k] = {}
-                destination_file_name = fn + '-head.fastq.gz'
+                destination_file_name = fn.replace('.fastq.gz', '') + '-head.fastq.gz'
                 if not destination_file_name in output_run_info[k]:
                     output_run_info[k][destination_file_name] = []
                 output_run_info[k][destination_file_name].append(fn)

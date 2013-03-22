@@ -22,6 +22,9 @@ class Task(object):
         task_state = self.step.get_run_state(self.run_id)
         return '[' + task_state[0].lower() + '] ' + str(self.step.get_step_id()) + '/' + self.run_id
 
+    def get_task_state(self):
+        return self.step.get_run_state(self.run_id)
+
     def run(self):
         task_state = self.step.get_run_state(self.run_id)
         if task_state == 'w':

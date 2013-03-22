@@ -180,8 +180,12 @@ class AbstractStep(object):
             temp_out_path = os.path.join(temp_directory, os.path.basename(out_path))
             temp_run_info[temp_out_path] = in_paths
 
+        start_time = datetime.datetime.now()
+
         print("executing " + self.get_step_id() + " " + run_id)
         self.execute(run_id, temp_run_info)
+
+        end_time = datetime.datetime.now()
 
         # if we're here, we can assume the step has finished successfully
         # now rename the output files (move from temp directory to
@@ -190,6 +194,20 @@ class AbstractStep(object):
             destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
             os.rename(out_path, destination_path)
 
+        # now write the annotation
+        annotation = {}
+        annotation['start_time'] = start_time
+        annotation['end_time'] = end_time
+        annotation['step_options'] = self.options
+        annotation['run_id'] = run_id
+        annotation['run_info'] = self.get_run_info()
+        annotation['config'] = self.pipeline.config
+
+        for out_path in temp_run_info.keys():
+            annotation_path = os.path.join(self.get_output_directory(), os.path.basename(out_path)) + '.annotation.yaml'
+            with open(annotation_path, 'w') as f:
+                f.write(yaml.dump(annotation, default_flow_style = False))
+
         # finally, remove the temporary directory if it's empty
         try:
             os.rmdir(temp_directory)
@@ -197,10 +215,7 @@ class AbstractStep(object):
             pass
 
     def execute(self, run_id, run_info):
-        print("WARNING: Just creating empty output files for " + self.get_step_id() + "/" + run_id + " due to missing implementation.")
-        for path in run_info.keys():
-            with open(path, 'w') as f:
-                pass
+        raise NotImplementedError()
 
     def __str__(self):
         s = self.step_name

@@ -208,9 +208,14 @@ class Pipeline(object):
                 raise ConfigurationException("Invalid steps definition, error in line: '" + line + "'.")
 
     def print_tasks(self):
-        print("task states: [w]aiting, [r]eady, [f]inished")
+        count = {}
         for task in self.all_tasks:
+            state = task.get_task_state()
+            if not state in count:
+                count[state] = 0
+            count[state] += 1
             print(task)
+        print('tasks: ' + str(len(self.all_tasks)) + ' total / ' + ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())]))
 
     def dry_run(self):
         temp_task_list = copy.copy(self.all_tasks)
