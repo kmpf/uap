@@ -67,3 +67,6 @@ class Cutadapt(AbstractStep):
                 if len(block) == 0:
                     break
                 fout.write(block)
+        s = pooryorick_pipeline.close(pids)
+        if max(s) > 0:
+            raise pooryorick_pipeline.PipelineError("return status:  %s" % s)

@@ -215,7 +215,7 @@ class Pipeline(object):
                 count[state] = 0
             count[state] += 1
             print(task)
-        print('tasks: ' + str(len(self.all_tasks)) + ' total / ' + ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())]))
+        print('tasks: ' + str(len(self.all_tasks)) + ' total, ' + ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())]))
 
     def dry_run(self):
         temp_task_list = copy.copy(self.all_tasks)
