@@ -17,6 +17,22 @@ def get_step_class_for_key(key):
         raise StandardError("need exactly one subclass of AbstractStep in " + key)
     return classes[0][1]
 
+def fix_dict(data, fix_func, *args):
+    if data.__class__ == list:
+        return [fix_dict(_, fix_func, *args) for _ in data]
+    elif data.__class__ == dict:
+        result = {}
+        for k, v in data.items():
+            result[fix_dict(k, fix_func, *args)] = fix_dict(v, fix_func, *args)
+        return result
+    else:
+        return fix_func(data, *args)
+
+def fix_func_dict_subst(v, full_paths):
+    if v in full_paths:
+        return full_paths[v]
+    return v
+
 class AbstractStep(object):
     def __init__(self, pipeline):
         self.dependencies = []
@@ -54,6 +70,7 @@ class AbstractStep(object):
             if len(self.dependencies) > 0:
                 # it's not the source step
                 input_run_info = copy.deepcopy(self.get_input_run_info())
+
                 # strip directories from file names, strip input files
                 for run_id, run_info in input_run_info.items():
                     for annotation in run_info['output_files'].keys():
@@ -68,17 +85,13 @@ class AbstractStep(object):
             self._run_info = self.setup_runs(input_run_info)
 
             if len(self.dependencies) > 0:
-                # re-add directories to input and output file names
+
                 for run_id, _ in self._run_info.items():
                     for annotation in self._run_info[run_id]['output_files'].keys():
                         for path in self._run_info[run_id]['output_files'][annotation].keys():
-                            full_path = os.path.join(self.get_output_directory(), path)
-                            fixed_input_files = []
-                            for inpath in self._run_info[run_id]['output_files'][annotation][path]:
-                                fixed_input_files.append(full_paths[inpath])
-                            self._run_info[run_id]['output_files'][annotation][full_path] = fixed_input_files
-                            self._run_info[run_id]['output_files'][annotation].pop(path)
-            #print("RUN INFO FOR " + self.get_step_id() + ":\n" + yaml.dump(self._run_info, default_flow_style = False))
+                            full_paths[path] = os.path.join(self.get_output_directory(), path)
+
+                self._run_info = fix_dict(self._run_info, fix_func_dict_subst, full_paths)
 
         return self._run_info
 
@@ -185,11 +198,12 @@ class AbstractStep(object):
 
         # call execute() but pass output file paths with the temporary directory
         temp_run_info = copy.deepcopy(self.get_run_info()[run_id])
+        temp_paths = {}
         for annotation in temp_run_info['output_files'].keys():
             for out_path, in_paths in temp_run_info['output_files'][annotation].items():
-                temp_out_path = os.path.join(temp_directory, os.path.basename(out_path))
-                temp_run_info['output_files'][annotation][temp_out_path] = temp_run_info['output_files'][annotation][out_path]
-                temp_run_info['output_files'][annotation].pop(out_path, None)
+                temp_paths[out_path] = os.path.join(temp_directory, os.path.basename(out_path))
+
+        temp_run_info = fix_dict(temp_run_info, fix_func_dict_subst, temp_paths)
 
         start_time = datetime.datetime.now()
 
