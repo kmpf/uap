@@ -1,42 +1,44 @@
 import sys
 from abstract_step import *
 import pipeline
-import pooryorick_pipeline
+import unix_pipeline
+import yaml
 
 class Head(AbstractStep):
     def __init__(self, pipeline):
         super(Head, self).__init__(pipeline)
 
     def setup_runs(self, input_run_info):
+        #print(yaml.dump(input_run_info, default_flow_style = False))
         output_run_info = {}
-        for key, input_files in input_run_info.items():
-            for fn in input_files:
-                k = key
-                if not k in output_run_info:
-                    output_run_info[k] = {}
-                destination_file_name = fn.replace('.fastq.gz', '') + '-head.fastq.gz'
-                if not destination_file_name in output_run_info[k]:
-                    output_run_info[k][destination_file_name] = []
-                output_run_info[k][destination_file_name].append(fn)
+        for input_run_id in input_run_info.keys():
+            output_run_info[input_run_id] = { 'output_files': {} }
+            for annotation, input_files in input_run_info[input_run_id]['output_files'].items():
+                output_run_info[input_run_id]['output_files'][annotation] = {}
+                for in_path in input_files.keys():
+                    out_path = in_path.replace('.fastq.gz', '-head.fastq.gz')
+                    output_run_info[input_run_id]['output_files'][annotation][out_path] = [in_path]
         return output_run_info
 
     def execute(self, run_id, run_info):
-        for outpath, inpaths in run_info.items():
-            if len(inpaths) != 1:
-                raise StandardError("Expected one input file per output file.")
-            inpath = inpaths[0]
+        for annotation in run_info['output_files'].keys():
+            for outpath, inpaths in run_info['output_files'][annotation].items():
+                if len(inpaths) != 1:
+                    raise StandardError("Expected one input file per output file.")
+                inpath = inpaths[0]
 
-            pigz1 = [self.pipeline.config['tools']['pigz']['path'], '-d', '-c', inpath]
+                # set up processes
+                pigz1 = [self.pipeline.config['tools']['pigz']['path'], '-d', '-c', inpath]
 
-            head = ['head', '-n', '1000']
+                head = ['head', '-n', '1000']
 
-            pigz2 = [self.pipeline.config['tools']['pigz']['path'],
-                '--blocksize', '4096', '--processes', '3', '-c']
+                pigz2 = [self.pipeline.config['tools']['pigz']['path'],
+                    '--blocksize', '4096', '--processes', '3', '-c']
 
-            with open(outpath, 'w') as fout:
-                fd, pids = pooryorick_pipeline.pipeline(pigz1, head, pigz2)
-                while True:
-                    block = os.read(fd, 4096 * 1024)
-                    if len(block) == 0:
-                        break
-                    fout.write(block)
+                # create the pipeline and run it
+                up = unix_pipeline.UnixPipeline()
+                up.append(pigz1)
+                up.append(head)
+                up.append(pigz2, stdout = open(outpath, 'w'))
+
+                up.run()

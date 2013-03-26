@@ -45,10 +45,11 @@ class Cutadapt(AbstractStep):
         return output_run_info
 
     def execute(self, run_id, run_info):
+        # basic sanity check
         if len(run_info['output_files']['reads']) != 1:
             raise StandardError("Expected a single output file.")
 
-        basename = os.path.basename(run_info.keys()[0])
+        # find adapter
         adapter = ''
         if run_info['info']['read'] == 'R1':
             adapter = self.options['adapter-R1']
@@ -57,12 +58,14 @@ class Cutadapt(AbstractStep):
         else:
             raise StandardError("Expected R1 or R2.")
 
+        # insert correct index if necessary
         if '((INDEX))' in adapter:
             # TODO: this is weird, we need something more general
             sample_info = self.pipeline.all_samples[run_id[0:-3]]
             index = sample_info['lanes'].values()[0]['Index']
             adapter = adapter.replace('((INDEX))', index)
 
+        # set up processes
         pigz1 = [self.tool('pigz'), '-d', '-c']
         pigz1.extend(*sorted(run_info['output_files']['reads'].values()))
 
@@ -70,56 +73,10 @@ class Cutadapt(AbstractStep):
 
         pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '3', '-c']
 
+        # create the pipeline and run it
         up = unix_pipeline.UnixPipeline()
         up.append(pigz1)
         up.append(cutadapt, stderr = open(run_info['output_files']['log'].keys()[0], 'w'))
         up.append(pigz2, stdout = open(run_info['output_files']['reads'].keys()[0], 'w'))
 
         up.run()
-
-        '''
-        procs = []
-        procs_pid = []
-        use_stdin = None
-        for args in [pigz1, cutadapt, pigz2]:
-            if len(procs) > 0:
-                use_stdin = procs[-1].stdout
-            proc = subprocess.Popen(args,
-                    stdout = subprocess.PIPE,
-                    bufsize = 4096 * 1024,
-                    stdin = use_stdin,
-                    stderr = subprocess.PIPE,
-                    preexec_fn = os.setsid
-                    )
-            procs.append(proc)
-            procs_pid.append(proc.pid)
-
-        copy_streams = []
-        copy_streams.append((procs[-1].stdout, open(run_info['output_files']['reads'].keys()[0], 'w')))
-        copy_streams.append((procs[-2].stderr, open(run_info['output_files']['log'].keys()[0], 'w')))
-
-        # copy data in threads
-        for info in copy_streams:
-            pid = os.fork()
-            if not pid:
-                while True:
-                    block = info[0].read(4096 * 1024)
-                    if len(block) == 0:
-                        break
-                    info[1].write(block)
-                info[1].close()
-                os._exit(0)
-            else:
-                procs_pid.append(pid)
-
-        while procs_pid:
-            try:
-                pid, exitcode = os.wait()
-            except OSError:
-                break
-            if exitcode != 0:
-                print(pid)
-                print(exitcode)
-                raise StandardError("PIPELINE CRASHED, OH MY.")
-            procs_pid.remove(pid)
-        '''

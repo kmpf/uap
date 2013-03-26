@@ -31,7 +31,7 @@ class Pipeline(object):
     states = Enum(['WAITING', 'READY', 'FINISHED'])
     run_modes = Enum(['DRY_RUN', 'TEST_RUN', 'FULL'])
 
-    def __init__(self, run_mode = run_modes.FULL):
+    def __init__(self):
 
         # the configuration as read from config.yaml
         self.config = {}
@@ -43,7 +43,13 @@ class Pipeline(object):
         self.steps = []
 
         # the run mode of the pipeline
-        self.run_mode = run_mode
+        self.run_mode = self.run_modes.FULL
+        if '--dry-run' in sys.argv:
+            sys.argv.remove('--dry-run')
+            self.run_mode = self.run_modes.DRY_RUN
+        if '--test-run' in sys.argv:
+            sys.argv.remove('--test-run')
+            self.run_mode = self.run_modes.TEST_RUN
 
         self.read_config()
 
