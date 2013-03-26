@@ -39,7 +39,7 @@ class AbstractStep(object):
         if len(self.dependencies) == 0:
             raise StandardError("You asked for input files of a step with no dependencies. This shouldn't happen.")
         elif len(self.dependencies) == 1:
-            return copy.copy(self.dependencies[0].get_run_info())
+            return copy.deepcopy(self.dependencies[0].get_run_info())
         else:
             raise NotImplementedError("DAG not implemented yet.")
 
@@ -184,7 +184,7 @@ class AbstractStep(object):
         os.makedirs(temp_directory)
 
         # call execute() but pass output file paths with the temporary directory
-        temp_run_info = copy.copy(self.get_run_info()[run_id])
+        temp_run_info = copy.deepcopy(self.get_run_info()[run_id])
         for annotation in temp_run_info['output_files'].keys():
             for out_path, in_paths in temp_run_info['output_files'][annotation].items():
                 temp_out_path = os.path.join(temp_directory, os.path.basename(out_path))

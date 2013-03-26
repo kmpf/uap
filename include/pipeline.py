@@ -228,7 +228,7 @@ class Pipeline(object):
         print('tasks: ' + str(len(self.all_tasks)) + ' total, ' + ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())]))
 
     def dry_run(self):
-        temp_task_list = copy.copy(self.all_tasks)
+        temp_task_list = copy.deepcopy(self.all_tasks)
 
         # the dry_run_cache contains all files which are created during the process
         dry_run_cache = {}
