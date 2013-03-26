@@ -8,6 +8,7 @@ import json
 import os
 import random
 import string
+import traceback
 import yaml
 
 def get_step_class_for_key(key):
@@ -22,7 +23,7 @@ class AbstractStep(object):
         self.options = {}
         self.pipeline = pipeline
         self.step_name = self.__module__
-        self.run_info = None
+        self._run_info = None
 
     def set_options(self, options):
         self.options = options
@@ -47,34 +48,39 @@ class AbstractStep(object):
 
     def get_run_info(self):
         # create run info if it doesn't exist yet
-        if self.run_info == None:
+        if self._run_info == None:
             input_run_info = None
             full_paths = dict()
             if len(self.dependencies) > 0:
                 # it's not the source step
-                input_run_info = self.get_input_run_info()
+                input_run_info = copy.deepcopy(self.get_input_run_info())
                 # strip directories from file names, strip input files
-                for run_id, output_files in input_run_info.items():
-                    for path in output_files.keys():
-                        basename = os.path.basename(path)
-                        if basename in full_paths:
-                            raise StandardError("There are multiple input filenames with the same basename.")
-                        full_paths[basename] = path
-                    input_run_info[run_id] = sorted([os.path.basename(path) for path in output_files.keys()])
+                for run_id, run_info in input_run_info.items():
+                    for annotation in run_info['output_files'].keys():
+                        for path in run_info['output_files'][annotation].keys():
+                            basename = os.path.basename(path)
+                            if basename in full_paths:
+                                raise StandardError("There are multiple input filenames with the same basename.")
+                            full_paths[basename] = path
+                            run_info['output_files'][annotation][basename] = run_info['output_files'][annotation][path]
+                            run_info['output_files'][annotation].pop(path)
 
-            self.run_info = self.setup_runs(input_run_info)
+            self._run_info = self.setup_runs(input_run_info)
+
             if len(self.dependencies) > 0:
-                run_info_temp = self.run_info
-                self.run_info = {}
                 # re-add directories to input and output file names
-                for run_id, output_files in run_info_temp.items():
-                    self.run_info[run_id] = {}
-                    for path in output_files.keys():
-                        full_path = os.path.join(self.get_output_directory(), path)
-                        self.run_info[run_id][full_path] = []
-                        for in_path in output_files[path]:
-                            self.run_info[run_id][full_path].append(full_paths[in_path])
-        return self.run_info
+                for run_id, _ in self._run_info.items():
+                    for annotation in self._run_info[run_id]['output_files'].keys():
+                        for path in self._run_info[run_id]['output_files'][annotation].keys():
+                            full_path = os.path.join(self.get_output_directory(), path)
+                            fixed_input_files = []
+                            for inpath in self._run_info[run_id]['output_files'][annotation][path]:
+                                fixed_input_files.append(full_paths[inpath])
+                            self._run_info[run_id]['output_files'][annotation][full_path] = fixed_input_files
+                            self._run_info[run_id]['output_files'][annotation].pop(path)
+            #print("RUN INFO FOR " + self.get_step_id() + ":\n" + yaml.dump(self._run_info, default_flow_style = False))
+
+        return self._run_info
 
     def get_run_ids(self):
         run_info = self.get_run_info()
@@ -143,15 +149,18 @@ class AbstractStep(object):
                 return True
 
         run_info = self.get_run_info()
+        #print("--------------- " + str(self) + " ----------------------")
+        #print(yaml.dump(run_info, default_flow_style = False))
         all_output_files_exist = True
         all_input_files_exist = True
-        # TODO: check whether output files are up-to-date regarding their input files
-        for output_file, input_files in run_info[run_id].items():
-            if not path_up_to_date(output_file, input_files, dry_run_cache):
-                all_output_files_exist = False
-            for input_file in input_files:
-                if not path_up_to_date(input_file, [], dry_run_cache):
-                    all_input_files_exist = False
+        for annotation in run_info[run_id]['output_files'].keys():
+            for output_file, input_files in run_info[run_id]['output_files'][annotation].items():
+                if not path_up_to_date(output_file, input_files, dry_run_cache):
+                    #print("MISSING FILE: " + str(output_file))
+                    all_output_files_exist = False
+                for input_file in input_files:
+                    if not path_up_to_date(input_file, [], dry_run_cache):
+                        all_input_files_exist = False
 
         if all_input_files_exist:
             if all_output_files_exist:
@@ -175,14 +184,16 @@ class AbstractStep(object):
         os.makedirs(temp_directory)
 
         # call execute() but pass output file paths with the temporary directory
-        temp_run_info = {}
-        for out_path, in_paths in self.get_run_info()[run_id].items():
-            temp_out_path = os.path.join(temp_directory, os.path.basename(out_path))
-            temp_run_info[temp_out_path] = in_paths
+        temp_run_info = copy.copy(self.get_run_info()[run_id])
+        for annotation in temp_run_info['output_files'].keys():
+            for out_path, in_paths in temp_run_info['output_files'][annotation].items():
+                temp_out_path = os.path.join(temp_directory, os.path.basename(out_path))
+                temp_run_info['output_files'][annotation][temp_out_path] = temp_run_info['output_files'][annotation][out_path]
+                temp_run_info['output_files'][annotation].pop(out_path, None)
 
         start_time = datetime.datetime.now()
 
-        print("executing " + self.get_step_id() + " " + run_id)
+        print("executing " + self.get_step_id() + "/" + run_id)
         self.execute(run_id, temp_run_info)
 
         end_time = datetime.datetime.now()
@@ -190,23 +201,25 @@ class AbstractStep(object):
         # if we're here, we can assume the step has finished successfully
         # now rename the output files (move from temp directory to
         # destination directory)
-        for out_path in temp_run_info.keys():
-            destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
-            os.rename(out_path, destination_path)
+        for annotation in temp_run_info['output_files'].keys():
+            for out_path in temp_run_info['output_files'][annotation].keys():
+                destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
+                os.rename(out_path, destination_path)
 
         # now write the annotation
-        annotation = {}
-        annotation['start_time'] = start_time
-        annotation['end_time'] = end_time
-        annotation['step_options'] = self.options
-        annotation['run_id'] = run_id
-        annotation['run_info'] = self.get_run_info()
-        annotation['config'] = self.pipeline.config
+        log = {}
+        log['start_time'] = start_time
+        log['end_time'] = end_time
+        log['step_options'] = self.options
+        log['run_id'] = run_id
+        log['run_info'] = self.get_run_info()
+        log['config'] = self.pipeline.config
 
-        for out_path in temp_run_info.keys():
-            annotation_path = os.path.join(self.get_output_directory(), os.path.basename(out_path)) + '.annotation.yaml'
-            with open(annotation_path, 'w') as f:
-                f.write(yaml.dump(annotation, default_flow_style = False))
+        for annotation in temp_run_info['output_files'].keys():
+            for out_path in temp_run_info['output_files'][annotation].keys():
+                annotation_path = os.path.join(self.get_output_directory(), os.path.basename(out_path)) + '.annotation.yaml'
+                with open(annotation_path, 'w') as f:
+                    f.write(yaml.dump(log, default_flow_style = False))
 
         # finally, remove the temporary directory if it's empty
         try:

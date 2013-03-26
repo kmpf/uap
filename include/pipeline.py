@@ -97,6 +97,16 @@ class Pipeline(object):
             for row in reader:
                 self.all_samples[sample_name]['lanes'][row['Lane']] = row
 
+        # remove all but one sample
+        '''
+        if True:
+            print("Ignoring all but one sample")
+            if len(self.all_samples) > 1:
+                sample_names = self.all_samples.keys()
+                for x in sample_names[0:-1]:
+                    self.all_samples.pop(x, None)
+        '''
+
     def build_steps(self):
         self.steps = []
         if not 'steps' in self.config:
