@@ -54,12 +54,11 @@ class Cutadapt(AbstractStep):
         elif run_info['info']['read'] == 'R2':
             adapter = self.options['adapter-R2']
 
-        # TODO: replace (__INDEX__) in adapter
-        if '(__INDEX__)' in adapter:
+        if '((INDEX))' in adapter:
             # TODO: this is weird, we need something more general
             sample_info = self.pipeline.all_samples[run_id[0:-3]]
             index = sample_info['lanes'].values()[0]['Index']
-            adapter = adapter.replace('(__INDEX__)', index)
+            adapter = adapter.replace('((INDEX))', index)
 
         pigz1 = [self.pipeline.config['tools']['pigz']['path'], '-d', '-c']
         pigz1.extend(*sorted(run_info['output_files']['reads'].values()))
