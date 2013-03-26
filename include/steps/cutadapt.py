@@ -3,6 +3,7 @@ from abstract_step import *
 import pipeline
 import subprocess
 import yaml
+import unix_pipeline
 
 class Cutadapt(AbstractStep):
     def __init__(self, pipeline):
@@ -53,6 +54,8 @@ class Cutadapt(AbstractStep):
             adapter = self.options['adapter-R1']
         elif run_info['info']['read'] == 'R2':
             adapter = self.options['adapter-R2']
+        else:
+            raise StandardError("Expected R1 or R2.")
 
         if '((INDEX))' in adapter:
             # TODO: this is weird, we need something more general
@@ -60,15 +63,21 @@ class Cutadapt(AbstractStep):
             index = sample_info['lanes'].values()[0]['Index']
             adapter = adapter.replace('((INDEX))', index)
 
-        pigz1 = [self.pipeline.config['tools']['pigz']['path'], '-d', '-c']
+        pigz1 = [self.tool('pigz'), '-d', '-c']
         pigz1.extend(*sorted(run_info['output_files']['reads'].values()))
 
-        cutadapt = [self.pipeline.config['tools']['cutadapt']['path'], '-a',
-            adapter, '-']
+        cutadapt = [self.tool('cutadapt'), '-a', adapter, '-']
 
-        pigz2 = [self.pipeline.config['tools']['pigz']['path'],
-            '--blocksize', '4096', '--processes', '3', '-c']
+        pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '3', '-c']
 
+        up = unix_pipeline.UnixPipeline()
+        up.append(pigz1)
+        up.append(cutadapt, stderr = open(run_info['output_files']['log'].keys()[0], 'w'))
+        up.append(pigz2, stdout = open(run_info['output_files']['reads'].keys()[0], 'w'))
+
+        up.run()
+
+        '''
         procs = []
         procs_pid = []
         use_stdin = None
@@ -113,3 +122,4 @@ class Cutadapt(AbstractStep):
                 print(exitcode)
                 raise StandardError("PIPELINE CRASHED, OH MY.")
             procs_pid.remove(pid)
+        '''

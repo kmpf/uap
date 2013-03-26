@@ -230,6 +230,9 @@ class AbstractStep(object):
     def execute(self, run_id, run_info):
         raise NotImplementedError()
 
+    def tool(self, key):
+        return self.pipeline.config['tools'][key]['path']
+
     def __str__(self):
         s = self.step_name
         #if len(self.options.keys()) > 0:
