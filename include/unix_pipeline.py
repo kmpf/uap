@@ -61,5 +61,6 @@ class UnixPipeline(object):
                 if pid in self.upstream_procs:
                     for upstream_proc in self.upstream_procs[pid]:
                         self.ok_to_fail.append(upstream_proc.pid)
-                        upstream_proc.kill()
+                        if upstream_proc.poll() == None:
+                            upstream_proc.terminate()
             self.procs_pid.remove(pid)
