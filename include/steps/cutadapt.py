@@ -8,6 +8,7 @@ import unix_pipeline
 class Cutadapt(AbstractStep):
     def __init__(self, pipeline):
         super(Cutadapt, self).__init__(pipeline)
+        self.set_cores(6)
 
     def setup_runs(self, complete_input_run_info):
         output_run_info = {}

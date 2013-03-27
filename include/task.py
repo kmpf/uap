@@ -27,6 +27,6 @@ class Task(object):
 
     def run(self):
         task_state = self.step.get_run_state(self.run_id)
-        if task_state == 'w':
+        if task_state != self.pipeline.states.READY:
             raise StandardError(str(self) + ' cannot be run yet.')
         self.step.run(self.run_id)

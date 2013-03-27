@@ -51,6 +51,8 @@ class Pipeline(object):
             sys.argv.remove('--test-run')
             self.run_mode = self.run_modes.TEST_RUN
 
+        self.dry_run_cache = {}
+
         self.read_config()
 
         # collect all tasks
@@ -61,6 +63,15 @@ class Pipeline(object):
                 self.all_tasks.append(task)
 
         self.check_tools()
+
+        if self.run_mode == self.run_modes.DRY_RUN:
+            # fill the dry run cache with input files
+            # fill dry_run_cache with source files
+            for run_id in self.steps[0].get_run_info().keys():
+                for annotation, files in self.steps[0].get_run_info()[run_id]['output_files'].items():
+                    for path in files.keys():
+                        self.dry_run_cache[path] = datetime.datetime.now()
+
 
     # read configuration and make sure it's good
     def read_config(self):
@@ -232,28 +243,6 @@ class Pipeline(object):
             count[state] += 1
             print(task)
         print('tasks: ' + str(len(self.all_tasks)) + ' total, ' + ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())]))
-
-    def dry_run(self):
-        temp_task_list = copy.deepcopy(self.all_tasks)
-
-        # the dry_run_cache contains all files which are created during the process
-        dry_run_cache = {}
-        # fill dry_run_cache with source files
-        for run_id, files in self.steps[0].get_run_info().items():
-            for path in files.keys():
-                dry_run_cache[path] = datetime.datetime.now()
-
-        while len(temp_task_list) > 0:
-            # find a task which is ready
-            ready_tasks = [_ for _ in temp_task_list if _['step'].get_run_state(_['run_id'], dry_run_cache) == 'r']
-            if len(ready_tasks) == 0:
-                raise StandardError("Unable to find a task which is ready.")
-            picked_task = ready_tasks[0]
-            # now dry-run the taks
-            print("now dry running: " + str(picked_task))
-            temp_task_list = [_ for _ in temp_task_list if _ != picked_task]
-            picked_task['step'].dry_run(picked_task['run_id'], dry_run_cache)
-        print("Dry run finished successfully.")
 
     def has_unfinished_tasks(self, task_list):
         unfinished_tasks = [task for task in task_list if task.step.get_run_state(task.run_id) != self.states.FINISHED]

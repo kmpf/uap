@@ -40,6 +40,10 @@ class AbstractStep(object):
         self.pipeline = pipeline
         self.step_name = self.__module__
         self._run_info = None
+        self._cores = 1
+
+    def set_cores(self, cores):
+        self._cores = cores
 
     def set_options(self, options):
         self.options = options
@@ -137,10 +141,20 @@ class AbstractStep(object):
             if not os.path.exists(path):
                 return path
 
-    def get_run_state(self, run_id, dry_run_cache = None):
+    def get_run_state(self, run_id):
 
-        def path_up_to_date(outpath, inpaths = [], dry_run_cache = None):
-            if dry_run_cache == None:
+        def path_up_to_date(outpath, inpaths = []):
+            if self.pipeline.run_mode == self.pipeline.run_modes.DRY_RUN:
+                # this is a dry run, use the dry run cache
+                if not outpath in self.pipeline.dry_run_cache:
+                    return False
+                for inpath in inpaths:
+                    if not inpath in self.pipeline.dry_run_cache:
+                        return False
+                    if self.pipeline.dry_run_cache[inpath] > self.pipeline.dry_run_cache[outpath]:
+                        return False
+                return True
+            else:
                 # check the file system
                 if not os.path.exists(outpath):
                     return False
@@ -150,29 +164,16 @@ class AbstractStep(object):
                     if os.path.getmtime(inpath) > os.path.getmtime(outpath):
                         return False
                 return True
-            else:
-                # this is a dry run, use the dry run cache
-                if not outpath in dry_run_cache:
-                    return False
-                for inpath in inpaths:
-                    if not inpath in dry_run_cache:
-                        return False
-                    if dry_run_cache[inpath] > dry_run_cache[outpath]:
-                        return False
-                return True
 
         run_info = self.get_run_info()
-        #print("--------------- " + str(self) + " ----------------------")
-        #print(yaml.dump(run_info, default_flow_style = False))
         all_output_files_exist = True
         all_input_files_exist = True
         for annotation in run_info[run_id]['output_files'].keys():
             for output_file, input_files in run_info[run_id]['output_files'][annotation].items():
-                if not path_up_to_date(output_file, input_files, dry_run_cache):
-                    #print("MISSING FILE: " + str(output_file))
+                if not path_up_to_date(output_file, input_files):
                     all_output_files_exist = False
                 for input_file in input_files:
-                    if not path_up_to_date(input_file, [], dry_run_cache):
+                    if not path_up_to_date(input_file, []):
                         all_input_files_exist = False
 
         if all_input_files_exist:
@@ -189,57 +190,63 @@ class AbstractStep(object):
             dry_run_cache[path] = datetime.datetime.now()
 
     def run(self, run_id):
-        # create the output directory if it doesn't exist yet
-        if not os.path.isdir(self.get_output_directory()):
-            os.makedirs(self.get_output_directory())
-        # also create a temporary directory for the output file
-        temp_directory = self.get_temp_output_directory()
-        os.makedirs(temp_directory)
+        if self.pipeline.run_mode == self.pipeline.run_modes.DRY_RUN:
+            print("dry-running " + self.get_step_id() + "/" + run_id)
+            run_info = copy.deepcopy(self.get_run_info()[run_id])
+            for annotation in run_info['output_files']:
+                for out_path in run_info['output_files'][annotation].keys():
+                    self.pipeline.dry_run_cache[out_path] = datetime.datetime.now()
+        else:
+            # create the output directory if it doesn't exist yet
+            if not os.path.isdir(self.get_output_directory()):
+                os.makedirs(self.get_output_directory())
+            # also create a temporary directory for the output file
+            temp_directory = self.get_temp_output_directory()
+            os.makedirs(temp_directory)
 
-        # call execute() but pass output file paths with the temporary directory
-        temp_run_info = copy.deepcopy(self.get_run_info()[run_id])
-        temp_paths = {}
-        for annotation in temp_run_info['output_files'].keys():
-            for out_path, in_paths in temp_run_info['output_files'][annotation].items():
-                temp_paths[out_path] = os.path.join(temp_directory, os.path.basename(out_path))
+            # call execute() but pass output file paths with the temporary directory
+            temp_run_info = copy.deepcopy(self.get_run_info()[run_id])
+            temp_paths = {}
+            for annotation in temp_run_info['output_files'].keys():
+                for out_path, in_paths in temp_run_info['output_files'][annotation].items():
+                    temp_paths[out_path] = os.path.join(temp_directory, os.path.basename(out_path))
 
-        temp_run_info = fix_dict(temp_run_info, fix_func_dict_subst, temp_paths)
+            temp_run_info = fix_dict(temp_run_info, fix_func_dict_subst, temp_paths)
 
-        start_time = datetime.datetime.now()
+            start_time = datetime.datetime.now()
 
-        print("executing " + self.get_step_id() + "/" + run_id)
-        self.execute(run_id, temp_run_info)
+            print("executing " + self.get_step_id() + "/" + run_id)
+            self.execute(run_id, temp_run_info)
 
-        end_time = datetime.datetime.now()
+            end_time = datetime.datetime.now()
+            # if we're here, we can assume the step has finished successfully
+            # now rename the output files (move from temp directory to
+            # destination directory)
+            for annotation in temp_run_info['output_files'].keys():
+                for out_path in temp_run_info['output_files'][annotation].keys():
+                    destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
+                    os.rename(out_path, destination_path)
 
-        # if we're here, we can assume the step has finished successfully
-        # now rename the output files (move from temp directory to
-        # destination directory)
-        for annotation in temp_run_info['output_files'].keys():
-            for out_path in temp_run_info['output_files'][annotation].keys():
-                destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
-                os.rename(out_path, destination_path)
+            # now write the annotation
+            log = {}
+            log['start_time'] = start_time
+            log['end_time'] = end_time
+            log['step_options'] = self.options
+            log['run_id'] = run_id
+            log['run_info'] = self.get_run_info()
+            log['config'] = self.pipeline.config
 
-        # now write the annotation
-        log = {}
-        log['start_time'] = start_time
-        log['end_time'] = end_time
-        log['step_options'] = self.options
-        log['run_id'] = run_id
-        log['run_info'] = self.get_run_info()
-        log['config'] = self.pipeline.config
+            for annotation in temp_run_info['output_files'].keys():
+                for out_path in temp_run_info['output_files'][annotation].keys():
+                    annotation_path = os.path.join(self.get_output_directory(), os.path.basename(out_path)) + '.annotation.yaml'
+                    with open(annotation_path, 'w') as f:
+                        f.write(yaml.dump(log, default_flow_style = False))
 
-        for annotation in temp_run_info['output_files'].keys():
-            for out_path in temp_run_info['output_files'][annotation].keys():
-                annotation_path = os.path.join(self.get_output_directory(), os.path.basename(out_path)) + '.annotation.yaml'
-                with open(annotation_path, 'w') as f:
-                    f.write(yaml.dump(log, default_flow_style = False))
-
-        # finally, remove the temporary directory if it's empty
-        try:
-            os.rmdir(temp_directory)
-        except OSError:
-            pass
+            # finally, remove the temporary directory if it's empty
+            try:
+                os.rmdir(temp_directory)
+            except OSError:
+                pass
 
     def execute(self, run_id, run_info):
         raise NotImplementedError()

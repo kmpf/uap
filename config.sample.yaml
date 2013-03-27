@@ -1,13 +1,14 @@
 # This is the rnaseq-pipeline configuration file. Important: save this file as config.yaml!
-
-# paths to flow cell directories
 sourcePaths:
-  - /gpfs1/data/bioinf/Data/120809_SN928_0081_AD11Y3ACXX_Keep
-  - [more paths...]
-# this is where output files go
-destinationPath: [path]
+    - [in path]
+destinationPath: [out path]
 steps: |
-  - cutadapt
-    - remove_empty_fastq_sequences
-      - segemehl
-    - analyze_cutadapt
+    - cutadapt {
+        adapter-R1: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG"
+        adapter-R2: "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT"
+        }
+        - fix_cutadapt
+tools:
+    pigz:
+        path: 'pigz'
+        get_version: '--version'

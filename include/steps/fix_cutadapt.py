@@ -5,6 +5,7 @@ import subprocess
 class FixCutadapt(AbstractStep):
     def __init__(self, pipeline):
         super(FixCutadapt, self).__init__(pipeline)
+        self.set_cores(9)
 
     def setup_runs(self, input_run_info_complete):
         output_run_info = {}
