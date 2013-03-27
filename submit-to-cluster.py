@@ -77,7 +77,7 @@ def submit_task(task, dependent_tasks = None):
     process.wait()
     response = process.stdout.read()
     job_id = re.search('Your job (\d+)', response).group(1)
-    if job_id == None or length(job_id) == 0:
+    if job_id == None or len(job_id) == 0:
         raise StandardError("Error: We couldn't parse a job id from this:\n" + response)
 
     job_id_for_task[str(task)] = job_id
