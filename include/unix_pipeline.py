@@ -10,6 +10,7 @@ class UnixPipeline(object):
         self.use_stdin = None
         self.copy_streams = []
         self.upstream_procs = {}
+        self.ok_to_fail = []
 
     def append(self, args, stdout = None, stderr = None):
         if len(self.procs) > 0:
@@ -52,11 +53,13 @@ class UnixPipeline(object):
             except OSError:
                 break
             if exitcode != 0:
-                print(pid)
-                print(exitcode)
-                raise StandardError("PIPELINE CRASHED, OH MY.")
+                if not pid in self.ok_to_fail:
+                    print(pid)
+                    print(exitcode)
+                    raise StandardError("PIPELINE CRASHED, OH MY.")
             else:
                 if pid in self.upstream_procs:
                     for upstream_proc in self.upstream_procs[pid]:
+                        self.ok_to_fail.append(upstream_proc.pid)
                         upstream_proc.kill()
             self.procs_pid.remove(pid)
