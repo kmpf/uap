@@ -87,6 +87,9 @@ class AbstractStep(object):
                             run_info['output_files'][annotation].pop(path)
 
             self._run_info = self.setup_runs(input_run_info)
+            for run_id in self._run_info.keys():
+                if '/' in run_id:
+                    raise StandardError("A run_id must not contain a '/': " + run_id + " for " + str(self))
 
             if len(self.dependencies) > 0:
 
@@ -225,6 +228,7 @@ class AbstractStep(object):
             for annotation in temp_run_info['output_files'].keys():
                 for out_path in temp_run_info['output_files'][annotation].keys():
                     destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
+                    # TODO: if the destination path already exists, this will overwrite the file.
                     os.rename(out_path, destination_path)
 
             # now write the annotation

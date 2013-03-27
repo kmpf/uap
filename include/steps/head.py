@@ -7,6 +7,7 @@ import yaml
 class Head(AbstractStep):
     def __init__(self, pipeline):
         super(Head, self).__init__(pipeline)
+        self.set_cores(6)
 
     def setup_runs(self, input_run_info):
         #print(yaml.dump(input_run_info, default_flow_style = False))

@@ -20,7 +20,7 @@ class Task(object):
 
     def __str__(self):
         task_state = self.step.get_run_state(self.run_id)
-        return '[' + task_state[0].lower() + '] ' + str(self.step.get_step_id()) + '/' + self.run_id
+        return str(self.step.get_step_id()) + '/' + self.run_id
 
     def get_task_state(self):
         return self.step.get_run_state(self.run_id)
@@ -30,3 +30,20 @@ class Task(object):
         if task_state != self.pipeline.states.READY:
             raise StandardError(str(self) + ' cannot be run yet.')
         self.step.run(self.run_id)
+
+    def input_files(self):
+        result = []
+        run_info = self.step.get_run_info()[self.run_id]
+        for annotation, outfiles in run_info['output_files'].items():
+            for outpath, infiles in outfiles.items():
+                for path in infiles:
+                    result.append(path)
+        return result
+
+    def output_files(self):
+        result = []
+        run_info = self.step.get_run_info()[self.run_id]
+        for annotation, outfiles in run_info['output_files'].items():
+            for path in outfiles.keys():
+                result.append(path)
+        return result

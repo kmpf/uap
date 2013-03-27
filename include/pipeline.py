@@ -241,7 +241,7 @@ class Pipeline(object):
             if not state in count:
                 count[state] = 0
             count[state] += 1
-            print(task)
+            print('[' + task.get_task_state()[0].lower() + '] ' + str(task))
         print('tasks: ' + str(len(self.all_tasks)) + ' total, ' + ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())]))
 
     def has_unfinished_tasks(self, task_list):

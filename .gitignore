@@ -1,3 +1,4 @@
 python_env
 config.yaml
 *.pyc
+doc/documentation.html
