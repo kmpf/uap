@@ -4,6 +4,7 @@ import sys
 sys.path.append('./include')
 import pipeline
 import copy
+import re
 import subprocess
 import yaml
 
@@ -65,16 +66,22 @@ def submit_task(task, dependent_tasks = None):
         temp[_] = temp[_][0]
     short_task_id = '_'.join(temp)[0:15]
 
-    process = subprocess.Popen(['qsub', '-N', short_task_id], bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+    qsub_args = ['qsub', '-N', short_task_id]
+    if dependent_tasks != None and len(dependent_tasks) > 0:
+        qsub_args.append("-hold_jid")
+        qsub_args.append(','.join(dependent_tasks))
+
+    process = subprocess.Popen(qsub_args, bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
     process.stdin.write(submit_script)
     process.stdin.close()
     process.wait()
     response = process.stdout.read()
-    print(response)
-    exit(1)
+    job_id = re.search('Your job (\d+)', response).group(1)
+    if job_id == None or length(job_id) == 0:
+        raise StandardError("Error: We couldn't parse a job id from this:\n" + response)
 
+    job_id_for_task[str(task)] = job_id
     tasks_left.remove(task)
-    job_id_for_task[str(task)] = 'JID_' + str(len(job_id_for_task) + 1)
 
 # first submit all tasks which are ready as per the file system
 while len(tasks_left) > 0:
