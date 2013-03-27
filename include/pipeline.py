@@ -56,11 +56,13 @@ class Pipeline(object):
         self.read_config()
 
         # collect all tasks
+        self.task_for_task_id = {}
         self.all_tasks = []
         for step in self.steps:
             for run_id in step.get_run_ids():
                 task = task_module.Task(self, step, run_id)
                 self.all_tasks.append(task)
+                self.task_for_task_id[str(task)] = task
 
         self.check_tools()
 

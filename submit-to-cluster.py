@@ -3,15 +3,30 @@
 import sys
 sys.path.append('./include')
 import pipeline
+import copy
+import subprocess
 import yaml
 
+original_argv = copy.copy(sys.argv)
+
 p = pipeline.Pipeline()
+
+if '--run-this' in sys.argv:
+    # execute the specified task
+    task_id = sys.argv[sys.argv.index('--run-this') + 1]
+    task = p.task_for_task_id[task_id]
+    task.run()
+    exit(0)
 
 tasks_left = []
 
 # a hash of files which are already there or will be there once submitted jobs
 # have completed
 file_hash = {}
+
+template = ''
+with open('qsub-template.sh', 'r') as f:
+    template = f.read()
 
 for task in p.all_tasks:
     state = task.get_task_state()
@@ -33,6 +48,30 @@ def submit_task(task, dependent_tasks = None):
         if not path in file_hash:
             file_hash[path] = []
         file_hash[path].append(str(task))
+
+    submit_script = copy.copy(template)
+    submit_script = submit_script.replace("#{CORES}", str(task.step._cores))
+    email = 'nobody@example.com'
+    if 'email' in p.config:
+        email = p.config['email']
+    submit_script = submit_script.replace("#{EMAIL}", email)
+    args = copy.copy(original_argv)
+    args.append("--run-this")
+    args.append('"' + str(task) + '"')
+    submit_script = submit_script.replace("#{COMMAND}", ' '.join(args))
+
+    temp = str(task).split('/')
+    for _ in range(len(temp) - 1):
+        temp[_] = temp[_][0]
+    short_task_id = '_'.join(temp)[0:15]
+
+    process = subprocess.Popen(['qsub', '-N', short_task_id], bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+    process.stdin.write(submit_script)
+    process.stdin.close()
+    process.wait()
+    response = process.stdout.read()
+    print(response)
+    exit(1)
 
     tasks_left.remove(task)
     job_id_for_task[str(task)] = 'JID_' + str(len(job_id_for_task) + 1)
