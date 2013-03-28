@@ -2,6 +2,7 @@ import copy
 import csv
 import datetime
 import glob
+import json
 import os
 import re
 import StringIO
@@ -32,6 +33,14 @@ class Pipeline(object):
     run_modes = Enum(['DRY_RUN', 'TEST_RUN', 'FULL'])
 
     def __init__(self):
+
+        # now determine the Git hash of the repository
+        self.git_hash_tag = subprocess.check_output(['git', 'describe', '--all', '--dirty', '--long']).strip()
+        if '-dirty' in self.git_hash_tag:
+            if not '--even-if-dirty' in sys.argv:
+                print("The repository has uncommitted changes, which is why we will exit right now.")
+                print("If this is not a production environment, you can skip this test by specifying --even-if-dirty on the command line.")
+                exit(1)
 
         # the configuration as read from config.yaml
         self.config = {}
@@ -275,3 +284,22 @@ class Pipeline(object):
         for sample in sorted(self.all_samples.keys()):
             s += "- " + sample + "\n"
         return s
+
+    def notify(self, message):
+        print(message)
+        if 'notify' in self.config:
+            try:
+                notify = self.config['notify']
+                match = re.search('^(http://[a-z\.]+:\d+)/([a-z0-9]+)$', notify)
+                if match:
+                    host = match.group(1)
+                    token = match.group(2)
+                    args = ['curl', host, '-X', 'POST', '-d', '@-']
+                    proc = subprocess.Popen(args, stdin = subprocess.PIPE)
+                    proc.stdin.write(json.dumps({'token': token, 'message': message}))
+                    proc.stdin.close()
+                    proc.wait()
+            except:
+                # swallow all exception that happen here, failing notifications
+                # are no reason to crash the entire thing
+                pass
