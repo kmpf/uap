@@ -4,6 +4,7 @@ import sys
 sys.path.append('./include')
 import pipeline
 import copy
+import os
 import re
 import subprocess
 import yaml
