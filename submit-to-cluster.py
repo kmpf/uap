@@ -41,9 +41,9 @@ for task in p.all_tasks:
 
 job_id_for_task = {}
 
-def submit_task(task, dependent_tasks = None):
+def submit_task(task, dependent_tasks = []):
     print("Submitting task " + str(task) + " with " + str(task.step._cores) + " cores.")
-    if dependent_tasks != None:
+    if len(dependent_tasks) > 0:
         print("...with dependent tasks: " + str(dependent_tasks))
     for path in task.output_files():
         if not path in file_hash:
@@ -67,7 +67,7 @@ def submit_task(task, dependent_tasks = None):
     short_task_id = '_'.join(temp)[0:15]
 
     qsub_args = ['qsub', '-N', short_task_id]
-    if dependent_tasks != None and len(dependent_tasks) > 0:
+    if len(dependent_tasks) > 0:
         qsub_args.append("-hold_jid")
         qsub_args.append(','.join(dependent_tasks))
 
@@ -119,11 +119,12 @@ while len(tasks_left) > 0:
         print("Error: Unable to find next task while there are still tasks left, giving up :(")
         exit(1)
 
-    if len(dependent_tasks) == 0:
-        dependent_tasks = None
-    else:
-        dependent_tasks = [job_id_for_task[_] for _ in dependent_tasks]
+    jids = []
+    if len(dependent_tasks) > 0:
+        for _ in dependent_tasks:
+            if _ in job_id_for_task:
+                jids.append(job_id_for_task[_])
 
-    submit_task(next_task, dependent_tasks)
+    submit_task(next_task, jids)
 
 print("All tasks submitted successfully.")
