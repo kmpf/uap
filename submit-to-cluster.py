@@ -72,6 +72,12 @@ def submit_task(task, dependent_tasks = []):
     qsub_args.append(os.path.join(task.step.get_output_directory(), '.' + short_task_id + '.stderr'))
     qsub_args.append('-o')
     qsub_args.append(os.path.join(task.step.get_output_directory(), '.' + short_task_id + '.stdout'))
+
+    # create the output directory if it doesn't exist yet
+    # this is necessary here because otherwise, qsub will complain
+    if not os.path.isdir(task.step.get_output_directory()):
+        os.makedirs(task.step.get_output_directory())
+
     if len(dependent_tasks) > 0:
         qsub_args.append("-hold_jid")
         qsub_args.append(','.join(dependent_tasks))
