@@ -65,13 +65,14 @@ def submit_task(task, dependent_tasks = []):
     temp = str(task).split('/')
     for _ in range(len(temp) - 1):
         temp[_] = temp[_][0]
-    short_task_id = (''.join(temp[0:-1]) + '_' + temp[-1])[0:15]
+    long_task_id = ''.join(temp[0:-1]) + '_' + temp[-1]
+    short_task_id = long_task_id[0:15]
 
     qsub_args = ['qsub', '-N', short_task_id]
     qsub_args.append('-e')
-    qsub_args.append(os.path.join(task.step.get_output_directory(), '.' + short_task_id + '.stderr'))
+    qsub_args.append(os.path.join(task.step.get_output_directory(), '.' + long_task_id + '.stderr'))
     qsub_args.append('-o')
-    qsub_args.append(os.path.join(task.step.get_output_directory(), '.' + short_task_id + '.stdout'))
+    qsub_args.append(os.path.join(task.step.get_output_directory(), '.' + long_task_id + '.stdout'))
 
     # create the output directory if it doesn't exist yet
     # this is necessary here because otherwise, qsub will complain
