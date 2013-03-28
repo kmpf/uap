@@ -10,7 +10,11 @@ class Head(AbstractStep):
         self.set_cores(6)
 
     def setup_runs(self, input_run_info):
-        #print(yaml.dump(input_run_info, default_flow_style = False))
+
+        # make sure tools are available
+        self.tool('pigz')
+        self.tool('head')
+
         output_run_info = {}
         for input_run_id in input_run_info.keys():
             output_run_info[input_run_id] = { 'output_files': {} }
@@ -29,11 +33,12 @@ class Head(AbstractStep):
                 inpath = inpaths[0]
 
                 # set up processes
-                pigz1 = [self.pipeline.config['tools']['pigz']['path'], '-d', '-c', inpath]
+                pigz1 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '1',
+                    '-d', '-c', inpath]
 
                 head = ['head', '-n', '1000']
 
-                pigz2 = [self.pipeline.config['tools']['pigz']['path'],
+                pigz2 = [self.tool('pigz'),
                     '--blocksize', '4096', '--processes', '3', '-c']
 
                 # create the pipeline and run it

@@ -8,6 +8,7 @@ import json
 import os
 import random
 import string
+import subprocess
 import traceback
 import yaml
 
@@ -200,6 +201,14 @@ class AbstractStep(object):
                 for out_path in run_info['output_files'][annotation].keys():
                     self.pipeline.dry_run_cache[out_path] = datetime.datetime.now()
         else:
+            # now determine the Git hash of the repository
+            git_hash_tag = subprocess.check_output(['git', 'describe', '--all', '--dirty', '--long']).strip()
+            if '-dirty' in git_hash_tag:
+                if not '--even-if-dirty' in sys.argv:
+                    print("The repository has uncommitted changes, which is why we will exit right now.")
+                    print("If this is not a production environment, you can skip this test by specifying --even-if-dirty on the command line.")
+                    exit(1)
+
             # create the output directory if it doesn't exist yet
             if not os.path.isdir(self.get_output_directory()):
                 os.makedirs(self.get_output_directory())
@@ -235,6 +244,7 @@ class AbstractStep(object):
             log['step']['id'] = self.get_step_id()
             log['run_info'] = self.get_run_info()
             log['config'] = self.pipeline.config
+            log['git_hash_tag'] = git_hash_tag
 
             annotation_path = os.path.join(self.get_output_directory(), 'annotation-' + hashlib.sha1(json.dumps(log, sort_keys=True)).hexdigest()[0:8] + '.yaml')
             with open(annotation_path, 'w') as f:

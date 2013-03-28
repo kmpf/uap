@@ -8,6 +8,9 @@ class FixCutadapt(AbstractStep):
         self.set_cores(9)
 
     def setup_runs(self, input_run_info_complete):
+        # make sure tools are available
+        self.tool('pigz')
+
         output_run_info = {}
         for input_run_id, input_run_info in input_run_info_complete.items():
             new_key = input_run_id.replace('-R1', '').replace('-R2', '')

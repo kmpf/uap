@@ -1,6 +1,7 @@
 import sys
 from abstract_step import *
 import pipeline
+import re
 import subprocess
 import yaml
 import unix_pipeline
@@ -11,6 +12,10 @@ class Cutadapt(AbstractStep):
         self.set_cores(6)
 
     def setup_runs(self, complete_input_run_info):
+        # make sure tools are available
+        self.tool('pigz')
+        self.tool('cutadapt')
+
         output_run_info = {}
         for input_run_id, input_run_info in complete_input_run_info.items():
             for in_path in sorted(input_run_info['output_files']['reads'].keys()):
@@ -33,6 +38,20 @@ class Cutadapt(AbstractStep):
                         }
                     }
 
+                # find adapter
+                adapter = self.options['adapter-' + which]
+
+                # insert correct index if necessary
+                if '((INDEX))' in adapter:
+                    # TODO: this is weird, we need something more general
+                    sample_info = self.pipeline.all_samples[input_run_id]
+                    index = sample_info['lanes'].values()[0]['Index']
+                    adapter = adapter.replace('((INDEX))', index)
+
+                if re.search('^[ACGT]+$', adapter) == None:
+                    raise StandardError("Unable to come up with a legit-looking adapter: " + adapter)
+                output_run_info[output_run_id]['info']['adapter'] = adapter
+
                 for t in [('reads', input_run_id + '-cutadapt-' + which + '.fastq.gz'),
                         ('log', input_run_id + '-cutadapt-' + which + '-log.txt')]:
                     pathkey = t[0]
@@ -50,27 +69,11 @@ class Cutadapt(AbstractStep):
         if len(run_info['output_files']['reads']) != 1:
             raise StandardError("Expected a single output file.")
 
-        # find adapter
-        adapter = ''
-        if run_info['info']['read'] == 'R1':
-            adapter = self.options['adapter-R1']
-        elif run_info['info']['read'] == 'R2':
-            adapter = self.options['adapter-R2']
-        else:
-            raise StandardError("Expected R1 or R2.")
-
-        # insert correct index if necessary
-        if '((INDEX))' in adapter:
-            # TODO: this is weird, we need something more general
-            sample_info = self.pipeline.all_samples[run_id[0:-3]]
-            index = sample_info['lanes'].values()[0]['Index']
-            adapter = adapter.replace('((INDEX))', index)
-
         # set up processes
-        pigz1 = [self.tool('pigz'), '-d', '-c']
+        pigz1 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '1', '-d', '-c']
         pigz1.extend(*sorted(run_info['output_files']['reads'].values()))
 
-        cutadapt = [self.tool('cutadapt'), '-a', adapter, '-']
+        cutadapt = [self.tool('cutadapt'), '-a', run_info['info']['adapter'], '-']
 
         pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '3', '-c']
 
