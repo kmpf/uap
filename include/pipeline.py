@@ -89,6 +89,9 @@ class Pipeline(object):
         if not os.path.exists(self.config['destinationPath']):
             raise ConfigurationException("Destination path does not exist: " + self.config['destinationPath'])
 
+        if not os.path.exists("out"):
+            os.symlink(self.config['destinationPath'], 'out')
+
         self.gather_information()
         self.build_steps()
 
