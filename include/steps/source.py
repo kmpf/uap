@@ -10,7 +10,7 @@ class Source(AbstractStep):
     def setup_runs(self, input_run_info):
         output_run_info = {}
         for key, sample_info in self.pipeline.all_samples.items():
-            input_files = sorted(glob.glob(os.path.join(sample_info['path'], '*.fastq.gz')))
+            input_files = sample_info['files']
             output_run_info[key] = { 'output_files': { 'reads' : {} } }
             for path in input_files:
                 output_run_info[key]['output_files']['reads'][path] = []

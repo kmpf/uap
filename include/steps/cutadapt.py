@@ -21,12 +21,12 @@ class Cutadapt(AbstractStep):
             for in_path in sorted(input_run_info['output_files']['reads'].keys()):
                 # determine which read this is (R1 or R2)
                 which = None
-                if '_R1_' in in_path:
+                if '_R1' in in_path:
                     which = 'R1'
-                elif '_R2_' in in_path:
+                elif '_R2' in in_path:
                     which = 'R2'
                 else:
-                    raise StandardError("Expected input files with _R1_ or _R2_.")
+                    raise StandardError("Expected input files with _R1 or _R2.")
 
                 output_run_id = input_run_id + '-' + which
 
@@ -43,9 +43,8 @@ class Cutadapt(AbstractStep):
 
                 # insert correct index if necessary
                 if '((INDEX))' in adapter:
-                    # TODO: this is weird, we need something more general
                     sample_info = self.pipeline.all_samples[input_run_id]
-                    index = sample_info['lanes'].values()[0]['Index']
+                    index = sample_info['index']
                     adapter = adapter.replace('((INDEX))', index)
 
                 if re.search('^[ACGT]+$', adapter) == None:

@@ -11,6 +11,7 @@ import sys
 import yaml
 
 import abstract_step
+import abstract_source
 import task as task_module
 
 # an enum class, yanked from http://stackoverflow.com/questions/36932/whats-the-best-way-to-implement-an-enum-in-python
@@ -88,55 +89,25 @@ class Pipeline(object):
     def read_config(self):
         #print >> sys.stderr, "Reading configuration..."
         self.config = yaml.load(open('config.yaml'))
-        if not 'sourcePaths' in self.config:
-            raise ConfigurationException("Missing key: sourcePaths")
-        for path in self.config['sourcePaths']:
-            if not os.path.exists(path):
-                raise ConfigurationException("Source path does not exist: " + path)
-        if not 'destinationPath' in self.config:
-            raise ConfigurationException("Missing key: destinationPath")
-        if not os.path.exists(self.config['destinationPath']):
-            raise ConfigurationException("Destination path does not exist: " + self.config['destinationPath'])
+        if not 'sources' in self.config:
+            raise ConfigurationException("Missing key: sources")
+        for path in self.config['sources']:
+            for source in self.config['sources']:
+                key = source.keys()[0]
+                source_instance = abstract_source.get_source_class_for_key(key)(self, source[key])
+                for sample_id, sample_info in source_instance.samples.items():
+                    if sample_id in self.all_samples:
+                        raise ConfigurationException("Sample appears multiple times in sources: " + sample_id)
+                    self.all_samples[sample_id] = copy.deepcopy(sample_info)
+        if not 'destination_path' in self.config:
+            raise ConfigurationException("Missing key: destination_path")
+        if not os.path.exists(self.config['destination_path']):
+            raise ConfigurationException("Destination path does not exist: " + self.config['destination_path'])
 
         if not os.path.exists("out"):
-            os.symlink(self.config['destinationPath'], 'out')
+            os.symlink(self.config['destination_path'], 'out')
 
-        self.gather_information()
         self.build_steps()
-
-    # for every source path, look for samples in [path]/Unaligned/Project_*/Sample_*
-    def gather_information(self):
-        #print >> sys.stderr, "Gathering information..."
-
-        # find all samples
-        self.all_samples = {}
-        for path in self.config['sourcePaths']:
-            if not os.path.exists(path):
-                raise ConfigurationException("Source path does not exist: " + path)
-            for samplePath in glob.glob(os.path.join(path, 'Unaligned', 'Project_*', 'Sample_*')):
-                sample_name = os.path.basename(samplePath).replace('Sample_', '')
-                if sample_name in self.all_samples:
-                    raise ConfigurationException("Duplicate sample: " + sample_name)
-                self.all_samples[sample_name] = {}
-                self.all_samples[sample_name]['path'] = samplePath
-
-        # read sample sheets
-        for sample_name, sample in self.all_samples.items():
-            sample_sheet_path = os.path.join(sample['path'], 'SampleSheet.csv')
-            reader = csv.DictReader(open(sample_sheet_path))
-            self.all_samples[sample_name]['lanes'] = {}
-            for row in reader:
-                self.all_samples[sample_name]['lanes'][row['Lane']] = row
-
-        # remove all but one sample
-        '''
-        if True:
-            print("Ignoring all but one sample")
-            if len(self.all_samples) > 1:
-                sample_names = self.all_samples.keys()
-                for x in sample_names[0:-1]:
-                    self.all_samples.pop(x, None)
-        '''
 
     def build_steps(self):
         self.steps = []

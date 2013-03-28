@@ -136,12 +136,12 @@ class AbstractStep(object):
         dependency_path = self.get_dependency_path(True)
         if (self.pipeline.run_mode == self.pipeline.run_modes.TEST_RUN):
             dependency_path.insert(0, 'test')
-        return os.path.join(self.pipeline.config['destinationPath'], *dependency_path)
+        return os.path.join(self.pipeline.config['destination_path'], *dependency_path)
 
     def get_temp_output_directory(self):
         while True:
             token = ''.join(random.choice(string.ascii_lowercase + string.digits) for x in range(8))
-            path = os.path.join(self.pipeline.config['destinationPath'], 'temp', 'temp-' + token)
+            path = os.path.join(self.pipeline.config['destination_path'], 'temp', 'temp-' + token)
             if not os.path.exists(path):
                 return path
 
@@ -237,6 +237,7 @@ class AbstractStep(object):
 
             # now write the annotation
             log = {}
+            log['all_samples'] = self.pipeline.all_samples
             log['step'] = {}
             log['step']['options'] = self.options
             log['step']['id'] = self.get_step_id()
