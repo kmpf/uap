@@ -240,11 +240,13 @@ class AbstractStep(object):
             log['run_info'] = self.get_run_info()
             log['config'] = self.pipeline.config
 
+            '''
             for annotation in temp_run_info['output_files'].keys():
                 for out_path in temp_run_info['output_files'][annotation].keys():
                     annotation_path = os.path.join(self.get_output_directory(), os.path.basename(out_path)) + '.annotation.yaml'
                     with open(annotation_path, 'w') as f:
                         f.write(yaml.dump(log, default_flow_style = False))
+            '''
 
             # finally, remove the temporary directory if it's empty
             try:
