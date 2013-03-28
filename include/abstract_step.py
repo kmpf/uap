@@ -216,12 +216,9 @@ class AbstractStep(object):
 
             temp_run_info = fix_dict(temp_run_info, fix_func_dict_subst, temp_paths)
 
-            start_time = datetime.datetime.now()
-
             print("executing " + self.get_step_id() + "/" + run_id)
             self.execute(run_id, temp_run_info)
 
-            end_time = datetime.datetime.now()
             # if we're here, we can assume the step has finished successfully
             # now rename the output files (move from temp directory to
             # destination directory)
@@ -233,20 +230,15 @@ class AbstractStep(object):
 
             # now write the annotation
             log = {}
-            log['start_time'] = start_time
-            log['end_time'] = end_time
-            log['step_options'] = self.options
-            log['run_id'] = run_id
+            log['step'] = {}
+            log['step']['options'] = self.options
+            log['step']['id'] = self.get_step_id()
             log['run_info'] = self.get_run_info()
             log['config'] = self.pipeline.config
 
-            '''
-            for annotation in temp_run_info['output_files'].keys():
-                for out_path in temp_run_info['output_files'][annotation].keys():
-                    annotation_path = os.path.join(self.get_output_directory(), os.path.basename(out_path)) + '.annotation.yaml'
-                    with open(annotation_path, 'w') as f:
-                        f.write(yaml.dump(log, default_flow_style = False))
-            '''
+            annotation_path = os.path.join(self.get_output_directory(), 'annotation-' + hashlib.sha1(json.dumps(log, sort_keys=True)).hexdigest()[0:8] + '.yaml')
+            with open(annotation_path, 'w') as f:
+                f.write(yaml.dump(log, default_flow_style = False))
 
             # finally, remove the temporary directory if it's empty
             try:
