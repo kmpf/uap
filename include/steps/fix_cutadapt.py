@@ -57,4 +57,9 @@ class FixCutadapt(AbstractStep):
                 wcount += 1
             rcount += 1
 
+        fout1.close()
+        p3.wait()
+        fout2.close()
+        p4.wait()
+
         print("Read " + str(rcount) + " entries, wrote " + str(wcount) + " entries.")
