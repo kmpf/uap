@@ -3,8 +3,8 @@ from abstract_step import *
 import pipeline
 import re
 import subprocess
-import yaml
 import unix_pipeline
+import yaml
 
 class Cutadapt(AbstractStep):
     def __init__(self, pipeline):

@@ -245,7 +245,10 @@ class Pipeline(object):
             exit_code = None
             with open(os.devnull, 'w') as devnull:
                 exit_code = subprocess.call(command, stdout = devnull, stderr = devnull)
-            if exit_code != 0:
+            expected_exit_code = 0
+            if 'exit_code' in info:
+                expected_exit_code = info['exit_code']
+            if exit_code != expected_exit_code:
                 raise ConfigurationException("Tool check failed for " + tool_id + ": " + ' '.join(command))
 
     # returns a short description of the configured pipeline
