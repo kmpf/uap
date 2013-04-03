@@ -13,13 +13,6 @@ original_argv = copy.copy(sys.argv)
 
 p = pipeline.Pipeline()
 
-if '--run-this' in sys.argv:
-    # execute the specified task
-    task_id = sys.argv[sys.argv.index('--run-this') + 1]
-    task = p.task_for_task_id[task_id]
-    task.run()
-    exit(0)
-
 tasks_left = []
 
 # a hash of files which are already there or will be there once submitted jobs
@@ -42,10 +35,42 @@ for task in p.all_tasks:
 
 job_id_for_task = {}
 
-def submit_task(task, dependent_tasks = []):
-    print("Submitting task " + str(task) + " with " + str(task.step._cores) + " cores.")
-    if len(dependent_tasks) > 0:
-        print("...with dependent tasks: " + str(dependent_tasks))
+quotas = dict()
+quotas['default'] = 5
+
+# read quotas
+# -> for every step, a quota can be defined (with a default quota in place for steps
+#    which have no defined quota)
+# -> during submitting, there is a list of N previous job ids in which every item
+#    holds one of the previously submitted tasks
+if os.path.exists("quotas.yaml"):
+    all_quotas = yaml.load(open("quotas.yaml", 'r'))
+    hostname = subprocess.check_output(['hostname']).strip()
+    for key in all_quotas.keys():
+        if re.match(key, hostname):
+            print("Applying quotas for " + hostname + ".")
+            quotas = all_quotas[key]
+
+if not 'default' in quotas:
+    raise StandardError("No default quota defined for this host.")
+
+quota_jids = {}
+quota_offset = {}
+
+def submit_task(task, dependent_tasks_in = []):
+    dependent_tasks = copy.copy(dependent_tasks_in)
+
+    step_name = next_task.step.step_name
+    if not step_name in quota_jids:
+        size = quotas[step_name] if step_name in quotas else quotas['default']
+        quota_jids[step_name] = [None for _ in range(size)]
+        quota_offset[step_name] = 0
+
+    quota_predecessor = quota_jids[step_name][quota_offset[step_name]]
+    if quota_predecessor:
+        dependent_tasks.append(quota_predecessor)
+
+    sys.stdout.write("Submitting task " + str(task) + " with " + str(task.step._cores) + " cores => ")
     for path in task.output_files():
         if not path in file_hash:
             file_hash[path] = []
@@ -92,8 +117,16 @@ def submit_task(task, dependent_tasks = []):
     if job_id == None or len(job_id) == 0:
         raise StandardError("Error: We couldn't parse a job id from this:\n" + response)
 
+    quota_jids[step_name][quota_offset[step_name]] = job_id
+    quota_offset[step_name] = (quota_offset[step_name] + 1) % len(quota_jids[step_name])
+
     job_id_for_task[str(task)] = job_id
     tasks_left.remove(task)
+
+    print(job_id)
+    if len(dependent_tasks) > 0:
+        print(" - with dependent tasks: " + ', '.join(dependent_tasks))
+
 
 # first submit all tasks which are ready as per the file system
 while len(tasks_left) > 0:
