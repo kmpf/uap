@@ -1,6 +1,5 @@
 python_env
 config.yaml
 *.pyc
-doc/documentation.xhtml
 doc/cache
 out

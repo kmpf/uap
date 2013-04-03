@@ -300,6 +300,7 @@ class AbstractStep(object):
             log['run_info'] = self.get_run_info()
             log['config'] = self.pipeline.config
             log['git_hash_tag'] = self.pipeline.git_hash_tag
+            log['tool_versions'] = self.pipeline.tool_versions
 
             annotation_path = os.path.join(self.get_output_directory(), 'annotation-' + hashlib.sha1(json.dumps(log, sort_keys=True)).hexdigest()[0:8] + '.yaml')
             with open(annotation_path, 'w') as f:

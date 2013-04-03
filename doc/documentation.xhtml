@@ -1,0 +1,458 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>RNASeq Pipeline Documentation</title>
+<style type='text/css'>
+body {
+    font-family: Arial;
+    font-size: 12pt;
+    background-color: #f8f8f8;
+    padding: 0;
+    margin: 0;
+}
+
+#content {
+    background-color: #fff;
+    margin-left: auto;
+    margin-right: auto;
+    padding-right: 2em;
+    padding-left: 19em;
+    padding-top: 1.4em;
+    padding-bottom: 1em;
+}
+
+div.attention {
+    padding-left: 70px;
+    background: url(dialog-warning.png) 11px 10px no-repeat;
+    border-top: 1px solid #cc0000;
+    border-bottom: 1px solid #cc0000;
+    background-color: #f4c9c5;
+    padding-right: 1em;
+}
+
+div.background {
+    padding-left: 70px;
+    background: url(help-browser.png) 11px 10px no-repeat;
+    border-top: 1px solid #3465a4;
+    border-bottom: 1px solid #3465a4;
+    background-color: #ccd8e8;
+    padding-right: 1em;
+}
+
+@media print
+{
+    a {
+        color: black!important;
+    }
+    body {
+        background-color: white;
+    }
+    #content {
+        border: 0;
+        -moz-box-shadow: none;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+        padding: 0;
+    }
+    table {
+        -moz-box-shadow: none;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+    }
+    listing {
+        -moz-box-shadow: none;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+    }
+    .toc {
+        display: none!important;
+    }
+
+    code {
+        background-color: none!important;
+        border: none!important;
+        padding-left: 0!important;
+        padding-right: 0!important;
+    }
+}
+
+dd {
+    margin-bottom: 0.5em;
+}
+
+code {
+    background-color:rgba(0,0,0,0.05);
+    border: 1px solid rgba(0,0,0,0.2);
+    font-size: 85%;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    border-radius: 0.3em;
+    margin-bottom: 1px;
+    line-height: 150%;
+}
+
+code.highlight {
+    background-color: #fdf3a7;
+    border: 1px solid #edd400;
+}
+
+table {
+    -moz-box-shadow: 2px 2px 8px #aaa;
+    -webkit-box-shadow: 2px 2px 8px #aaa;
+    box-shadow: 2px 2px 8px #aaa;
+    margin-bottom: 1.5em;
+    border-collapse: collapse;
+}
+
+table.noborder {
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    margin-bottom: 1.5em;
+    border-collapse: collapse;
+}
+
+table th
+{
+    text-align: left;
+    font-weight: bold;
+    padding: 0.2em 0.8em 0.2em 0.8em;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    vertical-align: top;
+}
+
+table th.nobold
+{
+    font-weight: normal;
+    vertical-align: top;
+}
+
+table td
+{
+    padding: 0.2em 0.8em 0.2em 0.8em;
+    border: 1px solid #ddd;
+    vertical-align: top;
+}
+
+table.noborder td
+{
+    border: 0;
+}
+
+listing
+{
+    background-color: #f8f8f8;
+    white-space: pre;
+    border: 1px solid #888;
+    -moz-box-shadow: 2px 2px 8px #aaa;
+    -webkit-box-shadow: 2px 2px 8px #aaa;
+    box-shadow: 2px 2px 8px #aaa;
+    margin-bottom: 1.5em;
+    padding: 1em;
+    border-radius: 8px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+    font-size: 90%;
+}
+
+.toc
+{
+    font-size: 80%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 17em;
+    background-color: #f8f8f8;
+    border-right: 1px solid #aaa;
+    height: 100%;
+    -moz-box-shadow: 2px 2px 8px #aaa;
+    -webkit-box-shadow: 2px 2px 8px #aaa;
+    box-shadow: 2px 2px 8px #aaa;
+    padding: 1em;
+    padding-bottom: 1.5em;
+    padding-left: 2em;
+    padding-right: 2em;
+    overflow: auto;
+}
+
+p {
+    text-align: justify;
+}
+
+dt {
+    margin-bottom: 0.4em;
+}
+
+.toc ul
+{
+    list-style: none;
+    padding-left: 0;
+}
+
+.toc ul li.first
+{
+    padding-left: 0em;
+    font-weight: bold;
+    margin-bottom: 1em;
+}
+
+.toc ul li.later
+{
+    font-weight: normal;
+}
+
+.toc ul > li > ul > li > ul > li.later
+{
+    padding-left: 1.5em;
+}
+
+.toc a
+{
+    color: #555753;
+}
+
+.toc a:visited
+{
+    color: #555753;
+}
+
+div.test {
+    background-color: #99b2d1;
+    border-top: 1px solid #3465a4;
+    border-bottom: 1px solid #3465a4;
+    padding: 0.5em;
+    padding-left: 1em;
+    padding-right: 1em;
+    text-align: justify;
+}
+
+a {
+    color: #204a87;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a:visited {
+    color: #204a87;
+}
+
+.title {
+    font-weight: bold;
+    font-size: 22pt;
+    margin-bottom: 1em;
+}
+
+h1 {
+    font-size: 18pt;
+}
+
+h2 {
+    font-size: 16pt;
+}
+
+h3 {
+    font-size: 14pt;
+}
+
+h4 {
+    font-size: 12pt;
+}
+
+h5 {
+    font-size: 12pt;
+    font-weight: normal;
+    font-style: italic;
+}
+</style>
+</head>
+
+<body>
+<div id='content'>
+<div class='title'>RNASeq pipeline documentation</div>
+<div class='toc'>
+<ul>
+	<li class="first">1&nbsp;&nbsp;<a href='#h1'>Introduction</a></li>
+	<li class="first">2&nbsp;&nbsp;<a href='#h2'>Setup</a>
+	<ul>
+		<li class="later">2.1&nbsp;&nbsp;<a href='#h3'>The configuration file</a></li>
+		<li class="later">2.2&nbsp;&nbsp;<a href='#h4'>Sources</a>
+		<ul>
+			<li class="later">2.2.1&nbsp;&nbsp;<a href='#h5'>Run folder source</a></li>
+			<li class="later">2.2.2&nbsp;&nbsp;<a href='#h6'><span class="caps">FASTQ</span> source</a></li>
+		</ul></li>
+		<li class="later">2.3&nbsp;&nbsp;<a href='#h7'>Steps</a>
+		<ul>
+			<li class="later">2.3.1&nbsp;&nbsp;<a href='#h8'>break</a></li>
+			<li class="later">2.3.2&nbsp;&nbsp;<a href='#h9'>head</a></li>
+		</ul></li>
+		<li class="later">2.4&nbsp;&nbsp;<a href='#h10'>Tools</a></li>
+	</ul></li>
+	<li class="first">3&nbsp;&nbsp;<a href='#h11'>Scripts</a>
+	<ul>
+		<li class="later">3.1&nbsp;&nbsp;<a href='#h12'>status.py</a></li>
+		<li class="later">3.2&nbsp;&nbsp;<a href='#h13'>run-locally.py</a></li>
+		<li class="later">3.3&nbsp;&nbsp;<a href='#h14'>run-on-cluster.py</a></li>
+	</ul></li>
+	<li class="first">4&nbsp;&nbsp;<a href='#h15'>Extending the pipeline</a></li>
+	<li class="first">5&nbsp;&nbsp;<a href='#h16'>Documentation</a>
+	<ul>
+		<li class="later">5.1&nbsp;&nbsp;<a href='#h17'>Steps, runs, and tasks</a></li>
+	</ul></li>
+</ul>
+</div>
+<h1 id="h1">1&nbsp;&nbsp;Introduction</h1>
+<p>The aim of this data processing pipeline is to enable simple and robust bioinformatics data evaluation.</p>
+<p><strong>Simplicity:</strong></p>
+<ul>
+	<li>The entire processing pipeline is described via a config file. Step are defined in a tree, and output files are written into a directory structure mirroring this tree.</li>
+	<li>To add a new processing step, a single Python file must be placed in <code>include/step</code> which defines a class with two functions, one for planning all jobs based on a list of input files or runs and possibly additional information from previous steps and another function for running a specific job.</li>
+</ul>
+<p><strong>Robustness:</strong></p>
+<ul>
+	<li>All steps write their output files to a temporary location (a fact which a step is not aware of). Only if a step has completed successfully, the output files are copied to the correct output directory.</li>
+	<li>The output directory names are suffixed with a eight-character hashtag which mirrors the options specified for the step.</li>
+	<li>Processing can be aborted and continued from the command line at any time. This way, cluster failures are less critical.</li>
+	<li>Comprehensive annotations are written to the output directories, allowing for later investigation.</li>
+	<li>Errors are caught as early as possible. Tools are checked for availability, the entire processing pipeline is calculated in advance.</li>
+</ul>
+<p>A pipeline is defined by two aspects:</p>
+<ul>
+	<li>the steps it carries out, with dependencies defined via a tree</li>
+	<li>its input samples</li>
+</ul>
+<p>The combination of <em>steps</em> and <em>samples</em> result in a list of <em>tasks</em>, which can be executed sequentially or can be submitted to a cluster.</p>
+<h1 id="h2">2&nbsp;&nbsp;Setup</h1>
+<p>After cloning the repository, run the bootstrapping script to create the required Python environment (which will be located in <code>./python_env/</code>):</p>
+<listing>$ ./bootstrap.sh
+</listing><p>There&#8217;s no harm in accidentally running this script multiple times.</p>
+<h2 id="h3">2.1&nbsp;&nbsp;The configuration file</h2>
+<p>Next, edit <code>config.sample.yaml</code> and save it as <code>config.yaml</code>. Although writing the configuration may seem a bit complicated, it pays off later because further interaction with the pipeline is quite simple. Here is a sample configuration:</p>
+<listing># This is the rnaseq-pipeline configuration file.
+sources:
+   - run_folder_source: { path: /home/michael/Desktop/rnaseq-pipeline/in }
+destination_path: /home/michael/Desktop/rnaseq-pipeline/out
+steps: |
+    - cutadapt {
+        adapter-R1: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG"
+        adapter-R2: "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT"
+      }
+        - fix_cutadapt
+tools:
+    cutadapt:
+        path: '/home/michael/Desktop/rnaseq-pipeline/tools/cutadapt-1.2.1/bin/cutadapt'
+        get_version: '--version'
+    pigz:
+        path: 'pigz'
+        get_version: '--version'
+    dd:
+        path: 'dd'
+        get_version: '--version'
+</listing><p>In the configuration, the following aspects of the pipeline are defined:</p>
+<ul>
+	<li><code>sources</code> &#8211; there can be multiple sources of different types:
+	<ul>
+		<li>run folders</li>
+		<li>plain fastq.gz files with additional information</li>
+	</ul></li>
+	<li><code>destination_path</code> &#8211; this is where result files, annotations and temporary files are written to</li>
+	<li><code>steps</code> &#8211; defines the processing step arranged in a tree</li>
+	<li><code>tools</code> &#8211; defines all tools used in the pipeline and how to determine their versions (for later reference)</li>
+</ul>
+<h2 id="h4">2.2&nbsp;&nbsp;Sources</h2>
+<p>In the following, the different types of sources are described in detail.</p>
+<h3 id="h5">2.2.1&nbsp;&nbsp;Run folder source</h3>
+<p>Here&#8217;s an example:</p>
+<listing>- run_folder_source: { path: /home/michael/Desktop/rnaseq-pipeline/in }
+</listing><p>This source looks for fastq.gz files in <code>path/Unaligned/Project_*/Sample_*</code> and pulls additional information from <span class="caps">CSV</span> sample sheets it finds. It also makes sure that index information for all samples is coherent and unambiguous.</p>
+<h3 id="h6">2.2.2&nbsp;&nbsp;<span class="caps">FASTQ</span> source</h3>
+<p>Here&#8217;s an example:</p>
+<listing>- fastq_source:
+    pattern: /data/original-fastq/&#42;.fastq.gz
+    group: (Sample_COPD_\d+)_R[12].fastq.gz
+    indices: copd-barcodes.csv
+</listing><p>Input files are collected as defined by <code>pattern</code> and grouped into samples according to <code>group</code>, which is a regular expression. All groups defined in the regex <code>(  )</code> are used to construct the sample name, here it is used to declare that both R1 and R2 files belong to the same sample. Indices are read from the <span class="caps">CSV</span> file defined by <code>indices</code>.</p>
+<h2 id="h7">2.3&nbsp;&nbsp;Steps</h2>
+<p>Steps are defined as a tree. However, the syntax is a bit peculiar: The <code>|</code> after <code>steps:</code> defines a string spanning multiple lines in which line breaks and indentation is maintained (this is <span class="caps">YAML</span> syntax). The string is later parsed by the pipeline and the most important parts are the individual steps which are to be performed. The relationship betweens steps is declared via indentation.</p>
+<div class='background'>
+<p>Why do we need the | symbol in the steps definition? Neither the list nor the dictionary syntax allow for a concise definition of a step tree with options. Think of the step definition as a nested list with an option hash attached to every item.</p>
+</div>
+<p>Steps may have options, which must be placed in between <code>{</code> curly braces <code>}</code> . Options can be specified on a single line (in this case, individual key/value pairs must be separated by comma) or may span multiple lines, following standard <span class="caps">YAML</span> block syntax.</p>
+<h3 id="h8">2.3.1&nbsp;&nbsp;break</h3>
+<p>There&#8217;s a special step called <code>break</code>. It may be placed multiple times in the tree and it cuts off further processing from where it is. This may be helpful for building up a pipeline step by step.</p>
+<h3 id="h9">2.3.2&nbsp;&nbsp;head</h3>
+<p>The <code>head</code> step produces a shortened version of every input file.</p>
+<p>Parameters:</p>
+<ul>
+	<li><code>n</code> (optional) &#8211; number of lines (default: 1000)</li>
+</ul>
+<h2 id="h10">2.4&nbsp;&nbsp;Tools</h2>
+<p>Tools are also specified in the config file, along with a command line parameter which is used by the pipeline to both test whether the tool is available and to record the version in log files.</p>
+<h1 id="h11">3&nbsp;&nbsp;Scripts</h1>
+<p>Once the project is set up, there are several scripts which can be used to execute and monitor the pipeline. There are a couple of global command line parameters which are valid for all scripts:</p>
+<dl>
+<dt><code>--test-run</code>:</dt>
+<dd>When this parameter is specified, a <code>head</code> step is placed before all first-level steps in the step tree, which returns the first 1000 lines of every input file. That way, a pipeline can be tested very quickly with a small input data set. Also, output files will go to the output directory specified in the configuration plus <code>/test</code>.</dd>
+</dl>
+<h2 id="h12">3.1&nbsp;&nbsp;status.py</h2>
+<p>The status script shows you whether the configuration is in a good state (if it doesn&#8217;t complain, it&#8217;s good) and which tasks are resulting from the configuration and the input files:</p>
+<listing>$ ./status.py
+[r] cutadapt/RIB0000784-R1
+[r] cutadapt/RIB0000784-R2
+[r] cutadapt/RIB0000794-R1
+[r] cutadapt/RIB0000794-R2
+[r] cutadapt/RIB0000770-R2
+[r] cutadapt/RIB0000770-R1
+[r] cutadapt/RIB0000757-R1
+[r] cutadapt/RIB0000757-R2
+[r] cutadapt/RIB0000777-R2
+[r] cutadapt/RIB0000778-R2
+[r] cutadapt/RIB0000778-R1
+[r] cutadapt/RIB0000777-R1
+[r] cutadapt/RIB0000740-R1
+[r] cutadapt/RIB0000740-R2
+[r] cutadapt/RIB0000786-R2
+[r] cutadapt/RIB0000786-R1
+[w] cutadapt/fix_cutadapt/RIB0000757
+[w] cutadapt/fix_cutadapt/RIB0000770
+[w] cutadapt/fix_cutadapt/RIB0000740
+[w] cutadapt/fix_cutadapt/RIB0000777
+[w] cutadapt/fix_cutadapt/RIB0000778
+[w] cutadapt/fix_cutadapt/RIB0000794
+[w] cutadapt/fix_cutadapt/RIB0000784
+[w] cutadapt/fix_cutadapt/RIB0000786
+tasks: 24 total, 16 ready, 8 waiting
+</listing><p>The status script shows which tasks are ready to run, waiting because input files are still missing, or finished.</p>
+<h2 id="h13">3.2&nbsp;&nbsp;run-locally.py</h2>
+<p>The <code>run-locally.py</code> script runs all tasks sequentially on the local machine. Feel free to cancel this script at any time, it won&#8217;t put your project in a confused state.</p>
+<h2 id="h14">3.3&nbsp;&nbsp;run-on-cluster.py</h2>
+<p>The <code>run-on-cluster.py</code> script determines which tasks still have to carried out and submits the jobs to a GridEngine cluster by calling <code>qsub</code>. Dependencies are defined via the <code>-hold_jid</code> option, which means that jobs that depend on other jobs won&#8217;t get scheduled until their dependencies have been satisfied.</p>
+<h1 id="h15">4&nbsp;&nbsp;Extending the pipeline</h1>
+<h1 id="h16">5&nbsp;&nbsp;Documentation</h1>
+<p>AbstractStep:</p>
+<ul>
+	<li>has 0 or 1 dependency to another step (if we need more than 1, we have to upgrade to a full <span class="caps">DAG</span> instead of just a tree)</li>
+</ul>
+<p>run_info:</p>
+<p>Each step consists of a couple of runs, the exact number of which is determined by the step based on the input files. The <code>run_info</code> structure has the following format:</p>
+<listing>run id 1:
+  output file 1:
+    - input file 1
+    - input file 2
+...
+</listing><p>For each run, a number of output files is generated, and every output file depends on a number of input files. Different output files may depend on the same input files. These dependencies are declared so that it&#8217;s possible to determine whether an output file is up-to-date based on the input files&#8217; timestamps or whether steps have to be re-run.</p>
+<p><code>setup_runs</code></p>
+<p>The method <code>setup_runs</code> must be implemented by every step. It receives a <code>input_run_info</code> dict which contains for every <code>run_id</code> a list of output file base names that will be generated by that step. The task of <code>setup_runs</code> is to build a dict similar to the argument it received, but also including for every output file the input files the output file depends on (again, basenames only).</p>
+<h2 id="h17">5.1&nbsp;&nbsp;Steps, runs, and tasks</h2>
+<p>Steps are processing steps like <code>cutadapt</code>, <code>fix_cutadapt</code>, etc. Every step is implemented as a class which is derived from <code>AbstractStep</code>. A special step class is <code>Source</code> which provides the input files for all subsequent steps, grouped by sample.</p>
+<p>Every step class is able to define a number of runs based on its input files, via the <code>setup_runs</code> function. One run corresponds to one job executed locally or on the cluster.</p>
+<p>In the context of the pipeline, the sum of all runs of all steps is the set of all tasks. The term &#8216;task&#8217; exists only in the context of a pipeline and describes a certain run of a certain step.</p>
+</div>
+</body>
+
+</html>

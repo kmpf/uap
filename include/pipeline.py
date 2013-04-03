@@ -76,6 +76,7 @@ class Pipeline(object):
                 self.all_tasks.append(task)
                 self.task_for_task_id[str(task)] = task
 
+        self.tool_versions = {}
         self.check_tools()
 
         if self.run_mode == self.run_modes.DRY_RUN:
@@ -180,9 +181,6 @@ class Pipeline(object):
                         options_def = options_def.strip()[1:-1]
                     options = yaml.load(options_def)
 
-                if step_name == 'source':
-                    raise ConfigurationException("You cannot use 'source' as a step, it's included automatically.")
-
                 # determine class and instatiate it with options
                 step_class = abstract_step.get_step_class_for_key(step_name)
                 step = step_class(self)
@@ -245,8 +243,15 @@ class Pipeline(object):
         for tool_id, info in self.config['tools'].items():
             command = [info['path'], info['get_version']]
             exit_code = None
-            with open(os.devnull, 'w') as devnull:
-                exit_code = subprocess.call(command, stdout = devnull, stderr = devnull)
+            proc = subprocess.Popen(command, stdout = subprocess.PIPE,
+                stderr = subprocess.PIPE, close_fds = True)
+            proc.wait()
+            exit_code = proc.returncode
+            self.tool_versions[tool_id] = {
+                'command': (' '.join(command)).strip(),
+                'exit_code': exit_code,
+                'response': (proc.stdout.read() + proc.stderr.read()).strip()
+            }
             expected_exit_code = 0
             if 'exit_code' in info:
                 expected_exit_code = info['exit_code']

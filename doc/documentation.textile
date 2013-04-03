@@ -2,24 +2,31 @@
 
 #{toc(1..3)}
 
-h1. RNASeq pipeline
-
-h2. Introduction
+h1. Introduction
 
 The aim of this data processing pipeline is to enable simple and robust bioinformatics data evaluation.
 
-h3. Simplicity
+*Simplicity:*
 
-* The entire processing pipeline is described as a tree, and output files are written into a directory structure mirroring this tree.
+* The entire processing pipeline is described via a config file. Step are defined in a tree, and output files are written into a directory structure mirroring this tree.
 * To add a new processing step, a single Python file must be placed in @include/step@ which defines a class with two functions, one for planning all jobs based on a list of input files or runs and possibly additional information from previous steps and another function for running a specific job.
 
-h3. Robustness
+*Robustness:*
 
 * All steps write their output files to a temporary location (a fact which a step is not aware of). Only if a step has completed successfully, the output files are copied to the correct output directory.
 * The output directory names are suffixed with a eight-character hashtag which mirrors the options specified for the step.
 * Processing can be aborted and continued from the command line at any time. This way, cluster failures are less critical.
+* Comprehensive annotations are written to the output directories, allowing for later investigation.
+* Errors are caught as early as possible. Tools are checked for availability, the entire processing pipeline is calculated in advance.
 
-h2. Setup
+A pipeline is defined by two aspects:
+
+* the steps it carries out, with dependencies defined via a tree
+* its input samples
+
+The combination of _steps_ and _samples_ result in a list of _tasks_, which can be executed sequentially or can be submitted to a cluster.
+
+h1. Setup
 
 After cloning the repository, run the bootstrapping script to create the required Python environment (which will be located in @./python_env/@):
 
@@ -29,9 +36,9 @@ $ ./bootstrap.sh
 
 There's no harm in accidentally running this script multiple times.
 
-h3. The configuration file
+h2. The configuration file
 
-Next, edit @config.sample.yaml@ and save it as @config.yaml@. Here is a sample configuration:
+Next, edit @config.sample.yaml@ and save it as @config.yaml@. Although writing the configuration may seem a bit complicated, it pays off later because further interaction with the pipeline is quite simple. Here is a sample configuration:
 
 <listing>
 # This is the rnaseq-pipeline configuration file.
@@ -56,19 +63,69 @@ tools:
         get_version: '--version'
 </listing>
 
-You can comment out lines with @#@. Steps can be defined as a tree. However, the syntax is a bit peculiar: The @|@ after @steps:@ defines a string spanning multiple lines in which line breaks and indentation is maintained. The string is later parsed by the pipeline and the most important parts are the individual steps which are to be performed. The relationship betweens steps is declared via indentation.
+In the configuration, the following aspects of the pipeline are defined:
 
-Steps may have options, which must be placed in between @{@ curly braces @}@ . Options can be specified on a single line (in this case, individual key/value pairs must be separated by comma) or may span multiple lines as shown in the example above, following standard YAML block syntax.
+* @sources@ - there can be multiple sources of different types:
+** run folders
+** plain fastq.gz files with additional information
+* @destination_path@ - this is where result files, annotations and temporary files are written to
+* @steps@ - defines the processing step arranged in a tree
+* @tools@ - defines all tools used in the pipeline and how to determine their versions (for later reference)
 
-h4. The break step
+h2. Sources
+
+In the following, the different types of sources are described in detail.
+
+h3. Run folder source
+
+Here's an example:
+
+<listing>
+- run_folder_source: { path: /home/michael/Desktop/rnaseq-pipeline/in }
+</listing>
+
+This source looks for fastq.gz files in @path/Unaligned/Project_*/Sample_*@ and pulls additional information from CSV sample sheets it finds. It also makes sure that index information for all samples is coherent and unambiguous.
+
+h3. FASTQ source
+
+Here's an example:
+
+<listing>
+- fastq_source:
+    pattern: /data/original-fastq/&#42;.fastq.gz
+    group: (Sample_COPD_\d+)_R[12].fastq.gz
+    indices: copd-barcodes.csv
+</listing>
+
+Input files are collected as defined by @pattern@ and grouped into samples according to @group@, which is a regular expression. All groups defined in the regex @(  )@ are used to construct the sample name, here it is used to declare that both R1 and R2 files belong to the same sample. Indices are read from the CSV file defined by @indices@.
+
+h2. Steps
+
+Steps are defined as a tree. However, the syntax is a bit peculiar: The @|@ after @steps:@ defines a string spanning multiple lines in which line breaks and indentation is maintained (this is YAML syntax). The string is later parsed by the pipeline and the most important parts are the individual steps which are to be performed. The relationship betweens steps is declared via indentation.
+
+<div class='background'>
+Why do we need the | symbol in the steps definition? Neither the list nor the dictionary syntax allow for a concise definition of a step tree with options. Think of the step definition as a nested list with an option hash attached to every item.
+</div>
+
+Steps may have options, which must be placed in between @{@ curly braces @}@ . Options can be specified on a single line (in this case, individual key/value pairs must be separated by comma) or may span multiple lines, following standard YAML block syntax.
+
+h3. break
 
 There's a special step called @break@. It may be placed multiple times in the tree and it cuts off further processing from where it is. This may be helpful for building up a pipeline step by step.
 
-h3. External tools
+h3. head
+
+The @head@ step produces a shortened version of every input file. It is automatically prepended to the pipeline if @--test-run@ is specified on the command line.
+
+Parameters:
+
+* @n@ (optional) - number of lines (default: 1000)
+
+h2. Tools
 
 Tools are also specified in the config file, along with a command line parameter which is used by the pipeline to both test whether the tool is available and to record the version in log files.
 
-h2. Scripts
+h1. Scripts
 
 Once the project is set up, there are several scripts which can be used to execute and monitor the pipeline. There are a couple of global command line parameters which are valid for all scripts:
 
@@ -77,7 +134,7 @@ Once the project is set up, there are several scripts which can be used to execu
 <dd>When this parameter is specified, a @head@ step is placed before all first-level steps in the step tree, which returns the first 1000 lines of every input file. That way, a pipeline can be tested very quickly with a small input data set. Also, output files will go to the output directory specified in the configuration plus @/test@.</dd>
 </dl>
 
-h3. status.py
+h2. status.py
 
 The status script shows you whether the configuration is in a good state (if it doesn't complain, it's good) and which tasks are resulting from the configuration and the input files:
 
@@ -112,15 +169,17 @@ tasks: 24 total, 16 ready, 8 waiting
 
 The status script shows which tasks are ready to run, waiting because input files are still missing, or finished.
 
-h3. run-locally.py
+h2. run-locally.py
 
 The @run-locally.py@ script runs all tasks sequentially on the local machine. Feel free to cancel this script at any time, it won't put your project in a confused state.
 
-h3. run-on-cluster.py
+h2. run-on-cluster.py
 
 The @run-on-cluster.py@ script determines which tasks still have to carried out and submits the jobs to a GridEngine cluster by calling @qsub@. Dependencies are defined via the @-hold_jid@ option, which means that jobs that depend on other jobs won't get scheduled until their dependencies have been satisfied.
 
-h2. Documentation
+h1. Extending the pipeline
+
+h1. Documentation
 
 AbstractStep:
 
@@ -144,7 +203,7 @@ For each run, a number of output files is generated, and every output file depen
 
 The method @setup_runs@ must be implemented by every step. It receives a @input_run_info@ dict which contains for every @run_id@ a list of output file base names that will be generated by that step. The task of @setup_runs@ is to build a dict similar to the argument it received, but also including for every output file the input files the output file depends on (again, basenames only).
 
-h3. Steps, runs, and tasks
+h2. Steps, runs, and tasks
 
 Steps are processing steps like @cutadapt@, @fix_cutadapt@, etc. Every step is implemented as a class which is derived from @AbstractStep@. A special step class is @Source@ which provides the input files for all subsequent steps, grouped by sample.
 
