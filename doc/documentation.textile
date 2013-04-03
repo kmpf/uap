@@ -7,7 +7,7 @@ The aim of this data processing pipeline is to enable simple and robust bioinfor
 h3. Simplicity
 
 * The entire processing pipeline is described as a tree, and output files are written into a directory structure mirroring this tree.
-* To add a new processing step, a single Python file must be placed in @include/step@ which defines a class with two functions, one for planning and one for running a job.
+* To add a new processing step, a single Python file must be placed in @include/step@ which defines a class with two functions, one for planning all jobs based on a list of input files or runs and possibly additional information from previous steps and another function for running a specific job.
 
 h3. Robustness
 
@@ -17,7 +17,7 @@ h3. Robustness
 
 h2. Setup
 
-After cloning the repository, run the bootstrapping script to create the required Python environment:
+After cloning the repository, run the bootstrapping script to create the required Python environment (which will be located in @./python_env/@):
 
 bc. $ ./bootstrap.sh
 
@@ -28,9 +28,9 @@ h3. The configuration file
 Next, edit @config.sample.yaml@ and save it as @config.yaml@. Here is a sample configuration:
 
 bc. # This is the rnaseq-pipeline configuration file.
-sourcePaths:
-    - /home/michael/Desktop/rnaseq-pipeline/in
-destinationPath: /home/michael/Desktop/rnaseq-pipeline/out
+sources:
+   - run_folder_source: { path: /home/michael/Desktop/rnaseq-pipeline/in }
+destination_path: /home/michael/Desktop/rnaseq-pipeline/out
 steps: |
     - cutadapt {
         adapter-R1: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG"
