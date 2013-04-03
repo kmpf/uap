@@ -1,3 +1,7 @@
+<div class='title'>RNASeq pipeline documentation</div>
+
+#{toc(1..3)}
+
 h1. RNASeq pipeline
 
 h2. Introduction
@@ -19,7 +23,9 @@ h2. Setup
 
 After cloning the repository, run the bootstrapping script to create the required Python environment (which will be located in @./python_env/@):
 
-bc. $ ./bootstrap.sh
+<listing>
+$ ./bootstrap.sh
+</listing>
 
 There's no harm in accidentally running this script multiple times.
 
@@ -27,7 +33,8 @@ h3. The configuration file
 
 Next, edit @config.sample.yaml@ and save it as @config.yaml@. Here is a sample configuration:
 
-bc. # This is the rnaseq-pipeline configuration file.
+<listing>
+# This is the rnaseq-pipeline configuration file.
 sources:
    - run_folder_source: { path: /home/michael/Desktop/rnaseq-pipeline/in }
 destination_path: /home/michael/Desktop/rnaseq-pipeline/out
@@ -47,6 +54,7 @@ tools:
     dd:
         path: 'dd'
         get_version: '--version'
+</listing>
 
 You can comment out lines with @#@. Steps can be defined as a tree. However, the syntax is a bit peculiar: The @|@ after @steps:@ defines a string spanning multiple lines in which line breaks and indentation is maintained. The string is later parsed by the pipeline and the most important parts are the individual steps which are to be performed. The relationship betweens steps is declared via indentation.
 
@@ -73,7 +81,8 @@ h3. status.py
 
 The status script shows you whether the configuration is in a good state (if it doesn't complain, it's good) and which tasks are resulting from the configuration and the input files:
 
-bc. $ ./status.py
+<listing>
+$ ./status.py
 [r] cutadapt/RIB0000784-R1
 [r] cutadapt/RIB0000784-R2
 [r] cutadapt/RIB0000794-R1
@@ -99,6 +108,7 @@ bc. $ ./status.py
 [w] cutadapt/fix_cutadapt/RIB0000784
 [w] cutadapt/fix_cutadapt/RIB0000786
 tasks: 24 total, 16 ready, 8 waiting
+</listing>
 
 The status script shows which tasks are ready to run, waiting because input files are still missing, or finished.
 
@@ -120,11 +130,13 @@ run_info:
 
 Each step consists of a couple of runs, the exact number of which is determined by the step based on the input files. The @run_info@ structure has the following format:
 
+<listing>
 run id 1:
   output file 1:
     - input file 1
     - input file 2
 ...
+</listing>
 
 For each run, a number of output files is generated, and every output file depends on a number of input files. Different output files may depend on the same input files. These dependencies are declared so that it's possible to determine whether an output file is up-to-date based on the input files' timestamps or whether steps have to be re-run.
 
@@ -139,4 +151,3 @@ Steps are processing steps like @cutadapt@, @fix_cutadapt@, etc. Every step is i
 Every step class is able to define a number of runs based on its input files, via the @setup_runs@ function. One run corresponds to one job executed locally or on the cluster.
 
 In the context of the pipeline, the sum of all runs of all steps is the set of all tasks. The term 'task' exists only in the context of a pipeline and describes a certain run of a certain step.
-
