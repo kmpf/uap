@@ -190,8 +190,6 @@ class AbstractStep(object):
         # add the options to the output path so that different options result in
         # a different directory
         dependency_path = self.get_dependency_path(True)
-        if (self.pipeline.run_mode == self.pipeline.run_modes.TEST_RUN):
-            dependency_path.insert(0, 'test')
         return os.path.join(self.pipeline.config['destination_path'], *dependency_path)
 
     def get_temp_output_directory(self):

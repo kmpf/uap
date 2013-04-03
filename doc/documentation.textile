@@ -119,20 +119,33 @@ The @head@ step produces a shortened version of every input file. It is automati
 
 Parameters:
 
-* @n@ (optional) - number of lines (default: 1000)
+* @lines@ (optional) - number of lines (default: 1000)
+
+h3. cutadapt
+
+h3. fix_cutadapt
+
+h3. analyze_cutadapt
+
+h3. segemehl
 
 h2. Tools
 
-Tools are also specified in the config file, along with a command line parameter which is used by the pipeline to both test whether the tool is available and to record the version in log files.
+Tools are also specified in the configuration file, along with a command line parameter which is used by the pipeline to both test whether the tool is available and to record the version in log files. The pipeline also tests whether this call returns an exit code of 0, otherwise, the whole thing will crash. If you need a tool which is known to return a non-zero exit code, @exit_code@ may be used to specify the expected exit code:
+
+<listing>
+segemehl:
+    path: /home/michael/IZI/segemehl/segemehl.x
+    get_version: ''
+    exit_code: 255
+</listing>
 
 h1. Scripts
 
 Once the project is set up, there are several scripts which can be used to execute and monitor the pipeline. There are a couple of global command line parameters which are valid for all scripts:
 
-<dl>
-<dt>@--test-run@:</dt>
-<dd>When this parameter is specified, a @head@ step is placed before all first-level steps in the step tree, which returns the first 1000 lines of every input file. That way, a pipeline can be tested very quickly with a small input data set. Also, output files will go to the output directory specified in the configuration plus @/test@.</dd>
-</dl>
+* @--even-if-dirty@ - Before doing anything else, the pipeline checks whether its source code has been modified in any way via Git. If yes, processing is stopped immediately unless this flag is specified.
+* @--test-run@ - When this parameter is specified, a @head@ step is placed before all first-level steps in the step tree, which returns the first 1000 lines of every input file. That way, a pipeline can be tested very quickly with a small input data set.
 
 h2. status.py
 
