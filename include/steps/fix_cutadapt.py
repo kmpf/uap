@@ -57,8 +57,11 @@ class FixCutadapt(AbstractStep):
                 wcount += 1
             rcount += 1
 
+        fout1.flush()
         fout1.close()
         p3.wait()
+
+        fout2.flush()
         fout2.close()
         p4.wait()
 

@@ -43,6 +43,8 @@ class Pipeline(object):
                 print("If this is not a production environment, you can skip this test by specifying --even-if-dirty on the command line.")
                 exit(1)
 
+        if '--even-if-dirty' in sys.argv:
+            sys.argv.remove('--even-if-dirty')
         # the configuration as read from config.yaml
         self.config = {}
 
