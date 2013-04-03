@@ -17,9 +17,19 @@ class Head(AbstractStep):
         self.tool('pigz')
         self.tool('head')
 
+        count = 1000
+        if 'lines' in self.options:
+            count = self.options['lines']
+
         output_run_info = {}
         for input_run_id in input_run_info.keys():
-            output_run_info[input_run_id] = { 'output_files': {} }
+            output_run_info[input_run_id] = {
+                'output_files': {},
+                'info': {}
+            }
+            if 'info' in input_run_info[input_run_id]:
+                output_run_info[input_run_id]['info'] = input_run_info[input_run_id]['info']
+            output_run_info[input_run_id]['info']['head-count'] = count
             for annotation, input_files in input_run_info[input_run_id]['output_files'].items():
                 output_run_info[input_run_id]['output_files'][annotation] = {}
                 for in_path in input_files.keys():
@@ -40,10 +50,7 @@ class Head(AbstractStep):
                     raise StandardError("Expected one input file per output file.")
 
                 inpath = inpaths[0]
-
-                count = 1000
-                if 'lines' in self.options:
-                    count = self.options['lines']
+                count = run_info['info']['head-count']
 
                 if inpath[-3:] == '.gz':
                     # set up processes for a gz-compressed file
