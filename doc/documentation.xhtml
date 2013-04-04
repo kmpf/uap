@@ -25,19 +25,28 @@ body {
 
 div.attention {
     padding-left: 70px;
-    background: url(dialog-warning.png) 11px 10px no-repeat;
-    border-top: 1px solid #cc0000;
-    border-bottom: 1px solid #cc0000;
-    background-color: #f4c9c5;
+    background: url(emblem-important.png) 11px 10px no-repeat;
+    border-top: 1px solid #d8822f;
+    border-bottom: 1px solid #d8822f;
+    background-color: #fae5d0;
+    padding-right: 1em;
+}
+
+div.information {
+    padding-left: 70px;
+    background: url(dialog-information.png) 11px 10px no-repeat;
+    border-top: 1px solid #bac6d1;
+    border-bottom: 1px solid #bac6d1;
+    background-color: #f5f8fb;
     padding-right: 1em;
 }
 
 div.background {
     padding-left: 70px;
     background: url(help-browser.png) 11px 10px no-repeat;
-    border-top: 1px solid #3465a4;
-    border-bottom: 1px solid #3465a4;
-    background-color: #ccd8e8;
+    border-top: 1px solid #bac6d1;
+    border-bottom: 1px solid #bac6d1;
+    background-color: #f5f8fb;
     padding-right: 1em;
 }
 
@@ -91,6 +100,12 @@ code {
     border-radius: 0.3em;
     margin-bottom: 1px;
     line-height: 150%;
+}
+
+.textmarker {
+    background-color: #fce94f;
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
 }
 
 code.highlight {
@@ -192,6 +207,11 @@ dt {
     padding-left: 0;
 }
 
+.toc ul li
+{
+    margin-bottom: 0;
+}
+
 .toc ul li.first
 {
     padding-left: 0em;
@@ -269,6 +289,11 @@ h5 {
     font-weight: normal;
     font-style: italic;
 }
+
+li {
+    margin-bottom: 0.2em;
+}
+
 </style>
 </head>
 
@@ -301,12 +326,11 @@ h5 {
 	<ul>
 		<li class="later">3.1&nbsp;&nbsp;<a href='#h16'>status.py</a></li>
 		<li class="later">3.2&nbsp;&nbsp;<a href='#h17'>run-locally.py</a></li>
-		<li class="later">3.3&nbsp;&nbsp;<a href='#h18'>run-on-cluster.py</a></li>
+		<li class="later">3.3&nbsp;&nbsp;<a href='#h18'>submit-to-cluster.py</a></li>
 	</ul></li>
-	<li class="first">4&nbsp;&nbsp;<a href='#h19'>Extending the pipeline</a></li>
-	<li class="first">5&nbsp;&nbsp;<a href='#h20'>Documentation</a>
+	<li class="first">4&nbsp;&nbsp;<a href='#h19'>Extending the pipeline</a>
 	<ul>
-		<li class="later">5.1&nbsp;&nbsp;<a href='#h21'>Steps, runs, and tasks</a></li>
+		<li class="later">4.1&nbsp;&nbsp;<a href='#h20'>Checklist</a></li>
 	</ul></li>
 </ul>
 </div>
@@ -331,6 +355,9 @@ h5 {
 	<li>its input samples</li>
 </ul>
 <p>The combination of <em>steps</em> and <em>samples</em> result in a list of <em>tasks</em>, which can be executed sequentially or can be submitted to a cluster.</p>
+<div class='information'>
+<p>The design decision that steps are defined as a tree instead of a full directed acyclic graph means that a step cannot have more than one direct parent, like a directory in a file system cannot have more than one parent directory. This means that a step cannot use the output of two different steps as its input.</p>
+</div>
 <h1 id="h2">2&nbsp;&nbsp;Setup</h1>
 <p>After cloning the repository, run the bootstrapping script to create the required Python environment (which will be located in <code>./python_env/</code>):</p>
 <listing>$ ./bootstrap.sh
@@ -338,9 +365,10 @@ h5 {
 <h2 id="h3">2.1&nbsp;&nbsp;The configuration file</h2>
 <p>Next, edit <code>config.sample.yaml</code> and save it as <code>config.yaml</code>. Although writing the configuration may seem a bit complicated, it pays off later because further interaction with the pipeline is quite simple. Here is a sample configuration:</p>
 <listing># This is the rnaseq-pipeline configuration file.
+email: micha.specht@gmail.com
 sources:
-   - run_folder_source: { path: /home/michael/Desktop/rnaseq-pipeline/in }
-destination_path: /home/michael/Desktop/rnaseq-pipeline/out
+   - run_folder_source: { path: in }
+destination_path: out
 steps: |
     - cutadapt {
         adapter-R1: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG"
@@ -349,7 +377,7 @@ steps: |
         - fix_cutadapt
 tools:
     cutadapt:
-        path: '/home/michael/Desktop/rnaseq-pipeline/tools/cutadapt-1.2.1/bin/cutadapt'
+        path: 'tools/cutadapt-1.2.1/bin/cutadapt'
         get_version: '--version'
     pigz:
         path: 'pigz'
@@ -367,13 +395,14 @@ tools:
 	<li><code>destination_path</code> &#8211; this is where result files, annotations and temporary files are written to</li>
 	<li><code>steps</code> &#8211; defines the processing step arranged in a tree</li>
 	<li><code>tools</code> &#8211; defines all tools used in the pipeline and how to determine their versions (for later reference)</li>
+	<li><code>email</code> &#8211; when submitting jobs on a cluster, messages will be sent to this email address (nobody@example.com by default)</li>
 </ul>
 <h2 id="h4">2.2&nbsp;&nbsp;Sources</h2>
 <p>In the following, the different types of sources are described in detail.</p>
 <h3 id="h5">2.2.1&nbsp;&nbsp;Run folder source</h3>
 <p>Here&#8217;s an example:</p>
-<listing>- run_folder_source: { path: /home/michael/Desktop/rnaseq-pipeline/in }
-</listing><p>This source looks for fastq.gz files in <code>path/Unaligned/Project_*/Sample_*</code> and pulls additional information from <span class="caps">CSV</span> sample sheets it finds. It also makes sure that index information for all samples is coherent and unambiguous.</p>
+<listing>- run_folder_source: { path: in }
+</listing><p>This source looks for fastq.gz files in <code>[path]/Unaligned/Project_*/Sample_*</code> and pulls additional information from <span class="caps">CSV</span> sample sheets it finds. It also makes sure that index information for all samples is coherent and unambiguous.</p>
 <h3 id="h6">2.2.2&nbsp;&nbsp;<span class="caps">FASTQ</span> source</h3>
 <p>Here&#8217;s an example:</p>
 <listing>- fastq_source:
@@ -406,64 +435,98 @@ tools:
     get_version: ''
     exit_code: 255
 </listing><h1 id="h15">3&nbsp;&nbsp;Scripts</h1>
-<p>Once the project is set up, there are several scripts which can be used to execute and monitor the pipeline. There are a couple of global command line parameters which are valid for all scripts:</p>
+<p>Once the project is set up, there are several scripts which can be used to execute and monitor the pipeline. All scripts have a couple of properties in common:</p>
+<ul>
+	<li>On startup, the configuration is read, tools are checked, input files are collected, and all tasks are calculated. If any of these steps fails, the script will print an error message with a backtrace and it will crash.</li>
+	<li>For convenience, a symbolic link called <code>out</code> will be placed in the pipeline&#8217;s directory which points to the output directory defined in the configuration file. If <code>out</code> already exists, this step is skipped.</li>
+</ul>
+<p>There are a couple of global command line parameters which are valid for all scripts:</p>
 <ul>
 	<li><code>--even-if-dirty</code> &#8211; Before doing anything else, the pipeline checks whether its source code has been modified in any way via Git. If yes, processing is stopped immediately unless this flag is specified.</li>
 	<li><code>--test-run</code> &#8211; When this parameter is specified, a <code>head</code> step is placed before all first-level steps in the step tree, which returns the first 1000 lines of every input file. That way, a pipeline can be tested very quickly with a small input data set.</li>
 </ul>
+<p>In the following, the scripts are described in detail.</p>
 <h2 id="h16">3.1&nbsp;&nbsp;status.py</h2>
-<p>The status script shows you whether the configuration is in a good state (if it doesn&#8217;t complain, it&#8217;s good) and which tasks are resulting from the configuration and the input files:</p>
+<p>The status script lists all tasks resulting from the configured steps and input samples. At the beginning of each line, the status of each task is denoted by <code>[w]</code>, <code>[r]</code>, and <code>[f]</code>, corresponding to:</p>
+<ul>
+	<li><strong>waiting</strong> &#8211; the taks is waiting for input files to appear or to be updated</li>
+	<li><strong>ready</strong> &#8211; all input files are present and up-to-date regarding their upstream input files, task can be started</li>
+	<li><strong>finished</strong> &#8211; all output files are in place and up-to-date</li>
+</ul>
+<div class='attention'>
+<p>In the current design, there is no mechanism to indicate whether a task is currently running or has been submitted to a cluster.</p>
+</div>
+<p>Here is an example output:</p>
 <listing>$ ./status.py
 [r] cutadapt/RIB0000784-R1
 [r] cutadapt/RIB0000784-R2
-[r] cutadapt/RIB0000794-R1
-[r] cutadapt/RIB0000794-R2
 [r] cutadapt/RIB0000770-R2
 [r] cutadapt/RIB0000770-R1
-[r] cutadapt/RIB0000757-R1
-[r] cutadapt/RIB0000757-R2
-[r] cutadapt/RIB0000777-R2
-[r] cutadapt/RIB0000778-R2
-[r] cutadapt/RIB0000778-R1
-[r] cutadapt/RIB0000777-R1
-[r] cutadapt/RIB0000740-R1
-[r] cutadapt/RIB0000740-R2
-[r] cutadapt/RIB0000786-R2
-[r] cutadapt/RIB0000786-R1
-[w] cutadapt/fix_cutadapt/RIB0000757
 [w] cutadapt/fix_cutadapt/RIB0000770
-[w] cutadapt/fix_cutadapt/RIB0000740
-[w] cutadapt/fix_cutadapt/RIB0000777
-[w] cutadapt/fix_cutadapt/RIB0000778
-[w] cutadapt/fix_cutadapt/RIB0000794
 [w] cutadapt/fix_cutadapt/RIB0000784
-[w] cutadapt/fix_cutadapt/RIB0000786
-tasks: 24 total, 16 ready, 8 waiting
-</listing><p>The status script shows which tasks are ready to run, waiting because input files are still missing, or finished.</p>
+tasks: 6 total, 4 ready, 2 waiting
+</listing><p>Here is another example output with <code>--test-run</code> specified on the command line. Here, all top-level steps are prepended with a <code>head</code> step, which is reflected in the task IDs:</p>
+<listing>$ ./status.py --test-run
+[r] head/cutadapt/RIB0000784
+[r] head/cutadapt/RIB0000770
+[w] head/cutadapt/RIB0000784-R1
+[w] head/cutadapt/RIB0000784-R2
+[w] head/cutadapt/RIB0000770-R2
+[w] head/cutadapt/RIB0000770-R1
+[w] head/cutadapt/fix_cutadapt/RIB0000770
+[w] head/cutadapt/fix_cutadapt/RIB0000784
+tasks: 8 total, 2 ready, 6 waiting
+</listing><p>Detailed information about a specific task can be obtained by specifying the task ID on the command line:</p>
+<listing>$ ./status.py cutadapt/RIB0000770-R1
+info:
+  adapter: AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTAGCTTATCTCGTATGCCGTCTTCTGCTTG
+  read: R1
+output_files:
+  log:
+    out/cutadapt-7708988d/RIB0000770-cutadapt-R1-log.txt:
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L001_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L002_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L003_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L004_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L005_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L006_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L007_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L008_R1_001.fastq.gz
+  reads:
+    out/cutadapt-7708988d/RIB0000770-cutadapt-R1.fastq.gz:
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L001_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L002_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L003_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L004_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L005_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L006_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L007_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L008_R1_001.fastq.gz
+</listing><p>The details of this data structure are explained below. It represents a kind of plan which includes information about which output files will be generated and which input files they depend on &#8211; this is stored in <code>output_files</code>. Furthermore, necessary information for actually executing the task are recorded in <code>info</code>. In this case, the final adapter has been determined by replacing <code>((INDEX))</code> in the configuration file&#8217;s <code>adapter-R1</code> with the actual barcode index of the sample.</p>
 <h2 id="h17">3.2&nbsp;&nbsp;run-locally.py</h2>
-<p>The <code>run-locally.py</code> script runs all tasks sequentially on the local machine. Feel free to cancel this script at any time, it won&#8217;t put your project in a confused state.</p>
-<h2 id="h18">3.3&nbsp;&nbsp;run-on-cluster.py</h2>
-<p>The <code>run-on-cluster.py</code> script determines which tasks still have to carried out and submits the jobs to a GridEngine cluster by calling <code>qsub</code>. Dependencies are defined via the <code>-hold_jid</code> option, which means that jobs that depend on other jobs won&#8217;t get scheduled until their dependencies have been satisfied.</p>
+<p>The <code>run-locally.py</code> script runs all non-finished tasks sequentially on the local machine. Feel free to cancel this script at any time, it won&#8217;t put your project in a confused state.</p>
+<div class='background'>
+<p>Why is it safe to cancel the pipeline? The pipeline is written in a way which expects processes to fail or cluster jobs to disappear without notice. This problem is mitigated by a design which relies on file presence and file timestamps to determine whether a task is finished or not. Output files are automatically written to temporary locations and later moved to their real target directory, and it is not until the last file rename operation has finished that a task is regarded as finished.</p>
+</div>
+<h2 id="h18">3.3&nbsp;&nbsp;submit-to-cluster.py</h2>
+<p>The <code>submit-to-cluster.py</code> script determines which tasks still have to be carried out and submits the jobs to a GridEngine cluster by calling <code>qsub</code>. Dependencies are passed to <code>qsub</code> via the <code>-hold_jid</code> option, which means that jobs that depend on other jobs won&#8217;t get scheduled until their dependencies have been satisfied.
+The file <code>qsub-template.sh</code> is used to submit jobs, with <code>#{  }</code> fields being substituted with appropriate values.</p>
+<p>The file <code>quotas.yaml</code> can be used to define different quotas for different systems:</p>
+<listing>"frontend[12]":
+    default: 5
+</listing><p>In the example above, a default quota of 5 is defined for hosts with a hostname of <code>frontend1</code> or <code>frontend2</code> (the name is a regular expression). Different quotas can be defined for each step. A quota of 5 means that no more than 5 jobs of on kind (the same step) will be run in parallel.</p>
 <h1 id="h19">4&nbsp;&nbsp;Extending the pipeline</h1>
-<h1 id="h20">5&nbsp;&nbsp;Documentation</h1>
-<p>AbstractStep:</p>
+<h2 id="h20">4.1&nbsp;&nbsp;Checklist</h2>
+<p>Here&#8217;s a couple of things which should be kept in mind when implementing new steps or modifying existing steps:</p>
 <ul>
-	<li>has 0 or 1 dependency to another step (if we need more than 1, we have to upgrade to a full <span class="caps">DAG</span> instead of just a tree)</li>
+	<li>Make sure errors already show up in <code>setup_runs</code> instead of <code>execute</code>. That way, wasting precious cluster waiting is avoided. Look out for things that may easily fail, and do them in <code>setup_runs</code>. Use the <code>info</code> entry in the returned <code>run_info</code> structure to pass the resulting information to <code>execute</code>.</li>
+	<li>Likewise, make sure that the tools you&#8217;ll need in execute are already available in <code>setup_runs</code>:
+<listing># make sure tools are available
+self.tool('pigz')
+self.tool('cutadapt')
+</listing></li>
+	<li>Make sure your disk access is as cluster-friendly as possible (which primarily means using large block sizes). If possible, use <code>unix_pipeline</code> to wrap your commands in <code>pigz</code> or <code>dd</code> with a block size of at least 4 MB. Although this is not possible in every case (for example when seeking inside files is involved), it is straightforward with tools that read a continuous stream from <code>stdin</code> and write a continuous stream to <code>stdout</code>.</li>
 </ul>
-<p>run_info:</p>
-<p>Each step consists of a couple of runs, the exact number of which is determined by the step based on the input files. The <code>run_info</code> structure has the following format:</p>
-<listing>run id 1:
-  output file 1:
-    - input file 1
-    - input file 2
-...
-</listing><p>For each run, a number of output files is generated, and every output file depends on a number of input files. Different output files may depend on the same input files. These dependencies are declared so that it&#8217;s possible to determine whether an output file is up-to-date based on the input files&#8217; timestamps or whether steps have to be re-run.</p>
-<p><code>setup_runs</code></p>
-<p>The method <code>setup_runs</code> must be implemented by every step. It receives a <code>input_run_info</code> dict which contains for every <code>run_id</code> a list of output file base names that will be generated by that step. The task of <code>setup_runs</code> is to build a dict similar to the argument it received, but also including for every output file the input files the output file depends on (again, basenames only).</p>
-<h2 id="h21">5.1&nbsp;&nbsp;Steps, runs, and tasks</h2>
-<p>Steps are processing steps like <code>cutadapt</code>, <code>fix_cutadapt</code>, etc. Every step is implemented as a class which is derived from <code>AbstractStep</code>. A special step class is <code>Source</code> which provides the input files for all subsequent steps, grouped by sample.</p>
-<p>Every step class is able to define a number of runs based on its input files, via the <code>setup_runs</code> function. One run corresponds to one job executed locally or on the cluster.</p>
-<p>In the context of the pipeline, the sum of all runs of all steps is the set of all tasks. The term &#8216;task&#8217; exists only in the context of a pipeline and describes a certain run of a certain step.</p>
 </div>
 </body>
 

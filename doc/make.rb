@@ -99,7 +99,7 @@ end
 # scan for functions
 regex = /#\{([^\}]+)\}/
 $contents.scan(regex).each do |hit_x|
-    hit = hit_x.first.to_s
+    hit = hit_x.first.strip.to_s
     ok = false
     LEGAL_FUNCTIONS.each do |x|
         if hit.index(x) == 0
@@ -109,7 +109,7 @@ $contents.scan(regex).each do |hit_x|
     if ok
         $contents.sub!(regex, eval(hit))
     else
-        puts "Error: Illegal function call (#{hit})."
+        puts "Error: Illegal function call (#{hit})." if hit.size > 0
     end
 end
 

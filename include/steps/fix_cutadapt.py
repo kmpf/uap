@@ -16,7 +16,7 @@ class FixCutadapt(AbstractStep):
             new_key = input_run_id.replace('-R1', '').replace('-R2', '')
             if not new_key in output_run_info:
                 output_run_info[new_key] = { 'output_files': { 'reads': {} }, 'info': {} }
-            output_run_info[new_key]['info'][input_run_info['info']['read'] + '-in'] = input_run_info['output_files']['reads'].keys()[0]
+            output_run_info[new_key]['info'][input_run_info['info']['read_number'] + '-in'] = input_run_info['output_files']['reads'].keys()[0]
             for in_path in sorted(input_run_info['output_files']['reads'].keys()):
                 for _ in ['R1', 'R2']:
                     k2 = new_key + '-fixed-' + _ + '.fastq.gz'

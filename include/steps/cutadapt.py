@@ -19,14 +19,9 @@ class Cutadapt(AbstractStep):
         output_run_info = {}
         for input_run_id, input_run_info in complete_input_run_info.items():
             for in_path in sorted(input_run_info['output_files']['reads'].keys()):
-                # determine which read this is (R1 or R2)
-                which = None
-                if '_R1' in in_path:
-                    which = 'R1'
-                elif '_R2' in in_path:
-                    which = 'R2'
-                else:
-                    raise StandardError("Expected input files with _R1 or _R2.")
+                which = input_run_info['info']['read_number'][os.path.basename(in_path)]
+                if not which in ['R1', 'R2']:
+                    raise StandardError("Expected R1 and R2 input files, but got this: " + in_path)
 
                 output_run_id = input_run_id + '-' + which
 
@@ -34,7 +29,7 @@ class Cutadapt(AbstractStep):
                     output_run_info[output_run_id] = {
                         'output_files': {},
                         'info': {
-                            'read': which
+                            'read_number': which
                         }
                     }
 
@@ -43,10 +38,10 @@ class Cutadapt(AbstractStep):
 
                 # insert correct index if necessary
                 if '((INDEX))' in adapter:
-                    sample_info = self.pipeline.all_samples[input_run_id]
-                    index = sample_info['index']
+                    index = input_run_info['info']['index']
                     adapter = adapter.replace('((INDEX))', index)
 
+                # make sure the adapter is looking good
                 if re.search('^[ACGT]+$', adapter) == None:
                     raise StandardError("Unable to come up with a legit-looking adapter: " + adapter)
                 output_run_info[output_run_id]['info']['adapter'] = adapter
@@ -70,6 +65,7 @@ class Cutadapt(AbstractStep):
 
         # set up processes
         pigz1 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '1', '-d', '-c']
+        # now insert the input files
         pigz1.extend(*sorted(run_info['output_files']['reads'].values()))
 
         cutadapt = [self.tool('cutadapt'), '-a', run_info['info']['adapter'], '-']

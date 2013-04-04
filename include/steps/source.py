@@ -1,5 +1,6 @@
 import sys
 from abstract_step import *
+import copy
 import glob
 import yaml
 
@@ -14,6 +15,8 @@ class Source(AbstractStep):
             output_run_info[key] = { 'output_files': { 'reads' : {} } }
             for path in input_files:
                 output_run_info[key]['output_files']['reads'][path] = []
+            if 'info' in sample_info:
+                output_run_info[key]['info'] = copy.deepcopy(sample_info['info'])
         return output_run_info
 
     def get_run_ids(self):

@@ -14,18 +14,21 @@ class RunFolderSource(AbstractSource):
 
         self.samples = {}
 
-        # find all samples
         self.all_samples = {}
         if not os.path.exists(path):
             raise ConfigurationException("Source path does not exist: " + path)
+
+        # find all samples
         for sample_path in glob.glob(os.path.join(path, 'Unaligned', 'Project_*', 'Sample_*')):
             sample_name = os.path.basename(sample_path).replace('Sample_', '')
-            if sample_name in self.all_samples:
+            if sample_name in self.samples:
                 raise ConfigurationException("Duplicate sample: " + sample_name)
             self.samples[sample_name] = {}
             self.samples[sample_name]['files'] = []
             for path in sorted(glob.glob(os.path.join(sample_path, '*.fastq.gz'))):
                 self.samples[sample_name]['files'].append(path)
+
+            self.samples[sample_name]['info'] = {}
 
             # read sample sheets
             sample_sheet_path = os.path.join(sample_path, 'SampleSheet.csv')
@@ -34,7 +37,18 @@ class RunFolderSource(AbstractSource):
                 sample_id = row['SampleID']
                 index = row['Index']
                 if not 'index' in self.samples[sample_id]:
-                    self.samples[sample_id]['index'] = index
+                    self.samples[sample_id]['info']['index'] = index
                 else:
-                    if index != self.samples[sample_id]['index']:
+                    if index != self.samples[sample_id]['info']['index']:
                         raise StandardError("Inconsistent index defined in sample sheets for sample " + sample_id)
+
+            # determine R1/R2 info for each input file: read_number
+            self.samples[sample_id]['info']['read_number'] = {}
+            for path in self.samples[sample_name]['files']:
+                isR1 = '_R1' in path
+                isR2 = '_R2' in path
+                if isR1 and isR2:
+                    raise StandardError("Unable to determine read_numer, seems to be both R1 and R2: " + path)
+                if (not isR1) and (not isR2):
+                    raise StandardError("Unable to determine read_numer, seems to be neither R1 nor R2: " + path)
+                self.samples[sample_id]['info']['read_number'][os.path.basename(path)] = 'R1' if isR1 else 'R2'
