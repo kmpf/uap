@@ -94,14 +94,13 @@ class Pipeline(object):
         self.config = yaml.load(open('config.yaml'))
         if not 'sources' in self.config:
             raise ConfigurationException("Missing key: sources")
-        for path in self.config['sources']:
-            for source in self.config['sources']:
-                key = source.keys()[0]
-                source_instance = abstract_source.get_source_class_for_key(key)(self, source[key])
-                for sample_id, sample_info in source_instance.samples.items():
-                    if sample_id in self.all_samples:
-                        raise ConfigurationException("Sample appears multiple times in sources: " + sample_id)
-                    self.all_samples[sample_id] = copy.deepcopy(sample_info)
+        for source in self.config['sources']:
+            key = source.keys()[0]
+            source_instance = abstract_source.get_source_class_for_key(key)(self, source[key])
+            for sample_id, sample_info in source_instance.samples.items():
+                if sample_id in self.all_samples:
+                    raise ConfigurationException("Sample appears multiple times in sources: " + sample_id)
+                self.all_samples[sample_id] = copy.deepcopy(sample_info)
         if not 'destination_path' in self.config:
             raise ConfigurationException("Missing key: destination_path")
         if not os.path.exists(self.config['destination_path']):
