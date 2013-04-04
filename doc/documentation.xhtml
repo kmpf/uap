@@ -425,7 +425,14 @@ tools:
 	<li><code>lines</code> (optional) &#8211; number of lines (default: 1000)</li>
 </ul>
 <h3 id="h10">2.3.3&nbsp;&nbsp;cutadapt</h3>
-<h3 id="h11">2.3.4&nbsp;&nbsp;fix_cutadapt</h3>
+<p>The <code>cutadapt</code> step clips adapter sequences from <span class="caps">FASTQ</span> sequences using <a href="https://code.google.com/p/cutadapt/">cutadapt</a>.
+Use <code>adapter-R1</code> and <code>adapter-R2</code> to specify adapters for R1 and R2 reads, use <code>((INDEX))</code> as a placeholder which will be substituted with each sample&#8217;s index barcode.</p>
+<listing>- cutadapt {
+    adapter-R1: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG"
+    adapter-R2: "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT"
+  }
+</listing><h3 id="h11">2.3.4&nbsp;&nbsp;fix_cutadapt</h3>
+<p>In some cases, when a sequence starts with an adapter, cutadapt discards the entire sequence, which subsequently causes segemehl to crash. To remedy problems like this, <code>fix_cutadapt</code> discards both R1 and R2 sequences if one of them is empty.</p>
 <h3 id="h12">2.3.5&nbsp;&nbsp;analyze_cutadapt</h3>
 <h3 id="h13">2.3.6&nbsp;&nbsp;segemehl</h3>
 <h2 id="h14">2.4&nbsp;&nbsp;Tools</h2>

@@ -129,7 +129,19 @@ Parameters:
 
 h3. cutadapt
 
+The @cutadapt@ step clips adapter sequences from FASTQ sequences using "cutadapt":https://code.google.com/p/cutadapt/.
+Use @adapter-R1@ and @adapter-R2@ to specify adapters for R1 and R2 reads, use @((INDEX))@ as a placeholder which will be substituted with each sample's index barcode.
+
+<listing>
+- cutadapt {
+    adapter-R1: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG"
+    adapter-R2: "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT"
+  }
+</listing>
+
 h3. fix_cutadapt
+
+In some cases, when a sequence starts with an adapter, cutadapt discards the entire sequence, which subsequently causes segemehl to crash. To remedy problems like this, @fix_cutadapt@ discards both R1 and R2 sequences if one of them is empty.
 
 h3. analyze_cutadapt
 
