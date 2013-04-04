@@ -434,8 +434,8 @@ Use <code>adapter-R1</code> and <code>adapter-R2</code> to specify adapters for 
 </listing><h3 id="h11">2.3.4&nbsp;&nbsp;fix_cutadapt</h3>
 <p>In some cases, when a sequence starts with an adapter, cutadapt discards the entire sequence, which subsequently causes segemehl to crash. To remedy problems like this, <code>fix_cutadapt</code> discards both R1 and R2 sequences if one of them is empty.</p>
 <h3 id="h12">2.3.5&nbsp;&nbsp;analyze_cutadapt</h3>
-<h3 id="h13">2.3.6&nbsp;&nbsp;segemehl</h3>
-<h2 id="h14">2.4&nbsp;&nbsp;Tools</h2>
+&hellip;<h3 id="h13">2.3.6&nbsp;&nbsp;segemehl</h3>
+&hellip;<h2 id="h14">2.4&nbsp;&nbsp;Tools</h2>
 <p>Tools are also specified in the configuration file, along with a command line parameter which is used by the pipeline to both test whether the tool is available and to record the version in log files. The pipeline also tests whether this call returns an exit code of 0, otherwise, the whole thing will crash. If you need a tool which is known to return a non-zero exit code, <code>exit_code</code> may be used to specify the expected exit code:</p>
 <listing>segemehl:
     path: /home/michael/IZI/segemehl/segemehl.x

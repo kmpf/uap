@@ -145,7 +145,11 @@ In some cases, when a sequence starts with an adapter, cutadapt discards the ent
 
 h3. analyze_cutadapt
 
+<notextile>&hellip;</notextile>
+
 h3. segemehl
+
+<notextile>&hellip;</notextile>
 
 h2. Tools
 
