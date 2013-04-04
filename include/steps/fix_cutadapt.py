@@ -13,6 +13,8 @@ class FixCutadapt(AbstractStep):
 
         output_run_info = {}
         for input_run_id, input_run_info in input_run_info_complete.items():
+            if not 'read_number' in input_run_info['info']:
+                raise StandardError("fix_cutadapt can only be run on paired-end sequenced samples.")
             new_key = input_run_id.replace('-R1', '').replace('-R2', '')
             if not new_key in output_run_info:
                 output_run_info[new_key] = { 'output_files': { 'reads': {} }, 'info': {} }

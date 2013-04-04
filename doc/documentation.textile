@@ -252,6 +252,8 @@ h2. run-locally.py
 
 The @run-locally.py@ script runs all non-finished tasks sequentially on the local machine. Feel free to cancel this script at any time, it won't put your project in a confused state.
 
+To execute a certain task, specify @--run-this@ followed by the task ID on the command line.
+
 <div class='background'>
 Why is it safe to cancel the pipeline? The pipeline is written in a way which expects processes to fail or cluster jobs to disappear without notice. This problem is mitigated by a design which relies on file presence and file timestamps to determine whether a task is finished or not. Output files are automatically written to temporary locations and later moved to their real target directory, and it is not until the last file rename operation has finished that a task is regarded as finished.
 </div>

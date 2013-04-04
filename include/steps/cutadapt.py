@@ -19,22 +19,26 @@ class Cutadapt(AbstractStep):
         output_run_info = {}
         for input_run_id, input_run_info in complete_input_run_info.items():
             for in_path in sorted(input_run_info['output_files']['reads'].keys()):
-                which = input_run_info['info']['read_number'][os.path.basename(in_path)]
-                if not which in ['R1', 'R2']:
-                    raise StandardError("Expected R1 and R2 input files, but got this: " + in_path)
+                suffix = ''
+                which = None
+                if input_run_info['info']['paired_end'] == True:
+                    which = input_run_info['info']['read_number'][os.path.basename(in_path)]
+                    if not which in ['R1', 'R2']:
+                        raise StandardError("Expected R1 and R2 input files, but got this: " + in_path)
+                    suffix = '-' + which
 
-                output_run_id = input_run_id + '-' + which
+                output_run_id = input_run_id + suffix
 
                 if not output_run_id in output_run_info:
                     output_run_info[output_run_id] = {
                         'output_files': {},
-                        'info': {
-                            'read_number': which
-                        }
+                        'info': {}
                     }
+                    if input_run_info['info']['paired_end'] == True:
+                        output_run_info[output_run_id]['info']['read_number'] = which
 
                 # find adapter
-                adapter = self.options['adapter-' + which]
+                adapter = self.options['adapter' + suffix]
 
                 # insert correct index if necessary
                 if '((INDEX))' in adapter:
@@ -46,8 +50,8 @@ class Cutadapt(AbstractStep):
                     raise StandardError("Unable to come up with a legit-looking adapter: " + adapter)
                 output_run_info[output_run_id]['info']['adapter'] = adapter
 
-                for t in [('reads', input_run_id + '-cutadapt-' + which + '.fastq.gz'),
-                        ('log', input_run_id + '-cutadapt-' + which + '-log.txt')]:
+                for t in [('reads', input_run_id + '-cutadapt' + suffix + '.fastq.gz'),
+                        ('log', input_run_id + '-cutadapt' + suffix + '-log.txt')]:
                     pathkey = t[0]
                     path = t[1]
                     if not pathkey in output_run_info[output_run_id]['output_files']:

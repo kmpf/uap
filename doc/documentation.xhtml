@@ -512,6 +512,7 @@ output_files:
 </listing><p>The details of this data structure are explained below. It represents a kind of plan which includes information about which output files will be generated and which input files they depend on &#8211; this is stored in <code>output_files</code>. Furthermore, necessary information for actually executing the task are recorded in <code>info</code>. In this case, the final adapter has been determined by replacing <code>((INDEX))</code> in the configuration file&#8217;s <code>adapter-R1</code> with the actual barcode index of the sample.</p>
 <h2 id="h17">3.2&nbsp;&nbsp;run-locally.py</h2>
 <p>The <code>run-locally.py</code> script runs all non-finished tasks sequentially on the local machine. Feel free to cancel this script at any time, it won&#8217;t put your project in a confused state.</p>
+<p>To execute a certain task, specify <code>--run-this</code> followed by the task ID on the command line.</p>
 <div class='background'>
 <p>Why is it safe to cancel the pipeline? The pipeline is written in a way which expects processes to fail or cluster jobs to disappear without notice. This problem is mitigated by a design which relies on file presence and file timestamps to determine whether a task is finished or not. Output files are automatically written to temporary locations and later moved to their real target directory, and it is not until the last file rename operation has finished that a task is regarded as finished.</p>
 </div>
