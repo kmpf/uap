@@ -29,17 +29,18 @@ class FixCutadapt(AbstractStep):
         return output_run_info
 
     def execute(self, run_id, run_info):
-        p1 = subprocess.Popen([self.tool('pigz'), "--decompress", "--stdout", "--blocksize", "4096", "--processes", "1", run_info['info']['R1-in']], bufsize = -1, stdout = subprocess.PIPE)
+        cat4m1 = subprocess.Popen([self.tool('cat4m'), run_info['info']['R1-in']], bufsize = -1, stdout = subprocess.PIPE)
+        cat4m2 = subprocess.Popen([self.tool('cat4m'), run_info['info']['R2-in']], bufsize = -1, stdout = subprocess.PIPE)
+
+        p1 = subprocess.Popen([self.tool('pigz'), "--decompress", "--stdout", "--processes", "1"], bufsize = -1, stdout = subprocess.PIPE, stdin = cat4m1.stdout)
         fin1 = p1.stdout
-        p2 = subprocess.Popen([self.tool('pigz'), "--decompress", "--stdout", "--blocksize", "4096", "--processes", "1", run_info['info']['R2-in']], bufsize = -1, stdout = subprocess.PIPE)
+
+        p2 = subprocess.Popen([self.tool('pigz'), "--decompress", "--stdout", "--processes", "1"], bufsize = -1, stdout = subprocess.PIPE, stdin = cat4m2.stdout)
         fin2 = p2.stdout
 
-        fout1f = open(run_info['info']['R1-out'], 'w')
-        fout2f = open(run_info['info']['R2-out'], 'w')
-
-        p3 = subprocess.Popen([self.tool('pigz'), "--blocksize", "4096", "--processes", "3", "--stdout"], bufsize = -1, stdin = subprocess.PIPE, stdout = fout1f)
+        p3 = subprocess.Popen([self.tool('pigz'), "--blocksize", "4096", "--processes", "3", '-c'], bufsize = -1, stdin = subprocess.PIPE, stdout = open(run_info['info']['R1-out'], 'w'))
         fout1 = p3.stdin
-        p4 = subprocess.Popen([self.tool('pigz'), "--blocksize", "4096", "--processes", "3", "--stdout"], bufsize = -1, stdin = subprocess.PIPE, stdout = fout2f)
+        p4 = subprocess.Popen([self.tool('pigz'), "--blocksize", "4096", "--processes", "3", '-c'], bufsize = -1, stdin = subprocess.PIPE, stdout = open(run_info['info']['R2-out'], 'w'))
         fout2 = p4.stdin
 
         rcount = 0

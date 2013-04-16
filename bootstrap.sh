@@ -5,3 +5,4 @@
 
 virtualenv python_env
 ./python_env/bin/pip install textile pyyaml
+gcc -o tools/cat4m tools/cat4m.c

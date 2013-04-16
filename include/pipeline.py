@@ -240,7 +240,9 @@ class Pipeline(object):
         if not 'tools' in self.config:
             return
         for tool_id, info in self.config['tools'].items():
-            command = [info['path'], info['get_version']]
+            command = [info['path']]
+            if 'get_version' in info:
+                command.append(info['get_version'])
             exit_code = None
             proc = subprocess.Popen(command, stdout = subprocess.PIPE,
                 stderr = subprocess.PIPE, close_fds = True)
@@ -255,7 +257,7 @@ class Pipeline(object):
             if 'exit_code' in info:
                 expected_exit_code = info['exit_code']
             if exit_code != expected_exit_code:
-                raise ConfigurationException("Tool check failed for " + tool_id + ": " + ' '.join(command))
+                raise ConfigurationException("Tool check failed for " + tool_id + ": " + ' '.join(command) + ' - exit code is: ' + str(exit_code) + ' (expected ' + str(expected_exit_code) + ')')
 
     # returns a short description of the configured pipeline
     def __str__(self):

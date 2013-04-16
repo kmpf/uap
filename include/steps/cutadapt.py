@@ -68,9 +68,10 @@ class Cutadapt(AbstractStep):
             raise StandardError("Expected a single output file.")
 
         # set up processes
+        cat4m = [self.tool('cat4m')]
+        cat4m.extend(*sorted(run_info['output_files']['reads'].values()))
+
         pigz1 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '1', '-d', '-c']
-        # now insert the input files
-        pigz1.extend(*sorted(run_info['output_files']['reads'].values()))
 
         cutadapt = [self.tool('cutadapt'), '-a', run_info['info']['adapter'], '-']
 
@@ -78,6 +79,7 @@ class Cutadapt(AbstractStep):
 
         # create the pipeline and run it
         up = unix_pipeline.UnixPipeline()
+        up.append(cat4m)
         up.append(pigz1)
         up.append(cutadapt, stderr = open(run_info['output_files']['log'].keys()[0], 'w'))
         up.append(pigz2, stdout = open(run_info['output_files']['reads'].keys()[0], 'w'))

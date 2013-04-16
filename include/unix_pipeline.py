@@ -7,6 +7,8 @@ class UnixPipeline(object):
     def __init__(self):
         self.procs = []
         self.procs_pid = []
+
+        # the stdout of the last process
         self.use_stdin = None
         self.copy_streams = []
         self.upstream_procs = {}
