@@ -9,6 +9,7 @@ class FixCutadapt(AbstractStep):
 
     def setup_runs(self, input_run_info_complete):
         # make sure tools are available
+        self.tool('cat4m')
         self.tool('pigz')
 
         output_run_info = {}

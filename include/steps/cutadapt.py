@@ -13,6 +13,7 @@ class Cutadapt(AbstractStep):
 
     def setup_runs(self, complete_input_run_info):
         # make sure tools are available
+        self.tool('cat4m')
         self.tool('pigz')
         self.tool('cutadapt')
 
