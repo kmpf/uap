@@ -89,22 +89,19 @@ class Segemehl(AbstractStep):
             '-q', run_info['info']['R1-in'],
             '-p', run_info['info']['R2-in'],
             '-H', '1',
-            '-t', '11',
+            '-t', '10',
             '-s', '-S',
-            '-o', temp_out_name
+            '-o', '/dev/stdout'
         ]
         
-        up = unix_pipeline.UnixPipeline()
-        up.append(segemehl, 
-                  stderr = open(run_info['output_files']['log'].keys()[0], 'w'))
-        up.run()
+        pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
         
-        pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '11', '-c', temp_out_name]
         up = unix_pipeline.UnixPipeline()
+        up.append(segemehl, stderr = open(run_info['output_files']['log'].keys()[0], 'w'))
         up.append(pigz, stdout = open(out_name, 'w'))
         up.run()
 
-        os.remove(temp_out_name)
+        #os.remove(temp_out_name)
         os.unlink(fifo_path_genome)
         #os.unlink(fifo_path_r1)
         #os.unlink(fifo_path_r2)
