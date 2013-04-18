@@ -47,45 +47,14 @@ class Segemehl(AbstractStep):
         os.unlink(fifo_path_genome)
         os.mkfifo(fifo_path_genome)
 
-        #_, fifo_path_r1 = tempfile.mkstemp('segemehl-r1-fifo')
-        #os.close(_)
-        #os.unlink(fifo_path_r1)
-        #os.mkfifo(fifo_path_r1)
-
-        #_, fifo_path_r2 = tempfile.mkstemp('segemehl-r2-fifo')
-        #os.close(_)
-        #os.unlink(fifo_path_r2)
-        #os.mkfifo(fifo_path_r2)
-
-        #_, fifo_path_sam = tempfile.mkstemp('segemehl-sam-fifo')
-        #os.close(_)
-        #os.unlink(fifo_path_sam)
-        #os.mkfifo(fifo_path_sam)
-
         subprocess.Popen(
             [self.tool('cat4m'), self.options['genome'], '-o', fifo_path_genome],
             preexec_fn = os.setsid)
-
-        #subprocess.Popen(
-            #[self.tool('cat4m'), fifo_path_sam, '-o', temp_out_name],
-            #preexec_fn = os.setsid)
-            
-        '''
-        subprocess.Popen(
-            [self.tool('cat4m'), run_info['info']['R1-in'], '-o', fifo_path_r1],
-            preexec_fn = os.setsid)
-
-        subprocess.Popen(
-            [self.tool('cat4m'), run_info['info']['R2-in'], '-o', fifo_path_r2],
-            preexec_fn = os.setsid)
-        '''
 
         segemehl = [
             self.tool('segemehl'),
             '-d', fifo_path_genome,
             '-i', self.options['index'],
-            #'-q', fifo_path_r1,
-            #'-p', fifo_path_r2,
             '-q', run_info['info']['R1-in'],
             '-p', run_info['info']['R2-in'],
             '-H', '1',
@@ -101,37 +70,4 @@ class Segemehl(AbstractStep):
         up.append(pigz, stdout = open(out_name, 'w'))
         up.run()
 
-        #os.remove(temp_out_name)
         os.unlink(fifo_path_genome)
-        #os.unlink(fifo_path_r1)
-        #os.unlink(fifo_path_r2)
-        #os.unlink(fifo_path_sam)
-
-'''
--------------------------------------
-/home/michael/data/genomes/cre4.fasta
--------------------------------------
-READS:
-  < 32k  27763x
-
--------------------------------------------------------------------------------------------------------------------
-/home/michael/Desktop/rnaseq-pipeline/out/cutadapt-4ad64293/fix_cutadapt-bf21a9e8/Sample_COPD_363-fixed-R1.fastq.gz
--------------------------------------------------------------------------------------------------------------------
-READS:
-  < 32k   9741x
-
--------------------------------------------------------------------------------------------------
-/home/michael/Desktop/rnaseq-pipeline/out/temp/temp-njw0ja5o/Sample_COPD_363-segemehl-results.sam
--------------------------------------------------------------------------------------------------
-READS:
-  128k+      1x
-  < 32k     60x
-WRITES:
-  < 32k     57x
-
--------------------------------------------------------------------------------------------------------------------
-/home/michael/Desktop/rnaseq-pipeline/out/cutadapt-4ad64293/fix_cutadapt-bf21a9e8/Sample_COPD_363-fixed-R2.fastq.gz
--------------------------------------------------------------------------------------------------------------------
-READS:
-  < 32k   9189x
-'''
