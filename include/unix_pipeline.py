@@ -67,4 +67,7 @@ class UnixPipeline(object):
                             upstream_proc.terminate()
                         except OSError:
                             pass
-            self.procs_pid.remove(pid)
+            try:
+                self.procs_pid.remove(pid)
+            except:
+                pass

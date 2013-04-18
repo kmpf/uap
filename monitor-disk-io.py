@@ -72,8 +72,28 @@ def handle_line(pid, line):
                 path_for_pid_and_fd[pid] = {}
             fd = args.strip()
             #path_for_pid_and_fd[pid].pop(fd, None)
+        if command == 'lseek':
+            fd = None
+            m = re.search("^(\d+),", args)
+            if m:
+                fd = m.group(1)
+            if fd:
+                path = '[unknown]'
+                try:
+                    path = path_for_pid_and_fd[pid][fd]
+                except:
+                    if fd == '0':
+                        path = 'stdin'
+                    elif fd == '1':
+                        path = 'stdout'
+                    elif fd == '2':
+                        path = 'stderr'
+                    else:
+                        pass
+                if not path in stats:
+                    stats[path] = {'read': {}, 'write': {}, 'lseek': 0}
+                stats[path]['lseek'] += 1
         if command == 'read' or command == 'write':
-            #print(pid + ' ' + command + ' ' + args + ' ' + retval)
             fd = None
             size = None
             m = re.search("^(\d+),", args)
@@ -98,7 +118,7 @@ def handle_line(pid, line):
                     else:
                         pass
                 if not path in stats:
-                    stats[path] = {'read': {}, 'write': {}}
+                    stats[path] = {'read': {}, 'write': {}, 'lseek': 0}
                 if not sizek in stats[path][command]:
                     stats[path][command][sizek] = 0
                 stats[path][command][sizek] += 1
@@ -142,7 +162,7 @@ for line in strace_out:
 
 for path in stats.keys():
     cancel = False
-    for _ in ['.py', '.pyc', 'stdin', 'stdout', 'stderr', '/dev']:
+    for _ in ['python_env', '/proc', '/etc', '/usr', '.git', '.so', '.py', '.pyc', 'stdin', 'stdout', 'stderr', '/dev']:
         if _ in path:
             cancel = True
             continue
@@ -160,8 +180,8 @@ for path in stats.keys():
             mod_size[cat] += count
         for key in sorted(mod_size.keys(), reverse=True):
             size = key[1]
-            if key[0] == 0:
-                continue
+            #if key[0] == 0:
+                #continue
             if not printed_path:
                 print('-' * len(path))
                 print(path)
@@ -171,6 +191,13 @@ for path in stats.keys():
                 print(mode.upper() + 'S:')
                 printed_mode = True
             print('{:>8} {:>5}x'.format(str(size), str(mod_size[key])))
+    if stats[path]['lseek'] > 0:
+        if not printed_path:
+            print('-' * len(path))
+            print(path)
+            print('-' * len(path))
+            printed_path = True
+        print("LSEEKS:   " + str(stats[path]['lseek']) + 'x')
 
 for pid, f in proc_files.items():
     f.close()
