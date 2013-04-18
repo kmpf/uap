@@ -3,3 +3,4 @@ config.yaml
 *.pyc
 doc/cache
 out
+tools/cat4m
