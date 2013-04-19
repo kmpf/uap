@@ -244,8 +244,11 @@ class Pipeline(object):
             if 'get_version' in info:
                 command.append(info['get_version'])
             exit_code = None
-            proc = subprocess.Popen(command, stdout = subprocess.PIPE,
-                stderr = subprocess.PIPE, close_fds = True)
+            try:
+                proc = subprocess.Popen(command, stdout = subprocess.PIPE,
+                    stderr = subprocess.PIPE, close_fds = True)
+            except:
+                raise ConfigurationException("Tool not found: " + info['path'])
             proc.wait()
             exit_code = proc.returncode
             self.tool_versions[tool_id] = {
