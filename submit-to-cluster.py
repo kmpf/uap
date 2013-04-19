@@ -88,7 +88,6 @@ def submit_task(task, dependent_tasks_in = []):
     args = ['./run-locally.py']
     if '--even-if-dirty' in original_argv:
         args.append('--even-if-dirty')
-    args.append("--run-this")
     args.append('"' + str(task) + '"')
     submit_script = submit_script.replace("#{COMMAND}", ' '.join(args))
 

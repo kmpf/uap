@@ -1,6 +1,6 @@
 #!./python_env/bin/python
 
-# usage: ./monitor-disk-io.py ./run-locally.py --run-this [task ID]
+# usage: ./monitor-disk-io.py ./run-locally.py [task ID]
 
 import sys
 import copy
