@@ -96,10 +96,10 @@ class UnixPipeline(object):
             self.use_stdin = self.pipeline_procs[-1].stdout
         sys.stderr.write("[up] Launching " + ' '.join(args) + " ... ")
         proc = subprocess.Popen(args,
-            stdout = subprocess.PIPE,
-            bufsize = 4096 * 1024,
             stdin = self.use_stdin,
+            stdout = subprocess.PIPE,
             stderr = subprocess.PIPE,
+            bufsize = 4096 * 1024,
             preexec_fn = os.setsid
         )
         sys.stderr.write("launched as PID " + str(proc.pid) + "\n")

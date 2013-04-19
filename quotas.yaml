@@ -1,2 +1,5 @@
 "frontend[12]":
     default: 10
+    segemehl: 5
+    cutadapt: 1000
+    fix_cutadapt: 1000
