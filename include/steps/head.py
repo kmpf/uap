@@ -63,12 +63,12 @@ class Head(AbstractStep):
                         '--blocksize', '4096', '--processes', '3', '-c']
 
                     # create the pipeline and run it
-                    up = unix_pipeline.UnixPipeline()
+                    up = unix_pipeline.create_pipeline()
                     up.append(pigz1)
                     up.append(head)
                     up.append(pigz2, stdout = open(outpath, 'w'))
 
-                    up.run()
+                    unix_pipeline.wait()
                 else:
                     # it's not a gz-compressed file
                     dd1 = [self.tool('dd'), 'bs=4M', 'if=' + inpath]
@@ -78,9 +78,9 @@ class Head(AbstractStep):
                     dd2 = [self.tool('dd'), 'bs=4M', 'of=' + outpath]
 
                     # create the pipeline and run it
-                    up = unix_pipeline.UnixPipeline()
+                    up = unix_pipeline.create_pipeline()
                     up.append(dd1)
                     up.append(head)
                     up.append(dd2)
 
-                    up.run()
+                    unix_pipeline.wait()

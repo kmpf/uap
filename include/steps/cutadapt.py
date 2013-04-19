@@ -2,7 +2,6 @@ import sys
 from abstract_step import *
 import pipeline
 import re
-import subprocess
 import unix_pipeline
 import yaml
 
@@ -79,10 +78,10 @@ class Cutadapt(AbstractStep):
         pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '3', '-c']
 
         # create the pipeline and run it
-        up = unix_pipeline.UnixPipeline()
-        up.append(cat4m)
-        up.append(pigz1)
-        up.append(cutadapt, stderr = open(run_info['output_files']['log'].keys()[0], 'w'))
-        up.append(pigz2, stdout = open(run_info['output_files']['reads'].keys()[0], 'w'))
+        p = unix_pipeline.create_pipeline()
+        p.append(cat4m)
+        p.append(pigz1)
+        p.append(cutadapt, stderr = open(run_info['output_files']['log'].keys()[0], 'w'))
+        p.append(pigz2, stdout = open(run_info['output_files']['reads'].keys()[0], 'w'))
 
-        up.run()
+        unix_pipeline.wait()

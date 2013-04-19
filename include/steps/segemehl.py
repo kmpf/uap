@@ -1,7 +1,6 @@
 import sys
 from abstract_step import *
 import unix_pipeline
-import tempfile
 import yaml
 
 
@@ -26,6 +25,8 @@ class Segemehl(AbstractStep):
             output_run_info[run_id]['output_files'] = {}
             output_run_info[run_id]['output_files']['alignments']  = {}
             output_run_info[run_id]['output_files']['alignments'][run_id + '-segemehl-results.sam.gz'] = input_run_info['output_files']['reads'].keys()
+            output_run_info[run_id]['output_files']['unmapped']  = {}
+            output_run_info[run_id]['output_files']['unmapped'][run_id + '-segemehl-unmapped.sam.gz'] = input_run_info['output_files']['reads'].keys()
             output_run_info[run_id]['output_files']['log']  = {}
             output_run_info[run_id]['output_files']['log'][run_id + '-segemehl-log.txt'] = input_run_info['output_files']['reads'].keys()
             read_files = assign_strings(input_run_info['output_files']['reads'].keys(), ['R1', 'R2'])
@@ -40,16 +41,10 @@ class Segemehl(AbstractStep):
         if out_name[-3:] != '.gz':
             raise StandardError("Expected .gz in output file name")
 
-        temp_out_name = out_name[:-3]
-
-        _, fifo_path_genome = tempfile.mkstemp('segemehl-genome-fifo')
-        os.close(_)
-        os.unlink(fifo_path_genome)
-        os.mkfifo(fifo_path_genome)
-
-        subprocess.Popen(
-            [self.tool('cat4m'), self.options['genome'], '-o', fifo_path_genome],
-            preexec_fn = os.setsid)
+        fifo_path_genome = unix_pipeline.mkfifo('segemehl-genome-fifo')
+        fifo_path_unmapped = unix_pipeline.mkfifo('segemehl-unmapped-fifo')
+        
+        unix_pipeline.launch([self.tool('cat4m'), self.options['genome'], '-o', fifo_path_genome])
 
         segemehl = [
             self.tool('segemehl'),
@@ -57,17 +52,25 @@ class Segemehl(AbstractStep):
             '-i', self.options['index'],
             '-q', run_info['info']['R1-in'],
             '-p', run_info['info']['R2-in'],
+            '-u', fifo_path_unmapped,
             '-H', '1',
             '-t', '10',
             '-s', '-S',
+            '-D', '0',
             '-o', '/dev/stdout'
         ]
         
         pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
         
-        up = unix_pipeline.UnixPipeline()
-        up.append(segemehl, stderr = open(run_info['output_files']['log'].keys()[0], 'w'))
-        up.append(pigz, stdout = open(out_name, 'w'))
-        up.run()
+        p = unix_pipeline.create_pipeline()
+        p.append(segemehl, stderr = open(run_info['output_files']['log'].keys()[0], 'w'))
+        p.append(pigz, stdout = open(out_name, 'w'))
+        
+        p2 = unix_pipeline.create_pipeline()
+        pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
+        p2.append([self.tool('cat4m'), fifo_path_unmapped])
+        p2.append(pigz2, stdout = open(run_info['output_files']['unmapped'].keys()[0], 'w'))
+        
+        unix_pipeline.wait()
 
         os.unlink(fifo_path_genome)
