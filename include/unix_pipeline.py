@@ -6,7 +6,6 @@ import subprocess
 class UnixPipeline(object):
     def __init__(self):
         self.procs = []
-        self.procs_pid = []
 
         # the stdout of the last process
         self.use_stdin = None
@@ -25,7 +24,6 @@ class UnixPipeline(object):
             preexec_fn = os.setsid
         )
         self.procs.append(proc)
-        self.procs_pid.append(proc.pid)
         self.upstream_procs[proc.pid] = self.procs[0:-1]
 
         if stdout != None:
@@ -36,8 +34,7 @@ class UnixPipeline(object):
     def run(self):
         # set up threads for writing data
         for info in self.copy_streams:
-            pid = os.fork()
-            if not pid:
+            if os.fork() == 0:
                 while True:
                     block = info[0].read(4096 * 1024)
                     if len(block) == 0:
@@ -45,11 +42,9 @@ class UnixPipeline(object):
                     info[1].write(block)
                 info[1].close()
                 os._exit(0)
-            else:
-                self.procs_pid.append(pid)
 
-        # wait until all processes have finished
-        while self.procs_pid:
+        # wait until all child processes have finished
+        while True:
             try:
                 pid, exitcode = os.wait()
             except OSError:
@@ -58,6 +53,8 @@ class UnixPipeline(object):
                 if not pid in self.ok_to_fail:
                     print(pid)
                     print(exitcode)
+                    sys.stdout.flush()
+                    sys.stderr.flush()
                     raise StandardError("PIPELINE CRASHED, OH MY.")
             else:
                 if pid in self.upstream_procs:
@@ -67,7 +64,3 @@ class UnixPipeline(object):
                             upstream_proc.terminate()
                         except OSError:
                             pass
-            try:
-                self.procs_pid.remove(pid)
-            except:
-                pass
