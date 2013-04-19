@@ -13,6 +13,10 @@ original_argv = copy.copy(sys.argv)
 
 p = pipeline.Pipeline()
 
+task_wish_list = None
+if len(sys.argv) > 1:
+    task_wish_list = sys.argv[1:]
+
 tasks_left = []
 
 # a hash of files which are already there or will be there once submitted jobs
@@ -70,7 +74,6 @@ def submit_task(task, dependent_tasks_in = []):
     if quota_predecessor:
         dependent_tasks.append(quota_predecessor)
 
-    sys.stdout.write("Submitting task " + str(task) + " with " + str(task.step._cores) + " cores => ")
     for path in task.output_files():
         if not path in file_hash:
             file_hash[path] = []
@@ -110,25 +113,30 @@ def submit_task(task, dependent_tasks_in = []):
         qsub_args.append("-hold_jid")
         qsub_args.append(','.join(dependent_tasks))
 
-    process = subprocess.Popen(qsub_args, bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
-    process.stdin.write(submit_script)
-    process.stdin.close()
-    process.wait()
-    response = process.stdout.read()
-    job_id = re.search('Your job (\d+)', response).group(1)
-    if job_id == None or len(job_id) == 0:
-        raise StandardError("Error: We couldn't parse a job id from this:\n" + response)
+    really_submit_this = True
+    if task_wish_list:
+        if not str(task) in task_wish_list:
+            really_submit_this = False
+    if really_submit_this:
+        sys.stdout.write("Submitting task " + str(task) + " with " + str(task.step._cores) + " cores => ")
+        process = subprocess.Popen(qsub_args, bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+        process.stdin.write(submit_script)
+        process.stdin.close()
+        process.wait()
+        response = process.stdout.read()
+        job_id = re.search('Your job (\d+)', response).group(1)
+        if job_id == None or len(job_id) == 0:
+            raise StandardError("Error: We couldn't parse a job id from this:\n" + response)
 
-    quota_jids[step_name][quota_offset[step_name]] = job_id
-    quota_offset[step_name] = (quota_offset[step_name] + 1) % len(quota_jids[step_name])
+        quota_jids[step_name][quota_offset[step_name]] = job_id
+        quota_offset[step_name] = (quota_offset[step_name] + 1) % len(quota_jids[step_name])
 
-    job_id_for_task[str(task)] = job_id
+        job_id_for_task[str(task)] = job_id
+
+        print(job_id)
+        if len(dependent_tasks) > 0:
+            print(" - with dependent tasks: " + ', '.join(dependent_tasks))
     tasks_left.remove(task)
-
-    print(job_id)
-    if len(dependent_tasks) > 0:
-        print(" - with dependent tasks: " + ', '.join(dependent_tasks))
-
 
 # first submit all tasks which are ready as per the file system
 while len(tasks_left) > 0:

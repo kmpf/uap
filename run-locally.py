@@ -8,11 +8,11 @@ import yaml
 
 p = pipeline.Pipeline()
 
-if '--run-this' in sys.argv:
+if len(sys.argv) > 1:
     # execute the specified task
-    task_id = sys.argv[sys.argv.index('--run-this') + 1]
-    task = p.task_for_task_id[task_id]
-    task.run()
+    for task_id in sys.argv[1:]:
+        task = p.task_for_task_id[task_id]
+        task.run()
     exit(0)
 
 task_list = copy.deepcopy(p.all_tasks)
