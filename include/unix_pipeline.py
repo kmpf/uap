@@ -1,6 +1,7 @@
 import sys
 sys.path.append('./include/steps')
 import os
+import signal
 import subprocess
 import tempfile
 
@@ -27,13 +28,22 @@ up_log = []
 
 def log(message):
     up_log.append(message)
-
+    
 def mkfifo(id):
     _, path = tempfile.mkstemp(id)
     os.close(_)
     os.unlink(path)
     os.mkfifo(path)
     return path
+
+def kill_all_child_processes():
+    for pid, name in name_for_pid.items():
+        try:
+            os.kill(pid, signal.SIGTERM)
+            sys.stderr.write("Killed " + name + " (PID " + str(pid) + ").\n")
+            sys.stderr.flush()
+        except OSError:
+            pass
 
 
 def launch_copy_thread(fin, fout):
@@ -84,9 +94,9 @@ def wait():
                 sys.stdout.flush()
                 sys.stderr.flush()
                 message = "Pipeline crashed, oh my.\n"
-                job_name = 'Job with PID ' + str(pid)
+                job_name = 'Process with PID ' + str(pid)
                 if pid in name_for_pid:
-                    job_name = name_for_pid[pid]
+                    job_name = name_for_pid[pid] + ' (PID ' + str(pid) + ')'
                 message += job_name + ' has crashed with exit code ' + str(exitcode) + '.\n'
                 message += "Full pipeline log:\n\n" + "\n".join(up_log) + "\n"
                 raise StandardError(message)

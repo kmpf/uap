@@ -34,7 +34,7 @@ class Pipeline(object):
     run_modes = Enum(['DRY_RUN', 'TEST_RUN', 'FULL'])
 
     def __init__(self):
-
+        
         # now determine the Git hash of the repository
         self.git_hash_tag = subprocess.check_output(['git', 'describe', '--all', '--dirty', '--long']).strip()
         if '-dirty' in self.git_hash_tag:
