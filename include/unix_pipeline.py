@@ -20,6 +20,7 @@ ok_to_fail = []
 #   C: [B, A]
 upstream_procs = {}
 
+name_for_pid = {}
 
 def mkfifo(id):
     _, path = tempfile.mkstemp(id)
@@ -40,6 +41,7 @@ def launch_copy_thread(fin, fout):
         fout.close()
         os._exit(0)
     else:
+        name_for_pid[pid] = '[copy thread]'
         sys.stderr.write("[up] Launched a copy thread with PID " + str(pid) + ".\n")
 
 
@@ -52,6 +54,7 @@ def launch(args, stdout = None, stderr = None):
         bufsize = 4096 * 1024,
         preexec_fn = os.setsid
     )
+    name_for_pid[proc.pid] = os.path.basename(args[0])
     sys.stderr.write("launched as PID " + str(proc.pid) + "\n")
 
     if stdout != None:
@@ -73,7 +76,12 @@ def wait():
                 # oops, something went wrong
                 sys.stdout.flush()
                 sys.stderr.flush()
-                raise StandardError("PIPELINE CRASHED, OH MY.")
+                message = "Pipeline crashed, oh my.\n"
+                job_name = 'Job with PID ' + str(pid)
+                if pid in name_for_pid:
+                    job_name = name_for_pid[pid]
+                message += job_name + ' has crashed with exit code ' + str(exitcode) + '.\n'
+                raise StandardError(message)
         else:
             if pid in upstream_procs:
                 for upstream_proc in upstream_procs[pid]:
@@ -105,6 +113,7 @@ class UnixPipeline(object):
         sys.stderr.write("launched as PID " + str(proc.pid) + "\n")
         self.pipeline_procs.append(proc)
         upstream_procs[proc.pid] = self.pipeline_procs[0:-1]
+        name_for_pid[proc.pid] = os.path.basename(args[0])
         
         if stdout != None:
             launch_copy_thread(proc.stdout, stdout)
