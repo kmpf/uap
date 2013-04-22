@@ -325,9 +325,19 @@ class AbstractStep(object):
             log['git_hash_tag'] = self.pipeline.git_hash_tag
             log['tool_versions'] = self.pipeline.tool_versions
 
-            annotation_path = os.path.join(self.get_output_directory(), 'annotation-' + hashlib.sha1(json.dumps(log, sort_keys=True)).hexdigest()[0:8] + '.yaml')
-            with open(annotation_path, 'w') as f:
-                f.write(yaml.dump(log, default_flow_style = False))
+            annotation_path = os.path.join(self.get_output_directory(), '.annotation-' + hashlib.sha1(json.dumps(log, sort_keys=True)).hexdigest()[0:8] + '.yaml')
+            # only write the annotation once
+            if not os.path.exists(annotation_path):
+                with open(annotation_path, 'w') as f:
+                    f.write(yaml.dump(log, default_flow_style = False))
+
+            # create a symbolic link for every output file
+            for annotation in temp_run_info['output_files'].keys():
+                for out_path in temp_run_info['output_files'][annotation].keys():
+                    destination_path = os.path.join(self.get_output_directory(), '.' + os.path.basename(out_path) + '.annotation.yaml')
+                    if os.path.exists(destination_path):
+                        os.unlink(destination_path)
+                    os.symlink(annotation_path, destination_path)
 
             # finally, remove the temporary directory if it's empty
             try:
