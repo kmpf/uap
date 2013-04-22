@@ -95,7 +95,7 @@ def fix_func_dict_subst(v, full_paths):
 # so that actual syscalls for this are only executed once and later re-used
 # from the cache
 
-fs_cache = {}
+fs_cache = dict()
 
 def fs_cache_path_exists(path):
     key = 'exists/' + path
@@ -114,7 +114,7 @@ def fs_cache_path_getmtime(path):
     return result
 
 def fs_cache_flush():
-    fs_cache = {}
+    fs_cache.clear()
 
 class AbstractStep(object):
     def __init__(self, pipeline):
@@ -356,6 +356,7 @@ class AbstractStep(object):
             # step has completed successfully, now determine how many jobs are still left
             # but first invalidate the FS cache because things have changed by now...
             fs_cache_flush()
+            
             count = {}
             for _ in self.get_run_ids():
                 state = self.get_run_state(_)
@@ -387,7 +388,7 @@ class AbstractStep(object):
             with open(annotation_path, 'w') as f:
                 f.write(yaml.dump(log, default_flow_style = False))
 
-            # create a symbolic link for every output file
+            # create a symbolic link to the annotation for every output file
             for annotation in temp_run_info['output_files'].keys():
                 for out_path in temp_run_info['output_files'][annotation].keys():
                     destination_path = os.path.join(self.get_output_directory(), '.' + os.path.basename(out_path) + '.annotation.yaml')
