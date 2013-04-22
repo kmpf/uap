@@ -29,6 +29,9 @@ up_log = []
 def log(message):
     up_log.append(message)
     
+def get_log():
+    return "\n".join(up_log)
+    
 def mkfifo(id):
     _, path = tempfile.mkstemp(id)
     os.close(_)
@@ -62,7 +65,6 @@ def launch_copy_thread(fin, fout):
 
 
 def launch(args, stdout = None, stderr = None, use_stdin = subprocess.PIPE):
-    log("[up] Launching " + ' '.join(args) + " ... ")
     proc = subprocess.Popen(args,
         stdin = use_stdin,
         stdout = subprocess.PIPE,
@@ -71,7 +73,7 @@ def launch(args, stdout = None, stderr = None, use_stdin = subprocess.PIPE):
         preexec_fn = os.setsid
     )
     name_for_pid[proc.pid] = os.path.basename(args[0])
-    log("launched as PID " + str(proc.pid) + '.')
+    log("[up] Launched " + ' '.join(args) + " as PID " + str(proc.pid) + '.')
 
     if stdout != None:
         launch_copy_thread(proc.stdout, stdout)
@@ -98,7 +100,7 @@ def wait():
                 if pid in name_for_pid:
                     job_name = name_for_pid[pid] + ' (PID ' + str(pid) + ')'
                 message += job_name + ' has crashed with exit code ' + str(exitcode) + '.\n'
-                message += "Full pipeline log:\n\n" + "\n".join(up_log) + "\n"
+                message += "Full pipeline log:\n\n" + get_log() + "\n"
                 raise StandardError(message)
         else:
             if pid in upstream_procs:

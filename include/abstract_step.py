@@ -11,6 +11,7 @@ import string
 import subprocess
 import traceback
 import yaml
+import unix_pipeline
 
 def get_step_class_for_key(key):
     classes = [_ for _ in inspect.getmembers(__import__(key), inspect.isclass) if AbstractStep in _[1].__bases__]
@@ -320,17 +321,18 @@ class AbstractStep(object):
             log['step'] = {}
             log['step']['options'] = self.options
             log['step']['id'] = self.get_step_id()
-            log['run_info'] = self.get_run_info()
-            log['run_id'] = run_id
+            log['run'] = {}
+            log['run']['run_info'] = self.get_run_info()[run_id]
+            log['run']['run_id'] = run_id
             log['config'] = self.pipeline.config
             log['git_hash_tag'] = self.pipeline.git_hash_tag
             log['tool_versions'] = self.pipeline.tool_versions
+            log['pipeline_log'] = unix_pipeline.up_log
 
-            annotation_path = os.path.join(self.get_output_directory(), '.annotation-' + hashlib.sha1(json.dumps(log, sort_keys=True)).hexdigest()[0:8] + '.yaml')
-            # only write the annotation once
-            if not os.path.exists(annotation_path):
-                with open(annotation_path, 'w') as f:
-                    f.write(yaml.dump(log, default_flow_style = False))
+            annotation_path = os.path.join(self.get_output_directory(), '.' + run_id + '-annotation.yaml')
+            # overwrite the annotation if it already exists
+            with open(annotation_path, 'w') as f:
+                f.write(yaml.dump(log, default_flow_style = False))
 
             # create a symbolic link for every output file
             for annotation in temp_run_info['output_files'].keys():
