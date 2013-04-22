@@ -20,7 +20,13 @@ ok_to_fail = []
 #   C: [B, A]
 upstream_procs = {}
 
+# for better error messages, this dict holds the process names for PIDs
 name_for_pid = {}
+
+up_log = []
+
+def log(message):
+    up_log.append(message)
 
 def mkfifo(id):
     _, path = tempfile.mkstemp(id)
@@ -42,32 +48,33 @@ def launch_copy_thread(fin, fout):
         os._exit(0)
     else:
         name_for_pid[pid] = '[copy thread]'
-        sys.stderr.write("[up] Launched a copy thread with PID " + str(pid) + ".\n")
+        log("[up] Launched a copy thread with PID " + str(pid) + ".")
 
 
-def launch(args, stdout = None, stderr = None):
-    sys.stderr.write("[up] Launching " + ' '.join(args) + " ... ")
+def launch(args, stdout = None, stderr = None, use_stdin = subprocess.PIPE):
+    log("[up] Launching " + ' '.join(args) + " ... ")
     proc = subprocess.Popen(args,
-        stdin = subprocess.PIPE,
+        stdin = use_stdin,
         stdout = subprocess.PIPE,
         stderr = subprocess.PIPE,
         bufsize = 4096 * 1024,
         preexec_fn = os.setsid
     )
     name_for_pid[proc.pid] = os.path.basename(args[0])
-    sys.stderr.write("launched as PID " + str(proc.pid) + "\n")
+    log("launched as PID " + str(proc.pid) + '.')
 
     if stdout != None:
         launch_copy_thread(proc.stdout, stdout)
     if stderr != None:
         launch_copy_thread(proc.stderr, stderr)
+    return proc
 
 def wait():
     # wait until all child processes have finished
     while True:
         try:
             pid, exitcode = os.wait()
-            sys.stderr.write("[up] Child " + str(pid) + " has exited with exit code " + str(exitcode) + ".\n")
+            log("[up] Child " + str(pid) + " has exited with exit code " + str(exitcode) + ".")
         except OSError:
             # no more children running, we are done
             break
@@ -81,6 +88,7 @@ def wait():
                 if pid in name_for_pid:
                     job_name = name_for_pid[pid]
                 message += job_name + ' has crashed with exit code ' + str(exitcode) + '.\n'
+                message += "Full pipeline log:\n\n" + "\n".join(up_log) + "\n"
                 raise StandardError(message)
         else:
             if pid in upstream_procs:
@@ -102,21 +110,8 @@ class UnixPipeline(object):
     def append(self, args, stdout = None, stderr = None):
         if len(self.pipeline_procs) > 0:
             self.use_stdin = self.pipeline_procs[-1].stdout
-        sys.stderr.write("[up] Launching " + ' '.join(args) + " ... ")
-        proc = subprocess.Popen(args,
-            stdin = self.use_stdin,
-            stdout = subprocess.PIPE,
-            stderr = subprocess.PIPE,
-            bufsize = 4096 * 1024,
-            preexec_fn = os.setsid
-        )
-        sys.stderr.write("launched as PID " + str(proc.pid) + "\n")
+            
+        proc = launch(args, stdout, stderr, use_stdin = self.use_stdin)
+
         self.pipeline_procs.append(proc)
         upstream_procs[proc.pid] = self.pipeline_procs[0:-1]
-        name_for_pid[proc.pid] = os.path.basename(args[0])
-        
-        if stdout != None:
-            launch_copy_thread(proc.stdout, stdout)
-        if stderr != None:
-            launch_copy_thread(proc.stderr, stderr)
-           
