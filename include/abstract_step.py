@@ -91,6 +91,31 @@ def fix_func_dict_subst(v, full_paths):
         return full_paths[v]
     return v
 
+# fs_cache records return values of 'exists' and 'getmtime' which is done
+# so that actual syscalls for this are only executed once and later re-used
+# from the cache
+
+fs_cache = {}
+
+def fs_cache_path_exists(path):
+    key = 'exists/' + path
+    if key in fs_cache:
+        return fs_cache[key]
+    result = os.path.exists(path)
+    fs_cache[key] = result
+    return result
+
+def fs_cache_path_getmtime(path):
+    key = 'getmtime/' + path
+    if key in fs_cache:
+        return fs_cache[key]
+    result = os.path.getmtime(path)
+    fs_cache[key] = result
+    return result
+
+def fs_cache_flush():
+    fs_cache = {}
+
 class AbstractStep(object):
     def __init__(self, pipeline):
         self.dependencies = []
@@ -98,6 +123,12 @@ class AbstractStep(object):
         self.pipeline = pipeline
         self.step_name = self.__module__
         self._run_info = None
+        # _file_dependencies_cumulative is secondary data which gets generated 
+        # from _run_info and keeps track of each output file's file 
+        # dependencies (regardless of the run id) and by file dependencies
+        # I mean ALL file dependencies including those from all of its
+        # parent steps (yup, that may become a lot of files)
+        self._file_dependencies_cumulative = {}
         self._cores = 1
 
     def set_cores(self, cores):
@@ -127,6 +158,7 @@ class AbstractStep(object):
     def get_run_info(self):
         # create run info if it doesn't exist yet
         if self._run_info == None:
+            # create input run info and simplify it a bit for setup_runs
             input_run_info = None
             full_paths = dict()
             if len(self.dependencies) > 0:
@@ -157,7 +189,25 @@ class AbstractStep(object):
                             full_paths[path] = os.path.join(self.get_output_directory(), path)
 
                 self._run_info = fix_dict(self._run_info, fix_func_dict_subst, full_paths)
-
+                
+                # fill _file_dependencies_cumulative
+                for run_id in self._run_info.keys():
+                    for tag in self._run_info[run_id]['output_files'].keys():
+                        for output_path, input_paths in self._run_info[run_id]['output_files'][tag].items():
+                            if output_path in self._file_dependencies_cumulative:
+                                raise StandardError("Error: Multiple run IDs want to create the same output file (" + output_path + ").")
+                            self._file_dependencies_cumulative[output_path] = copy.deepcopy(input_paths)
+                            # now recursively add dependencies of each input file, if any
+                            # ATTENTION: Actually, this is an ugly hack, there's no recursion here, but it still
+                            # works. It might break at some point, but right now it's fine. TODO: Prove that it
+                            # will remain fine.
+                            p = self.dependencies[0]
+                            l = input_paths
+                            for path in l:
+                                if path in p._file_dependencies_cumulative:
+                                    self._file_dependencies_cumulative[output_path].extend(p._file_dependencies_cumulative[path])
+                            
+        # now that the _run_info exists, it remains constant, just return it
         return self._run_info
 
     def get_run_ids(self):
@@ -229,12 +279,12 @@ class AbstractStep(object):
                 return True
             else:
                 # check the file system
-                if not os.path.exists(outpath):
+                if not fs_cache_path_exists(outpath):
                     return False
                 for inpath in inpaths:
-                    if not os.path.exists(inpath):
+                    if not fs_cache_path_exists(inpath):
                         return False
-                    if os.path.getmtime(inpath) > os.path.getmtime(outpath):
+                    if fs_cache_path_getmtime(inpath) > fs_cache_path_getmtime(outpath):
                         return False
                 return True
 
@@ -242,7 +292,8 @@ class AbstractStep(object):
         all_output_files_exist = True
         all_input_files_exist = True
         for annotation in run_info[run_id]['output_files'].keys():
-            for output_file, input_files in run_info[run_id]['output_files'][annotation].items():
+            for output_file in run_info[run_id]['output_files'][annotation].keys():
+                input_files = self._file_dependencies_cumulative[output_file]
                 if not path_up_to_date(output_file, input_files):
                     all_output_files_exist = False
                 for input_file in input_files:
@@ -303,6 +354,8 @@ class AbstractStep(object):
                     os.rename(out_path, destination_path)
 
             # step has completed successfully, now determine how many jobs are still left
+            # but first invalidate the FS cache because things have changed by now...
+            fs_cache_flush()
             count = {}
             for _ in self.get_run_ids():
                 state = self.get_run_state(_)
