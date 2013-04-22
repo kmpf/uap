@@ -186,6 +186,20 @@ class AbstractStep(object):
     def get_step_id(self):
         return '/'.join(self.get_dependency_path())
 
+    '''
+    get_task_id_fragmented returns the step ID, but in a way which puts
+    the most important information first, e. g.
+    -> segemehl/Sample_COPD_363 (cutadapt/fix_cutadapt/...)
+    instead of
+    -> cutadapt/fix_cutadapt/segemehl/Sample_COPD_363
+    '''
+    def get_task_id_fragmented(self, run_id):
+        path = self.get_dependency_path()
+        result = path[-1] + '/' + run_id
+        if len(path) > 1:
+            result += ' (' + '/'.join(path[:-1]) + '/...)'
+        return result
+
     def get_output_directory(self):
         # add the options to the output path so that different options result in
         # a different directory
@@ -271,14 +285,12 @@ class AbstractStep(object):
 
             temp_run_info = fix_dict(temp_run_info, fix_func_dict_subst, temp_paths)
 
-            self.pipeline.notify("[INFO] starting " + self.get_step_id() + "/" + run_id)
+            self.pipeline.notify("[INFO] starting " + self.get_task_id_fragmented(run_id))
             try:
                 self.execute(run_id, temp_run_info)
             except Exception as e:
-                self.pipeline.notify("[BAD] " + self.get_step_id() + "/" + run_id + " failed: " + str(e))
+                self.pipeline.notify("[BAD] " + self.get_task_id_fragmented(run_id) + " failed: " + str(e))
                 raise
-
-            self.pipeline.notify("[OK] " + self.get_step_id() + "/" + run_id + " successfully finished")
 
             # if we're here, we can assume the step has finished successfully
             # now rename the output files (move from temp directory to
@@ -288,6 +300,19 @@ class AbstractStep(object):
                     destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
                     # TODO: if the destination path already exists, this will overwrite the file.
                     os.rename(out_path, destination_path)
+
+            # step has completed successfully, now determine how many jobs are still left
+            count = {}
+            for _ in self.get_run_ids():
+                state = self.get_run_state(_)
+                if not state in count:
+                    count[state] = 0
+                count[state] += 1
+            remaining_task_info = ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())])
+            
+            message = "[OK] " + self.get_task_id_fragmented(run_id) + " successfully finished.\n"
+            message += str(self) + ': ' + remaining_task_info + "\n"
+            self.pipeline.notify(message)
 
             # now write the annotation
             log = {}
@@ -317,10 +342,5 @@ class AbstractStep(object):
         return self.pipeline.config['tools'][key]['path']
 
     def __str__(self):
-        s = self.step_name
-        #if len(self.options.keys()) > 0:
-            #s += " with options: " + str(self.options)
-        #if len(self.dependencies) > 0:
-            #s += " with dependencies: " + ', '.join(['(' + str(_) + ')' for _ in self.dependencies])
-        return s
+        return self.step_name
 
