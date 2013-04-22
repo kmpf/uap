@@ -338,7 +338,10 @@ class AbstractStep(object):
                     destination_path = os.path.join(self.get_output_directory(), '.' + os.path.basename(out_path) + '.annotation.yaml')
                     if os.path.exists(destination_path):
                         os.unlink(destination_path)
-                    os.symlink(annotation_path, destination_path)
+                    oldwd = os.getcwd()
+                    os.chdir(os.path.dirname(destination_path))
+                    os.symlink(os.path.basename(annotation_path), os.path.basename(destination_path))
+                    os.chdir(oldwd)
 
             # finally, remove the temporary directory if it's empty
             try:
