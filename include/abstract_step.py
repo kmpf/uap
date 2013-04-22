@@ -321,6 +321,7 @@ class AbstractStep(object):
             log['step']['options'] = self.options
             log['step']['id'] = self.get_step_id()
             log['run_info'] = self.get_run_info()
+            log['run_id'] = run_id
             log['config'] = self.pipeline.config
             log['git_hash_tag'] = self.pipeline.git_hash_tag
             log['tool_versions'] = self.pipeline.tool_versions
