@@ -232,7 +232,7 @@ class AbstractStep(object):
         return path
 
     def get_options_hashtag(self):
-        return hashlib.sha1(json.dumps(self.options, sort_keys=True)).hexdigest()[0:8]
+        return hashlib.sha1(json.dumps(self.options, sort_keys=True)).hexdigest()[0:4]
 
     def get_step_id(self):
         return '/'.join(self.get_dependency_path())
@@ -392,6 +392,7 @@ class AbstractStep(object):
             for annotation in temp_run_info['output_files'].keys():
                 for out_path in temp_run_info['output_files'][annotation].keys():
                     destination_path = os.path.join(self.get_output_directory(), '.' + os.path.basename(out_path) + '.annotation.yaml')
+                    # overwrite the symbolic link if it already exists
                     if os.path.exists(destination_path):
                         os.unlink(destination_path)
                     oldwd = os.getcwd()
