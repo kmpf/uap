@@ -19,19 +19,14 @@ def get_step_class_for_key(key):
         raise StandardError("need exactly one subclass of AbstractStep in " + key)
     return classes[0][1]
 
-'''
-Turns filenames like these (paths):
-    ['RIB0000794-cutadapt-R1.fastq.gz', 'RIB0000794-cutadapt-R2.fastq.gz']
-and this (tags):
-    ['R1', 'R2']
-...into this:
-    {
-        'R1': 'RIB0000794-cutadapt-R1.fastq.gz',
-        'R2': 'RIB0000794-cutadapt-R2.fastq.gz'
-    }
-If this is not possible without ambiguities, a StandardError is thrown
-'''
 def assign_strings(paths, tags):
+    '''
+    Assign strings (path names, for example) to tags. Example:
+      - paths = ['RIB0000794-cutadapt-R1.fastq.gz', 'RIB0000794-cutadapt-R2.fastq.gz']
+      - tags = ['R1', 'R2']
+      - result = { 'R1': 'RIB0000794-cutadapt-R1.fastq.gz', 'R2': 'RIB0000794-cutadapt-R2.fastq.gz' }
+    If this is not possible without ambiguities, a StandardError is thrown.
+    '''
 
     def check_candidate(paths, tags, head, tail):
         chopped = []
@@ -237,14 +232,14 @@ class AbstractStep(object):
     def get_step_id(self):
         return '/'.join(self.get_dependency_path())
 
-    '''
-    get_task_id_fragmented returns the step ID, but in a way which puts
-    the most important information first, e. g.
-    -> segemehl/Sample_COPD_363 (cutadapt/fix_cutadapt/...)
-    instead of
-    -> cutadapt/fix_cutadapt/segemehl/Sample_COPD_363
-    '''
     def get_task_id_fragmented(self, run_id):
+        '''
+        get_task_id_fragmented returns the step ID, but in a way which puts
+        the most important information first, e. g.
+        ``segemehl/Sample_COPD_363 (cutadapt/fix_cutadapt/...)``
+        instead of
+        ``cutadapt/fix_cutadapt/segemehl/Sample_COPD_363``
+        '''
         path = self.get_dependency_path()
         result = path[-1] + '/' + run_id
         if len(path) > 1:

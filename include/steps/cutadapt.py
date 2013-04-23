@@ -6,6 +6,26 @@ import unix_pipeline
 import yaml
 
 class Cutadapt(AbstractStep):
+    
+    '''
+    The cutadapt step can be used to clip adapter sequences from RNASeq reads.
+    
+    Options:
+    
+    - ``adapter-R1`` and ``adapter-R2`` for paired-end reads
+    - ``adapter`` for non-paired-end reads
+    
+    Required tools:
+    
+    - cutadapt
+    - cat4m
+    - pigz
+    
+    Any adapter may contain ``((INDEX))`` which will be replaced with every
+    sample's index. The resulting adapter is checked for sanity and a
+    StandardError is thrown if the adapter looks non-legit.
+    '''
+    
     def __init__(self, pipeline):
         super(Cutadapt, self).__init__(pipeline)
         self.set_cores(6)
