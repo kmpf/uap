@@ -26,7 +26,7 @@ class Segemehl(AbstractStep):
             output_run_info[run_id]['output_files']['alignments']  = {}
             output_run_info[run_id]['output_files']['alignments'][run_id + '-segemehl-results.sam.gz'] = input_run_info['output_files']['reads'].keys()
             output_run_info[run_id]['output_files']['unmapped']  = {}
-            output_run_info[run_id]['output_files']['unmapped'][run_id + '-segemehl-unmapped.sam.gz'] = input_run_info['output_files']['reads'].keys()
+            output_run_info[run_id]['output_files']['unmapped'][run_id + '-segemehl-unmapped.fastq.gz'] = input_run_info['output_files']['reads'].keys()
             output_run_info[run_id]['output_files']['log']  = {}
             output_run_info[run_id]['output_files']['log'][run_id + '-segemehl-log.txt'] = input_run_info['output_files']['reads'].keys()
             read_files = assign_strings(input_run_info['output_files']['reads'].keys(), ['R1', 'R2'])
