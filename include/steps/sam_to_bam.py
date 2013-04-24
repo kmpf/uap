@@ -68,6 +68,8 @@ class SamToBam(AbstractStep):
 
         # samtools index
         
-        unix_pipeline.launch([self.tool('samtools'), 'index', sorted_bam_path])
+        unix_pipeline.launch([self.tool('samtools'), 'index', sorted_bam_path, '/dev/stdout'],
+            stdout = open(sorted_bai_path, 'w'))
+
         unix_pipeline.wait()
         
