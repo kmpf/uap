@@ -9,9 +9,10 @@ import os
 import random
 import string
 import subprocess
+import tempfile
 import traceback
-import yaml
 import unix_pipeline
+import yaml
 
 def get_step_class_for_key(key):
     classes = [_ for _ in inspect.getmembers(__import__(key), inspect.isclass) if AbstractStep in _[1].__bases__]
@@ -127,6 +128,7 @@ class AbstractStep(object):
         # parent steps (yup, that may become a lot of files)
         self._file_dependencies_cumulative = {}
         self._cores = 1
+        self._temp_directory = None
 
     def set_cores(self, cores):
         self._cores = cores
@@ -323,6 +325,7 @@ class AbstractStep(object):
                 os.makedirs(self.get_output_directory())
             # also create a temporary directory for the output file
             temp_directory = self.get_temp_output_directory()
+            self._temp_directory = temp_directory
             os.makedirs(temp_directory)
 
             # call execute() but pass output file paths with the temporary directory
@@ -341,6 +344,7 @@ class AbstractStep(object):
                 self.pipeline.notify("[BAD] " + self.get_task_id_fragmented(run_id) + " failed: " + str(e))
                 raise
 
+            
             # if we're here, we can assume the step has finished successfully
             # now rename the output files (move from temp directory to
             # destination directory)
@@ -348,8 +352,12 @@ class AbstractStep(object):
                 for out_path in temp_run_info['output_files'][annotation].keys():
                     destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
                     # TODO: if the destination path already exists, this will overwrite the file.
+                    if not os.path.exists(out_path):
+                        raise StandardError("The step failed to produce an output file it announced: " + os.path.basename(out_path))
                     os.rename(out_path, destination_path)
 
+            self._temp_directory = None
+            
             # step has completed successfully, now determine how many jobs are still left
             # but first invalidate the FS cache because things have changed by now...
             fs_cache_flush()
@@ -408,6 +416,20 @@ class AbstractStep(object):
 
     def tool(self, key):
         return self.pipeline.config['tools'][key]['path']
+    
+    def get_temporary_path(self, prefix, suffix):
+        '''
+        Returns a temporary path with the prefix and suffix specified. The
+        returned path will be in the temporary directory.
+        '''
+        if not self._temp_directory:
+            raise StandardError("Temporary directory not set, you cannot call get_temporary_path from setup_runs.")
+
+        _, _path = tempfile.mkstemp(suffix, prefix, self._temp_directory)
+        os.close(_)
+        os.unlink(_path)
+
+        return _path        
 
     def __str__(self):
         return self.step_name

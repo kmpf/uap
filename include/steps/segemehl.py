@@ -74,3 +74,4 @@ class Segemehl(AbstractStep):
         unix_pipeline.wait()
 
         os.unlink(fifo_path_genome)
+        os.unlink(fifo_path_unmapped)
