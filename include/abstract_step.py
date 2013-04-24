@@ -22,9 +22,11 @@ def get_step_class_for_key(key):
 def assign_strings(paths, tags):
     '''
     Assign strings (path names, for example) to tags. Example:
+    
       - paths = ['RIB0000794-cutadapt-R1.fastq.gz', 'RIB0000794-cutadapt-R2.fastq.gz']
       - tags = ['R1', 'R2']
       - result = { 'R1': 'RIB0000794-cutadapt-R1.fastq.gz', 'R2': 'RIB0000794-cutadapt-R2.fastq.gz' }
+      
     If this is not possible without ambiguities, a StandardError is thrown.
     '''
 

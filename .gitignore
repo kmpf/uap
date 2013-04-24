@@ -1,6 +1,6 @@
 python_env
 config.yaml
 *.pyc
-doc/cache
 out
 tools/cat4m
+doc/build

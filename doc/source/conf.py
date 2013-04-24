@@ -12,12 +12,14 @@
 # serve to show the default.
 
 import sys, os
+from sphinx.ext import autodoc
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('../include/steps'))
-sys.path.insert(0, os.path.abspath('../include/'))
+sys.path.insert(0, os.path.abspath('../../include/steps'))
+sys.path.insert(0, os.path.abspath('../../include/'))
+sys.path.append(os.path.abspath('_ext'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -26,7 +28,10 @@ sys.path.insert(0, os.path.abspath('../include/'))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.coverage', 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.coverage', 
+              'sphinx.ext.viewcode', 'graphviz_svg']
+              
+#graphviz_output_format = 'svg'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -247,3 +252,35 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+#html_theme = "sphinxdoc"
+html_theme = "nature"
+#html_theme = "pyramid"
+#html_theme_options = {"stickysidebar": "true"}
+
+# credits go to http://stackoverflow.com/questions/7825263/including-docstring-in-sphinx-documentation
+
+class SimpleClassDocumenter(autodoc.ClassDocumenter):
+    objtype = "simpleclass"
+
+    #do not indent the content
+    content_indent = ""
+
+    #do not add a header to the docstring
+    def add_directive_header(self, sig):
+        pass
+    
+class SimpleMethodDocumenter(autodoc.MethodDocumenter):
+    objtype = "simplemethod"
+
+    #do not indent the content
+    content_indent = ""
+
+    #do not add a header to the docstring
+    def add_directive_header(self, sig):
+        pass
+    
+def setup(app): 
+    app.add_stylesheet('custom.css') 
+    app.add_autodocumenter(SimpleClassDocumenter)
+    app.add_autodocumenter(SimpleMethodDocumenter)

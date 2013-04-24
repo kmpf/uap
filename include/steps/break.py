@@ -2,12 +2,13 @@ import sys
 from abstract_step import *
 import pipeline
 
-'''
-This steps breaks the processing flow and does nothing. Because it
-returns no runs, its children never get run.
-'''
-
 class Break(AbstractStep):
+    '''
+    This steps breaks the processing flow and does nothing. Because it
+    returns no runs, its children never get run. Use it to conveniently
+    cut off branches of the step tree (it's like an uncommenting feature).
+    '''
+
     def __init__(self, pipeline):
         super(Break, self).__init__(pipeline)
 

@@ -1,0 +1,82 @@
+span.pre {
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    padding-top: 2px;
+    background-color: #f8f8f8;
+    padding-bottom: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
+    font-size: 10pt;
+}
+
+/*
+.admonition.important {
+    padding-left: 60px;
+    background: url(dialog-information.png) 4px 10px no-repeat;
+    min-height: 48px;
+}
+
+.admonition.attention {
+    padding-left: 60px;
+    background: url(emblem-important.png) 4px 10px no-repeat;
+    min-height: 48px;
+}
+
+.admonition * {
+    position: relative;
+    top: -50%;
+}
+*/
+
+div.sphinxsidebarwrapper {
+    position: fixed;
+    top: 32px;
+    left: 0;
+    width: 20em;
+    background-color: #f8f8f8;
+    border-right: 1px solid #aaa;
+    height: 100%;
+    -moz-box-shadow: 2px 2px 8px #aaa;
+    -webkit-box-shadow: 2px 2px 8px #aaa;
+    box-shadow: 2px 2px 8px #aaa;
+    padding: 1em;
+    padding-bottom: 1.5em;
+    padding-left: 2em;
+    padding-right: 2em;
+    overflow: auto;
+}
+
+div.bodywrapper {
+    margin-left: 18em;
+    margin-top: 32px;
+}
+
+div.related {
+    background-color: #73a946;
+}
+
+div.related:first-child {
+    position: fixed;
+    border-bottom: 1px solid #1d5d2b;
+    z-index: 999;
+    /*
+    -moz-box-shadow: 2px 2px 8px #aaa;
+    -webkit-box-shadow: 2px 2px 8px #aaa;
+    box-shadow: 2px 2px 8px #aaa;
+    */
+}
+
+div.body h1, div.body h2, div.body h3 {
+    background-color: #c6d4dd;
+}
+
+body {
+    background-color: #fff;
+}
+
+div.footer {
+    width: inherit;
+    text-align: right;
+    padding-top: 13px;
+    padding-right: 12px;
+}

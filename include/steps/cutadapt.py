@@ -6,7 +6,6 @@ import unix_pipeline
 import yaml
 
 class Cutadapt(AbstractStep):
-    
     '''
     The cutadapt step can be used to clip adapter sequences from RNASeq reads.
     

@@ -6,6 +6,15 @@ import unix_pipeline
 import yaml
 
 class Head(AbstractStep):
+    '''
+    The head step filters the first few lines of any input file (1000 by 
+    default). Uncompressed and Gzip-compressed files are handled correctly.
+    
+    Options:
+    
+    - ``lines``: specify the number of lines that should be returned
+    '''
+    
     def __init__(self, pipeline):
         super(Head, self).__init__(pipeline)
         self.set_cores(6)
