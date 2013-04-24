@@ -1,4 +1,4 @@
-.. title:: rnaseq-pipelined
+.. title:: rnaseq-pipeline
 
 Introduction
 ============
