@@ -549,14 +549,15 @@ On-the-fly steps:
                 graph [style=dashed, color="#808080"];
             }
         }
-        
-Indices and tables
-==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+..
+    Indices and tables
+    ==================
+
+    * :ref:`genindex`
+    * :ref:`modindex`
+    * :ref:`search`
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
