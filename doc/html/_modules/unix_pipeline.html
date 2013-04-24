@@ -1,0 +1,225 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>unix_pipeline &mdash; rnaseq-pipeline develop documentation</title>
+    
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'develop',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="rnaseq-pipeline develop documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">rnaseq-pipeline develop documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for unix_pipeline</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;./include/steps&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">signal</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+
+<span class="c"># a list of PIDs which are ok to fail because a child has terminated</span>
+<span class="c"># for example, if we do:</span>
+<span class="c"># $ cat [file] | head -n 10</span>
+<span class="c"># ...head would stop after ten lines. cat would run on forever if we</span>
+<span class="c"># wouldn&#39;t terminate it, so we do. But before that, we must remember</span>
+<span class="c"># that it&#39;s OK for cat to fail. Right?</span>
+<span class="c"># Values are integers (PIDs).</span>
+<span class="n">ok_to_fail</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c"># a dict of upstream procs for any proc in a pipeline, values are Popen objects</span>
+<span class="c"># A =&gt; B =&gt; C</span>
+<span class="c"># upstream_procs:</span>
+<span class="c">#   B: [A]</span>
+<span class="c">#   C: [B, A]</span>
+<span class="n">upstream_procs</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c"># for better error messages, this dict holds the process names for PIDs</span>
+<span class="n">name_for_pid</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="n">up_log</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="log"><a class="viewcode-back" href="../api.html#unix_pipeline.log">[docs]</a><span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Append a message to the pipeline log.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">up_log</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="get_log"><a class="viewcode-back" href="../api.html#unix_pipeline.get_log">[docs]</a><span class="k">def</span> <span class="nf">get_log</span><span class="p">():</span>
+    <span class="k">return</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">up_log</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="mkfifo"><a class="viewcode-back" href="../api.html#unix_pipeline.mkfifo">[docs]</a><span class="k">def</span> <span class="nf">mkfifo</span><span class="p">(</span><span class="nb">id</span><span class="p">):</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">mkfifo</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+</div>
+<div class="viewcode-block" id="kill_all_child_processes"><a class="viewcode-back" href="../api.html#unix_pipeline.kill_all_child_processes">[docs]</a><span class="k">def</span> <span class="nf">kill_all_child_processes</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">pid</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">name_for_pid</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">kill</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;Killed &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot; (PID &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;).</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="launch_copy_process"><a class="viewcode-back" href="../api.html#unix_pipeline.launch_copy_process">[docs]</a><span class="k">def</span> <span class="nf">launch_copy_process</span><span class="p">(</span><span class="n">fin</span><span class="p">,</span> <span class="n">fout</span><span class="p">,</span> <span class="n">other_pid</span><span class="p">,</span> <span class="n">which</span><span class="p">):</span>
+    <span class="n">pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="n">fin</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4096</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">fout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+        <span class="n">fout</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">_exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">name_for_pid</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;[copy process]&#39;</span>
+        <span class="n">log</span><span class="p">(</span><span class="s">&quot;[up] Launched a copy process with PID &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot; to capture &quot;</span> <span class="o">+</span> <span class="n">which</span> <span class="o">+</span> <span class="s">&quot; of PID &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">other_pid</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;.&quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="launch"><a class="viewcode-back" href="../api.html#unix_pipeline.launch">[docs]</a><span class="k">def</span> <span class="nf">launch</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">use_stdin</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">):</span>
+    <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">args</span><span class="p">,</span>
+        <span class="n">stdin</span> <span class="o">=</span> <span class="n">use_stdin</span><span class="p">,</span>
+        <span class="n">stdout</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+        <span class="n">stderr</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+        <span class="n">bufsize</span> <span class="o">=</span> <span class="mi">4096</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">,</span>
+        <span class="n">preexec_fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">setsid</span>
+    <span class="p">)</span>
+    <span class="n">name_for_pid</span><span class="p">[</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">&quot;[up] Launched &quot;</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot; as PID &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">stdout</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">launch_copy_process</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="s">&#39;stdout&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stderr</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">launch_copy_process</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="n">stderr</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="s">&#39;stderr&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">proc</span>
+</div>
+<div class="viewcode-block" id="wait"><a class="viewcode-back" href="../api.html#unix_pipeline.wait">[docs]</a><span class="k">def</span> <span class="nf">wait</span><span class="p">():</span>
+    <span class="c"># wait until all child processes have finished</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pid</span><span class="p">,</span> <span class="n">exitcode</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">&quot;[up] Child &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot; has exited with exit code &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">exitcode</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="c"># no more children running, we are done</span>
+            <span class="k">break</span>
+        <span class="k">if</span> <span class="n">exitcode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">ok_to_fail</span><span class="p">:</span>
+                <span class="c"># oops, something went wrong</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="s">&quot;Pipeline crashed, oh my.</span><span class="se">\n</span><span class="s">&quot;</span>
+                <span class="n">job_name</span> <span class="o">=</span> <span class="s">&#39;Process with PID &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">name_for_pid</span><span class="p">:</span>
+                    <span class="n">job_name</span> <span class="o">=</span> <span class="n">name_for_pid</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; (PID &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;)&#39;</span>
+                <span class="n">message</span> <span class="o">+=</span> <span class="n">job_name</span> <span class="o">+</span> <span class="s">&#39; has crashed with exit code &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">exitcode</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;.</span><span class="se">\n</span><span class="s">&#39;</span>
+                <span class="n">message</span> <span class="o">+=</span> <span class="s">&quot;Full pipeline log:</span><span class="se">\n\n</span><span class="s">&quot;</span> <span class="o">+</span> <span class="n">get_log</span><span class="p">()</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+                <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">upstream_procs</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">upstream_proc</span> <span class="ow">in</span> <span class="n">upstream_procs</span><span class="p">[</span><span class="n">pid</span><span class="p">]:</span>
+                    <span class="n">ok_to_fail</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">upstream_proc</span><span class="o">.</span><span class="n">pid</span><span class="p">)</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">upstream_proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+                    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                    </div>
+<div class="viewcode-block" id="create_pipeline"><a class="viewcode-back" href="../api.html#unix_pipeline.create_pipeline">[docs]</a><span class="k">def</span> <span class="nf">create_pipeline</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">UnixPipeline</span><span class="p">()</span>
+                    </div>
+<div class="viewcode-block" id="UnixPipeline"><a class="viewcode-back" href="../api.html#unix_pipeline.UnixPipeline">[docs]</a><span class="k">class</span> <span class="nc">UnixPipeline</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_procs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_stdin</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="UnixPipeline.append"><a class="viewcode-back" href="../api.html#unix_pipeline.UnixPipeline.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipeline_procs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">use_stdin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_procs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">stdout</span>
+            
+        <span class="n">proc</span> <span class="o">=</span> <span class="n">launch</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">,</span> <span class="n">use_stdin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_stdin</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_procs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
+        <span class="n">upstream_procs</span><span class="p">[</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_procs</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">rnaseq-pipeline develop documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Michael Specht.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

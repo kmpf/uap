@@ -1,3 +1,8 @@
+'''
+This module can be used to launch child processes and wait for them.
+Processes may either run on their own or pipelines can be built with them.
+'''
+
 import sys
 sys.path.append('./include/steps')
 import os
@@ -27,19 +32,31 @@ name_for_pid = {}
 up_log = []
 
 def log(message):
+    '''
+    Append a message to the pipeline log.
+    '''
     up_log.append(message)
     
 def get_log():
+    '''
+    Return the log as a single string.
+    '''
     return "\n".join(up_log)
     
-def mkfifo(id):
-    _, path = tempfile.mkstemp(id)
+def mkfifo(suffix):
+    '''
+    Create a temporary FIFO and return its path.
+    '''
+    _, path = tempfile.mkstemp(suffix)
     os.close(_)
     os.unlink(path)
     os.mkfifo(path)
     return path
 
 def kill_all_child_processes():
+    '''
+    Kill all child processes launched via this module by sending a SIGTERM to each of them.
+    '''
     for pid, name in name_for_pid.items():
         try:
             os.kill(pid, signal.SIGTERM)
@@ -50,6 +67,9 @@ def kill_all_child_processes():
 
 
 def launch_copy_process(fin, fout, other_pid, which):
+    '''
+    Launch a copy process which copies data from ``fin`` to ``fout`` in chunks of 4M.
+    '''
     pid = os.fork()
     if pid == 0:
         while True:
@@ -65,6 +85,9 @@ def launch_copy_process(fin, fout, other_pid, which):
 
 
 def launch(args, stdout = None, stderr = None, use_stdin = subprocess.PIPE):
+    '''
+    Launch a process.
+    '''
     proc = subprocess.Popen(args,
         stdin = use_stdin,
         stdout = subprocess.PIPE,
@@ -82,7 +105,9 @@ def launch(args, stdout = None, stderr = None, use_stdin = subprocess.PIPE):
     return proc
 
 def wait():
-    # wait until all child processes have finished
+    '''
+    Wait until all child processes have finished.
+    '''
     while True:
         try:
             pid, exitcode = os.wait()
@@ -112,14 +137,26 @@ def wait():
                         pass
                     
 def create_pipeline():
+    '''
+    Create a new pipeline instance.
+    '''
     return UnixPipeline()
                     
 class UnixPipeline(object):
+    '''
+    This class can be used to chain multiple processes together.
+    '''
     def __init__(self):
         self.pipeline_procs = []
         self.use_stdin = None
 
     def append(self, args, stdout = None, stderr = None):
+        '''
+        Append a process to the pipeline. If there already is a process in
+        the pipeline, its ``stdout`` will be connected to the ``stdin`` of 
+        the new process. File objects may be passed to capture ``stdout`` 
+        and ``stderr``.
+        '''
         if len(self.pipeline_procs) > 0:
             self.use_stdin = self.pipeline_procs[-1].stdout
             

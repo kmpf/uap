@@ -9,6 +9,8 @@ class Head(AbstractStep):
     '''
     The head step filters the first few lines of any input file (1000 by 
     default). Uncompressed and Gzip-compressed files are handled correctly.
+    This step is useful to drastically reduce the amount of data in order
+    to quickly test a pipeline.
     
     Options:
     

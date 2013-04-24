@@ -16,9 +16,9 @@ class Cutadapt(AbstractStep):
     
     Required tools:
     
-    - cutadapt
+    - cutadapt (https://code.google.com/p/cutadapt/)
+    - pigz (http://zlib.net/pigz/)
     - cat4m
-    - pigz
     
     Any adapter may contain ``((INDEX))`` which will be replaced with every
     sample's index. The resulting adapter is checked for sanity and a

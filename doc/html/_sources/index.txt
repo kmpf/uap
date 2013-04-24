@@ -266,12 +266,6 @@ Different quotas can be defined for each step. A quota of 5 means that no
 more than 5 jobs of on kind (the same step) will be run in parallel.
 
   
-The pipeline
-============
-
-.. automodule:: pipeline
-    :members:
-    
 Sources
 =======
 
@@ -324,7 +318,7 @@ The string is later parsed by the pipeline and the most important parts are
 the individual steps which are to be performed. The relationship betweens 
 steps is declared via indentation.
 
-.. NOTE:: Why do we need the | symbol in the steps definition? Neither the 
+.. NOTE:: Why do we need the ``|`` symbol in the steps definition? Neither the 
     list nor the dictionary syntax allow for a concise definition of a step 
     tree with options. Think of the step definition as a nested list with an 
     option hash attached to every item.
@@ -390,8 +384,11 @@ Break
 Preprocessing
 -------------
     
+Adapter clipping
+~~~~~~~~~~~~~~~~
+
 Cutadapt
-~~~~~~~~
+^^^^^^^^
 
 .. graphviz::
 
@@ -415,7 +412,7 @@ Cutadapt
 .. autosimpleclass:: cutadapt.Cutadapt
     
 Fix cutadapt
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 
 .. graphviz::
 
@@ -497,6 +494,9 @@ steps or modifying existing steps:
 To-do list
 ==========
 
+Timestamps:
+    ``unix_pipeline`` log messages should include timestamps.
+
 Getting started package:
     We need a small package which demonstrates a quick pipeline, including
     the configuration and all required tools.
@@ -550,14 +550,14 @@ On-the-fly steps:
             }
         }
 
-..
-    Indices and tables
-    ==================
+Indices and tables
+==================
 
-    * :ref:`genindex`
-    * :ref:`modindex`
-    * :ref:`search`
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
 
 .. toctree::
     :maxdepth: 2
 
+    api
