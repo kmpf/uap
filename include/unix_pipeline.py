@@ -49,7 +49,7 @@ def kill_all_child_processes():
             pass
 
 
-def launch_copy_thread(fin, fout):
+def launch_copy_process(fin, fout, other_pid, which):
     pid = os.fork()
     if pid == 0:
         while True:
@@ -60,8 +60,8 @@ def launch_copy_thread(fin, fout):
         fout.close()
         os._exit(0)
     else:
-        name_for_pid[pid] = '[copy thread]'
-        log("[up] Launched a copy thread with PID " + str(pid) + ".")
+        name_for_pid[pid] = '[copy process]'
+        log("[up] Launched a copy process with PID " + str(pid) + " to capture " + which + " of PID " + str(other_pid) + ".")
 
 
 def launch(args, stdout = None, stderr = None, use_stdin = subprocess.PIPE):
@@ -76,9 +76,9 @@ def launch(args, stdout = None, stderr = None, use_stdin = subprocess.PIPE):
     log("[up] Launched " + ' '.join(args) + " as PID " + str(proc.pid) + '.')
 
     if stdout != None:
-        launch_copy_thread(proc.stdout, stdout)
+        launch_copy_process(proc.stdout, stdout, proc.pid, 'stdout')
     if stderr != None:
-        launch_copy_thread(proc.stderr, stderr)
+        launch_copy_process(proc.stderr, stderr, proc.pid, 'stderr')
     return proc
 
 def wait():
