@@ -73,3 +73,4 @@ class SamToBam(AbstractStep):
 
         unix_pipeline.wait()
         
+        os.unlink(unsorted_bam_path)
