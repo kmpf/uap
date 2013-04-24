@@ -8,9 +8,12 @@ bioinformatics data evaluation.
 
 **Simplicity:**
 
-* The entire processing pipeline is described via a config file. Step are 
-  defined in a tree, and output files are written into a directory structure 
-  mirroring this tree.
+* The entire processing pipeline is described via a configuration file. Steps 
+  are defined in a tree, and output files are written into a directory 
+  structure mirroring this tree.
+* Interaction with the pipeline happens through simple scripts which are used 
+  to monitor the state of the pipeline and execute individual or all 
+  remaining steps.
 * To add a new processing step, a single Python file must be placed in 
   ``include/step`` which defines a class with two functions, one for 
   planning all jobs based on a list of input files or runs and possibly 
@@ -19,9 +22,9 @@ bioinformatics data evaluation.
 
 **Robustness:**
 
-* All steps write their output files to a temporary location (a fact which a 
-  step is not aware of). Only if a step has completed successfully, the 
-  output files are copied to the correct output directory.
+* All steps write their output files to a temporary location. Only if a step 
+  has completed successfully, the output files are copied to the correct 
+  output directory.
 * The output directory names are suffixed with a four-character hashtag 
   which mirrors the options specified for the step.
 * Processing can be aborted and continued from the command line at any time. 
@@ -50,6 +53,10 @@ can be executed sequentially or can be submitted to a cluster.
 
 Setup
 =====
+
+The repository can be obtained like this::
+
+    $ git clone spechtm@bioinf1:/home/spechtm/rnaseq-pipeline.git
 
 After cloning the repository, run the bootstrapping script to create the 
 required Python environment (which will be located in ``./python_env/``)::
@@ -500,6 +507,9 @@ Capture process output:
     be included into the error message if a pipeline fails. Also, the 
     captured output should be incorporated into the YAML annotations which
     are written for every output file.
+    
+    *Plus:* This would also allow for the automatic generation of SHA1 
+    checksums on the fly.
     
 Steps should be able to access all ancestors:
     All upstream steps should be accessible via their step name or output 
