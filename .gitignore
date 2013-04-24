@@ -3,4 +3,4 @@ config.yaml
 *.pyc
 out
 tools/cat4m
-doc/build
+doc/doctrees

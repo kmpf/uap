@@ -1,0 +1,723 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>rnaseq-pipelined &mdash; rnaseq-pipeline develop documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'develop',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="rnaseq-pipeline develop documentation" href="#" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">rnaseq-pipeline develop documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>The aim of this data processing pipeline is to enable simple and robust
+bioinformatics data evaluation.</p>
+<p><strong>Simplicity:</strong></p>
+<ul class="simple">
+<li>The entire processing pipeline is described via a config file. Step are
+defined in a tree, and output files are written into a directory structure
+mirroring this tree.</li>
+<li>To add a new processing step, a single Python file must be placed in
+<tt class="docutils literal"><span class="pre">include/step</span></tt> which defines a class with two functions, one for
+planning all jobs based on a list of input files or runs and possibly
+additional information from previous steps and another function for
+running a specific job.</li>
+</ul>
+<p><strong>Robustness:</strong></p>
+<ul class="simple">
+<li>All steps write their output files to a temporary location (a fact which a
+step is not aware of). Only if a step has completed successfully, the
+output files are copied to the correct output directory.</li>
+<li>The output directory names are suffixed with a four-character hashtag
+which mirrors the options specified for the step.</li>
+<li>Processing can be aborted and continued from the command line at any time.
+This way, cluster failures are less critical because output files do not
+get compromised.</li>
+<li>Comprehensive annotations are written to the output directories, allowing
+for later investigation about what exactly happened.</li>
+<li>Errors are caught as early as possible. Tools are checked for availability,
+and the entire processing pipeline is calculated in advance before
+jobs are being started or submitted to a cluster.</li>
+</ul>
+<p>A pipeline is defined by two aspects:</p>
+<ul class="simple">
+<li>all processing steps arranges in a dependency tree</li>
+<li>its input samples</li>
+</ul>
+<p>The combination of <em>steps</em> and <em>samples</em> result in a list of <em>tasks</em>, which
+can be executed sequentially or can be submitted to a cluster.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The design decision that steps are defined as a tree instead
+of a full directed acyclic graph means that a step cannot have more than
+one direct parent, like a directory in a file system cannot have more than
+one parent directory. This means that a step cannot use the output of two
+different steps as its input. However, any step may have more than one
+input or output file.</p>
+</div>
+</div>
+<div class="section" id="setup">
+<h1>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h1>
+<p>After cloning the repository, run the bootstrapping script to create the
+required Python environment (which will be located in <tt class="docutils literal"><span class="pre">./python_env/</span></tt>):</p>
+<div class="highlight-python"><pre>$ ./bootstrap.sh</pre>
+</div>
+<p>There&#8217;s no harm in accidentally running this script multiple times. Also,
+it will compile <tt class="docutils literal"><span class="pre">cat4m</span></tt>, a tool which can be found at <tt class="docutils literal"><span class="pre">./tools/cat4m</span></tt>
+and which is able to read arbitrary input files in chunks of 4 MB
+and prints them to stdout.</p>
+<div class="section" id="the-configuration-file">
+<h2>The configuration file<a class="headerlink" href="#the-configuration-file" title="Permalink to this headline">¶</a></h2>
+<p>Next, edit <tt class="docutils literal"><span class="pre">config.sample.yaml</span></tt> and save it as <tt class="docutils literal"><span class="pre">config.yaml</span></tt>. Although
+writing the configuration may seem a bit complicated, the trouble pays off
+later because further interaction with the pipeline is quite simple. Here is
+a sample configuration:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="c1"># This is the rnaseq-pipeline configuration file.</span>
+<span class="l-Scalar-Plain">email</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">micha.specht@gmail.com</span>
+<span class="l-Scalar-Plain">sources</span><span class="p-Indicator">:</span>
+<span class="p-Indicator">-</span> <span class="l-Scalar-Plain">run_folder_source</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span> <span class="nv">path</span><span class="p-Indicator">:</span> <span class="nv">in</span> <span class="p-Indicator">}</span>
+<span class="l-Scalar-Plain">destination_path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">out</span>
+<span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span> <span class="p-Indicator">|</span>
+    <span class="no">- cutadapt {</span>
+        <span class="no">adapter-R1: &quot;AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG&quot;</span>
+        <span class="no">adapter-R2: &quot;AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT&quot;</span>
+    <span class="no">}</span>
+        <span class="no">- fix_cutadapt</span>
+<span class="l-Scalar-Plain">tools</span><span class="p-Indicator">:</span>
+    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="s">&#39;tools/cutadapt-1.2.1/bin/cutadapt&#39;</span>
+        <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="s">&#39;--version&#39;</span>
+    <span class="l-Scalar-Plain">pigz</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="s">&#39;pigz&#39;</span>
+        <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="s">&#39;--version&#39;</span>
+    <span class="l-Scalar-Plain">dd</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="s">&#39;dd&#39;</span>
+        <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="s">&#39;--version&#39;</span>
+</pre></div>
+</div>
+<p>In the configuration, the following aspects of the pipeline are defined:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">sources</span></tt> &#8211; there can be multiple sources of different types:<ul>
+<li>run folders</li>
+<li>plain fastq.gz files with additional information</li>
+</ul>
+</li>
+<li><tt class="docutils literal"><span class="pre">destination_path</span></tt> &#8211; this is where result files, annotations and
+temporary files are written to</li>
+<li><tt class="docutils literal"><span class="pre">steps</span></tt> &#8211; defines the processing step arranged in a tree</li>
+<li><tt class="docutils literal"><span class="pre">tools</span></tt> &#8211; defines all tools used in the pipeline and how to determine
+their versions (for later reference)</li>
+<li><tt class="docutils literal"><span class="pre">email</span></tt> &#8211; when submitting jobs on a cluster, messages will be sent to
+this email address (<a class="reference external" href="mailto:nobody&#37;&#52;&#48;example&#46;com">nobody<span>&#64;</span>example<span>&#46;</span>com</a> by default)</li>
+</ul>
+</div>
+</div>
+<div class="section" id="scripts">
+<h1>Scripts<a class="headerlink" href="#scripts" title="Permalink to this headline">¶</a></h1>
+<p>Once the project is set up, there are several scripts which can be used to
+execute and monitor the pipeline. All scripts have a couple of properties in
+common:</p>
+<ul class="simple">
+<li>On startup, the configuration is read, tools are checked, input files are
+collected, and all tasks are calculated. If any of these steps fails, the
+script will print an error message with a backtrace and it will crash.</li>
+<li>For convenience, a symbolic link called <tt class="docutils literal"><span class="pre">out</span></tt> will be placed in the
+pipeline&#8217;s directory which points to the output directory defined in the
+configuration file. If <tt class="docutils literal"><span class="pre">out</span></tt> already exists, it is left untouched.</li>
+</ul>
+<p>There are a couple of global command line parameters which are valid for all
+scripts:</p>
+<ul>
+<li><dl class="first docutils">
+<dt><tt class="docutils literal"><span class="pre">--even-if-dirty</span></tt>:</dt>
+<dd><p class="first last">Before doing anything else, the pipeline checks whether its source code
+has been modified in any way via Git. If yes, processing is stopped
+immediately unless this flag is specified.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><tt class="docutils literal"><span class="pre">--test-run</span></tt>:</dt>
+<dd><p class="first last">When this parameter is specified, a <tt class="docutils literal"><span class="pre">head</span></tt> step is placed before all
+first-level steps in the step tree, which returns the first 1000 lines
+of every input file. That way, a pipeline can be tested very quickly
+with a small input data set.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>In the following, the scripts are described in detail.</p>
+<div class="section" id="status-py">
+<h2>status.py<a class="headerlink" href="#status-py" title="Permalink to this headline">¶</a></h2>
+<p>The status script lists all tasks resulting from the configured steps and
+input samples. At the beginning of each line, the status of each task is
+denoted by [w], [r], and [f], corresponding to:</p>
+<ul class="simple">
+<li><strong>waiting</strong> &#8211; the taks is waiting for input files to appear or to be updated</li>
+<li><strong>ready</strong> &#8211; all input files are present and up-to-date regarding their
+upstream input files, task can be started</li>
+<li><strong>finished</strong> &#8211; all output files are in place and up-to-date</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In the current design, there is no mechanism to indicate
+whether a task is currently running or has been submitted to a cluster.</p>
+</div>
+<p>Here is an example output:</p>
+<div class="highlight-python"><pre>$ ./status.py
+[r] cutadapt/RIB0000784-R1
+[r] cutadapt/RIB0000784-R2
+[r] cutadapt/RIB0000770-R2
+[r] cutadapt/RIB0000770-R1
+[w] cutadapt/fix_cutadapt/RIB0000770
+[w] cutadapt/fix_cutadapt/RIB0000784
+tasks: 6 total, 4 ready, 2 waiting</pre>
+</div>
+<p>Here is another example output with <tt class="docutils literal"><span class="pre">--test-run</span></tt> specified on the command
+line. Here, all top-level steps are prepended with a <tt class="docutils literal"><span class="pre">head</span></tt> step, which is
+reflected in the task IDs:</p>
+<div class="highlight-python"><pre>$ ./status.py --test-run
+[r] head/cutadapt/RIB0000784
+[r] head/cutadapt/RIB0000770
+[w] head/cutadapt/RIB0000784-R1
+[w] head/cutadapt/RIB0000784-R2
+[w] head/cutadapt/RIB0000770-R2
+[w] head/cutadapt/RIB0000770-R1
+[w] head/cutadapt/fix_cutadapt/RIB0000770
+[w] head/cutadapt/fix_cutadapt/RIB0000784
+tasks: 8 total, 2 ready, 6 waiting</pre>
+</div>
+<p>Detailed information about a specific task can be obtained by specifying the
+task ID on the command line:</p>
+<div class="highlight-python"><pre>$ ./status.py cutadapt/RIB0000770-R1
+info:
+adapter: AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTAGCTTATCTCGTATGCCGTCTTCTGCTTG
+read: R1
+output_files:
+log:
+    out/cutadapt-7708988d/RIB0000770-cutadapt-R1-log.txt:
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L001_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L002_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L003_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L004_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L005_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L006_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L007_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L008_R1_001.fastq.gz
+reads:
+    out/cutadapt-7708988d/RIB0000770-cutadapt-R1.fastq.gz:
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L001_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L002_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L003_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L004_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L005_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L006_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L007_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L008_R1_001.fastq.gz</pre>
+</div>
+<p>The details of this data structure are explained below. It represents a kind
+of plan which includes information about which output files will be generated
+and which input files they depend on &#8211; this is stored in <tt class="docutils literal"><span class="pre">output_files</span></tt>.
+Furthermore, necessary information for actually executing the task are
+recorded in <tt class="docutils literal"><span class="pre">info</span></tt>. In this case, the final adapter has been determined by
+replacing <tt class="docutils literal"><span class="pre">((INDEX))</span></tt> in the configuration file&#8217;s <tt class="docutils literal"><span class="pre">adapter-R1</span></tt> with the
+actual barcode index of the sample.</p>
+</div>
+<div class="section" id="run-locally-py">
+<h2>run-locally.py<a class="headerlink" href="#run-locally-py" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="docutils literal"><span class="pre">run-locally.py</span></tt> script runs all non-finished tasks (or a subset)
+sequentially on the local machine. Feel free to cancel this script at any
+time, it won&#8217;t put your project in a confused state.</p>
+<p>To execute one or more certain tasks, specify the task IDs on the command
+line.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Why is it safe to cancel the pipeline? The pipeline is
+written in a way which expects processes to fail or cluster jobs to
+disappear without notice. This problem is mitigated by a design which
+relies on file presence and file timestamps to determine whether a task
+is finished or not. Output files are automatically written to temporary
+locations and later moved to their real target directory, and it is not
+until the last file rename operation has finished that a task is
+regarded as finished.</p>
+</div>
+</div>
+<div class="section" id="submit-to-cluster-py">
+<h2>submit-to-cluster.py<a class="headerlink" href="#submit-to-cluster-py" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="docutils literal"><span class="pre">submit-to-cluster.py</span></tt> script determines which tasks still have to be
+carried out and submits the jobs to a GridEngine cluster by calling <tt class="docutils literal"><span class="pre">qsub</span></tt>.
+Dependencies are passed to <tt class="docutils literal"><span class="pre">qsub</span></tt> via the <tt class="docutils literal"><span class="pre">-hold_jid</span></tt> option, which means
+that jobs that depend on other jobs won&#8217;t get scheduled until their
+dependencies have been satisfied. The file <tt class="docutils literal"><span class="pre">qsub-template.sh</span></tt> is used to
+submit jobs, with <tt class="docutils literal"><span class="pre">#{</span> <span class="pre">}</span></tt> fields being substituted with appropriate values.</p>
+<p>The file <tt class="docutils literal"><span class="pre">quotas.yaml</span></tt> can be used to define different quotas for different
+systems:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="s">&quot;frontend[12]&quot;</span><span class="p-Indicator">:</span>
+    <span class="l-Scalar-Plain">default</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">5</span>
+</pre></div>
+</div>
+<p>In the example above, a default quota of 5 is defined for hosts with a
+hostname of <tt class="docutils literal"><span class="pre">frontend1</span></tt> or <tt class="docutils literal"><span class="pre">frontend2</span></tt> (the name is a regular expression).
+Different quotas can be defined for each step. A quota of 5 means that no
+more than 5 jobs of on kind (the same step) will be run in parallel.</p>
+</div>
+</div>
+<div class="section" id="module-pipeline">
+<span id="the-pipeline"></span><h1>The pipeline<a class="headerlink" href="#module-pipeline" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pipeline.Pipeline">
+<em class="property">class </em><tt class="descclassname">pipeline.</tt><tt class="descname">Pipeline</tt><a class="reference internal" href="_modules/pipeline.html#Pipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipeline.Pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Pipeline class represents the entire processing pipeline which is defined and 
+configured via the configuration file config.yaml.</p>
+<p>Individual steps may be defined in a tree, and their combination with samples
+as generated by one or more source leads to an array of tasks.</p>
+<dl class="method">
+<dt id="pipeline.Pipeline.check_tools">
+<tt class="descname">check_tools</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pipeline.html#Pipeline.check_tools"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipeline.Pipeline.check_tools" title="Permalink to this definition">¶</a></dt>
+<dd><p>checks whether all tools references by the configuration are available 
+and records their versions as determined by <tt class="docutils literal"><span class="pre">[tool]</span> <span class="pre">--version</span></tt> etc.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pipeline.Pipeline.has_unfinished_tasks">
+<tt class="descname">has_unfinished_tasks</tt><big>(</big><em>task_list</em><big>)</big><a class="reference internal" href="_modules/pipeline.html#Pipeline.has_unfinished_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipeline.Pipeline.has_unfinished_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns True if there is at least one task in task_list which is not finished yet</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pipeline.Pipeline.notify">
+<tt class="descname">notify</tt><big>(</big><em>message</em><big>)</big><a class="reference internal" href="_modules/pipeline.html#Pipeline.notify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipeline.Pipeline.notify" title="Permalink to this definition">¶</a></dt>
+<dd><p>prints a notification to the screen and optionally delivers the
+message on additional channels (as defined by the configuration)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pipeline.Pipeline.pick_next_ready_task">
+<tt class="descname">pick_next_ready_task</tt><big>(</big><em>task_list</em><big>)</big><a class="reference internal" href="_modules/pipeline.html#Pipeline.pick_next_ready_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipeline.Pipeline.pick_next_ready_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the next ready task from task_list but does not remove it from the list</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pipeline.Pipeline.print_tasks">
+<tt class="descname">print_tasks</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pipeline.html#Pipeline.print_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipeline.Pipeline.print_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>prints a summary of all tasks, indicating whether each taks is</dt>
+<dd><ul class="first last simple">
+<li><tt class="docutils literal"><span class="pre">[r]eady</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">[w]aiting</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">[f]inished</span></tt></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="sources">
+<h1>Sources<a class="headerlink" href="#sources" title="Permalink to this headline">¶</a></h1>
+<p>In the following, the different types of sources are described in detail.</p>
+<div class="section" id="run-folder-source">
+<h2>Run folder source<a class="headerlink" href="#run-folder-source" title="Permalink to this headline">¶</a></h2>
+<p>Here&#8217;s an example:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">run_folder_source</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span> <span class="nv">path</span><span class="p-Indicator">:</span> <span class="nv">in</span> <span class="p-Indicator">}</span>
+</pre></div>
+</div>
+<p>This source looks for fastq.gz files in <tt class="docutils literal"><span class="pre">[path]/Unaligned/Project_*/Sample_*</span></tt>
+and pulls additional information from CSV sample sheets it finds. It also
+makes sure that index information for all samples is coherent and unambiguous.</p>
+</div>
+<div class="section" id="fastq-source">
+<h2>FASTQ source<a class="headerlink" href="#fastq-source" title="Permalink to this headline">¶</a></h2>
+<p>Here&#8217;s an example:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">fastq_source</span><span class="p-Indicator">:</span>
+    <span class="l-Scalar-Plain">pattern</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/data/original-fastq/&amp;#42;.fastq.gz</span>
+    <span class="l-Scalar-Plain">group</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">(Sample_COPD_\d+)_R[12].fastq.gz</span>
+    <span class="l-Scalar-Plain">indices</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">copd-barcodes.csv</span>
+</pre></div>
+</div>
+<p>Input files are collected as defined by <tt class="docutils literal"><span class="pre">pattern</span></tt> and grouped into samples
+according to <tt class="docutils literal"><span class="pre">group</span></tt>, which is a regular expression. All groups defined in
+the regex <tt class="docutils literal"><span class="pre">(</span>&nbsp; <span class="pre">)</span></tt> are used to construct the sample name, here it is used to
+declare that both R1 and R2 files belong to the same sample. Indices are
+read from the CSV file specified by <tt class="docutils literal"><span class="pre">indices</span></tt>.</p>
+</div>
+</div>
+<div class="section" id="steps">
+<h1>Steps<a class="headerlink" href="#steps" title="Permalink to this headline">¶</a></h1>
+<p>Steps are defined in a dependency tree. However, the syntax is a bit peculiar:
+The <tt class="docutils literal"><span class="pre">|</span></tt> after <tt class="docutils literal"><span class="pre">steps:</span></tt> is YAML-specific syntax and it defines a string
+spanning multiple lines in which line breaks and indentation is maintained.
+The string is later parsed by the pipeline and the most important parts are
+the individual steps which are to be performed. The relationship betweens
+steps is declared via indentation.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Why do we need the | symbol in the steps definition? Neither the
+list nor the dictionary syntax allow for a concise definition of a step
+tree with options. Think of the step definition as a nested list with an
+option hash attached to every item.</p>
+</div>
+<p>Steps may have options, which must be placed in between <tt class="docutils literal"><span class="pre">{</span></tt> curly braces
+<tt class="docutils literal"><span class="pre">}</span></tt>. Options can be specified on a single line (in this case, individual
+key/value pairs must be separated by comma) or may span multiple lines,
+following standard YAML block syntax.</p>
+<div class="section" id="miscellaneous">
+<h2>Miscellaneous<a class="headerlink" href="#miscellaneous" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="head">
+<h3>Head<a class="headerlink" href="#head" title="Permalink to this headline">¶</a></h3>
+<p class="graphviz">
+<img src="_images/graphviz-f9f50a25f5de3af1ce0a289c2b180e139aff8b7e.png" alt="digraph foo {
+    rankdir=LR;
+    splines=true;
+    graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
+    node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color=&quot;#404040&quot;, fillcolor=&quot;#ffffff&quot;];
+    edge [fontname = Helvetica, fontsize = 12, color=&quot;#404040&quot;];
+
+    head [fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
+    in_any [label = &quot;any (*)&quot;];
+    out_any [label = &quot;any (*)&quot;];
+
+    in_any -&gt; head;
+    head -&gt; out_any;
+
+}" />
+</p>
+<p>The head step filters the first few lines of any input file (1000 by 
+default). Uncompressed and Gzip-compressed files are handled correctly.</p>
+<p>Options:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">lines</span></tt>: specify the number of lines that should be returned</li>
+</ul>
+</div>
+<div class="section" id="break">
+<h3>Break<a class="headerlink" href="#break" title="Permalink to this headline">¶</a></h3>
+<p class="graphviz">
+<img src="_images/graphviz-fd4f26b2178d7ee39a00da48c6e9373e2124d608.png" alt="digraph foo {
+    rankdir=LR;
+    splines=true;
+    graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
+    node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color=&quot;#404040&quot;, fillcolor=&quot;#ffffff&quot;];
+    edge [fontname = Helvetica, fontsize = 12, color=&quot;#404040&quot;];
+
+    break [fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
+    in_any [label = &quot;any (*)&quot;];
+
+    in_any -&gt; break;
+}" />
+</p>
+<p>This steps breaks the processing flow and does nothing. Because it
+returns no runs, its children never get run. Use it to conveniently
+cut off branches of the step tree (it&#8217;s like an uncommenting feature).</p>
+</div>
+</div>
+<div class="section" id="preprocessing">
+<h2>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="cutadapt">
+<h3>Cutadapt<a class="headerlink" href="#cutadapt" title="Permalink to this headline">¶</a></h3>
+<p class="graphviz">
+<img src="_images/graphviz-a46d04aa286577e6115c4774e161ff5a66aaa72d.png" alt="digraph foo {
+    rankdir=LR;
+    splines=true;
+    graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
+    node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color=&quot;#404040&quot;, fillcolor=&quot;#ffffff&quot;];
+    edge [fontname = Helvetica, fontsize = 12, color=&quot;#404040&quot;];
+
+    cutadapt [fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
+    in_reads [label = &quot;reads\n(fastq.gz)&quot;];
+    out_reads [label = &quot;reads\n(fastq.gz)&quot;];
+    out_log [label = &quot;log\n(.txt)&quot;];
+
+    in_reads -&gt; cutadapt;
+    cutadapt -&gt; out_reads;
+    cutadapt -&gt; out_log;
+}" />
+</p>
+<p>The cutadapt step can be used to clip adapter sequences from RNASeq reads.</p>
+<p>Options:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">adapter-R1</span></tt> and <tt class="docutils literal"><span class="pre">adapter-R2</span></tt> for paired-end reads</li>
+<li><tt class="docutils literal"><span class="pre">adapter</span></tt> for non-paired-end reads</li>
+</ul>
+<p>Required tools:</p>
+<ul class="simple">
+<li>cutadapt</li>
+<li>cat4m</li>
+<li>pigz</li>
+</ul>
+<p>Any adapter may contain <tt class="docutils literal"><span class="pre">((INDEX))</span></tt> which will be replaced with every
+sample&#8217;s index. The resulting adapter is checked for sanity and a
+StandardError is thrown if the adapter looks non-legit.</p>
+</div>
+<div class="section" id="fix-cutadapt">
+<h3>Fix cutadapt<a class="headerlink" href="#fix-cutadapt" title="Permalink to this headline">¶</a></h3>
+<p class="graphviz">
+<img src="_images/graphviz-ba007efa8e4f6357a334fb0dc3c978588a4d613c.png" alt="digraph foo {
+    rankdir=LR;
+    splines=true;
+    graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
+    node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color=&quot;#404040&quot;, fillcolor=&quot;#ffffff&quot;];
+    edge [fontname = Helvetica, fontsize = 12, color=&quot;#404040&quot;];
+
+    fix_cutadapt [fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
+    in_reads [label = &quot;reads\n(fastq.gz)&quot;];
+    out_reads [label = &quot;reads\n(fastq.gz)&quot;];
+
+    in_reads -&gt; fix_cutadapt;
+    fix_cutadapt -&gt; out_reads;
+}" />
+</p>
+</div>
+</div>
+<div class="section" id="aligners">
+<h2>Aligners<a class="headerlink" href="#aligners" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="segemehl">
+<h3>Segemehl<a class="headerlink" href="#segemehl" title="Permalink to this headline">¶</a></h3>
+<p class="graphviz">
+<img src="_images/graphviz-e887d783dd5d1fb424a74269353ae1534abd53c3.png" alt="digraph foo {
+    rankdir=LR;
+    splines=true;
+    graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
+    node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color=&quot;#404040&quot;, fillcolor=&quot;#ffffff&quot;];
+    edge [fontname = Helvetica, fontsize = 12, color=&quot;#404040&quot;];
+
+    segemehl [fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
+    in_reads [label = &quot;reads\n(fastq.gz)&quot;];
+    out_mapped_reads [label = &quot;mapped reads\n(sam.gz)&quot;];
+    out_unmapped_reads [label = &quot;unmapped reads\n(fastq.gz)&quot;];
+    out_log [label = &quot;log\n(txt)&quot;];
+
+    in_reads -&gt; segemehl;
+    segemehl -&gt; out_mapped_reads;
+    segemehl -&gt; out_unmapped_reads;
+    segemehl -&gt; out_log;
+}" />
+</p>
+</div>
+</div>
+</div>
+<div class="section" id="extending-the-pipeline">
+<h1>Extending the pipeline<a class="headerlink" href="#extending-the-pipeline" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="checklist">
+<h2>Checklist<a class="headerlink" href="#checklist" title="Permalink to this headline">¶</a></h2>
+<p>Here&#8217;s a couple of things which should be kept in mind when implementing new
+steps or modifying existing steps:</p>
+<ul>
+<li><p class="first">Make sure errors already show up in <tt class="docutils literal"><span class="pre">setup_runs</span></tt> instead of <tt class="docutils literal"><span class="pre">execute</span></tt>.
+That way, wasting precious cluster waiting time is avoided. Look out for
+things that may fail, and do them in <tt class="docutils literal"><span class="pre">setup_runs</span></tt>. Use the <tt class="docutils literal"><span class="pre">info</span></tt>
+entry in the returned <tt class="docutils literal"><span class="pre">run_info</span></tt> structure to pass the resulting
+information to <tt class="docutils literal"><span class="pre">execute</span></tt>.</p>
+</li>
+<li><p class="first">Likewise, make sure that the tools you&#8217;ll need in execute are already
+available in <tt class="docutils literal"><span class="pre">setup_runs</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># make sure tools are available</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="s">&#39;pigz&#39;</span><span class="p">)</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="s">&#39;cutadapt&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Make sure your disk access is as cluster-friendly as possible (which
+primarily means using large block sizes and preferably no seek operations).
+If possible, use <tt class="docutils literal"><span class="pre">unix_pipeline</span></tt> to wrap your commands in <tt class="docutils literal"><span class="pre">pigz</span></tt>,
+<tt class="docutils literal"><span class="pre">dd</span></tt>, or <tt class="docutils literal"><span class="pre">cat4m</span></tt> with a block size of at least 4 MB. Although this is
+not possible in every case (for example when seeking inside files is
+involved), it is straightforward with tools that read a continuous stream
+from <tt class="docutils literal"><span class="pre">stdin</span></tt> and write a continuous stream to <tt class="docutils literal"><span class="pre">stdout</span></tt>.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="to-do-list">
+<h1>To-do list<a class="headerlink" href="#to-do-list" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt>Getting started package:</dt>
+<dd>We need a small package which demonstrates a quick pipeline, including
+the configuration and all required tools.</dd>
+<dt>Capture process output:</dt>
+<dd>For all processes launched via <tt class="docutils literal"><span class="pre">unix_pipeline</span></tt>, the respective stdout
+and stderr should be recorded and the last kB remembered, so that it can
+be included into the error message if a pipeline fails. Also, the
+captured output should be incorporated into the YAML annotations which
+are written for every output file.</dd>
+<dt>Steps should be able to access all ancestors:</dt>
+<dd>All upstream steps should be accessible via their step name or output
+file key.</dd>
+<dt>On-the-fly steps:</dt>
+<dd><p class="first">We need a way to skip writing certain output files and have them flow
+temporarily through a pipe only, if possible. This is a disk space-saving
+feature only and has no effect on the outcome of the pipeline. However,
+it would require that a step is capable of being run <em>on-the-fly</em> which
+means it must read and write in a single stream.</p>
+<p>Here&#8217;s an example:</p>
+<p class="last graphviz">
+<img src="_images/graphviz-663567c7698527d96be3c169697b33db4b725a6b.png" alt="digraph foo {
+    rankdir=LR;
+    splines=true;
+    graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
+    node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color=&quot;#404040&quot;, fillcolor=&quot;#ffffff&quot;];
+    edge [fontname = Helvetica, fontsize = 12, color=&quot;#404040&quot;];
+
+    segemehl [fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
+    in_reads [label = &quot;reads\n(fastq.gz)&quot;];
+    mapped_reads [label = &quot;mapped reads\n(sam.gz)&quot;];
+    some_filter [fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
+    filtered_reads [label = &quot;filtered reads\n(sam.gz)&quot;];
+    htseq_count [label = &quot;htseq-count&quot;, fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
+    counts [label = &quot;counts&quot;];
+
+    in_reads -&gt; segemehl -&gt; mapped_reads -&gt; some_filter -&gt; filtered_reads;
+    filtered_reads -&gt; htseq_count -&gt; counts;
+
+    subgraph cluster_food {
+        some_filter; filtered_reads;
+        label = &quot;on-the-fly step, filtered reads\nnever get written to disk&quot;;
+        graph [style=dashed, color=&quot;#808080&quot;];
+    }
+}" />
+</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction</a></li>
+<li><a class="reference internal" href="#setup">Setup</a><ul>
+<li><a class="reference internal" href="#the-configuration-file">The configuration file</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#scripts">Scripts</a><ul>
+<li><a class="reference internal" href="#status-py">status.py</a></li>
+<li><a class="reference internal" href="#run-locally-py">run-locally.py</a></li>
+<li><a class="reference internal" href="#submit-to-cluster-py">submit-to-cluster.py</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-pipeline">The pipeline</a></li>
+<li><a class="reference internal" href="#sources">Sources</a><ul>
+<li><a class="reference internal" href="#run-folder-source">Run folder source</a></li>
+<li><a class="reference internal" href="#fastq-source">FASTQ source</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#steps">Steps</a><ul>
+<li><a class="reference internal" href="#miscellaneous">Miscellaneous</a><ul>
+<li><a class="reference internal" href="#head">Head</a></li>
+<li><a class="reference internal" href="#break">Break</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#preprocessing">Preprocessing</a><ul>
+<li><a class="reference internal" href="#cutadapt">Cutadapt</a></li>
+<li><a class="reference internal" href="#fix-cutadapt">Fix cutadapt</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#aligners">Aligners</a><ul>
+<li><a class="reference internal" href="#segemehl">Segemehl</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#extending-the-pipeline">Extending the pipeline</a><ul>
+<li><a class="reference internal" href="#checklist">Checklist</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#to-do-list">To-do list</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a><ul>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">rnaseq-pipeline develop documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Michael Specht.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
