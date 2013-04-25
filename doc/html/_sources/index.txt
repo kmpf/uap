@@ -608,6 +608,27 @@ Steps should be able to access all ancestors:
     All upstream steps should be accessible via their step name or output 
     file key.
     
+Custom step names:
+    In the configuration, it should be possible to assign a step name other
+    than the default step name.
+    Otherwise it's not possible to have something like this:
+    
+    .. graphviz::
+        digraph foo {
+            rankdir=LR;
+            splines=true;
+            graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
+            node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color="#404040", fillcolor="#ffffff"];
+            edge [fontname = Helvetica, fontsize = 12, color="#404040"];
+
+            sam_to_bam [fillcolor = "#fce94f", color = "#c4a000"];
+            remapper1 [label = "remapper 1", fillcolor = "#fce94f", color = "#c4a000"];
+            remapper2 [label = "remapper 2\n(with alternative options)", fillcolor = "#fce94f", color = "#c4a000"];
+
+            sam_to_bam -> remapper1
+            sam_to_bam -> remapper2
+        }
+    
 On-the-fly steps:
     We need a way to skip writing certain output files and have them flow 
     temporarily through a pipe only, if possible. 

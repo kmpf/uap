@@ -636,6 +636,27 @@ checksums on the fly.</p>
 <dt>Steps should be able to access all ancestors:</dt>
 <dd>All upstream steps should be accessible via their step name or output
 file key.</dd>
+<dt>Custom step names:</dt>
+<dd><p class="first">In the configuration, it should be possible to assign a step name other
+than the default step name.
+Otherwise it&#8217;s not possible to have something like this:</p>
+<p class="last graphviz">
+<img src="_images/graphviz-7ca770936cf333e9eee86de7f534329bfa38832c.png" alt="digraph foo {
+    rankdir=LR;
+    splines=true;
+    graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
+    node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color=&quot;#404040&quot;, fillcolor=&quot;#ffffff&quot;];
+    edge [fontname = Helvetica, fontsize = 12, color=&quot;#404040&quot;];
+
+    sam_to_bam [fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
+    remapper1 [label = &quot;remapper 1&quot;, fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
+    remapper2 [label = &quot;remapper 2\n(with alternative options)&quot;, fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
+
+    sam_to_bam -&gt; remapper1
+    sam_to_bam -&gt; remapper2
+}" />
+</p>
+</dd>
 <dt>On-the-fly steps:</dt>
 <dd><p class="first">We need a way to skip writing certain output files and have them flow
 temporarily through a pipe only, if possible.
