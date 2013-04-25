@@ -116,7 +116,7 @@ def fs_cache_flush():
 
 class AbstractStep(object):
     def __init__(self, pipeline):
-        self.dependencies = []
+        self.parent = None
         self.options = {}
         self.pipeline = pipeline
         self.step_name = self.__module__
@@ -138,18 +138,17 @@ class AbstractStep(object):
 
     def add_dependency(self, parent):
         if not isinstance(parent, AbstractStep):
-            raise StandardError("parent argument must be an AbstractStep")
+            raise StandardError("Error: parent argument must be an AbstractStep.")
         if parent == self:
-            raise StandardError("cannot add a node as its own dependency")
-        self.dependencies.append(parent)
+            raise StandardError("Cannot add a node as its own dependency.")
+        if self.parent:
+            raise StandardError("This step already has a parent.")
+        self.parent = parent
 
     def get_input_run_info(self):
-        if len(self.dependencies) == 0:
-            raise StandardError("You asked for input files of a step with no dependencies. This shouldn't happen.")
-        elif len(self.dependencies) == 1:
-            return copy.deepcopy(self.dependencies[0].get_run_info())
-        else:
-            raise NotImplementedError("DAG not implemented yet.")
+        if not self.parent:
+            raise StandardError("You asked for the input run info of a step with no parent. This shouldn't happen.")
+        return copy.deepcopy(self.parent.get_run_info())
 
     def setup_runs(self, input_run_info):
         raise NotImplementedError()
@@ -160,7 +159,7 @@ class AbstractStep(object):
             # create input run info and simplify it a bit for setup_runs
             input_run_info = None
             full_paths = dict()
-            if len(self.dependencies) > 0:
+            if self.parent:
                 # it's not the source step
                 input_run_info = copy.deepcopy(self.get_input_run_info())
 
@@ -180,7 +179,7 @@ class AbstractStep(object):
                 if '/' in run_id:
                     raise StandardError("A run_id must not contain a '/': " + run_id + " for " + str(self))
 
-            if len(self.dependencies) > 0:
+            if self.parent:
 
                 for run_id, _ in self._run_info.items():
                     for annotation in self._run_info[run_id]['output_files'].keys():
@@ -200,7 +199,7 @@ class AbstractStep(object):
                             # ATTENTION: Actually, this is an ugly hack, there's no recursion here, but it still
                             # works. It might break at some point, but right now it's fine. TODO: Prove that it
                             # will remain fine.
-                            p = self.dependencies[0]
+                            p = self.parent
                             l = input_paths
                             for path in l:
                                 if path in p._file_dependencies_cumulative:
@@ -219,10 +218,8 @@ class AbstractStep(object):
         path.append(p.__module__)
         if with_options:
             path[-1] += '-' + p.get_options_hashtag()
-        while len(p.dependencies) > 0:
-            if len(p.dependencies) > 1:
-                raise NotImplementedError("Full DAG not implemented yet, trees only for now.")
-            p = p.dependencies[0]
+        while p.parent:
+            p = p.parent
             if p.__module__ != 'source':
                 path.append(p.__module__)
                 if with_options:
