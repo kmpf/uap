@@ -51,53 +51,107 @@
             
   <div class="section" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<p>The aim of this data processing pipeline is to enable simple and robust
-bioinformatics data evaluation.</p>
+<p>The aim of this data processing pipeline is to enable robust and
+straightforward bioinformatics data evaluation.
+It is implemented in Python, runs under GNU/Linux and can be controlled from
+the command-line interface.
+Although the primary focus is the evaluation of RNASeq data, its design
+allows for a variety of other applications.</p>
+<div class="section" id="general-usage">
+<h2>General usage<a class="headerlink" href="#general-usage" title="Permalink to this headline">¶</a></h2>
+<p>This package <em>does not</em> provide a number of tools which are downloaded and
+installed system-wide to provide certain functioniality.
+The intention of this system is to provide a robust and traceable framework
+for data evaluation in scientific experiments.</p>
+<p>The recommended workflow for running a data evaluation for an experiment is
+as follows:</p>
+<ol class="arabic simple">
+<li>Fork the rnaseq-pipeline repository via Git.</li>
+<li>Setup the project by writing the configuration file.</li>
+<li>Add steps or other functionality as needed (optional).</li>
+<li>Run the pipeline.</li>
+<li>Have your changes (if there are any) merged back into the main repository,
+to the advantage of the scientific community.</li>
+</ol>
+<p>This leaves you with:</p>
+<ul class="simple">
+<li>Your original input files, which are left untouched.</li>
+<li>The experiment-specific pipeline repository.
+You should keep this repository for later reference and you could even
+make it publicly available along with your input files for anybody to
+re-run the entire data evaluation or parts thereof.</li>
+<li>The output directory containing all output files and comprehensive
+annotations.
+These annotations include detailed information for every output file,
+including which steps have been executed and the Git SHA1 hash of
+the pipeline repository at the time the data processing took place.</li>
+</ul>
+</div>
+<div class="section" id="core-aspects">
+<h2>Core aspects<a class="headerlink" href="#core-aspects" title="Permalink to this headline">¶</a></h2>
 <p><strong>Simplicity:</strong></p>
 <ul class="simple">
-<li>The entire processing pipeline is described via a configuration file. Steps
-are defined in a tree, and output files are written into a directory
+<li>The entire processing pipeline is described via a configuration file.
+Steps are defined in a tree, and output files are written into a directory
 structure mirroring this tree.</li>
-<li>Interaction with the pipeline happens through simple scripts which are used
-to monitor the state of the pipeline and execute individual or all
+<li>Interaction with the pipeline happens through a handful of scripts which
+are used to monitor the state of the pipeline and execute individual or all
 remaining steps.</li>
-<li>To add a new processing step, a single Python file must be placed in
-<tt class="docutils literal"><span class="pre">include/step</span></tt> which defines a class with two functions, one for
-planning all jobs based on a list of input files or runs and possibly
-additional information from previous steps and another function for
-running a specific job.</li>
 </ul>
 <p><strong>Robustness:</strong></p>
 <ul class="simple">
-<li>All steps write their output files to a temporary location. Only if a step
-has completed successfully, the output files are copied to the correct
-output directory.</li>
+<li>All steps write their output files to a temporary location.
+Only if a step has completed successfully, the output files are copied to
+the correct output directory.</li>
 <li>The output directory names are suffixed with a four-character hashtag
 which mirrors the options specified for the step.</li>
 <li>Processing can be aborted and continued from the command line at any time.
 This way, cluster failures are less critical because output files do not
 get compromised.</li>
-<li>Comprehensive annotations are written to the output directories, allowing
-for later investigation about what exactly happened.</li>
 <li>Errors are caught as early as possible. Tools are checked for availability,
 and the entire processing pipeline is calculated in advance before
 jobs are being started or submitted to a cluster.</li>
 </ul>
-<p>A pipeline is defined by two aspects:</p>
+<p><strong>Traceability:</strong></p>
 <ul class="simple">
-<li>all processing steps arranges in a dependency tree</li>
-<li>its input samples</li>
+<li>Comprehensive annotations are written to the output directories, allowing
+for later investigation about what exactly happened.</li>
 </ul>
-<p>The combination of <em>steps</em> and <em>samples</em> result in a list of <em>tasks</em>, which
-can be executed sequentially or can be submitted to a cluster.</p>
+</div>
+<div class="section" id="design">
+<h2>Design<a class="headerlink" href="#design" title="Permalink to this headline">¶</a></h2>
+<p>The central part of the pipeline is its definition of the steps which are to
+be carried out.
+Steps are organized in a dependency tree &#8211; every step has one parent step,
+which may in turn have another parent step, and so on.
+At the root of the tree, there is a special step called <tt class="docutils literal"><span class="pre">source</span></tt> which
+provides the input samples.</p>
+<p>Each step defines a number of runs and each run represents a piece of the
+entire data evaluation, typically at the level of a single sample.
+A certain <em>run</em> of a certain <em>step</em> is called a <em>task</em>.
+While the steps only describe what needs to be done on a very abstract level,
+it is through the individual runs of each step that a pipeline-wide list of
+actual tasks becomes available.</p>
+<p>The <tt class="docutils literal"><span class="pre">source</span></tt> step defines a run for every input sample, and following steps
+may:</p>
+<ul class="simple">
+<li>define the same number of runs,</li>
+<li>define more runs (for example when R1 and R2 reads in a paired-end RNASeq
+experiment should be treated separately),</li>
+<li>define fewer runs (usually at the end of a pipeline, where results are
+summarized).</li>
+</ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The design decision that steps are defined as a tree instead
 of a full directed acyclic graph means that a step cannot have more than
 one direct parent, like a directory in a file system cannot have more than
-one parent directory. This means that a step cannot use the output of two
-different steps as its input. However, any step may have more than one
+one parent directory.
+This means that a step cannot use the output of two different steps as its
+input.
+However, any step may have more than one
 input or output file.</p>
+</div>
 </div>
 </div>
 <div class="section" id="setup">
@@ -109,16 +163,16 @@ input or output file.</p>
 required Python environment (which will be located in <tt class="docutils literal"><span class="pre">./python_env/</span></tt>):</p>
 <div class="highlight-python"><pre>$ ./bootstrap.sh</pre>
 </div>
-<p>There&#8217;s no harm in accidentally running this script multiple times. Also,
-it will compile <tt class="docutils literal"><span class="pre">cat4m</span></tt>, a tool which can be found at <tt class="docutils literal"><span class="pre">./tools/cat4m</span></tt>
-and which is able to read arbitrary input files in chunks of 4 MB
-and prints them to stdout.</p>
+<p>There&#8217;s no harm in accidentally running this script multiple times.
+Also, it will compile <tt class="docutils literal"><span class="pre">cat4m</span></tt>, a tool which can be found at
+<tt class="docutils literal"><span class="pre">./tools/cat4m</span></tt> and which is able to read arbitrary input files in chunks
+of 4 MB and prints them to stdout.</p>
 <div class="section" id="the-configuration-file">
 <h2>The configuration file<a class="headerlink" href="#the-configuration-file" title="Permalink to this headline">¶</a></h2>
-<p>Next, edit <tt class="docutils literal"><span class="pre">config.sample.yaml</span></tt> and save it as <tt class="docutils literal"><span class="pre">config.yaml</span></tt>. Although
-writing the configuration may seem a bit complicated, the trouble pays off
-later because further interaction with the pipeline is quite simple. Here is
-a sample configuration:</p>
+<p>Next, edit <tt class="docutils literal"><span class="pre">config.sample.yaml</span></tt> and save it as <tt class="docutils literal"><span class="pre">config.yaml</span></tt>.
+Although writing the configuration may seem a bit complicated, the trouble
+pays off later because further interaction with the pipeline is quite simple.
+Here is a sample configuration:</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span class="c1"># This is the rnaseq-pipeline configuration file.</span>
 <span class="l-Scalar-Plain">email</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">micha.specht@gmail.com</span>
 <span class="l-Scalar-Plain">sources</span><span class="p-Indicator">:</span>
@@ -162,15 +216,17 @@ this email address (<a class="reference external" href="mailto:nobody&#37;&#52;&
 <div class="section" id="scripts">
 <h1>Scripts<a class="headerlink" href="#scripts" title="Permalink to this headline">¶</a></h1>
 <p>Once the project is set up, there are several scripts which can be used to
-execute and monitor the pipeline. All scripts have a couple of properties in
-common:</p>
+execute and monitor the pipeline.
+All scripts have a couple of properties in common:</p>
 <ul class="simple">
 <li>On startup, the configuration is read, tools are checked, input files are
-collected, and all tasks are calculated. If any of these steps fails, the
-script will print an error message with a backtrace and it will crash.</li>
+collected, and all tasks are calculated.
+If any of these steps fails, the script will print an error message with
+a backtrace and it will crash.</li>
 <li>For convenience, a symbolic link called <tt class="docutils literal"><span class="pre">out</span></tt> will be placed in the
 pipeline&#8217;s directory which points to the output directory defined in the
-configuration file. If <tt class="docutils literal"><span class="pre">out</span></tt> already exists, it is left untouched.</li>
+configuration file.
+If <tt class="docutils literal"><span class="pre">out</span></tt> already exists, it is left untouched.</li>
 </ul>
 <p>There are a couple of global command line parameters which are valid for all
 scripts:</p>
@@ -178,8 +234,8 @@ scripts:</p>
 <li><dl class="first docutils">
 <dt><tt class="docutils literal"><span class="pre">--even-if-dirty</span></tt>:</dt>
 <dd><p class="first last">Before doing anything else, the pipeline checks whether its source code
-has been modified in any way via Git. If yes, processing is stopped
-immediately unless this flag is specified.</p>
+has been modified in any way via Git.
+If yes, processing is stopped immediately unless this flag is specified.</p>
 </dd>
 </dl>
 </li>
@@ -187,8 +243,9 @@ immediately unless this flag is specified.</p>
 <dt><tt class="docutils literal"><span class="pre">--test-run</span></tt>:</dt>
 <dd><p class="first last">When this parameter is specified, a <tt class="docutils literal"><span class="pre">head</span></tt> step is placed before all
 first-level steps in the step tree, which returns the first 1000 lines
-of every input file. That way, a pipeline can be tested very quickly
-with a small input data set.</p>
+of every input file.
+That way, a pipeline can be tested very quickly with a small input data
+set.</p>
 </dd>
 </dl>
 </li>
@@ -197,10 +254,12 @@ with a small input data set.</p>
 <div class="section" id="status-py">
 <h2>status.py<a class="headerlink" href="#status-py" title="Permalink to this headline">¶</a></h2>
 <p>The status script lists all tasks resulting from the configured steps and
-input samples. At the beginning of each line, the status of each task is
-denoted by [w], [r], and [f], corresponding to:</p>
+input samples.
+At the beginning of each line, the status of each task is denoted by
+<tt class="docutils literal"><span class="pre">[w]</span></tt>, <tt class="docutils literal"><span class="pre">[r]</span></tt>, and <tt class="docutils literal"><span class="pre">[f]</span></tt>, corresponding to:</p>
 <ul class="simple">
-<li><strong>waiting</strong> &#8211; the taks is waiting for input files to appear or to be updated</li>
+<li><strong>waiting</strong> &#8211; the taks is waiting for input files to appear or to be
+updated</li>
 <li><strong>ready</strong> &#8211; all input files are present and up-to-date regarding their
 upstream input files, task can be started</li>
 <li><strong>finished</strong> &#8211; all output files are in place and up-to-date</li>
@@ -221,7 +280,8 @@ whether a task is currently running or has been submitted to a cluster.</p>
 tasks: 6 total, 4 ready, 2 waiting</pre>
 </div>
 <p>Here is another example output with <tt class="docutils literal"><span class="pre">--test-run</span></tt> specified on the command
-line. Here, all top-level steps are prepended with a <tt class="docutils literal"><span class="pre">head</span></tt> step, which is
+line.
+Here, all top-level steps are prepended with a <tt class="docutils literal"><span class="pre">head</span></tt> step, which is
 reflected in the task IDs:</p>
 <div class="highlight-python"><pre>$ ./status.py --test-run
 [r] head/cutadapt/RIB0000784
@@ -262,31 +322,34 @@ reads:
     - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L007_R1_001.fastq.gz
     - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L008_R1_001.fastq.gz</pre>
 </div>
-<p>The details of this data structure are explained below. It represents a kind
-of plan which includes information about which output files will be generated
-and which input files they depend on &#8211; this is stored in <tt class="docutils literal"><span class="pre">output_files</span></tt>.
+<p>The details of this data structure are explained below.
+It represents a kind of plan which includes information about which output
+files will be generated and which input files they depend on &#8211; this is
+stored in <tt class="docutils literal"><span class="pre">output_files</span></tt>.
 Furthermore, necessary information for actually executing the task are
-recorded in <tt class="docutils literal"><span class="pre">info</span></tt>. In this case, the final adapter has been determined by
-replacing <tt class="docutils literal"><span class="pre">((INDEX))</span></tt> in the configuration file&#8217;s <tt class="docutils literal"><span class="pre">adapter-R1</span></tt> with the
-actual barcode index of the sample.</p>
+recorded in <tt class="docutils literal"><span class="pre">info</span></tt>.
+In this case, the final adapter has been determined by replacing <tt class="docutils literal"><span class="pre">((INDEX))</span></tt>
+in the configuration file&#8217;s <tt class="docutils literal"><span class="pre">adapter-R1</span></tt> with the actual barcode index of
+the sample.</p>
 </div>
 <div class="section" id="run-locally-py">
 <h2>run-locally.py<a class="headerlink" href="#run-locally-py" title="Permalink to this headline">¶</a></h2>
 <p>The <tt class="docutils literal"><span class="pre">run-locally.py</span></tt> script runs all non-finished tasks (or a subset)
-sequentially on the local machine. Feel free to cancel this script at any
-time, it won&#8217;t put your project in a confused state.</p>
+sequentially on the local machine.
+Feel free to cancel this script at any time, it won&#8217;t put your project in a
+confused state.</p>
 <p>To execute one or more certain tasks, specify the task IDs on the command
 line.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Why is it safe to cancel the pipeline? The pipeline is
-written in a way which expects processes to fail or cluster jobs to
-disappear without notice. This problem is mitigated by a design which
-relies on file presence and file timestamps to determine whether a task
-is finished or not. Output files are automatically written to temporary
-locations and later moved to their real target directory, and it is not
-until the last file rename operation has finished that a task is
-regarded as finished.</p>
+<p class="last">Why is it safe to cancel the pipeline?
+The pipeline is written in a way which expects processes to fail or
+cluster jobs to disappear without notice.
+This problem is mitigated by a design which relies on file presence and
+file timestamps to determine whether a task is finished or not.
+Output files are automatically written to temporary locations and later
+moved to their real target directory, and it is not until the last file
+rename operation has finished that a task is regarded as finished.</p>
 </div>
 </div>
 <div class="section" id="submit-to-cluster-py">
@@ -295,18 +358,22 @@ regarded as finished.</p>
 carried out and submits the jobs to a GridEngine cluster by calling <tt class="docutils literal"><span class="pre">qsub</span></tt>.
 Dependencies are passed to <tt class="docutils literal"><span class="pre">qsub</span></tt> via the <tt class="docutils literal"><span class="pre">-hold_jid</span></tt> option, which means
 that jobs that depend on other jobs won&#8217;t get scheduled until their
-dependencies have been satisfied. The file <tt class="docutils literal"><span class="pre">qsub-template.sh</span></tt> is used to
-submit jobs, with <tt class="docutils literal"><span class="pre">#{</span> <span class="pre">}</span></tt> fields being substituted with appropriate values.</p>
+dependencies have been satisfied.
+The file <tt class="docutils literal"><span class="pre">qsub-template.sh</span></tt> is used to submit jobs, with <tt class="docutils literal"><span class="pre">#{</span> <span class="pre">}</span></tt> fields
+being substituted with appropriate values.</p>
 <p>The file <tt class="docutils literal"><span class="pre">quotas.yaml</span></tt> can be used to define different quotas for different
 systems:</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span class="s">&quot;frontend[12]&quot;</span><span class="p-Indicator">:</span>
     <span class="l-Scalar-Plain">default</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">5</span>
+    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">100</span>
 </pre></div>
 </div>
 <p>In the example above, a default quota of 5 is defined for hosts with a
 hostname of <tt class="docutils literal"><span class="pre">frontend1</span></tt> or <tt class="docutils literal"><span class="pre">frontend2</span></tt> (the name is a regular expression).
-Different quotas can be defined for each step. A quota of 5 means that no
-more than 5 jobs of on kind (the same step) will be run in parallel.</p>
+A quota of 5 means that no more than 5 jobs of one kind will be run in
+parallel.
+Different quotas can be defined for each step: because <tt class="docutils literal"><span class="pre">cutadapt</span></tt> is
+highly IO-efficient, it has a higher quota.</p>
 </div>
 </div>
 <div class="section" id="sources">
@@ -318,9 +385,11 @@ more than 5 jobs of on kind (the same step) will be run in parallel.</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">run_folder_source</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span> <span class="nv">path</span><span class="p-Indicator">:</span> <span class="nv">in</span> <span class="p-Indicator">}</span>
 </pre></div>
 </div>
-<p>This source looks for fastq.gz files in <tt class="docutils literal"><span class="pre">[path]/Unaligned/Project_*/Sample_*</span></tt>
-and pulls additional information from CSV sample sheets it finds. It also
-makes sure that index information for all samples is coherent and unambiguous.</p>
+<p>This source looks for fastq.gz files in
+<tt class="docutils literal"><span class="pre">[path]/Unaligned/Project_*/Sample_*</span></tt> and pulls additional information from
+CSV sample sheets it finds.
+It also makes sure that index information for all samples is coherent and
+unambiguous.</p>
 </div>
 <div class="section" id="fastq-source">
 <h2>FASTQ source<a class="headerlink" href="#fastq-source" title="Permalink to this headline">¶</a></h2>
@@ -332,31 +401,44 @@ makes sure that index information for all samples is coherent and unambiguous.</
 </pre></div>
 </div>
 <p>Input files are collected as defined by <tt class="docutils literal"><span class="pre">pattern</span></tt> and grouped into samples
-according to <tt class="docutils literal"><span class="pre">group</span></tt>, which is a regular expression. All groups defined in
-the regex <tt class="docutils literal"><span class="pre">(</span>&nbsp; <span class="pre">)</span></tt> are used to construct the sample name, here it is used to
-declare that both R1 and R2 files belong to the same sample. Indices are
-read from the CSV file specified by <tt class="docutils literal"><span class="pre">indices</span></tt>.</p>
+according to <tt class="docutils literal"><span class="pre">group</span></tt>, which is a regular expression.
+All groups defined in the regex <tt class="docutils literal"><span class="pre">(</span>&nbsp; <span class="pre">)</span></tt> are used to construct the sample
+name, here it is used to declare that both R1 and R2 files belong to the
+same sample.
+Indices are read from the CSV file specified by <tt class="docutils literal"><span class="pre">indices</span></tt>.</p>
 </div>
 </div>
 <div class="section" id="steps">
 <h1>Steps<a class="headerlink" href="#steps" title="Permalink to this headline">¶</a></h1>
-<p>Steps are defined in a dependency tree. However, the syntax is a bit peculiar:
-The <tt class="docutils literal"><span class="pre">|</span></tt> after <tt class="docutils literal"><span class="pre">steps:</span></tt> is YAML-specific syntax and it defines a string
-spanning multiple lines in which line breaks and indentation is maintained.
+<p>Steps are defined in a dependency tree.
+However, the syntax is a bit peculiar: The <tt class="docutils literal"><span class="pre">|</span></tt> after <tt class="docutils literal"><span class="pre">steps:</span></tt> is
+YAML-specific syntax and it defines a string spanning multiple lines in which
+line breaks and indentation is maintained.
 The string is later parsed by the pipeline and the most important parts are
-the individual steps which are to be performed. The relationship betweens
-steps is declared via indentation.</p>
+the individual steps which are to be performed.
+The relationship betweens steps is declared via indentation.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Why do we need the <tt class="docutils literal"><span class="pre">|</span></tt> symbol in the steps definition? Neither the
-list nor the dictionary syntax allow for a concise definition of a step
-tree with options. Think of the step definition as a nested list with an
-option hash attached to every item.</p>
+<p class="last">Why do we need the <tt class="docutils literal"><span class="pre">|</span></tt> symbol in the steps definition?
+Neither the list nor the dictionary syntax allow for a concise definition
+of a step tree with options.
+Think of the step definition as a nested list with an option hash
+attached to every item.</p>
 </div>
 <p>Steps may have options, which must be placed in between <tt class="docutils literal"><span class="pre">{</span></tt> curly braces
-<tt class="docutils literal"><span class="pre">}</span></tt>. Options can be specified on a single line (in this case, individual
-key/value pairs must be separated by comma) or may span multiple lines,
-following standard YAML block syntax.</p>
+<tt class="docutils literal"><span class="pre">}</span></tt>.
+Options can be specified on a single line (in this case, individual key/value
+pairs must be separated by comma) or may span multiple lines, following
+standard YAML block syntax:</p>
+<div class="highlight-yaml"><pre># here, options are written in a single line, thus the comma is required
+- cutadapt { a: 123, b: 456 }
+
+# YAML block syntax:
+- fix_cutadapt {
+    a: 123
+    b: 456
+}</pre>
+</div>
 <div class="section" id="miscellaneous">
 <h2>Miscellaneous<a class="headerlink" href="#miscellaneous" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="head">
@@ -498,16 +580,21 @@ StandardError is thrown if the adapter looks non-legit.</p>
 </div>
 <div class="section" id="extending-the-pipeline">
 <h1>Extending the pipeline<a class="headerlink" href="#extending-the-pipeline" title="Permalink to this headline">¶</a></h1>
+<p>To add a new processing step, a single Python file must be placed in
+<tt class="docutils literal"><span class="pre">include/step</span></tt> which defines a class with two functions, one for planning
+all jobs based on a list of input files or runs and possibly additional
+information from previous steps and another function for running a specific
+job.</p>
 <div class="section" id="checklist">
 <h2>Checklist<a class="headerlink" href="#checklist" title="Permalink to this headline">¶</a></h2>
 <p>Here&#8217;s a couple of things which should be kept in mind when implementing new
 steps or modifying existing steps:</p>
 <ul>
 <li><p class="first">Make sure errors already show up in <tt class="docutils literal"><span class="pre">setup_runs</span></tt> instead of <tt class="docutils literal"><span class="pre">execute</span></tt>.
-That way, wasting precious cluster waiting time is avoided. Look out for
-things that may fail, and do them in <tt class="docutils literal"><span class="pre">setup_runs</span></tt>. Use the <tt class="docutils literal"><span class="pre">info</span></tt>
-entry in the returned <tt class="docutils literal"><span class="pre">run_info</span></tt> structure to pass the resulting
-information to <tt class="docutils literal"><span class="pre">execute</span></tt>.</p>
+That way, wasting precious cluster waiting time is avoided.
+Look out for things that may fail, and do them in <tt class="docutils literal"><span class="pre">setup_runs</span></tt>.
+Use the <tt class="docutils literal"><span class="pre">info</span></tt> entry in the returned <tt class="docutils literal"><span class="pre">run_info</span></tt> structure to pass the
+resulting information to <tt class="docutils literal"><span class="pre">execute</span></tt>.</p>
 </li>
 <li><p class="first">Likewise, make sure that the tools you&#8217;ll need in execute are already
 available in <tt class="docutils literal"><span class="pre">setup_runs</span></tt>:</p>
@@ -520,10 +607,11 @@ available in <tt class="docutils literal"><span class="pre">setup_runs</span></t
 <li><p class="first">Make sure your disk access is as cluster-friendly as possible (which
 primarily means using large block sizes and preferably no seek operations).
 If possible, use <tt class="docutils literal"><span class="pre">unix_pipeline</span></tt> to wrap your commands in <tt class="docutils literal"><span class="pre">pigz</span></tt>,
-<tt class="docutils literal"><span class="pre">dd</span></tt>, or <tt class="docutils literal"><span class="pre">cat4m</span></tt> with a block size of at least 4 MB. Although this is
-not possible in every case (for example when seeking inside files is
-involved), it is straightforward with tools that read a continuous stream
-from <tt class="docutils literal"><span class="pre">stdin</span></tt> and write a continuous stream to <tt class="docutils literal"><span class="pre">stdout</span></tt>.</p>
+<tt class="docutils literal"><span class="pre">dd</span></tt>, or <tt class="docutils literal"><span class="pre">cat4m</span></tt> with a large block size like 4 MB.
+Although this is not possible in every case (for example when seeking
+in files is involved), it is straightforward with tools that read a
+continuous stream from <tt class="docutils literal"><span class="pre">stdin</span></tt> and write a continuous stream to
+<tt class="docutils literal"><span class="pre">stdout</span></tt>.</p>
 </li>
 </ul>
 </div>
@@ -539,9 +627,9 @@ the configuration and all required tools.</dd>
 <dt>Capture process output:</dt>
 <dd><p class="first">For all processes launched via <tt class="docutils literal"><span class="pre">unix_pipeline</span></tt>, the respective stdout
 and stderr should be recorded and the last kB remembered, so that it can
-be included into the error message if a pipeline fails. Also, the
-captured output should be incorporated into the YAML annotations which
-are written for every output file.</p>
+be included into the error message if a pipeline fails.
+Also, the captured output should be incorporated into the YAML
+annotations which are written for every output file.</p>
 <p class="last"><em>Plus:</em> This would also allow for the automatic generation of SHA1
 checksums on the fly.</p>
 </dd>
@@ -550,10 +638,11 @@ checksums on the fly.</p>
 file key.</dd>
 <dt>On-the-fly steps:</dt>
 <dd><p class="first">We need a way to skip writing certain output files and have them flow
-temporarily through a pipe only, if possible. This is a disk space-saving
-feature only and has no effect on the outcome of the pipeline. However,
-it would require that a step is capable of being run <em>on-the-fly</em> which
-means it must read and write in a single stream.</p>
+temporarily through a pipe only, if possible.
+This is a disk space-saving feature only and has no effect on the
+outcome of the pipeline. However, it would require that a step is
+capable of being run <em>on-the-fly</em> which means it must read and write in
+a single stream.</p>
 <p>Here&#8217;s an example:</p>
 <p class="last graphviz">
 <img src="_images/graphviz-663567c7698527d96be3c169697b33db4b725a6b.png" alt="digraph foo {
@@ -613,7 +702,12 @@ means it must read and write in a single stream.</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Introduction</a></li>
+<li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#general-usage">General usage</a></li>
+<li><a class="reference internal" href="#core-aspects">Core aspects</a></li>
+<li><a class="reference internal" href="#design">Design</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#setup">Setup</a><ul>
 <li><a class="reference internal" href="#the-configuration-file">The configuration file</a></li>
 </ul>

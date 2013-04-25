@@ -48,6 +48,11 @@
           <div class="body">
             
   <h1>Source code for unix_pipeline</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">This module can be used to launch child processes and wait for them.</span>
+<span class="sd">Processes may either run on their own or pipelines can be built with them.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;./include/steps&#39;</span><span class="p">)</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -83,16 +88,25 @@
     <span class="n">up_log</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
     </div>
 <div class="viewcode-block" id="get_log"><a class="viewcode-back" href="../api.html#unix_pipeline.get_log">[docs]</a><span class="k">def</span> <span class="nf">get_log</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Return the log as a single string.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">return</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">up_log</span><span class="p">)</span>
     </div>
-<div class="viewcode-block" id="mkfifo"><a class="viewcode-back" href="../api.html#unix_pipeline.mkfifo">[docs]</a><span class="k">def</span> <span class="nf">mkfifo</span><span class="p">(</span><span class="nb">id</span><span class="p">):</span>
-    <span class="n">_</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+<div class="viewcode-block" id="mkfifo"><a class="viewcode-back" href="../api.html#unix_pipeline.mkfifo">[docs]</a><span class="k">def</span> <span class="nf">mkfifo</span><span class="p">(</span><span class="n">suffix</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create a temporary FIFO and return its path.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">suffix</span><span class="p">)</span>
     <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
     <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
     <span class="n">os</span><span class="o">.</span><span class="n">mkfifo</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">path</span>
 </div>
 <div class="viewcode-block" id="kill_all_child_processes"><a class="viewcode-back" href="../api.html#unix_pipeline.kill_all_child_processes">[docs]</a><span class="k">def</span> <span class="nf">kill_all_child_processes</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Kill all child processes launched via this module by sending a SIGTERM to each of them.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">for</span> <span class="n">pid</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">name_for_pid</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">os</span><span class="o">.</span><span class="n">kill</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">)</span>
@@ -103,6 +117,9 @@
 
 </div>
 <div class="viewcode-block" id="launch_copy_process"><a class="viewcode-back" href="../api.html#unix_pipeline.launch_copy_process">[docs]</a><span class="k">def</span> <span class="nf">launch_copy_process</span><span class="p">(</span><span class="n">fin</span><span class="p">,</span> <span class="n">fout</span><span class="p">,</span> <span class="n">other_pid</span><span class="p">,</span> <span class="n">which</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Launch a copy process which copies data from ``fin`` to ``fout`` in chunks of 4M.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
@@ -118,6 +135,9 @@
 
 </div>
 <div class="viewcode-block" id="launch"><a class="viewcode-back" href="../api.html#unix_pipeline.launch">[docs]</a><span class="k">def</span> <span class="nf">launch</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">use_stdin</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Launch a process.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">args</span><span class="p">,</span>
         <span class="n">stdin</span> <span class="o">=</span> <span class="n">use_stdin</span><span class="p">,</span>
         <span class="n">stdout</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
@@ -135,7 +155,9 @@
     <span class="k">return</span> <span class="n">proc</span>
 </div>
 <div class="viewcode-block" id="wait"><a class="viewcode-back" href="../api.html#unix_pipeline.wait">[docs]</a><span class="k">def</span> <span class="nf">wait</span><span class="p">():</span>
-    <span class="c"># wait until all child processes have finished</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Wait until all child processes have finished.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">pid</span><span class="p">,</span> <span class="n">exitcode</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
@@ -165,14 +187,26 @@
                         <span class="k">pass</span>
                     </div>
 <div class="viewcode-block" id="create_pipeline"><a class="viewcode-back" href="../api.html#unix_pipeline.create_pipeline">[docs]</a><span class="k">def</span> <span class="nf">create_pipeline</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create a new pipeline instance.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">return</span> <span class="n">UnixPipeline</span><span class="p">()</span>
                     </div>
 <div class="viewcode-block" id="UnixPipeline"><a class="viewcode-back" href="../api.html#unix_pipeline.UnixPipeline">[docs]</a><span class="k">class</span> <span class="nc">UnixPipeline</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This class can be used to chain multiple processes together.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_procs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">use_stdin</span> <span class="o">=</span> <span class="bp">None</span>
 
 <div class="viewcode-block" id="UnixPipeline.append"><a class="viewcode-back" href="../api.html#unix_pipeline.UnixPipeline.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Append a process to the pipeline. If there already is a process in</span>
+<span class="sd">        the pipeline, its ``stdout`` will be connected to the ``stdin`` of </span>
+<span class="sd">        the new process. File objects may be passed to capture ``stdout`` </span>
+<span class="sd">        and ``stderr``.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipeline_procs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">use_stdin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_procs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">stdout</span>
             

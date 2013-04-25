@@ -1,54 +1,115 @@
+..
+  This is the documentation for rnaseq-pipeline. Please keep lines under
+  80 characters if you can and start each sentence on a new line as it 
+  decreases maintenance.
+  
 .. title:: rnaseq-pipeline
 
 Introduction
 ============
 
-The aim of this data processing pipeline is to enable simple and robust 
-bioinformatics data evaluation.
+The aim of this data processing pipeline is to enable robust and 
+straightforward bioinformatics data evaluation. 
+It is implemented in Python, runs under GNU/Linux and can be controlled from 
+the command-line interface. 
+Although the primary focus is the evaluation of RNASeq data, its design 
+allows for a variety of other applications.
+
+General usage
+-------------
+
+This package *does not* provide a number of tools which are downloaded and
+installed system-wide to provide certain functioniality.
+The intention of this system is to provide a robust and traceable framework
+for data evaluation in scientific experiments.
+    
+The recommended workflow for running a data evaluation for an experiment is 
+as follows:
+
+1. Fork the rnaseq-pipeline repository via Git.
+2. Setup the project by writing the configuration file.
+3. Add steps or other functionality as needed (optional).
+4. Run the pipeline.
+5. Have your changes (if there are any) merged back into the main repository,
+   to the advantage of the scientific community.
+
+This leaves you with:
+
+* Your original input files, which are left untouched.
+* The experiment-specific pipeline repository.  
+  You should keep this repository for later reference and you could even
+  make it publicly available along with your input files for anybody to
+  re-run the entire data evaluation or parts thereof.
+* The output directory containing all output files and comprehensive 
+  annotations.
+  These annotations include detailed information for every output file,
+  including which steps have been executed and the Git SHA1 hash of
+  the pipeline repository at the time the data processing took place.
+
+Core aspects
+------------
 
 **Simplicity:**
 
-* The entire processing pipeline is described via a configuration file. Steps 
-  are defined in a tree, and output files are written into a directory 
+* The entire processing pipeline is described via a configuration file. 
+  Steps are defined in a tree, and output files are written into a directory 
   structure mirroring this tree.
-* Interaction with the pipeline happens through simple scripts which are used 
-  to monitor the state of the pipeline and execute individual or all 
+* Interaction with the pipeline happens through a handful of scripts which 
+  are used to monitor the state of the pipeline and execute individual or all 
   remaining steps.
-* To add a new processing step, a single Python file must be placed in 
-  ``include/step`` which defines a class with two functions, one for 
-  planning all jobs based on a list of input files or runs and possibly 
-  additional information from previous steps and another function for 
-  running a specific job.
 
 **Robustness:**
 
-* All steps write their output files to a temporary location. Only if a step 
-  has completed successfully, the output files are copied to the correct 
-  output directory.
+* All steps write their output files to a temporary location. 
+  Only if a step has completed successfully, the output files are copied to 
+  the correct output directory.
 * The output directory names are suffixed with a four-character hashtag 
   which mirrors the options specified for the step.
 * Processing can be aborted and continued from the command line at any time. 
   This way, cluster failures are less critical because output files do not
   get compromised.
-* Comprehensive annotations are written to the output directories, allowing 
-  for later investigation about what exactly happened.
 * Errors are caught as early as possible. Tools are checked for availability, 
   and the entire processing pipeline is calculated in advance before 
   jobs are being started or submitted to a cluster.
+  
+**Traceability:**
 
-A pipeline is defined by two aspects:
+* Comprehensive annotations are written to the output directories, allowing 
+  for later investigation about what exactly happened.
+      
+Design
+------
 
-* all processing steps arranges in a dependency tree
-* its input samples
+The central part of the pipeline is its definition of the steps which are to 
+be carried out.
+Steps are organized in a dependency tree -- every step has one parent step,
+which may in turn have another parent step, and so on.
+At the root of the tree, there is a special step called ``source`` which
+provides the input samples.
 
-The combination of *steps* and *samples* result in a list of *tasks*, which 
-can be executed sequentially or can be submitted to a cluster.
+Each step defines a number of runs and each run represents a piece of the
+entire data evaluation, typically at the level of a single sample.
+A certain *run* of a certain *step* is called a *task*.
+While the steps only describe what needs to be done on a very abstract level,
+it is through the individual runs of each step that a pipeline-wide list of 
+actual tasks becomes available.
+
+The ``source`` step defines a run for every input sample, and following steps
+may:
+
+* define the same number of runs, 
+* define more runs (for example when R1 and R2 reads in a paired-end RNASeq 
+  experiment should be treated separately),
+* define fewer runs (usually at the end of a pipeline, where results are
+  summarized).
 
 .. NOTE:: The design decision that steps are defined as a tree instead 
    of a full directed acyclic graph means that a step cannot have more than 
    one direct parent, like a directory in a file system cannot have more than 
-   one parent directory. This means that a step cannot use the output of two 
-   different steps as its input. However, any step may have more than one
+   one parent directory. 
+   This means that a step cannot use the output of two different steps as its 
+   input. 
+   However, any step may have more than one
    input or output file.
 
 Setup
@@ -63,18 +124,18 @@ required Python environment (which will be located in ``./python_env/``)::
 
     $ ./bootstrap.sh
 
-There's no harm in accidentally running this script multiple times. Also,
-it will compile ``cat4m``, a tool which can be found at ``./tools/cat4m``
-and which is able to read arbitrary input files in chunks of 4 MB
-and prints them to stdout.
+There's no harm in accidentally running this script multiple times. 
+Also, it will compile ``cat4m``, a tool which can be found at 
+``./tools/cat4m`` and which is able to read arbitrary input files in chunks 
+of 4 MB and prints them to stdout.
 
 The configuration file
 ----------------------
 
-Next, edit ``config.sample.yaml`` and save it as ``config.yaml``. Although 
-writing the configuration may seem a bit complicated, the trouble pays off 
-later because further interaction with the pipeline is quite simple. Here is 
-a sample configuration:
+Next, edit ``config.sample.yaml`` and save it as ``config.yaml``. 
+Although writing the configuration may seem a bit complicated, the trouble 
+pays off later because further interaction with the pipeline is quite simple. 
+Here is a sample configuration:
 
 .. code-block:: yaml
 
@@ -119,28 +180,31 @@ Scripts
 =======
 
 Once the project is set up, there are several scripts which can be used to 
-execute and monitor the pipeline. All scripts have a couple of properties in 
-common:
+execute and monitor the pipeline. 
+All scripts have a couple of properties in common:
 
 * On startup, the configuration is read, tools are checked, input files are 
-  collected, and all tasks are calculated. If any of these steps fails, the 
-  script will print an error message with a backtrace and it will crash.
+  collected, and all tasks are calculated. 
+  If any of these steps fails, the script will print an error message with 
+  a backtrace and it will crash.
 * For convenience, a symbolic link called ``out`` will be placed in the 
   pipeline's directory which points to the output directory defined in the 
-  configuration file. If ``out`` already exists, it is left untouched.
+  configuration file. 
+  If ``out`` already exists, it is left untouched.
 
 There are a couple of global command line parameters which are valid for all 
 scripts:
 
 * ``--even-if-dirty``:
     Before doing anything else, the pipeline checks whether its source code 
-    has been modified in any way via Git. If yes, processing is stopped 
-    immediately unless this flag is specified.
+    has been modified in any way via Git. 
+    If yes, processing is stopped immediately unless this flag is specified.
 * ``--test-run``:
     When this parameter is specified, a ``head`` step is placed before all 
     first-level steps in the step tree, which returns the first 1000 lines 
-    of every input file. That way, a pipeline can be tested very quickly 
-    with a small input data set.
+    of every input file. 
+    That way, a pipeline can be tested very quickly with a small input data 
+    set.
 
 In the following, the scripts are described in detail.
 
@@ -148,10 +212,12 @@ status.py
 ---------
 
 The status script lists all tasks resulting from the configured steps and 
-input samples. At the beginning of each line, the status of each task is 
-denoted by [w], [r], and [f], corresponding to:
+input samples. 
+At the beginning of each line, the status of each task is denoted by 
+``[w]``, ``[r]``, and ``[f]``, corresponding to:
 
-* **waiting** -- the taks is waiting for input files to appear or to be updated
+* **waiting** -- the taks is waiting for input files to appear or to be 
+  updated
 * **ready** -- all input files are present and up-to-date regarding their 
   upstream input files, task can be started
 * **finished** -- all output files are in place and up-to-date
@@ -171,7 +237,8 @@ Here is an example output::
     tasks: 6 total, 4 ready, 2 waiting
 
 Here is another example output with ``--test-run`` specified on the command 
-line. Here, all top-level steps are prepended with a ``head`` step, which is 
+line. 
+Here, all top-level steps are prepended with a ``head`` step, which is 
 reflected in the task IDs::
 
     $ ./status.py --test-run
@@ -214,33 +281,36 @@ task ID on the command line::
         - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L007_R1_001.fastq.gz
         - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L008_R1_001.fastq.gz
 
-The details of this data structure are explained below. It represents a kind 
-of plan which includes information about which output files will be generated 
-and which input files they depend on -- this is stored in ``output_files``. 
+The details of this data structure are explained below. 
+It represents a kind of plan which includes information about which output 
+files will be generated and which input files they depend on -- this is 
+stored in ``output_files``. 
 Furthermore, necessary information for actually executing the task are 
-recorded in ``info``. In this case, the final adapter has been determined by 
-replacing ``((INDEX))`` in the configuration file's ``adapter-R1`` with the 
-actual barcode index of the sample.
+recorded in ``info``. 
+In this case, the final adapter has been determined by replacing ``((INDEX))`` 
+in the configuration file's ``adapter-R1`` with the actual barcode index of 
+the sample.
 
 
 run-locally.py
 --------------
 
 The ``run-locally.py`` script runs all non-finished tasks (or a subset) 
-sequentially on the local machine. Feel free to cancel this script at any 
-time, it won't put your project in a confused state.
+sequentially on the local machine. 
+Feel free to cancel this script at any time, it won't put your project in a 
+confused state.
 
 To execute one or more certain tasks, specify the task IDs on the command 
 line.
 
-.. NOTE:: Why is it safe to cancel the pipeline? The pipeline is 
-    written in a way which expects processes to fail or cluster jobs to 
-    disappear without notice. This problem is mitigated by a design which 
-    relies on file presence and file timestamps to determine whether a task 
-    is finished or not. Output files are automatically written to temporary 
-    locations and later moved to their real target directory, and it is not 
-    until the last file rename operation has finished that a task is 
-    regarded as finished.
+.. NOTE:: Why is it safe to cancel the pipeline? 
+    The pipeline is written in a way which expects processes to fail or 
+    cluster jobs to disappear without notice. 
+    This problem is mitigated by a design which relies on file presence and 
+    file timestamps to determine whether a task is finished or not. 
+    Output files are automatically written to temporary locations and later 
+    moved to their real target directory, and it is not until the last file 
+    rename operation has finished that a task is regarded as finished.
 
 submit-to-cluster.py
 --------------------
@@ -249,8 +319,9 @@ The ``submit-to-cluster.py`` script determines which tasks still have to be
 carried out and submits the jobs to a GridEngine cluster by calling ``qsub``. 
 Dependencies are passed to ``qsub`` via the ``-hold_jid`` option, which means 
 that jobs that depend on other jobs won't get scheduled until their 
-dependencies have been satisfied. The file ``qsub-template.sh`` is used to 
-submit jobs, with ``#{ }`` fields being substituted with appropriate values.
+dependencies have been satisfied. 
+The file ``qsub-template.sh`` is used to submit jobs, with ``#{ }`` fields 
+being substituted with appropriate values.
 
 The file ``quotas.yaml`` can be used to define different quotas for different 
 systems:
@@ -259,11 +330,14 @@ systems:
 
     "frontend[12]":
         default: 5
+        cutadapt: 100
 
 In the example above, a default quota of 5 is defined for hosts with a 
 hostname of ``frontend1`` or ``frontend2`` (the name is a regular expression). 
-Different quotas can be defined for each step. A quota of 5 means that no 
-more than 5 jobs of on kind (the same step) will be run in parallel.
+A quota of 5 means that no more than 5 jobs of one kind will be run in 
+parallel.
+Different quotas can be defined for each step: because ``cutadapt`` is 
+highly IO-efficient, it has a higher quota.
 
   
 Sources
@@ -280,9 +354,11 @@ Here's an example:
 
     - run_folder_source: { path: in }
 
-This source looks for fastq.gz files in ``[path]/Unaligned/Project_*/Sample_*`` 
-and pulls additional information from CSV sample sheets it finds. It also 
-makes sure that index information for all samples is coherent and unambiguous.
+This source looks for fastq.gz files in 
+``[path]/Unaligned/Project_*/Sample_*`` and pulls additional information from 
+CSV sample sheets it finds. 
+It also makes sure that index information for all samples is coherent and 
+unambiguous.
 
 FASTQ source
 ------------
@@ -297,10 +373,11 @@ Here's an example:
         indices: copd-barcodes.csv
 
 Input files are collected as defined by ``pattern`` and grouped into samples 
-according to ``group``, which is a regular expression. All groups defined in 
-the regex ``(  )`` are used to construct the sample name, here it is used to 
-declare that both R1 and R2 files belong to the same sample. Indices are 
-read from the CSV file specified by ``indices``.
+according to ``group``, which is a regular expression. 
+All groups defined in the regex ``(  )`` are used to construct the sample 
+name, here it is used to declare that both R1 and R2 files belong to the 
+same sample. 
+Indices are read from the CSV file specified by ``indices``.
 
 ..    
     .. automodule:: abstract_source
@@ -311,30 +388,38 @@ read from the CSV file specified by ``indices``.
 Steps
 =====
 
-Steps are defined in a dependency tree. However, the syntax is a bit peculiar: 
-The ``|`` after ``steps:`` is YAML-specific syntax and it defines a string 
-spanning multiple lines in which line breaks and indentation is maintained. 
+Steps are defined in a dependency tree. 
+However, the syntax is a bit peculiar: The ``|`` after ``steps:`` is 
+YAML-specific syntax and it defines a string spanning multiple lines in which 
+line breaks and indentation is maintained. 
 The string is later parsed by the pipeline and the most important parts are 
-the individual steps which are to be performed. The relationship betweens 
-steps is declared via indentation.
+the individual steps which are to be performed. 
+The relationship betweens steps is declared via indentation.
 
-.. NOTE:: Why do we need the ``|`` symbol in the steps definition? Neither the 
-    list nor the dictionary syntax allow for a concise definition of a step 
-    tree with options. Think of the step definition as a nested list with an 
-    option hash attached to every item.
+.. NOTE:: Why do we need the ``|`` symbol in the steps definition? 
+    Neither the list nor the dictionary syntax allow for a concise definition 
+    of a step tree with options. 
+    Think of the step definition as a nested list with an option hash 
+    attached to every item.
 
 Steps may have options, which must be placed in between ``{`` curly braces 
-``}``. Options can be specified on a single line (in this case, individual 
-key/value pairs must be separated by comma) or may span multiple lines, 
-following standard YAML block syntax.
+``}``. 
+Options can be specified on a single line (in this case, individual key/value 
+pairs must be separated by comma) or may span multiple lines, following 
+standard YAML block syntax:
 
-..
-    .. automodule:: abstract_step
-        :members:
+.. code-block:: yaml
 
-    .. autoclass:: AbstractStep
-        :members:
+    # here, options are written in a single line, thus the comma is required
+    - cutadapt { a: 123, b: 456 }
     
+    # YAML block syntax:
+    - fix_cutadapt { 
+        a: 123
+        b: 456
+    }
+
+
 Miscellaneous
 -------------
 
@@ -465,6 +550,13 @@ Segemehl
 Extending the pipeline
 ======================
 
+To add a new processing step, a single Python file must be placed in 
+``include/step`` which defines a class with two functions, one for planning 
+all jobs based on a list of input files or runs and possibly additional 
+information from previous steps and another function for running a specific 
+job.
+
+
 Checklist
 ---------
 
@@ -472,10 +564,10 @@ Here's a couple of things which should be kept in mind when implementing new
 steps or modifying existing steps:
 
 * Make sure errors already show up in ``setup_runs`` instead of ``execute``.
-  That way, wasting precious cluster waiting time is avoided. Look out for 
-  things that may fail, and do them in ``setup_runs``. Use the ``info`` 
-  entry in the returned ``run_info`` structure to pass the resulting 
-  information to ``execute``.
+  That way, wasting precious cluster waiting time is avoided. 
+  Look out for things that may fail, and do them in ``setup_runs``. 
+  Use the ``info`` entry in the returned ``run_info`` structure to pass the 
+  resulting information to ``execute``.
 * Likewise, make sure that the tools you'll need in execute are already 
   available in ``setup_runs``::
   
@@ -486,10 +578,11 @@ steps or modifying existing steps:
 * Make sure your disk access is as cluster-friendly as possible (which 
   primarily means using large block sizes and preferably no seek operations). 
   If possible, use ``unix_pipeline`` to wrap your commands in ``pigz``, 
-  ``dd``, or ``cat4m`` with a block size of at least 4 MB. Although this is 
-  not possible in every case (for example when seeking inside files is 
-  involved), it is straightforward with tools that read a continuous stream 
-  from ``stdin`` and write a continuous stream to ``stdout``.
+  ``dd``, or ``cat4m`` with a large block size like 4 MB. 
+  Although this is not possible in every case (for example when seeking 
+  in files is involved), it is straightforward with tools that read a 
+  continuous stream from ``stdin`` and write a continuous stream to 
+  ``stdout``.
 
 To-do list
 ==========
@@ -504,9 +597,9 @@ Getting started package:
 Capture process output:
     For all processes launched via ``unix_pipeline``, the respective stdout 
     and stderr should be recorded and the last kB remembered, so that it can
-    be included into the error message if a pipeline fails. Also, the 
-    captured output should be incorporated into the YAML annotations which
-    are written for every output file.
+    be included into the error message if a pipeline fails. 
+    Also, the captured output should be incorporated into the YAML 
+    annotations which are written for every output file.
     
     *Plus:* This would also allow for the automatic generation of SHA1 
     checksums on the fly.
@@ -517,10 +610,11 @@ Steps should be able to access all ancestors:
     
 On-the-fly steps:
     We need a way to skip writing certain output files and have them flow 
-    temporarily through a pipe only, if possible. This is a disk space-saving 
-    feature only and has no effect on the outcome of the pipeline. However,
-    it would require that a step is capable of being run *on-the-fly* which
-    means it must read and write in a single stream.
+    temporarily through a pipe only, if possible. 
+    This is a disk space-saving feature only and has no effect on the 
+    outcome of the pipeline. However, it would require that a step is 
+    capable of being run *on-the-fly* which means it must read and write in 
+    a single stream.
     
     Here's an example:
     
