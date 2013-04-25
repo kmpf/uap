@@ -82,6 +82,8 @@ class Pipeline(object):
             for run_id in sorted(step.get_run_ids()):
                 task = task_module.Task(self, step, run_id)
                 self.all_tasks.append(task)
+                if str(task) in self.task_for_task_id:
+                    raise ConfigurationException("Duplicate task ID %s. Use the 'step_name' option to assign another step name." % str(task))
                 self.task_for_task_id[str(task)] = task
 
         self.tool_versions = {}

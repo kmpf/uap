@@ -215,13 +215,13 @@ class AbstractStep(object):
     def get_dependency_path(self, with_options = False):
         path = []
         p = self
-        path.append(p.__module__)
+        path.append(str(p))
         if with_options:
             path[-1] += '-' + p.get_options_hashtag()
         while p.parent:
             p = p.parent
             if p.__module__ != 'source':
-                path.append(p.__module__)
+                path.append(str(p))
                 if with_options:
                     path[-1] += '-' + p.get_options_hashtag()
         path.reverse()
@@ -429,5 +429,8 @@ class AbstractStep(object):
         return _path        
 
     def __str__(self):
-        return self.step_name
+        if 'step_name' in self.options:
+            return self.options['step_name']
+        else:
+            return self.step_name
 
