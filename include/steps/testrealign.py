@@ -39,7 +39,8 @@ class TestRealign(AbstractStep):
             output_run_info[run_id]['info'] = {}
             output_run_info[run_id]['info']['bam-in'] = [_ for _ in input_run_info['output_files']['alignments'].keys() if _[-4:] == '.bam'][0]
             output_run_info[run_id]['info']['maxdist'] = '100'
-            output_run_info[run_id]['info']['maxdist'] = str(self.options['maxdist'])
+            if 'maxdist' in self.options:
+                output_run_info[run_id]['info']['maxdist'] = str(self.options['maxdist'])
 
 
         return output_run_info

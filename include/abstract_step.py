@@ -129,12 +129,15 @@ class AbstractStep(object):
         self._file_dependencies_cumulative = {}
         self._cores = 1
         self._temp_directory = None
+        self._volatile = False
 
     def set_cores(self, cores):
         self._cores = cores
 
     def set_options(self, options):
         self.options = options
+        if '_volatile' in options:
+            self._volatile = options['_volatile']
 
     def add_dependency(self, parent):
         if not isinstance(parent, AbstractStep):
@@ -429,8 +432,8 @@ class AbstractStep(object):
         return _path        
 
     def __str__(self):
-        if 'step_name' in self.options:
-            return self.options['step_name']
+        if '_step_name' in self.options:
+            return self.options['_step_name']
         else:
             return self.step_name
 
