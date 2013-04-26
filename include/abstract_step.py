@@ -177,7 +177,7 @@ class AbstractStep(object):
     def get_temp_output_directory(self):
         while True:
             token = ''.join(random.choice(string.ascii_lowercase + string.digits) for x in range(8))
-            path = os.path.join(self._pipeline.config['destination_path'], 'temp', 'temp-' + token)
+            path = os.path.join(self._pipeline.config['destination_path'], 'temp', 'temp-%s-%s' % (str(self), token))
             if not os.path.exists(path):
                 return path
 
