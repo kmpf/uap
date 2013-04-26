@@ -88,3 +88,4 @@ class TestRealign(AbstractStep):
 
         os.unlink(fifo_path_genome)
         os.unlink(fifo_path_splicesites)
+        os.unlink(fifo_path_transrealigned)
