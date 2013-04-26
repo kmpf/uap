@@ -76,6 +76,7 @@ class AbstractStep(object):
             raise StandardError("Error: parent argument must be an AbstractStep.")
         if parent == self:
             raise StandardError("Cannot add a node as its own dependency.")
+        # TODO: Check for cycles.
         self.dependencies.append(parent)
 
     def get_input_run_info(self):
@@ -84,7 +85,7 @@ class AbstractStep(object):
         '''
         input_run_info = dict()
         for parent in self.dependencies:
-            input_run_info[str(parent)] = copy.deepcopy(parent.get_run_info())
+            input_run_info[parent.get_step_id()] = copy.deepcopy(parent.get_run_info())
         return input_run_info
 
     def setup_runs(self, input_run_info):
@@ -93,9 +94,15 @@ class AbstractStep(object):
         '''
         raise NotImplementedError()
 
+    def execute(self, run_id, run_info):
+        '''
+        Raise NotImplementedError because every subclass must override this method.
+        '''
+        raise NotImplementedError()
+
     def get_run_info(self):
         # create run info if it doesn't exist yet
-        if self._run_info == None:
+        if not self._run_info:
             # create input run info and simplify it a bit for setup_runs
             input_run_info = copy.deepcopy(self.get_input_run_info())
             full_paths = dict()
@@ -131,6 +138,7 @@ class AbstractStep(object):
 
             self._run_info = fix_dict(self._run_info, fix_func_dict_subst, full_paths)
             
+            # TODO: Fix this.
             # fill _file_dependencies_cumulative
             for run_id in self._run_info.keys():
                 for tag in self._run_info[run_id]['output_files'].keys():
@@ -156,24 +164,15 @@ class AbstractStep(object):
     def get_run_ids(self):
         return self.get_run_info().keys()
 
-    def get_dependency_path(self, with_options = False):
-        p = self
-        path = str(p)
-        if with_options:
-            path += '-' + p.get_options_hashtag()
-        return path
-
     def get_options_hashtag(self):
         return hashlib.sha1(json.dumps(self.options, sort_keys=True)).hexdigest()[0:4]
 
     def get_step_id(self):
-        return self.get_dependency_path()
+        return self._step_name
 
     def get_output_directory(self):
-        # add the options to the output path so that different options result in
-        # a different directory
-        dependency_path = self.get_dependency_path(True)
-        return os.path.join(self._pipeline.config['destination_path'], dependency_path)
+        return os.path.join(self._pipeline.config['destination_path'], 
+            '%s-%s' % (self.get_step_id(), self.get_options_hashtag()))
 
     def get_temp_output_directory(self):
         while True:
@@ -214,15 +213,11 @@ class AbstractStep(object):
         else:
             return self._pipeline.states.WAITING
 
-    def dry_run(self, run_id, dry_run_cache):
-        run_info = self.get_run_info()[run_id]
-        for path in run_info.keys():
-            dry_run_cache[path] = datetime.datetime.now()
-
     def run(self, run_id):
         # create the output directory if it doesn't exist yet
         if not os.path.isdir(self.get_output_directory()):
             os.makedirs(self.get_output_directory())
+            
         # also create a temporary directory for the output file
         temp_directory = self.get_temp_output_directory()
         self._temp_directory = temp_directory
@@ -244,7 +239,6 @@ class AbstractStep(object):
             self._pipeline.notify("[BAD] %s/%s failed: %s" % (str(self), run_id, str(e)))
             raise
 
-        
         # if we're here, we can assume the step has finished successfully
         # now rename the output files (move from temp directory to
         # destination directory)
@@ -276,7 +270,6 @@ class AbstractStep(object):
 
         # now write the annotation
         log = {}
-        log['all_samples'] = self._pipeline.all_samples
         log['step'] = {}
         log['step']['options'] = self.options
         log['step']['id'] = self.get_step_id()
@@ -311,16 +304,17 @@ class AbstractStep(object):
         except OSError:
             pass
 
-    def execute(self, run_id, run_info):
-        raise NotImplementedError()
-
     def tool(self, key):
+        '''
+        Return full path to a configured tool.
+        '''
         return self._pipeline.config['tools'][key]['path']
     
     def get_temporary_path(self, prefix, suffix):
         '''
-        Returns a temporary path with the prefix and suffix specified. The
-        returned path will be in the temporary directory.
+        Returns a temporary path with the prefix and suffix specified. 
+        The returned path will be in the temporary directory of the step 
+        and will not exist yet.
         '''
         if not self._temp_directory:
             raise StandardError("Temporary directory not set, you cannot call get_temporary_path from setup_runs.")
