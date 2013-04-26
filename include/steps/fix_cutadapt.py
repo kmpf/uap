@@ -3,9 +3,14 @@ from abstract_step import *
 import subprocess
 
 class FixCutadapt(AbstractStep):
+    
+    cores = 9
+    connections = []
+    connections.append('in/reads')
+    connections.append('out/reads')
+    
     def __init__(self, pipeline):
         super(FixCutadapt, self).__init__(pipeline)
-        self.set_cores(9)
 
     def setup_runs(self, input_run_info_complete):
         # make sure tools are available
