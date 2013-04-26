@@ -50,8 +50,10 @@
   <h1>Source code for abstract_step</h1><div class="highlight"><pre>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;./include/steps&#39;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;./include/sources&#39;</span><span class="p">)</span>
 <span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">fscache</span>
 <span class="kn">import</span> <span class="nn">hashlib</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">import</span> <span class="nn">json</span>
@@ -64,64 +66,362 @@
 <span class="kn">import</span> <span class="nn">unix_pipeline</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
 
-<span class="k">def</span> <span class="nf">get_step_class_for_key</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
-    <span class="n">classes</span> <span class="o">=</span> <span class="p">[</span><span class="n">_</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="nb">__import__</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">)</span> <span class="k">if</span> <span class="n">AbstractStep</span> <span class="ow">in</span> <span class="n">_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">__bases__</span><span class="p">]</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">classes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;need exactly one subclass of AbstractStep in &quot;</span> <span class="o">+</span> <span class="n">key</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">classes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
 
-<div class="viewcode-block" id="assign_strings"><a class="viewcode-back" href="../api.html#abstract_step.assign_strings">[docs]</a><span class="k">def</span> <span class="nf">assign_strings</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">tags</span><span class="p">):</span>
+<div class="viewcode-block" id="AbstractStep"><a class="viewcode-back" href="../api.html#abstract_step.AbstractStep">[docs]</a><span class="k">class</span> <span class="nc">AbstractStep</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    
+    <span class="n">cores</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">connections</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="n">fsc</span> <span class="o">=</span> <span class="n">fscache</span><span class="o">.</span><span class="n">FSCache</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">):</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span> <span class="o">=</span> <span class="n">pipeline</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        All steps this step depends on.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Options as specified in the configuration.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_step_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__module__</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        By default, this is the name of the module. Can be overridden </span>
+<span class="sd">        to allow for multiple steps of the same kind.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Cached run information. ``setup_runs`` is only called once, the</span>
+<span class="sd">        post-processed results are stored in here.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file_dependencies_cumulative</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        _file_dependencies_cumulative is secondary data which gets generated </span>
+<span class="sd">        from _run_info and keeps track of each output file&#39;s file </span>
+<span class="sd">        dependencies (regardless of the run id) and by file dependencies</span>
+<span class="sd">        I mean ALL file dependencies including those from all of its</span>
+<span class="sd">        parent steps (yup, that may become a lot of files).</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_temp_directory</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The temporary output directory the step is using. Only set when</span>
+<span class="sd">        the step is being run.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_step_name</span> <span class="o">=</span> <span class="n">step_name</span>
+
+    <span class="k">def</span> <span class="nf">set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">options</span>
+
+    <span class="k">def</span> <span class="nf">add_dependency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">AbstractStep</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;Error: parent argument must be an AbstractStep.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parent</span> <span class="o">==</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;Cannot add a node as its own dependency.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AbstractStep.get_input_run_info"><a class="viewcode-back" href="../api.html#abstract_step.AbstractStep.get_input_run_info">[docs]</a>    <span class="k">def</span> <span class="nf">get_input_run_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Return a dict with run info for each parent.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">input_run_info</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="p">:</span>
+            <span class="n">input_run_info</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">parent</span><span class="p">)]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get_run_info</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">input_run_info</span>
+</div>
+<div class="viewcode-block" id="AbstractStep.setup_runs"><a class="viewcode-back" href="../api.html#abstract_step.AbstractStep.setup_runs">[docs]</a>    <span class="k">def</span> <span class="nf">setup_runs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_run_info</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Raise NotImplementedError because every subclass must override this method.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">get_run_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># create run info if it doesn&#39;t exist yet</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># create input run info and simplify it a bit for setup_runs</span>
+            <span class="n">input_run_info</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_input_run_info</span><span class="p">())</span>
+            <span class="n">full_paths</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+            <span class="c"># strip directories from file names, strip input files</span>
+            <span class="k">for</span> <span class="n">step_name</span> <span class="ow">in</span> <span class="n">input_run_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">run_info</span> <span class="ow">in</span> <span class="n">input_run_info</span><span class="p">[</span><span class="n">step_name</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                            <span class="n">basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">basename</span> <span class="ow">in</span> <span class="n">full_paths</span><span class="p">:</span>
+                                <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;There are multiple input filenames with the same basename.&quot;</span><span class="p">)</span>
+                            <span class="n">full_paths</span><span class="p">[</span><span class="n">basename</span><span class="p">]</span> <span class="o">=</span> <span class="n">path</span>
+                            <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">][</span><span class="n">basename</span><span class="p">]</span> <span class="o">=</span> <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">][</span><span class="n">path</span><span class="p">]</span>
+                            <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setup_runs</span><span class="p">(</span><span class="n">input_run_info</span><span class="p">)</span>
+            
+            <span class="c"># verify connection keys</span>
+            <span class="k">for</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">run_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;out/&#39;</span> <span class="o">+</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">connections</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;Invalid output_file key &#39;</span><span class="si">%s</span><span class="s">&#39; in </span><span class="si">%s</span><span class="s">. &quot;</span>
+                            <span class="s">&quot;Keys must be specified via the &#39;connections&#39; &quot;</span>
+                            <span class="s">&quot;class member (you might want to add &quot;</span>
+                            <span class="s">&quot;connections.append(&#39;out/</span><span class="si">%s</span><span class="s">&#39;)).&quot;</span> 
+                            <span class="o">%</span> <span class="p">(</span><span class="n">annotation</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">annotation</span><span class="p">))</span>
+            
+            <span class="k">for</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">run_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">full_paths</span><span class="p">[</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span> <span class="n">path</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span> <span class="o">=</span> <span class="n">fix_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span><span class="p">,</span> <span class="n">fix_func_dict_subst</span><span class="p">,</span> <span class="n">full_paths</span><span class="p">)</span>
+            
+            <span class="c"># fill _file_dependencies_cumulative</span>
+            <span class="k">for</span> <span class="n">run_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span><span class="p">[</span><span class="n">run_id</span><span class="p">][</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">input_paths</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span><span class="p">[</span><span class="n">run_id</span><span class="p">][</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">tag</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="n">output_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_dependencies_cumulative</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;Error: Multiple run IDs want to create the same output file (&quot;</span> <span class="o">+</span> <span class="n">output_path</span> <span class="o">+</span> <span class="s">&quot;).&quot;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_file_dependencies_cumulative</span><span class="p">[</span><span class="n">output_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">input_paths</span><span class="p">)</span>
+                        <span class="c"># now recursively add dependencies of each input file, if any</span>
+                        <span class="c"># ATTENTION: Actually, this is an ugly hack, there&#39;s no recursion here, but it still</span>
+                        <span class="c"># works. It might break at some point, but right now it&#39;s fine. TODO: Prove that it</span>
+                        <span class="c"># will remain fine.</span>
+                        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">                        p = self.parent</span>
+<span class="sd">                        l = input_paths</span>
+<span class="sd">                        for path in l:</span>
+<span class="sd">                            if path in p._file_dependencies_cumulative:</span>
+<span class="sd">                                self._file_dependencies_cumulative[output_path].extend(p._file_dependencies_cumulative[path])</span>
+<span class="sd">                        &#39;&#39;&#39;</span>
+                            
+        <span class="c"># now that the _run_info exists, it remains constant, just return it</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span>
+
+    <span class="k">def</span> <span class="nf">get_run_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_run_info</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_dependency_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">with_options</span> <span class="o">=</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">with_options</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">+=</span> <span class="s">&#39;-&#39;</span> <span class="o">+</span> <span class="n">p</span><span class="o">.</span><span class="n">get_options_hashtag</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">path</span>
+
+    <span class="k">def</span> <span class="nf">get_options_hashtag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha1</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_step_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependency_path</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># add the options to the output path so that different options result in</span>
+        <span class="c"># a different directory</span>
+        <span class="n">dependency_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependency_path</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;destination_path&#39;</span><span class="p">],</span> <span class="n">dependency_path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_temp_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_lowercase</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;destination_path&#39;</span><span class="p">],</span> <span class="s">&#39;temp&#39;</span><span class="p">,</span> <span class="s">&#39;temp-&#39;</span> <span class="o">+</span> <span class="n">token</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">path</span>
+
+    <span class="k">def</span> <span class="nf">get_run_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">path_up_to_date</span><span class="p">(</span><span class="n">outpath</span><span class="p">,</span> <span class="n">inpaths</span> <span class="o">=</span> <span class="p">[]):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">AbstractStep</span><span class="o">.</span><span class="n">fsc</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outpath</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">for</span> <span class="n">inpath</span> <span class="ow">in</span> <span class="n">inpaths</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">AbstractStep</span><span class="o">.</span><span class="n">fsc</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">inpath</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+                <span class="k">if</span> <span class="n">AbstractStep</span><span class="o">.</span><span class="n">fsc</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">inpath</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">AbstractStep</span><span class="o">.</span><span class="n">fsc</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">outpath</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="n">run_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_run_info</span><span class="p">()</span>
+        <span class="n">all_output_files_exist</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">all_input_files_exist</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="n">run_id</span><span class="p">][</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">output_file</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="n">run_id</span><span class="p">][</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">input_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_dependencies_cumulative</span><span class="p">[</span><span class="n">output_file</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">path_up_to_date</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">input_files</span><span class="p">):</span>
+                    <span class="n">all_output_files_exist</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="k">for</span> <span class="n">input_file</span> <span class="ow">in</span> <span class="n">input_files</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">path_up_to_date</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="p">[]):</span>
+                        <span class="n">all_input_files_exist</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">all_input_files_exist</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">all_output_files_exist</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">FINISHED</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">READY</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">WAITING</span>
+
+    <span class="k">def</span> <span class="nf">dry_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">dry_run_cache</span><span class="p">):</span>
+        <span class="n">run_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_run_info</span><span class="p">()[</span><span class="n">run_id</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">run_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">dry_run_cache</span><span class="p">[</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">):</span>
+        <span class="c"># create the output directory if it doesn&#39;t exist yet</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">())</span>
+        <span class="c"># also create a temporary directory for the output file</span>
+        <span class="n">temp_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_temp_output_directory</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_temp_directory</span> <span class="o">=</span> <span class="n">temp_directory</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">temp_directory</span><span class="p">)</span>
+
+        <span class="c"># call execute() but pass output file paths with the temporary directory</span>
+        <span class="n">temp_run_info</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_run_info</span><span class="p">()[</span><span class="n">run_id</span><span class="p">])</span>
+        <span class="n">temp_paths</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">temp_run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">out_path</span><span class="p">,</span> <span class="n">in_paths</span> <span class="ow">in</span> <span class="n">temp_run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">temp_paths</span><span class="p">[</span><span class="n">out_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">temp_directory</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">out_path</span><span class="p">))</span>
+
+        <span class="n">temp_run_info</span> <span class="o">=</span> <span class="n">fix_dict</span><span class="p">(</span><span class="n">temp_run_info</span><span class="p">,</span> <span class="n">fix_func_dict_subst</span><span class="p">,</span> <span class="n">temp_paths</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span><span class="s">&quot;[INFO] starting </span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">run_id</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">run_id</span><span class="p">,</span> <span class="n">temp_run_info</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span><span class="s">&quot;[BAD] </span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s"> failed: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">run_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+            <span class="k">raise</span>
+
+        
+        <span class="c"># if we&#39;re here, we can assume the step has finished successfully</span>
+        <span class="c"># now rename the output files (move from temp directory to</span>
+        <span class="c"># destination directory)</span>
+        <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">temp_run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">out_path</span> <span class="ow">in</span> <span class="n">temp_run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">destination_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">out_path</span><span class="p">))</span>
+                <span class="c"># TODO: if the destination path already exists, this will overwrite the file.</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">out_path</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;The step failed to produce an output file it announced: &quot;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">out_path</span><span class="p">))</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">out_path</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_temp_directory</span> <span class="o">=</span> <span class="bp">None</span>
+        
+        <span class="c"># step has completed successfully, now determine how many jobs are still left</span>
+        <span class="c"># but first invalidate the FS cache because things have changed by now...</span>
+        <span class="n">AbstractStep</span><span class="o">.</span><span class="n">fsc</span> <span class="o">=</span> <span class="n">fscache</span><span class="o">.</span><span class="n">FSCache</span><span class="p">()</span>
+        
+        <span class="n">count</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_run_ids</span><span class="p">():</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_run_state</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">count</span><span class="p">:</span>
+                <span class="n">count</span><span class="p">[</span><span class="n">state</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">count</span><span class="p">[</span><span class="n">state</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">remaining_task_info</span> <span class="o">=</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">count</span><span class="p">[</span><span class="n">_</span><span class="p">])</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">_</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">count</span><span class="o">.</span><span class="n">keys</span><span class="p">())])</span>
+        
+        <span class="n">message</span> <span class="o">=</span> <span class="s">&quot;[OK] </span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s"> successfully finished.</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">run_id</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;: &#39;</span> <span class="o">+</span> <span class="n">remaining_task_info</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+        <span class="c"># now write the annotation</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">log</span><span class="p">[</span><span class="s">&#39;all_samples&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span><span class="o">.</span><span class="n">all_samples</span>
+        <span class="n">log</span><span class="p">[</span><span class="s">&#39;step&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">log</span><span class="p">[</span><span class="s">&#39;step&#39;</span><span class="p">][</span><span class="s">&#39;options&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span>
+        <span class="n">log</span><span class="p">[</span><span class="s">&#39;step&#39;</span><span class="p">][</span><span class="s">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_id</span><span class="p">()</span>
+        <span class="n">log</span><span class="p">[</span><span class="s">&#39;run&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">log</span><span class="p">[</span><span class="s">&#39;run&#39;</span><span class="p">][</span><span class="s">&#39;run_info&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_run_info</span><span class="p">()[</span><span class="n">run_id</span><span class="p">]</span>
+        <span class="n">log</span><span class="p">[</span><span class="s">&#39;run&#39;</span><span class="p">][</span><span class="s">&#39;run_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">run_id</span>
+        <span class="n">log</span><span class="p">[</span><span class="s">&#39;config&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span><span class="o">.</span><span class="n">config</span>
+        <span class="n">log</span><span class="p">[</span><span class="s">&#39;git_hash_tag&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span><span class="o">.</span><span class="n">git_hash_tag</span>
+        <span class="n">log</span><span class="p">[</span><span class="s">&#39;tool_versions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span><span class="o">.</span><span class="n">tool_versions</span>
+        <span class="n">log</span><span class="p">[</span><span class="s">&#39;pipeline_log&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unix_pipeline</span><span class="o">.</span><span class="n">up_log</span>
+
+        <span class="n">annotation_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="n">run_id</span> <span class="o">+</span> <span class="s">&#39;-annotation.yaml&#39;</span><span class="p">)</span>
+        <span class="c"># overwrite the annotation if it already exists</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">annotation_path</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">default_flow_style</span> <span class="o">=</span> <span class="bp">False</span><span class="p">))</span>
+
+        <span class="c"># create a symbolic link to the annotation for every output file</span>
+        <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">temp_run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">out_path</span> <span class="ow">in</span> <span class="n">temp_run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">destination_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;.annotation.yaml&#39;</span><span class="p">)</span>
+                <span class="c"># overwrite the symbolic link if it already exists</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">destination_path</span><span class="p">):</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">destination_path</span><span class="p">)</span>
+                <span class="n">oldwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">destination_path</span><span class="p">))</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">annotation_path</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">destination_path</span><span class="p">))</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">oldwd</span><span class="p">)</span>
+
+        <span class="c"># finally, remove the temporary directory if it&#39;s empty</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">rmdir</span><span class="p">(</span><span class="n">temp_directory</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">run_info</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">tool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;tools&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s">&#39;path&#39;</span><span class="p">]</span>
+    
+<div class="viewcode-block" id="AbstractStep.get_temporary_path"><a class="viewcode-back" href="../api.html#abstract_step.AbstractStep.get_temporary_path">[docs]</a>    <span class="k">def</span> <span class="nf">get_temporary_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">suffix</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns a temporary path with the prefix and suffix specified. The</span>
+<span class="sd">        returned path will be in the temporary directory.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temp_directory</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;Temporary directory not set, you cannot call get_temporary_path from setup_runs.&quot;</span><span class="p">)</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">_path</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">suffix</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temp_directory</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">_path</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_path</span>        
+</div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_name</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="AbstractStep.get_step_class_for_key"><a class="viewcode-back" href="../api.html#abstract_step.AbstractStep.get_step_class_for_key">[docs]</a>    <span class="k">def</span> <span class="nf">get_step_class_for_key</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns a step (or source step) class for a given key which corresponds</span>
+<span class="sd">        to the name of the module the class is defined in. Pass &#39;cutadapt&#39; and</span>
+<span class="sd">        you will get the cutadapt.Cutadapt class which you may then instantiate.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        
+        <span class="c"># look for a subclass of AbstractSourceStep fist</span>
+        <span class="n">classes</span> <span class="o">=</span> <span class="p">[</span><span class="n">_</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="nb">__import__</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">)</span> <span class="k">if</span> <span class="n">AbstractSourceStep</span> <span class="ow">in</span> <span class="n">_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">__bases__</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">classes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">classes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;need exactly one subclass of AbstractSourceStep in &quot;</span> <span class="o">+</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">classes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c"># then, look for a subclass of AbstractStep fist</span>
+        <span class="n">classes</span> <span class="o">=</span> <span class="p">[</span><span class="n">_</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="nb">__import__</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">)</span> <span class="k">if</span> <span class="n">AbstractStep</span> <span class="ow">in</span> <span class="n">_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">__bases__</span><span class="p">]</span>
+        <span class="n">classes</span> <span class="o">=</span> <span class="p">[</span><span class="n">_</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">classes</span> <span class="k">if</span> <span class="n">_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">AbstractSourceStep</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">classes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">classes</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;need exactly one subclass of AbstractStep in &quot;</span> <span class="o">+</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">classes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+    </div></div>
+<div class="viewcode-block" id="AbstractSourceStep"><a class="viewcode-back" href="../api.html#abstract_step.AbstractSourceStep">[docs]</a><span class="k">class</span> <span class="nc">AbstractSourceStep</span><span class="p">(</span><span class="n">AbstractStep</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Assign strings (path names, for example) to tags. Example:</span>
+<span class="sd">    A subclass all source steps inherit from and which distinguishes source</span>
+<span class="sd">    steps from all real processing steps because they do not yield any tasks, </span>
+<span class="sd">    because their &quot;output files&quot; are in fact files which are already there.</span>
 <span class="sd">    </span>
-<span class="sd">      - paths = [&#39;RIB0000794-cutadapt-R1.fastq.gz&#39;, &#39;RIB0000794-cutadapt-R2.fastq.gz&#39;]</span>
-<span class="sd">      - tags = [&#39;R1&#39;, &#39;R2&#39;]</span>
-<span class="sd">      - result = { &#39;R1&#39;: &#39;RIB0000794-cutadapt-R1.fastq.gz&#39;, &#39;R2&#39;: &#39;RIB0000794-cutadapt-R2.fastq.gz&#39; }</span>
-<span class="sd">      </span>
-<span class="sd">    If this is not possible without ambiguities, a StandardError is thrown.</span>
+<span class="sd">    Note that the name might be a bit misleading because this class only</span>
+<span class="sd">    applies to source steps which &#39;serve&#39; existing files. A step which has </span>
+<span class="sd">    no input but produces input data for other steps and actually has to do </span>
+<span class="sd">    something for it, on the other hand, would be a normal AbstractStep</span>
+<span class="sd">    subclass because it produces tasks.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">check_candidate</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">tags</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span> <span class="n">tail</span><span class="p">):</span>
-        <span class="n">chopped</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">path</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">head</span><span class="p">)]</span> <span class="o">!=</span> <span class="n">head</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">None</span>
-            <span class="k">if</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">tail</span><span class="p">):]</span> <span class="o">!=</span> <span class="n">tail</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">None</span>
-            <span class="n">chopped</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">path</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">head</span><span class="p">):</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">tail</span><span class="p">)],</span> <span class="n">path</span><span class="p">))</span>
-
-        <span class="k">if</span> <span class="p">[</span><span class="n">_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">chopped</span><span class="p">)]</span> <span class="o">==</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">tags</span><span class="p">):</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">chopped</span><span class="p">):</span>
-                <span class="n">result</span><span class="p">[</span><span class="n">_</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">result</span>
-
-        <span class="k">return</span> <span class="bp">None</span>
-
-
-    <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tags</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;Number of tags must be equal to number of paths&quot;</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">tags</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
-            <span class="n">result_candidate</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">if</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
-                <span class="c"># find all occurences of tag in path</span>
-                <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="k">while</span> <span class="n">path</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">index</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
-                    <span class="n">head</span> <span class="o">=</span> <span class="n">path</span><span class="p">[:</span><span class="n">index</span><span class="p">]</span>
-                    <span class="n">tail</span> <span class="o">=</span> <span class="n">path</span><span class="p">[(</span><span class="n">index</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">tag</span><span class="p">)):]</span>
-                    <span class="c"># now try chopping off head and tail from every path</span>
-                    <span class="c"># and see whether we can unambiguously assign a path</span>
-                    <span class="c"># to every tag, if yes, we have a result candidate</span>
-                    <span class="n">result_candidate</span> <span class="o">=</span> <span class="n">check_candidate</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">tags</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span> <span class="n">tail</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">result_candidate</span><span class="p">:</span>
-                        <span class="n">results</span><span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">result_candidate</span><span class="p">,</span> <span class="n">sort_keys</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)]</span> <span class="o">=</span> <span class="n">result_candidate</span>
-                    <span class="n">offset</span> <span class="o">=</span> <span class="n">index</span> <span class="o">+</span> <span class="mi">1</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;Unable to find an unambiguous mapping.&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="n">results</span><span class="o">.</span><span class="n">keys</span><span class="p">()[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AbstractSourceStep</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">pipeline</span><span class="p">)</span>
 </div>
 <span class="k">def</span> <span class="nf">fix_dict</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">fix_func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">__class__</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
@@ -138,351 +438,6 @@
     <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">full_paths</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">full_paths</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">v</span>
-
-<span class="c"># fs_cache records return values of &#39;exists&#39; and &#39;getmtime&#39; which is done</span>
-<span class="c"># so that actual syscalls for this are only executed once and later re-used</span>
-<span class="c"># from the cache</span>
-
-<span class="n">fs_cache</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-
-<span class="k">def</span> <span class="nf">fs_cache_path_exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-    <span class="n">key</span> <span class="o">=</span> <span class="s">&#39;exists/&#39;</span> <span class="o">+</span> <span class="n">path</span>
-    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">fs_cache</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">fs_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-    <span class="n">fs_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
-    <span class="k">return</span> <span class="n">result</span>
-
-<span class="k">def</span> <span class="nf">fs_cache_path_getmtime</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-    <span class="n">key</span> <span class="o">=</span> <span class="s">&#39;getmtime/&#39;</span> <span class="o">+</span> <span class="n">path</span>
-    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">fs_cache</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">fs_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-    <span class="n">fs_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
-    <span class="k">return</span> <span class="n">result</span>
-
-<span class="k">def</span> <span class="nf">fs_cache_flush</span><span class="p">():</span>
-    <span class="n">fs_cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-
-<span class="k">class</span> <span class="nc">AbstractStep</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">pipeline</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">step_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__module__</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="c"># _file_dependencies_cumulative is secondary data which gets generated </span>
-        <span class="c"># from _run_info and keeps track of each output file&#39;s file </span>
-        <span class="c"># dependencies (regardless of the run id) and by file dependencies</span>
-        <span class="c"># I mean ALL file dependencies including those from all of its</span>
-        <span class="c"># parent steps (yup, that may become a lot of files)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_file_dependencies_cumulative</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cores</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_temp_directory</span> <span class="o">=</span> <span class="bp">None</span>
-
-    <span class="k">def</span> <span class="nf">set_cores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cores</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cores</span> <span class="o">=</span> <span class="n">cores</span>
-
-    <span class="k">def</span> <span class="nf">set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">options</span>
-
-    <span class="k">def</span> <span class="nf">add_dependency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">AbstractStep</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;parent argument must be an AbstractStep&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">parent</span> <span class="o">==</span> <span class="bp">self</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;cannot add a node as its own dependency&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">get_input_run_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;You asked for input files of a step with no dependencies. This shouldn&#39;t happen.&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_run_info</span><span class="p">())</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;DAG not implemented yet.&quot;</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">setup_runs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_run_info</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">get_run_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c"># create run info if it doesn&#39;t exist yet</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="c"># create input run info and simplify it a bit for setup_runs</span>
-            <span class="n">input_run_info</span> <span class="o">=</span> <span class="bp">None</span>
-            <span class="n">full_paths</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="c"># it&#39;s not the source step</span>
-                <span class="n">input_run_info</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_input_run_info</span><span class="p">())</span>
-
-                <span class="c"># strip directories from file names, strip input files</span>
-                <span class="k">for</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">run_info</span> <span class="ow">in</span> <span class="n">input_run_info</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                            <span class="n">basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-                            <span class="k">if</span> <span class="n">basename</span> <span class="ow">in</span> <span class="n">full_paths</span><span class="p">:</span>
-                                <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;There are multiple input filenames with the same basename.&quot;</span><span class="p">)</span>
-                            <span class="n">full_paths</span><span class="p">[</span><span class="n">basename</span><span class="p">]</span> <span class="o">=</span> <span class="n">path</span>
-                            <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">][</span><span class="n">basename</span><span class="p">]</span> <span class="o">=</span> <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">][</span><span class="n">path</span><span class="p">]</span>
-                            <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setup_runs</span><span class="p">(</span><span class="n">input_run_info</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">run_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="k">if</span> <span class="s">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">run_id</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;A run_id must not contain a &#39;/&#39;: &quot;</span> <span class="o">+</span> <span class="n">run_id</span> <span class="o">+</span> <span class="s">&quot; for &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
-
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-
-                <span class="k">for</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span><span class="p">[</span><span class="n">run_id</span><span class="p">][</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span><span class="p">[</span><span class="n">run_id</span><span class="p">][</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                            <span class="n">full_paths</span><span class="p">[</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span> <span class="n">path</span><span class="p">)</span>
-
-                <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span> <span class="o">=</span> <span class="n">fix_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span><span class="p">,</span> <span class="n">fix_func_dict_subst</span><span class="p">,</span> <span class="n">full_paths</span><span class="p">)</span>
-                
-                <span class="c"># fill _file_dependencies_cumulative</span>
-                <span class="k">for</span> <span class="n">run_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                    <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span><span class="p">[</span><span class="n">run_id</span><span class="p">][</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                        <span class="k">for</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">input_paths</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span><span class="p">[</span><span class="n">run_id</span><span class="p">][</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">tag</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                            <span class="k">if</span> <span class="n">output_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_dependencies_cumulative</span><span class="p">:</span>
-                                <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;Error: Multiple run IDs want to create the same output file (&quot;</span> <span class="o">+</span> <span class="n">output_path</span> <span class="o">+</span> <span class="s">&quot;).&quot;</span><span class="p">)</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_file_dependencies_cumulative</span><span class="p">[</span><span class="n">output_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">input_paths</span><span class="p">)</span>
-                            <span class="c"># now recursively add dependencies of each input file, if any</span>
-                            <span class="c"># ATTENTION: Actually, this is an ugly hack, there&#39;s no recursion here, but it still</span>
-                            <span class="c"># works. It might break at some point, but right now it&#39;s fine. TODO: Prove that it</span>
-                            <span class="c"># will remain fine.</span>
-                            <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                            <span class="n">l</span> <span class="o">=</span> <span class="n">input_paths</span>
-                            <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
-                                <span class="k">if</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">_file_dependencies_cumulative</span><span class="p">:</span>
-                                    <span class="bp">self</span><span class="o">.</span><span class="n">_file_dependencies_cumulative</span><span class="p">[</span><span class="n">output_path</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">_file_dependencies_cumulative</span><span class="p">[</span><span class="n">path</span><span class="p">])</span>
-                            
-        <span class="c"># now that the _run_info exists, it remains constant, just return it</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span>
-
-    <span class="k">def</span> <span class="nf">get_run_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">run_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_run_info</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">run_info</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">get_dependency_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">with_options</span> <span class="o">=</span> <span class="bp">False</span><span class="p">):</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span>
-        <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">__module__</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">with_options</span><span class="p">:</span>
-            <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="s">&#39;-&#39;</span> <span class="o">+</span> <span class="n">p</span><span class="o">.</span><span class="n">get_options_hashtag</span><span class="p">()</span>
-        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">dependencies</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">dependencies</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Full DAG not implemented yet, trees only for now.&quot;</span><span class="p">)</span>
-            <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">dependencies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">__module__</span> <span class="o">!=</span> <span class="s">&#39;source&#39;</span><span class="p">:</span>
-                <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">__module__</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">with_options</span><span class="p">:</span>
-                    <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="s">&#39;-&#39;</span> <span class="o">+</span> <span class="n">p</span><span class="o">.</span><span class="n">get_options_hashtag</span><span class="p">()</span>
-        <span class="n">path</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">path</span>
-
-    <span class="k">def</span> <span class="nf">get_options_hashtag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha1</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
-
-    <span class="k">def</span> <span class="nf">get_step_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_dependency_path</span><span class="p">())</span>
-
-    <span class="k">def</span> <span class="nf">get_task_id_fragmented</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        get_task_id_fragmented returns the step ID, but in a way which puts</span>
-<span class="sd">        the most important information first, e. g.</span>
-<span class="sd">        ``segemehl/Sample_COPD_363 (cutadapt/fix_cutadapt/...)``</span>
-<span class="sd">        instead of</span>
-<span class="sd">        ``cutadapt/fix_cutadapt/segemehl/Sample_COPD_363``</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependency_path</span><span class="p">()</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="n">run_id</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">+=</span> <span class="s">&#39; (&#39;</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="s">&#39;/...)&#39;</span>
-        <span class="k">return</span> <span class="n">result</span>
-
-    <span class="k">def</span> <span class="nf">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c"># add the options to the output path so that different options result in</span>
-        <span class="c"># a different directory</span>
-        <span class="n">dependency_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependency_path</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;destination_path&#39;</span><span class="p">],</span> <span class="o">*</span><span class="n">dependency_path</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">get_temp_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-            <span class="n">token</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_lowercase</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;destination_path&#39;</span><span class="p">],</span> <span class="s">&#39;temp&#39;</span><span class="p">,</span> <span class="s">&#39;temp-&#39;</span> <span class="o">+</span> <span class="n">token</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">path</span>
-
-    <span class="k">def</span> <span class="nf">get_run_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">):</span>
-
-        <span class="k">def</span> <span class="nf">path_up_to_date</span><span class="p">(</span><span class="n">outpath</span><span class="p">,</span> <span class="n">inpaths</span> <span class="o">=</span> <span class="p">[]):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">run_mode</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">run_modes</span><span class="o">.</span><span class="n">DRY_RUN</span><span class="p">:</span>
-                <span class="c"># this is a dry run, use the dry run cache</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">outpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">dry_run_cache</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="bp">False</span>
-                <span class="k">for</span> <span class="n">inpath</span> <span class="ow">in</span> <span class="n">inpaths</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">inpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">dry_run_cache</span><span class="p">:</span>
-                        <span class="k">return</span> <span class="bp">False</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">dry_run_cache</span><span class="p">[</span><span class="n">inpath</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">dry_run_cache</span><span class="p">[</span><span class="n">outpath</span><span class="p">]:</span>
-                        <span class="k">return</span> <span class="bp">False</span>
-                <span class="k">return</span> <span class="bp">True</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c"># check the file system</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">fs_cache_path_exists</span><span class="p">(</span><span class="n">outpath</span><span class="p">):</span>
-                    <span class="k">return</span> <span class="bp">False</span>
-                <span class="k">for</span> <span class="n">inpath</span> <span class="ow">in</span> <span class="n">inpaths</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">fs_cache_path_exists</span><span class="p">(</span><span class="n">inpath</span><span class="p">):</span>
-                        <span class="k">return</span> <span class="bp">False</span>
-                    <span class="k">if</span> <span class="n">fs_cache_path_getmtime</span><span class="p">(</span><span class="n">inpath</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">fs_cache_path_getmtime</span><span class="p">(</span><span class="n">outpath</span><span class="p">):</span>
-                        <span class="k">return</span> <span class="bp">False</span>
-                <span class="k">return</span> <span class="bp">True</span>
-
-        <span class="n">run_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_run_info</span><span class="p">()</span>
-        <span class="n">all_output_files_exist</span> <span class="o">=</span> <span class="bp">True</span>
-        <span class="n">all_input_files_exist</span> <span class="o">=</span> <span class="bp">True</span>
-        <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="n">run_id</span><span class="p">][</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">output_file</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="n">run_id</span><span class="p">][</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="n">input_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_dependencies_cumulative</span><span class="p">[</span><span class="n">output_file</span><span class="p">]</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">path_up_to_date</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">input_files</span><span class="p">):</span>
-                    <span class="n">all_output_files_exist</span> <span class="o">=</span> <span class="bp">False</span>
-                <span class="k">for</span> <span class="n">input_file</span> <span class="ow">in</span> <span class="n">input_files</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">path_up_to_date</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="p">[]):</span>
-                        <span class="n">all_input_files_exist</span> <span class="o">=</span> <span class="bp">False</span>
-
-        <span class="k">if</span> <span class="n">all_input_files_exist</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">all_output_files_exist</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">FINISHED</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">READY</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">WAITING</span>
-
-    <span class="k">def</span> <span class="nf">dry_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">dry_run_cache</span><span class="p">):</span>
-        <span class="n">run_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_run_info</span><span class="p">()[</span><span class="n">run_id</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">run_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">dry_run_cache</span><span class="p">[</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">run_mode</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">run_modes</span><span class="o">.</span><span class="n">DRY_RUN</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s">&quot;dry-running &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_id</span><span class="p">()</span> <span class="o">+</span> <span class="s">&quot;/&quot;</span> <span class="o">+</span> <span class="n">run_id</span><span class="p">)</span>
-            <span class="n">run_info</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_run_info</span><span class="p">()[</span><span class="n">run_id</span><span class="p">])</span>
-            <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">]:</span>
-                <span class="k">for</span> <span class="n">out_path</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">dry_run_cache</span><span class="p">[</span><span class="n">out_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c"># create the output directory if it doesn&#39;t exist yet</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()):</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">())</span>
-            <span class="c"># also create a temporary directory for the output file</span>
-            <span class="n">temp_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_temp_output_directory</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_temp_directory</span> <span class="o">=</span> <span class="n">temp_directory</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">temp_directory</span><span class="p">)</span>
-
-            <span class="c"># call execute() but pass output file paths with the temporary directory</span>
-            <span class="n">temp_run_info</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_run_info</span><span class="p">()[</span><span class="n">run_id</span><span class="p">])</span>
-            <span class="n">temp_paths</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">temp_run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="k">for</span> <span class="n">out_path</span><span class="p">,</span> <span class="n">in_paths</span> <span class="ow">in</span> <span class="n">temp_run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="n">temp_paths</span><span class="p">[</span><span class="n">out_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">temp_directory</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">out_path</span><span class="p">))</span>
-
-            <span class="n">temp_run_info</span> <span class="o">=</span> <span class="n">fix_dict</span><span class="p">(</span><span class="n">temp_run_info</span><span class="p">,</span> <span class="n">fix_func_dict_subst</span><span class="p">,</span> <span class="n">temp_paths</span><span class="p">)</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span><span class="s">&quot;[INFO] starting &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_task_id_fragmented</span><span class="p">(</span><span class="n">run_id</span><span class="p">))</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">run_id</span><span class="p">,</span> <span class="n">temp_run_info</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span><span class="s">&quot;[BAD] &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_task_id_fragmented</span><span class="p">(</span><span class="n">run_id</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot; failed: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-                <span class="k">raise</span>
-
-            
-            <span class="c"># if we&#39;re here, we can assume the step has finished successfully</span>
-            <span class="c"># now rename the output files (move from temp directory to</span>
-            <span class="c"># destination directory)</span>
-            <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">temp_run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="k">for</span> <span class="n">out_path</span> <span class="ow">in</span> <span class="n">temp_run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                    <span class="n">destination_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">out_path</span><span class="p">))</span>
-                    <span class="c"># TODO: if the destination path already exists, this will overwrite the file.</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">out_path</span><span class="p">):</span>
-                        <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;The step failed to produce an output file it announced: &quot;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">out_path</span><span class="p">))</span>
-                    <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">out_path</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">)</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">_temp_directory</span> <span class="o">=</span> <span class="bp">None</span>
-            
-            <span class="c"># step has completed successfully, now determine how many jobs are still left</span>
-            <span class="c"># but first invalidate the FS cache because things have changed by now...</span>
-            <span class="n">fs_cache_flush</span><span class="p">()</span>
-            
-            <span class="n">count</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_run_ids</span><span class="p">():</span>
-                <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_run_state</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">count</span><span class="p">:</span>
-                    <span class="n">count</span><span class="p">[</span><span class="n">state</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="n">count</span><span class="p">[</span><span class="n">state</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="n">remaining_task_info</span> <span class="o">=</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">count</span><span class="p">[</span><span class="n">_</span><span class="p">])</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">_</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">count</span><span class="o">.</span><span class="n">keys</span><span class="p">())])</span>
-            
-            <span class="n">message</span> <span class="o">=</span> <span class="s">&quot;[OK] &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_task_id_fragmented</span><span class="p">(</span><span class="n">run_id</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot; successfully finished.</span><span class="se">\n</span><span class="s">&quot;</span>
-            <span class="n">message</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;: &#39;</span> <span class="o">+</span> <span class="n">remaining_task_info</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
-
-            <span class="c"># now write the annotation</span>
-            <span class="n">log</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="n">log</span><span class="p">[</span><span class="s">&#39;all_samples&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">all_samples</span>
-            <span class="n">log</span><span class="p">[</span><span class="s">&#39;step&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="n">log</span><span class="p">[</span><span class="s">&#39;step&#39;</span><span class="p">][</span><span class="s">&#39;options&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span>
-            <span class="n">log</span><span class="p">[</span><span class="s">&#39;step&#39;</span><span class="p">][</span><span class="s">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_id</span><span class="p">()</span>
-            <span class="n">log</span><span class="p">[</span><span class="s">&#39;run&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="n">log</span><span class="p">[</span><span class="s">&#39;run&#39;</span><span class="p">][</span><span class="s">&#39;run_info&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_run_info</span><span class="p">()[</span><span class="n">run_id</span><span class="p">]</span>
-            <span class="n">log</span><span class="p">[</span><span class="s">&#39;run&#39;</span><span class="p">][</span><span class="s">&#39;run_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">run_id</span>
-            <span class="n">log</span><span class="p">[</span><span class="s">&#39;config&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">config</span>
-            <span class="n">log</span><span class="p">[</span><span class="s">&#39;git_hash_tag&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">git_hash_tag</span>
-            <span class="n">log</span><span class="p">[</span><span class="s">&#39;tool_versions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">tool_versions</span>
-            <span class="n">log</span><span class="p">[</span><span class="s">&#39;pipeline_log&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unix_pipeline</span><span class="o">.</span><span class="n">up_log</span>
-
-            <span class="n">annotation_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="n">run_id</span> <span class="o">+</span> <span class="s">&#39;-annotation.yaml&#39;</span><span class="p">)</span>
-            <span class="c"># overwrite the annotation if it already exists</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">annotation_path</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">default_flow_style</span> <span class="o">=</span> <span class="bp">False</span><span class="p">))</span>
-
-            <span class="c"># create a symbolic link to the annotation for every output file</span>
-            <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">temp_run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="k">for</span> <span class="n">out_path</span> <span class="ow">in</span> <span class="n">temp_run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">][</span><span class="n">annotation</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                    <span class="n">destination_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;.annotation.yaml&#39;</span><span class="p">)</span>
-                    <span class="c"># overwrite the symbolic link if it already exists</span>
-                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">destination_path</span><span class="p">):</span>
-                        <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">destination_path</span><span class="p">)</span>
-                    <span class="n">oldwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
-                    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">destination_path</span><span class="p">))</span>
-                    <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">annotation_path</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">destination_path</span><span class="p">))</span>
-                    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">oldwd</span><span class="p">)</span>
-
-            <span class="c"># finally, remove the temporary directory if it&#39;s empty</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">rmdir</span><span class="p">(</span><span class="n">temp_directory</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-                <span class="k">pass</span>
-
-    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">run_info</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">tool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;tools&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s">&#39;path&#39;</span><span class="p">]</span>
-    
-    <span class="k">def</span> <span class="nf">get_temporary_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">suffix</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Returns a temporary path with the prefix and suffix specified. The</span>
-<span class="sd">        returned path will be in the temporary directory.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temp_directory</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;Temporary directory not set, you cannot call get_temporary_path from setup_runs.&quot;</span><span class="p">)</span>
-
-        <span class="n">_</span><span class="p">,</span> <span class="n">_path</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">suffix</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temp_directory</span><span class="p">)</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">_path</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">_path</span>        
-
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_name</span>
 </pre></div>
 
           </div>

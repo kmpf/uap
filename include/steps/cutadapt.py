@@ -96,11 +96,11 @@ class Cutadapt(AbstractStep):
         cat4m = [self.tool('cat4m')]
         cat4m.extend(*sorted(run_info['output_files']['reads'].values()))
 
-        pigz1 = [self.tool('pigz'), '--processes', '1', '-d', '-c']
+        pigz1 = [self.tool('pigz'), '--processes', '1', '--decompress', '--stdout']
 
         cutadapt = [self.tool('cutadapt'), '-a', run_info['info']['adapter'], '-']
 
-        pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '3', '-c']
+        pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '3', '--stdout']
 
         # create the pipeline and run it
         p = unix_pipeline.create_pipeline()

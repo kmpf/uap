@@ -1,5 +1,6 @@
 import sys
 from abstract_step import *
+import misc
 import unix_pipeline
 import yaml
 
@@ -29,7 +30,7 @@ class Segemehl(AbstractStep):
             output_run_info[run_id]['output_files']['unmapped'][run_id + '-segemehl-unmapped.fastq.gz'] = input_run_info['output_files']['reads'].keys()
             output_run_info[run_id]['output_files']['log']  = {}
             output_run_info[run_id]['output_files']['log'][run_id + '-segemehl-log.txt'] = input_run_info['output_files']['reads'].keys()
-            read_files = assign_strings(input_run_info['output_files']['reads'].keys(), ['R1', 'R2'])
+            read_files = misc.assign_strings(input_run_info['output_files']['reads'].keys(), ['R1', 'R2'])
             output_run_info[run_id]['info'] = {}
             output_run_info[run_id]['info']['R1-in'] = read_files['R1']
             output_run_info[run_id]['info']['R2-in'] = read_files['R2']

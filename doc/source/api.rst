@@ -1,18 +1,16 @@
 API documentation
 =================
 
-abstract_source
----------------
-
-.. automodule:: abstract_source
-    :members:
-    
 abstract_step
 -------------
 
 .. automodule:: abstract_step
+    
+.. autoclass:: AbstractStep
     :members:
     
+.. autoclass:: AbstractSourceStep
+
 pipeline
 --------
 
@@ -29,5 +27,17 @@ unix_pipeline
 -------------
 
 .. automodule:: unix_pipeline
+    :members:
+    
+fscache
+-------
+
+.. automodule:: fscache
+    :members:
+    
+misc
+----
+
+.. automodule:: misc
     :members:
     

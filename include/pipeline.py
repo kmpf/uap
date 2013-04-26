@@ -110,11 +110,11 @@ class Pipeline(object):
 
         # step one: instantiate all steps
         for step_id, step_description in self.config['steps'].items():
-            step_name = step_id
+            step_module_name = step_id
             if '_step' in step_description:
-                step_name = step_description['_step']
+                step_module_name = step_description['_step']
                 
-            step_class = abstract_step.get_step_class_for_key(step_name)
+            step_class = abstract_step.AbstractStep.get_step_class_for_key(step_module_name)
             step = step_class(self)
             
             step.set_name(step_id)
@@ -124,21 +124,23 @@ class Pipeline(object):
             
         # step two: set dependencies
         for step_id, step_description in self.config['steps'].items():
-            if not '_depends' in step_description:
-                raise ConfigurationException("Missing key in step '%s': "
-                    "_depends (set to null if the step has no dependencies)." 
-                    % step_id)
-            depends = step_description['_depends']
-            if depends == None:
-                pass
-            else:
-                temp_list = depends
-                if depends.__class__ == str:
-                    temp_list = [depends]
-                for d in temp_list:
-                    if not d in self.steps:
-                        raise ConfigurationException("Unknown dependency: %s." % d)
-                    self.steps[step_id].add_dependency(self.steps[d])
+            # '_depends' is not required for AbstractSourceStep classes
+            if not isinstance(self.steps[step_id], abstract_step.AbstractSourceStep):
+                if not '_depends' in step_description:
+                    raise ConfigurationException("Missing key in step '%s': "
+                        "_depends (set to null if the step has no dependencies)." 
+                        % step_id)
+                depends = step_description['_depends']
+                if depends == None:
+                    pass
+                else:
+                    temp_list = depends
+                    if depends.__class__ == str:
+                        temp_list = [depends]
+                    for d in temp_list:
+                        if not d in self.steps:
+                            raise ConfigurationException("Unknown dependency: %s." % d)
+                        self.steps[step_id].add_dependency(self.steps[d])
                     
 
     def print_tasks(self):

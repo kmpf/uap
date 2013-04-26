@@ -3,6 +3,7 @@ sys.path.append('./include/steps')
 sys.path.append('./include/sources')
 import copy
 import datetime
+import fscache
 import hashlib
 import inspect
 import json
@@ -15,138 +16,57 @@ import traceback
 import unix_pipeline
 import yaml
 
-def get_step_class_for_key(key):
-    
-    # look for a subclass of AbstractSourceStep fist
-    classes = [_ for _ in inspect.getmembers(__import__(key), inspect.isclass) if AbstractSourceStep in _[1].__bases__]
-    if len(classes) > 0:
-        if len(classes) != 1:
-            raise StandardError("need exactly one subclass of AbstractSourceStep in " + key)
-        return classes[0][1]
-
-    # then, look for a subclass of AbstractStep fist
-    classes = [_ for _ in inspect.getmembers(__import__(key), inspect.isclass) if AbstractStep in _[1].__bases__]
-    classes = [_ for _ in classes if _[1] != AbstractSourceStep]
-    if len(classes) != 1:
-        print(classes)
-        raise StandardError("need exactly one subclass of AbstractStep in " + key)
-    return classes[0][1]
-
-def assign_strings(paths, tags):
-    '''
-    Assign strings (path names, for example) to tags. Example:
-    
-      - paths = ['RIB0000794-cutadapt-R1.fastq.gz', 'RIB0000794-cutadapt-R2.fastq.gz']
-      - tags = ['R1', 'R2']
-      - result = { 'R1': 'RIB0000794-cutadapt-R1.fastq.gz', 'R2': 'RIB0000794-cutadapt-R2.fastq.gz' }
-      
-    If this is not possible without ambiguities, a StandardError is thrown.
-    '''
-
-    def check_candidate(paths, tags, head, tail):
-        chopped = []
-        for path in paths:
-            if path[:len(head)] != head:
-                return None
-            if path[-len(tail):] != tail:
-                return None
-            chopped.append((path[len(head):-len(tail)], path))
-
-        if [_[0] for _ in sorted(chopped)] == sorted(tags):
-            result = {}
-            for _ in sorted(chopped):
-                result[_[0]] = _[1]
-            return result
-
-        return None
-
-
-    results = {}
-    if len(paths) != len(tags):
-        raise StandardError("Number of tags must be equal to number of paths")
-    for tag in tags:
-        for path in paths:
-            result_candidate = {}
-            if tag in path:
-                # find all occurences of tag in path
-                offset = 0
-                while path.find(tag, offset) >= 0:
-                    index = path.find(tag, offset)
-                    head = path[:index]
-                    tail = path[(index+len(tag)):]
-                    # now try chopping off head and tail from every path
-                    # and see whether we can unambiguously assign a path
-                    # to every tag, if yes, we have a result candidate
-                    result_candidate = check_candidate(paths, tags, head, tail)
-                    if result_candidate:
-                        results[json.dumps(result_candidate, sort_keys = True)] = result_candidate
-                    offset = index + 1
-    if len(results) != 1:
-        raise StandardError("Unable to find an unambiguous mapping.")
-    return results[results.keys()[0]]
-
-def fix_dict(data, fix_func, *args):
-    if data.__class__ == list:
-        return [fix_dict(_, fix_func, *args) for _ in data]
-    elif data.__class__ == dict:
-        result = {}
-        for k, v in data.items():
-            result[fix_dict(k, fix_func, *args)] = fix_dict(v, fix_func, *args)
-        return result
-    else:
-        return fix_func(data, *args)
-
-def fix_func_dict_subst(v, full_paths):
-    if v in full_paths:
-        return full_paths[v]
-    return v
-
-# fs_cache records return values of 'exists' and 'getmtime' which is done
-# so that actual syscalls for this are only executed once and later re-used
-# from the cache
-
-fs_cache = dict()
-
-def fs_cache_path_exists(path):
-    key = 'exists/' + path
-    if key in fs_cache:
-        return fs_cache[key]
-    result = os.path.exists(path)
-    fs_cache[key] = result
-    return result
-
-def fs_cache_path_getmtime(path):
-    key = 'getmtime/' + path
-    if key in fs_cache:
-        return fs_cache[key]
-    result = os.path.getmtime(path)
-    fs_cache[key] = result
-    return result
-
-def fs_cache_flush():
-    fs_cache.clear()
 
 class AbstractStep(object):
     
     cores = 1
     connections = []
     
+    fsc = fscache.FSCache()
+    
     def __init__(self, pipeline):
+        
+        self._pipeline = pipeline
+        
         self.dependencies = []
+        '''
+        All steps this step depends on.
+        '''
+        
         self.options = {}
-        self.pipeline = pipeline
-        self.step_name = self.__module__
+        '''
+        Options as specified in the configuration.
+        '''
+        
+        self._step_name = self.__module__
+        '''
+        By default, this is the name of the module. Can be overridden 
+        to allow for multiple steps of the same kind.
+        '''
+        
         self._run_info = None
-        # _file_dependencies_cumulative is secondary data which gets generated 
-        # from _run_info and keeps track of each output file's file 
-        # dependencies (regardless of the run id) and by file dependencies
-        # I mean ALL file dependencies including those from all of its
-        # parent steps (yup, that may become a lot of files)
+        '''
+        Cached run information. ``setup_runs`` is only called once, the
+        post-processed results are stored in here.
+        '''
+        
         self._file_dependencies_cumulative = {}
+        '''
+        _file_dependencies_cumulative is secondary data which gets generated 
+        from _run_info and keeps track of each output file's file 
+        dependencies (regardless of the run id) and by file dependencies
+        I mean ALL file dependencies including those from all of its
+        parent steps (yup, that may become a lot of files).
+        '''
+        
         self._temp_directory = None
+        '''
+        The temporary output directory the step is using. Only set when
+        the step is being run.
+        '''
 
     def set_name(self, step_name):
-        self.step_name = step_name
+        self._step_name = step_name
 
     def set_options(self, options):
         self.options = options
@@ -164,7 +84,7 @@ class AbstractStep(object):
         '''
         input_run_info = dict()
         for parent in self.dependencies:
-            input_run_info[parent.step_name] = copy.deepcopy(parent.get_run_info())
+            input_run_info[str(parent)] = copy.deepcopy(parent.get_run_info())
         return input_run_info
 
     def setup_runs(self, input_run_info):
@@ -253,25 +173,24 @@ class AbstractStep(object):
         # add the options to the output path so that different options result in
         # a different directory
         dependency_path = self.get_dependency_path(True)
-        return os.path.join(self.pipeline.config['destination_path'], dependency_path)
+        return os.path.join(self._pipeline.config['destination_path'], dependency_path)
 
     def get_temp_output_directory(self):
         while True:
             token = ''.join(random.choice(string.ascii_lowercase + string.digits) for x in range(8))
-            path = os.path.join(self.pipeline.config['destination_path'], 'temp', 'temp-' + token)
+            path = os.path.join(self._pipeline.config['destination_path'], 'temp', 'temp-' + token)
             if not os.path.exists(path):
                 return path
 
     def get_run_state(self, run_id):
 
         def path_up_to_date(outpath, inpaths = []):
-            # check the file system
-            if not fs_cache_path_exists(outpath):
+            if not AbstractStep.fsc.exists(outpath):
                 return False
             for inpath in inpaths:
-                if not fs_cache_path_exists(inpath):
+                if not AbstractStep.fsc.exists(inpath):
                     return False
-                if fs_cache_path_getmtime(inpath) > fs_cache_path_getmtime(outpath):
+                if AbstractStep.fsc.getmtime(inpath) > AbstractStep.fsc.getmtime(outpath):
                     return False
             return True
 
@@ -289,11 +208,11 @@ class AbstractStep(object):
 
         if all_input_files_exist:
             if all_output_files_exist:
-                return self.pipeline.states.FINISHED
+                return self._pipeline.states.FINISHED
             else:
-                return self.pipeline.states.READY
+                return self._pipeline.states.READY
         else:
-            return self.pipeline.states.WAITING
+            return self._pipeline.states.WAITING
 
     def dry_run(self, run_id, dry_run_cache):
         run_info = self.get_run_info()[run_id]
@@ -318,11 +237,11 @@ class AbstractStep(object):
 
         temp_run_info = fix_dict(temp_run_info, fix_func_dict_subst, temp_paths)
 
-        self.pipeline.notify("[INFO] starting %s/%s" % (str(self), run_id))
+        self._pipeline.notify("[INFO] starting %s/%s" % (str(self), run_id))
         try:
             self.execute(run_id, temp_run_info)
         except Exception as e:
-            self.pipeline.notify("[BAD] %s/%s failed: %s" % (str(self), run_id, str(e)))
+            self._pipeline.notify("[BAD] %s/%s failed: %s" % (str(self), run_id, str(e)))
             raise
 
         
@@ -341,7 +260,7 @@ class AbstractStep(object):
         
         # step has completed successfully, now determine how many jobs are still left
         # but first invalidate the FS cache because things have changed by now...
-        fs_cache_flush()
+        AbstractStep.fsc = fscache.FSCache()
         
         count = {}
         for _ in self.get_run_ids():
@@ -353,20 +272,20 @@ class AbstractStep(object):
         
         message = "[OK] %s/%s successfully finished.\n" % (str(self), run_id)
         message += str(self) + ': ' + remaining_task_info + "\n"
-        self.pipeline.notify(message)
+        self._pipeline.notify(message)
 
         # now write the annotation
         log = {}
-        log['all_samples'] = self.pipeline.all_samples
+        log['all_samples'] = self._pipeline.all_samples
         log['step'] = {}
         log['step']['options'] = self.options
         log['step']['id'] = self.get_step_id()
         log['run'] = {}
         log['run']['run_info'] = self.get_run_info()[run_id]
         log['run']['run_id'] = run_id
-        log['config'] = self.pipeline.config
-        log['git_hash_tag'] = self.pipeline.git_hash_tag
-        log['tool_versions'] = self.pipeline.tool_versions
+        log['config'] = self._pipeline.config
+        log['git_hash_tag'] = self._pipeline.git_hash_tag
+        log['tool_versions'] = self._pipeline.tool_versions
         log['pipeline_log'] = unix_pipeline.up_log
 
         annotation_path = os.path.join(self.get_output_directory(), '.' + run_id + '-annotation.yaml')
@@ -396,7 +315,7 @@ class AbstractStep(object):
         raise NotImplementedError()
 
     def tool(self, key):
-        return self.pipeline.config['tools'][key]['path']
+        return self._pipeline.config['tools'][key]['path']
     
     def get_temporary_path(self, prefix, suffix):
         '''
@@ -413,17 +332,59 @@ class AbstractStep(object):
         return _path        
 
     def __str__(self):
-        if '_step_name' in self.options:
-            return self.options['_step_name']
-        else:
-            return self.step_name
+        return self._step_name
 
+    @classmethod
+    def get_step_class_for_key(cls, key):
+        '''
+        Returns a step (or source step) class for a given key which corresponds
+        to the name of the module the class is defined in. Pass 'cutadapt' and
+        you will get the cutadapt.Cutadapt class which you may then instantiate.
+        '''
+        
+        # look for a subclass of AbstractSourceStep fist
+        classes = [_ for _ in inspect.getmembers(__import__(key), inspect.isclass) if AbstractSourceStep in _[1].__bases__]
+        if len(classes) > 0:
+            if len(classes) != 1:
+                raise StandardError("need exactly one subclass of AbstractSourceStep in " + key)
+            return classes[0][1]
+
+        # then, look for a subclass of AbstractStep fist
+        classes = [_ for _ in inspect.getmembers(__import__(key), inspect.isclass) if AbstractStep in _[1].__bases__]
+        classes = [_ for _ in classes if _[1] != AbstractSourceStep]
+        if len(classes) != 1:
+            print(classes)
+            raise StandardError("need exactly one subclass of AbstractStep in " + key)
+        return classes[0][1]
+    
 class AbstractSourceStep(AbstractStep):
     '''
-    A subclass all source steps inherit from and which separates them from
-    all other steps because they do not yield any tasks, because their
-    "output files" are in fact files which are already there.
+    A subclass all source steps inherit from and which distinguishes source
+    steps from all real processing steps because they do not yield any tasks, 
+    because their "output files" are in fact files which are already there.
+    
+    Note that the name might be a bit misleading because this class only
+    applies to source steps which 'serve' existing files. A step which has 
+    no input but produces input data for other steps and actually has to do 
+    something for it, on the other hand, would be a normal AbstractStep
+    subclass because it produces tasks.
     '''
 
     def __init__(self, pipeline):
         super(AbstractSourceStep, self).__init__(pipeline)
+
+def fix_dict(data, fix_func, *args):
+    if data.__class__ == list:
+        return [fix_dict(_, fix_func, *args) for _ in data]
+    elif data.__class__ == dict:
+        result = {}
+        for k, v in data.items():
+            result[fix_dict(k, fix_func, *args)] = fix_dict(v, fix_func, *args)
+        return result
+    else:
+        return fix_func(data, *args)
+
+def fix_func_dict_subst(v, full_paths):
+    if v in full_paths:
+        return full_paths[v]
+    return v
