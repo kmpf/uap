@@ -55,9 +55,6 @@ class Pipeline(object):
         # the configuration as read from config.yaml
         self.config = {}
 
-        # dictionary of sample names => information
-        self.all_samples = {}
-
         # dict of steps, steps are objects with inter-dependencies
         self.steps = {}
         
@@ -86,17 +83,7 @@ class Pipeline(object):
     def read_config(self):
         #print >> sys.stderr, "Reading configuration..."
         self.config = yaml.load(open('config.yaml'))
-        '''
-        if not 'sources' in self.config:
-            raise ConfigurationException("Missing key: sources")
-        for source in self.config['sources']:
-            key = source.keys()[0]
-            source_instance = abstract_source.get_source_class_for_key(key)(self, source[key])
-            for sample_id, sample_info in source_instance.samples.items():
-                if sample_id in self.all_samples:
-                    raise ConfigurationException("Sample appears multiple times in sources: " + sample_id)
-                self.all_samples[sample_id] = copy.deepcopy(sample_info)
-                '''
+
         if not 'destination_path' in self.config:
             raise ConfigurationException("Missing key: destination_path")
         if not os.path.exists(self.config['destination_path']):
@@ -191,8 +178,15 @@ class Pipeline(object):
             if not state in count:
                 count[state] = 0
             count[state] += 1
-            print('[' + task.get_task_state()[0].lower() + '] ' + str(task))
-        print('tasks: ' + str(len(self.all_tasks)) + ' total, ' + ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())]))
+            print("[%s] %s" % (task.get_task_state()[0].lower(), task))
+        print("tasks: %d total, %s" % (len(self.all_tasks), ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())])))
+        
+    def print_source_runs(self):
+        for step_name in self.topological_step_order:
+            step = self.steps[step_name]
+            if abstract_step.AbstractSourceStep in step.__class__.__bases__:
+                for run_id in sorted(step.get_run_ids()):
+                    print("[%s] %s/%s" % (step.get_run_state(run_id)[0].lower(), step, run_id))
 
     def has_unfinished_tasks(self, task_list):
         '''
@@ -237,14 +231,6 @@ class Pipeline(object):
                 expected_exit_code = info['exit_code']
             if exit_code != expected_exit_code:
                 raise ConfigurationException("Tool check failed for " + tool_id + ": " + ' '.join(command) + ' - exit code is: ' + str(exit_code) + ' (expected ' + str(expected_exit_code) + ')')
-
-    # returns a short description of the configured pipeline
-    def __str__(self):
-        s = ''
-        s += "Number of samples: " + str(len(self.all_samples)) + "\n"
-        for sample in sorted(self.all_samples.keys()):
-            s += "- " + sample + "\n"
-        return s
 
     def notify(self, message):
         '''
