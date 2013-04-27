@@ -12,26 +12,27 @@ class FixCutadapt(AbstractStep):
     def __init__(self, pipeline):
         super(FixCutadapt, self).__init__(pipeline)
 
-    def setup_runs(self, input_run_info_complete):
+    def setup_runs(self, complete_input_run_info):
         # make sure tools are available
         self.tool('cat4m')
         self.tool('pigz')
 
         output_run_info = {}
-        for input_run_id, input_run_info in input_run_info_complete.items():
-            if not 'read_number' in input_run_info['info']:
-                raise StandardError("fix_cutadapt can only be run on paired-end sequenced samples.")
-            new_key = input_run_id.replace('-R1', '').replace('-R2', '')
-            if not new_key in output_run_info:
-                output_run_info[new_key] = { 'output_files': { 'reads': {} }, 'info': {} }
-            output_run_info[new_key]['info'][input_run_info['info']['read_number'] + '-in'] = input_run_info['output_files']['reads'].keys()[0]
-            for in_path in sorted(input_run_info['output_files']['reads'].keys()):
-                for _ in ['R1', 'R2']:
-                    k2 = new_key + '-fixed-' + _ + '.fastq.gz'
-                    if not k2 in output_run_info[new_key]['output_files']['reads']:
-                        output_run_info[new_key]['output_files']['reads'][k2] = []
-                    output_run_info[new_key]['output_files']['reads'][k2].append(in_path)
-                    output_run_info[new_key]['info'][_ + '-out'] = k2
+        for step_name, step_input_info in complete_input_run_info.items():
+            for input_run_id, input_run_info in step_input_info.items():
+                if not 'read_number' in input_run_info['info']:
+                    raise StandardError("fix_cutadapt can only be run on paired-end sequenced samples.")
+                new_key = input_run_id.replace('-R1', '').replace('-R2', '')
+                if not new_key in output_run_info:
+                    output_run_info[new_key] = { 'output_files': { 'reads': {} }, 'info': {} }
+                output_run_info[new_key]['info'][input_run_info['info']['read_number'] + '-in'] = input_run_info['output_files']['reads'].keys()[0]
+                for in_path in sorted(input_run_info['output_files']['reads'].keys()):
+                    for _ in ['R1', 'R2']:
+                        k2 = new_key + '-fixed-' + _ + '.fastq.gz'
+                        if not k2 in output_run_info[new_key]['output_files']['reads']:
+                            output_run_info[new_key]['output_files']['reads'][k2] = []
+                        output_run_info[new_key]['output_files']['reads'][k2].append(in_path)
+                        output_run_info[new_key]['info'][_ + '-out'] = k2
         return output_run_info
 
     def execute(self, run_id, run_info):

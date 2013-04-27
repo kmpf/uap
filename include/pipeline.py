@@ -98,35 +98,54 @@ class Pipeline(object):
         self.steps = {}
         if not 'steps' in self.config:
             raise ConfigurationException("Missing key: steps")
+        
+        re_simple_key = re.compile('^[a-zA-Z0-9_]+$')
+        re_complex_key = re.compile('^([a-zA-Z0-9_]+)\s+\(([a-zA-Z0-9_]+)\)$')
 
         # step one: instantiate all steps
-        for step_id, step_description in self.config['steps'].items():
-            step_module_name = step_id
-            if '_step' in step_description:
-                step_module_name = step_description['_step']
-                
-            step_class = abstract_step.AbstractStep.get_step_class_for_key(step_module_name)
+        for step_key, step_description in self.config['steps'].items():
+            
+            # the step keys in the configuration may be either:
+            # - MODULE_NAME 
+            # - DIFFERENT_STEP_NAME\s+\(MODULE_NAME\)
+            step_name = None
+            module_name = None
+            if re_simple_key.match(step_key):
+                step_name = step_key
+                module_name = step_key
+            else:
+                match = re_complex_key.match(step_key)
+                if match:
+                    step_name = match.group(1)
+                    module_name = match.group(2)
+            
+            if step_name == 'temp':
+                # A step cannot be named 'temp' because we need the out/temp
+                # directory to store temporary files.
+                raise ConfigurationException("A step name cannot be 'temp'.")
+            
+            step_class = abstract_step.AbstractStep.get_step_class_for_key(module_name)
             step = step_class(self)
             
-            step.set_name(step_id)
+            step.set_name(step_name)
             step.set_options(step_description)
             
-            self.steps[step_id] = step
+            self.steps[step_name] = step
             
         # step two: set dependencies
-        for step_id, step_description in self.config['steps'].items():
+        for step_name, step in self.steps.items():
             # '_depends' is not required for AbstractSourceStep classes
-            if isinstance(self.steps[step_id], abstract_step.AbstractSourceStep):
-                if '_depends' in step_description:
+            if isinstance(step, abstract_step.AbstractSourceStep):
+                if '_depends' in step.options:
                     raise ConfigurationException("%s must not have dependencies "
                         "because it is an AbstractSourceStep (remove the "
                         "_depends key)." % step_id)
             else:
-                if not '_depends' in step_description:
+                if not '_depends' in step.options:
                     raise ConfigurationException("Missing key in step '%s': "
                         "_depends (set to null if the step has no dependencies)." 
                         % step_id)
-                depends = step_description['_depends']
+                depends = step.options['_depends']
                 if depends == None:
                     pass
                 else:
@@ -135,8 +154,9 @@ class Pipeline(object):
                         temp_list = [depends]
                     for d in temp_list:
                         if not d in self.steps:
-                            raise ConfigurationException("Unknown dependency: %s." % d)
-                        self.steps[step_id].add_dependency(self.steps[d])
+                            raise ConfigurationException("Step %s specifies "
+                                "an undefined dependency: %s." % (step_name, d))
+                        step.add_dependency(self.steps[d])
                         
         # step three: perform topological sort, raise a ConfigurationException
         # if there's a cycle (yeah, the algorithm is O(n^2), tsk, tsk...)

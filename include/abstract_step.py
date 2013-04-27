@@ -120,8 +120,11 @@ class AbstractStep(object):
 
             self._run_info = self.setup_runs(input_run_info)
             
-            # verify connection keys
+            # verify run_ids and connection keys
             for run_id, run_info in self._run_info.items():
+                if '/' in run_id:
+                    raise StandardError("Run IDs must not contain a slash ('/'): %s "
+                        "returns a run called %s." % (self, run_id))
                 for annotation in run_info['output_files'].keys():
                     if not 'out/' + annotation in self.__class__.connections:
                         raise StandardError("Invalid output_file key '%s' in %s. "
@@ -231,6 +234,7 @@ class AbstractStep(object):
 
         temp_run_info = fix_dict(temp_run_info, fix_func_dict_subst, temp_paths)
 
+        start_time = datetime.datetime.now()
         self._pipeline.notify("[INFO] starting %s/%s" % (str(self), run_id))
         try:
             self.execute(run_id, temp_run_info)
@@ -262,7 +266,8 @@ class AbstractStep(object):
                 count[state] = 0
             count[state] += 1
         remaining_task_info = ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())])
-        
+
+        end_time = datetime.datetime.now()
         message = "[OK] %s/%s successfully finished.\n" % (str(self), run_id)
         message += str(self) + ': ' + remaining_task_info + "\n"
         self._pipeline.notify(message)
@@ -271,7 +276,7 @@ class AbstractStep(object):
         log = {}
         log['step'] = {}
         log['step']['options'] = self.options
-        log['step']['id'] = self.get_step_name()
+        log['step']['name'] = self.get_step_name()
         log['run'] = {}
         log['run']['run_info'] = self.get_run_info()[run_id]
         log['run']['run_id'] = run_id
@@ -279,6 +284,8 @@ class AbstractStep(object):
         log['git_hash_tag'] = self._pipeline.git_hash_tag
         log['tool_versions'] = self._pipeline.tool_versions
         log['pipeline_log'] = unix_pipeline.up_log
+        log['start_time'] = start_time
+        log['end_time'] = end_time
 
         annotation_path = os.path.join(self.get_output_directory(), '.' + run_id + '-annotation.yaml')
         # overwrite the annotation if it already exists
