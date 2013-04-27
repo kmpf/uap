@@ -76,16 +76,15 @@ class AbstractStep(object):
             raise StandardError("Error: parent argument must be an AbstractStep.")
         if parent == self:
             raise StandardError("Cannot add a node as its own dependency.")
-        # TODO: Check for cycles.
         self.dependencies.append(parent)
-
+        
     def get_input_run_info(self):
         '''
         Return a dict with run info for each parent.
         '''
         input_run_info = dict()
         for parent in self.dependencies:
-            input_run_info[parent.get_step_id()] = copy.deepcopy(parent.get_run_info())
+            input_run_info[parent.get_step_name()] = copy.deepcopy(parent.get_run_info())
         return input_run_info
 
     def setup_runs(self, input_run_info):
@@ -167,12 +166,12 @@ class AbstractStep(object):
     def get_options_hashtag(self):
         return hashlib.sha1(json.dumps(self.options, sort_keys=True)).hexdigest()[0:4]
 
-    def get_step_id(self):
+    def get_step_name(self):
         return self._step_name
 
     def get_output_directory(self):
         return os.path.join(self._pipeline.config['destination_path'], 
-            '%s-%s' % (self.get_step_id(), self.get_options_hashtag()))
+            '%s-%s' % (self.get_step_name(), self.get_options_hashtag()))
 
     def get_temp_output_directory(self):
         while True:
@@ -272,7 +271,7 @@ class AbstractStep(object):
         log = {}
         log['step'] = {}
         log['step']['options'] = self.options
-        log['step']['id'] = self.get_step_id()
+        log['step']['id'] = self.get_step_name()
         log['run'] = {}
         log['run']['run_info'] = self.get_run_info()[run_id]
         log['run']['run_id'] = run_id

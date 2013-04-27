@@ -9,7 +9,7 @@ class Task(object):
         self.run_id = run_id
 
     def __str__(self):
-        return '%s/%s' % (self.step.get_step_id(), self.run_id)
+        return '%s/%s' % (self.step.get_step_name(), self.run_id)
 
     def get_task_state(self):
         '''
