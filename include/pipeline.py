@@ -78,8 +78,8 @@ class Pipeline(object):
         for step_name in self.topological_step_order:
             step = self.steps[step_name]
             if not abstract_step.AbstractSourceStep in step.__class__.__bases__:
-                for run_id in sorted(step.get_run_ids()):
-                    task = task_module.Task(self, step, run_id)
+                for run_index, run_id in enumerate(sorted(step.get_run_ids())):
+                    task = task_module.Task(self, step, run_id, run_index)
                     self.all_tasks.append(task)
                     if str(task) in self.task_for_task_id:
                         raise ConfigurationException("Duplicate task ID %s. Use the 'step_name' option to assign another step name." % str(task))

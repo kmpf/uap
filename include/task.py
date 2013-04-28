@@ -3,10 +3,11 @@ class Task(object):
     A task represents a certain run of a certain step.
     '''
 
-    def __init__(self, pipeline, step, run_id):
+    def __init__(self, pipeline, step, run_id, run_index):
         self.pipeline = pipeline
         self.step = step
         self.run_id = run_id
+        self.run_index = run_index
 
     def __str__(self):
         return '%s/%s' % (self.step.get_step_name(), self.run_id)

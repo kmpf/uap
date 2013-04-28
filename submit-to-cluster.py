@@ -92,11 +92,8 @@ def main():
         args.append('"' + str(task) + '"')
         submit_script = submit_script.replace("#{COMMAND}", ' '.join(args))
 
-        temp = str(task).split('/')
-        long_task_id = ''.join(temp[0:-1]) + '_' + temp[-1]
+        long_task_id = '%s_%d' % (str(task.step), task.run_index + 1)
         short_task_id = long_task_id[0:15]
-        print(long_task_id)
-        print(short_task_id)
 
         qsub_args = ['qsub', '-N', short_task_id]
         qsub_args.append('-e')
@@ -133,7 +130,7 @@ def main():
 
             job_id_for_task[str(task)] = job_id
 
-            print(job_id)
+            print("%s (%s)" % (job_id, short_task_id))
             if len(dependent_tasks) > 0:
                 print(" - with dependent tasks: " + ', '.join(dependent_tasks))
         tasks_left.remove(task)

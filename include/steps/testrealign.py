@@ -5,9 +5,17 @@ import yaml
 
 
 class TestRealign(AbstractStep):
+
+    connections = []
+    connections.append('in/alignments')
+    connections.append('out/alignments')
+    connections.append('out/splicesites')
+    connections.append('out/transrealigned')
+    connections.append('out/log')
+    cores = 12
+
     def __init__(self, pipeline):
         super(TestRealign, self).__init__(pipeline)
-        self.set_cores(12)
 
     def setup_runs(self, complete_input_run_info):
         # make sure tools are available
@@ -19,28 +27,29 @@ class TestRealign(AbstractStep):
         # make sure files are available
         for key in ['genome']:
             if not os.path.exists(self.options[key]):
-                raise StandardError("Could not find " + key + " file: " + self.options[key])
+                raise StandardError("Could not find %s file: %s" % (key, self.options[key]))
 
         output_run_info = {}
-        for run_id, input_run_info in complete_input_run_info.items():
-            output_run_info[run_id] = {}
-            output_run_info[run_id]['output_files'] = {}
-            # TODO: only depend on bam, not on bai
-            # TODO: make this more generic (query language-like)
-            output_run_info[run_id]['output_files']['alignments'] = {}
-            output_run_info[run_id]['output_files']['alignments'][run_id + '-realigned.sam.gz'] = input_run_info['output_files']['alignments'].keys()
-            output_run_info[run_id]['output_files']['splicesites']  = {}
-            output_run_info[run_id]['output_files']['splicesites'][run_id + '-splicesites.bed'] = input_run_info['output_files']['alignments'].keys()
-            output_run_info[run_id]['output_files']['transrealigned']  = {}
-            output_run_info[run_id]['output_files']['transrealigned'][run_id + '-transrealigned.bed'] = input_run_info['output_files']['alignments'].keys()
-            output_run_info[run_id]['output_files']['log']  = {}
-            output_run_info[run_id]['output_files']['log'][run_id + '-testrealign-log.txt'] = input_run_info['output_files']['alignments'].keys()
-            
-            output_run_info[run_id]['info'] = {}
-            output_run_info[run_id]['info']['bam-in'] = [_ for _ in input_run_info['output_files']['alignments'].keys() if _[-4:] == '.bam'][0]
-            output_run_info[run_id]['info']['maxdist'] = '100'
-            if 'maxdist' in self.options:
-                output_run_info[run_id]['info']['maxdist'] = str(self.options['maxdist'])
+        for step_name, step_input_info in complete_input_run_info.items():
+            for run_id, input_run_info in step_input_info.items():
+                output_run_info[run_id] = {}
+                output_run_info[run_id]['output_files'] = {}
+                # TODO: only depend on bam, not on bai
+                # TODO: make this more generic (query language-like)
+                output_run_info[run_id]['output_files']['alignments'] = {}
+                output_run_info[run_id]['output_files']['alignments'][run_id + '-realigned.sam.gz'] = input_run_info['output_files']['alignments'].keys()
+                output_run_info[run_id]['output_files']['splicesites']  = {}
+                output_run_info[run_id]['output_files']['splicesites'][run_id + '-splicesites.bed'] = input_run_info['output_files']['alignments'].keys()
+                output_run_info[run_id]['output_files']['transrealigned']  = {}
+                output_run_info[run_id]['output_files']['transrealigned'][run_id + '-transrealigned.bed'] = input_run_info['output_files']['alignments'].keys()
+                output_run_info[run_id]['output_files']['log']  = {}
+                output_run_info[run_id]['output_files']['log'][run_id + '-testrealign-log.txt'] = input_run_info['output_files']['alignments'].keys()
+                
+                output_run_info[run_id]['info'] = {}
+                output_run_info[run_id]['info']['bam-in'] = [_ for _ in input_run_info['output_files']['alignments'].keys() if _[-4:] == '.bam'][0]
+                output_run_info[run_id]['info']['maxdist'] = '100'
+                if 'maxdist' in self.options:
+                    output_run_info[run_id]['info']['maxdist'] = str(self.options['maxdist'])
 
 
         return output_run_info

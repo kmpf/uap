@@ -5,9 +5,14 @@ import yaml
 
 
 class SamToBam(AbstractStep):
+
+    connections = []
+    connections.append('in/alignments')
+    connections.append('out/alignments')
+    cores = 4
+
     def __init__(self, pipeline):
         super(SamToBam, self).__init__(pipeline)
-        self.set_cores(4)
 
     def setup_runs(self, complete_input_run_info):
         # make sure tools are available
@@ -18,21 +23,22 @@ class SamToBam(AbstractStep):
         # make sure files are available
         for key in ['genome']:
             if not os.path.exists(self.options[key]):
-                raise StandardError("Could not find " + key + " file: " + self.options[key])
+                raise StandardError("Could not find %s file: %s" % (key, self.options[key]))
 
         output_run_info = {}
-        for run_id, input_run_info in complete_input_run_info.items():
-            output_run_info[run_id] = {}
-            output_run_info[run_id]['output_files'] = {}
-            output_run_info[run_id]['output_files']['alignments']  = {}
-            output_run_info[run_id]['output_files']['alignments'][run_id + '.bam'] = input_run_info['output_files']['alignments'].keys()
-            output_run_info[run_id]['output_files']['alignments'][run_id + '.bam.bai'] = input_run_info['output_files']['alignments'].keys()
-            output_run_info[run_id]['info'] = {}
-            if len(input_run_info['output_files']['alignments'].keys()) != 1:
-                raise StandardError("Expected exactly one alignments file.")
-            output_run_info[run_id]['info']['in-sam']  = input_run_info['output_files']['alignments'].keys()[0]
-            output_run_info[run_id]['info']['out-bam']  = run_id + '.bam'
-            output_run_info[run_id]['info']['out-bai']  = run_id + '.bam.bai'
+        for step_name, step_input_info in complete_input_run_info.items():
+            for run_id, input_run_info in step_input_info.items():
+                output_run_info[run_id] = {}
+                output_run_info[run_id]['output_files'] = {}
+                output_run_info[run_id]['output_files']['alignments']  = {}
+                output_run_info[run_id]['output_files']['alignments'][run_id + '.bam'] = input_run_info['output_files']['alignments'].keys()
+                output_run_info[run_id]['output_files']['alignments'][run_id + '.bam.bai'] = input_run_info['output_files']['alignments'].keys()
+                output_run_info[run_id]['info'] = {}
+                if len(input_run_info['output_files']['alignments'].keys()) != 1:
+                    raise StandardError("Expected exactly one alignments file.")
+                output_run_info[run_id]['info']['in-sam']  = input_run_info['output_files']['alignments'].keys()[0]
+                output_run_info[run_id]['info']['out-bam']  = run_id + '.bam'
+                output_run_info[run_id]['info']['out-bai']  = run_id + '.bam.bai'
 
         return output_run_info
 
