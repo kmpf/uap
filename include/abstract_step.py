@@ -93,6 +93,11 @@ class AbstractStep(object):
     def get_run_info(self):
         # create run info if it doesn't exist yet
         if not self._run_info:
+            # if _BREAK: true is specified in the configuration,
+            # return no runs and thus cut off further processing
+            if '_BREAK' in self.options and self.options['_BREAK']:
+                return dict()
+                
             # create input run info and simplify it a bit for setup_runs
             input_run_info = copy.deepcopy(self.get_input_run_info())
             full_paths = dict()
