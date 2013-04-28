@@ -50,15 +50,6 @@ class AbstractStep(object):
         post-processed results are stored in here.
         '''
         
-        self._file_dependencies_cumulative = {}
-        '''
-        _file_dependencies_cumulative is secondary data which gets generated 
-        from _run_info and keeps track of each output file's file 
-        dependencies (regardless of the run id) and by file dependencies
-        I mean ALL file dependencies including those from all of its
-        parent steps (yup, that may become a lot of files).
-        '''
-        
         self._temp_directory = None
         '''
         The temporary output directory the step is using. Only set when
@@ -109,14 +100,14 @@ class AbstractStep(object):
             # strip directories from file names, strip input files
             for step_name in input_run_info.keys():
                 for run_id, run_info in input_run_info[step_name].items():
-                    for annotation in run_info['output_files'].keys():
-                        for path in run_info['output_files'][annotation].keys():
+                    for tag in run_info['output_files'].keys():
+                        for path in run_info['output_files'][tag].keys():
                             basename = os.path.basename(path)
                             if basename in full_paths:
                                 raise StandardError("There are multiple input filenames with the same basename.")
                             full_paths[basename] = path
-                            run_info['output_files'][annotation][basename] = run_info['output_files'][annotation][path]
-                            run_info['output_files'][annotation].pop(path)
+                            run_info['output_files'][tag][basename] = run_info['output_files'][tag][path]
+                            run_info['output_files'][tag].pop(path)
 
             self._run_info = self.setup_runs(input_run_info)
             
@@ -125,41 +116,27 @@ class AbstractStep(object):
                 if '/' in run_id:
                     raise StandardError("Run IDs must not contain a slash ('/'): %s "
                         "returns a run called %s." % (self, run_id))
-                for annotation in run_info['output_files'].keys():
-                    if not 'out/' + annotation in self.__class__.connections:
-                        raise StandardError("Invalid output_file key '%s' in %s. "
+                for tag in run_info['output_files'].keys():
+                    if not 'out/' + tag in self.__class__.connections:
+                        raise StandardError("Invalid output_file tag '%s' in %s. "
                             "Keys must be specified via the 'connections' "
                             "class member (you might want to add "
                             "connections.append('out/%s'))." 
-                            % (annotation, str(self), annotation))
+                            % (tag, str(self), tag))
             
             for run_id, run_info in self._run_info.items():
-                for annotation in run_info['output_files'].keys():
-                    for path in run_info['output_files'][annotation].keys():
+                for tag in run_info['output_files'].keys():
+                    for path in run_info['output_files'][tag].keys():
                         full_paths[path] = os.path.join(self.get_output_directory(), path)
 
             self._run_info = fix_dict(self._run_info, fix_func_dict_subst, full_paths)
-            
-            # TODO: Fix this.
-            # fill _file_dependencies_cumulative
+                        
+            # fill _file_dependencies
             for run_id in self._run_info.keys():
                 for tag in self._run_info[run_id]['output_files'].keys():
                     for output_path, input_paths in self._run_info[run_id]['output_files'][tag].items():
-                        if output_path in self._file_dependencies_cumulative:
-                            raise StandardError("Error: Multiple run IDs want to create the same output file (" + output_path + ").")
-                        self._file_dependencies_cumulative[output_path] = copy.deepcopy(input_paths)
-                        # now recursively add dependencies of each input file, if any
-                        # ATTENTION: Actually, this is an ugly hack, there's no recursion here, but it still
-                        # works. It might break at some point, but right now it's fine. TODO: Prove that it
-                        # will remain fine.
-                        '''
-                        p = self.parent
-                        l = input_paths
-                        for path in l:
-                            if path in p._file_dependencies_cumulative:
-                                self._file_dependencies_cumulative[output_path].extend(p._file_dependencies_cumulative[path])
-                        '''
-                            
+                        self._pipeline.add_file_dependencies(output_path, input_paths)
+                        
         # now that the _run_info exists, it remains constant, just return it
         return self._run_info
 
@@ -185,7 +162,7 @@ class AbstractStep(object):
 
     def get_run_state(self, run_id):
 
-        def path_up_to_date(outpath, inpaths = []):
+        def path_up_to_date(outpath, inpaths):
             if not AbstractStep.fsc.exists(outpath):
                 return False
             for inpath in inpaths:
@@ -194,24 +171,35 @@ class AbstractStep(object):
                 if AbstractStep.fsc.getmtime(inpath) > AbstractStep.fsc.getmtime(outpath):
                     return False
             return True
+            
+        def up_to_dateness_level(path, level = 0):
+            #print("up_to_dateness_level(path = %s, level = %d)" % (os.path.basename(path), level))
+            result = level
+            dep_paths = self._pipeline.file_dependencies[path]
+            if not path_up_to_date(path, dep_paths):
+                result = level + 1
+            for dep_path in dep_paths:
+                recursive_result = up_to_dateness_level(dep_path, level + 1)
+                if recursive_result > level + 1:
+                    result = max(result, recursive_result)
+            return result
 
+        '''
+        finished: all output files exist AND up to date (recursively)
+        ready: NOT all output files exist AND all input files exist AND up to date (recursively)
+        waiting: otherwise
+        '''
+        
         run_info = self.get_run_info()
-        all_output_files_exist = True
-        all_input_files_exist = True
-        for annotation in run_info[run_id]['output_files'].keys():
-            for output_file in run_info[run_id]['output_files'][annotation].keys():
-                input_files = self._file_dependencies_cumulative[output_file]
-                if not path_up_to_date(output_file, input_files):
-                    all_output_files_exist = False
-                for input_file in input_files:
-                    if not path_up_to_date(input_file, []):
-                        all_input_files_exist = False
+        max_level = 0
+        for tag in run_info[run_id]['output_files'].keys():
+            for output_file in run_info[run_id]['output_files'][tag].keys():
+                max_level = max(max_level, up_to_dateness_level(output_file))
 
-        if all_input_files_exist:
-            if all_output_files_exist:
-                return self._pipeline.states.FINISHED
-            else:
-                return self._pipeline.states.READY
+        if max_level == 0:
+            return self._pipeline.states.FINISHED
+        elif max_level == 1:
+            return self._pipeline.states.READY
         else:
             return self._pipeline.states.WAITING
 
@@ -228,8 +216,8 @@ class AbstractStep(object):
         # call execute() but pass output file paths with the temporary directory
         temp_run_info = copy.deepcopy(self.get_run_info()[run_id])
         temp_paths = {}
-        for annotation in temp_run_info['output_files'].keys():
-            for out_path, in_paths in temp_run_info['output_files'][annotation].items():
+        for tag in temp_run_info['output_files'].keys():
+            for out_path, in_paths in temp_run_info['output_files'][tag].items():
                 temp_paths[out_path] = os.path.join(temp_directory, os.path.basename(out_path))
 
         temp_run_info = fix_dict(temp_run_info, fix_func_dict_subst, temp_paths)
@@ -245,8 +233,8 @@ class AbstractStep(object):
         # if we're here, we can assume the step has finished successfully
         # now rename the output files (move from temp directory to
         # destination directory)
-        for annotation in temp_run_info['output_files'].keys():
-            for out_path in temp_run_info['output_files'][annotation].keys():
+        for tag in temp_run_info['output_files'].keys():
+            for out_path in temp_run_info['output_files'][tag].keys():
                 destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
                 # TODO: if the destination path already exists, this will overwrite the file.
                 if not os.path.exists(out_path):
@@ -293,8 +281,8 @@ class AbstractStep(object):
             f.write(yaml.dump(log, default_flow_style = False))
 
         # create a symbolic link to the annotation for every output file
-        for annotation in temp_run_info['output_files'].keys():
-            for out_path in temp_run_info['output_files'][annotation].keys():
+        for tag in temp_run_info['output_files'].keys():
+            for out_path in temp_run_info['output_files'][tag].keys():
                 destination_path = os.path.join(self.get_output_directory(), '.' + os.path.basename(out_path) + '.annotation.yaml')
                 # overwrite the symbolic link if it already exists
                 if os.path.exists(destination_path):

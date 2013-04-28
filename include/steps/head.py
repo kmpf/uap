@@ -41,8 +41,8 @@ class Head(AbstractStep):
             if 'info' in input_run_info[input_run_id]:
                 output_run_info[input_run_id]['info'] = input_run_info[input_run_id]['info']
             output_run_info[input_run_id]['info']['head-count'] = count
-            for annotation, input_files in input_run_info[input_run_id]['output_files'].items():
-                output_run_info[input_run_id]['output_files'][annotation] = {}
+            for tag, input_files in input_run_info[input_run_id]['output_files'].items():
+                output_run_info[input_run_id]['output_files'][tag] = {}
                 for in_path in input_files.keys():
                     out_path = in_path.replace('.fastq.gz', '-head.fastq.gz')
                     out_path = copy.copy(in_path)
@@ -51,12 +51,12 @@ class Head(AbstractStep):
                         out_path = out_path[:offset] + '-head' + out_path[offset:]
                     else:
                         out_path = out_path + '-head'
-                    output_run_info[input_run_id]['output_files'][annotation][out_path] = [in_path]
+                    output_run_info[input_run_id]['output_files'][tag][out_path] = [in_path]
         return output_run_info
 
     def execute(self, run_id, run_info):
-        for annotation in run_info['output_files'].keys():
-            for outpath, inpaths in run_info['output_files'][annotation].items():
+        for tag in run_info['output_files'].keys():
+            for outpath, inpaths in run_info['output_files'][tag].items():
                 if len(inpaths) != 1:
                     raise StandardError("Expected one input file per output file.")
 

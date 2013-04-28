@@ -1,3 +1,5 @@
+import json
+
 def assign_strings(paths, tags):
     '''
     Assign strings (path names, for example) to tags. Example:

@@ -6,9 +6,16 @@ import yaml
 
 
 class Segemehl(AbstractStep):
+
+    connections = []
+    connections.append('in/reads')
+    connections.append('out/alignments')
+    connections.append('out/unmapped')
+    connections.append('out/log')
+    cores = 12
+    
     def __init__(self, pipeline):
         super(Segemehl, self).__init__(pipeline)
-        self.set_cores(12)
 
     def setup_runs(self, complete_input_run_info):
         # make sure tools are available
@@ -18,22 +25,23 @@ class Segemehl(AbstractStep):
         # make sure files are available
         for key in ['genome', 'index']:
             if not os.path.exists(self.options[key]):
-                raise StandardError("Could not find " + key + " file: " + self.options[key])
+                raise StandardError("Could not find %s file: %s" % (key, self.options[key]))
 
         output_run_info = {}
-        for run_id, input_run_info in complete_input_run_info.items():
-            output_run_info[run_id] = {}
-            output_run_info[run_id]['output_files'] = {}
-            output_run_info[run_id]['output_files']['alignments']  = {}
-            output_run_info[run_id]['output_files']['alignments'][run_id + '-segemehl-results.sam.gz'] = input_run_info['output_files']['reads'].keys()
-            output_run_info[run_id]['output_files']['unmapped']  = {}
-            output_run_info[run_id]['output_files']['unmapped'][run_id + '-segemehl-unmapped.fastq.gz'] = input_run_info['output_files']['reads'].keys()
-            output_run_info[run_id]['output_files']['log']  = {}
-            output_run_info[run_id]['output_files']['log'][run_id + '-segemehl-log.txt'] = input_run_info['output_files']['reads'].keys()
-            read_files = misc.assign_strings(input_run_info['output_files']['reads'].keys(), ['R1', 'R2'])
-            output_run_info[run_id]['info'] = {}
-            output_run_info[run_id]['info']['R1-in'] = read_files['R1']
-            output_run_info[run_id]['info']['R2-in'] = read_files['R2']
+        for step_name, step_input_info in complete_input_run_info.items():
+            for run_id, input_run_info in step_input_info.items():
+                output_run_info[run_id] = {}
+                output_run_info[run_id]['output_files'] = {}
+                output_run_info[run_id]['output_files']['alignments']  = {}
+                output_run_info[run_id]['output_files']['alignments'][run_id + '-segemehl-results.sam.gz'] = input_run_info['output_files']['reads'].keys()
+                output_run_info[run_id]['output_files']['unmapped']  = {}
+                output_run_info[run_id]['output_files']['unmapped'][run_id + '-segemehl-unmapped.fastq.gz'] = input_run_info['output_files']['reads'].keys()
+                output_run_info[run_id]['output_files']['log']  = {}
+                output_run_info[run_id]['output_files']['log'][run_id + '-segemehl-log.txt'] = input_run_info['output_files']['reads'].keys()
+                read_files = misc.assign_strings(input_run_info['output_files']['reads'].keys(), ['R1', 'R2'])
+                output_run_info[run_id]['info'] = {}
+                output_run_info[run_id]['info']['R1-in'] = read_files['R1']
+                output_run_info[run_id]['info']['R2-in'] = read_files['R2']
 
         return output_run_info
 
