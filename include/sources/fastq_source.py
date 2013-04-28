@@ -9,11 +9,10 @@ import yaml
 
 class FastqSource(AbstractSourceStep):
 
-    connections = []
-    connections.append('out/reads')
-
     def __init__(self, pipeline):
         super(FastqSource, self).__init__(pipeline)
+        
+        self.add_connection('out/reads')
 
     def setup_runs(self, input_run_info):
         regex = re.compile(self.options['group'])

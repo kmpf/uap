@@ -7,21 +7,23 @@ import yaml
 
 class Segemehl(AbstractStep):
 
-    connections = []
-    connections.append('in/reads')
-    connections.append('out/alignments')
-    connections.append('out/unmapped')
-    connections.append('out/log')
-    cores = 12
     
     def __init__(self, pipeline):
         super(Segemehl, self).__init__(pipeline)
 
-    def setup_runs(self, complete_input_run_info):
-        # make sure tools are available
-        self.tool('segemehl')
-        self.tool('pigz')
+        self.set_cores(12)
+        
+        self.add_connection('in/reads')
+        self.add_connection('out/alignments')
+        self.add_connection('out/unmapped')
+        self.add_connection('out/log')
+        
+        self.require_tool('cat4m')
+        self.require_tool('pigz')
+        self.require_tool('segemehl')
 
+
+    def setup_runs(self, complete_input_run_info):
         # make sure files are available
         for key in ['genome', 'index']:
             if not os.path.exists(self.options[key]):

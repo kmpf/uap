@@ -6,20 +6,19 @@ import yaml
 
 class SamToBam(AbstractStep):
 
-    connections = []
-    connections.append('in/alignments')
-    connections.append('out/alignments')
-    cores = 4
-
     def __init__(self, pipeline):
         super(SamToBam, self).__init__(pipeline)
+        
+        self.set_cores(4)
+        
+        self.add_connection('in/alignments')
+        self.add_connection('out/alignments')
+        
+        self.require_tool('cat4m')
+        self.require_tool('samtools')
+        self.require_tool('pigz')
 
     def setup_runs(self, complete_input_run_info):
-        # make sure tools are available
-        self.tool('samtools')
-        self.tool('pigz')
-        self.tool('cat4m')
-
         # make sure files are available
         for key in ['genome']:
             if not os.path.exists(self.options[key]):

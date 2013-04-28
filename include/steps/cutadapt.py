@@ -25,21 +25,20 @@ class Cutadapt(AbstractStep):
     StandardError is thrown if the adapter looks non-legit.
     '''
     
-    cores = 6
-    connections = []
-    connections.append('in/reads')
-    connections.append('out/reads')
-    connections.append('out/log')
-    
     def __init__(self, pipeline):
         super(Cutadapt, self).__init__(pipeline)
+        
+        self.set_cores(6)
+        
+        self.add_connection('in/reads')
+        self.add_connection('out/reads')
+        self.add_connection('out/log')
+        
+        self.require_tool('cat4m')
+        self.require_tool('pigz')
+        self.require_tool('cutadapt')
 
     def setup_runs(self, complete_input_run_info):
-        # make sure tools are available
-        self.tool('cat4m')
-        self.tool('pigz')
-        self.tool('cutadapt')
-
         output_run_info = {}
         for step_name, step_input_info in complete_input_run_info.items():
             for input_run_id, input_run_info in step_input_info.items():

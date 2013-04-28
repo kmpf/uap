@@ -1,7 +1,7 @@
 ..
   This is the documentation for rnaseq-pipeline. Please keep lines under
   80 characters if you can and start each sentence on a new line as it 
-  decreases maintenance.
+  decreases maintenance and makes diffs more readable.
   
 .. title:: rnaseq-pipeline
 
@@ -49,15 +49,6 @@ This leaves you with:
 Core aspects
 ------------
 
-**Simplicity:**
-
-* The entire processing pipeline is described via a configuration file. 
-  Steps are defined in a tree, and output files are written into a directory 
-  structure mirroring this tree.
-* Interaction with the pipeline happens through a handful of scripts which 
-  are used to monitor the state of the pipeline and execute individual or all 
-  remaining steps.
-
 **Robustness:**
 
 * All steps write their output files to a temporary location. 
@@ -77,15 +68,24 @@ Core aspects
 * Comprehensive annotations are written to the output directories, allowing 
   for later investigation about what exactly happened.
       
+**Simplicity:**
+
+* The entire processing pipeline is described via a configuration file. 
+  Steps are defined in a directed acyclic graph (DAG).
+* Interaction with the pipeline happens through a handful of scripts which 
+  are used to monitor the state of the pipeline and execute individual or all 
+  remaining steps.
+
 Design
 ------
 
 The central part of the pipeline is its definition of the steps which are to 
 be carried out.
-Steps are organized in a dependency tree -- every step has one parent step,
-which may in turn have another parent step, and so on.
-At the root of the tree, there is a special step called ``source`` which
-provides the input samples.
+Steps are organized in a dependency graph, or directed acyclic graph -- every 
+step may have one or more parent steps, which may in turn have other parent 
+steps, and so on.
+Steps without parents are usually sources which provide source files, for
+example FASTQ files with the raw sequences obtained from the sequencer.
 
 Each step defines a number of runs and each run represents a piece of the
 entire data evaluation, typically at the level of a single sample.
@@ -93,8 +93,10 @@ A certain *run* of a certain *step* is called a *task*.
 While the steps only describe what needs to be done on a very abstract level,
 it is through the individual runs of each step that a pipeline-wide list of 
 actual tasks becomes available.
+Each run may provide a number of output files which depend on output files
+of one or several runs from parent steps.
 
-The ``source`` step defines a run for every input sample, and following steps
+Source steps define a run for every input sample, and following steps
 may:
 
 * define the same number of runs, 
@@ -102,15 +104,6 @@ may:
   experiment should be treated separately),
 * define fewer runs (usually at the end of a pipeline, where results are
   summarized).
-
-.. NOTE:: The design decision that steps are defined as a tree instead 
-   of a full directed acyclic graph means that a step cannot have more than 
-   one direct parent, like a directory in a file system cannot have more than 
-   one parent directory. 
-   This means that a step cannot use the output of two different steps as its 
-   input. 
-   However, any step may have more than one
-   input or output file.
 
 Setup
 =====
@@ -127,7 +120,8 @@ required Python environment (which will be located in ``./python_env/``)::
 There's no harm in accidentally running this script multiple times. 
 Also, it will compile ``cat4m``, a tool which can be found at 
 ``./tools/cat4m`` and which is able to read arbitrary input files in chunks 
-of 4 MB and prints them to stdout.
+of 4 MB and prints them to stdout (we'll need this often in the pipeline,
+as ``cat`` reads in system-default blocks of 32 kB).
 
 The configuration file
 ----------------------
@@ -140,26 +134,36 @@ Here is a sample configuration:
 .. code-block:: yaml
 
     # This is the rnaseq-pipeline configuration file.
-    email: micha.specht@gmail.com
-    sources:
-    - run_folder_source: { path: in }
-    destination_path: out
-    steps: |
-        - cutadapt {
-            adapter-R1: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG"
-            adapter-R2: "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT"
-        }
-            - fix_cutadapt
+
+    destination_path: "/home/michael/test-pipeline/out"
+
+    steps:
+        fastq_source:
+            pattern: /home/michael/test-pipeline/fastq/*.fastq.gz
+            group: (Sample_COPD_\d+)_R[12]-head.fastq.gz
+            indices: copd-barcodes.csv
+            paired_end: yes
+            
+        cutadapt:
+            _depends: fastq_source
+            adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG
+            adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+            
     tools:
         cutadapt:
-            path: 'tools/cutadapt-1.2.1/bin/cutadapt'
+            path: /home/michael/Desktop/rnaseq-pipeline/tools/cutadapt-1.2.1/bin/cutadapt
             get_version: '--version'
         pigz:
-            path: 'pigz'
+            path: pigz
             get_version: '--version'
         dd:
-            path: 'dd'
+            path: dd
             get_version: '--version'
+        head:
+            path: head
+            get_version: '--version'
+        cat4m:
+            path: ./tools/cat4m
 
 In the configuration, the following aspects of the pipeline are defined:
 

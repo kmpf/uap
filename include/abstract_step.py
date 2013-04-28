@@ -19,9 +19,6 @@ import yaml
 
 class AbstractStep(object):
     
-    cores = 1
-    connections = []
-    
     fsc = fscache.FSCache()
     
     def __init__(self, pipeline):
@@ -55,6 +52,10 @@ class AbstractStep(object):
         The temporary output directory the step is using. Only set when
         the step is being run.
         '''
+        
+        self._cores = 1
+        self._connections = []
+        self._tools = dict()
 
     def set_name(self, step_name):
         self._step_name = step_name
@@ -122,12 +123,11 @@ class AbstractStep(object):
                     raise StandardError("Run IDs must not contain a slash ('/'): %s "
                         "returns a run called %s." % (self, run_id))
                 for tag in run_info['output_files'].keys():
-                    if not 'out/' + tag in self.__class__.connections:
+                    if not 'out/' + tag in self._connections:
                         raise StandardError("Invalid output_file tag '%s' in %s. "
-                            "Keys must be specified via the 'connections' "
-                            "class member (you might want to add "
-                            "connections.append('out/%s'))." 
-                            % (tag, str(self), tag))
+                            "You might want to add self.add_connection('out/%s')"
+                            "to the constructor of %s." 
+                            % (tag, str(self), tag, self.__class__))
             
             for run_id, run_info in self._run_info.items():
                 for tag in run_info['output_files'].keys():
@@ -307,7 +307,7 @@ class AbstractStep(object):
         '''
         Return full path to a configured tool.
         '''
-        return self._pipeline.config['tools'][key]['path']
+        return self._tools[key]
     
     def get_temporary_path(self, prefix, suffix):
         '''
@@ -349,6 +349,15 @@ class AbstractStep(object):
             print(classes)
             raise StandardError("need exactly one subclass of AbstractStep in " + key)
         return classes[0][1]
+    
+    def set_cores(self, cores):
+        self._cores = cores
+
+    def add_connection(self, connection):
+        self._connections.append(connection)
+        
+    def require_tool(self, tool):
+        self._tools[tool] = self._pipeline.config['tools'][tool]['path']
     
 class AbstractSourceStep(AbstractStep):
     '''

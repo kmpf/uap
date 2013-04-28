@@ -6,24 +6,23 @@ import yaml
 
 class TestRealign(AbstractStep):
 
-    connections = []
-    connections.append('in/alignments')
-    connections.append('out/alignments')
-    connections.append('out/splicesites')
-    connections.append('out/transrealigned')
-    connections.append('out/log')
-    cores = 12
-
     def __init__(self, pipeline):
         super(TestRealign, self).__init__(pipeline)
+        
+        self.set_cores(12)
+        
+        self.add_connection('in/alignments')
+        self.add_connection('out/alignments')
+        self.add_connection('out/splicesites')
+        self.add_connection('out/transrealigned')
+        self.add_connection('out/log')
+        
+        self.require_tool('testrealign')
+        self.require_tool('samtools')
+        self.require_tool('pigz')
+        self.require_tool('cat4m')
 
     def setup_runs(self, complete_input_run_info):
-        # make sure tools are available
-        self.tool('testrealign')
-        self.tool('samtools')
-        self.tool('pigz')
-        self.tool('cat4m')
-
         # make sure files are available
         for key in ['genome']:
             if not os.path.exists(self.options[key]):

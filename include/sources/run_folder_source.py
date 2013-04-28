@@ -9,6 +9,8 @@ import yaml
 class RunFolderSource(AbstractSource):
     def __init__(self, pipeline, options):
         super(RunFolderSource, self).__init__(pipeline)
+        
+        raise StandardError("Let's fix this first, shall we?")
 
         path = options['path']
 
