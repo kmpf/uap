@@ -29,3 +29,26 @@ class Task(object):
         if task_state != self.pipeline.states.READY:
             raise StandardError("%s cannot be run yet." % self)
         self.step.run(self.run_id)
+
+    def input_files(self):
+        '''
+        Return a list of input files required by this task.
+        '''
+        result = set()
+        run_info = self.step.get_run_info()[self.run_id]
+        for annotation, outfiles in run_info['output_files'].items():
+            for outpath, infiles in outfiles.items():
+                for path in infiles:
+                    result.add(path)
+        return list(result)
+
+    def output_files(self):
+        '''
+        Return a list of output files produced by this task.
+        '''
+        result = []
+        run_info = self.step.get_run_info()[self.run_id]
+        for annotation, outfiles in run_info['output_files'].items():
+            for path in outfiles.keys():
+                result.append(path)
+        return result
