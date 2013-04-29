@@ -12,6 +12,7 @@ import sys
 import yaml
 
 import abstract_step
+import misc
 import task as task_module
 
 # an enum class, yanked from http://stackoverflow.com/questions/36932/whats-the-best-way-to-implement-an-enum-in-python
@@ -78,7 +79,7 @@ class Pipeline(object):
         for step_name in self.topological_step_order:
             step = self.steps[step_name]
             if not abstract_step.AbstractSourceStep in step.__class__.__bases__:
-                for run_index, run_id in enumerate(sorted(step.get_run_ids())):
+                for run_index, run_id in enumerate(misc.natsorted(step.get_run_ids())):
                     task = task_module.Task(self, step, run_id, run_index)
                     self.all_tasks.append(task)
                     if str(task) in self.task_for_task_id:

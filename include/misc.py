@@ -1,4 +1,5 @@
 import json
+import re
 
 def assign_strings(paths, tags):
     '''
@@ -55,3 +56,14 @@ def assign_strings(paths, tags):
         raise StandardError("Unable to find an unambiguous mapping.")
     
     return results[results.keys()[0]]
+
+def natsorted(l):
+    '''
+    Return a 'naturally sorted' permutation of l.
+    
+    Credits: http://www.codinghorror.com/blog/2007/12/sorting-for-humans-natural-sort-order.html
+    '''
+    convert = lambda text: int(text) if text.isdigit() else text
+    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
+    return sorted(l, key=alphanum_key)
+    
