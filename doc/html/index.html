@@ -89,15 +89,6 @@ the pipeline repository at the time the data processing took place.</li>
 </div>
 <div class="section" id="core-aspects">
 <h2>Core aspects<a class="headerlink" href="#core-aspects" title="Permalink to this headline">¶</a></h2>
-<p><strong>Simplicity:</strong></p>
-<ul class="simple">
-<li>The entire processing pipeline is described via a configuration file.
-Steps are defined in a tree, and output files are written into a directory
-structure mirroring this tree.</li>
-<li>Interaction with the pipeline happens through a handful of scripts which
-are used to monitor the state of the pipeline and execute individual or all
-remaining steps.</li>
-</ul>
 <p><strong>Robustness:</strong></p>
 <ul class="simple">
 <li>All steps write their output files to a temporary location.
@@ -117,22 +108,33 @@ jobs are being started or submitted to a cluster.</li>
 <li>Comprehensive annotations are written to the output directories, allowing
 for later investigation about what exactly happened.</li>
 </ul>
+<p><strong>Simplicity:</strong></p>
+<ul class="simple">
+<li>The entire processing pipeline is described via a configuration file.
+Steps are defined in a directed acyclic graph (DAG).</li>
+<li>Interaction with the pipeline happens through a handful of scripts which
+are used to monitor the state of the pipeline and execute individual or all
+remaining steps.</li>
+</ul>
 </div>
 <div class="section" id="design">
 <h2>Design<a class="headerlink" href="#design" title="Permalink to this headline">¶</a></h2>
 <p>The central part of the pipeline is its definition of the steps which are to
 be carried out.
-Steps are organized in a dependency tree &#8211; every step has one parent step,
-which may in turn have another parent step, and so on.
-At the root of the tree, there is a special step called <tt class="docutils literal"><span class="pre">source</span></tt> which
-provides the input samples.</p>
+Steps are organized in a dependency graph, or directed acyclic graph &#8211; every
+step may have one or more parent steps, which may in turn have other parent
+steps, and so on.
+Steps without parents are usually sources which provide source files, for
+example FASTQ files with the raw sequences obtained from the sequencer.</p>
 <p>Each step defines a number of runs and each run represents a piece of the
 entire data evaluation, typically at the level of a single sample.
 A certain <em>run</em> of a certain <em>step</em> is called a <em>task</em>.
 While the steps only describe what needs to be done on a very abstract level,
 it is through the individual runs of each step that a pipeline-wide list of
-actual tasks becomes available.</p>
-<p>The <tt class="docutils literal"><span class="pre">source</span></tt> step defines a run for every input sample, and following steps
+actual tasks becomes available.
+Each run may provide a number of output files which depend on output files
+of one or several runs from parent steps.</p>
+<p>Source steps define a run for every input sample, and following steps
 may:</p>
 <ul class="simple">
 <li>define the same number of runs,</li>
@@ -141,17 +143,6 @@ experiment should be treated separately),</li>
 <li>define fewer runs (usually at the end of a pipeline, where results are
 summarized).</li>
 </ul>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The design decision that steps are defined as a tree instead
-of a full directed acyclic graph means that a step cannot have more than
-one direct parent, like a directory in a file system cannot have more than
-one parent directory.
-This means that a step cannot use the output of two different steps as its
-input.
-However, any step may have more than one
-input or output file.</p>
-</div>
 </div>
 </div>
 <div class="section" id="setup">
@@ -166,7 +157,8 @@ required Python environment (which will be located in <tt class="docutils litera
 <p>There&#8217;s no harm in accidentally running this script multiple times.
 Also, it will compile <tt class="docutils literal"><span class="pre">cat4m</span></tt>, a tool which can be found at
 <tt class="docutils literal"><span class="pre">./tools/cat4m</span></tt> and which is able to read arbitrary input files in chunks
-of 4 MB and prints them to stdout.</p>
+of 4 MB and prints them to stdout (we&#8217;ll need this often in the pipeline,
+as <tt class="docutils literal"><span class="pre">cat</span></tt> reads in system-default blocks of 32 kB).</p>
 <div class="section" id="the-configuration-file">
 <h2>The configuration file<a class="headerlink" href="#the-configuration-file" title="Permalink to this headline">¶</a></h2>
 <p>Next, edit <tt class="docutils literal"><span class="pre">config.sample.yaml</span></tt> and save it as <tt class="docutils literal"><span class="pre">config.yaml</span></tt>.
@@ -174,38 +166,40 @@ Although writing the configuration may seem a bit complicated, the trouble
 pays off later because further interaction with the pipeline is quite simple.
 Here is a sample configuration:</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span class="c1"># This is the rnaseq-pipeline configuration file.</span>
-<span class="l-Scalar-Plain">email</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">micha.specht@gmail.com</span>
-<span class="l-Scalar-Plain">sources</span><span class="p-Indicator">:</span>
-<span class="p-Indicator">-</span> <span class="l-Scalar-Plain">run_folder_source</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span> <span class="nv">path</span><span class="p-Indicator">:</span> <span class="nv">in</span> <span class="p-Indicator">}</span>
-<span class="l-Scalar-Plain">destination_path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">out</span>
-<span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span> <span class="p-Indicator">|</span>
-    <span class="no">- cutadapt {</span>
-        <span class="no">adapter-R1: &quot;AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG&quot;</span>
-        <span class="no">adapter-R2: &quot;AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT&quot;</span>
-    <span class="no">}</span>
-        <span class="no">- fix_cutadapt</span>
+
+<span class="l-Scalar-Plain">destination_path</span><span class="p-Indicator">:</span> <span class="s">&quot;/home/michael/test-pipeline/out&quot;</span>
+
+<span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
+    <span class="l-Scalar-Plain">fastq_source</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">pattern</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/home/michael/test-pipeline/fastq/*.fastq.gz</span>
+        <span class="l-Scalar-Plain">group</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">(Sample_COPD_\d+)_R[12]-head.fastq.gz</span>
+        <span class="l-Scalar-Plain">indices</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">copd-barcodes.csv</span>
+        <span class="l-Scalar-Plain">paired_end</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
+
+    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">fastq_source</span>
+        <span class="l-Scalar-Plain">adapter-R1</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG</span>
+        <span class="l-Scalar-Plain">adapter-R2</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT</span>
+
 <span class="l-Scalar-Plain">tools</span><span class="p-Indicator">:</span>
     <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="s">&#39;tools/cutadapt-1.2.1/bin/cutadapt&#39;</span>
+        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/home/michael/Desktop/rnaseq-pipeline/tools/cutadapt-1.2.1/bin/cutadapt</span>
         <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="s">&#39;--version&#39;</span>
     <span class="l-Scalar-Plain">pigz</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="s">&#39;pigz&#39;</span>
+        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pigz</span>
         <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="s">&#39;--version&#39;</span>
-    <span class="l-Scalar-Plain">dd</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="s">&#39;dd&#39;</span>
+    <span class="l-Scalar-Plain">head</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">head</span>
         <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="s">&#39;--version&#39;</span>
+    <span class="l-Scalar-Plain">cat4m</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">./tools/cat4m</span>
 </pre></div>
 </div>
 <p>In the configuration, the following aspects of the pipeline are defined:</p>
 <ul class="simple">
-<li><tt class="docutils literal"><span class="pre">sources</span></tt> &#8211; there can be multiple sources of different types:<ul>
-<li>run folders</li>
-<li>plain fastq.gz files with additional information</li>
-</ul>
-</li>
 <li><tt class="docutils literal"><span class="pre">destination_path</span></tt> &#8211; this is where result files, annotations and
 temporary files are written to</li>
-<li><tt class="docutils literal"><span class="pre">steps</span></tt> &#8211; defines the processing step arranged in a tree</li>
+<li><tt class="docutils literal"><span class="pre">steps</span></tt> &#8211; defines the processing step arranged in a DAG</li>
 <li><tt class="docutils literal"><span class="pre">tools</span></tt> &#8211; defines all tools used in the pipeline and how to determine
 their versions (for later reference)</li>
 <li><tt class="docutils literal"><span class="pre">email</span></tt> &#8211; when submitting jobs on a cluster, messages will be sent to
@@ -229,23 +223,13 @@ configuration file.
 If <tt class="docutils literal"><span class="pre">out</span></tt> already exists, it is left untouched.</li>
 </ul>
 <p>There are a couple of global command line parameters which are valid for all
-scripts:</p>
+scripts (well, actually, it&#8217;s only one):</p>
 <ul>
 <li><dl class="first docutils">
 <dt><tt class="docutils literal"><span class="pre">--even-if-dirty</span></tt>:</dt>
 <dd><p class="first last">Before doing anything else, the pipeline checks whether its source code
 has been modified in any way via Git.
 If yes, processing is stopped immediately unless this flag is specified.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><tt class="docutils literal"><span class="pre">--test-run</span></tt>:</dt>
-<dd><p class="first last">When this parameter is specified, a <tt class="docutils literal"><span class="pre">head</span></tt> step is placed before all
-first-level steps in the step tree, which returns the first 1000 lines
-of every input file.
-That way, a pipeline can be tested very quickly with a small input data
-set.</p>
 </dd>
 </dl>
 </li>
@@ -275,24 +259,9 @@ whether a task is currently running or has been submitted to a cluster.</p>
 [r] cutadapt/RIB0000784-R2
 [r] cutadapt/RIB0000770-R2
 [r] cutadapt/RIB0000770-R1
-[w] cutadapt/fix_cutadapt/RIB0000770
-[w] cutadapt/fix_cutadapt/RIB0000784
+[w] fix_cutadapt/RIB0000770
+[w] fix_cutadapt/RIB0000784
 tasks: 6 total, 4 ready, 2 waiting</pre>
-</div>
-<p>Here is another example output with <tt class="docutils literal"><span class="pre">--test-run</span></tt> specified on the command
-line.
-Here, all top-level steps are prepended with a <tt class="docutils literal"><span class="pre">head</span></tt> step, which is
-reflected in the task IDs:</p>
-<div class="highlight-python"><pre>$ ./status.py --test-run
-[r] head/cutadapt/RIB0000784
-[r] head/cutadapt/RIB0000770
-[w] head/cutadapt/RIB0000784-R1
-[w] head/cutadapt/RIB0000784-R2
-[w] head/cutadapt/RIB0000770-R2
-[w] head/cutadapt/RIB0000770-R1
-[w] head/cutadapt/fix_cutadapt/RIB0000770
-[w] head/cutadapt/fix_cutadapt/RIB0000784
-tasks: 8 total, 2 ready, 6 waiting</pre>
 </div>
 <p>Detailed information about a specific task can be obtained by specifying the
 task ID on the command line:</p>
@@ -376,11 +345,64 @@ Different quotas can be defined for each step: because <tt class="docutils liter
 highly IO-efficient, it has a higher quota.</p>
 </div>
 </div>
-<div class="section" id="sources">
-<h1>Sources<a class="headerlink" href="#sources" title="Permalink to this headline">¶</a></h1>
-<p>In the following, the different types of sources are described in detail.</p>
+<div class="section" id="steps">
+<h1>Steps<a class="headerlink" href="#steps" title="Permalink to this headline">¶</a></h1>
+<p>Steps are defined in a directed acyclic graph.
+In the configuration, the <tt class="docutils literal"><span class="pre">steps</span></tt> dictionary contains a key for every
+step, therefore each step must have a unique name.
+There are two ways to name a step:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
+    <span class="c1"># here, the step name is unchanged, it&#39;s a cutadapt step which is also called &#39;cutadapt&#39;</span>
+    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">...</span> <span class="c1"># options following</span>
+
+    <span class="c1"># here, we also insert a cutadapt step, but we give it a different name: &#39;clip_adapters&#39;</span>
+    <span class="l-Scalar-Plain">clip_adapters (cutadapt)</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">...</span> <span class="c1"># options following</span>
+</pre></div>
+</div>
+<p>Source steps are special in the way that they provide files without doing
+anything, and they are usually the first steps in a pipeline because they
+have no dependencies.
+Regular steps, on the other hand, need to define their dependencies via
+the <tt class="docutils literal"><span class="pre">_depends</span></tt> key which may either be <tt class="docutils literal"><span class="pre">null</span></tt>, a step name, or a list
+of step names.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
+    <span class="c1"># the source step which depends on nothing</span>
+    <span class="l-Scalar-Plain">fastq_source</span><span class="p-Indicator">:</span>
+        <span class="c1"># ...</span>
+
+    <span class="c1"># the first processing step, which depends on the sources</span>
+    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">fastq_source</span>
+
+    <span class="c1"># the second processing step, which depends on the cutadapt step</span>
+    <span class="l-Scalar-Plain">fix_cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cutadapt</span>
+</pre></div>
+</div>
+<p>If you want to cut off entire branches of the step graph, set the <tt class="docutils literal"><span class="pre">_BREAK</span></tt>
+flag in a step definition, which will force the step to produce no runs
+(which will in turn give all following steps nothing to do, thereby
+effectively disabling these steps):</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
+    <span class="l-Scalar-Plain">fastq_source</span><span class="p-Indicator">:</span>
+        <span class="c1"># ...</span>
+
+    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">fastq_source</span>
+
+    <span class="c1"># this step and all following steps will not be executed</span>
+    <span class="l-Scalar-Plain">fix_cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cutadapt</span>
+        <span class="l-Scalar-Plain">_BREAK</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
+</pre></div>
+</div>
+<div class="section" id="source-steps">
+<h2>Source steps<a class="headerlink" href="#source-steps" title="Permalink to this headline">¶</a></h2>
+<p>Source steps provide input files for the pipeline, such as RNA sequences.</p>
 <div class="section" id="run-folder-source">
-<h2>Run folder source<a class="headerlink" href="#run-folder-source" title="Permalink to this headline">¶</a></h2>
+<h3>Run folder source<a class="headerlink" href="#run-folder-source" title="Permalink to this headline">¶</a></h3>
 <p>Here&#8217;s an example:</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">run_folder_source</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span> <span class="nv">path</span><span class="p-Indicator">:</span> <span class="nv">in</span> <span class="p-Indicator">}</span>
 </pre></div>
@@ -392,7 +414,7 @@ It also makes sure that index information for all samples is coherent and
 unambiguous.</p>
 </div>
 <div class="section" id="fastq-source">
-<h2>FASTQ source<a class="headerlink" href="#fastq-source" title="Permalink to this headline">¶</a></h2>
+<h3>FASTQ source<a class="headerlink" href="#fastq-source" title="Permalink to this headline">¶</a></h3>
 <p>Here&#8217;s an example:</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">fastq_source</span><span class="p-Indicator">:</span>
     <span class="l-Scalar-Plain">pattern</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/data/original-fastq/&amp;#42;.fastq.gz</span>
@@ -407,37 +429,6 @@ name, here it is used to declare that both R1 and R2 files belong to the
 same sample.
 Indices are read from the CSV file specified by <tt class="docutils literal"><span class="pre">indices</span></tt>.</p>
 </div>
-</div>
-<div class="section" id="steps">
-<h1>Steps<a class="headerlink" href="#steps" title="Permalink to this headline">¶</a></h1>
-<p>Steps are defined in a dependency tree.
-However, the syntax is a bit peculiar: The <tt class="docutils literal"><span class="pre">|</span></tt> after <tt class="docutils literal"><span class="pre">steps:</span></tt> is
-YAML-specific syntax and it defines a string spanning multiple lines in which
-line breaks and indentation is maintained.
-The string is later parsed by the pipeline and the most important parts are
-the individual steps which are to be performed.
-The relationship betweens steps is declared via indentation.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Why do we need the <tt class="docutils literal"><span class="pre">|</span></tt> symbol in the steps definition?
-Neither the list nor the dictionary syntax allow for a concise definition
-of a step tree with options.
-Think of the step definition as a nested list with an option hash
-attached to every item.</p>
-</div>
-<p>Steps may have options, which must be placed in between <tt class="docutils literal"><span class="pre">{</span></tt> curly braces
-<tt class="docutils literal"><span class="pre">}</span></tt>.
-Options can be specified on a single line (in this case, individual key/value
-pairs must be separated by comma) or may span multiple lines, following
-standard YAML block syntax:</p>
-<div class="highlight-yaml"><pre># here, options are written in a single line, thus the comma is required
-- cutadapt { a: 123, b: 456 }
-
-# YAML block syntax:
-- fix_cutadapt {
-    a: 123
-    b: 456
-}</pre>
 </div>
 <div class="section" id="miscellaneous">
 <h2>Miscellaneous<a class="headerlink" href="#miscellaneous" title="Permalink to this headline">¶</a></h2>
@@ -468,26 +459,6 @@ to quickly test a pipeline.</p>
 <ul class="simple">
 <li><tt class="docutils literal"><span class="pre">lines</span></tt>: specify the number of lines that should be returned</li>
 </ul>
-</div>
-<div class="section" id="break">
-<h3>Break<a class="headerlink" href="#break" title="Permalink to this headline">¶</a></h3>
-<p class="graphviz">
-<img src="_images/graphviz-fd4f26b2178d7ee39a00da48c6e9373e2124d608.png" alt="digraph foo {
-    rankdir=LR;
-    splines=true;
-    graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
-    node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color=&quot;#404040&quot;, fillcolor=&quot;#ffffff&quot;];
-    edge [fontname = Helvetica, fontsize = 12, color=&quot;#404040&quot;];
-
-    break [fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
-    in_any [label = &quot;any (*)&quot;];
-
-    in_any -&gt; break;
-}" />
-</p>
-<p>This steps breaks the processing flow and does nothing. Because it
-returns no runs, its children never get run. Use it to conveniently
-cut off branches of the step tree (it&#8217;s like an uncommenting feature).</p>
 </div>
 </div>
 <div class="section" id="preprocessing">
@@ -636,27 +607,6 @@ checksums on the fly.</p>
 <dt>Steps should be able to access all ancestors:</dt>
 <dd>All upstream steps should be accessible via their step name or output
 file key.</dd>
-<dt>Custom step names:</dt>
-<dd><p class="first">In the configuration, it should be possible to assign a step name other
-than the default step name.
-Otherwise it&#8217;s not possible to have something like this:</p>
-<p class="last graphviz">
-<img src="_images/graphviz-7ca770936cf333e9eee86de7f534329bfa38832c.png" alt="digraph foo {
-    rankdir=LR;
-    splines=true;
-    graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
-    node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color=&quot;#404040&quot;, fillcolor=&quot;#ffffff&quot;];
-    edge [fontname = Helvetica, fontsize = 12, color=&quot;#404040&quot;];
-
-    sam_to_bam [fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
-    remapper1 [label = &quot;remapper 1&quot;, fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
-    remapper2 [label = &quot;remapper 2\n(with alternative options)&quot;, fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
-
-    sam_to_bam -&gt; remapper1
-    sam_to_bam -&gt; remapper2
-}" />
-</p>
-</dd>
 <dt>On-the-fly steps:</dt>
 <dd><p class="first">We need a way to skip writing certain output files and have them flow
 temporarily through a pipe only, if possible.
@@ -692,6 +642,12 @@ a single stream.</p>
 }" />
 </p>
 </dd>
+<dt>Miscellaneous input files:</dt>
+<dd>Genome files and their index such as used by segemehl should not be defined
+via a fixed path.
+For traceability, it would be preferable to specify the hg19.fa URL and
+checksum and have the index generated by a step which the segemehl step
+depends on.</dd>
 </dl>
 </div>
 <div class="section" id="indices-and-tables">
@@ -704,11 +660,8 @@ a single stream.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api.html#module-abstract_source">abstract_source</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#module-abstract_step">abstract_step</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#module-pipeline">pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#module-task">task</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#module-unix_pipeline">unix_pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#pipeline-specific-modules">Pipeline-specific modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#miscellaneous-modules">Miscellaneous modules</a></li>
 </ul>
 </li>
 </ul>
@@ -739,15 +692,14 @@ a single stream.</p>
 <li><a class="reference internal" href="#submit-to-cluster-py">submit-to-cluster.py</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#sources">Sources</a><ul>
+<li><a class="reference internal" href="#steps">Steps</a><ul>
+<li><a class="reference internal" href="#source-steps">Source steps</a><ul>
 <li><a class="reference internal" href="#run-folder-source">Run folder source</a></li>
 <li><a class="reference internal" href="#fastq-source">FASTQ source</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#steps">Steps</a><ul>
 <li><a class="reference internal" href="#miscellaneous">Miscellaneous</a><ul>
 <li><a class="reference internal" href="#head">Head</a></li>
-<li><a class="reference internal" href="#break">Break</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#preprocessing">Preprocessing</a><ul>

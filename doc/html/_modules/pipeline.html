@@ -51,6 +51,7 @@
 <span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">csv</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">fscache</span>
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -61,7 +62,6 @@
 <span class="kn">import</span> <span class="nn">yaml</span>
 
 <span class="kn">import</span> <span class="nn">abstract_step</span>
-<span class="kn">import</span> <span class="nn">abstract_source</span>
 <span class="kn">import</span> <span class="nn">task</span> <span class="kn">as</span> <span class="nn">task_module</span>
 
 <span class="c"># an enum class, yanked from http://stackoverflow.com/questions/36932/whats-the-best-way-to-implement-an-enum-in-python</span>
@@ -89,7 +89,6 @@
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">states</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">([</span><span class="s">&#39;WAITING&#39;</span><span class="p">,</span> <span class="s">&#39;READY&#39;</span><span class="p">,</span> <span class="s">&#39;FINISHED&#39;</span><span class="p">])</span>
-    <span class="n">run_modes</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">([</span><span class="s">&#39;DRY_RUN&#39;</span><span class="p">,</span> <span class="s">&#39;TEST_RUN&#39;</span><span class="p">,</span> <span class="s">&#39;FULL&#39;</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         
@@ -103,62 +102,47 @@
 
         <span class="k">if</span> <span class="s">&#39;--even-if-dirty&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
             <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;--even-if-dirty&#39;</span><span class="p">)</span>
+            
         <span class="c"># the configuration as read from config.yaml</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
-        <span class="c"># dictionary of sample names =&gt; information</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">all_samples</span> <span class="o">=</span> <span class="p">{}</span>
-
-        <span class="c"># list of steps, steps are objects with inter-dependencies</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="c"># the run mode of the pipeline</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">run_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_modes</span><span class="o">.</span><span class="n">FULL</span>
-        <span class="k">if</span> <span class="s">&#39;--dry-run&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
-            <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;--dry-run&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">run_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_modes</span><span class="o">.</span><span class="n">DRY_RUN</span>
-        <span class="k">if</span> <span class="s">&#39;--test-run&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
-            <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;--test-run&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">run_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_modes</span><span class="o">.</span><span class="n">TEST_RUN</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">dry_run_cache</span> <span class="o">=</span> <span class="p">{}</span>
-
+        <span class="c"># dict of steps, steps are objects with inter-dependencies</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        
+        <span class="c"># topological order of steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topological_step_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_dependencies</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        This dict stores file dependencies within this step, but regardless</span>
+<span class="sd">        of step, output file tag or run ID. This dict has, for all output </span>
+<span class="sd">        files generated by the pipeline, a set of input files that output </span>
+<span class="sd">        file depends on.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">()</span>
 
         <span class="c"># collect all tasks</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task_for_task_id</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">all_tasks</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">run_id</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">get_run_ids</span><span class="p">()):</span>
-                <span class="n">task</span> <span class="o">=</span> <span class="n">task_module</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">run_id</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">all_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">task_for_task_id</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">task</span><span class="p">)]</span> <span class="o">=</span> <span class="n">task</span>
+        <span class="k">for</span> <span class="n">step_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">topological_step_order</span><span class="p">:</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="n">step_name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">abstract_step</span><span class="o">.</span><span class="n">AbstractSourceStep</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__bases__</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">run_index</span><span class="p">,</span> <span class="n">run_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">get_run_ids</span><span class="p">())):</span>
+                    <span class="n">task</span> <span class="o">=</span> <span class="n">task_module</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">run_index</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">all_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">task</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_for_task_id</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">ConfigurationException</span><span class="p">(</span><span class="s">&quot;Duplicate task ID </span><span class="si">%s</span><span class="s">. Use the &#39;step_name&#39; option to assign another step name.&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">task</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">task_for_task_id</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">task</span><span class="p">)]</span> <span class="o">=</span> <span class="n">task</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">tool_versions</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">check_tools</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_mode</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_modes</span><span class="o">.</span><span class="n">DRY_RUN</span><span class="p">:</span>
-            <span class="c"># fill the dry run cache with input files</span>
-            <span class="c"># fill dry_run_cache with source files</span>
-            <span class="k">for</span> <span class="n">run_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_run_info</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="k">for</span> <span class="n">annotation</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_run_info</span><span class="p">()[</span><span class="n">run_id</span><span class="p">][</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">files</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">dry_run_cache</span><span class="p">[</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-
 
     <span class="c"># read configuration and make sure it&#39;s good</span>
     <span class="k">def</span> <span class="nf">read_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c">#print &gt;&gt; sys.stderr, &quot;Reading configuration...&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s">&#39;config.yaml&#39;</span><span class="p">))</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;sources&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">ConfigurationException</span><span class="p">(</span><span class="s">&quot;Missing key: sources&quot;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;sources&#39;</span><span class="p">]:</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">keys</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">source_instance</span> <span class="o">=</span> <span class="n">abstract_source</span><span class="o">.</span><span class="n">get_source_class_for_key</span><span class="p">(</span><span class="n">key</span><span class="p">)(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
-            <span class="k">for</span> <span class="n">sample_id</span><span class="p">,</span> <span class="n">sample_info</span> <span class="ow">in</span> <span class="n">source_instance</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">sample_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_samples</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">ConfigurationException</span><span class="p">(</span><span class="s">&quot;Sample appears multiple times in sources: &quot;</span> <span class="o">+</span> <span class="n">sample_id</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">all_samples</span><span class="p">[</span><span class="n">sample_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">sample_info</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;destination_path&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">ConfigurationException</span><span class="p">(</span><span class="s">&quot;Missing key: destination_path&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;destination_path&#39;</span><span class="p">]):</span>
@@ -168,113 +152,97 @@
             <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;destination_path&#39;</span><span class="p">],</span> <span class="s">&#39;out&#39;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">build_steps</span><span class="p">()</span>
-
+        
     <span class="k">def</span> <span class="nf">build_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;steps&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">ConfigurationException</span><span class="p">(</span><span class="s">&quot;Missing key: steps&quot;</span><span class="p">)</span>
+        
+        <span class="n">re_simple_key</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;^[a-zA-Z0-9_]+$&#39;</span><span class="p">)</span>
+        <span class="n">re_complex_key</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;^([a-zA-Z0-9_]+)\s+\(([a-zA-Z0-9_]+)\)$&#39;</span><span class="p">)</span>
 
-        <span class="c"># stacks are used to handle dependencies between steps</span>
-        <span class="n">step_stack</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">indent_stack</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">last_indent</span> <span class="o">=</span> <span class="bp">None</span>
-
-        <span class="n">source_step</span> <span class="o">=</span> <span class="n">abstract_step</span><span class="o">.</span><span class="n">get_step_class_for_key</span><span class="p">(</span><span class="s">&#39;source&#39;</span><span class="p">)(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source_step</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_mode</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_modes</span><span class="o">.</span><span class="n">TEST_RUN</span><span class="p">):</span>
-            <span class="c"># this is a test run, append a head step which boild the</span>
-            <span class="c"># problem down to 1000 lines per input file</span>
-            <span class="n">head_step</span> <span class="o">=</span> <span class="n">abstract_step</span><span class="o">.</span><span class="n">get_step_class_for_key</span><span class="p">(</span><span class="s">&#39;head&#39;</span><span class="p">)(</span><span class="bp">self</span><span class="p">)</span>
-            <span class="n">head_step</span><span class="o">.</span><span class="n">add_dependency</span><span class="p">(</span><span class="n">source_step</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">head_step</span><span class="p">)</span>
-            <span class="n">source_step</span> <span class="o">=</span> <span class="n">head_step</span>
-            <span class="c"># now source_step points to head_step and everything else</span>
-            <span class="c"># depends on it, HARR HARR!</span>
-
-        <span class="n">steps_definition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;steps&#39;</span><span class="p">]</span>
-
-        <span class="c"># remove comments (from # to EOL)</span>
-        <span class="k">while</span> <span class="s">&#39;#&#39;</span> <span class="ow">in</span> <span class="n">steps_definition</span><span class="p">:</span>
-            <span class="n">p0</span> <span class="o">=</span> <span class="n">steps_definition</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s">&#39;#&#39;</span><span class="p">)</span>
-            <span class="n">p1</span> <span class="o">=</span> <span class="n">steps_definition</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">p0</span><span class="p">)</span>
-            <span class="n">temp</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">steps_definition</span><span class="p">)</span>
-            <span class="n">temp</span><span class="p">[</span><span class="n">p0</span><span class="p">:(</span><span class="n">p1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
-            <span class="n">steps_definition</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
-
-        <span class="n">steps_definition_offset</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">while</span> <span class="n">steps_definition_offset</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">steps_definition</span><span class="p">):</span>
-            <span class="c"># find next newline</span>
-            <span class="n">newline_index</span> <span class="o">=</span> <span class="n">steps_definition</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">steps_definition_offset</span><span class="p">)</span>
-            <span class="c"># if there&#39;s no newline, use the rest of the string</span>
-            <span class="k">if</span> <span class="n">newline_index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">newline_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">steps_definition</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-            <span class="n">line</span> <span class="o">=</span> <span class="n">steps_definition</span><span class="p">[</span><span class="n">steps_definition_offset</span><span class="p">:(</span><span class="n">newline_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
-            <span class="n">steps_definition_offset</span> <span class="o">=</span> <span class="n">newline_index</span> <span class="o">+</span> <span class="mi">1</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="n">block_mapping</span> <span class="o">=</span> <span class="bp">False</span>
-            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;{&#39;</span><span class="p">:</span>
-                <span class="n">block_mapping</span> <span class="o">=</span> <span class="bp">True</span>
-                <span class="c"># line ends with a { --&gt; find matching } and extend line</span>
-                <span class="n">level</span> <span class="o">=</span> <span class="mi">1</span>
-                <span class="k">while</span> <span class="n">level</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">c</span> <span class="o">=</span> <span class="n">steps_definition</span><span class="p">[</span><span class="n">steps_definition_offset</span><span class="p">]</span>
-                    <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s">&#39;{&#39;</span><span class="p">:</span>
-                        <span class="n">level</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="k">elif</span> <span class="n">c</span> <span class="o">==</span> <span class="s">&#39;}&#39;</span><span class="p">:</span>
-                        <span class="n">level</span> <span class="o">-=</span> <span class="mi">1</span>
-                    <span class="n">line</span> <span class="o">+=</span> <span class="n">c</span>
-                    <span class="n">steps_definition_offset</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="n">regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;(\s*)-\s([^\s]+)(\s\{([^\}]+)\})?&#39;</span><span class="p">)</span>
-            <span class="n">match</span> <span class="o">=</span> <span class="n">regex</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
-                <span class="n">indent</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-                <span class="n">step_name</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-                <span class="n">options_def</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-                <span class="n">options</span> <span class="o">=</span> <span class="p">{}</span>
-                <span class="k">if</span> <span class="n">options_def</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">block_mapping</span><span class="p">:</span>
-                        <span class="n">options_def</span> <span class="o">=</span> <span class="n">options_def</span><span class="o">.</span><span class="n">strip</span><span class="p">()[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-                    <span class="n">options</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">options_def</span><span class="p">)</span>
-
-                <span class="c"># determine class and instatiate it with options</span>
-                <span class="n">step_class</span> <span class="o">=</span> <span class="n">abstract_step</span><span class="o">.</span><span class="n">get_step_class_for_key</span><span class="p">(</span><span class="n">step_name</span><span class="p">)</span>
-                <span class="n">step</span> <span class="o">=</span> <span class="n">step_class</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-                <span class="n">step</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
-
-                <span class="c"># append step to steps list</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">last_indent</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
-                    <span class="c"># level_shift &gt; 0 if indent increase, &lt; 0 if decrease, 0 if constant</span>
-                    <span class="n">level_shift</span> <span class="o">=</span> <span class="n">indent</span> <span class="o">-</span> <span class="n">last_indent</span>
-
-                    <span class="k">if</span> <span class="n">level_shift</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="c"># going down one level, push items on stacks</span>
-                        <span class="n">indent_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">last_indent</span><span class="p">)</span>
-                        <span class="n">step_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
-                    <span class="k">elif</span> <span class="n">level_shift</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="c"># going up, pop items from stack</span>
-                        <span class="n">pop_indent</span> <span class="o">=</span> <span class="bp">None</span>
-                        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">indent_stack</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">indent_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">indent</span><span class="p">:</span>
-                            <span class="n">pop_indent</span> <span class="o">=</span> <span class="n">indent_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-                            <span class="n">pop_step</span> <span class="o">=</span> <span class="n">step_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-                        <span class="k">if</span> <span class="n">pop_indent</span> <span class="o">!=</span> <span class="n">indent</span><span class="p">:</span>
-                            <span class="k">raise</span> <span class="n">ConfigurationException</span><span class="p">(</span><span class="s">&quot;invalid indentation: &#39;&quot;</span> <span class="o">+</span> <span class="n">line</span> <span class="o">+</span> <span class="s">&quot;&#39;&quot;</span><span class="p">)</span>
-
-                <span class="c"># if there is an upstream step, add it as a dependency</span>
-                <span class="c"># otherwise, link it to the source step which provides the</span>
-                <span class="c"># input files</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">step_stack</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">step</span><span class="o">.</span><span class="n">add_dependency</span><span class="p">(</span><span class="n">step_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">step</span><span class="o">.</span><span class="n">add_dependency</span><span class="p">(</span><span class="n">source_step</span><span class="p">)</span>
-
-                <span class="n">last_indent</span> <span class="o">=</span> <span class="n">indent</span>
-
+        <span class="c"># step one: instantiate all steps</span>
+        <span class="k">for</span> <span class="n">step_key</span><span class="p">,</span> <span class="n">step_description</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;steps&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            
+            <span class="c"># the step keys in the configuration may be either:</span>
+            <span class="c"># - MODULE_NAME </span>
+            <span class="c"># - DIFFERENT_STEP_NAME\s+\(MODULE_NAME\)</span>
+            <span class="n">step_name</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="n">module_name</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">if</span> <span class="n">re_simple_key</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">step_key</span><span class="p">):</span>
+                <span class="n">step_name</span> <span class="o">=</span> <span class="n">step_key</span>
+                <span class="n">module_name</span> <span class="o">=</span> <span class="n">step_key</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">ConfigurationException</span><span class="p">(</span><span class="s">&quot;Invalid steps definition, error in line: &#39;&quot;</span> <span class="o">+</span> <span class="n">line</span> <span class="o">+</span> <span class="s">&quot;&#39;.&quot;</span><span class="p">)</span>
+                <span class="n">match</span> <span class="o">=</span> <span class="n">re_complex_key</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">step_key</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                    <span class="n">step_name</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">module_name</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">step_name</span> <span class="o">==</span> <span class="s">&#39;temp&#39;</span><span class="p">:</span>
+                <span class="c"># A step cannot be named &#39;temp&#39; because we need the out/temp</span>
+                <span class="c"># directory to store temporary files.</span>
+                <span class="k">raise</span> <span class="n">ConfigurationException</span><span class="p">(</span><span class="s">&quot;A step name cannot be &#39;temp&#39;.&quot;</span><span class="p">)</span>
+            
+            <span class="n">step_class</span> <span class="o">=</span> <span class="n">abstract_step</span><span class="o">.</span><span class="n">AbstractStep</span><span class="o">.</span><span class="n">get_step_class_for_key</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="n">step_class</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            
+            <span class="n">step</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">step_name</span><span class="p">)</span>
+            <span class="n">step</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">step_description</span><span class="p">)</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="n">step_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">step</span>
+            
+        <span class="c"># step two: set dependencies</span>
+        <span class="k">for</span> <span class="n">step_name</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c"># &#39;_depends&#39; is not required for AbstractSourceStep classes</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">abstract_step</span><span class="o">.</span><span class="n">AbstractSourceStep</span><span class="p">):</span>
+                <span class="k">if</span> <span class="s">&#39;_depends&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">ConfigurationException</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> must not have dependencies &quot;</span>
+                        <span class="s">&quot;because it is an AbstractSourceStep (remove the &quot;</span>
+                        <span class="s">&quot;_depends key).&quot;</span> <span class="o">%</span> <span class="n">step_id</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;_depends&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">ConfigurationException</span><span class="p">(</span><span class="s">&quot;Missing key in step &#39;</span><span class="si">%s</span><span class="s">&#39;: &quot;</span>
+                        <span class="s">&quot;_depends (set to null if the step has no dependencies).&quot;</span> 
+                        <span class="o">%</span> <span class="n">step_id</span><span class="p">)</span>
+                <span class="n">depends</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s">&#39;_depends&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">depends</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">temp_list</span> <span class="o">=</span> <span class="n">depends</span>
+                    <span class="k">if</span> <span class="n">depends</span><span class="o">.</span><span class="n">__class__</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+                        <span class="n">temp_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">depends</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">temp_list</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="n">ConfigurationException</span><span class="p">(</span><span class="s">&quot;Step </span><span class="si">%s</span><span class="s"> specifies &quot;</span>
+                                <span class="s">&quot;an undefined dependency: </span><span class="si">%s</span><span class="s">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">step_name</span><span class="p">,</span> <span class="n">d</span><span class="p">))</span>
+                        <span class="n">step</span><span class="o">.</span><span class="n">add_dependency</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="n">d</span><span class="p">])</span>
+                        
+        <span class="c"># step three: perform topological sort, raise a ConfigurationException</span>
+        <span class="c"># if there&#39;s a cycle (yeah, the algorithm is O(n^2), tsk, tsk...)</span>
+        
+        <span class="n">unassigned_steps</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">assigned_steps</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topological_step_order</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">unassigned_steps</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c"># choose all tasks which have all dependencies resolved, either</span>
+            <span class="c"># because they have no dependencies or are already assigned</span>
+            <span class="n">next_steps</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">step_name</span> <span class="ow">in</span> <span class="n">unassigned_steps</span><span class="p">:</span>
+                <span class="n">is_ready</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="n">step_name</span><span class="p">]</span><span class="o">.</span><span class="n">dependencies</span><span class="p">:</span>
+                    <span class="n">dep_name</span> <span class="o">=</span> <span class="n">dep</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">dep_name</span> <span class="ow">in</span> <span class="n">assigned_steps</span><span class="p">:</span>
+                        <span class="n">is_ready</span> <span class="o">=</span> <span class="bp">False</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="n">is_ready</span><span class="p">:</span>
+                    <span class="n">next_steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">next_steps</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ConfigurationException</span><span class="p">(</span><span class="s">&quot;There is a cycle in the step dependencies.&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">step_name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">next_steps</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">topological_step_order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step_name</span><span class="p">)</span>
+                <span class="n">assigned_steps</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">step_name</span><span class="p">)</span>
+                <span class="n">unassigned_steps</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">step_name</span><span class="p">)</span>
+        
 
 <div class="viewcode-block" id="Pipeline.print_tasks"><a class="viewcode-back" href="../api.html#pipeline.Pipeline.print_tasks">[docs]</a>    <span class="k">def</span> <span class="nf">print_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
@@ -289,9 +257,16 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">count</span><span class="p">:</span>
                 <span class="n">count</span><span class="p">[</span><span class="n">state</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">count</span><span class="p">[</span><span class="n">state</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="k">print</span><span class="p">(</span><span class="s">&#39;[&#39;</span> <span class="o">+</span> <span class="n">task</span><span class="o">.</span><span class="n">get_task_state</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">+</span> <span class="s">&#39;] &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">task</span><span class="p">))</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;tasks: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_tasks</span><span class="p">))</span> <span class="o">+</span> <span class="s">&#39; total, &#39;</span> <span class="o">+</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">count</span><span class="p">[</span><span class="n">_</span><span class="p">])</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">_</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">count</span><span class="o">.</span><span class="n">keys</span><span class="p">())]))</span>
-</div>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;[</span><span class="si">%s</span><span class="s">] </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">get_task_state</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">task</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;tasks: </span><span class="si">%d</span><span class="s"> total, </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_tasks</span><span class="p">),</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">count</span><span class="p">[</span><span class="n">_</span><span class="p">])</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">_</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">count</span><span class="o">.</span><span class="n">keys</span><span class="p">())])))</span>
+        </div>
+    <span class="k">def</span> <span class="nf">print_source_runs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">step_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">topological_step_order</span><span class="p">:</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="n">step_name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">abstract_step</span><span class="o">.</span><span class="n">AbstractSourceStep</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__bases__</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">run_id</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">get_run_ids</span><span class="p">()):</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s">&quot;[</span><span class="si">%s</span><span class="s">] </span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">get_run_state</span><span class="p">(</span><span class="n">run_id</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">step</span><span class="p">,</span> <span class="n">run_id</span><span class="p">))</span>
+
 <div class="viewcode-block" id="Pipeline.has_unfinished_tasks"><a class="viewcode-back" href="../api.html#pipeline.Pipeline.has_unfinished_tasks">[docs]</a>    <span class="k">def</span> <span class="nf">has_unfinished_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_list</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        returns True if there is at least one task in task_list which is not finished yet</span>
@@ -305,7 +280,13 @@
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">ready_tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">task</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">task_list</span> <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">get_run_state</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">run_id</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">READY</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">ready_tasks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</div>
+    </div>
+    <span class="k">def</span> <span class="nf">add_file_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">input_paths</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">output_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_dependencies</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;Different steps/runs/tags want to create the same output file: </span><span class="si">%s</span><span class="s">.&quot;</span> <span class="o">%</span>
+                <span class="n">output_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_dependencies</span><span class="p">[</span><span class="n">output_path</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">input_paths</span><span class="p">)</span>
+
 <div class="viewcode-block" id="Pipeline.check_tools"><a class="viewcode-back" href="../api.html#pipeline.Pipeline.check_tools">[docs]</a>    <span class="k">def</span> <span class="nf">check_tools</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        checks whether all tools references by the configuration are available </span>
@@ -335,15 +316,7 @@
                 <span class="n">expected_exit_code</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s">&#39;exit_code&#39;</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">exit_code</span> <span class="o">!=</span> <span class="n">expected_exit_code</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">ConfigurationException</span><span class="p">(</span><span class="s">&quot;Tool check failed for &quot;</span> <span class="o">+</span> <span class="n">tool_id</span> <span class="o">+</span> <span class="s">&quot;: &quot;</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39; - exit code is: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">exit_code</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39; (expected &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">expected_exit_code</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;)&#39;</span><span class="p">)</span>
-
-    <span class="c"># returns a short description of the configured pipeline</span></div>
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
-        <span class="n">s</span> <span class="o">+=</span> <span class="s">&quot;Number of samples: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_samples</span><span class="p">))</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
-        <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_samples</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
-            <span class="n">s</span> <span class="o">+=</span> <span class="s">&quot;- &quot;</span> <span class="o">+</span> <span class="n">sample</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
-        <span class="k">return</span> <span class="n">s</span>
-
+</div>
 <div class="viewcode-block" id="Pipeline.notify"><a class="viewcode-back" href="../api.html#pipeline.Pipeline.notify">[docs]</a>    <span class="k">def</span> <span class="nf">notify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        prints a notification to the screen and optionally delivers the</span>

@@ -1,7 +1,7 @@
 ..
   This is the documentation for rnaseq-pipeline. Please keep lines under
   80 characters if you can and start each sentence on a new line as it 
-  decreases maintenance.
+  decreases maintenance and makes diffs more readable.
   
 .. title:: rnaseq-pipeline
 
@@ -49,15 +49,6 @@ This leaves you with:
 Core aspects
 ------------
 
-**Simplicity:**
-
-* The entire processing pipeline is described via a configuration file. 
-  Steps are defined in a tree, and output files are written into a directory 
-  structure mirroring this tree.
-* Interaction with the pipeline happens through a handful of scripts which 
-  are used to monitor the state of the pipeline and execute individual or all 
-  remaining steps.
-
 **Robustness:**
 
 * All steps write their output files to a temporary location. 
@@ -77,15 +68,24 @@ Core aspects
 * Comprehensive annotations are written to the output directories, allowing 
   for later investigation about what exactly happened.
       
+**Simplicity:**
+
+* The entire processing pipeline is described via a configuration file. 
+  Steps are defined in a directed acyclic graph (DAG).
+* Interaction with the pipeline happens through a handful of scripts which 
+  are used to monitor the state of the pipeline and execute individual or all 
+  remaining steps.
+
 Design
 ------
 
 The central part of the pipeline is its definition of the steps which are to 
 be carried out.
-Steps are organized in a dependency tree -- every step has one parent step,
-which may in turn have another parent step, and so on.
-At the root of the tree, there is a special step called ``source`` which
-provides the input samples.
+Steps are organized in a dependency graph, or directed acyclic graph -- every 
+step may have one or more parent steps, which may in turn have other parent 
+steps, and so on.
+Steps without parents are usually sources which provide source files, for
+example FASTQ files with the raw sequences obtained from the sequencer.
 
 Each step defines a number of runs and each run represents a piece of the
 entire data evaluation, typically at the level of a single sample.
@@ -93,8 +93,10 @@ A certain *run* of a certain *step* is called a *task*.
 While the steps only describe what needs to be done on a very abstract level,
 it is through the individual runs of each step that a pipeline-wide list of 
 actual tasks becomes available.
+Each run may provide a number of output files which depend on output files
+of one or several runs from parent steps.
 
-The ``source`` step defines a run for every input sample, and following steps
+Source steps define a run for every input sample, and following steps
 may:
 
 * define the same number of runs, 
@@ -102,15 +104,6 @@ may:
   experiment should be treated separately),
 * define fewer runs (usually at the end of a pipeline, where results are
   summarized).
-
-.. NOTE:: The design decision that steps are defined as a tree instead 
-   of a full directed acyclic graph means that a step cannot have more than 
-   one direct parent, like a directory in a file system cannot have more than 
-   one parent directory. 
-   This means that a step cannot use the output of two different steps as its 
-   input. 
-   However, any step may have more than one
-   input or output file.
 
 Setup
 =====
@@ -127,7 +120,8 @@ required Python environment (which will be located in ``./python_env/``)::
 There's no harm in accidentally running this script multiple times. 
 Also, it will compile ``cat4m``, a tool which can be found at 
 ``./tools/cat4m`` and which is able to read arbitrary input files in chunks 
-of 4 MB and prints them to stdout.
+of 4 MB and prints them to stdout (we'll need this often in the pipeline,
+as ``cat`` reads in system-default blocks of 32 kB).
 
 The configuration file
 ----------------------
@@ -140,37 +134,39 @@ Here is a sample configuration:
 .. code-block:: yaml
 
     # This is the rnaseq-pipeline configuration file.
-    email: micha.specht@gmail.com
-    sources:
-    - run_folder_source: { path: in }
-    destination_path: out
-    steps: |
-        - cutadapt {
-            adapter-R1: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG"
-            adapter-R2: "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT"
-        }
-            - fix_cutadapt
+
+    destination_path: "/home/michael/test-pipeline/out"
+
+    steps:
+        fastq_source:
+            pattern: /home/michael/test-pipeline/fastq/*.fastq.gz
+            group: (Sample_COPD_\d+)_R[12]-head.fastq.gz
+            indices: copd-barcodes.csv
+            paired_end: yes
+            
+        cutadapt:
+            _depends: fastq_source
+            adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG
+            adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+            
     tools:
         cutadapt:
-            path: 'tools/cutadapt-1.2.1/bin/cutadapt'
+            path: /home/michael/Desktop/rnaseq-pipeline/tools/cutadapt-1.2.1/bin/cutadapt
             get_version: '--version'
         pigz:
-            path: 'pigz'
+            path: pigz
             get_version: '--version'
-        dd:
-            path: 'dd'
+        head:
+            path: head
             get_version: '--version'
+        cat4m:
+            path: ./tools/cat4m
 
 In the configuration, the following aspects of the pipeline are defined:
 
-* ``sources`` -- there can be multiple sources of different types:
-
-  * run folders
-  * plain fastq.gz files with additional information
-  
 * ``destination_path`` -- this is where result files, annotations and 
   temporary files are written to
-* ``steps`` -- defines the processing step arranged in a tree
+* ``steps`` -- defines the processing step arranged in a DAG
 * ``tools`` -- defines all tools used in the pipeline and how to determine 
   their versions (for later reference)
 * ``email`` -- when submitting jobs on a cluster, messages will be sent to 
@@ -193,18 +189,20 @@ All scripts have a couple of properties in common:
   If ``out`` already exists, it is left untouched.
 
 There are a couple of global command line parameters which are valid for all 
-scripts:
+scripts (well, actually, it's only one):
 
 * ``--even-if-dirty``:
     Before doing anything else, the pipeline checks whether its source code 
     has been modified in any way via Git. 
     If yes, processing is stopped immediately unless this flag is specified.
-* ``--test-run``:
-    When this parameter is specified, a ``head`` step is placed before all 
-    first-level steps in the step tree, which returns the first 1000 lines 
-    of every input file. 
-    That way, a pipeline can be tested very quickly with a small input data 
-    set.
+
+..
+    * ``--test-run``:
+        When this parameter is specified, a ``head`` step is placed before all 
+        first-level steps in the step tree, which returns the first 1000 lines 
+        of every input file. 
+        That way, a pipeline can be tested very quickly with a small input data 
+        set.
 
 In the following, the scripts are described in detail.
 
@@ -232,25 +230,26 @@ Here is an example output::
     [r] cutadapt/RIB0000784-R2
     [r] cutadapt/RIB0000770-R2
     [r] cutadapt/RIB0000770-R1
-    [w] cutadapt/fix_cutadapt/RIB0000770
-    [w] cutadapt/fix_cutadapt/RIB0000784
+    [w] fix_cutadapt/RIB0000770
+    [w] fix_cutadapt/RIB0000784
     tasks: 6 total, 4 ready, 2 waiting
 
-Here is another example output with ``--test-run`` specified on the command 
-line. 
-Here, all top-level steps are prepended with a ``head`` step, which is 
-reflected in the task IDs::
+..
+    Here is another example output with ``--test-run`` specified on the command 
+    line. 
+    Here, all top-level steps are prepended with a ``head`` step, which is 
+    reflected in the task IDs::
 
-    $ ./status.py --test-run
-    [r] head/cutadapt/RIB0000784
-    [r] head/cutadapt/RIB0000770
-    [w] head/cutadapt/RIB0000784-R1
-    [w] head/cutadapt/RIB0000784-R2
-    [w] head/cutadapt/RIB0000770-R2
-    [w] head/cutadapt/RIB0000770-R1
-    [w] head/cutadapt/fix_cutadapt/RIB0000770
-    [w] head/cutadapt/fix_cutadapt/RIB0000784
-    tasks: 8 total, 2 ready, 6 waiting
+        $ ./status.py --test-run
+        [r] head/cutadapt/RIB0000784
+        [r] head/cutadapt/RIB0000770
+        [w] head/cutadapt/RIB0000784-R1
+        [w] head/cutadapt/RIB0000784-R2
+        [w] head/cutadapt/RIB0000770-R2
+        [w] head/cutadapt/RIB0000770-R1
+        [w] head/cutadapt/fix_cutadapt/RIB0000770
+        [w] head/cutadapt/fix_cutadapt/RIB0000784
+        tasks: 8 total, 2 ready, 6 waiting
 
 Detailed information about a specific task can be obtained by specifying the 
 task ID on the command line::
@@ -339,14 +338,74 @@ parallel.
 Different quotas can be defined for each step: because ``cutadapt`` is 
 highly IO-efficient, it has a higher quota.
 
-  
-Sources
-=======
+Steps
+=====
 
-In the following, the different types of sources are described in detail.
+Steps are defined in a directed acyclic graph. 
+In the configuration, the ``steps`` dictionary contains a key for every
+step, therefore each step must have a unique name.
+There are two ways to name a step:
+
+.. code-block:: yaml
+
+    steps:
+        # here, the step name is unchanged, it's a cutadapt step which is also called 'cutadapt'
+        cutadapt:
+            ... # options following
+            
+        # here, we also insert a cutadapt step, but we give it a different name: 'clip_adapters'
+        clip_adapters (cutadapt):
+            ... # options following
+            
+Source steps are special in the way that they provide files without doing
+anything, and they are usually the first steps in a pipeline because they
+have no dependencies.
+Regular steps, on the other hand, need to define their dependencies via
+the ``_depends`` key which may either be ``null``, a step name, or a list
+of step names.
+
+.. code-block:: yaml
+
+    steps:
+        # the source step which depends on nothing
+        fastq_source:
+            # ...
+            
+        # the first processing step, which depends on the sources
+        cutadapt:
+            _depends: fastq_source
+        
+        # the second processing step, which depends on the cutadapt step
+        fix_cutadapt:
+            _depends: cutadapt
+                
+If you want to cut off entire branches of the step graph, set the ``_BREAK`` 
+flag in a step definition, which will force the step to produce no runs
+(which will in turn give all following steps nothing to do, thereby 
+effectively disabling these steps):
+        
+
+.. code-block:: yaml
+
+    steps:
+        fastq_source:
+            # ...
+            
+        cutadapt:
+            _depends: fastq_source
+        
+        # this step and all following steps will not be executed
+        fix_cutadapt:
+            _depends: cutadapt
+            _BREAK: true
+                
+Source steps
+------------
+
+Source steps provide input files for the pipeline, such as RNA sequences.
 
 Run folder source
------------------
+~~~~~~~~~~~~~~~~~
 
 Here's an example:
 
@@ -361,7 +420,7 @@ It also makes sure that index information for all samples is coherent and
 unambiguous.
 
 FASTQ source
-------------
+~~~~~~~~~~~~
 
 Here's an example:
 
@@ -385,41 +444,6 @@ Indices are read from the CSV file specified by ``indices``.
     .. autoclass:: AbstractSource
         :members:
     
-Steps
-=====
-
-Steps are defined in a dependency tree. 
-However, the syntax is a bit peculiar: The ``|`` after ``steps:`` is 
-YAML-specific syntax and it defines a string spanning multiple lines in which 
-line breaks and indentation is maintained. 
-The string is later parsed by the pipeline and the most important parts are 
-the individual steps which are to be performed. 
-The relationship betweens steps is declared via indentation.
-
-.. NOTE:: Why do we need the ``|`` symbol in the steps definition? 
-    Neither the list nor the dictionary syntax allow for a concise definition 
-    of a step tree with options. 
-    Think of the step definition as a nested list with an option hash 
-    attached to every item.
-
-Steps may have options, which must be placed in between ``{`` curly braces 
-``}``. 
-Options can be specified on a single line (in this case, individual key/value 
-pairs must be separated by comma) or may span multiple lines, following 
-standard YAML block syntax:
-
-.. code-block:: yaml
-
-    # here, options are written in a single line, thus the comma is required
-    - cutadapt { a: 123, b: 456 }
-    
-    # YAML block syntax:
-    - fix_cutadapt { 
-        a: 123
-        b: 456
-    }
-
-
 Miscellaneous
 -------------
 
@@ -445,26 +469,6 @@ Head
     }
 
 .. autosimpleclass:: head.Head
-    
-Break
-~~~~~
-
-.. graphviz::
-
-    digraph foo {
-        rankdir=LR;
-        splines=true;
-        graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
-        node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color="#404040", fillcolor="#ffffff"];
-        edge [fontname = Helvetica, fontsize = 12, color="#404040"];
-
-        break [fillcolor = "#fce94f", color = "#c4a000"];
-        in_any [label = "any (*)"];
-        
-        in_any -> break;
-    }
-
-.. autosimpleclass:: break.Break
     
 Preprocessing
 -------------
@@ -608,27 +612,6 @@ Steps should be able to access all ancestors:
     All upstream steps should be accessible via their step name or output 
     file key.
     
-Custom step names:
-    In the configuration, it should be possible to assign a step name other
-    than the default step name.
-    Otherwise it's not possible to have something like this:
-    
-    .. graphviz::
-        digraph foo {
-            rankdir=LR;
-            splines=true;
-            graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
-            node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color="#404040", fillcolor="#ffffff"];
-            edge [fontname = Helvetica, fontsize = 12, color="#404040"];
-
-            sam_to_bam [fillcolor = "#fce94f", color = "#c4a000"];
-            remapper1 [label = "remapper 1", fillcolor = "#fce94f", color = "#c4a000"];
-            remapper2 [label = "remapper 2\n(with alternative options)", fillcolor = "#fce94f", color = "#c4a000"];
-
-            sam_to_bam -> remapper1
-            sam_to_bam -> remapper2
-        }
-    
 On-the-fly steps:
     We need a way to skip writing certain output files and have them flow 
     temporarily through a pipe only, if possible. 
@@ -664,6 +647,13 @@ On-the-fly steps:
                 graph [style=dashed, color="#808080"];
             }
         }
+        
+Miscellaneous input files:
+    Genome files and their index such as used by segemehl should not be defined
+    via a fixed path.
+    For traceability, it would be preferable to specify the hg19.fa URL and
+    checksum and have the index generated by a step which the segemehl step
+    depends on.
 
 Indices and tables
 ==================

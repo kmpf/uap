@@ -65,7 +65,7 @@ def main():
     def submit_task(task, dependent_tasks_in = []):
         dependent_tasks = copy.copy(dependent_tasks_in)
 
-        step_name = next_task.step.step_name
+        step_name = next_task.step.get_step_name()
         if not step_name in quota_jids:
             size = quotas[step_name] if step_name in quotas else quotas['default']
             quota_jids[step_name] = [None for _ in range(size)]
@@ -81,7 +81,7 @@ def main():
             file_hash[path].append(str(task))
 
         submit_script = copy.copy(template)
-        submit_script = submit_script.replace("#{CORES}", str(task.step._cores))
+        submit_script = submit_script.replace("#{CORES}", str(task.step.cores))
         email = 'nobody@example.com'
         if 'email' in p.config:
             email = p.config['email']
@@ -92,10 +92,7 @@ def main():
         args.append('"' + str(task) + '"')
         submit_script = submit_script.replace("#{COMMAND}", ' '.join(args))
 
-        temp = str(task).split('/')
-        for _ in range(len(temp) - 1):
-            temp[_] = temp[_][0]
-        long_task_id = ''.join(temp[0:-1]) + '_' + temp[-1]
+        long_task_id = '%s_%d' % (str(task.step), task.run_index + 1)
         short_task_id = long_task_id[0:15]
 
         qsub_args = ['qsub', '-N', short_task_id]
@@ -118,7 +115,7 @@ def main():
             if not str(task) in task_wish_list:
                 really_submit_this = False
         if really_submit_this:
-            sys.stdout.write("Submitting task " + str(task) + " with " + str(task.step._cores) + " cores => ")
+            sys.stdout.write("Submitting task " + str(task) + " with " + str(task.step.cores) + " cores => ")
             process = subprocess.Popen(qsub_args, bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
             process.stdin.write(submit_script)
             process.stdin.close()
@@ -133,7 +130,7 @@ def main():
 
             job_id_for_task[str(task)] = job_id
 
-            print(job_id)
+            print("%s (%s)" % (job_id, short_task_id))
             if len(dependent_tasks) > 0:
                 print(" - with dependent tasks: " + ', '.join(dependent_tasks))
         tasks_left.remove(task)
