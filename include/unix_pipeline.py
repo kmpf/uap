@@ -41,7 +41,7 @@ sha1_checksum_for_file = {}
 
 up_log = []
 copy_thread_reports = {}
-pipeline_instances = []
+seal_these_pipeline_instances = []
 
 def clear():
     ok_to_fail = list()
@@ -50,7 +50,7 @@ def clear():
     sha1_checksum_for_file = dict()
     up_log = list()
     copy_thread_reports = dict()
-    pipeline_instances = list()
+    seal_these_pipeline_instances = list()
 
 def log(message):
     '''
@@ -204,8 +204,12 @@ def wait():
     '''
     
     # Seal all pipelines, i. e. add a consumer to the end
-    for p in pipeline_instances:
+    global seal_these_pipeline_instances
+    
+    for p in seal_these_pipeline_instances:
         p.seal()
+        
+    seal_these_pipeline_instances = list()
         
     something_went_wrong = None
     while True:
@@ -262,7 +266,7 @@ class UnixPipeline(object):
     def __init__(self):
         self.pipeline_procs = []
         self.use_stdin = subprocess.PIPE
-        pipeline_instances.append(self)
+        seal_these_pipeline_instances.append(self)
 
     def append(self, args, stdout_path = None, stderr_path = None):
         '''
@@ -278,9 +282,13 @@ class UnixPipeline(object):
         upstream_procs[proc.pid] = self.pipeline_procs[0:-1]
 
     def seal(self):
-        if os.fork() == 0:
+        pid = os.fork()
+        if pid == 0:
             while True:
                 block = os.read(self.use_stdin, COPY_BLOCK_SIZE)
                 if len(block) == 0:
                     break
             os._exit(0)
+        else:
+            log("Launched a null consumer with PID %d." % pid)
+            
