@@ -69,9 +69,6 @@
 
 <div class="viewcode-block" id="AbstractStep"><a class="viewcode-back" href="../api.html#abstract_step.AbstractStep">[docs]</a><span class="k">class</span> <span class="nc">AbstractStep</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     
-    <span class="n">cores</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">connections</span> <span class="o">=</span> <span class="p">[]</span>
-    
     <span class="n">fsc</span> <span class="o">=</span> <span class="n">fscache</span><span class="o">.</span><span class="n">FSCache</span><span class="p">()</span>
     
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">):</span>
@@ -105,6 +102,10 @@
 <span class="sd">        The temporary output directory the step is using. Only set when</span>
 <span class="sd">        the step is being run.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cores</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_name</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_name</span> <span class="o">=</span> <span class="n">step_name</span>
@@ -172,12 +173,11 @@
                     <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;Run IDs must not contain a slash (&#39;/&#39;): </span><span class="si">%s</span><span class="s"> &quot;</span>
                         <span class="s">&quot;returns a run called </span><span class="si">%s</span><span class="s">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">))</span>
                 <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;out/&#39;</span> <span class="o">+</span> <span class="n">tag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">connections</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;out/&#39;</span> <span class="o">+</span> <span class="n">tag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="p">:</span>
                         <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;Invalid output_file tag &#39;</span><span class="si">%s</span><span class="s">&#39; in </span><span class="si">%s</span><span class="s">. &quot;</span>
-                            <span class="s">&quot;Keys must be specified via the &#39;connections&#39; &quot;</span>
-                            <span class="s">&quot;class member (you might want to add &quot;</span>
-                            <span class="s">&quot;connections.append(&#39;out/</span><span class="si">%s</span><span class="s">&#39;)).&quot;</span> 
-                            <span class="o">%</span> <span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">tag</span><span class="p">))</span>
+                            <span class="s">&quot;You might want to add self.add_connection(&#39;out/</span><span class="si">%s</span><span class="s">&#39;)&quot;</span>
+                            <span class="s">&quot;to the constructor of </span><span class="si">%s</span><span class="s">.&quot;</span> 
+                            <span class="o">%</span> <span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">tag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">))</span>
             
             <span class="k">for</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">run_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_info</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -357,7 +357,7 @@
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Return full path to a configured tool.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;tools&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s">&#39;path&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
     </div>
 <div class="viewcode-block" id="AbstractStep.get_temporary_path"><a class="viewcode-back" href="../api.html#abstract_step.AbstractStep.get_temporary_path">[docs]</a>    <span class="k">def</span> <span class="nf">get_temporary_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">suffix</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
@@ -399,7 +399,16 @@
             <span class="k">print</span><span class="p">(</span><span class="n">classes</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">StandardError</span><span class="p">(</span><span class="s">&quot;need exactly one subclass of AbstractStep in &quot;</span> <span class="o">+</span> <span class="n">key</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">classes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
-    </div></div>
+    </div>
+    <span class="k">def</span> <span class="nf">set_cores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cores</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cores</span> <span class="o">=</span> <span class="n">cores</span>
+
+    <span class="k">def</span> <span class="nf">add_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">connection</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">connection</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">require_tool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">[</span><span class="n">tool</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pipeline</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;tools&#39;</span><span class="p">][</span><span class="n">tool</span><span class="p">][</span><span class="s">&#39;path&#39;</span><span class="p">]</span>
+    </div>
 <div class="viewcode-block" id="AbstractSourceStep"><a class="viewcode-back" href="../api.html#abstract_step.AbstractSourceStep">[docs]</a><span class="k">class</span> <span class="nc">AbstractSourceStep</span><span class="p">(</span><span class="n">AbstractStep</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A subclass all source steps inherit from and which distinguishes source</span>
