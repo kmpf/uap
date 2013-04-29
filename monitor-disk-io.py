@@ -1,9 +1,24 @@
 #!./python_env/bin/python
 
-# usage: ./monitor-disk-io.py ./run-locally.py [task ID]
+# Run this tool in two stages: 
+#
+# 1. Collect data: ./monitor-disk-io.py [command]
+# 2. Print statistics: ./monitor-disk-io.py
+# 3. $$$
+#
+# The first command will run strace and write the output to 
+# _monitor_disk_io/strace-out.txt. The second call (without any arguments)
+# will parse that file and try to find out which file every read, write,
+# and seek corresponds to.
+# If you want to profile a BASH command, put it in a script and pass the
+# path of that script (i. e. BASH voodoo is not allowed here but can be
+# accomplished if a BASH script is used).
+
+WRITE_PROC_FILES = False
 
 import sys
 import copy
+import glob
 import subprocess
 import os
 import re
@@ -11,29 +26,33 @@ import yaml
 
 proc_files = {}
 
+if not os.path.exists('_monitor_disk_io'):
+    os.mkdir('_monitor_disk_io')
+
 if len(sys.argv) > 1:
     args = ["strace", "-f", "-o", '/dev/stderr']
     args.extend(sys.argv[1:])
     p = subprocess.Popen(args, stderr = subprocess.PIPE)
     strace_out = p.stderr
-    with open('strace-out.txt', 'w') as f:
+    with open('_monitor_disk_io/strace-out.txt', 'w') as f:
         for line in strace_out:
             f.write(line)
     exit(0)
 
-strace_out = open('strace-out.txt', 'r')
+strace_out = open('_monitor_disk_io/strace-out.txt', 'r')
 
-os.system("rm strace-procs/*")
-os.system("mkdir -p strace-procs")
+if len(glob.glob('_monitor_disk_io/*.proc.txt')) > 0:
+    os.system("rm _monitor_disk_io/*.proc.txt")
 
 path_for_pid_and_fd = {}
 stats = {}
 
 def handle_line(pid, line):
     line = line.strip()
-    if not pid in proc_files:
-        proc_files[pid] = open("strace-procs/strace-out." + pid + ".txt", 'w')
-    proc_files[pid].write(line + "\n")
+    if WRITE_PROC_FILES:
+        if not pid in proc_files:
+            proc_files[pid] = open("_monitor_disk_io/%s.proc.txt" % pid, 'w')
+        proc_files[pid].write(line + "\n")
     m = re.search('^(\w+)\((.*)\)\s+=\s+(.+)$', line)
     if m:
         command = str(m.group(1))
@@ -44,34 +63,22 @@ def handle_line(pid, line):
                 if not retval in path_for_pid_and_fd:
                     path_for_pid_and_fd[retval] = {}
                 path_for_pid_and_fd[retval][_] = copy.copy(path_for_pid_and_fd[pid][_])
-                #if retval == '17893':
-                    #print('------')
-                    #print(yaml.dump(path_for_pid_and_fd[retval], default_flow_style = False))
-                    #print('------')
-            #if retval == '6767':
-                #print(yaml.dump(path_for_pid_and_fd[retval], default_flow_style = False))
 
         if command == 'dup2':
-            #print(pid + ' ' + command + ' ' + args + ' ' + retval)
             fds = [_.strip() for _ in args.split(',')]
             try:
                 path_for_pid_and_fd[pid][fds[1]] = copy.copy(path_for_pid_and_fd[pid][fds[0]])
             except:
                 path_for_pid_and_fd[pid][fds[1]] = '[unknown]'
-            #if pid == '6764':
-                #print(yaml.dump(path_for_pid_and_fd[pid], default_flow_style = False))
 
         if command == 'open':
-            #print(pid + ' ' + command + ' ' + args + ' ' + retval)
             if not pid in path_for_pid_and_fd:
                 path_for_pid_and_fd[pid] = {}
             path_for_pid_and_fd[pid][retval] = re.search("^\\\"([^\\\"]+)\\\"", args).group(1)
         if command == 'close':
-            #print(pid + ' ' + command + ' ' + args + ' ' + retval)
             if not pid in path_for_pid_and_fd:
                 path_for_pid_and_fd[pid] = {}
             fd = args.strip()
-            #path_for_pid_and_fd[pid].pop(fd, None)
         if command == 'lseek':
             fd = None
             m = re.search("^(\d+),", args)
@@ -99,9 +106,6 @@ def handle_line(pid, line):
             m = re.search("^(\d+),", args)
             if m:
                 fd = m.group(1)
-            #m = re.search("\s+(\d+)$", args)
-            #if m:
-                #size = m.group(1)
             size = retval
             if fd and size:
                 sizek = int(size) / 1024
@@ -122,8 +126,6 @@ def handle_line(pid, line):
                 if not sizek in stats[path][command]:
                     stats[path][command][sizek] = 0
                 stats[path][command][sizek] += 1
-                #print(path + ": " + command + " " + str(sizek) + " k")
-                #exit(1)
 
 def size_to_cat(s):
     if s < 32:
