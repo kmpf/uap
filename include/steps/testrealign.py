@@ -83,11 +83,11 @@ class TestRealign(AbstractStep):
         
         pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
         
-        p = unix_pipeline.create_pipeline()
+        p = unix_pipeline.UnixPipeline()
         p.append(cat4m)
         p.append(samtools)
-        p.append(testrealign, stderr = open(run_info['output_files']['log'].keys()[0], 'w'))
-        p.append(pigz, stdout = open(run_info['output_files']['alignments'].keys()[0], 'w'))
+        p.append(testrealign, stderr_path = run_info['output_files']['log'].keys()[0])
+        p.append(pigz, stdout_path = run_info['output_files']['alignments'].keys()[0])
         
         unix_pipeline.launch([self.tool('cat4m'), fifo_path_splicesites, '-o', run_info['output_files']['splicesites'].keys()[0]])
         unix_pipeline.launch([self.tool('cat4m'), fifo_path_transrealigned, '-o', run_info['output_files']['transrealigned'].keys()[0]])

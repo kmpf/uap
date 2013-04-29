@@ -72,11 +72,11 @@ class Head(AbstractStep):
                     pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '3', '-c']
 
                     # create the pipeline and run it
-                    up = unix_pipeline.create_pipeline()
+                    up = unix_pipeline.UnixPipeline()
                     up.append(cat4m)
                     up.append(pigz1)
                     up.append(head)
-                    up.append(pigz2, stdout = open(outpath, 'w'))
+                    up.append(pigz2, stdout_path = outpath)
 
                     unix_pipeline.wait()
                 else:
@@ -86,8 +86,8 @@ class Head(AbstractStep):
                     head = ['head', '-n', str(count)]
 
                     # create the pipeline and run it
-                    up = unix_pipeline.create_pipeline()
+                    up = unix_pipeline.UnixPipeline()
                     up.append(cat4m)
-                    up.append(head, stdout = open(outpath, 'w'))
+                    up.append(head, stdout_path = outpath)
 
                     unix_pipeline.wait()

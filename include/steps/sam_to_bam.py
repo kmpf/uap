@@ -53,10 +53,10 @@ class SamToBam(AbstractStep):
         pigz1 = [self.tool('pigz'), '--processes', '2', '-d', '-c']
         samtools = [self.tool('samtools'), 'view', '-Sbt', self.options['genome'], '-']
         
-        p = unix_pipeline.create_pipeline()
+        p = unix_pipeline.UnixPipeline()
         p.append(cat4m)
         p.append(pigz1)
-        p.append(samtools, stdout = open(unsorted_bam_path, 'w'))
+        p.append(samtools, stdout_path = unsorted_bam_path)
         
         unix_pipeline.wait()
         
@@ -65,7 +65,7 @@ class SamToBam(AbstractStep):
         cat4m = [self.tool('cat4m'), unsorted_bam_path]
         samtools = [self.tool('samtools'), 'sort', '-', sorted_bam_path[:-4]]
         
-        p = unix_pipeline.create_pipeline()
+        p = unix_pipeline.UnixPipeline()
         p.append(cat4m)
         p.append(samtools)
         
@@ -74,7 +74,7 @@ class SamToBam(AbstractStep):
         # samtools index
         
         unix_pipeline.launch([self.tool('samtools'), 'index', sorted_bam_path, '/dev/stdout'],
-            stdout = open(sorted_bai_path, 'w'))
+            stdout_path = sorted_bai_path)
 
         unix_pipeline.wait()
         

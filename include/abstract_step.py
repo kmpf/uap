@@ -56,6 +56,8 @@ class AbstractStep(object):
         self._cores = 1
         self._connections = []
         self._tools = dict()
+        
+        self.needs_parents = False
 
     def set_name(self, step_name):
         self._step_name = step_name
@@ -276,7 +278,7 @@ class AbstractStep(object):
         log['config'] = self._pipeline.config
         log['git_hash_tag'] = self._pipeline.git_hash_tag
         log['tool_versions'] = self._pipeline.tool_versions
-        log['pipeline_log'] = unix_pipeline.up_log
+        log['pipeline_log'] = unix_pipeline.get_log()
         log['start_time'] = start_time
         log['end_time'] = end_time
 
@@ -302,6 +304,9 @@ class AbstractStep(object):
             os.rmdir(temp_directory)
         except OSError:
             pass
+        
+        # finally, reset the unix pipeline module
+        unix_pipeline.clear()
 
     def tool(self, key):
         '''
@@ -354,6 +359,8 @@ class AbstractStep(object):
         self._cores = cores
 
     def add_connection(self, connection):
+        if connection[0:3] == 'in/':
+            self.needs_parents = True
         self._connections.append(connection)
         
     def require_tool(self, tool):

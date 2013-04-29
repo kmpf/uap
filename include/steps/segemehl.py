@@ -73,14 +73,14 @@ class Segemehl(AbstractStep):
         
         pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
         
-        p = unix_pipeline.create_pipeline()
-        p.append(segemehl, stderr = open(run_info['output_files']['log'].keys()[0], 'w'))
-        p.append(pigz, stdout = open(out_name, 'w'))
+        p = unix_pipeline.UnixPipeline()
+        p.append(segemehl, stderr_path = run_info['output_files']['log'].keys()[0])
+        p.append(pigz, stdout_path = out_name)
         
-        p2 = unix_pipeline.create_pipeline()
+        p2 = unix_pipeline.UnixPipeline()
         pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
         p2.append([self.tool('cat4m'), fifo_path_unmapped])
-        p2.append(pigz2, stdout = open(run_info['output_files']['unmapped'].keys()[0], 'w'))
+        p2.append(pigz2, stdout_path = run_info['output_files']['unmapped'].keys()[0])
         
         unix_pipeline.wait()
 

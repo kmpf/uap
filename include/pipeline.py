@@ -144,17 +144,16 @@ class Pipeline(object):
             
         # step two: set dependencies
         for step_name, step in self.steps.items():
-            # '_depends' is not required for AbstractSourceStep classes
-            if isinstance(step, abstract_step.AbstractSourceStep):
+            if not step.needs_parents:
                 if '_depends' in step.options:
                     raise ConfigurationException("%s must not have dependencies "
-                        "because it is an AbstractSourceStep (remove the "
-                        "_depends key)." % step_id)
+                        "because it declares no in/* connections (remove the "
+                        "_depends key)." % step_name)
             else:
                 if not '_depends' in step.options:
                     raise ConfigurationException("Missing key in step '%s': "
                         "_depends (set to null if the step has no dependencies)." 
-                        % step_id)
+                        % step_name)
                 depends = step.options['_depends']
                 if depends == None:
                     pass

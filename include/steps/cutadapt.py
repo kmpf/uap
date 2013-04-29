@@ -102,10 +102,12 @@ class Cutadapt(AbstractStep):
         pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '3', '--stdout']
 
         # create the pipeline and run it
-        p = unix_pipeline.create_pipeline()
+        p = unix_pipeline.UnixPipeline()
         p.append(cat4m)
         p.append(pigz1)
-        p.append(cutadapt, stderr = open(run_info['output_files']['log'].keys()[0], 'w'))
-        p.append(pigz2, stdout = open(run_info['output_files']['reads'].keys()[0], 'w'))
+        p.append(cutadapt, stderr_path = run_info['output_files']['log'].keys()[0])
+        p.append(pigz2, stdout_path = run_info['output_files']['reads'].keys()[0])
 
+        p.seal()
+        
         unix_pipeline.wait()
