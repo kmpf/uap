@@ -81,7 +81,7 @@ def main():
             file_hash[path].append(str(task))
 
         submit_script = copy.copy(template)
-        submit_script = submit_script.replace("#{CORES}", str(task.step.cores))
+        submit_script = submit_script.replace("#{CORES}", str(task.step._cores))
         email = 'nobody@example.com'
         if 'email' in p.config:
             email = p.config['email']
@@ -115,7 +115,7 @@ def main():
             if not str(task) in task_wish_list:
                 really_submit_this = False
         if really_submit_this:
-            sys.stdout.write("Submitting task " + str(task) + " with " + str(task.step.cores) + " cores => ")
+            sys.stdout.write("Submitting task " + str(task) + " with " + str(task.step._cores) + " cores => ")
             process = subprocess.Popen(qsub_args, bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
             process.stdin.write(submit_script)
             process.stdin.close()
