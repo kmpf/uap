@@ -189,7 +189,7 @@ class Pipeline(object):
                     next_steps.append(step_name)
             if len(next_steps) == 0:
                 raise ConfigurationException("There is a cycle in the step dependencies.")
-            for step_name in sorted(next_steps):
+            for step_name in misc.natsorted(next_steps):
                 self.topological_step_order.append(step_name)
                 assigned_steps.add(step_name)
                 unassigned_steps.remove(step_name)
@@ -215,7 +215,7 @@ class Pipeline(object):
         for step_name in self.topological_step_order:
             step = self.steps[step_name]
             if abstract_step.AbstractSourceStep in step.__class__.__bases__:
-                for run_id in sorted(step.get_run_ids()):
+                for run_id in misc.natsorted(step.get_run_ids()):
                     print("[%s] %s/%s" % (step.get_run_state(run_id)[0].lower(), step, run_id))
 
     def has_unfinished_tasks(self, task_list):
