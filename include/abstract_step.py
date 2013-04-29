@@ -151,7 +151,11 @@ class AbstractStep(object):
         return self.get_run_info().keys()
 
     def get_options_hashtag(self):
-        return hashlib.sha1(json.dumps(self.options, sort_keys=True)).hexdigest()[0:4]
+        options_without_dash_prefix = dict()
+        for k, v in self.options.items():
+            if k[0] != '_':
+                options_without_dash_prefix[k] = v
+        return hashlib.sha1(json.dumps(options_without_dash_prefix, sort_keys=True)).hexdigest()[0:4]
 
     def get_step_name(self):
         return self._step_name
