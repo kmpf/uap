@@ -282,7 +282,9 @@ class AbstractStep(object):
         log['run']['run_id'] = run_id
         log['config'] = self._pipeline.config
         log['git_hash_tag'] = self._pipeline.git_hash_tag
-        log['tool_versions'] = self._pipeline.tool_versions
+        log['tool_versions'] = {}
+        for tool in self._tools.keys():
+            log['tool_versions'][tool] = self._pipeline.tool_versions[tool]
         log['pipeline_log'] = unix_pipeline.get_log()
         log['start_time'] = start_time
         log['end_time'] = end_time

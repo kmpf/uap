@@ -18,14 +18,21 @@ import yaml
 
 TAIL_LENGTH = 1024
 COPY_BLOCK_SIZE = 4194304
+SIGTERM_TIMEOUT = 5
+
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException()
 
 # for better error messages, this dict holds the process names for PIDs
 name_for_pid = {}
 
-sha1_checksum_for_file = {}
+sha1_checksum_for_file_basename = {}
 
 up_log = []
-copy_thread_reports = {}
+copy_process_reports = {}
 seal_these_pipeline_instances = []
 
 proc_order = []
@@ -33,9 +40,9 @@ proc_details = {}
 
 def clear():
     name_for_pid = dict()
-    sha1_checksum_for_file = dict()
+    sha1_checksum_for_file_basename = dict()
     up_log = list()
-    copy_thread_reports = dict()
+    copy_process_reports = dict()
     seal_these_pipeline_instances = list()
     proc_order = list()
     proc_details = dict()
@@ -53,17 +60,14 @@ def log(message):
     '''
     Append a message to the pipeline log.
     '''
-    formatted_message = "[up] %s" % message
-    print(formatted_message)
-    up_log.append(formatted_message)
+    #sys.stderr.write(message + "\n")
+    up_log.append(message)
     
 def get_log():
     '''
     Return the log as a dictionary.
     '''
     log = dict()
-    #log['messages'] = up_log
-    #log['streams'] = copy_thread_reports.values()
     log['processes'] = []
     proc_details_copy = dict()
     for pid in proc_order:
@@ -77,6 +81,8 @@ def get_log():
     for pid in proc_order:
         if pid in proc_details_copy:
             log['processes'].append(proc_details_copy[pid])
+            
+    log['log'] = up_log
     return log
     
 def mkfifo(suffix = ''):
@@ -121,6 +127,7 @@ def launch_copy_process(fin, fout, report_path, other_pid, which, pipe, use_pipe
         os.close(pipe[0])
         checksum = hashlib.sha1()
         tail = ''
+        length = 0
         while True:
             block = fin.read(COPY_BLOCK_SIZE)
             if len(block) == 0:
@@ -135,6 +142,9 @@ def launch_copy_process(fin, fout, report_path, other_pid, which, pipe, use_pipe
             else:
                 keep_length = TAIL_LENGTH - len(block)
                 tail = tail[0:keep_length] + block
+                
+            # update length
+            length += len(block)
             
             # write block to output file
             if fout is not None:
@@ -154,6 +164,7 @@ def launch_copy_process(fin, fout, report_path, other_pid, which, pipe, use_pipe
             report = dict()
             report['sha1'] = checksum.hexdigest()
             report['tail'] = tail
+            report['length'] = length
             freport.write(yaml.dump(report))
             
         os._exit(0)
@@ -188,12 +199,12 @@ def launch(args, stdout_path = None, stderr_path = None, use_stdin = subprocess.
         stdout_sink = open(stdout_path, 'w')
     report_path = temppath()
     pid = launch_copy_process(proc.stdout, stdout_sink, report_path, proc.pid, 'stdout', pipe, True)
-    copy_thread_reports[pid] = {
+    copy_process_reports[pid] = {
         'report_path': report_path,
         'stream': 'stdout',
         'pid': proc.pid,
         'args': args,
-        'sink': stdout_path
+        'sink': os.path.basename(stdout_path) if stdout_path else None
     }
 
     os.close(pipe[1])
@@ -203,12 +214,12 @@ def launch(args, stdout_path = None, stderr_path = None, use_stdin = subprocess.
         stderr_sink = open(stderr_path, 'w')
     report_path = temppath()
     pid = launch_copy_process(proc.stderr, stderr_sink, report_path, proc.pid, 'stderr', pipe, False)
-    copy_thread_reports[pid] = {
+    copy_process_reports[pid] = {
         'report_path': report_path,
         'stream': 'stderr',
         'pid': proc.pid,
         'args': args,
-        'sink': stderr_path
+        'sink': os.path.basename(stderr_path) if stderr_path else None
     }
     
     return (proc, pipe[0])
@@ -231,30 +242,41 @@ def wait():
             log("%s (PID %d) has exited with exit code %d." % ((proc_details[pid]['name'] if 'name' in proc_details[pid] else proc_details[pid]['args']), pid, exitcode))
             proc_details[pid]['exit_code'] = exitcode
             try:
-                if pid in copy_thread_reports:
-                    report_path = copy_thread_reports[pid]['report_path']
+                if pid in copy_process_reports:
+                    report_path = copy_process_reports[pid]['report_path']
                     if os.path.exists(report_path):
                         report = yaml.load(open(report_path, 'r'))
-                        if copy_thread_reports[pid]['sink']:
-                            sha1_checksum_for_file[copy_thread_reports[pid]['sink']] = report['sha1']
-                        copy_thread_reports[pid].update(report)
-                        del copy_thread_reports[pid]['report_path']
+                        if copy_process_reports[pid]['sink']:
+                            sha1_checksum_for_file_basename[copy_process_reports[pid]['sink']] = report['sha1']
+                            proc_details[pid]['sink'] = copy_process_reports[pid]['sink']
+                        copy_process_reports[pid].update(report)
+                        del copy_process_reports[pid]['report_path']
                         os.unlink(report_path)
-                        proc_details[pid]['report'] = report
-            except:
+                        proc_details[pid].update(report)
+            except Exception:
                 # swallow possible exceptions because getting the checksum and
                 # the tail is nice to have, but no cause for the entire process
                 # to fail
                 pass
+        except TimeoutException:
+            log("Timeout, killing all child processes now.")
+            kill_all_child_processes()
         except OSError:
             # no more children running, we are done
+            signal.alarm(0)
+            log("Cancelling timeout (if there was one), all children have exited.")
             break
-        if exitcode != 0:
-            # oops, something went wrong
-            #kill_all_child_processes()
-            something_went_wrong = True
+        else:
+            if exitcode != 0:
+                # Oops, something went wrong. See what happens and terminate
+                # all child processes in a few seconds.
+                something_went_wrong = True
+                signal.signal(signal.SIGALRM, timeout_handler) 
+                log("Terminating all children in %d seconds..." % SIGTERM_TIMEOUT)
+                signal.alarm(SIGTERM_TIMEOUT)
                         
     if something_went_wrong:
+        log("Pipeline crashed.")
         raise StandardError("Pipeline crashed.")
                     
 class UnixPipeline(object):

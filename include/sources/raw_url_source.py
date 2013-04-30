@@ -38,5 +38,5 @@ class RawUrlSource(AbstractStep):
 
         unix_pipeline.wait()
         
-        if unix_pipeline.sha1_checksum_for_file[run_info['output_files']['raw'].keys()[0]] != self.options['sha1']:
+        if unix_pipeline.sha1_checksum_for_file_basename[os.path.basename(run_info['output_files']['raw'].keys()[0])] != self.options['sha1']:
             raise StandardError("Checksum of downloaded file does not match.")
