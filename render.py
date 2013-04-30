@@ -26,6 +26,8 @@ def main():
             if step.get_run_state(_) == p.states.FINISHED:
                 finished_runs += 1
 
+        f.write("subgraph cluster_%s {\n" % step_name)
+        
         label = step_name
         if step_name != step.__module__:
             label = "%s\\n(%s)" % (step_name, step.__module__)
@@ -41,19 +43,40 @@ def main():
                 f.write("    %s -> %s [style=dashed, color = \"#888a85\"];\n" % (connection_key, step_name))
             else:
                 f.write("    %s -> %s [style=dashed, color = \"#888a85\"];\n" % (step_name, connection_key))
+                
+        f.write("  graph[style=dashed];\n")
+        f.write("}\n")
             
     for step_name, step in p.steps.items():
         for other_step in step.dependencies:
             f.write("    %s -> %s;\n" % (other_step.get_step_name(), step_name))
-            for c in step._connections:
-                if c[0:3] != 'in/':
+            
+            for in_key in step._connections:
+                if in_key[0:3] != 'in/':
                     continue
-                connection_key = ('%s/%s' % (step_name, c)).replace('/', '__')
-                for oc in other_step._connections:
-                    if oc[0:4] != 'out/':
+                
+                out_key = in_key.replace('in/', 'out/')
+                allowed_steps = None
+                if '_connect' in step.options:
+                    if in_key in step.options['_connect']:
+                        declaration = step.options['_connect'][in_key]
+                        if declaration.__class__ == str:
+                            if '/' in declaration:
+                                parts = declaration.split('/')
+                                allowed_steps = set()
+                                allowed_steps.add(parts[0])
+                                out_key = 'out/' + parts[1]
+                            else:
+                                out_key = 'out/' + declaration
+                        else:
+                            raise StandardError("Invalid _connect value: %s" % yaml.dump(declaration))
+                        
+                for real_outkey in other_step._connections:
+                    if real_outkey[0:4] != 'out/':
                         continue
-                    other_connection_key = ('%s/%s' % (other_step.get_step_name(), oc)).replace('/', '__')
-                    if c.replace('in/', 'out/') == oc:
+                    if out_key == real_outkey:
+                        connection_key = ('%s/%s' % (step_name, in_key)).replace('/', '__')
+                        other_connection_key = ('%s/%s' % (other_step.get_step_name(), out_key)).replace('/', '__')
                         f.write("    %s -> %s [style=dashed, color = \"#888a85\"];\n" % (other_connection_key, connection_key))
     f.write("}\n")
     
