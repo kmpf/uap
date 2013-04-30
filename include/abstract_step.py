@@ -248,7 +248,7 @@ class AbstractStep(object):
         except Exception as e:
             self._pipeline.notify("[BAD] %s/%s failed.\n\nHere are the details:\n%s" % (str(self), run_id, yaml.dump(unix_pipeline.get_log(), default_flow_style = False)))
             raise
-
+        
         # if we're here, we can assume the step has finished successfully
         # now rename the output files (move from temp directory to
         # destination directory)
@@ -258,7 +258,8 @@ class AbstractStep(object):
                 # TODO: if the destination path already exists, this will overwrite the file.
                 if os.path.exists(out_path):
                     os.rename(out_path, destination_path)
-                # if the file doesn't exist, keep calm and carry on
+                else:
+                    raise StandardError("The step failed to produce an output file it announced: %s" % os.path.basename(out_path))
 
         self._temp_directory = None
         

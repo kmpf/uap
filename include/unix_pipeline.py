@@ -39,6 +39,14 @@ proc_order = []
 proc_details = {}
 
 def clear():
+    global name_for_pid
+    global sha1_checksum_for_file_basename
+    global up_log
+    global copy_process_reports
+    global seal_these_pipeline_instances
+    global proc_order
+    global proc_details
+    
     name_for_pid = dict()
     sha1_checksum_for_file_basename = dict()
     up_log = list()
