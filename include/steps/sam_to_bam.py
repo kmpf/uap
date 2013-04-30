@@ -18,7 +18,7 @@ class SamToBam(AbstractStep):
         self.require_tool('samtools')
         self.require_tool('pigz')
 
-    def setup_runs(self, complete_input_run_info):
+    def setup_runs(self, complete_input_run_info, connection_info):
         # make sure files are available
         for key in ['genome']:
             if not os.path.exists(self.options[key]):

@@ -15,7 +15,7 @@ class FixCutadapt(AbstractStep):
         self.require_tool('cat4m')
         self.require_tool('pigz')
 
-    def setup_runs(self, complete_input_run_info):
+    def setup_runs(self, complete_input_run_info, connection_info):
         output_run_info = {}
         for step_name, step_input_info in complete_input_run_info.items():
             for input_run_id, input_run_info in step_input_info.items():

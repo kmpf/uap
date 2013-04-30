@@ -14,7 +14,7 @@ class FastqSource(AbstractSourceStep):
         
         self.add_connection('out/reads')
 
-    def setup_runs(self, input_run_info):
+    def setup_runs(self, input_run_info, connection_info):
         regex = re.compile(self.options['group'])
 
         output_run_info = {}

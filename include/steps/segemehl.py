@@ -23,7 +23,7 @@ class Segemehl(AbstractStep):
         self.require_tool('segemehl')
 
 
-    def setup_runs(self, complete_input_run_info):
+    def setup_runs(self, complete_input_run_info, connection_info):
         # make sure files are available
         for key in ['genome', 'index']:
             if not os.path.exists(self.options[key]):

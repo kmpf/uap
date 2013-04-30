@@ -56,6 +56,7 @@ class AbstractStep(object):
         
         self._cores = 1
         self._connections = []
+        self._connection_restrictions = {}
         self._tools = dict()
         
         self.needs_parents = False
@@ -82,7 +83,7 @@ class AbstractStep(object):
             input_run_info[parent.get_step_name()] = copy.deepcopy(parent.get_run_info())
         return input_run_info
 
-    def setup_runs(self, input_run_info):
+    def setup_runs(self, input_run_info, connection_info = {}):
         '''
         Raise NotImplementedError because every subclass must override this method.
         '''
@@ -118,7 +119,13 @@ class AbstractStep(object):
                             run_info['output_files'][tag][basename] = run_info['output_files'][tag][path]
                             run_info['output_files'][tag].pop(path)
 
-            self._run_info = self.setup_runs(input_run_info)
+            connection_info = {}
+            for c in self._connections:
+                if c[0:3] != 'in/':
+                    continue
+                connection_info[c] = self.get_input_run_info_for_connection(c)
+                
+            self._run_info = self.setup_runs(input_run_info, connection_info)
             
             # verify run_ids and connection keys
             for run_id, run_info in self._run_info.items():
@@ -249,9 +256,9 @@ class AbstractStep(object):
             for out_path in temp_run_info['output_files'][tag].keys():
                 destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
                 # TODO: if the destination path already exists, this will overwrite the file.
-                if not os.path.exists(out_path):
-                    raise StandardError("The step failed to produce an output file it announced: " + os.path.basename(out_path))
-                os.rename(out_path, destination_path)
+                if os.path.exists(out_path):
+                    os.rename(out_path, destination_path)
+                # if the file doesn't exist, keep calm and carry on
 
         self._temp_directory = None
         
@@ -365,13 +372,90 @@ class AbstractStep(object):
     def set_cores(self, cores):
         self._cores = cores
 
-    def add_connection(self, connection):
+    def add_connection(self, connection, constraints = None):
         if connection[0:3] == 'in/':
             self.needs_parents = True
         self._connections.append(connection)
+        if constraints is not None:
+            self._connection_restrictions[connection] = constraints
         
     def require_tool(self, tool):
         self._tools[tool] = self._pipeline.config['tools'][tool]['path']
+        
+    def get_input_run_info_for_connection(self, in_key):
+        if in_key[0:3] != 'in/':
+            raise StandardError("in_key does not start with 'in/': %s" % in_key)
+        out_key = in_key.replace('in/', 'out/')
+        allowed_steps = None
+        if '_connect' in self.options:
+            if in_key in self.options['_connect']:
+                declaration = self.options['_connect'][in_key]
+                if declaration.__class__ == str:
+                    if '/' in declaration:
+                        parts = declaration.split('/')
+                        allowed_steps = set()
+                        allowed_steps.add(parts[0])
+                        out_key = 'out/' + parts[1]
+                    else:
+                        out_key = 'out/' + declaration
+                else:
+                    raise StandardError("Invalid _connect value: %s" % yaml.dump(declaration))
+        bare_out_key = out_key.replace('out/', '')
+        
+        result = dict()
+        result['counts'] = {
+            'total_steps': 0,
+            'total_runs': 0,
+            'total_files': 0,
+            'min_steps_per_run': None,
+            'max_steps_per_run': None,
+            'min_files_per_step_and_run': None,
+            'max_files_per_step_and_run': None,
+            'min_files_per_run': None,
+            'max_files_per_run': None,
+        }
+        
+        def update_min_max(key, value):
+            for mkey in ['min', 'max']:
+                key2 = '%s_%s' % (mkey, key)
+                if result['counts'][key2] is None:
+                    result['counts'][key2] = value
+                result['counts'][key2] = (min if mkey == 'min' else max)(result['counts'][key2], value)
+            
+        result['runs'] = dict()
+        for step_name, step_info in self.get_input_run_info().items():
+            if allowed_steps is not None:
+                if not step_name in allowed_steps:
+                    continue
+            if out_key in self._pipeline.steps[step_name]._connections:
+                result['counts']['total_steps'] += 1
+                for run_id, run_info in step_info.items():
+                    result['counts']['total_runs'] += 1
+                    paths = run_info['output_files'][bare_out_key].keys()
+                    result['counts']['total_files'] += len(paths)
+                    if not run_id in result['runs']:
+                        result['runs'][run_id] = dict()
+                    result['runs'][run_id][step_name] = paths
+
+                    steps_per_run = len(result['runs'][run_id])
+                    update_min_max('steps_per_run', steps_per_run)
+
+                    files_per_step_and_run = len(result['runs'][run_id][step_name])
+                    update_min_max('files_per_step_and_run', files_per_step_and_run)
+                    
+                    files_per_run = 0
+                    for _ in result['runs'][run_id].values():
+                        files_per_run += len(_)
+                    update_min_max('files_per_run', files_per_run)
+                    
+        # check constraints, if any
+        if in_key in self._connection_restrictions:
+            for k, v in self._connection_restrictions[in_key].items():
+                if result['counts'][k] != v:
+                    raise StandardError("Connection constraint failed: %s/%s/%s should be %d but is %d." % (self, in_key, k, v, result['counts'][k]))
+
+        return result
+
     
 class AbstractSourceStep(AbstractStep):
     '''

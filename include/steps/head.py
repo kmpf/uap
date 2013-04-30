@@ -28,7 +28,7 @@ class Head(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('head')
 
-    def setup_runs(self, input_run_info):
+    def setup_runs(self, input_run_info, connection_info):
         count = 1000
         if 'lines' in self.options:
             count = self.options['lines']

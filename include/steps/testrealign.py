@@ -22,7 +22,7 @@ class TestRealign(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('cat4m')
 
-    def setup_runs(self, complete_input_run_info):
+    def setup_runs(self, complete_input_run_info, connection_info):
         # make sure files are available
         for key in ['genome']:
             if not os.path.exists(self.options[key]):

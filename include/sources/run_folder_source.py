@@ -12,7 +12,7 @@ class RunFolderSource(AbstractSourceStep):
         
         self.add_connection('out/reads')
         
-    def setup_runs(self, input_run_info):
+    def setup_runs(self, input_run_info, connection_info):
         path = self.options['path']
 
         output_run_info = {}

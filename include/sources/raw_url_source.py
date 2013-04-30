@@ -12,13 +12,14 @@ class RawUrlSource(AbstractStep):
         self.add_connection('out/raw')
         self.require_tool('curl')
 
-    def setup_runs(self, input_run_info):
+    def setup_runs(self, input_run_info, connection_info):
         output_run_info = {}
 
         if not 'url' in self.options:
             raise StandardError("missing 'url' key in raw_url_source")
         if not 'sha1' in self.options:
             raise StandardError("missing 'sha1' key in raw_url_source")
+        
         
         path = os.path.basename(urlparse.urlparse(self.options['url']).path)
         output_run_info['download'] = {}
