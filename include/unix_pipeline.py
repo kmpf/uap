@@ -5,6 +5,7 @@ Processes may either run on their own or pipelines can be built with them.
 
 import sys
 sys.path.append('./include/steps')
+import copy
 import datetime
 import fcntl
 import hashlib
@@ -18,22 +19,6 @@ import yaml
 TAIL_LENGTH = 1024
 COPY_BLOCK_SIZE = 4194304
 
-# a list of PIDs which are ok to fail because a child has terminated
-# for example, if we do:
-# $ cat [file] | head -n 10
-# ...head would stop after ten lines. cat would run on forever if we
-# wouldn't terminate it, so we do. But before that, we must remember
-# that it's OK for cat to fail. Right?
-# Values are integers (PIDs).
-ok_to_fail = []
-
-# a dict of upstream procs for any proc in a pipeline, values are Popen objects
-# A => B => C
-# upstream_procs:
-#   B: [A]
-#   C: [B, A]
-upstream_procs = {}
-
 # for better error messages, this dict holds the process names for PIDs
 name_for_pid = {}
 
@@ -43,28 +28,55 @@ up_log = []
 copy_thread_reports = {}
 seal_these_pipeline_instances = []
 
+proc_order = []
+proc_details = {}
+
 def clear():
-    ok_to_fail = list()
-    upstream_proc = dict()
     name_for_pid = dict()
     sha1_checksum_for_file = dict()
     up_log = list()
     copy_thread_reports = dict()
     seal_these_pipeline_instances = list()
+    proc_order = list()
+    proc_details = dict()
+    
+def add_proc_info(pid, name = None, args = None):
+    proc_order.append(pid)
+    proc_details[pid] = {}
+    proc_details[pid]['pid'] = pid
+    if name is not None:
+        proc_details[pid]['name'] = name
+    if args is not None:
+        proc_details[pid]['args'] = ' '.join(args)
 
 def log(message):
     '''
     Append a message to the pipeline log.
     '''
-    up_log.append("[up] [%s] %s" % (datetime.datetime.now(), message))
+    formatted_message = "[up] %s" % message
+    print(formatted_message)
+    up_log.append(formatted_message)
     
 def get_log():
     '''
     Return the log as a dictionary.
     '''
     log = dict()
-    log['messages'] = up_log
-    log['streams'] = copy_thread_reports.values()
+    #log['messages'] = up_log
+    #log['streams'] = copy_thread_reports.values()
+    log['processes'] = []
+    proc_details_copy = dict()
+    for pid in proc_order:
+        if 'attach_to' in proc_details[pid]:
+            attach_info = proc_details[pid]['attach_to']
+            proc_details_copy[attach_info[0]][attach_info[1] + '_copy'] = copy.deepcopy(proc_details[pid])
+            del proc_details_copy[attach_info[0]][attach_info[1] + '_copy']['attach_to']
+        else:
+            proc_details_copy[pid] = copy.deepcopy(proc_details[pid])
+        
+    for pid in proc_order:
+        if pid in proc_details_copy:
+            log['processes'].append(proc_details_copy[pid])
     return log
     
 def mkfifo(suffix = ''):
@@ -147,6 +159,8 @@ def launch_copy_process(fin, fout, report_path, other_pid, which, pipe, use_pipe
         os._exit(0)
     else:
         name_for_pid[pid] = '[copy process]'
+        add_proc_info(pid, name = "copy process to capture %s of PID %d" % (which, other_pid))
+        proc_details[pid]['attach_to'] = [other_pid, which]
         log("Launched a copy process with PID " + str(pid) + " to capture " + which + " of PID " + str(other_pid) + ".")
         return pid
 
@@ -164,6 +178,7 @@ def launch(args, stdout_path = None, stderr_path = None, use_stdin = subprocess.
         preexec_fn = os.setsid
     )
     name_for_pid[proc.pid] = os.path.basename(args[0])
+    add_proc_info(proc.pid, args = args)
     log("Launched " + ' '.join(args) + " as PID " + str(proc.pid) + '.')
 
     pipe = os.pipe()
@@ -205,17 +220,16 @@ def wait():
     
     # Seal all pipelines, i. e. add a consumer to the end
     global seal_these_pipeline_instances
-    
     for p in seal_these_pipeline_instances:
         p.seal()
-        
     seal_these_pipeline_instances = list()
         
-    something_went_wrong = None
+    something_went_wrong = False
     while True:
         try:
             pid, exitcode = os.wait()
-            log("Child " + str(pid) + " has exited with exit code " + str(exitcode) + ".")
+            log("%s (PID %d) has exited with exit code %d." % ((proc_details[pid]['name'] if 'name' in proc_details[pid] else proc_details[pid]['args']), pid, exitcode))
+            proc_details[pid]['exit_code'] = exitcode
             try:
                 if pid in copy_thread_reports:
                     report_path = copy_thread_reports[pid]['report_path']
@@ -226,6 +240,7 @@ def wait():
                         copy_thread_reports[pid].update(report)
                         del copy_thread_reports[pid]['report_path']
                         os.unlink(report_path)
+                        proc_details[pid]['report'] = report
             except:
                 # swallow possible exceptions because getting the checksum and
                 # the tail is nice to have, but no cause for the entire process
@@ -235,28 +250,11 @@ def wait():
             # no more children running, we are done
             break
         if exitcode != 0:
-            if not pid in ok_to_fail:
-                # oops, something went wrong
-                sys.stdout.flush()
-                sys.stderr.flush()
-                message = "Pipeline crashed, oh my.\n"
-                job_name = 'Process with PID ' + str(pid)
-                if pid in name_for_pid:
-                    job_name = name_for_pid[pid] + ' (PID ' + str(pid) + ')'
-                message += job_name + ' has crashed with exit code ' + str(exitcode) + '.\n'
-                message += "Full pipeline log:\n\n%s\n" % yaml.dump(get_log(), default_flow_style = False)
-                something_went_wrong = message
-            else:
-                if pid in upstream_procs:
-                    for upstream_proc in upstream_procs[pid]:
-                        ok_to_fail.append(upstream_proc.pid)
-                        try:
-                            upstream_proc.terminate()
-                        except OSError:
-                            pass
+            # oops, something went wrong
+            #kill_all_child_processes()
+            something_went_wrong = True
                         
-    if something_went_wrong != None:
-        sys.stderr.write(something_went_wrong)
+    if something_went_wrong:
         raise StandardError("Pipeline crashed.")
                     
 class UnixPipeline(object):
@@ -279,7 +277,6 @@ class UnixPipeline(object):
         self.use_stdin = stdout_copy
 
         self.pipeline_procs.append(proc)
-        upstream_procs[proc.pid] = self.pipeline_procs[0:-1]
 
     def seal(self):
         pid = os.fork()
@@ -290,5 +287,7 @@ class UnixPipeline(object):
                     break
             os._exit(0)
         else:
+            name_for_pid[pid] = 'null consumer'
+            add_proc_info(pid, name = "null consumer for PID %d" % pid)
             log("Launched a null consumer with PID %d." % pid)
             

@@ -9,6 +9,7 @@ import inspect
 import json
 import os
 import random
+import socket
 import string
 import subprocess
 import tempfile
@@ -234,11 +235,11 @@ class AbstractStep(object):
         temp_run_info = fix_dict(temp_run_info, fix_func_dict_subst, temp_paths)
 
         start_time = datetime.datetime.now()
-        self._pipeline.notify("[INFO] starting %s/%s" % (str(self), run_id))
+        self._pipeline.notify("[INFO] starting %s/%s on %s" % (str(self), run_id, socket.gethostname()))
         try:
             self.execute(run_id, temp_run_info)
         except Exception as e:
-            self._pipeline.notify("[BAD] %s/%s failed: %s" % (str(self), run_id, str(e)))
+            self._pipeline.notify("[BAD] %s/%s failed.\n\nHere are the details:\n%s" % (str(self), run_id, yaml.dump(unix_pipeline.get_log(), default_flow_style = False)))
             raise
 
         # if we're here, we can assume the step has finished successfully
