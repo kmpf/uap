@@ -13,14 +13,16 @@ def main():
             # print all sources (i. e. instances of AbstractSourceStep)
             p.print_source_runs()
         else:
-            # print a specific task
+            # print one or more specific tasks
             for task_id in sys.argv[1:]:
                 parts = task_id.split('/')
                 if len(parts) != 2:
                     raise StandardError("Invalid task ID %s." % task_id)
                 step_name = parts[0]
                 run_id = parts[1]
-                print(yaml.dump(p.steps[step_name].get_run_info()[run_id], default_flow_style = False))
+                report = p.steps[step_name].get_run_info()[run_id]
+                report['state'] = p.steps[step_name].get_run_state(run_id)
+                print(yaml.dump(report, default_flow_style = False))
     else:
         # print all tasks
         p.print_tasks()
