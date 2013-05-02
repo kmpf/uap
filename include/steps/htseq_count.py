@@ -26,19 +26,20 @@ class HtSeqCount(AbstractStep):
         
         output_run_info = {}
         
+        features_path = connection_info['in/features']['runs'].values()[0].values()[0][0]
         for run_id, info in connection_info['in/alignments']['runs'].items():
             counts_path = '%s-counts.txt' % run_id
             alignments_path = info.values()[0][0]
             run_info = {
                 'output_files': {
                     'counts': {
-                        counts_path: [alignments_path]
+                        counts_path: [alignments_path, features_path]
                     }
                 },
                 'info': {
                     'counts_path': counts_path,
                     'alignments_path': alignments_path,
-                    'features_path': connection_info['in/features']['runs'].values()[0].values()[0][0]
+                    'features_path': features_path
                 }
             }
             output_run_info[run_id] = run_info
