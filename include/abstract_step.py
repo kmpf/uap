@@ -55,7 +55,7 @@ class AbstractStep(object):
         '''
         
         self._cores = 1
-        self._connections = []
+        self._connections = set()
         self._connection_restrictions = {}
         self._tools = dict()
         
@@ -378,7 +378,7 @@ class AbstractStep(object):
     def add_connection(self, connection, constraints = None):
         if connection[0:3] == 'in/':
             self.needs_parents = True
-        self._connections.append(connection)
+        self._connections.add(connection)
         if constraints is not None:
             self._connection_restrictions[connection] = constraints
         

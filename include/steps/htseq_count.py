@@ -19,6 +19,8 @@ class HtSeqCount(AbstractStep):
         self.require_tool('cat4m')
         self.require_tool('pigz')
         self.require_tool('htseq-count')
+        self.require_tool('grep')
+        self.require_tool('invertGood')
 
     def setup_runs(self, complete_input_run_info, connection_info):
         
@@ -45,21 +47,31 @@ class HtSeqCount(AbstractStep):
     
     
     def execute(self, run_id, run_info):
-        #run_info['info']['features_path'] = '/home/michael/programming/rnaseq-pipeline/out/gencode-7898/genes.gtf.gz'
-
-        features_fifo = unix_pipeline.mkfifo()
-        
-        cat4m = [self.tool('cat4m'), run_info['info']['features_path'], '-o', features_fifo]
-        unix_pipeline.launch(cat4m)
-        
         p = unix_pipeline.UnixPipeline()
         
-        cat4m2 = [self.tool('cat4m'), run_info['info']['alignments_path']]
-        htseq_count = [self.tool('htseq-count'), '-', features_fifo]
+        if not 'mode' in self.options:
+            self.options['mode'] = 'union'
+        if not 'stranded' in self.options:
+            self.options['stranded'] = 'yes'
+        if not 'type' in self.options:
+            self.options['type'] = 'exon'
+        if not 'idattr' in self.options:
+            self.options['idattr'] = 'gene_id'
+
+        cat4m = [self.tool('cat4m'), run_info['info']['alignments_path']]
+        pigz = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+        grep = [self.tool('grep'), '-v', "\t\\*\t"]
+        invertGood = [self.tool('invertGood')]
+        htseq_count = [self.tool('htseq-count')]
+        for key in ('mode', 'stranded', 'type', 'idattr'):
+            htseq_count.extend(['--%s' % key, self.options[key]])
+        htseq_count.extend(['-', run_info['info']['features_path']])
         
-        p.append(cat4m2)
+        p.append(cat4m)
+        p.append(pigz)
+        p.append(grep)
+        p.append(invertGood)
         p.append(htseq_count, stdout_path = run_info['info']['counts_path'])
                 
         unix_pipeline.wait()
         
-        os.unlink(features_fifo)
