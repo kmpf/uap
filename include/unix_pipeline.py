@@ -20,6 +20,9 @@ TAIL_LENGTH = 1024
 COPY_BLOCK_SIZE = 4194304
 SIGTERM_TIMEOUT = 5
 
+# signal names for numbers... kudos to http://stackoverflow.com/questions/2549939/get-signal-names-from-numbers-in-python
+SIGNAL_NAMES = dict((getattr(signal, n), n) for n in dir(signal) if n.startswith('SIG') and '_' not in n )
+
 class TimeoutException(Exception):
     pass
 
@@ -68,8 +71,9 @@ def log(message):
     '''
     Append a message to the pipeline log.
     '''
-    #sys.stderr.write(message + "\n")
-    up_log.append(message)
+    formatted_message = "[%s] %s" % (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), message)
+    #sys.stderr.write(formatted_message + "\n")
+    up_log.append(formatted_message)
     
 def get_log():
     '''
@@ -120,19 +124,20 @@ def kill_all_child_processes():
         try:
             os.kill(pid, signal.SIGTERM)
             log('Sending SIGTERM to process %s (PID %d).' % (name, pid))
-            sys.stderr.write("Sending SIGTERM to " + name + " (PID " + str(pid) + ").\n")
-            sys.stderr.flush()
         except OSError:
             pass
         
 
-def launch_copy_process(fin, fout, report_path, other_pid, which, pipe, use_pipe):
+def launch_copy_process(fin, fout_path, report_path, other_pid, which, pipe, use_pipe):
     '''
     Launch a copy process which copies data from ``fin`` to ``fout`` in chunks of 4M.
     '''
     pid = os.fork()
     if pid == 0:
         os.close(pipe[0])
+        fdout = None
+        if fout_path is not None:
+            fdout = os.open(fout_path, os.O_WRONLY|os.O_CREAT|os.O_TRUNC)
         checksum = hashlib.sha1()
         tail = ''
         length = 0
@@ -155,16 +160,16 @@ def launch_copy_process(fin, fout, report_path, other_pid, which, pipe, use_pipe
             length += len(block)
             
             # write block to output file
-            if fout is not None:
-                fout.write(block)
+            if fdout is not None:
+                bytes_written = os.write(fdout, block)
                 
             # write block to pipe
             if use_pipe:
                 bytes_written = os.write(pipe[1], block)
                 
         # we're finished, close everything
-        if fout != None:
-            fout.close()
+        if fdout is not None:
+            os.close(fdout)
         if use_pipe:
             os.close(pipe[1])
             
@@ -181,6 +186,8 @@ def launch_copy_process(fin, fout, report_path, other_pid, which, pipe, use_pipe
         add_proc_info(pid, name = "copy process to capture %s of PID %d" % (which, other_pid))
         proc_details[pid]['attach_to'] = [other_pid, which]
         log("Launched a copy process with PID " + str(pid) + " to capture " + which + " of PID " + str(other_pid) + ".")
+        if fout_path is not None:
+            log("...which gets also redirected to %s" % fout_path)
         return pid
 
 
@@ -202,11 +209,8 @@ def launch(args, stdout_path = None, stderr_path = None, use_stdin = subprocess.
 
     pipe = os.pipe()
     
-    stdout_sink = None
-    if stdout_path != None:
-        stdout_sink = open(stdout_path, 'w')
     report_path = temppath()
-    pid = launch_copy_process(proc.stdout, stdout_sink, report_path, proc.pid, 'stdout', pipe, True)
+    pid = launch_copy_process(proc.stdout, stdout_path, report_path, proc.pid, 'stdout', pipe, True)
     copy_process_reports[pid] = {
         'report_path': report_path,
         'stream': 'stdout',
@@ -217,11 +221,8 @@ def launch(args, stdout_path = None, stderr_path = None, use_stdin = subprocess.
 
     os.close(pipe[1])
     
-    stderr_sink = None
-    if stderr_path != None:
-        stderr_sink = open(stderr_path, 'w')
     report_path = temppath()
-    pid = launch_copy_process(proc.stderr, stderr_sink, report_path, proc.pid, 'stderr', pipe, False)
+    pid = launch_copy_process(proc.stderr, stderr_path, report_path, proc.pid, 'stderr', pipe, False)
     copy_process_reports[pid] = {
         'report_path': report_path,
         'stream': 'stderr',
@@ -246,9 +247,22 @@ def wait():
     something_went_wrong = False
     while True:
         try:
-            pid, exitcode = os.wait()
-            log("%s (PID %d) has exited with exit code %d." % ((proc_details[pid]['name'] if 'name' in proc_details[pid] else proc_details[pid]['args']), pid, exitcode))
-            proc_details[pid]['exit_code'] = exitcode
+            pid, _exitcode = os.wait()
+            signal_number = _exitcode & 255
+            exit_code = _exitcode >> 8
+            what_happened = "has exited with exit code %d" % exit_code
+            if signal_number > 0:
+                what_happened = "has received signal %d" % signal_number
+                if signal_number in SIGNAL_NAMES:
+                    what_happened = "has received %s (signal number %d)" % (SIGNAL_NAMES[signal_number], signal_number)
+                    
+            log("%s (PID %d) %s." % ((proc_details[pid]['name'] if 'name' in proc_details[pid] else proc_details[pid]['args']), pid, what_happened))
+            if signal_number == 0:
+                proc_details[pid]['exit_code'] = exit_code
+            else:
+                proc_details[pid]['signal'] = signal_number
+                if signal_number in SIGNAL_NAMES:
+                    proc_details[pid]['signal_name'] = SIGNAL_NAMES[signal_number]
             try:
                 if pid in copy_process_reports:
                     report_path = copy_process_reports[pid]['report_path']
@@ -275,7 +289,7 @@ def wait():
             log("Cancelling timeout (if there was one), all children have exited.")
             break
         else:
-            if exitcode != 0:
+            if _exitcode != 0:
                 # Oops, something went wrong. See what happens and terminate
                 # all child processes in a few seconds.
                 something_went_wrong = True

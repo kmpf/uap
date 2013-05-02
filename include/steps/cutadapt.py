@@ -108,6 +108,4 @@ class Cutadapt(AbstractStep):
         p.append(cutadapt, stderr_path = run_info['output_files']['log'].keys()[0])
         p.append(pigz2, stdout_path = run_info['output_files']['reads'].keys()[0])
 
-        p.seal()
-        
         unix_pipeline.wait()

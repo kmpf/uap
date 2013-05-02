@@ -21,17 +21,11 @@ class HtSeqCount(AbstractStep):
         self.require_tool('htseq-count')
 
     def setup_runs(self, complete_input_run_info, connection_info):
-        if connection_info['in/features']['counts']['total_files'] != 1:
-            raise StandardError("Expected a single in/features file:\n%s" % yaml.dump(connection_info, default_flow_style = False))
         
         output_run_info = {}
         
         for run_id, info in connection_info['in/alignments']['runs'].items():
             counts_path = '%s-counts.txt' % run_id
-            if len(info.values()) != 1:
-                raise StandardError("")
-            if len(info.values()[0]) != 1:
-                raise StandardError("")
             alignments_path = info.values()[0][0]
             run_info = {
                 'output_files': {
@@ -51,28 +45,21 @@ class HtSeqCount(AbstractStep):
     
     
     def execute(self, run_id, run_info):
-        return
-        # basic sanity check
-        if len(run_info['output_files']['reads']) != 1:
-            raise StandardError("Expected a single output file.")
+        run_info['info']['features_path'] = '/home/michael/programming/rnaseq-pipeline/out/gencode-7898/genes.gtf.gz'
 
-        # set up processes
-        cat4m = [self.tool('cat4m')]
-        cat4m.extend(*sorted(run_info['output_files']['reads'].values()))
-
-        pigz1 = [self.tool('pigz'), '--processes', '1', '--decompress', '--stdout']
-
-        cutadapt = [self.tool('cutadapt'), '-a', run_info['info']['adapter'], '-']
-
-        pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '3', '--stdout']
-
-        # create the pipeline and run it
-        p = unix_pipeline.UnixPipeline()
-        p.append(cat4m)
-        p.append(pigz1)
-        p.append(cutadapt, stderr_path = run_info['output_files']['log'].keys()[0])
-        p.append(pigz2, stdout_path = run_info['output_files']['reads'].keys()[0])
-
-        p.seal()
+        features_fifo = unix_pipeline.mkfifo()
         
+        cat4m = [self.tool('cat4m'), run_info['info']['features_path'], '-o', features_fifo]
+        unix_pipeline.launch(cat4m)
+        
+        p = unix_pipeline.UnixPipeline()
+        
+        cat4m2 = [self.tool('cat4m'), run_info['info']['alignments_path']]
+        htseq_count = [self.tool('htseq-count'), '-', features_fifo]
+        
+        p.append(cat4m2)
+        p.append(htseq_count, stdout_path = run_info['info']['counts_path'])
+                
         unix_pipeline.wait()
+        
+        os.unlink(features_fifo)

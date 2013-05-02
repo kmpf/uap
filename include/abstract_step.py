@@ -259,7 +259,7 @@ class AbstractStep(object):
                 if os.path.exists(out_path):
                     os.rename(out_path, destination_path)
                 else:
-                    raise StandardError("The step failed to produce an output file it announced: %s" % os.path.basename(out_path))
+                    raise StandardError("The step failed to produce an output file it announced: %s\n\nHere are the details:\n%s" % (os.path.basename(out_path), yaml.dump(unix_pipeline.get_log(), default_flow_style = False)))
 
         self._temp_directory = None
         
