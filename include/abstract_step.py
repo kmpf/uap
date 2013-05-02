@@ -296,6 +296,8 @@ class AbstractStep(object):
         log['pipeline_log'] = unix_pipeline.get_log()
         log['start_time'] = start_time
         log['end_time'] = end_time
+        if self._pipeline.git_dirty_diff:
+            log['git_dirty_diff'] = self._pipeline.git_dirty_diff
 
         annotation_path = os.path.join(self.get_output_directory(), '.' + run_id + '-annotation.yaml')
         # overwrite the annotation if it already exists

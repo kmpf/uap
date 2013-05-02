@@ -43,6 +43,8 @@ class Pipeline(object):
 
     def __init__(self):
         
+        self.git_dirty_diff = None
+        
         # now determine the Git hash of the repository
         self.git_hash_tag = subprocess.check_output(['git', 'describe', '--all', '--dirty', '--long']).strip()
         if '-dirty' in self.git_hash_tag:
@@ -50,6 +52,7 @@ class Pipeline(object):
                 print("The repository has uncommitted changes, which is why we will exit right now.")
                 print("If this is not a production environment, you can skip this test by specifying --even-if-dirty on the command line.")
                 exit(1)
+            self.git_dirty_diff = subprocess.check_output(['git', 'diff'])
 
         if '--even-if-dirty' in sys.argv:
             sys.argv.remove('--even-if-dirty')
