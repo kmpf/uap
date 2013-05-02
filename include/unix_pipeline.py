@@ -199,8 +199,22 @@ def launch_copy_process(fin, fout_path, report_path, other_pid, which, pipe, use
 def launch(args, stdout_path = None, stderr_path = None, use_stdin = subprocess.PIPE):
     '''
     Launch a process.
+    
+    args is the argument list. 
+    
+    Attention: the first element of args can be a list, for cases like this:
+    $ python /path/to/script.py (without shebang line and executable flag or something)
+    instead of:
+    $ /path/to/script.py
     '''
 
+    program_name = args[0]
+    if args[0].__class__ == list:
+        new_args = args[0]
+        program_name = new_args[-1]
+        new_args.extend(args[1:])
+        args = new_args
+        
     proc = subprocess.Popen(args,
         stdin = use_stdin,
         stdout = subprocess.PIPE,
@@ -208,7 +222,7 @@ def launch(args, stdout_path = None, stderr_path = None, use_stdin = subprocess.
         bufsize = COPY_BLOCK_SIZE,
         preexec_fn = os.setsid
     )
-    name_for_pid[proc.pid] = os.path.basename(args[0])
+    name_for_pid[proc.pid] = os.path.basename(program_name)
     add_proc_info(proc.pid, args = args)
     log("Launched " + ' '.join(args) + " as PID " + str(proc.pid) + '.')
 

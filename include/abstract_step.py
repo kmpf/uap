@@ -383,7 +383,7 @@ class AbstractStep(object):
             self._connection_restrictions[connection] = constraints
         
     def require_tool(self, tool):
-        self._tools[tool] = self._pipeline.config['tools'][tool]['path']
+        self._tools[tool] = copy.deepcopy(self._pipeline.config['tools'][tool]['path'])
         
     def get_input_run_info_for_connection(self, in_key):
         if in_key[0:3] != 'in/':

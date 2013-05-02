@@ -45,7 +45,7 @@ class HtSeqCount(AbstractStep):
     
     
     def execute(self, run_id, run_info):
-        run_info['info']['features_path'] = '/home/michael/programming/rnaseq-pipeline/out/gencode-7898/genes.gtf.gz'
+        #run_info['info']['features_path'] = '/home/michael/programming/rnaseq-pipeline/out/gencode-7898/genes.gtf.gz'
 
         features_fifo = unix_pipeline.mkfifo()
         

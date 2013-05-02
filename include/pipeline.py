@@ -248,7 +248,9 @@ class Pipeline(object):
         if not 'tools' in self.config:
             return
         for tool_id, info in self.config['tools'].items():
-            command = [info['path']]
+            command = [copy.deepcopy(info['path'])]
+            if info['path'].__class__ == list:
+                command = copy.deepcopy(info['path'])
             if 'get_version' in info:
                 if info['get_version'] is None:
                     self.tool_versions[tool_id] = {
@@ -261,7 +263,7 @@ class Pipeline(object):
                 proc = subprocess.Popen(command, stdout = subprocess.PIPE,
                     stderr = subprocess.PIPE, close_fds = True)
             except:
-                raise ConfigurationException("Tool not found: " + info['path'])
+                raise ConfigurationException("Tool not found: %s" % info['path'])
             proc.wait()
             exit_code = proc.returncode
             self.tool_versions[tool_id] = {
@@ -273,7 +275,7 @@ class Pipeline(object):
             if 'exit_code' in info:
                 expected_exit_code = info['exit_code']
             if exit_code != expected_exit_code:
-                raise ConfigurationException("Tool check failed for " + tool_id + ": " + ' '.join(command) + ' - exit code is: ' + str(exit_code) + ' (expected ' + str(expected_exit_code) + ')')
+                raise ConfigurationException("Tool check failed for %s: %s - exit code is: %d (expected %d)" % (tool_id, ' '.join(command), exit_code, expected_exit_code))
 
     def notify(self, message):
         '''
