@@ -339,6 +339,8 @@ class UnixPipeline(object):
         proc, stdout_copy = launch(args, stdout_path, stderr_path, use_stdin = self.use_stdin)
         self.use_stdin = stdout_copy
 
+        if len(self.pipeline_procs) > 0:
+            proc_details[proc.pid]['use_stdin_of'] = self.pipeline_procs[-1].pid
         self.pipeline_procs.append(proc)
 
     def seal(self):
