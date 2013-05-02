@@ -250,6 +250,11 @@ class Pipeline(object):
         for tool_id, info in self.config['tools'].items():
             command = [info['path']]
             if 'get_version' in info:
+                if info['get_version'] is None:
+                    self.tool_versions[tool_id] = {
+                        '(not applicable)'
+                    }
+                    continue
                 command.append(info['get_version'])
             exit_code = None
             try:

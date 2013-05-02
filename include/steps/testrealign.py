@@ -21,6 +21,8 @@ class TestRealign(AbstractStep):
         self.require_tool('samtools')
         self.require_tool('pigz')
         self.require_tool('cat4m')
+        self.require_tool('grep')
+        self.require_tool('invertGood')
 
     def setup_runs(self, complete_input_run_info, connection_info):
         # make sure files are available
@@ -69,12 +71,22 @@ class TestRealign(AbstractStep):
             self.tool('samtools'),
             'view', '-h', '-'
         ]
+        
+        grep = [
+            self.tool('grep'),
+            '-v',
+            "\t\\*\t"
+        ]
+        
+        invertGood = [
+            self.tool('invertGood')
+        ]
 
         testrealign = [
             self.tool('testrealign'),
             '-q', '/dev/stdin',
             '-d', fifo_path_genome,
-            '-t', '10',
+            '-t', '3',
             '-M', run_info['info']['maxdist'],
             '-o', '/dev/stdout',
             '-U', fifo_path_splicesites,
@@ -86,6 +98,8 @@ class TestRealign(AbstractStep):
         p = unix_pipeline.UnixPipeline()
         p.append(cat4m)
         p.append(samtools)
+        p.append(grep)
+        p.append(invertGood)
         p.append(testrealign, stderr_path = run_info['output_files']['log'].keys()[0])
         p.append(pigz, stdout_path = run_info['output_files']['alignments'].keys()[0])
         

@@ -141,6 +141,7 @@ def launch_copy_process(fin, fout_path, report_path, other_pid, which, pipe, use
         checksum = hashlib.sha1()
         tail = ''
         length = 0
+        newline_count = 0
         while True:
             block = fin.read(COPY_BLOCK_SIZE)
             if len(block) == 0:
@@ -158,6 +159,9 @@ def launch_copy_process(fin, fout_path, report_path, other_pid, which, pipe, use
                 
             # update length
             length += len(block)
+            
+            # update newline_count
+            newline_count += block.count('\n')
             
             # write block to output file
             if fdout is not None:
@@ -178,6 +182,7 @@ def launch_copy_process(fin, fout_path, report_path, other_pid, which, pipe, use
             report['sha1'] = checksum.hexdigest()
             report['tail'] = tail
             report['length'] = length
+            report['lines'] = newline_count
             freport.write(yaml.dump(report))
             
         os._exit(0)
