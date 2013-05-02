@@ -98,7 +98,7 @@ class TestRealign(AbstractStep):
         p = unix_pipeline.UnixPipeline()
         p.append(cat4m)
         p.append(samtools)
-        #p.append(grep)
+        p.append(grep)
         p.append(invertGood)
         p.append(testrealign, stderr_path = run_info['output_files']['log'].keys()[0])
         p.append(pigz, stdout_path = run_info['output_files']['alignments'].keys()[0])
