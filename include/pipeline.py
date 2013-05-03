@@ -1,3 +1,4 @@
+import base64
 import copy
 import csv
 import datetime
@@ -277,7 +278,7 @@ class Pipeline(object):
             if exit_code != expected_exit_code:
                 raise ConfigurationException("Tool check failed for %s: %s - exit code is: %d (expected %d)" % (tool_id, ' '.join(command), exit_code, expected_exit_code))
 
-    def notify(self, message):
+    def notify(self, message, attachment = None):
         '''
         prints a notification to the screen and optionally delivers the
         message on additional channels (as defined by the configuration)
@@ -292,7 +293,11 @@ class Pipeline(object):
                     token = match.group(2)
                     args = ['curl', host, '-X', 'POST', '-d', '@-']
                     proc = subprocess.Popen(args, stdin = subprocess.PIPE)
-                    proc.stdin.write(json.dumps({'token': token, 'message': message}))
+                    data = {'token': token, 'message': message}
+                    if attachment:
+                        data['attachment_name'] = attachment['name']
+                        data['attachment_data'] = base64.b64encode(attachment['data'])
+                    proc.stdin.write(json.dumps(data))
                     proc.stdin.close()
                     proc.wait()
             except:

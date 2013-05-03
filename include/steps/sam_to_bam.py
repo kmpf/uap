@@ -43,7 +43,7 @@ class SamToBam(AbstractStep):
 
     def execute(self, run_id, run_info):
         sam_path = run_info['info']['in-sam']
-        unsorted_bam_path = self.get_temporary_path('sam_to_bam-unsorted-', '.bam')
+        unsorted_bam_path = self.get_temporary_path('sam_to_bam_unsorted', 'output')
         sorted_bam_path = run_info['info']['out-bam']
         sorted_bai_path = run_info['info']['out-bai']
         

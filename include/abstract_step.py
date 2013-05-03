@@ -8,9 +8,11 @@ import hashlib
 import inspect
 import json
 import os
+import re
 import random
 import socket
 import string
+import StringIO
 import subprocess
 import tempfile
 import traceback
@@ -60,6 +62,8 @@ class AbstractStep(object):
         self._tools = dict()
         
         self.needs_parents = False
+        
+        self.known_paths = dict()
 
     def set_name(self, step_name):
         self._step_name = step_name
@@ -223,6 +227,7 @@ class AbstractStep(object):
             return self._pipeline.states.WAITING
 
     def run(self, run_id):
+        
         # create the output directory if it doesn't exist yet
         if not os.path.isdir(self.get_output_directory()):
             os.makedirs(self.get_output_directory())
@@ -234,6 +239,18 @@ class AbstractStep(object):
 
         # call execute() but pass output file paths with the temporary directory
         temp_run_info = copy.deepcopy(self.get_run_info()[run_id])
+
+        # prepare self.known_paths
+        self.known_paths = dict()
+        for tag, tag_info in temp_run_info['output_files'].items():
+            for output_path, input_paths in tag_info.items():
+                # add the real output path
+                self.known_paths[output_path] = {'type': 'output', 'designation': 'output', 'label': os.path.basename(output_path), 'type': 'step_file'}
+                # ...and also add the temporary output path
+                self.known_paths[os.path.join(temp_directory, os.path.basename(output_path))] = {'type': 'output', 'designation': 'output', 'label': "%s\\n(%s)" % (os.path.basename(output_path), tag), 'type': 'step_file', 'real_path': output_path}
+                for input_path in input_paths:
+                    self.known_paths[input_path] = {'type': 'input', 'designation': 'input', 'label': os.path.basename(input_path), 'type': 'step_file'}
+
         temp_paths = {}
         for tag in temp_run_info['output_files'].keys():
             for out_path, in_paths in temp_run_info['output_files'][tag].items():
@@ -261,30 +278,16 @@ class AbstractStep(object):
                 else:
                     raise StandardError("The step failed to produce an output file it announced: %s\n\nHere are the details:\n%s" % (os.path.basename(out_path), yaml.dump(unix_pipeline.get_log(), default_flow_style = False)))
 
+        end_time = datetime.datetime.now()
+        
         self._temp_directory = None
         
-        # step has completed successfully, now determine how many jobs are still left
-        # but first invalidate the FS cache because things have changed by now...
-        AbstractStep.fsc = fscache.FSCache()
-        
-        count = {}
-        for _ in self.get_run_ids():
-            state = self.get_run_state(_)
-            if not state in count:
-                count[state] = 0
-            count[state] += 1
-        remaining_task_info = ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())])
-
-        end_time = datetime.datetime.now()
-        message = "[OK] %s/%s successfully finished.\n" % (str(self), run_id)
-        message += str(self) + ': ' + remaining_task_info + "\n"
-        self._pipeline.notify(message)
-
         # now write the annotation
         log = {}
         log['step'] = {}
         log['step']['options'] = self.options
         log['step']['name'] = self.get_step_name()
+        log['step']['known_paths'] = self.known_paths
         log['run'] = {}
         log['run']['run_info'] = self.get_run_info()[run_id]
         log['run']['run_id'] = run_id
@@ -303,6 +306,25 @@ class AbstractStep(object):
         # overwrite the annotation if it already exists
         with open(annotation_path, 'w') as f:
             f.write(yaml.dump(log, default_flow_style = False))
+            
+        try:
+            gv = self.render_pipeline([log])
+            dot = subprocess.Popen(['dot', '-Tsvg'], stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+            dot.stdin.write(gv)
+            dot.stdin.close()
+            svg = dot.stdout.read()
+            with open(annotation_path + '.svg', 'w') as f:
+                f.write(svg)
+                
+            dot = subprocess.Popen(['dot', '-Tpng'], stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+            dot.stdin.write(gv)
+            dot.stdin.close()
+            png = dot.stdout.read()
+            with open(annotation_path + '.png', 'w') as f:
+                f.write(png)
+        except:
+            raise
+            pass
 
         # create a symbolic link to the annotation for every output file
         for tag in temp_run_info['output_files'].keys():
@@ -322,6 +344,27 @@ class AbstractStep(object):
         except OSError:
             pass
         
+        # step has completed successfully, now determine how many jobs are still left
+        # but first invalidate the FS cache because things have changed by now...
+        AbstractStep.fsc = fscache.FSCache()
+        
+        count = {}
+        for _ in self.get_run_ids():
+            state = self.get_run_state(_)
+            if not state in count:
+                count[state] = 0
+            count[state] += 1
+        remaining_task_info = ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())])
+
+        message = "[OK] %s/%s successfully finished.\n" % (str(self), run_id)
+        message += str(self) + ': ' + remaining_task_info + "\n"
+        attachment = None
+        if os.path.exists(annotation_path + '.png'):
+            attachment = dict()
+            attachment['name'] = 'details.png'
+            attachment['data'] = open(annotation_path + '.png').read()
+        self._pipeline.notify(message, attachment)
+
         # finally, reset the unix pipeline module
         unix_pipeline.clear()
 
@@ -331,7 +374,7 @@ class AbstractStep(object):
         '''
         return self._tools[key]
     
-    def get_temporary_path(self, prefix, suffix):
+    def get_temporary_path(self, suffix = '', designation = None):
         '''
         Returns a temporary path with the prefix and suffix specified. 
         The returned path will be in the temporary directory of the step 
@@ -340,14 +383,227 @@ class AbstractStep(object):
         if not self._temp_directory:
             raise StandardError("Temporary directory not set, you cannot call get_temporary_path from setup_runs.")
 
-        _, _path = tempfile.mkstemp(suffix, prefix, self._temp_directory)
+        _, _path = tempfile.mkstemp(suffix, '', self._temp_directory)
         os.close(_)
         os.unlink(_path)
+        
+        self.known_paths[_path] = {'label': suffix, 'designation': designation, 'type': 'file'}
 
         return _path        
 
+    def get_temporary_fifo(self, suffix = '', designation = None):
+        '''
+        Create a temporary FIFO and return its path.
+        '''
+        path = self.get_temporary_path(suffix, designation)
+        os.mkfifo(path)
+        self.known_paths[path]['type'] = 'fifo'
+        return path
+
     def __str__(self):
         return self._step_name
+    
+    @classmethod
+    def render_pipeline(cls, logs):
+        hash = {'nodes': {}, 'edges': {}, 'clusters': {}}
+        for log in logs:
+            temp = cls.render_pipeline_hash(log)
+            for _ in ['nodes', 'edges', 'clusters']:
+                hash[_].update(temp[_])
+
+        f = StringIO.StringIO()
+        f.write("digraph {\n")
+        f.write("    rankdir = TB;\n")
+        f.write("    splines = true;\n")
+        f.write("    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", nodesep = 0.2, ranksep = 0.3];\n")
+        f.write("    node [fontname = Helvetica, fontsize = 12, shape = rect, style = filled];\n")
+        f.write("    edge [fontname = Helvetica, fontsize = 12];\n")
+        f.write("\n")
+        
+        f.write("    // nodes\n")
+        f.write("\n")
+        for node_key, node_info in hash['nodes'].items():
+            f.write("    _%s" % node_key)
+            if len(node_info) > 0:
+                f.write(" [%s]" % ', '.join(['%s = "%s"' % (k, node_info[k]) for k in node_info.keys()]))
+            f.write(";\n")
+            
+        f.write("\n")
+        
+        f.write("    // edges\n")
+        f.write("\n")
+        for edge_pair in hash['edges'].keys():
+            if edge_pair[0] in hash['nodes'] and edge_pair[1] in hash['nodes']:
+                f.write("    _%s -> _%s;\n" % (edge_pair[0], edge_pair[1]))
+        
+        f.write("\n")
+        
+        '''
+        f.write("    // clusters\n")
+        f.write("\n")
+        for cluster_hash, cluster_info in hash['clusters'].items():
+            f.write("    subgraph cluster_%s {\n" % cluster_hash)
+            for node in cluster_info['group']:
+                f.write("        _%s;\n" % node)
+                
+            f.write("        label = \"%s\";\n" % cluster_info['task_name'])
+            f.write("        graph [style = dashed];\n")
+            f.write("    }\n")
+        '''
+        
+        f.write("}\n")
+        
+        result = f.getvalue()
+        f.close()
+        return result
+        
+    @classmethod
+    def render_pipeline_hash(cls, log):
+        
+        def str_to_sha1(s):
+            return hashlib.sha1(s).hexdigest()
+        
+        def pid_hash(pid, suffix = ''):
+            hashtag = "%s/%s/%d/%s" % (log['step']['name'], log['run']['run_id'], pid, suffix)
+            return hashlib.sha1(hashtag).hexdigest()
+        
+        def file_hash(path):
+            if 'real_path' in log['step']['known_paths'][path]:
+                path = log['step']['known_paths'][path]['real_path']
+            return str_to_sha1(path)
+        
+        #print(yaml.dump(self.known_paths, default_flow_style = False))
+        
+        hash = dict()
+        hash['nodes'] = dict()
+        hash['edges'] = dict()
+        hash['clusters'] = dict()
+        
+        def bytes_to_str(num):
+            for _, x in enumerate(['bytes','k','M','G']):
+                if num < 1024.0:
+                    if _ == 0:
+                        return "%d %s" % (num, x)
+                    else:
+                        return "%1.1f %sB" % (num, x)
+                num /= 1024.0
+            return "%1.1f %sB" % (num, 'T')
+        
+        def add_file_node(path):
+            if 'real_path' in log['step']['known_paths'][path]:
+                path = log['step']['known_paths'][path]['real_path']
+            label = log['step']['known_paths'][path]['label']
+            color = '#ffffff'
+            if log['step']['known_paths'][path]['type'] == 'fifo':
+                color = '#c4f099'
+            elif log['step']['known_paths'][path]['type'] == 'file':
+                color = '#8ae234'
+            elif log['step']['known_paths'][path]['type'] == 'step_file':
+                color = '#97b7c8'
+            hash['nodes'][str_to_sha1(path)] = {
+                'label': label,
+                'fillcolor': color
+            }
+            
+        
+        for proc_info in copy.deepcopy(log['pipeline_log']['processes']):
+            pid = proc_info['pid']
+            label = "PID %d" % pid
+            name = '(unknown)'
+            if 'name' in proc_info:
+                name = proc_info['name']
+            label = "%s" % (proc_info['name'])
+            if 'args' in proc_info:
+                stripped_args = []
+                for arg in copy.deepcopy(proc_info['args']):
+                    if arg in log['step']['known_paths']:
+                        add_file_node(arg)
+                    if arg in log['step']['known_paths']:
+                        if log['step']['known_paths'][arg]['type'] != 'step_file':
+                            arg = log['step']['known_paths'][arg]['label']
+                        else:
+                            arg = os.path.basename(arg)
+                    else:
+                        if arg[0:4] != '/dev':
+                            arg = os.path.basename(arg)
+                    stripped_args.append(arg.replace('\t', '\\t').replace('\\', '\\\\'))
+                label = "%s" % (' '.join(stripped_args))
+            if 'args' in proc_info:
+                cat4m_seen_minus_o = False
+                for arg in proc_info['args']:
+                    fifo_type = None
+                    if name == 'cat4m' and arg == '-o':
+                        cat4m_seen_minus_o = True
+                    if arg in log['step']['known_paths']:
+                        add_file_node(arg)
+                        if name == 'cat4m':
+                            if cat4m_seen_minus_o:
+                                fifo_type = 'output'
+                            else:
+                                fifo_type = 'input'
+                        else:
+                            # we can't know whether the fifo is for input or output,
+                            # ask unix_pipeline
+                            fifo_type = log['step']['known_paths'][arg]['designation']
+                        if fifo_type == 'input':
+                            # add edge from file to proc
+                            hash['edges'][(file_hash(arg), pid_hash(pid))] = dict()
+                        elif fifo_type == 'output':
+                            # add edge from proc to file
+                            hash['edges'][(pid_hash(pid), file_hash(arg))] = dict()
+            # add proc
+            hash['nodes'][pid_hash(pid)] = {
+                'label': label,
+                'fillcolor': "#fce94f"
+            }
+            for which in ['stdout', 'stderr']:
+                key = "%s_copy" % which
+                if key in proc_info:
+                    if (proc_info[key]['length'] == 0) and (not 'sink_full_path' in proc_info[key]):
+                        # skip this stdout/stderr box if it leads to nothing
+                        continue
+                    size_label = '(empty)'
+                    if proc_info[key]['length'] > 0:
+                        size_label = "(%s / %s lines)" % (bytes_to_str(proc_info[key]['length']), "{:,}".format(proc_info[key]['lines']))
+                    label = "%s\\n%s" % (which, size_label)
+                    # add proc_which
+                    hash['nodes'][pid_hash(pid, which)] = {
+                        'label': label,
+                        'fillcolor': "#fdf3a7"
+                    }
+                    if 'sink_full_path' in proc_info[key]:
+                        path = proc_info[key]['sink_full_path']
+                        add_file_node(path)
+
+        for proc_info in copy.deepcopy(log['pipeline_log']['processes']):
+            pid = proc_info['pid']
+            if 'use_stdin_of' in proc_info:
+                other_pid = proc_info['use_stdin_of']
+                hash['edges'][(pid_hash(other_pid, 'stdout'), pid_hash(pid))] = dict()
+            for which in ['stdout', 'stderr']:
+                key = "%s_copy" % which
+                if key in proc_info:
+                    other_pid = proc_info[key]['pid']
+                    hash['edges'][(pid_hash(pid), pid_hash(pid, which))] = dict()
+                    if 'sink_full_path' in proc_info[key]:
+                        hash['edges'][(pid_hash(pid, which), file_hash(proc_info[key]['sink_full_path']))] = dict()
+
+        # define nodes which go into subgraph
+        step_file_nodes = dict()
+        for path, path_info in log['step']['known_paths'].items():
+            if path_info['type'] == 'step_file':
+                step_file_nodes[file_hash(path)] = path_info['designation']
+
+        task_name = "%s/%s" % (log['step']['name'], log['run']['run_id'])
+        cluster_hash = str_to_sha1(task_name)
+        hash['clusters'][cluster_hash] = dict()
+        hash['clusters'][cluster_hash]['task_name'] = task_name
+        hash['clusters'][cluster_hash]['group'] = list()
+        for node in hash['nodes'].keys():
+            if not node in step_file_nodes:
+                hash['clusters'][cluster_hash]['group'].append(node)
+
+        return hash
 
     @classmethod
     def get_step_class_for_key(cls, key):

@@ -1,6 +1,6 @@
 import sys
 from abstract_step import *
-import subprocess
+import unix_pipeline
 
 class FixCutadapt(AbstractStep):
     
@@ -14,6 +14,7 @@ class FixCutadapt(AbstractStep):
 
         self.require_tool('cat4m')
         self.require_tool('pigz')
+        self.require_tool('fix_cutadapt')
 
     def setup_runs(self, complete_input_run_info, connection_info):
         output_run_info = {}
@@ -35,43 +36,47 @@ class FixCutadapt(AbstractStep):
         return output_run_info
 
     def execute(self, run_id, run_info):
-        cat4m1 = subprocess.Popen([self.tool('cat4m'), run_info['info']['R1-in']], bufsize = -1, stdout = subprocess.PIPE)
-        cat4m2 = subprocess.Popen([self.tool('cat4m'), run_info['info']['R2-in']], bufsize = -1, stdout = subprocess.PIPE)
+        fifo_in_R1 = self.get_temporary_fifo('fifo_in_R1', 'input')
+        fifo_in_R2 = self.get_temporary_fifo('fifo_in_R2', 'input')
+        fifo_out_R1 = self.get_temporary_fifo('fifo_out_R1', 'output')
+        fifo_out_R2 = self.get_temporary_fifo('fifo_out_R2', 'output')
+        
+        cat4m1 = [self.tool('cat4m'), run_info['info']['R1-in']]
+        pigz1 = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+        
+        p1 = unix_pipeline.UnixPipeline()
+        p1.append(cat4m1)
+        p1.append(pigz1, stdout_path = fifo_in_R1)
+        
+        cat4m2 = [self.tool('cat4m'), run_info['info']['R2-in']]
+        pigz2 = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+        
+        p2 = unix_pipeline.UnixPipeline()
+        p2.append(cat4m2)
+        p2.append(pigz2, stdout_path = fifo_in_R2)
 
-        p1 = subprocess.Popen([self.tool('pigz'), "--decompress", "--stdout", "--processes", "1"], bufsize = -1, stdout = subprocess.PIPE, stdin = cat4m1.stdout)
-        fin1 = p1.stdout
+        fix_cutadapt = [
+            self.tool('fix_cutadapt'),
+            fifo_in_R1,
+            fifo_in_R2,
+            fifo_out_R1,
+            fifo_out_R2
+        ]
+        
+        unix_pipeline.launch(fix_cutadapt)
+        
+        p3 = unix_pipeline.UnixPipeline()
+        cat4m3 = [self.tool('cat4m'), fifo_out_R1]
+        pigz3 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '1', '--stdout']
+        
+        p4 = unix_pipeline.UnixPipeline()
+        cat4m4 = [self.tool('cat4m'), fifo_out_R2]
+        pigz4 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '1', '--stdout']
 
-        p2 = subprocess.Popen([self.tool('pigz'), "--decompress", "--stdout", "--processes", "1"], bufsize = -1, stdout = subprocess.PIPE, stdin = cat4m2.stdout)
-        fin2 = p2.stdout
-
-        p3 = subprocess.Popen([self.tool('pigz'), "--blocksize", "4096", "--processes", "3", '-c'], bufsize = -1, stdin = subprocess.PIPE, stdout = open(run_info['info']['R1-out'], 'w'))
-        fout1 = p3.stdin
-        p4 = subprocess.Popen([self.tool('pigz'), "--blocksize", "4096", "--processes", "3", '-c'], bufsize = -1, stdin = subprocess.PIPE, stdout = open(run_info['info']['R2-out'], 'w'))
-        fout2 = p4.stdin
-
-        rcount = 0
-        wcount = 0
-        while True:
-            lines1 = []
-            lines2 = []
-            for _ in range(4):
-                lines1.append(fin1.readline())
-                lines2.append(fin2.readline())
-            if (len(lines1[0]) == 0):
-                break
-            if not (lines1[1] == "\n" or lines2[1] == "\n"):
-                for _ in range(4):
-                    fout1.write(lines1[_])
-                    fout2.write(lines2[_])
-                wcount += 1
-            rcount += 1
-
-        fout1.flush()
-        fout1.close()
-        p3.wait()
-
-        fout2.flush()
-        fout2.close()
-        p4.wait()
-
-        print("Read " + str(rcount) + " entries, wrote " + str(wcount) + " entries.")
+        p3.append(cat4m3)
+        p3.append(pigz3, stdout_path = run_info['info']['R1-out'])
+        
+        p4.append(cat4m4)
+        p4.append(pigz4, stdout_path = run_info['info']['R2-out'])
+        
+        unix_pipeline.wait()

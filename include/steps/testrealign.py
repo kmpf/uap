@@ -56,11 +56,12 @@ class TestRealign(AbstractStep):
         return output_run_info
 
     def execute(self, run_id, run_info):
-        fifo_path_genome = unix_pipeline.mkfifo('realigner-genome-fifo')
-        fifo_path_splicesites = unix_pipeline.mkfifo('realigner-splicesites-fifo')
-        fifo_path_transrealigned = unix_pipeline.mkfifo('realigner-transrealigned-fifo')
+        fifo_path_genome = self.get_temporary_fifo('genome-fifo', 'input')
+        fifo_path_splicesites = self.get_temporary_fifo('splicesites-fifo', 'output')
+        fifo_path_transrealigned = self.get_temporary_fifo('transrealigned-fifo', 'output')
         
         unix_pipeline.launch([self.tool('cat4m'), self.options['genome'], '-o', fifo_path_genome])
+        #unix_pipeline.launch([self.tool('cat4m'), self.options['genome']], stdout_path = fifo_path_genome)
         
         cat4m = [
             self.tool('cat4m'),

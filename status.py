@@ -7,7 +7,7 @@ import yaml
 
 def main():
     p = pipeline.Pipeline()
-
+    
     if len(sys.argv) > 1:
         if sys.argv[1] == '--sources':
             # print all sources (i. e. instances of AbstractSourceStep)

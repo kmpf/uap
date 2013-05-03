@@ -65,7 +65,12 @@ def add_proc_info(pid, name = None, args = None):
     if name is not None:
         proc_details[pid]['name'] = name
     if args is not None:
-        proc_details[pid]['args'] = ' '.join(args)
+        proc_details[pid]['args'] = copy.deepcopy(args)
+        if name is None:
+            name = copy.deepcopy(args[0])
+            if name.__class__ == list:
+                name = name[-1]
+            proc_details[pid]['name'] = os.path.basename(name)
 
 def log(message):
     '''
@@ -97,16 +102,6 @@ def get_log():
     log['log'] = up_log
     return log
     
-def mkfifo(suffix = ''):
-    '''
-    Create a temporary FIFO and return its path.
-    '''
-    _, path = tempfile.mkstemp(suffix)
-    os.close(_)
-    os.unlink(path)
-    os.mkfifo(path)
-    return path
-
 def temppath(suffix = ''):
     '''
     Return a temporary file path.
@@ -235,7 +230,8 @@ def launch(args, stdout_path = None, stderr_path = None, use_stdin = subprocess.
         'stream': 'stdout',
         'pid': proc.pid,
         'args': args,
-        'sink': os.path.basename(stdout_path) if stdout_path else None
+        'sink': os.path.basename(stdout_path) if stdout_path else None,
+        'sink_full_path': stdout_path if stdout_path else None
     }
 
     os.close(pipe[1])
@@ -247,7 +243,8 @@ def launch(args, stdout_path = None, stderr_path = None, use_stdin = subprocess.
         'stream': 'stderr',
         'pid': proc.pid,
         'args': args,
-        'sink': os.path.basename(stderr_path) if stderr_path else None
+        'sink': os.path.basename(stderr_path) if stderr_path else None,
+        'sink_full_path': stderr_path if stderr_path else None
     }
     
     return (proc, pipe[0])
@@ -290,6 +287,7 @@ def wait():
                         if copy_process_reports[pid]['sink']:
                             sha1_checksum_for_file_basename[copy_process_reports[pid]['sink']] = report['sha1']
                             proc_details[pid]['sink'] = copy_process_reports[pid]['sink']
+                            proc_details[pid]['sink_full_path'] = copy_process_reports[pid]['sink_full_path']
                         copy_process_reports[pid].update(report)
                         del copy_process_reports[pid]['report_path']
                         os.unlink(report_path)
@@ -355,4 +353,5 @@ class UnixPipeline(object):
             name_for_pid[pid] = 'null consumer'
             add_proc_info(pid, name = "null consumer for PID %d" % pid)
             log("Launched a null consumer with PID %d." % pid)
+            proc_details[pid]['use_stdin_of'] = self.pipeline_procs[-1].pid
             

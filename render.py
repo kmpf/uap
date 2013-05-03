@@ -2,6 +2,8 @@
 
 import sys
 sys.path.append('./include')
+import abstract_step
+import os
 import pipeline
 import subprocess
 import yaml
@@ -53,6 +55,29 @@ def gradient(x, gradient):
 
 def main():
     p = pipeline.Pipeline()
+    
+    if len(sys.argv) > 1:
+        logs = []
+        if sys.argv[1] == '--all':
+            for task in p.task_for_task_id.values():
+                annotation_path = os.path.join(task.step.get_output_directory(), '.%s-annotation.yaml' % task.run_id)
+                if os.path.exists(annotation_path):
+                    log = yaml.load(open(annotation_path))
+                    logs.append(log)
+        else:
+            for task_id in sys.argv[1:]:
+                task = p.task_for_task_id[task_id]
+                annotation_path = os.path.join(task.step.get_output_directory(), '.%s-annotation.yaml' % task.run_id)
+                if os.path.exists(annotation_path):
+                    log = yaml.load(open(annotation_path))
+                    logs.append(log)
+                else:
+                    print("Unable to find annotation at %s." % annotation_path)
+        gv = abstract_step.AbstractStep.render_pipeline(logs)
+        with open('out.gv', 'w') as f:
+            f.write(gv)
+            
+        exit(0)
     
     dot = subprocess.Popen(['dot', '-Tsvg'], stdin = subprocess.PIPE, stdout = subprocess.PIPE)
     

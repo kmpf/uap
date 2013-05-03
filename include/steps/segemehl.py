@@ -52,8 +52,8 @@ class Segemehl(AbstractStep):
         if out_name[-3:] != '.gz':
             raise StandardError("Expected .gz in output file name")
 
-        fifo_path_genome = unix_pipeline.mkfifo('segemehl-genome-fifo')
-        fifo_path_unmapped = unix_pipeline.mkfifo('segemehl-unmapped-fifo')
+        fifo_path_genome = self.get_temporary_fifo('segemehl-genome-fifo', 'input')
+        fifo_path_unmapped = self.get_temporary_fifo('segemehl-unmapped-fifo', 'output')
         
         unix_pipeline.launch([self.tool('cat4m'), self.options['genome'], '-o', fifo_path_genome])
 
