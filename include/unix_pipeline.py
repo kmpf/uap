@@ -203,7 +203,7 @@ def launch(args, stdout_path = None, stderr_path = None, use_stdin = subprocess.
     $ /path/to/script.py
     '''
 
-    program_name = args[0]
+    program_name = copy.deepcopy(args[0])
     if args[0].__class__ == list:
         new_args = args[0]
         program_name = new_args[-1]

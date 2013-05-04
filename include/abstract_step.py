@@ -56,6 +56,8 @@ class AbstractStep(object):
         the step is being run.
         '''
         
+        self._pipeline_log = dict()
+        
         self._cores = 1
         self._connections = set()
         self._connection_restrictions = {}
@@ -265,7 +267,6 @@ class AbstractStep(object):
         except Exception as e:
             self.end_time = datetime.datetime.now()
             annotation_path = self.write_annotation(run_id, self._temp_directory)
-            #self._pipeline.notify("[BAD] %s/%s failed on %s.\n\nHere are the details:\n%s" % (str(self), run_id, socket.gethostname(), yaml.dump(unix_pipeline.get_log(), default_flow_style = False)))
             message = "[BAD] %s/%s failed on %s.\n\nHere are the details:\n%s" % (str(self), run_id, socket.gethostname(), yaml.dump(unix_pipeline.get_log(), default_flow_style = False))
             attachment = None
             if os.path.exists(annotation_path + '.png'):
@@ -339,7 +340,14 @@ class AbstractStep(object):
         '''
         Return full path to a configured tool.
         '''
-        return self._tools[key]
+        return copy.deepcopy(self._tools[key])
+    
+    def append_pipeline_log(self, log):
+        if len(self._pipeline_log) == 0:
+            self._pipeline_log = copy.deepcopy(log)
+        else:
+            for k in self._pipeline_log.keys():
+                self._pipeline_log[k].update(log[k])
     
     def write_annotation(self, run_id, path):
         # now write the annotation
@@ -356,7 +364,7 @@ class AbstractStep(object):
         log['tool_versions'] = {}
         for tool in self._tools.keys():
             log['tool_versions'][tool] = self._pipeline.tool_versions[tool]
-        log['pipeline_log'] = unix_pipeline.get_log()
+        log['pipeline_log'] = self._pipeline_log
         log['start_time'] = self.start_time
         log['end_time'] = self.end_time
         if self._pipeline.git_dirty_diff:
@@ -383,32 +391,33 @@ class AbstractStep(object):
             with open(annotation_path + '.png', 'w') as f:
                 f.write(png)
         except:
+            raise
             pass
         
         return annotation_path
     
-    def get_temporary_path(self, suffix = '', designation = None):
+    def get_temporary_path(self, prefix = '', designation = None):
         '''
-        Returns a temporary path with the prefix and suffix specified. 
+        Returns a temporary path with the prefix specified. 
         The returned path will be in the temporary directory of the step 
         and will not exist yet.
         '''
         if not self._temp_directory:
             raise StandardError("Temporary directory not set, you cannot call get_temporary_path from setup_runs.")
 
-        _, _path = tempfile.mkstemp(suffix, '', self._temp_directory)
+        _, _path = tempfile.mkstemp('', prefix, self._temp_directory)
         os.close(_)
         os.unlink(_path)
         
-        self.known_paths[_path] = {'label': suffix, 'designation': designation, 'type': 'file'}
+        self.known_paths[_path] = {'label': prefix, 'designation': designation, 'type': 'file'}
 
         return _path        
 
-    def get_temporary_fifo(self, suffix = '', designation = None):
+    def get_temporary_fifo(self, prefix = '', designation = None):
         '''
         Create a temporary FIFO and return its path.
         '''
-        path = self.get_temporary_path(suffix, designation)
+        path = self.get_temporary_path(prefix, designation)
         os.mkfifo(path)
         self.known_paths[path]['type'] = 'fifo'
         return path
@@ -587,11 +596,11 @@ class AbstractStep(object):
             for which in ['stdout', 'stderr']:
                 key = "%s_copy" % which
                 if key in proc_info:
-                    if ('exit_code' in proc_info) and (proc_info['exit_code'] == 0) and (proc_info[key]['length'] == 0) and (not 'sink_full_path' in proc_info[key]):
+                    if ('exit_code' in proc_info) and (proc_info['exit_code'] == 0) and ('length' in proc_info[key]) and (proc_info[key]['length'] == 0) and (not 'sink_full_path' in proc_info[key]):
                         # skip this stdout/stderr box if it leads to nothing
                         continue
                     size_label = '(empty)'
-                    if proc_info[key]['length'] > 0:
+                    if ('length' in proc_info[key]) and (proc_info[key]['length'] > 0):
                         size_label = "(%s / %s lines)" % (bytes_to_str(proc_info[key]['length']), "{:,}".format(proc_info[key]['lines']))
                     label = "%s\\n%s" % (which, size_label)
                     

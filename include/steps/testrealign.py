@@ -1,6 +1,6 @@
 import sys
 from abstract_step import *
-import unix_pipeline
+import unix_pipeline2 as up2
 import yaml
 
 
@@ -56,6 +56,59 @@ class TestRealign(AbstractStep):
         return output_run_info
 
     def execute(self, run_id, run_info):
+        with up2.UnixPipeline(self) as up:
+            
+            fifo_path_genome = up.get_temporary_fifo('genome-fifo', 'input')
+            fifo_path_splicesites = up.get_temporary_fifo('splicesites-fifo', 'output')
+            fifo_path_transrealigned = up.get_temporary_fifo('transrealigned-fifo', 'output')
+            
+            up.launch([self.tool('cat4m'), self.options['genome'], '-o', fifo_path_genome])
+            
+            cat4m = [
+                self.tool('cat4m'),
+                run_info['info']['bam-in']
+            ]
+            
+            samtools = [
+                self.tool('samtools'),
+                'view', '-h', '-'
+            ]
+            
+            grep = [
+                self.tool('grep'),
+                '-v',
+                "\t\\*\t"
+            ]
+            
+            invertGood = [
+                self.tool('invertGood')
+            ]
+
+            testrealign = [
+                self.tool('testrealign'),
+                '-q', '/dev/stdin',
+                '-d', fifo_path_genome,
+                '-t', '4',
+                '-M', run_info['info']['maxdist'],
+                '-o', '/dev/stdout',
+                '-U', fifo_path_splicesites,
+                '-T', fifo_path_transrealigned
+            ]
+            
+            pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
+            
+            p1 = up.create_pipeline()
+            p1.append(cat4m)
+            p1.append(samtools)
+            p1.append(grep)
+            p1.append(invertGood)
+            p1.append(testrealign, stderr_path = run_info['output_files']['log'].keys()[0])
+            p1.append(pigz, stdout_path = run_info['output_files']['alignments'].keys()[0])
+            
+            up.launch([self.tool('cat4m'), fifo_path_splicesites], stdout_path = run_info['output_files']['splicesites'].keys()[0])
+            
+            up.launch([self.tool('cat4m'), fifo_path_transrealigned], stdout_path = run_info['output_files']['transrealigned'].keys()[0])
+        '''    
         fifo_path_genome = self.get_temporary_fifo('genome-fifo', 'input')
         fifo_path_splicesites = self.get_temporary_fifo('splicesites-fifo', 'output')
         fifo_path_transrealigned = self.get_temporary_fifo('transrealigned-fifo', 'output')
@@ -112,3 +165,4 @@ class TestRealign(AbstractStep):
         os.unlink(fifo_path_genome)
         os.unlink(fifo_path_splicesites)
         os.unlink(fifo_path_transrealigned)
+        '''

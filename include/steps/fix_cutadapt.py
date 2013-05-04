@@ -80,3 +80,9 @@ class FixCutadapt(AbstractStep):
         p4.append(pigz4, stdout_path = run_info['info']['R2-out'])
         
         unix_pipeline.wait()
+        
+        os.unlink(fifo_in_R1)
+        os.unlink(fifo_in_R2)
+        os.unlink(fifo_out_R1)
+        os.unlink(fifo_out_R2)
+        
