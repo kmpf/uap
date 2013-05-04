@@ -258,13 +258,24 @@ class AbstractStep(object):
 
         temp_run_info = fix_dict(temp_run_info, fix_func_dict_subst, temp_paths)
 
-        start_time = datetime.datetime.now()
+        self.start_time = datetime.datetime.now()
         self._pipeline.notify("[INFO] starting %s/%s on %s" % (str(self), run_id, socket.gethostname()))
         try:
             self.execute(run_id, temp_run_info)
         except Exception as e:
-            self._pipeline.notify("[BAD] %s/%s failed.\n\nHere are the details:\n%s" % (str(self), run_id, yaml.dump(unix_pipeline.get_log(), default_flow_style = False)))
+            self.end_time = datetime.datetime.now()
+            annotation_path = self.write_annotation(run_id, self._temp_directory)
+            #self._pipeline.notify("[BAD] %s/%s failed on %s.\n\nHere are the details:\n%s" % (str(self), run_id, socket.gethostname(), yaml.dump(unix_pipeline.get_log(), default_flow_style = False)))
+            message = "[BAD] %s/%s failed on %s.\n\nHere are the details:\n%s" % (str(self), run_id, socket.gethostname(), yaml.dump(unix_pipeline.get_log(), default_flow_style = False))
+            attachment = None
+            if os.path.exists(annotation_path + '.png'):
+                attachment = dict()
+                attachment['name'] = 'details.png'
+                attachment['data'] = open(annotation_path + '.png').read()
+            self._pipeline.notify(message, attachment)
             raise
+        
+        self.end_time = datetime.datetime.now()
         
         # if we're here, we can assume the step has finished successfully
         # now rename the output files (move from temp directory to
@@ -278,53 +289,9 @@ class AbstractStep(object):
                 else:
                     raise StandardError("The step failed to produce an output file it announced: %s\n\nHere are the details:\n%s" % (os.path.basename(out_path), yaml.dump(unix_pipeline.get_log(), default_flow_style = False)))
 
-        end_time = datetime.datetime.now()
-        
         self._temp_directory = None
-        
-        # now write the annotation
-        log = {}
-        log['step'] = {}
-        log['step']['options'] = self.options
-        log['step']['name'] = self.get_step_name()
-        log['step']['known_paths'] = self.known_paths
-        log['run'] = {}
-        log['run']['run_info'] = self.get_run_info()[run_id]
-        log['run']['run_id'] = run_id
-        log['config'] = self._pipeline.config
-        log['git_hash_tag'] = self._pipeline.git_hash_tag
-        log['tool_versions'] = {}
-        for tool in self._tools.keys():
-            log['tool_versions'][tool] = self._pipeline.tool_versions[tool]
-        log['pipeline_log'] = unix_pipeline.get_log()
-        log['start_time'] = start_time
-        log['end_time'] = end_time
-        if self._pipeline.git_dirty_diff:
-            log['git_dirty_diff'] = self._pipeline.git_dirty_diff
 
-        annotation_path = os.path.join(self.get_output_directory(), '.' + run_id + '-annotation.yaml')
-        # overwrite the annotation if it already exists
-        with open(annotation_path, 'w') as f:
-            f.write(yaml.dump(log, default_flow_style = False))
-            
-        try:
-            gv = self.render_pipeline([log])
-            dot = subprocess.Popen(['dot', '-Tsvg'], stdin = subprocess.PIPE, stdout = subprocess.PIPE)
-            dot.stdin.write(gv)
-            dot.stdin.close()
-            svg = dot.stdout.read()
-            with open(annotation_path + '.svg', 'w') as f:
-                f.write(svg)
-                
-            dot = subprocess.Popen(['dot', '-Tpng'], stdin = subprocess.PIPE, stdout = subprocess.PIPE)
-            dot.stdin.write(gv)
-            dot.stdin.close()
-            png = dot.stdout.read()
-            with open(annotation_path + '.png', 'w') as f:
-                f.write(png)
-        except:
-            raise
-            pass
+        annotation_path = self.write_annotation(run_id, self.get_output_directory())
 
         # create a symbolic link to the annotation for every output file
         for tag in temp_run_info['output_files'].keys():
@@ -356,7 +323,7 @@ class AbstractStep(object):
             count[state] += 1
         remaining_task_info = ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())])
 
-        message = "[OK] %s/%s successfully finished.\n" % (str(self), run_id)
+        message = "[OK] %s/%s successfully finished on %s.\n" % (str(self), run_id, socket.gethostname())
         message += str(self) + ': ' + remaining_task_info + "\n"
         attachment = None
         if os.path.exists(annotation_path + '.png'):
@@ -373,6 +340,52 @@ class AbstractStep(object):
         Return full path to a configured tool.
         '''
         return self._tools[key]
+    
+    def write_annotation(self, run_id, path):
+        # now write the annotation
+        log = {}
+        log['step'] = {}
+        log['step']['options'] = self.options
+        log['step']['name'] = self.get_step_name()
+        log['step']['known_paths'] = self.known_paths
+        log['run'] = {}
+        log['run']['run_info'] = self.get_run_info()[run_id]
+        log['run']['run_id'] = run_id
+        log['config'] = self._pipeline.config
+        log['git_hash_tag'] = self._pipeline.git_hash_tag
+        log['tool_versions'] = {}
+        for tool in self._tools.keys():
+            log['tool_versions'][tool] = self._pipeline.tool_versions[tool]
+        log['pipeline_log'] = unix_pipeline.get_log()
+        log['start_time'] = self.start_time
+        log['end_time'] = self.end_time
+        if self._pipeline.git_dirty_diff:
+            log['git_dirty_diff'] = self._pipeline.git_dirty_diff
+
+        annotation_path = os.path.join(path, '.' + run_id + '-annotation.yaml')
+        # overwrite the annotation if it already exists
+        with open(annotation_path, 'w') as f:
+            f.write(yaml.dump(log, default_flow_style = False))
+            
+        try:
+            gv = self.render_pipeline([log])
+            dot = subprocess.Popen(['dot', '-Tsvg'], stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+            dot.stdin.write(gv)
+            dot.stdin.close()
+            svg = dot.stdout.read()
+            with open(annotation_path + '.svg', 'w') as f:
+                f.write(svg)
+                
+            dot = subprocess.Popen(['dot', '-Tpng'], stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+            dot.stdin.write(gv)
+            dot.stdin.close()
+            png = dot.stdout.read()
+            with open(annotation_path + '.png', 'w') as f:
+                f.write(png)
+        except:
+            pass
+        
+        return annotation_path
     
     def get_temporary_path(self, suffix = '', designation = None):
         '''
@@ -552,24 +565,54 @@ class AbstractStep(object):
                             # add edge from proc to file
                             hash['edges'][(pid_hash(pid), file_hash(arg))] = dict()
             # add proc
+            something_went_wrong = False
+            if 'signal' in proc_info:
+                something_went_wrong = True
+            else:
+                if proc_info['exit_code'] != 0:
+                    something_went_wrong = True
+            color = "#fce94f"
+            if something_went_wrong:
+                color = "#d5291a"
+                if 'signal' in proc_info:
+                    label = "%s\\n(received %s)" % (label, proc_info['signal_name'] if 'signal_name' in proc_info else 'signal %d' % proc_info['signal'])
+                elif proc_info['exit_code'] != 0:
+                    label = "%s\\n(failed with exit code %d)" % (label, proc_info['exit_code'])
+                
             hash['nodes'][pid_hash(pid)] = {
                 'label': label,
-                'fillcolor': "#fce94f"
+                'fillcolor': color
             }
+            
             for which in ['stdout', 'stderr']:
                 key = "%s_copy" % which
                 if key in proc_info:
-                    if (proc_info[key]['length'] == 0) and (not 'sink_full_path' in proc_info[key]):
+                    if ('exit_code' in proc_info) and (proc_info['exit_code'] == 0) and (proc_info[key]['length'] == 0) and (not 'sink_full_path' in proc_info[key]):
                         # skip this stdout/stderr box if it leads to nothing
                         continue
                     size_label = '(empty)'
                     if proc_info[key]['length'] > 0:
                         size_label = "(%s / %s lines)" % (bytes_to_str(proc_info[key]['length']), "{:,}".format(proc_info[key]['lines']))
                     label = "%s\\n%s" % (which, size_label)
+                    
+                    something_went_wrong = False
+                    if 'signal' in proc_info:
+                        something_went_wrong = True
+                    else:
+                        if proc_info['exit_code'] != 0:
+                            something_went_wrong = True
+                    color = "#fdf3a7"
+                    if something_went_wrong:
+                        color = "#d5291a"
+                        if 'signal' in proc_info:
+                            label = "%s\\n(received %s)" % (label, proc_info['signal_name'] if 'signal_name' in proc_info else 'signal %d' % proc_info['signal'])
+                        elif proc_info['exit_code'] != 0:
+                            label = "%s\\n(failed with exit code %d)" % (label, proc_info['exit_code'])
+                                
                     # add proc_which
                     hash['nodes'][pid_hash(pid, which)] = {
                         'label': label,
-                        'fillcolor': "#fdf3a7"
+                        'fillcolor': color
                     }
                     if 'sink_full_path' in proc_info[key]:
                         path = proc_info[key]['sink_full_path']
