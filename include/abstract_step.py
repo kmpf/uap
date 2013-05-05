@@ -16,7 +16,6 @@ import StringIO
 import subprocess
 import tempfile
 import traceback
-import unix_pipeline
 import yaml
 
 
@@ -66,6 +65,10 @@ class AbstractStep(object):
         self.needs_parents = False
         
         self.known_paths = dict()
+        
+    def _reset(self):
+        self.known_paths = dict()
+        self._pipeline_log = dict()
 
     def set_name(self, step_name):
         self._step_name = step_name
@@ -266,8 +269,8 @@ class AbstractStep(object):
             self.execute(run_id, temp_run_info)
         except Exception as e:
             self.end_time = datetime.datetime.now()
-            annotation_path = self.write_annotation(run_id, self._temp_directory)
-            message = "[BAD] %s/%s failed on %s.\n\nHere are the details:\n%s" % (str(self), run_id, socket.gethostname(), yaml.dump(unix_pipeline.get_log(), default_flow_style = False))
+            annotation_path, annotation_str = self.write_annotation(run_id, self._temp_directory)
+            message = "[BAD] %s/%s failed on %s.\n\nHere are the details:\n%s" % (str(self), run_id, socket.gethostname(), annotation_str)
             attachment = None
             if os.path.exists(annotation_path + '.png'):
                 attachment = dict()
@@ -288,11 +291,12 @@ class AbstractStep(object):
                 if os.path.exists(out_path):
                     os.rename(out_path, destination_path)
                 else:
-                    raise StandardError("The step failed to produce an output file it announced: %s\n\nHere are the details:\n%s" % (os.path.basename(out_path), yaml.dump(unix_pipeline.get_log(), default_flow_style = False)))
+                    annotation_path, annotation_str = self.write_annotation(run_id, self._temp_directory)
+                    raise StandardError("The step failed to produce an output file it announced: %s\n\nHere are the details:\n%s" % (os.path.basename(out_path), annotation_str))
 
         self._temp_directory = None
 
-        annotation_path = self.write_annotation(run_id, self.get_output_directory())
+        annotation_path, annotation_str = self.write_annotation(run_id, self.get_output_directory())
 
         # create a symbolic link to the annotation for every output file
         for tag in temp_run_info['output_files'].keys():
@@ -334,7 +338,7 @@ class AbstractStep(object):
         self._pipeline.notify(message, attachment)
 
         # finally, reset the unix pipeline module
-        unix_pipeline.clear()
+        self._reset()
 
     def tool(self, key):
         '''
@@ -397,7 +401,7 @@ class AbstractStep(object):
             raise
             pass
         
-        return annotation_path
+        return annotation_path, yaml.dump(log, default_flow_style = False)
     
     def get_temporary_path(self, prefix = '', designation = None):
         '''
@@ -551,6 +555,8 @@ class AbstractStep(object):
                     else:
                         if arg[0:4] != '/dev':
                             arg = os.path.basename(arg)
+                            if len(arg) > 16 and re.match('^[A-Z]+$', arg[0]):
+                                arg = "%s[...]" % arg[:16]
                     stripped_args.append(arg.replace('\t', '\\t').replace('\\', '\\\\'))
                 label = "%s" % (' '.join(stripped_args))
             if 'args' in proc_info:
@@ -568,7 +574,6 @@ class AbstractStep(object):
                                 fifo_type = 'input'
                         else:
                             # we can't know whether the fifo is for input or output,
-                            # ask unix_pipeline
                             fifo_type = log['step']['known_paths'][arg]['designation']
                         if fifo_type == 'input':
                             # add edge from file to proc
