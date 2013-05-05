@@ -2,7 +2,7 @@ import sys
 from abstract_step import *
 import pipeline
 import re
-import unix_pipeline
+import process_pool
 import yaml
 
 class HtSeqCount(AbstractStep):
@@ -48,7 +48,6 @@ class HtSeqCount(AbstractStep):
     
     
     def execute(self, run_id, run_info):
-        p = unix_pipeline.UnixPipeline()
         
         if not 'mode' in self.options:
             self.options['mode'] = 'union'
@@ -58,21 +57,22 @@ class HtSeqCount(AbstractStep):
             self.options['type'] = 'exon'
         if not 'idattr' in self.options:
             self.options['idattr'] = 'gene_id'
+            
+        with process_pool.ProcessPool(self) as pool:
+            with pool.Pipeline(pool) as pipeline:
 
-        cat4m = [self.tool('cat4m'), run_info['info']['alignments_path']]
-        pigz = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
-        grep = [self.tool('grep'), '-v', "\t\\*\t"]
-        invertGood = [self.tool('invertGood')]
-        htseq_count = [self.tool('htseq-count')]
-        for key in ('mode', 'stranded', 'type', 'idattr'):
-            htseq_count.extend(['--%s' % key, self.options[key]])
-        htseq_count.extend(['-', run_info['info']['features_path']])
+                cat4m = [self.tool('cat4m'), run_info['info']['alignments_path']]
+                pigz = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+                grep = [self.tool('grep'), '-v', "\t\\*\t"]
+                invertGood = [self.tool('invertGood')]
+                htseq_count = [self.tool('htseq-count')]
+                for key in ('mode', 'stranded', 'type', 'idattr'):
+                    htseq_count.extend(['--%s' % key, self.options[key]])
+                htseq_count.extend(['-', run_info['info']['features_path']])
         
-        p.append(cat4m)
-        p.append(pigz)
-        p.append(grep)
-        p.append(invertGood)
-        p.append(htseq_count, stdout_path = run_info['info']['counts_path'])
-                
-        unix_pipeline.wait()
+                pipeline.append(cat4m)
+                pipeline.append(pigz)
+                pipeline.append(grep)
+                pipeline.append(invertGood)
+                pipeline.append(htseq_count, stdout_path = run_info['info']['counts_path'])
         

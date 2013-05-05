@@ -1,6 +1,6 @@
 import sys
 from abstract_step import *
-import unix_pipeline
+import process_pool
 import yaml
 
 
@@ -49,33 +49,31 @@ class SamToBam(AbstractStep):
         
         # samtools view
 
-        cat4m = [self.tool('cat4m'), sam_path]
-        pigz1 = [self.tool('pigz'), '--processes', '2', '-d', '-c']
-        samtools = [self.tool('samtools'), 'view', '-Sbt', self.options['genome'], '-']
+        with process_pool.ProcessPool(self) as pool:
+            with pool.Pipeline(pool) as pipeline:
+                cat4m = [self.tool('cat4m'), sam_path]
+                pigz1 = [self.tool('pigz'), '--processes', '2', '-d', '-c']
+                samtools = [self.tool('samtools'), 'view', '-Sbt', self.options['genome'], '-']
+                
+                pipeline.append(cat4m)
+                pipeline.append(pigz1)
+                pipeline.append(samtools, stdout_path = unsorted_bam_path)
         
-        p = unix_pipeline.UnixPipeline()
-        p.append(cat4m)
-        p.append(pigz1)
-        p.append(samtools, stdout_path = unsorted_bam_path)
-        
-        unix_pipeline.wait()
         
         # samtools sort
 
-        cat4m = [self.tool('cat4m'), unsorted_bam_path]
-        samtools = [self.tool('samtools'), 'sort', '-', sorted_bam_path[:-4]]
-        
-        p = unix_pipeline.UnixPipeline()
-        p.append(cat4m)
-        p.append(samtools)
-        
-        unix_pipeline.wait()
+        with process_pool.ProcessPool(self) as pool:
+            with pool.Pipeline(pool) as pipeline:
+                cat4m = [self.tool('cat4m'), unsorted_bam_path]
+                samtools = [self.tool('samtools'), 'sort', '-', sorted_bam_path[:-4]]
+                
+                pipeline.append(cat4m)
+                pipeline.append(samtools)
 
         # samtools index
         
-        unix_pipeline.launch([self.tool('samtools'), 'index', sorted_bam_path, '/dev/stdout'],
-            stdout_path = sorted_bai_path)
+        with process_pool.ProcessPool(self) as pool:
+            pool.launch([self.tool('samtools'), 'index', sorted_bam_path, '/dev/stdout'],
+                stdout_path = sorted_bai_path)
 
-        unix_pipeline.wait()
-        
         os.unlink(unsorted_bam_path)

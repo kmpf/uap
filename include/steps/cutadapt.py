@@ -2,7 +2,7 @@ import sys
 from abstract_step import *
 import pipeline
 import re
-import unix_pipeline
+import process_pool
 import yaml
 
 class Cutadapt(AbstractStep):
@@ -91,21 +91,20 @@ class Cutadapt(AbstractStep):
         if len(run_info['output_files']['reads']) != 1:
             raise StandardError("Expected a single output file.")
 
-        # set up processes
-        cat4m = [self.tool('cat4m')]
-        cat4m.extend(*sorted(run_info['output_files']['reads'].values()))
+        with process_pool.ProcessPool(self) as pool:
+            with pool.Pipeline(pool) as pipeline:
+                # set up processes
+                cat4m = [self.tool('cat4m')]
+                cat4m.extend(*sorted(run_info['output_files']['reads'].values()))
 
-        pigz1 = [self.tool('pigz'), '--processes', '1', '--decompress', '--stdout']
+                pigz1 = [self.tool('pigz'), '--processes', '1', '--decompress', '--stdout']
 
-        cutadapt = [self.tool('cutadapt'), '-a', run_info['info']['adapter'], '-']
+                cutadapt = [self.tool('cutadapt'), '-a', run_info['info']['adapter'], '-']
 
-        pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '3', '--stdout']
+                pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '3', '--stdout']
 
-        # create the pipeline and run it
-        p = unix_pipeline.UnixPipeline()
-        p.append(cat4m)
-        p.append(pigz1)
-        p.append(cutadapt, stderr_path = run_info['output_files']['log'].keys()[0])
-        p.append(pigz2, stdout_path = run_info['output_files']['reads'].keys()[0])
-
-        unix_pipeline.wait()
+                # create the pipeline and run it
+                pipeline.append(cat4m)
+                pipeline.append(pigz1)
+                pipeline.append(cutadapt, stderr_path = run_info['output_files']['log'].keys()[0])
+                pipeline.append(pigz2, stdout_path = run_info['output_files']['reads'].keys()[0])

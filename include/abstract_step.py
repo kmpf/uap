@@ -347,7 +347,10 @@ class AbstractStep(object):
             self._pipeline_log = copy.deepcopy(log)
         else:
             for k in self._pipeline_log.keys():
-                self._pipeline_log[k].update(log[k])
+                if log[k].__class__ == list:
+                    self._pipeline_log[k].extend(log[k])
+                else:
+                    self._pipeline_log[k].update(log[k])
     
     def write_annotation(self, run_id, path):
         # now write the annotation

@@ -2,7 +2,7 @@ import sys
 from abstract_step import *
 import pipeline
 import re
-import unix_pipeline
+import process_pool
 import yaml
 
 class HtSeqCount(AbstractStep):
@@ -42,15 +42,13 @@ class HtSeqCount(AbstractStep):
     
     
     def execute(self, run_id, run_info):
-        p = unix_pipeline.UnixPipeline()
-        
-        pigz1 = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout', run_info['info']['in_path']]
-        grep = [self.tool('grep'), self.options['pattern']]
-        pigz2 = [self.tool('pigz'), '--processes', '2', '--blocksize', '4096', '--stdout']
-        
-        p.append(pigz1)
-        p.append(grep)
-        p.append(pigz2, stdout_path = run_info['info']['out_path'])
+        with process_pool.ProcessPool(self) as pool:
+            with pool.Pipeline(pool) as pipeline:
+                pigz1 = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout', run_info['info']['in_path']]
+                grep = [self.tool('grep'), self.options['pattern']]
+                pigz2 = [self.tool('pigz'), '--processes', '2', '--blocksize', '4096', '--stdout']
                 
-        unix_pipeline.wait()
+                pipeline.append(pigz1)
+                pipeline.append(grep)
+                pipeline.append(pigz2, stdout_path = run_info['info']['out_path'])
         

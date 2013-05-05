@@ -1,7 +1,7 @@
 import sys
 from abstract_step import *
 import misc
-import unix_pipeline
+import process_pool
 import yaml
 
 
@@ -52,37 +52,37 @@ class Segemehl(AbstractStep):
         if out_name[-3:] != '.gz':
             raise StandardError("Expected .gz in output file name")
 
-        fifo_path_genome = self.get_temporary_fifo('segemehl-genome-fifo', 'input')
-        fifo_path_unmapped = self.get_temporary_fifo('segemehl-unmapped-fifo', 'output')
-        
-        unix_pipeline.launch([self.tool('cat4m'), self.options['genome'], '-o', fifo_path_genome])
-
-        segemehl = [
-            self.tool('segemehl'),
-            '-d', fifo_path_genome,
-            '-i', self.options['index'],
-            '-q', run_info['info']['R1-in'],
-            '-p', run_info['info']['R2-in'],
-            '-u', fifo_path_unmapped,
-            '-H', '1',
-            '-t', '10',
-            '-s', '-S',
-            '-D', '0',
-            '-o', '/dev/stdout'
-        ]
-        
-        pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
-        
-        p = unix_pipeline.UnixPipeline()
-        p.append(segemehl, stderr_path = run_info['output_files']['log'].keys()[0])
-        p.append(pigz, stdout_path = out_name)
-        
-        p2 = unix_pipeline.UnixPipeline()
-        pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
-        p2.append([self.tool('cat4m'), fifo_path_unmapped])
-        p2.append(pigz2, stdout_path = run_info['output_files']['unmapped'].keys()[0])
-        
-        unix_pipeline.wait()
-
-        os.unlink(fifo_path_genome)
-        os.unlink(fifo_path_unmapped)
+        with process_pool.ProcessPool(self) as pool:
+            
+            fifo_path_genome = pool.get_temporary_fifo('segemehl-genome-fifo', 'input')
+            fifo_path_unmapped = pool.get_temporary_fifo('segemehl-unmapped-fifo', 'output')
+            
+            pool.launch([self.tool('cat4m'), self.options['genome'], '-o', fifo_path_genome])
+            
+            with pool.Pipeline(pool) as pipeline:
+            
+                segemehl = [
+                    self.tool('segemehl'),
+                    '-d', fifo_path_genome,
+                    '-i', self.options['index'],
+                    '-q', run_info['info']['R1-in'],
+                    '-p', run_info['info']['R2-in'],
+                    '-u', fifo_path_unmapped,
+                    '-H', '1',
+                    '-t', '10',
+                    '-s', '-S',
+                    '-D', '0',
+                    '-o', '/dev/stdout'
+                ]
+                
+                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
+                
+                pipeline.append(segemehl, stderr_path = run_info['output_files']['log'].keys()[0])
+                pipeline.append(pigz, stdout_path = out_name)
+                
+            with pool.Pipeline(pool) as pipeline:
+                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
+                
+                pipeline.append([self.tool('cat4m'), fifo_path_unmapped])
+                pipeline.append(pigz, stdout_path = run_info['output_files']['unmapped'].keys()[0])
+                

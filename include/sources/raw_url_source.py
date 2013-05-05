@@ -2,7 +2,7 @@ import sys
 from abstract_step import *
 import os
 import urlparse
-import unix_pipeline
+import process_pool
 
 class RawUrlSource(AbstractStep):
 
@@ -30,14 +30,10 @@ class RawUrlSource(AbstractStep):
         return output_run_info
 
     def execute(self, run_id, run_info):
-        # set up processes
-        curl = [self.tool('curl'), self.options['url']]
-
-        # create the pipeline and run it
-        p = unix_pipeline.UnixPipeline()
-        p.append(curl, stdout_path = run_info['output_files']['raw'].keys()[0])
-
-        unix_pipeline.wait()
-        
-        if unix_pipeline.sha1_checksum_for_file_basename[os.path.basename(run_info['output_files']['raw'].keys()[0])] != self.options['sha1']:
-            raise StandardError("Checksum of downloaded file does not match.")
+        with process_pool.ProcessPool(self) as pool:
+            curl = [self.tool('curl'), self.options['url']]
+            
+            pool.launch(curl, stdout_path = run_info['output_files']['raw'].keys()[0])
+            
+        # TODO: verify checksum after process pool has finished
+        #stdout_assert_sha1 = self.options['sha1']

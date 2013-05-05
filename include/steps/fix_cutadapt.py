@@ -1,6 +1,6 @@
 import sys
 from abstract_step import *
-import unix_pipeline
+import process_pool
 
 class FixCutadapt(AbstractStep):
     
@@ -36,53 +36,46 @@ class FixCutadapt(AbstractStep):
         return output_run_info
 
     def execute(self, run_id, run_info):
-        fifo_in_R1 = self.get_temporary_fifo('fifo_in_R1', 'input')
-        fifo_in_R2 = self.get_temporary_fifo('fifo_in_R2', 'input')
-        fifo_out_R1 = self.get_temporary_fifo('fifo_out_R1', 'output')
-        fifo_out_R2 = self.get_temporary_fifo('fifo_out_R2', 'output')
+        with process_pool.ProcessPool(self) as pool:
+            fifo_in_R1 = pool.get_temporary_fifo('fifo_in_R1', 'input')
+            fifo_in_R2 = pool.get_temporary_fifo('fifo_in_R2', 'input')
+            fifo_out_R1 = pool.get_temporary_fifo('fifo_out_R1', 'output')
+            fifo_out_R2 = pool.get_temporary_fifo('fifo_out_R2', 'output')
+            
+            with pool.Pipeline(pool) as pipeline:
+                cat4m = [self.tool('cat4m'), run_info['info']['R1-in']]
+                pigz = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+                
+                pipeline.append(cat4m)
+                pipeline.append(pigz, stdout_path = fifo_in_R1)
         
-        cat4m1 = [self.tool('cat4m'), run_info['info']['R1-in']]
-        pigz1 = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+            with pool.Pipeline(pool) as pipeline:
+                cat4m = [self.tool('cat4m'), run_info['info']['R2-in']]
+                pigz = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+                
+                pipeline.append(cat4m)
+                pipeline.append(pigz, stdout_path = fifo_in_R2)
         
-        p1 = unix_pipeline.UnixPipeline()
-        p1.append(cat4m1)
-        p1.append(pigz1, stdout_path = fifo_in_R1)
+            fix_cutadapt = [
+                self.tool('fix_cutadapt'),
+                fifo_in_R1,
+                fifo_in_R2,
+                fifo_out_R1,
+                fifo_out_R2
+            ]
+            
+            pool.launch(fix_cutadapt)
         
-        cat4m2 = [self.tool('cat4m'), run_info['info']['R2-in']]
-        pigz2 = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
-        
-        p2 = unix_pipeline.UnixPipeline()
-        p2.append(cat4m2)
-        p2.append(pigz2, stdout_path = fifo_in_R2)
-
-        fix_cutadapt = [
-            self.tool('fix_cutadapt'),
-            fifo_in_R1,
-            fifo_in_R2,
-            fifo_out_R1,
-            fifo_out_R2
-        ]
-        
-        unix_pipeline.launch(fix_cutadapt)
-        
-        p3 = unix_pipeline.UnixPipeline()
-        cat4m3 = [self.tool('cat4m'), fifo_out_R1]
-        pigz3 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '1', '--stdout']
-        
-        p4 = unix_pipeline.UnixPipeline()
-        cat4m4 = [self.tool('cat4m'), fifo_out_R2]
-        pigz4 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '1', '--stdout']
-
-        p3.append(cat4m3)
-        p3.append(pigz3, stdout_path = run_info['info']['R1-out'])
-        
-        p4.append(cat4m4)
-        p4.append(pigz4, stdout_path = run_info['info']['R2-out'])
-        
-        unix_pipeline.wait()
-        
-        os.unlink(fifo_in_R1)
-        os.unlink(fifo_in_R2)
-        os.unlink(fifo_out_R1)
-        os.unlink(fifo_out_R2)
-        
+            with pool.Pipeline(pool) as pipeline:
+                cat4m = [self.tool('cat4m'), fifo_out_R1]
+                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '1', '--stdout']
+                
+                pipeline.append(cat4m)
+                pipeline.append(pigz, stdout_path = run_info['info']['R1-out'])
+                
+            with pool.Pipeline(pool) as pipeline:
+                cat4m = [self.tool('cat4m'), fifo_out_R2]
+                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '1', '--stdout']
+                
+                pipeline.append(cat4m)
+                pipeline.append(pigz, stdout_path = run_info['info']['R2-out'])

@@ -1,6 +1,6 @@
 import sys
 from abstract_step import *
-import unix_pipeline
+import process_pool
 import yaml
 
 
@@ -47,21 +47,16 @@ class S2C(AbstractStep):
         return output_run_info
 
     def execute(self, run_id, run_info):
-        p = unix_pipeline.UnixPipeline()
-        
-        cat4m = [self.tool('cat4m'), run_info['info']['alignments_path']]
-        pigz = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
-        s2c = [self.tool('s2c'), '-s', '/dev/stdin', '-o', self._temp_directory]
-        samtools = [self.tool('samtools'), 'view', '-Sb', '-']
-        samtools_sort = [self.tool('samtools'), 'sort', '-', run_info['info']['s2c_path'][:-4]]
-        
-        p.append(cat4m)
-        p.append(pigz)
-        p.append(s2c, stderr_path = run_info['info']['log_path'])
-        p.append(samtools)
-        p.append(samtools_sort)
+        with process_pool.ProcessPool(self) as pool:
+            with pool.Pipeline(pool) as pipeline:
+                cat4m = [self.tool('cat4m'), run_info['info']['alignments_path']]
+                pigz = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+                s2c = [self.tool('s2c'), '-s', '/dev/stdin', '-o', self._temp_directory]
+                samtools = [self.tool('samtools'), 'view', '-Sb', '-']
+                samtools_sort = [self.tool('samtools'), 'sort', '-', run_info['info']['s2c_path'][:-4]]
                 
-        unix_pipeline.wait()
-
-        p = unix_pipeline.UnixPipeline()
-        
+                pipeline.append(cat4m)
+                pipeline.append(pigz)
+                pipeline.append(s2c, stderr_path = run_info['info']['log_path'])
+                pipeline.append(samtools)
+                pipeline.append(samtools_sort)
