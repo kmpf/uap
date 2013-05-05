@@ -446,7 +446,7 @@ class AbstractStep(object):
         f.write("digraph {\n")
         f.write("    rankdir = TB;\n")
         f.write("    splines = true;\n")
-        f.write("    graph [fontname = \"Helvetica-Bold\", fontsize = 12, size = \"14, 11\", nodesep = 0.2, ranksep = 0.3];\n")
+        f.write("    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", nodesep = 0.2, ranksep = 0.3, labelloc = t, labeljust = l];\n")
         f.write("    node [fontname = Helvetica, fontsize = 12, shape = rect, style = filled];\n")
         f.write("    edge [fontname = Helvetica, fontsize = 12];\n")
         f.write("\n")
@@ -483,7 +483,7 @@ class AbstractStep(object):
         '''
         
         if len(hash['graph_labels']) == 1:
-            f.write("    graph [label = \"%s\"];\n" % hash['graph_labels'].values()[0])
+            f.write("    graph [label=\"%s\"];\n" % hash['graph_labels'].values()[0])
         f.write("}\n")
         
         result = f.getvalue()
@@ -679,11 +679,18 @@ class AbstractStep(object):
         for node in hash['nodes'].keys():
             if not node in step_file_nodes:
                 hash['clusters'][cluster_hash]['group'].append(node)
+                
+        start_time = log['start_time']
+        end_time = log['end_time']
+        duration = end_time - start_time
 
-        hash['graph_labels'][task_name] = "%s (%1.1f%% CPU, %s RAM (%1.1f%%))" % (task_name, 
+        hash['graph_labels'][task_name] = "Task: %s\\lHost: %s, CPU: %1.1f%% , RAM: %s (%1.1f%%)\\lDuration: %s\\l\\l" % (
+            task_name, 
+            socket.gethostname(),
             log['pipeline_log']['process_watcher']['sum']['cpu_percent'], 
             misc.bytes_to_str(log['pipeline_log']['process_watcher']['sum']['rss']), 
-            log['pipeline_log']['process_watcher']['sum']['memory_percent'])
+            log['pipeline_log']['process_watcher']['sum']['memory_percent'],
+            duration)
         return hash
 
     @classmethod
