@@ -7,6 +7,7 @@ import sys
 sys.path.append('./include/steps')
 import copy
 import datetime
+import errno
 import fcntl
 import hashlib
 import os
@@ -64,6 +65,9 @@ class UnixPipeline(object):
         # list of PIDs in the order that processes were launched
         # whenever a child process exits, its PID will remain in here
         self.proc_order = []
+
+        # we must keep Popen objects around, or their destructor will be called
+        self.popen_procs = {}
         
         # dict of PID -> process info
         # whenever a child process exits, its PID will remain in here
@@ -184,14 +188,15 @@ class UnixPipeline(object):
         # launch the process and always pipe stdout and stderr because we
         # want to watch both streams, regardless of whether stdout should 
         # be passed on to another process
-        proc = subprocess.Popen(args,
+        proc = subprocess.Popen(
+            args,
             stdin = use_stdin,
             stdout = subprocess.PIPE,
             stderr = subprocess.PIPE,
             preexec_fn = os.setsid
         )
         pid = proc.pid
-        print("%d launched: %s" % (pid, args))
+        self.popen_procs[pid] = proc
 
         self.running_procs.add(pid)
         self.proc_order.append(pid)
@@ -222,6 +227,8 @@ class UnixPipeline(object):
                 self.proc_details[listener_pid]['sink'] = os.path.basename(sink_path)
                 self.proc_details[listener_pid]['sink_full_path'] = sink_path
 
+        #os.system("ls -l /proc/%d/status" % pid)
+        
         if keep_stdout_open:
             os.close(pipe[1])
             return pipe[0], pid
@@ -231,6 +238,7 @@ class UnixPipeline(object):
     def _do_launch_copy_process(self, fin, fout_path, report_path, parent_pid, which, pipe):
         pid = os.fork()
         if pid == 0:
+            os.setsid()
             if pipe is not None:
                 os.close(pipe[0])
             fdout = None
@@ -295,7 +303,6 @@ class UnixPipeline(object):
                 
             os._exit(0)
         else:
-            print("%d launched: %s of %d" % (pid, which, parent_pid))
             self.running_procs.add(pid)
             self.proc_order.append(pid)
             self.proc_details[pid] = {
@@ -314,13 +321,18 @@ class UnixPipeline(object):
         while True:
             try:
                 # wait for the next child process to exit
-                pid, exit_code_with_signal = os.wait()
-                print("%d exited: %d" % (pid, exit_code_with_signal))
+                pid, exit_code_with_signal, usage_information = os.wait3(0)
                 
                 # remove pid from self.running_procs
                 self.running_procs.remove(pid)
                 
                 self.proc_details[pid]['end_time'] = datetime.datetime.now()
+                self.proc_details[pid]['usage_information'] = dict()
+                for _, k in enumerate(['utime', 'stime', 'maxrss', 'ixrss', 
+                    'idrss', 'isrss', 'minflt', 'majflt', 'nswap', 'inblock', 
+                    'oublock', 'msgsnd', 'msgrcv', 'nsignals', 'nvcsw', 
+                    'nivcsw']):
+                    self.proc_details[pid]['usage_information'][k] = usage_information[_]
                 
                 signal_number = exit_code_with_signal & 255
                 exit_code = exit_code_with_signal >> 8

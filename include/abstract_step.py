@@ -592,6 +592,8 @@ class AbstractStep(object):
                         label = "%s\\n(failed with exit code %d)" % (label, proc_info['exit_code'])
                 else:
                     label = "%s\\n(exited instantly)" % label
+                    
+            label += "\\n(%s RAM)" % (bytes_to_str(proc_info['usage_information']['maxrss'] * 1024))
                 
             hash['nodes'][pid_hash(pid)] = {
                 'label': label,
