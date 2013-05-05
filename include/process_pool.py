@@ -19,6 +19,11 @@ import tempfile
 import time
 import yaml
 
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException()
 
 class ProcessPool(object):
 
@@ -52,12 +57,6 @@ class ProcessPool(object):
             }
             self.append_calls.append(call)
             
-    class TimeoutException(Exception):
-        pass
-
-    def timeout_handler(signum, frame):
-        raise TimeoutException()
-    
     def __init__(self, step):
         # the current step this ProcessPool is used in (for temporary paths etc.)
         self.step = step
@@ -372,8 +371,8 @@ class ProcessPool(object):
                         os.unlink(report_path)
                         self.proc_details[pid].update(report)
                 
-            except ProcessPool.TimeoutException:
-                log("Timeout, killing all child processes now.")
+            except TimeoutException:
+                self.log("Timeout, killing all child processes now.")
                 self._kill_all_child_processes()
             except OSError:
                 # no more children running, we are done
@@ -385,7 +384,7 @@ class ProcessPool(object):
                     # Oops, something went wrong. See what happens and terminate
                     # all child processes in a few seconds.
                     something_went_wrong = True
-                    signal.signal(signal.SIGALRM, ProcessPool.timeout_handler) 
+                    signal.signal(signal.SIGALRM, timeout_handler)
                     self.log("Terminating all children in %d seconds..." % ProcessPool.SIGTERM_TIMEOUT)
                     signal.alarm(ProcessPool.SIGTERM_TIMEOUT)
                             
@@ -476,6 +475,6 @@ class ProcessPool(object):
         for pid in self.running_procs:
             try:
                 os.kill(pid, signal.SIGTERM)
-                log('Sending SIGTERM to process %s (PID %d).' % (self.proc_details[pid]['name'], pid))
+                self.log('Sending SIGTERM to process %s (PID %d).' % (self.proc_details[pid]['name'], pid))
             except OSError:
                 pass
