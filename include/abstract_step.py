@@ -577,16 +577,21 @@ class AbstractStep(object):
             something_went_wrong = False
             if 'signal' in proc_info:
                 something_went_wrong = True
-            else:
+            elif 'exit_code' in proc_info:
                 if proc_info['exit_code'] != 0:
                     something_went_wrong = True
+            else:
+                something_went_wrong = True
             color = "#fce94f"
             if something_went_wrong:
                 color = "#d5291a"
                 if 'signal' in proc_info:
                     label = "%s\\n(received %s)" % (label, proc_info['signal_name'] if 'signal_name' in proc_info else 'signal %d' % proc_info['signal'])
-                elif proc_info['exit_code'] != 0:
-                    label = "%s\\n(failed with exit code %d)" % (label, proc_info['exit_code'])
+                elif 'exit_code' in proc_info:
+                    if proc_info['exit_code'] != 0:
+                        label = "%s\\n(failed with exit code %d)" % (label, proc_info['exit_code'])
+                else:
+                    label = "%s\\n(exited instantly)" % label
                 
             hash['nodes'][pid_hash(pid)] = {
                 'label': label,
@@ -607,16 +612,22 @@ class AbstractStep(object):
                     something_went_wrong = False
                     if 'signal' in proc_info:
                         something_went_wrong = True
-                    else:
+                    elif 'exit_code' in proc_info:
                         if proc_info['exit_code'] != 0:
                             something_went_wrong = True
+                    else:
+                        something_went_wrong = True
                     color = "#fdf3a7"
                     if something_went_wrong:
                         color = "#d5291a"
                         if 'signal' in proc_info:
                             label = "%s\\n(received %s)" % (label, proc_info['signal_name'] if 'signal_name' in proc_info else 'signal %d' % proc_info['signal'])
-                        elif proc_info['exit_code'] != 0:
-                            label = "%s\\n(failed with exit code %d)" % (label, proc_info['exit_code'])
+                        elif 'exit_code' in proc_info:
+                            if proc_info['exit_code'] != 0:
+                                label = "%s\\n(failed with exit code %d)" % (label, proc_info['exit_code'])
+                        else:
+                            label = "%s\\n(exited instantly)" % label
+                            
                                 
                     # add proc_which
                     hash['nodes'][pid_hash(pid, which)] = {

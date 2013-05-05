@@ -309,14 +309,6 @@ class UnixPipeline(object):
             return pid
                 
     def _wait(self):
-        while True:
-            try:
-                pid, exit_code_with_signal = os.wait()
-            except OSError:
-                break
-            print("%d finished: os.wait() returned (%d, %d)" % (pid, pid, exit_code_with_signal))
-            
-        return
         something_went_wrong = False
         while True:
             try:
