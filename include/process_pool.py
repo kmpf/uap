@@ -10,7 +10,9 @@ import datetime
 import errno
 import fcntl
 import hashlib
+import misc
 import os
+import psutil
 import signal
 import subprocess
 import tempfile
@@ -80,6 +82,8 @@ class ProcessPool(object):
         # dict of PID -> process info
         # whenever a child process exits, its PID will remain in here
         self.proc_details = {}
+        
+        self.process_watcher_report = dict()
         
         # list of temp paths to clean up
         self.temp_paths = []
@@ -159,6 +163,7 @@ class ProcessPool(object):
                 log['processes'].append(proc_details_copy[pid])
                 
         log['log'] = copy.deepcopy(self.log_entries)
+        log['process_watcher'] = copy.deepcopy(self.process_watcher_report)
         
         return log
         
@@ -323,22 +328,25 @@ class ProcessPool(object):
             return pid
                 
     def _wait(self):
+        watcher_report_path = self.step.get_temporary_path('watcher-report')
+        watcher_pid = self._launch_process_watcher(watcher_report_path)
         something_went_wrong = False
         while True:
             try:
                 # wait for the next child process to exit
-                pid, exit_code_with_signal, usage_information = os.wait3(0)
+                pid, exit_code_with_signal = os.wait()
+                if pid == watcher_pid:
+                    try:
+                        self.process_watcher_report = yaml.load(open(watcher_report_path))
+                        os.unlink(watcher_report_path)
+                    except:
+                        pass
+                    continue
                 
                 # remove pid from self.running_procs
                 self.running_procs.remove(pid)
                 
                 self.proc_details[pid]['end_time'] = datetime.datetime.now()
-                self.proc_details[pid]['usage_information'] = dict()
-                for _, k in enumerate(['utime', 'stime', 'maxrss', 'ixrss', 
-                    'idrss', 'isrss', 'minflt', 'majflt', 'nswap', 'inblock', 
-                    'oublock', 'msgsnd', 'msgrcv', 'nsignals', 'nvcsw', 
-                    'nivcsw']):
-                    self.proc_details[pid]['usage_information'][k] = usage_information[_]
                 
                 signal_number = exit_code_with_signal & 255
                 exit_code = exit_code_with_signal >> 8
@@ -385,6 +393,82 @@ class ProcessPool(object):
             self.log("Pipeline crashed.")
             raise StandardError("Pipeline crashed.")        
         
+    def _launch_process_watcher(self, watcher_report_path):
+        super_pid = os.getpid()
+        watcher_pid = os.fork()
+        if watcher_pid == 0:
+            procs = {}
+            procs[super_pid] = psutil.Process(super_pid)
+            for pid in self.running_procs:
+                try:
+                    procs[pid] = psutil.Process(pid)
+                except psutil._error.NoSuchProcess:
+                    pass
+
+            pid_list = copy.deepcopy(procs.keys())
+            for pid in pid_list:
+                proc = procs[pid]
+                try:
+                    cpu_percent = proc.get_cpu_percent(interval = None)
+                except psutil._error.NoSuchProcess:
+                    del procs[pid]
+
+            time.sleep(0.1)
+
+            iterations = 0
+            delay = 0.5
+            max_data = dict()
+            while True:
+                pid_list = copy.deepcopy(procs.keys())
+                sum_data = dict()
+                for pid in pid_list:
+                    proc = procs[pid]
+                    try:
+                        data = dict()
+                        data['cpu_percent'] = proc.get_cpu_percent(interval = None)
+                        data['memory_percent'] = proc.get_memory_percent()
+                        memory_info = proc.get_memory_info()
+                        data['rss'] = memory_info.rss
+                        data['vms'] = memory_info.vms
+
+                        if not pid in max_data:
+                            max_data[pid] = copy.deepcopy(data)
+                        for k, v in data.items():
+                            max_data[pid][k] = max(max_data[pid][k], v)
+
+                        if len(sum_data) == 0:
+                            for k, v in data.items():
+                                sum_data[k] = 0.0
+
+                        for k, v in data.items():
+                            sum_data[k] += v
+
+                    except psutil._error.NoSuchProcess:
+                        del procs[pid]
+
+                if not 'sum' in max_data:
+                    max_data['sum'] = copy.deepcopy(sum_data)
+                for k, v in sum_data.items():
+                    max_data['sum'][k] = max(max_data['sum'][k], v)
+
+                if len(procs) == 1:
+                    # there's nothing more to watch, write report and exit
+                    with open(watcher_report_path, 'w') as f:
+                        f.write(yaml.dump(max_data, default_flow_style = False))
+
+                    os._exit(0)
+
+                iterations += 1
+                if iterations == 10:
+                    delay = 1
+                if iterations == 20:
+                    delay = 2
+                if iterations == 30:
+                    delay = 10
+                time.sleep(delay)
+        else:
+            return watcher_pid
+
     def _kill_all_child_processes(self):
         '''
         Kill all child processes launched via this module by sending a SIGTERM to each of them.

@@ -7,6 +7,7 @@ import fscache
 import hashlib
 import inspect
 import json
+import misc
 import os
 import re
 import random
@@ -435,17 +436,17 @@ class AbstractStep(object):
     
     @classmethod
     def render_pipeline(cls, logs):
-        hash = {'nodes': {}, 'edges': {}, 'clusters': {}}
+        hash = {'nodes': {}, 'edges': {}, 'clusters': {}, 'graph_labels': {}}
         for log in logs:
             temp = cls.render_pipeline_hash(log)
-            for _ in ['nodes', 'edges', 'clusters']:
+            for _ in ['nodes', 'edges', 'clusters', 'graph_labels']:
                 hash[_].update(temp[_])
 
         f = StringIO.StringIO()
         f.write("digraph {\n")
         f.write("    rankdir = TB;\n")
         f.write("    splines = true;\n")
-        f.write("    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", nodesep = 0.2, ranksep = 0.3];\n")
+        f.write("    graph [fontname = \"Helvetica-Bold\", fontsize = 12, size = \"14, 11\", nodesep = 0.2, ranksep = 0.3];\n")
         f.write("    node [fontname = Helvetica, fontsize = 12, shape = rect, style = filled];\n")
         f.write("    edge [fontname = Helvetica, fontsize = 12];\n")
         f.write("\n")
@@ -481,6 +482,8 @@ class AbstractStep(object):
             f.write("    }\n")
         '''
         
+        if len(hash['graph_labels']) == 1:
+            f.write("    graph [label = \"%s\"];\n" % hash['graph_labels'].values()[0])
         f.write("}\n")
         
         result = f.getvalue()
@@ -490,9 +493,6 @@ class AbstractStep(object):
     @classmethod
     def render_pipeline_hash(cls, log):
         
-        def str_to_sha1(s):
-            return hashlib.sha1(s).hexdigest()
-        
         def pid_hash(pid, suffix = ''):
             hashtag = "%s/%s/%d/%s" % (log['step']['name'], log['run']['run_id'], pid, suffix)
             return hashlib.sha1(hashtag).hexdigest()
@@ -500,7 +500,7 @@ class AbstractStep(object):
         def file_hash(path):
             if 'real_path' in log['step']['known_paths'][path]:
                 path = log['step']['known_paths'][path]['real_path']
-            return str_to_sha1(path)
+            return misc.str_to_sha1(path)
         
         #print(yaml.dump(self.known_paths, default_flow_style = False))
         
@@ -508,16 +508,7 @@ class AbstractStep(object):
         hash['nodes'] = dict()
         hash['edges'] = dict()
         hash['clusters'] = dict()
-        
-        def bytes_to_str(num):
-            for _, x in enumerate(['bytes','k','M','G']):
-                if num < 1024.0:
-                    if _ == 0:
-                        return "%d %s" % (num, x)
-                    else:
-                        return "%1.1f %sB" % (num, x)
-                num /= 1024.0
-            return "%1.1f %sB" % (num, 'T')
+        hash['graph_labels'] = dict()
         
         def add_file_node(path):
             if 'real_path' in log['step']['known_paths'][path]:
@@ -530,7 +521,7 @@ class AbstractStep(object):
                 color = '#8ae234'
             elif log['step']['known_paths'][path]['type'] == 'step_file':
                 color = '#97b7c8'
-            hash['nodes'][str_to_sha1(path)] = {
+            hash['nodes'][misc.str_to_sha1(path)] = {
                 'label': label,
                 'fillcolor': color
             }
@@ -614,7 +605,7 @@ class AbstractStep(object):
                 else:
                     label = "%s\\n(exited instantly)" % label
                     
-            label += "\\n(%s RAM)" % (bytes_to_str(proc_info['usage_information']['maxrss'] * 1024))
+            label += "\\n(%1.1f%% CPU, %s RAM (%1.1f%%))" % (log['pipeline_log']['process_watcher'][pid]['cpu_percent'], misc.bytes_to_str(log['pipeline_log']['process_watcher'][pid]['rss']), log['pipeline_log']['process_watcher'][pid]['memory_percent'])
                 
             hash['nodes'][pid_hash(pid)] = {
                 'label': label,
@@ -629,7 +620,7 @@ class AbstractStep(object):
                         continue
                     size_label = '(empty)'
                     if ('length' in proc_info[key]) and (proc_info[key]['length'] > 0):
-                        size_label = "(%s / %s lines)" % (bytes_to_str(proc_info[key]['length']), "{:,}".format(proc_info[key]['lines']))
+                        size_label = "(%s / %s lines)" % (misc.bytes_to_str(proc_info[key]['length']), "{:,}".format(proc_info[key]['lines']))
                     label = "%s\\n%s" % (which, size_label)
                     
                     something_went_wrong = False
@@ -681,7 +672,7 @@ class AbstractStep(object):
                 step_file_nodes[file_hash(path)] = path_info['designation']
 
         task_name = "%s/%s" % (log['step']['name'], log['run']['run_id'])
-        cluster_hash = str_to_sha1(task_name)
+        cluster_hash = misc.str_to_sha1(task_name)
         hash['clusters'][cluster_hash] = dict()
         hash['clusters'][cluster_hash]['task_name'] = task_name
         hash['clusters'][cluster_hash]['group'] = list()
@@ -689,6 +680,10 @@ class AbstractStep(object):
             if not node in step_file_nodes:
                 hash['clusters'][cluster_hash]['group'].append(node)
 
+        hash['graph_labels'][task_name] = "%s (%1.1f%% CPU, %s RAM (%1.1f%%))" % (task_name, 
+            log['pipeline_log']['process_watcher']['sum']['cpu_percent'], 
+            misc.bytes_to_str(log['pipeline_log']['process_watcher']['sum']['rss']), 
+            log['pipeline_log']['process_watcher']['sum']['memory_percent'])
         return hash
 
     @classmethod

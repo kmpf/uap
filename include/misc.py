@@ -1,3 +1,4 @@
+import hashlib
 import json
 import re
 
@@ -67,3 +68,16 @@ def natsorted(l):
     alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
     return sorted(l, key=alphanum_key)
     
+def str_to_sha1(s):
+    return hashlib.sha1(s).hexdigest()
+
+def bytes_to_str(num):
+    for _, x in enumerate(['bytes','k','M','G']):
+        if num < 1024.0:
+            if _ == 0:
+                return "%d %s" % (num, x)
+            else:
+                return "%1.1f %sB" % (num, x)
+        num /= 1024.0
+    return "%1.1f %sB" % (num, 'T')
+

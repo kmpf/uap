@@ -4,5 +4,5 @@
 # To use it, call Python at ./python-env/bin/python.
 
 virtualenv python_env
-./python_env/bin/pip install textile pyyaml numpy biopython
+./python_env/bin/pip install pyyaml numpy biopython psutil
 gcc -o tools/cat4m tools/cat4m.c
