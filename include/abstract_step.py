@@ -351,11 +351,19 @@ class AbstractStep(object):
         if len(self._pipeline_log) == 0:
             self._pipeline_log = copy.deepcopy(log)
         else:
-            for k in self._pipeline_log.keys():
-                if log[k].__class__ == list:
-                    self._pipeline_log[k].extend(log[k])
+            for k in log.keys():
+                if k == 'process_watcher':
+                    for _ in log['process_watcher'].keys():
+                        if _ == 'sum':
+                            for k2 in self._pipeline_log['process_watcher'][_].keys():
+                                self._pipeline_log['process_watcher'][_][k2] = max(self._pipeline_log['process_watcher'][_][k2], log['process_watcher'][_][k2])
+                        else:
+                            self._pipeline_log['process_watcher'][_] = copy.deepcopy(log['process_watcher'][_])
                 else:
-                    self._pipeline_log[k].update(log[k])
+                    if log[k].__class__ == list:
+                        self._pipeline_log[k].extend(log[k])
+                    else:
+                        self._pipeline_log[k].update(log[k])
     
     def write_annotation(self, run_id, path):
         # now write the annotation
@@ -605,7 +613,8 @@ class AbstractStep(object):
                 else:
                     label = "%s\\n(exited instantly)" % label
                     
-            label += "\\n(%1.1f%% CPU, %s RAM (%1.1f%%))" % (log['pipeline_log']['process_watcher'][pid]['cpu_percent'], misc.bytes_to_str(log['pipeline_log']['process_watcher'][pid]['rss']), log['pipeline_log']['process_watcher'][pid]['memory_percent'])
+            if pid in log['pipeline_log']['process_watcher']:
+                label += "\\n(%1.1f%% CPU, %s RAM (%1.1f%%))" % (log['pipeline_log']['process_watcher'][pid]['cpu_percent'], misc.bytes_to_str(log['pipeline_log']['process_watcher'][pid]['rss']), log['pipeline_log']['process_watcher'][pid]['memory_percent'])
                 
             hash['nodes'][pid_hash(pid)] = {
                 'label': label,

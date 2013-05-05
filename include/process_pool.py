@@ -238,8 +238,6 @@ class ProcessPool(object):
                 self.proc_details[listener_pid]['sink'] = os.path.basename(sink_path)
                 self.proc_details[listener_pid]['sink_full_path'] = sink_path
 
-        #os.system("ls -l /proc/%d/status" % pid)
-        
         if keep_stdout_open:
             os.close(pipe[1])
             return pipe[0], pid
@@ -328,6 +326,7 @@ class ProcessPool(object):
             return pid
                 
     def _wait(self):
+        self.log("Now launching process watcher and waiting for all child processes to exit.")
         watcher_report_path = self.step.get_temporary_path('watcher-report')
         watcher_pid = self._launch_process_watcher(watcher_report_path)
         something_went_wrong = False
@@ -340,6 +339,7 @@ class ProcessPool(object):
                         self.process_watcher_report = yaml.load(open(watcher_report_path))
                         os.unlink(watcher_report_path)
                     except:
+                        print("Warning: Couldn't load watcher report from %s." % watcher_report_path)
                         pass
                     continue
                 
