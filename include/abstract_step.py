@@ -16,6 +16,7 @@ import string
 import StringIO
 import subprocess
 import tempfile
+import textwrap
 import traceback
 import yaml
 
@@ -561,7 +562,8 @@ class AbstractStep(object):
                             if (len(arg) > 16) and re.match('^[A-Z]+$', arg):
                                 arg = "%s[...]" % arg[:16]
                     stripped_args.append(arg.replace('\t', '\\t').replace('\\', '\\\\'))
-                label = "%s" % (' '.join(stripped_args))
+                tw = textwrap.TextWrapper(width = 50, break_long_words = False, break_on_hyphens = False)
+                label = "%s" % ("\\n".join(tw.wrap(' '.join(stripped_args))))
             if 'args' in proc_info:
                 cat4m_seen_minus_o = False
                 for arg in proc_info['args']:
