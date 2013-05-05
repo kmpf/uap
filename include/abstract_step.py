@@ -398,7 +398,8 @@ class AbstractStep(object):
             with open(annotation_path + '.png', 'w') as f:
                 f.write(png)
         except:
-            raise
+            # rendering the pipeline graph is not _that_ important, after all
+            # we can still try to render it later from the annotation file
             pass
         
         return annotation_path, yaml.dump(log, default_flow_style = False)
