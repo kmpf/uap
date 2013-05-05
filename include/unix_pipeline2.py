@@ -54,7 +54,7 @@ class UnixPipeline(object):
         # log entries
         self.log_entries = []
         
-        # dict of PID -> info about where each copy process puts its report
+        # dict of PID -> path to copy process report
         self.copy_process_reports = {}
         
         # set of currently running PIDs
@@ -159,9 +159,13 @@ class UnixPipeline(object):
             if info.__class__ == UnixPipeline.Pipeline:
                 pipeline = info
                 use_stdin = None
+                last_pid = None
                 for index, info in enumerate(pipeline.append_calls):
-                    use_stdin = self._do_launch(info, 
+                    use_stdin, pid = self._do_launch(info, 
                         index < len(pipeline.append_calls) - 1, use_stdin)
+                    if last_pid is not None:
+                        self.proc_details[pid]['use_stdin_of'] = last_pid
+                    last_pid = pid
             else:
                 self._do_launch(info)
     
@@ -205,27 +209,24 @@ class UnixPipeline(object):
         
         for which in ['stdout', 'stderr']:
             report_path = self.get_temporary_path("%s-report" % which)
+            sink_path = stdout_path if which == 'stdout' else stderr_path
             listener_pid = self._do_launch_copy_process(
                 proc.stdout if which == 'stdout' else proc.stderr,
-                stdout_path if which == 'stdout' else stderr_path,
+                sink_path,
                 report_path, pid, which, 
                 pipe if which == 'stdout' else None)
             
-            self.copy_process_reports[listener_pid] = {
-                'report_path': report_path,
-                'stream': which,
-                'pid': pid
-            }
+            self.copy_process_reports[listener_pid] = report_path
             
-            if which == 'stdout':
-                self.copy_process_reports[listener_pid]['sink'] = os.path.basename(stdout_path) if stdout_path else None
-                self.copy_process_reports[listener_pid]['sink_full_path'] = stdout_path
+            if sink_path is not None:
+                self.proc_details[listener_pid]['sink'] = os.path.basename(sink_path)
+                self.proc_details[listener_pid]['sink_full_path'] = sink_path
 
         if keep_stdout_open:
             os.close(pipe[1])
-            return pipe[0]
+            return pipe[0], pid
         else:
-            return None
+            return None, pid
 
     def _do_launch_copy_process(self, fin, fout_path, report_path, parent_pid, which, pipe):
         pid = os.fork()
@@ -312,14 +313,9 @@ class UnixPipeline(object):
         something_went_wrong = False
         while True:
             try:
-                try:
-                    # wait for the next child process to exit
-                    pid, exit_code_with_signal = os.wait()
-                except OSError:
-                    # no more children running, we are done
-                    signal.alarm(0)
-                    self.log("Cancelling timeout (if there was one), all child processes have exited.")
-                    break
+                # wait for the next child process to exit
+                pid, exit_code_with_signal = os.wait()
+                print("%d exited: %d" % (pid, exit_code_with_signal))
                 
                 # remove pid from self.running_procs
                 self.running_procs.remove(pid)
@@ -345,23 +341,26 @@ class UnixPipeline(object):
                         
                 try:
                     if pid in self.copy_process_reports:
-                        report_path = self.copy_process_reports[pid]['report_path']
+                        report_path = self.copy_process_reports[pid]
                         if os.path.exists(report_path):
                             report = yaml.load(open(report_path, 'r'))
-                            if self.copy_process_reports[pid]['sink']:
-                                self.proc_details[pid]['sink'] = copy_process_reports[pid]['sink']
-                                self.proc_details[pid]['sink_full_path'] = copy_process_reports[pid]['sink_full_path']
                             os.unlink(report_path)
                             self.proc_details[pid].update(report)
                 except Exception:
                     # swallow possible exceptions because getting the checksum and
                     # the tail is nice to have, but no cause for the entire process
                     # to fail
+                    raise
                     pass
                 
             except UnixPipeline.TimeoutException:
                 log("Timeout, killing all child processes now.")
                 self._kill_all_child_processes()
+            except OSError:
+                # no more children running, we are done
+                signal.alarm(0)
+                self.log("Cancelling timeout (if there was one), all child processes have exited.")
+                break
             else:
                 if exit_code_with_signal != 0:
                     # Oops, something went wrong. See what happens and terminate

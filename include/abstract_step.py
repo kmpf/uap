@@ -601,7 +601,7 @@ class AbstractStep(object):
             for which in ['stdout', 'stderr']:
                 key = "%s_copy" % which
                 if key in proc_info:
-                    if ('exit_code' in proc_info) and (proc_info['exit_code'] == 0) and ('length' in proc_info[key]) and (proc_info[key]['length'] == 0) and (not 'sink_full_path' in proc_info[key]):
+                    if ('exit_code' in proc_info[key]) and (proc_info[key]['exit_code'] == 0) and ('length' in proc_info[key]) and (proc_info[key]['length'] == 0) and (not 'sink_full_path' in proc_info[key]):
                         # skip this stdout/stderr box if it leads to nothing
                         continue
                     size_label = '(empty)'
@@ -610,21 +610,21 @@ class AbstractStep(object):
                     label = "%s\\n%s" % (which, size_label)
                     
                     something_went_wrong = False
-                    if 'signal' in proc_info:
+                    if 'signal' in proc_info[key]:
                         something_went_wrong = True
-                    elif 'exit_code' in proc_info:
-                        if proc_info['exit_code'] != 0:
+                    elif 'exit_code' in proc_info[key]:
+                        if proc_info[key]['exit_code'] != 0:
                             something_went_wrong = True
                     else:
                         something_went_wrong = True
                     color = "#fdf3a7"
                     if something_went_wrong:
                         color = "#d5291a"
-                        if 'signal' in proc_info:
-                            label = "%s\\n(received %s)" % (label, proc_info['signal_name'] if 'signal_name' in proc_info else 'signal %d' % proc_info['signal'])
-                        elif 'exit_code' in proc_info:
-                            if proc_info['exit_code'] != 0:
-                                label = "%s\\n(failed with exit code %d)" % (label, proc_info['exit_code'])
+                        if 'signal' in proc_info[key]:
+                            label = "%s\\n(received %s)" % (label, proc_info[key]['signal_name'] if 'signal_name' in proc_info[key] else 'signal %d' % proc_info[key]['signal'])
+                        elif 'exit_code' in proc_info[key]:
+                            if proc_info[key]['exit_code'] != 0:
+                                label = "%s\\n(failed with exit code %d)" % (label, proc_info[key]['exit_code'])
                         else:
                             label = "%s\\n(exited instantly)" % label
                             
