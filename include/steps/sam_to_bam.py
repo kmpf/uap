@@ -68,12 +68,12 @@ class SamToBam(AbstractStep):
                 samtools = [self.tool('samtools'), 'sort', '-', sorted_bam_path[:-4]]
                 
                 pipeline.append(cat4m)
-                pipeline.append(samtools)
+                pipeline.append(samtools, hints = {'writes': [sorted_bam_path]})
 
         # samtools index
         
         with process_pool.ProcessPool(self) as pool:
             pool.launch([self.tool('samtools'), 'index', sorted_bam_path, '/dev/stdout'],
-                stdout_path = sorted_bai_path)
+                stdout_path = sorted_bai_path, hints = {'reads': [sorted_bam_path]})
 
         os.unlink(unsorted_bam_path)

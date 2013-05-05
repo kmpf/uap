@@ -59,4 +59,4 @@ class S2C(AbstractStep):
                 pipeline.append(pigz)
                 pipeline.append(s2c, stderr_path = run_info['info']['log_path'])
                 pipeline.append(samtools)
-                pipeline.append(samtools_sort)
+                pipeline.append(samtools_sort, hints = {'writes': [run_info['info']['s2c_path']]})

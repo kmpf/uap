@@ -542,6 +542,9 @@ class AbstractStep(object):
             if 'name' in proc_info:
                 name = proc_info['name']
             label = "%s" % (proc_info['name'])
+            if 'writes' in proc_info['hints']:
+                for path in proc_info['hints']['writes']:
+                    add_file_node(path)
             if 'args' in proc_info:
                 stripped_args = []
                 for arg in copy.deepcopy(proc_info['args']):
@@ -555,7 +558,7 @@ class AbstractStep(object):
                     else:
                         if arg[0:4] != '/dev':
                             arg = os.path.basename(arg)
-                            if len(arg) > 16 and re.match('^[A-Z]+$', arg[0]):
+                            if (len(arg) > 16) and re.match('^[A-Z]+$', arg):
                                 arg = "%s[...]" % arg[:16]
                     stripped_args.append(arg.replace('\t', '\\t').replace('\\', '\\\\'))
                 label = "%s" % (' '.join(stripped_args))
@@ -574,13 +577,22 @@ class AbstractStep(object):
                                 fifo_type = 'input'
                         else:
                             # we can't know whether the fifo is for input or output,
-                            fifo_type = log['step']['known_paths'][arg]['designation']
+                            # firts look at the hints, then use the designation (if any was given)
+                            if 'reads' in proc_info['hints'] and arg in proc_info['hints']['reads']:
+                                fifo_type = 'input'
+                            if 'writes' in proc_info['hints'] and arg in proc_info['hints']['writeds']:
+                                fifo_type = 'output'
+                            if fifo_type is None:
+                                fifo_type = log['step']['known_paths'][arg]['designation']
                         if fifo_type == 'input':
                             # add edge from file to proc
                             hash['edges'][(file_hash(arg), pid_hash(pid))] = dict()
                         elif fifo_type == 'output':
                             # add edge from proc to file
                             hash['edges'][(pid_hash(pid), file_hash(arg))] = dict()
+            if 'writes' in proc_info['hints']:
+                for path in proc_info['hints']['writes']:
+                    hash['edges'][(pid_hash(pid), file_hash(path))] = dict()
             # add proc
             something_went_wrong = False
             if 'signal' in proc_info:

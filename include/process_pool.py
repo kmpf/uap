@@ -41,11 +41,12 @@ class ProcessPool(object):
         def __exit__(self, type, value, traceback):
             pass
 
-        def append(self, args, stdout_path = None, stderr_path = None):
+        def append(self, args, stdout_path = None, stderr_path = None, hints = {}):
             call = {
                 'args': copy.deepcopy(args),
                 'stdout_path': copy.copy(stdout_path),
-                'stderr_path': copy.copy(stderr_path)
+                'stderr_path': copy.copy(stderr_path),
+                'hints': copy.deepcopy(hints)
             }
             self.append_calls.append(call)
             
@@ -121,11 +122,12 @@ class ProcessPool(object):
         self.temp_paths.append(path)
         return path
     
-    def launch(self, args, stdout_path = None, stderr_path = None):
+    def launch(self, args, stdout_path = None, stderr_path = None, hints = {}):
         call = {
             'args': copy.deepcopy(args),
             'stdout_path': copy.copy(stdout_path),
-            'stderr_path': copy.copy(stderr_path)
+            'stderr_path': copy.copy(stderr_path),
+            'hints': copy.deepcopy(hints)
         }
         
         self.launch_calls.append(call)
@@ -179,6 +181,7 @@ class ProcessPool(object):
         args = copy.deepcopy(info['args'])
         stdout_path = copy.copy(info['stdout_path'])
         stderr_path = copy.copy(info['stderr_path'])
+        hints = copy.deepcopy(info['hints'])
         
         program_name = copy.deepcopy(args[0])
         if program_name.__class__ == list:
@@ -206,7 +209,8 @@ class ProcessPool(object):
             'name': os.path.basename(program_name),
             'start_time': datetime.datetime.now(),
             'args': args,
-            'pid': pid
+            'pid': pid,
+            'hints': hints
         }
         self.log("Launched %s as PID %d." % (' '.join(args), pid))
 
