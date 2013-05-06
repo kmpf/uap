@@ -7,7 +7,7 @@ class FixCutadapt(AbstractStep):
     def __init__(self, pipeline):
         super(FixCutadapt, self).__init__(pipeline)
         
-        self.set_cores(3)
+        self.set_cores(4)
 
         self.add_connection('in/reads')
         self.add_connection('out/reads')
