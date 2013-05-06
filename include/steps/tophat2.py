@@ -107,7 +107,7 @@ class TopHat2(AbstractStep):
                 os.rmdir(os.path.join(tophat_out_path, 'logs'))
             except OSError:
                 pass
-            f.write(yaml.dump(log, default_flow_style = False))
+            f.write(yaml.dump(logs, default_flow_style = False))
 
         try:
             os.rmdir(tophat_out_path)

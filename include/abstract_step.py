@@ -586,7 +586,7 @@ class AbstractStep(object):
                             # firts look at the hints, then use the designation (if any was given)
                             if 'reads' in proc_info['hints'] and arg in proc_info['hints']['reads']:
                                 fifo_type = 'input'
-                            if 'writes' in proc_info['hints'] and arg in proc_info['hints']['writeds']:
+                            if 'writes' in proc_info['hints'] and arg in proc_info['hints']['writes']:
                                 fifo_type = 'output'
                             if fifo_type is None:
                                 fifo_type = log['step']['known_paths'][arg]['designation']
