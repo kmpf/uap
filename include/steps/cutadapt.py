@@ -28,7 +28,7 @@ class Cutadapt(AbstractStep):
     def __init__(self, pipeline):
         super(Cutadapt, self).__init__(pipeline)
         
-        self.set_cores(6)
+        self.set_cores(3)
         
         self.add_connection('in/reads')
         self.add_connection('out/reads')
@@ -101,7 +101,7 @@ class Cutadapt(AbstractStep):
 
                 cutadapt = [self.tool('cutadapt'), '-a', run_info['info']['adapter'], '-']
 
-                pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '3', '--stdout']
+                pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '1', '--stdout']
 
                 # create the pipeline and run it
                 pipeline.append(cat4m)

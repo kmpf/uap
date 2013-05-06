@@ -29,6 +29,9 @@ class Segemehl(AbstractStep):
             if not os.path.exists(self.options[key]):
                 raise StandardError("Could not find %s file: %s" % (key, self.options[key]))
 
+        if not 'swap_reads' in self.options:
+            self.options['swap_reads'] = False
+            
         output_run_info = {}
         for step_name, step_input_info in complete_input_run_info.items():
             for run_id, input_run_info in step_input_info.items():
@@ -49,9 +52,6 @@ class Segemehl(AbstractStep):
 
     def execute(self, run_id, run_info):
         
-        if not 'swap_reads' in self.options:
-            self.options['swap_reads'] = False
-            
         out_name = run_info['output_files']['alignments'].keys()[0]
         if out_name[-3:] != '.gz':
             raise StandardError("Expected .gz in output file name")

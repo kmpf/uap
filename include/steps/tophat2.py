@@ -35,6 +35,9 @@ class TopHat2(AbstractStep):
         if not os.path.exists(self.options['index'] + '.1.bt2'):
             raise StandardError("Could not find %s file: %s" % (key, self.options[key]))
 
+        if not 'swap_reads' in self.options:
+            self.options['swap_reads'] = False
+            
         output_run_info = {}
         for step_name, step_input_info in complete_input_run_info.items():
             for run_id, input_run_info in step_input_info.items():
@@ -69,9 +72,6 @@ class TopHat2(AbstractStep):
 
     def execute(self, run_id, run_info):
         
-        if not 'swap_reads' in self.options:
-            self.options['swap_reads'] = False
-            
         tophat_out_path = self.get_temporary_path('tophat-out')
         
         with process_pool.ProcessPool(self) as pool:
@@ -90,7 +90,7 @@ class TopHat2(AbstractStep):
             ]
 
             pool.launch(tophat2, stderr_path = run_info['output_files']['log'].keys()[0], hints = {'writes': [run_info['output_files']['alignments'].keys()[0], run_info['output_files']['unmapped'].keys()[0]]})
-        
+            
         os.rename(os.path.join(tophat_out_path, 'accepted_hits.bam'), run_info['output_files']['alignments'].keys()[0])
         os.rename(os.path.join(tophat_out_path, 'unmapped.bam'), run_info['output_files']['unmapped'].keys()[0])
         os.rename(os.path.join(tophat_out_path, 'insertions.bed'), run_info['output_files']['insertions'].keys()[0])

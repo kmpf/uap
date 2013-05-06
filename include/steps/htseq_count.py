@@ -24,6 +24,15 @@ class HtSeqCount(AbstractStep):
 
     def setup_runs(self, complete_input_run_info, connection_info):
         
+        if not 'mode' in self.options:
+            self.options['mode'] = 'union'
+        if not 'stranded' in self.options:
+            self.options['stranded'] = 'yes'
+        if not 'type' in self.options:
+            self.options['type'] = 'exon'
+        if not 'idattr' in self.options:
+            self.options['idattr'] = 'gene_id'
+            
         output_run_info = {}
         
         features_path = connection_info['in/features']['runs'].values()[0].values()[0][0]
@@ -49,15 +58,6 @@ class HtSeqCount(AbstractStep):
     
     def execute(self, run_id, run_info):
         
-        if not 'mode' in self.options:
-            self.options['mode'] = 'union'
-        if not 'stranded' in self.options:
-            self.options['stranded'] = 'yes'
-        if not 'type' in self.options:
-            self.options['type'] = 'exon'
-        if not 'idattr' in self.options:
-            self.options['idattr'] = 'gene_id'
-            
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
 
