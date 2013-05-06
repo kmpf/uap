@@ -11,7 +11,7 @@ class TopHat2(AbstractStep):
     def __init__(self, pipeline):
         super(TopHat2, self).__init__(pipeline)
 
-        self.set_cores(12)
+        self.set_cores(6)
         
         self.add_connection('in/reads')
         self.add_connection('out/alignments')
@@ -86,7 +86,7 @@ class TopHat2(AbstractStep):
                 self.tool('tophat2'),
                 '--library-type', self.options['library_type'],
                 '--output-dir', tophat_out_path,
-                '-p', '12', self.options['index'], q, p
+                '-p', '6', self.options['index'], q, p
             ]
 
             pool.launch(tophat2, stderr_path = run_info['output_files']['log'].keys()[0], hints = {'writes': [run_info['output_files']['alignments'].keys()[0], run_info['output_files']['unmapped'].keys()[0]]})
