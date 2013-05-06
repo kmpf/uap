@@ -396,8 +396,10 @@ class ProcessPool(object):
         super_pid = os.getpid()
         watcher_pid = os.fork()
         if watcher_pid == 0:
+            called_cpu_stat_for_childpid = set()
             procs = {}
             procs[super_pid] = psutil.Process(super_pid)
+            procs[os.getpid()] = psutil.Process(os.getpid())
             for pid in self.running_procs:
                 try:
                     procs[pid] = psutil.Process(pid)
@@ -409,6 +411,14 @@ class ProcessPool(object):
                 proc = procs[pid]
                 try:
                     cpu_percent = proc.get_cpu_percent(interval = None)
+                    # add values for all children
+                    if pid != super_pid:
+                        for p in proc.get_children(recursive = True):
+                            try:
+                                cpu_percent = p.get_cpu_percent(interval = None)
+                                called_cpu_stat_for_childpid.add(p.pid)
+                            except psutil._error.NoSuchProcess:
+                                pass
                 except psutil._error.NoSuchProcess:
                     del procs[pid]
 
@@ -417,6 +427,7 @@ class ProcessPool(object):
             iterations = 0
             delay = 0.5
             max_data = dict()
+            cumulative_data = dict()
             while True:
                 pid_list = copy.deepcopy(procs.keys())
                 sum_data = dict()
@@ -429,7 +440,33 @@ class ProcessPool(object):
                         memory_info = proc.get_memory_info()
                         data['rss'] = memory_info.rss
                         data['vms'] = memory_info.vms
-
+                        
+                        # add values for all children
+                        if pid != super_pid:
+                            for p in proc.get_children(recursive = True):
+                                try:
+                                    v = p.get_cpu_percent(interval = None)
+                                    if p.pid in called_cpu_stat_for_childpid:
+                                        data['cpu_percent'] += v
+                                    called_cpu_stat_for_childpid.add(p.pid)
+                                    data['memory_percent'] += p.get_memory_percent()
+                                    memory_info = p.get_memory_info()
+                                    data['rss'] += memory_info.rss
+                                    data['vms'] += memory_info.vms
+                                except psutil._error.NoSuchProcess:
+                                    pass
+                        
+                        # TODO cumulative_data does not include children
+                        if not pid in cumulative_data:
+                            cumulative_data[pid] = dict()
+                        io_counters = proc.get_io_counters()
+                        cumulative_data[pid]['io_counters'] = {
+                            'read_count': io_counters.read_count,
+                            'write_count': io_counters.write_count,
+                            'read_bytes': io_counters.read_bytes,
+                            'write_bytes': io_counters.write_bytes
+                        }
+                        
                         if not pid in max_data:
                             max_data[pid] = copy.deepcopy(data)
                         for k, v in data.items():
@@ -450,10 +487,15 @@ class ProcessPool(object):
                 for k, v in sum_data.items():
                     max_data['sum'][k] = max(max_data['sum'][k], v)
 
-                if len(procs) == 1:
+                if len(procs) == 2:
                     # there's nothing more to watch, write report and exit
+                    # (now there's only the controlling python process and
+                    # the process watcher itself
                     with open(watcher_report_path, 'w') as f:
-                        f.write(yaml.dump(max_data, default_flow_style = False))
+                        report = dict()
+                        report['max'] = max_data
+                        report['cumulative'] = cumulative_data
+                        f.write(yaml.dump(report, default_flow_style = False))
 
                     os._exit(0)
 

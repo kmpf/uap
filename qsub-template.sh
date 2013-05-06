@@ -17,10 +17,12 @@
 ## does the actual work
 ##
 source /etc/profile.d/000-modules.sh    # makes the module system available to your job
+export PATH=$PATH:~reichek/Tools/bowtie2-2.1.0/
 module load python/2.7.3-1-virtual
 module load git
 module load graphviz
 module load pigz
 module load samtools
+module load boost
 
 #{COMMAND}

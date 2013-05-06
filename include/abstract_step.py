@@ -353,12 +353,17 @@ class AbstractStep(object):
         else:
             for k in log.keys():
                 if k == 'process_watcher':
-                    for _ in log['process_watcher'].keys():
-                        if _ == 'sum':
-                            for k2 in self._pipeline_log['process_watcher'][_].keys():
-                                self._pipeline_log['process_watcher'][_][k2] = max(self._pipeline_log['process_watcher'][_][k2], log['process_watcher'][_][k2])
+                    for k2 in log[k].keys():
+                        if k2 == 'max':
+                            for _ in log[k][k2].keys():
+                                if _ == 'sum':
+                                    for k3 in self._pipeline_log[k][k2][_].keys():
+                                        self._pipeline_log[k][k2][_][k2] = max(self._pipeline_log[k][k2][_][k3], log[k][k2][_][k3])
+                                else:
+                                    self._pipeline_log[k][k2][_] = copy.deepcopy(log[k][k2][_])
                         else:
-                            self._pipeline_log['process_watcher'][_] = copy.deepcopy(log['process_watcher'][_])
+                            self._pipeline_log[k][k2].update(log[k][k2])
+                            
                 else:
                     if log[k].__class__ == list:
                         self._pipeline_log[k].extend(log[k])
@@ -614,8 +619,8 @@ class AbstractStep(object):
                 else:
                     label = "%s\\n(exited instantly)" % label
                     
-            if pid in log['pipeline_log']['process_watcher']:
-                label += "\\n(%1.1f%% CPU, %s RAM (%1.1f%%))" % (log['pipeline_log']['process_watcher'][pid]['cpu_percent'], misc.bytes_to_str(log['pipeline_log']['process_watcher'][pid]['rss']), log['pipeline_log']['process_watcher'][pid]['memory_percent'])
+            if pid in log['pipeline_log']['process_watcher']['max']:
+                label += "\\n(%1.1f%% CPU, %s RAM (%1.1f%%))" % (log['pipeline_log']['process_watcher']['max'][pid]['cpu_percent'], misc.bytes_to_str(log['pipeline_log']['process_watcher']['max'][pid]['rss']), log['pipeline_log']['process_watcher']['max'][pid]['memory_percent'])
                 
             hash['nodes'][pid_hash(pid)] = {
                 'label': label,
@@ -697,9 +702,9 @@ class AbstractStep(object):
         hash['graph_labels'][task_name] = "Task: %s\\lHost: %s, CPU: %1.1f%% , RAM: %s (%1.1f%%)\\lDuration: %s\\l\\l" % (
             task_name, 
             socket.gethostname(),
-            log['pipeline_log']['process_watcher']['sum']['cpu_percent'], 
-            misc.bytes_to_str(log['pipeline_log']['process_watcher']['sum']['rss']), 
-            log['pipeline_log']['process_watcher']['sum']['memory_percent'],
+            log['pipeline_log']['process_watcher']['max']['sum']['cpu_percent'], 
+            misc.bytes_to_str(log['pipeline_log']['process_watcher']['max']['sum']['rss']), 
+            log['pipeline_log']['process_watcher']['max']['sum']['memory_percent'],
             duration)
         return hash
 
