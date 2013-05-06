@@ -4,7 +4,6 @@ import sys
 sys.path.append('./include')
 import copy
 import pipeline
-import unix_pipeline
 import yaml
 
 def main():
@@ -24,10 +23,5 @@ def main():
             task.run()
 
 if __name__ == '__main__':
-    try:
-        main()
-    finally:
-        # make sure we kill all child processes on exit
-        # TODO: Will this also kill child processes which have not been
-        # forked from our script? If yes, that would be a problem.
-        unix_pipeline.kill_all_child_processes()
+    main()
+    # TODO: Kill all child processes when Ctrl+C is pressed
