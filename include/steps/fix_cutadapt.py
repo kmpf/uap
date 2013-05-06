@@ -7,7 +7,7 @@ class FixCutadapt(AbstractStep):
     def __init__(self, pipeline):
         super(FixCutadapt, self).__init__(pipeline)
         
-        self.set_cores(7)
+        self.set_cores(6)
 
         self.add_connection('in/reads')
         self.add_connection('out/reads')
@@ -68,14 +68,14 @@ class FixCutadapt(AbstractStep):
         
             with pool.Pipeline(pool) as pipeline:
                 cat4m = [self.tool('cat4m'), fifo_out_R1]
-                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '3', '--stdout']
+                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '--stdout']
                 
                 pipeline.append(cat4m)
                 pipeline.append(pigz, stdout_path = run_info['info']['R1-out'])
                 
             with pool.Pipeline(pool) as pipeline:
                 cat4m = [self.tool('cat4m'), fifo_out_R2]
-                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '3', '--stdout']
+                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '--stdout']
                 
                 pipeline.append(cat4m)
                 pipeline.append(pigz, stdout_path = run_info['info']['R2-out'])

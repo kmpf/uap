@@ -427,7 +427,6 @@ class ProcessPool(object):
             iterations = 0
             delay = 0.5
             max_data = dict()
-            cumulative_data = dict()
             while True:
                 pid_list = copy.deepcopy(procs.keys())
                 sum_data = dict()
@@ -456,17 +455,6 @@ class ProcessPool(object):
                                 except psutil._error.NoSuchProcess:
                                     pass
                         
-                        # TODO cumulative_data does not include children
-                        if not pid in cumulative_data:
-                            cumulative_data[pid] = dict()
-                        io_counters = proc.get_io_counters()
-                        cumulative_data[pid]['io_counters'] = {
-                            'read_count': io_counters.read_count,
-                            'write_count': io_counters.write_count,
-                            'read_bytes': io_counters.read_bytes,
-                            'write_bytes': io_counters.write_bytes
-                        }
-                        
                         if not pid in max_data:
                             max_data[pid] = copy.deepcopy(data)
                         for k, v in data.items():
@@ -494,7 +482,6 @@ class ProcessPool(object):
                     with open(watcher_report_path, 'w') as f:
                         report = dict()
                         report['max'] = max_data
-                        report['cumulative'] = cumulative_data
                         f.write(yaml.dump(report, default_flow_style = False))
 
                     os._exit(0)

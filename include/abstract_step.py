@@ -620,7 +620,7 @@ class AbstractStep(object):
                     label = "%s\\n(exited instantly)" % label
                     
             if pid in log['pipeline_log']['process_watcher']['max']:
-                label += "\\n(%1.1f%% CPU, %s RAM (%1.1f%%))" % (log['pipeline_log']['process_watcher']['max'][pid]['cpu_percent'], misc.bytes_to_str(log['pipeline_log']['process_watcher']['max'][pid]['rss']), log['pipeline_log']['process_watcher']['max'][pid]['memory_percent'])
+                label += "\\n%1.1f%% CPU, %s RAM (%1.1f%%)" % (log['pipeline_log']['process_watcher']['max'][pid]['cpu_percent'], misc.bytes_to_str(log['pipeline_log']['process_watcher']['max'][pid]['rss']), log['pipeline_log']['process_watcher']['max'][pid]['memory_percent'])
                 
             hash['nodes'][pid_hash(pid)] = {
                 'label': label,
@@ -635,7 +635,9 @@ class AbstractStep(object):
                         continue
                     size_label = '(empty)'
                     if ('length' in proc_info[key]) and (proc_info[key]['length'] > 0):
-                        size_label = "(%s / %s lines)" % (misc.bytes_to_str(proc_info[key]['length']), "{:,}".format(proc_info[key]['lines']))
+                        speed = float(proc_info[key]['length']) / (proc_info[key]['end_time'] - proc_info[key]['start_time']).total_seconds()
+                        speed_label = "%s/s" % misc.bytes_to_str(speed)
+                        size_label = "%s / %s lines (%s)" % (misc.bytes_to_str(proc_info[key]['length']), "{:,}".format(proc_info[key]['lines']), speed_label)
                     label = "%s\\n%s" % (which, size_label)
                     
                     something_went_wrong = False
