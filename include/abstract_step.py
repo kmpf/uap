@@ -268,7 +268,7 @@ class AbstractStep(object):
         except Exception as e:
             self.end_time = datetime.datetime.now()
             annotation_path, annotation_str = self.write_annotation(run_id, self._temp_directory)
-            message = "[BAD] %s/%s failed on %s.\n\nHere are the details:\n%s" % (str(self), run_id, socket.gethostname(), annotation_str)
+            message = "[BAD] %s/%s failed on %s\n\nHere are the details:\n%s" % (str(self), run_id, socket.gethostname(), annotation_str)
             attachment = None
             if os.path.exists(annotation_path + '.png'):
                 attachment = dict()
@@ -330,7 +330,7 @@ class AbstractStep(object):
             count[state] += 1
         remaining_task_info = ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())])
 
-        message = "[OK] %s/%s successfully finished on %s.\n" % (str(self), run_id, socket.gethostname())
+        message = "[OK] %s/%s successfully finished on %s\n" % (str(self), run_id, socket.gethostname())
         message += str(self) + ': ' + remaining_task_info + "\n"
         attachment = None
         if os.path.exists(annotation_path + '.png'):
@@ -339,7 +339,6 @@ class AbstractStep(object):
             attachment['data'] = open(annotation_path + '.png').read()
         self._pipeline.notify(message, attachment)
 
-        # finally, reset the unix pipeline module
         self._reset()
 
     def tool(self, key):

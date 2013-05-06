@@ -48,6 +48,10 @@ class Segemehl(AbstractStep):
         return output_run_info
 
     def execute(self, run_id, run_info):
+        
+        if not 'swap_reads' in self.options:
+            self.options['swap_reads'] = False
+            
         out_name = run_info['output_files']['alignments'].keys()[0]
         if out_name[-3:] != '.gz':
             raise StandardError("Expected .gz in output file name")
@@ -61,12 +65,19 @@ class Segemehl(AbstractStep):
             
             with pool.Pipeline(pool) as pipeline:
             
+                q = run_info['info']['R1-in']
+                p = run_info['info']['R2-in']
+                
+                if self.options['swap_reads']:
+                    q = run_info['info']['R2-in']
+                    p = run_info['info']['R1-in']
+                    
                 segemehl = [
                     self.tool('segemehl'),
                     '-d', fifo_path_genome,
                     '-i', self.options['index'],
-                    '-q', run_info['info']['R1-in'],
-                    '-p', run_info['info']['R2-in'],
+                    '-q', q,
+                    '-p', p,
                     '-u', fifo_path_unmapped,
                     '-H', '1',
                     '-t', '10',
