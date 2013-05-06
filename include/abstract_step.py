@@ -235,10 +235,6 @@ class AbstractStep(object):
 
     def run(self, run_id):
         
-        # create the output directory if it doesn't exist yet
-        if not os.path.isdir(self.get_output_directory()):
-            os.makedirs(self.get_output_directory())
-            
         # also create a temporary directory for the output file
         temp_directory = self.get_temp_output_directory()
         self._temp_directory = temp_directory
@@ -283,6 +279,10 @@ class AbstractStep(object):
         
         self.end_time = datetime.datetime.now()
         
+        # create the output directory if it doesn't exist yet
+        if not os.path.isdir(self.get_output_directory()):
+            os.makedirs(self.get_output_directory())
+            
         # if we're here, we can assume the step has finished successfully
         # now rename the output files (move from temp directory to
         # destination directory)
