@@ -44,10 +44,12 @@ class HtSeqCount(AbstractStep):
     def execute(self, run_id, run_info):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
-                pigz1 = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout', run_info['info']['in_path']]
+                cat4m = [self.tool('cat4m'), run_info['info']['in_path']]
+                pigz1 = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
                 grep = [self.tool('grep'), self.options['pattern']]
                 pigz2 = [self.tool('pigz'), '--processes', '2', '--blocksize', '4096', '--stdout']
                 
+                pipeline.append(cat4m)
                 pipeline.append(pigz1)
                 pipeline.append(grep)
                 pipeline.append(pigz2, stdout_path = run_info['info']['out_path'])

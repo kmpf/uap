@@ -358,7 +358,7 @@ class AbstractStep(object):
                             for _ in log[k][k2].keys():
                                 if _ == 'sum':
                                     for k3 in self._pipeline_log[k][k2][_].keys():
-                                        self._pipeline_log[k][k2][_][k2] = max(self._pipeline_log[k][k2][_][k3], log[k][k2][_][k3])
+                                        self._pipeline_log[k][k2][_][k3] = max(self._pipeline_log[k][k2][_][k3], log[k][k2][_][k3])
                                 else:
                                     self._pipeline_log[k][k2][_] = copy.deepcopy(log[k][k2][_])
                         else:
