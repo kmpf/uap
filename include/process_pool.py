@@ -369,7 +369,8 @@ class ProcessPool(object):
                     if os.path.exists(report_path):
                         report = yaml.load(open(report_path, 'r'))
                         os.unlink(report_path)
-                        self.proc_details[pid].update(report)
+                        if report is not None:
+                            self.proc_details[pid].update(report)
                 
             except TimeoutException:
                 self.log("Timeout, killing all child processes now.")
