@@ -27,7 +27,7 @@ class Task(object):
         if task_state == self.pipeline.states.FINISHED:
             print("Skipping task: %s is already finished." % self)
             return
-        if task_state != self.pipeline.states.READY:
+        if task_state == self.pipeline.states.WAITING:
             raise StandardError("%s cannot be run yet." % self)
         self.step.run(self.run_id)
 

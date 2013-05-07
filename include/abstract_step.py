@@ -250,10 +250,10 @@ class AbstractStep(object):
         if max_level == 0:
             return self._pipeline.states.FINISHED
         elif max_level == 1:
-            run_ping_path = self.get_run_ping_path_for_run_id(run_id)
-            if os.path.exists(run_ping_path):
-                if (datetime.datetime.now() - datetime.datetime.fromtimestamp(os.path.getmtime(run_ping_path))).total_seconds() > AbstractStep.PING_TIMEOUT:
-                    print("WARNING: The ping file at %s is stale. You should make sure that the task is not running somewhere and remove the file." % run_ping_path)
+            executing_ping_path = self.get_executing_ping_path_for_run_id(run_id)
+            if os.path.exists(executing_ping_path):
+                if (datetime.datetime.now() - datetime.datetime.fromtimestamp(os.path.getmtime(executing_ping_path))).total_seconds() > AbstractStep.PING_TIMEOUT:
+                    print("WARNING: The ping file at %s is stale. You should make sure that the task is not running somewhere and remove the file." % executing_ping_path)
                 return self._pipeline.states.EXECUTING
             return self._pipeline.states.READY
         else:
@@ -265,9 +265,9 @@ class AbstractStep(object):
             os.makedirs(self.get_output_directory())
             
         # now write the run ping file
-        run_ping_path = self.get_run_ping_path_for_run_id(run_id)
+        executing_ping_path = self.get_executing_ping_path_for_run_id(run_id)
         
-        if os.path.exists(run_ping_path):
+        if os.path.exists(executing_ping_path):
             raise StandardError("%s/%s seems to be already running, exiting..." % (self, run_id))
         
         # create a temporary directory for the output files
@@ -297,18 +297,18 @@ class AbstractStep(object):
         temp_run_info = fix_dict(temp_run_info, fix_func_dict_subst, temp_paths)
         
         # now write the run ping file
-        run_ping_info = dict()
-        run_ping_info['start_time'] = datetime.datetime.now()
-        run_ping_info['host'] = socket.gethostname()
-        with open(run_ping_path, 'w') as f:
-            f.write(yaml.dump(run_ping_info, default_flow_style = False))
+        executing_ping_info = dict()
+        executing_ping_info['start_time'] = datetime.datetime.now()
+        executing_ping_info['host'] = socket.gethostname()
+        with open(executing_ping_path, 'w') as f:
+            f.write(yaml.dump(executing_ping_info, default_flow_style = False))
             
-        run_ping_pid = os.fork()
-        if run_ping_pid == 0:
+        executing_ping_pid = os.fork()
+        if executing_ping_pid == 0:
             while True:
                 time.sleep(AbstractStep.PING_RENEW)
-                if os.path.exists(run_ping_path):
-                    os.utime(run_ping_path, None)
+                if os.path.exists(executing_ping_path):
+                    os.utime(executing_ping_path, None)
             os._exit(0)
             
         self.start_time = datetime.datetime.now()
@@ -327,11 +327,11 @@ class AbstractStep(object):
             self._pipeline.notify(message, attachment)
             raise
         finally:
-            os.kill(run_ping_pid, signal.SIGTERM)
-            os.waitpid(run_ping_pid, 0)
+            os.kill(executing_ping_pid, signal.SIGTERM)
+            os.waitpid(executing_ping_pid, 0)
             # remove the run ping file
-            if os.path.exists(run_ping_path):
-                os.unlink(run_ping_path)
+            if os.path.exists(executing_ping_path):
+                os.unlink(executing_ping_path)
         
         self.end_time = datetime.datetime.now()
         
@@ -801,8 +801,11 @@ class AbstractStep(object):
     def _get_ping_path_for_run_id(self, run_id, key):
         return os.path.join(self.get_output_directory(), '.%s-%s-ping.yaml' % (run_id, key))
     
-    def get_run_ping_path_for_run_id(self, run_id):
+    def get_executing_ping_path_for_run_id(self, run_id):
         return self._get_ping_path_for_run_id(run_id, 'run')
+        
+    def get_queued_ping_path_for_run_id(self, run_id):
+        return self._get_ping_path_for_run_id(run_id, 'queued')
         
     def get_input_run_info_for_connection(self, in_key):
         if in_key[0:3] != 'in/':

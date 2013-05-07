@@ -9,10 +9,7 @@ import yaml
 def main():
     p = pipeline.Pipeline()
     
-    group_by_status = False
-    if '--group' in sys.argv:
-        group_by_status = True
-        sys.argv.remove('--group')
+    group_by_status = True
     
     if len(sys.argv) > 1:
         if sys.argv[1] == '--sources':
