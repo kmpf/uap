@@ -11,12 +11,14 @@ import misc
 import os
 import re
 import random
+import signal
 import socket
 import string
 import StringIO
 import subprocess
 import tempfile
 import textwrap
+import time
 import traceback
 import yaml
 
@@ -24,6 +26,9 @@ import yaml
 class AbstractStep(object):
     
     fsc = fscache.FSCache()
+    
+    PING_TIMEOUT = 300
+    PING_RENEW = 30
     
     def __init__(self, pipeline):
         
@@ -215,9 +220,25 @@ class AbstractStep(object):
             return result
 
         '''
-        finished: all output files exist AND up to date (recursively)
-        ready: NOT all output files exist AND all input files exist AND up to date (recursively)
-        waiting: otherwise
+        - finished: all output files exist AND up to date (recursively)
+        - ready: NOT all output files exist AND all input files exist AND up to date (recursively)
+        - waiting: otherwise
+        - if it's ready, it might be executing or queued -> check execute and queue ping
+        - if it's waiting, it might be queued -> check queue ping
+        
+        the ping works like this (this example is for execute, same goes for queued):
+          - there's a ping file for every task ( = step + run)
+          - it contains information about when how where the job was started etc.
+          - its timestamp gets renewed every 30 seconds (touch)
+          - as soon as the job has finished, the execute ping file is removed,
+            this should also work if the job crashes (however, it cannot work if
+            the controlling script receives SIGKILL
+          - if its timestamp is no more than 5 minutes old, it is regarded as
+            currently executing
+          - otherwise, a warning is printed because the ping file is probably stale
+            (no automatic cleanup is performed, manual intervention is necessary)
+          - warning: this requires all involved systems or the file system to be
+            time-synchronized
         '''
         
         run_info = self.get_run_info()
@@ -229,13 +250,17 @@ class AbstractStep(object):
         if max_level == 0:
             return self._pipeline.states.FINISHED
         elif max_level == 1:
+            run_ping_path = self.get_run_ping_path_for_run_id(run_id)
+            if os.path.exists(run_ping_path):
+                if (datetime.datetime.now() - datetime.datetime.fromtimestamp(os.path.getmtime(run_ping_path))).total_seconds() < AbstractStep.PING_TIMEOUT:
+                    return self._pipeline.states.EXECUTING
             return self._pipeline.states.READY
         else:
             return self._pipeline.states.WAITING
 
     def run(self, run_id):
         
-        # also create a temporary directory for the output file
+        # create a temporary directory for the output files
         temp_directory = self.get_temp_output_directory()
         self._temp_directory = temp_directory
         os.makedirs(temp_directory)
@@ -260,13 +285,36 @@ class AbstractStep(object):
                 temp_paths[out_path] = os.path.join(temp_directory, os.path.basename(out_path))
 
         temp_run_info = fix_dict(temp_run_info, fix_func_dict_subst, temp_paths)
-
+        
+        # create the output directory if it doesn't exist yet
+        if not os.path.isdir(self.get_output_directory()):
+            os.makedirs(self.get_output_directory())
+            
+        # now write the run ping file
+        run_ping_path = self.get_run_ping_path_for_run_id(run_id)
+        run_ping_info = dict()
+        run_ping_info['start_time'] = datetime.datetime.now()
+        run_ping_info['host'] = socket.gethostname()
+        with open(run_ping_path, 'w') as f:
+            f.write(yaml.dump(run_ping_info, default_flow_style = False))
+            
+        run_ping_pid = os.fork()
+        if run_ping_pid == 0:
+            while True:
+                time.sleep(AbstractStep.PING_RENEW)
+                if os.path.exists(run_ping_path):
+                    os.utime(run_ping_path, None)
+            os._exit(0)
+            
         self.start_time = datetime.datetime.now()
         self._pipeline.notify("[INFO] starting %s/%s on %s" % (str(self), run_id, socket.gethostname()))
         try:
             self.execute(run_id, temp_run_info)
-        except Exception as e:
+        except:
             self.end_time = datetime.datetime.now()
+            # remove the run ping file
+            if os.path.exists(run_ping_path):
+                os.unlink(run_ping_path)
             annotation_path, annotation_str = self.write_annotation(run_id, self._temp_directory)
             message = "[BAD] %s/%s failed on %s\n\nHere are the details:\n%s" % (str(self), run_id, socket.gethostname(), annotation_str)
             attachment = None
@@ -276,13 +324,12 @@ class AbstractStep(object):
                 attachment['data'] = open(annotation_path + '.png').read()
             self._pipeline.notify(message, attachment)
             raise
+        finally:
+            os.kill(run_ping_pid, signal.SIGTERM)
+            os.waitpid(run_ping_pid, 0)
         
         self.end_time = datetime.datetime.now()
         
-        # create the output directory if it doesn't exist yet
-        if not os.path.isdir(self.get_output_directory()):
-            os.makedirs(self.get_output_directory())
-            
         # if we're here, we can assume the step has finished successfully
         # now rename the output files (move from temp directory to
         # destination directory)
@@ -328,7 +375,7 @@ class AbstractStep(object):
             if not state in count:
                 count[state] = 0
             count[state] += 1
-        remaining_task_info = ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())])
+        remaining_task_info = ', '.join(["%d %s" % (count[_], _.lower()) for _ in self._pipeline.states.order if _ in count])
 
         message = "[OK] %s/%s successfully finished on %s\n" % (str(self), run_id, socket.gethostname())
         message += str(self) + ': ' + remaining_task_info + "\n"
@@ -745,6 +792,12 @@ class AbstractStep(object):
         
     def require_tool(self, tool):
         self._tools[tool] = copy.deepcopy(self._pipeline.config['tools'][tool]['path'])
+        
+    def _get_ping_path_for_run_id(self, run_id, key):
+        return os.path.join(self.get_output_directory(), '.%s-%s-ping.yaml' % (run_id, key))
+    
+    def get_run_ping_path_for_run_id(self, run_id):
+        return self._get_ping_path_for_run_id(run_id, 'run')
         
     def get_input_run_info_for_connection(self, in_key):
         if in_key[0:3] != 'in/':

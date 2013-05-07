@@ -26,6 +26,8 @@ def main():
 if __name__ == '__main__':
     try:
         main()
+    except KeyboardInterrupt:
+        print("Script terminated by user.")
     finally:
         # make sure all child processes get terminated
         process_pool.ProcessPool.kill_all_child_processes()

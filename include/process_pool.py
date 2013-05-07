@@ -340,10 +340,14 @@ class ProcessPool(object):
                     except:
                         print("Warning: Couldn't load watcher report from %s." % watcher_report_path)
                         pass
+                    raise OSError
                     continue
-                
-                # remove pid from self.running_procs
-                self.running_procs.remove(pid)
+
+                try:
+                    # remove pid from self.running_procs
+                    self.running_procs.remove(pid)
+                except:
+                    raise StandardError("Caught a process which we didn't know: %d." % pid)
                 
                 self.proc_details[pid]['end_time'] = datetime.datetime.now()
                 
@@ -476,7 +480,7 @@ class ProcessPool(object):
                 for k, v in sum_data.items():
                     max_data['sum'][k] = max(max_data['sum'][k], v)
 
-                if len(procs) == 2:
+                if len(procs) <= 2:
                     # there's nothing more to watch, write report and exit
                     # (now there's only the controlling python process and
                     # the process watcher itself
