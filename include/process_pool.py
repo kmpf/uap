@@ -373,7 +373,7 @@ class ProcessPool(object):
                 
             except TimeoutException:
                 self.log("Timeout, killing all child processes now.")
-                self._kill_all_child_processes()
+                ProcessPool.kill_all_child_processes()
             except OSError:
                 # no more children running, we are done
                 signal.alarm(0)
@@ -497,13 +497,16 @@ class ProcessPool(object):
         else:
             return watcher_pid
 
-    def _kill_all_child_processes(self):
+    @classmethod
+    def kill_all_child_processes(cls):
         '''
-        Kill all child processes launched via this module by sending a SIGTERM to each of them.
+        Kill all child processes of this process by sending a SIGTERM to each of them.
+        This includes all children which were not launched by this module, and
+        their children etc.
         '''
-        for pid in self.running_procs:
+        proc = psutil.Process(os.getpid())
+        for p in proc.get_children(recursive = True):
             try:
-                os.kill(pid, signal.SIGTERM)
-                self.log('Sending SIGTERM to process %s (PID %d).' % (self.proc_details[pid]['name'], pid))
-            except OSError:
+                p.terminate()
+            except psutil._error.NoSuchProcess:
                 pass

@@ -4,6 +4,7 @@ import sys
 sys.path.append('./include')
 import copy
 import pipeline
+import process_pool
 import yaml
 
 def main():
@@ -23,5 +24,8 @@ def main():
             task.run()
 
 if __name__ == '__main__':
-    main()
-    # TODO: Kill all child processes when Ctrl+C is pressed
+    try:
+        main()
+    except:
+        # make sure all child processes get terminated
+        process_pool.ProcessPool.kill_all_child_processes()
