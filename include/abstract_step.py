@@ -252,13 +252,23 @@ class AbstractStep(object):
         elif max_level == 1:
             run_ping_path = self.get_run_ping_path_for_run_id(run_id)
             if os.path.exists(run_ping_path):
-                if (datetime.datetime.now() - datetime.datetime.fromtimestamp(os.path.getmtime(run_ping_path))).total_seconds() < AbstractStep.PING_TIMEOUT:
-                    return self._pipeline.states.EXECUTING
+                if (datetime.datetime.now() - datetime.datetime.fromtimestamp(os.path.getmtime(run_ping_path))).total_seconds() > AbstractStep.PING_TIMEOUT:
+                    print("WARNING: The ping file at %s is stale. You should make sure that the task is not running somewhere and remove the file." % run_ping_path)
+                return self._pipeline.states.EXECUTING
             return self._pipeline.states.READY
         else:
             return self._pipeline.states.WAITING
 
     def run(self, run_id):
+        # create the output directory if it doesn't exist yet
+        if not os.path.isdir(self.get_output_directory()):
+            os.makedirs(self.get_output_directory())
+            
+        # now write the run ping file
+        run_ping_path = self.get_run_ping_path_for_run_id(run_id)
+        
+        if os.path.exists(run_ping_path):
+            raise StandardError("%s/%s seems to be already running, exiting..." % (self, run_id))
         
         # create a temporary directory for the output files
         temp_directory = self.get_temp_output_directory()
@@ -286,12 +296,7 @@ class AbstractStep(object):
 
         temp_run_info = fix_dict(temp_run_info, fix_func_dict_subst, temp_paths)
         
-        # create the output directory if it doesn't exist yet
-        if not os.path.isdir(self.get_output_directory()):
-            os.makedirs(self.get_output_directory())
-            
         # now write the run ping file
-        run_ping_path = self.get_run_ping_path_for_run_id(run_id)
         run_ping_info = dict()
         run_ping_info['start_time'] = datetime.datetime.now()
         run_ping_info['host'] = socket.gethostname()
@@ -312,9 +317,6 @@ class AbstractStep(object):
             self.execute(run_id, temp_run_info)
         except:
             self.end_time = datetime.datetime.now()
-            # remove the run ping file
-            if os.path.exists(run_ping_path):
-                os.unlink(run_ping_path)
             annotation_path, annotation_str = self.write_annotation(run_id, self._temp_directory)
             message = "[BAD] %s/%s failed on %s\n\nHere are the details:\n%s" % (str(self), run_id, socket.gethostname(), annotation_str)
             attachment = None
@@ -327,6 +329,9 @@ class AbstractStep(object):
         finally:
             os.kill(run_ping_pid, signal.SIGTERM)
             os.waitpid(run_ping_pid, 0)
+            # remove the run ping file
+            if os.path.exists(run_ping_path):
+                os.unlink(run_ping_path)
         
         self.end_time = datetime.datetime.now()
         
