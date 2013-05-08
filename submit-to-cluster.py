@@ -99,15 +99,15 @@ def main():
         args.append('"' + str(task) + '"')
         submit_script = submit_script.replace("#{COMMAND}", ' '.join(args))
 
-        #long_task_id = '%s_%d' % (str(task.step), task.run_index + 1)
+        long_task_id_with_run_id = '%s_%d' % (str(task.step), task.run_index + 1)
         long_task_id = str(task.step)
         short_task_id = long_task_id[0:15]
 
         qsub_args = ['qsub', '-N', short_task_id]
         qsub_args.append('-e')
-        qsub_args.append(os.path.join(task.step.get_output_directory(), '.' + long_task_id + '.stderr'))
+        qsub_args.append(os.path.join(task.step.get_output_directory(), '.' + long_task_id_with_run_id + '.stderr'))
         qsub_args.append('-o')
-        qsub_args.append(os.path.join(task.step.get_output_directory(), '.' + long_task_id + '.stdout'))
+        qsub_args.append(os.path.join(task.step.get_output_directory(), '.' + long_task_id_with_run_id + '.stdout'))
 
         # create the output directory if it doesn't exist yet
         # this is necessary here because otherwise, qsub will complain
