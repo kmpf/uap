@@ -29,10 +29,10 @@ task
 Miscellaneous modules
 ---------------------
     
-unix_pipeline
-~~~~~~~~~~~~~
+process_pool
+~~~~~~~~~~~~
 
-.. automodule:: unix_pipeline
+.. automodule:: process_pool
     :members:
     
 fscache

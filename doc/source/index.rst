@@ -21,12 +21,13 @@ General usage
 This package *does not* provide a number of tools which are downloaded and
 installed system-wide to provide certain functioniality.
 The intention of this system is to provide a robust and traceable framework
-for data evaluation in scientific experiments.
+for data evaluation in scientific experiments which uses other tools and
+manages individual data processing steps and their inter-dependencies.
     
 The recommended workflow for running a data evaluation for an experiment is 
 as follows:
 
-1. Fork the rnaseq-pipeline repository via Git.
+1. Check-out the rnaseq-pipeline repository via Git.
 2. Setup the project by writing the configuration file.
 3. Add steps or other functionality as needed (optional).
 4. Run the pipeline.
@@ -81,11 +82,12 @@ Design
 
 The central part of the pipeline is its definition of the steps which are to 
 be carried out.
-Steps are organized in a dependency graph, or directed acyclic graph -- every 
+Steps are organized in a dependency graph (a directed acyclic graph) -- every 
 step may have one or more parent steps, which may in turn have other parent 
 steps, and so on.
 Steps without parents are usually sources which provide source files, for
-example FASTQ files with the raw sequences obtained from the sequencer.
+example FASTQ files with the raw sequences obtained from the sequencer,
+genome sequence databases or annotation tracks.
 
 Each step defines a number of runs and each run represents a piece of the
 entire data evaluation, typically at the level of a single sample.
@@ -96,13 +98,13 @@ actual tasks becomes available.
 Each run may provide a number of output files which depend on output files
 of one or several runs from parent steps.
 
-Source steps define a run for every input sample, and following steps
+Source steps define a run for every input sample, and a subsequent step
 may:
 
 * define the same number of runs, 
 * define more runs (for example when R1 and R2 reads in a paired-end RNASeq 
   experiment should be treated separately),
-* define fewer runs (usually at the end of a pipeline, where results are
+* define fewer runs (usually towards the end of a pipeline, where results are
   summarized).
 
 Setup
@@ -120,8 +122,9 @@ required Python environment (which will be located in ``./python_env/``)::
 There's no harm in accidentally running this script multiple times. 
 Also, it will compile ``cat4m``, a tool which can be found at 
 ``./tools/cat4m`` and which is able to read arbitrary input files in chunks 
-of 4 MB and prints them to stdout (we'll need this often in the pipeline,
-as ``cat`` reads in system-default blocks of 32 kB).
+of 4 MB and print them to stdout (we'll need this often in the pipeline,
+as ``cat`` reads in system-default blocks of 32 kB which is ok for a normal
+system but leads to high I/O load on a cluster system).
 
 The configuration file
 ----------------------
@@ -170,177 +173,11 @@ In the configuration, the following aspects of the pipeline are defined:
 * ``tools`` -- defines all tools used in the pipeline and how to determine 
   their versions (for later reference)
 * ``email`` -- when submitting jobs on a cluster, messages will be sent to 
-  this email address (nobody@example.com by default)
+  this email address by the cluster scheduler (nobody@example.com by default)
   
-Scripts
-=======
-
-Once the project is set up, there are several scripts which can be used to 
-execute and monitor the pipeline. 
-All scripts have a couple of properties in common:
-
-* On startup, the configuration is read, tools are checked, input files are 
-  collected, and all tasks are calculated. 
-  If any of these steps fails, the script will print an error message with 
-  a backtrace and it will crash.
-* For convenience, a symbolic link called ``out`` will be placed in the 
-  pipeline's directory which points to the output directory defined in the 
-  configuration file. 
-  If ``out`` already exists, it is left untouched.
-
-There are a couple of global command line parameters which are valid for all 
-scripts (well, actually, it's only one):
-
-* ``--even-if-dirty``:
-    Before doing anything else, the pipeline checks whether its source code 
-    has been modified in any way via Git. 
-    If yes, processing is stopped immediately unless this flag is specified.
-
-..
-    * ``--test-run``:
-        When this parameter is specified, a ``head`` step is placed before all 
-        first-level steps in the step tree, which returns the first 1000 lines 
-        of every input file. 
-        That way, a pipeline can be tested very quickly with a small input data 
-        set.
-
-In the following, the scripts are described in detail.
-
-status.py
----------
-
-The status script lists all tasks resulting from the configured steps and 
-input samples. 
-At the beginning of each line, the status of each task is denoted by 
-``[w]``, ``[r]``, and ``[f]``, corresponding to:
-
-* **waiting** -- the taks is waiting for input files to appear or to be 
-  updated
-* **ready** -- all input files are present and up-to-date regarding their 
-  upstream input files, task can be started
-* **finished** -- all output files are in place and up-to-date
-
-.. NOTE:: In the current design, there is no mechanism to indicate 
-    whether a task is currently running or has been submitted to a cluster.
-
-Here is an example output::
-
-    $ ./status.py
-    [r] cutadapt/RIB0000784-R1
-    [r] cutadapt/RIB0000784-R2
-    [r] cutadapt/RIB0000770-R2
-    [r] cutadapt/RIB0000770-R1
-    [w] fix_cutadapt/RIB0000770
-    [w] fix_cutadapt/RIB0000784
-    tasks: 6 total, 4 ready, 2 waiting
-
-..
-    Here is another example output with ``--test-run`` specified on the command 
-    line. 
-    Here, all top-level steps are prepended with a ``head`` step, which is 
-    reflected in the task IDs::
-
-        $ ./status.py --test-run
-        [r] head/cutadapt/RIB0000784
-        [r] head/cutadapt/RIB0000770
-        [w] head/cutadapt/RIB0000784-R1
-        [w] head/cutadapt/RIB0000784-R2
-        [w] head/cutadapt/RIB0000770-R2
-        [w] head/cutadapt/RIB0000770-R1
-        [w] head/cutadapt/fix_cutadapt/RIB0000770
-        [w] head/cutadapt/fix_cutadapt/RIB0000784
-        tasks: 8 total, 2 ready, 6 waiting
-
-Detailed information about a specific task can be obtained by specifying the 
-task ID on the command line::
-
-    $ ./status.py cutadapt/RIB0000770-R1
-    info:
-    adapter: AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTAGCTTATCTCGTATGCCGTCTTCTGCTTG
-    read: R1
-    output_files:
-    log:
-        out/cutadapt-7708988d/RIB0000770-cutadapt-R1-log.txt:
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L001_R1_001.fastq.gz
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L002_R1_001.fastq.gz
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L003_R1_001.fastq.gz
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L004_R1_001.fastq.gz
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L005_R1_001.fastq.gz
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L006_R1_001.fastq.gz
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L007_R1_001.fastq.gz
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L008_R1_001.fastq.gz
-    reads:
-        out/cutadapt-7708988d/RIB0000770-cutadapt-R1.fastq.gz:
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L001_R1_001.fastq.gz
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L002_R1_001.fastq.gz
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L003_R1_001.fastq.gz
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L004_R1_001.fastq.gz
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L005_R1_001.fastq.gz
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L006_R1_001.fastq.gz
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L007_R1_001.fastq.gz
-        - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L008_R1_001.fastq.gz
-
-The details of this data structure are explained below. 
-It represents a kind of plan which includes information about which output 
-files will be generated and which input files they depend on -- this is 
-stored in ``output_files``. 
-Furthermore, necessary information for actually executing the task are 
-recorded in ``info``. 
-In this case, the final adapter has been determined by replacing ``((INDEX))`` 
-in the configuration file's ``adapter-R1`` with the actual barcode index of 
-the sample.
-
-
-run-locally.py
---------------
-
-The ``run-locally.py`` script runs all non-finished tasks (or a subset) 
-sequentially on the local machine. 
-Feel free to cancel this script at any time, it won't put your project in a 
-confused state.
-
-To execute one or more certain tasks, specify the task IDs on the command 
-line.
-
-.. NOTE:: Why is it safe to cancel the pipeline? 
-    The pipeline is written in a way which expects processes to fail or 
-    cluster jobs to disappear without notice. 
-    This problem is mitigated by a design which relies on file presence and 
-    file timestamps to determine whether a task is finished or not. 
-    Output files are automatically written to temporary locations and later 
-    moved to their real target directory, and it is not until the last file 
-    rename operation has finished that a task is regarded as finished.
-
-submit-to-cluster.py
---------------------
-
-The ``submit-to-cluster.py`` script determines which tasks still have to be 
-carried out and submits the jobs to a GridEngine cluster by calling ``qsub``. 
-Dependencies are passed to ``qsub`` via the ``-hold_jid`` option, which means 
-that jobs that depend on other jobs won't get scheduled until their 
-dependencies have been satisfied. 
-The file ``qsub-template.sh`` is used to submit jobs, with ``#{ }`` fields 
-being substituted with appropriate values.
-
-The file ``quotas.yaml`` can be used to define different quotas for different 
-systems:
-
-.. code-block:: yaml
-
-    "frontend[12]":
-        default: 5
-        cutadapt: 100
-
-In the example above, a default quota of 5 is defined for hosts with a 
-hostname of ``frontend1`` or ``frontend2`` (the name is a regular expression). 
-A quota of 5 means that no more than 5 jobs of one kind will be run in 
-parallel.
-Different quotas can be defined for each step: because ``cutadapt`` is 
-highly IO-efficient, it has a higher quota.
-
 Steps
-=====
-
+~~~~~
+  
 Steps are defined in a directed acyclic graph. 
 In the configuration, the ``steps`` dictionary contains a key for every
 step, therefore each step must have a unique name.
@@ -398,7 +235,251 @@ effectively disabling these steps):
         fix_cutadapt:
             _depends: cutadapt
             _BREAK: true
-                
+
+Tools
+~~~~~
+
+All tools which are used in the pipeline must be specified in the 
+configuration file.
+The pipeline determines and records their versions for future reference.
+
+By default, version determination is simply attempted by calling the program
+without command-line arguments.
+
+If a certain argument is required, specify it in ``get_version``. 
+If the tools does not return with an exit code of 0, find out which code it
+is by typing ``echo $?`` into Bash and specify the exit code in ``exit_code``.
+            
+Scripts
+=======
+
+Once the project is set up, there are several scripts which can be used to 
+execute and monitor the pipeline. 
+All scripts have a couple of properties in common:
+
+* On startup, the configuration is read, tools are checked, input files are 
+  collected, and all tasks are calculated. 
+  If any of these steps fails, the script will print an error message with 
+  a backtrace and it will crash.
+  This may seem a bit harsh, but after all, it's better to fail early than
+  to fail late if failing is unavoidable.
+* For convenience, a symbolic link called ``out`` will be placed in the 
+  pipeline's directory which points to the output directory defined in the 
+  configuration file. 
+  If ``out`` already exists, it is left untouched.
+
+There are a couple of global command line parameters which are valid for all 
+scripts (well, actually, it's only one):
+
+* ``--even-if-dirty``:
+    Before doing anything else, the pipeline checks whether its source code 
+    has been modified in any way via Git. 
+    If yes, processing is stopped immediately unless this flag is specified.
+    If you specify the flag, the fact that the repository was dirty will be 
+    recorded in all annotations which are produces *including* a full Git diff.
+
+..
+    * ``--test-run``:
+        When this parameter is specified, a ``head`` step is placed before all 
+        first-level steps in the step tree, which returns the first 1000 lines 
+        of every input file. 
+        That way, a pipeline can be tested very quickly with a small input data 
+        set.
+
+In the following, the scripts are described in detail.
+
+status.py
+---------
+
+The status script lists all tasks resulting from the configured steps and 
+input samples. 
+At any time, each task is in one of the following states:
+
+* **waiting** -- the task is waiting for input files to appear, or its input
+  files are not up-to-date regarding their respective dependencies
+* **ready** -- all input files are present and up-to-date regarding their 
+  upstream input files (and so on, recursively), the task is ready and can 
+  be started
+* **queued** -- the task is currently queued and will be started "soon" 
+  (if you use a computing cluster)
+* **executing** -- the task is currently running on this or another machine
+* **finished** -- all output files are in place and up-to-date
+
+Here is an example output::
+
+    $ ./status.py --even-if-dirty
+    Waiting tasks
+    -------------
+    [w] cufflinks/Sample_COPD_2023
+
+    Ready tasks
+    -----------
+    [r] tophat2/Sample_COPD_2023
+
+    Finished tasks
+    --------------
+    [f] cutadapt/Sample_COPD_2023-R1
+    [f] cutadapt/Sample_COPD_2023-R2
+    [f] fix_cutadapt/Sample_COPD_2023
+
+    tasks: 5 total, 1 waiting, 1 ready, 3 finished
+
+..
+    Here is another example output with ``--test-run`` specified on the command 
+    line. 
+    Here, all top-level steps are prepended with a ``head`` step, which is 
+    reflected in the task IDs::
+
+        $ ./status.py --test-run
+        [r] head/cutadapt/RIB0000784
+        [r] head/cutadapt/RIB0000770
+        [w] head/cutadapt/RIB0000784-R1
+        [w] head/cutadapt/RIB0000784-R2
+        [w] head/cutadapt/RIB0000770-R2
+        [w] head/cutadapt/RIB0000770-R1
+        [w] head/cutadapt/fix_cutadapt/RIB0000770
+        [w] head/cutadapt/fix_cutadapt/RIB0000784
+        tasks: 8 total, 2 ready, 6 waiting
+
+Detailed information about a specific task can be obtained by specifying the 
+task ID on the command line::
+
+    $ ./status.py cutadapt/Sample_COPD_2023-R1
+    info:
+      adapter: AGATCGGAAGAGCACACGTCTGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG
+    read_number: R1
+    output_files:
+      log:
+        /home/michael/Desktop/rnaseq-pipeline/out/cutadapt-7708/Sample_COPD_2023-cutadapt-R1-log.txt:
+        - /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1-head.fastq.gz
+      reads:
+        /home/michael/Desktop/rnaseq-pipeline/out/cutadapt-7708/Sample_COPD_2023-cutadapt-R1.fastq.gz:
+        - /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1-head.fastq.gz
+    state: FINISHED
+
+This data structure is called the "run info" of a certain run and it 
+represents a kind of plan which includes information about which output 
+files will be generated and which input files they depend on -- this is 
+stored in ``output_files``. 
+Furthermore, necessary information for actually executing the task are 
+recorded in ``info``. 
+In this case, the final adapter has been determined by replacing ``((INDEX))`` 
+in the configuration file's ``adapter-R1`` with the actual barcode index of 
+the sample.
+
+Because source steps produce no runs and therefore no tasks, they don't 
+appear in the list produced by ``status.py``.
+To see their task IDs, specify ``--sources``::
+
+    $ ./status.py --sources
+    samples/Sample_COPD_2023
+    
+You can then specify the ID of a source task like the ID of any other task
+to see its details::
+
+    $ ./status.py samples/Sample_COPD_2023
+    info:
+      index: ACAGTG
+      paired_end: true
+      read_number:
+        Sample_COPD_2023_R1-head.fastq.gz: R1
+        Sample_COPD_2023_R2-head.fastq.gz: R2
+    output_files:
+      reads:
+        /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1-head.fastq.gz: []
+        /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R2-head.fastq.gz: []
+      state: FINISHED
+
+
+
+run-locally.py
+--------------
+
+The ``run-locally.py`` script runs all non-finished tasks (or a subset) 
+sequentially on the local machine. 
+Feel free to cancel this script at any time, it won't put your project in a 
+confused state.
+However, if the ``run-locally.py`` script receives a SIGKILL signal, the 
+currently executing job will continue to run and the corresponding task
+will be reported as ``executing`` by ``status.py`` for five more minutes
+(SIGTERM should be fine and exit gracefully but *doesn't just yet*).
+After that time, you will be warned that a job is marked as being currently
+run but no activity has been seen for a while, along with further 
+instructions about what to do in such a case (don't worry, it shouldn't 
+happen by accident).
+
+To execute one or more certain tasks, specify the task IDs on the command 
+line. 
+To execute all tasks of a certain step, specify the step name on the command 
+line.
+
+.. NOTE:: Why is it safe to cancel the pipeline? 
+    The pipeline is written in a way which expects processes to fail or 
+    cluster jobs to disappear without notice. 
+    This problem is mitigated by a design which relies on file presence and 
+    file timestamps to determine whether a task is finished or not. 
+    Output files are automatically written to temporary locations and later 
+    moved to their real target directory, and it is not until the last file 
+    rename operation has finished that a task is regarded as finished.
+    
+submit-to-cluster.py
+--------------------
+
+The ``submit-to-cluster.py`` script determines which tasks still have to be 
+carried out and submits the jobs to a GridEngine cluster by calling ``qsub``. 
+Dependencies are passed to ``qsub`` via the ``-hold_jid`` option, which means 
+that jobs that depend on other jobs won't get scheduled until their 
+dependencies have been satisfied. 
+The file ``qsub-template.sh`` is used to submit jobs, with ``#{ }`` fields 
+being substituted with appropriate values.
+
+The file ``quotas.yaml`` can be used to define different quotas for different 
+systems:
+
+.. code-block:: yaml
+
+    "frontend[12]":
+        default: 5
+        cutadapt: 100
+
+In the example above, a default quota of 5 is defined for hosts with a 
+hostname of ``frontend1`` or ``frontend2`` (the name is a regular expression). 
+A quota of 5 means that no more than 5 jobs of one kind will be run in 
+parallel.
+Different quotas can be defined for each step: because ``cutadapt`` is 
+highly IO-efficient, it has a higher quota.
+
+Annotations
+===========
+    
+Upon successful completion of a task, an extensive YAML-formatted annotation 
+is placed next to the output files in a file called 
+``.[task_id]-annotation.yaml``.
+Also, for every output file, a symbolic link to this file is created:
+``.[output_filename].annotation.yaml``.
+
+Finally, the annotation is rendered via GraphViz, if available.
+Rendering can also be done at a later time using annotations as input.
+The annotation can be used to determine at a later time what exactly happened.
+Also, annotations may help to identify bottlenecks.
+
++---------------------------------------+-----------------------------------------------+
+| .. image:: _static/cutadapt.png       | .. image:: _static/cpu-starving.png           |
+|   :height: 500                        |   :height: 500                                |
+|                                       |                                               |
+| Annotation graph of a ``cutadapt``    | In this graph, it becomes evident that        |
+| run. CPU and RAM usage for individual | the ``fix_cutadapt.py`` process in the middle |
+| processes are shown, file sizes       | gets throttled by the following two ``pigz``  |
+| and line counts are shown for         | processes, which only run with one core       |
+| output files and inter-process        | each and therefore cannot compress the        |
+| streams.                              | results fast enough.                          |
++---------------------------------------+-----------------------------------------------+
+    
+Steps
+=====
+
+A detailed description of all availble steps follows.
+               
 Source steps
 ------------
 
@@ -443,113 +524,41 @@ Indices are read from the CSV file specified by ``indices``.
 
     .. autoclass:: AbstractSource
         :members:
-    
-Miscellaneous
--------------
 
-Head
-~~~~
-    
-.. graphviz::
+*(detailed step descriptions to follow...)*
 
-    digraph foo {
-        rankdir=LR;
-        splines=true;
-        graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
-        node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color="#404040", fillcolor="#ffffff"];
-        edge [fontname = Helvetica, fontsize = 12, color="#404040"];
+..
+    Miscellaneous
+    -------------
 
-        head [fillcolor = "#fce94f", color = "#c4a000"];
-        in_any [label = "any (*)"];
-        out_any [label = "any (*)"];
+    Head
+    ~~~~
         
-        in_any -> head;
-        head -> out_any;
+    .. autosimpleclass:: head.Head
         
-    }
-
-.. autosimpleclass:: head.Head
-    
-Preprocessing
--------------
-    
-Adapter clipping
-~~~~~~~~~~~~~~~~
-
-Cutadapt
-^^^^^^^^
-
-.. graphviz::
-
-    digraph foo {
-        rankdir=LR;
-        splines=true;
-        graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
-        node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color="#404040", fillcolor="#ffffff"];
-        edge [fontname = Helvetica, fontsize = 12, color="#404040"];
-
-        cutadapt [fillcolor = "#fce94f", color = "#c4a000"];
-        in_reads [label = "reads\n(fastq.gz)"];
-        out_reads [label = "reads\n(fastq.gz)"];
-        out_log [label = "log\n(.txt)"];
+    Preprocessing
+    -------------
         
-        in_reads -> cutadapt;
-        cutadapt -> out_reads;
-        cutadapt -> out_log;
-    }
+    Adapter clipping
+    ~~~~~~~~~~~~~~~~
 
-.. autosimpleclass:: cutadapt.Cutadapt
-    
-Fix cutadapt
-^^^^^^^^^^^^
+    Cutadapt
+    ^^^^^^^^
 
-.. graphviz::
-
-    digraph foo {
-        rankdir=LR;
-        splines=true;
-        graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
-        node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color="#404040", fillcolor="#ffffff"];
-        edge [fontname = Helvetica, fontsize = 12, color="#404040"];
-
-        fix_cutadapt [fillcolor = "#fce94f", color = "#c4a000"];
-        in_reads [label = "reads\n(fastq.gz)"];
-        out_reads [label = "reads\n(fastq.gz)"];
+    .. autosimpleclass:: cutadapt.Cutadapt
         
-        in_reads -> fix_cutadapt;
-        fix_cutadapt -> out_reads;
-    }
+    Fix cutadapt
+    ^^^^^^^^^^^^
 
-.. autosimpleclass:: fix_cutadapt.FixCutadapt
-    
-Aligners
---------
-
-Segemehl
-~~~~~~~~
-
-.. graphviz::
-
-    digraph foo {
-        rankdir=LR;
-        splines=true;
-        graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
-        node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color="#404040", fillcolor="#ffffff"];
-        edge [fontname = Helvetica, fontsize = 12, color="#404040"];
-
-        segemehl [fillcolor = "#fce94f", color = "#c4a000"];
-        in_reads [label = "reads\n(fastq.gz)"];
-        out_mapped_reads [label = "mapped reads\n(sam.gz)"];
-        out_unmapped_reads [label = "unmapped reads\n(fastq.gz)"];
-        out_log [label = "log\n(txt)"];
+    .. autosimpleclass:: fix_cutadapt.FixCutadapt
         
-        in_reads -> segemehl;
-        segemehl -> out_mapped_reads;
-        segemehl -> out_unmapped_reads;
-        segemehl -> out_log;
-    }
+    Aligners
+    --------
 
-.. autosimpleclass:: segemehl.Segemehl
+    Segemehl
+    ~~~~~~~~
+
+    .. autosimpleclass:: segemehl.Segemehl
 
 Extending the pipeline
 ======================
@@ -598,16 +607,6 @@ Getting started package:
     We need a small package which demonstrates a quick pipeline, including
     the configuration and all required tools.
     
-Capture process output:
-    For all processes launched via ``unix_pipeline``, the respective stdout 
-    and stderr should be recorded and the last kB remembered, so that it can
-    be included into the error message if a pipeline fails. 
-    Also, the captured output should be incorporated into the YAML 
-    annotations which are written for every output file.
-    
-    *Plus:* This would also allow for the automatic generation of SHA1 
-    checksums on the fly.
-    
 Steps should be able to access all ancestors:
     All upstream steps should be accessible via their step name or output 
     file key.
@@ -654,6 +653,8 @@ Miscellaneous input files:
     For traceability, it would be preferable to specify the hg19.fa URL and
     checksum and have the index generated by a step which the segemehl step
     depends on.
+    
+Make ``run-locally.py`` exit gracefully on receiving SIGTERM.
 
 Indices and tables
 ==================

@@ -223,7 +223,7 @@ class Pipeline(object):
             step = self.steps[step_name]
             if abstract_step.AbstractSourceStep in step.__class__.__bases__:
                 for run_id in misc.natsorted(step.get_run_ids()):
-                    print("[%s] %s/%s" % (step.get_run_state(run_id)[0].lower(), step, run_id))
+                    print("%s/%s" % (step, run_id))
 
     def has_unfinished_tasks(self, task_list):
         '''

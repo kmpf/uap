@@ -1,14 +1,28 @@
-# This is the rnaseq-pipeline configuration file. Important: save this file as config.yaml!
-sourcePaths:
-    - [in path]
-destinationPath: [out path]
-steps: |
-    - cutadapt {
-        adapter-R1: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG"
-        adapter-R2: "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT"
-        }
-        - fix_cutadapt
+# This is the rnaseq-pipeline configuration file.
+
+destination_path: "/home/michael/test-pipeline/out"
+
+steps:
+    fastq_source:
+        pattern: /home/michael/test-pipeline/fastq/*.fastq.gz
+        group: (Sample_COPD_\d+)_R[12]-head.fastq.gz
+        indices: copd-barcodes.csv
+        paired_end: yes
+
+    cutadapt:
+        _depends: fastq_source
+        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG
+        adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+
 tools:
-    pigz:
-        path: 'pigz'
+    cutadapt:
+        path: /home/michael/Desktop/rnaseq-pipeline/tools/cutadapt-1.2.1/bin/cutadapt
         get_version: '--version'
+    pigz:
+        path: pigz
+        get_version: '--version'
+    head:
+        path: head
+        get_version: '--version'
+    cat4m:
+        path: ./tools/cat4m
