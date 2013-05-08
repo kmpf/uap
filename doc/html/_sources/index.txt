@@ -46,6 +46,9 @@ This leaves you with:
   These annotations include detailed information for every output file,
   including which steps have been executed and the Git SHA1 hash of
   the pipeline repository at the time the data processing took place.
+  In many cases, these annotations also include information about all
+  inter-process streams and output files, including SHA1 checksums, file 
+  sizes, and line counts.
 
 Core aspects
 ------------
@@ -307,7 +310,7 @@ At any time, each task is in one of the following states:
 
 Here is an example output::
 
-    $ ./status.py --even-if-dirty
+    $ ./status.py
     Waiting tasks
     -------------
     [w] cufflinks/Sample_COPD_2023

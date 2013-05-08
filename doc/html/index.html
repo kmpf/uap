@@ -85,7 +85,10 @@ re-run the entire data evaluation or parts thereof.</li>
 annotations.
 These annotations include detailed information for every output file,
 including which steps have been executed and the Git SHA1 hash of
-the pipeline repository at the time the data processing took place.</li>
+the pipeline repository at the time the data processing took place.
+In many cases, these annotations also include information about all
+inter-process streams and output files, including SHA1 checksums, file
+sizes, and line counts.</li>
 </ul>
 </div>
 <div class="section" id="core-aspects">
@@ -324,7 +327,7 @@ be started</li>
 <li><strong>finished</strong> &#8211; all output files are in place and up-to-date</li>
 </ul>
 <p>Here is an example output:</p>
-<div class="highlight-python"><pre>$ ./status.py --even-if-dirty
+<div class="highlight-python"><pre>$ ./status.py
 Waiting tasks
 -------------
 [w] cufflinks/Sample_COPD_2023
