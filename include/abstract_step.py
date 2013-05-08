@@ -586,6 +586,8 @@ class AbstractStep(object):
                 color = '#8ae234'
             elif log['step']['known_paths'][path]['type'] == 'step_file':
                 color = '#97b7c8'
+                if os.path.exists(path):
+                    label += "\\n%s" % misc.bytes_to_str(os.path.getsize(path))
             hash['nodes'][misc.str_to_sha1(path)] = {
                 'label': label,
                 'fillcolor': color

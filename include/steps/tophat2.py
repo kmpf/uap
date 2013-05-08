@@ -89,7 +89,17 @@ class TopHat2(AbstractStep):
                 '-p', '12', self.options['index'], q, p
             ]
 
-            pool.launch(tophat2, stderr_path = run_info['output_files']['log'].keys()[0], hints = {'writes': [run_info['output_files']['alignments'].keys()[0], run_info['output_files']['unmapped'].keys()[0]]})
+            pool.launch(tophat2, stderr_path = run_info['output_files']['log'].keys()[0], 
+            hints = {'writes': [
+                run_info['output_files']['alignments'].keys()[0], 
+                run_info['output_files']['unmapped'].keys()[0],
+                run_info['output_files']['insertions'].keys()[0],
+                run_info['output_files']['deletions'].keys()[0],
+                run_info['output_files']['junctions'].keys()[0],
+                run_info['output_files']['misc_logs'].keys()[0],
+                run_info['output_files']['misc_logs'].keys()[1],
+                run_info['output_files']['log'].keys()[0]
+            ]})
             
         os.rename(os.path.join(tophat_out_path, 'accepted_hits.bam'), run_info['output_files']['alignments'].keys()[0])
         os.rename(os.path.join(tophat_out_path, 'unmapped.bam'), run_info['output_files']['unmapped'].keys()[0])
