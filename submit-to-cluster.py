@@ -99,7 +99,7 @@ def main():
         args.append('"' + str(task) + '"')
         submit_script = submit_script.replace("#{COMMAND}", ' '.join(args))
 
-        long_task_id_with_run_id = '%s_%d' % (str(task.step), task.run_index + 1)
+        long_task_id_with_run_id = '%s_%s' % (str(task.step), task.run_id)
         long_task_id = str(task.step)
         short_task_id = long_task_id[0:15]
 
