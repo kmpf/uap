@@ -354,10 +354,10 @@ task ID on the command line::
     output_files:
       log:
         /home/michael/Desktop/rnaseq-pipeline/out/cutadapt-7708/Sample_COPD_2023-cutadapt-R1-log.txt:
-        - /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1-head.fastq.gz
+        - /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1.fastq.gz
       reads:
         /home/michael/Desktop/rnaseq-pipeline/out/cutadapt-7708/Sample_COPD_2023-cutadapt-R1.fastq.gz:
-        - /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1-head.fastq.gz
+        - /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1.fastq.gz
     state: FINISHED
 
 This data structure is called the "run info" of a certain run and it 
@@ -385,12 +385,12 @@ to see its details::
       index: ACAGTG
       paired_end: true
       read_number:
-        Sample_COPD_2023_R1-head.fastq.gz: R1
-        Sample_COPD_2023_R2-head.fastq.gz: R2
+        Sample_COPD_2023_R1.fastq.gz: R1
+        Sample_COPD_2023_R2.fastq.gz: R2
     output_files:
       reads:
-        /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1-head.fastq.gz: []
-        /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R2-head.fastq.gz: []
+        /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1.fastq.gz: []
+        /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R2.fastq.gz: []
       state: FINISHED
 
 
@@ -450,7 +450,7 @@ hostname of ``frontend1`` or ``frontend2`` (the name is a regular expression).
 A quota of 5 means that no more than 5 jobs of one kind will be run in 
 parallel.
 Different quotas can be defined for each step: because ``cutadapt`` is 
-highly IO-efficient, it has a higher quota.
+highly I/O-efficient, it has a higher quota.
 
 Annotations
 ===========
