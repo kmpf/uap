@@ -11,7 +11,7 @@ class CuffLinks(AbstractStep):
     def __init__(self, pipeline):
         super(CuffLinks, self).__init__(pipeline)
 
-        self.set_cores(12)
+        self.set_cores(6)
         
         self.add_connection('in/alignments')
         self.add_connection('out/features')
@@ -70,7 +70,7 @@ class CuffLinks(AbstractStep):
             cufflinks = [
                 self.tool('cufflinks'),
                 '-o', cufflinks_out_path,
-                '-p', '12', 
+                '-p', '6', 
                 "--library-type=%s" % self.options['library_type'],
                 run_info['info']['in-alignments']
             ]
