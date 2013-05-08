@@ -7,6 +7,7 @@ import pipeline
 import process_pool
 import yaml
 
+
 def main():
     p = pipeline.Pipeline()
 

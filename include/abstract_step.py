@@ -327,8 +327,12 @@ class AbstractStep(object):
             self._pipeline.notify(message, attachment)
             raise
         finally:
-            os.kill(executing_ping_pid, signal.SIGTERM)
-            os.waitpid(executing_ping_pid, 0)
+            try:
+                os.kill(executing_ping_pid, signal.SIGTERM)
+                os.waitpid(executing_ping_pid, 0)
+            except OSError:
+                # if the ping process was already killed, it's gone anyway
+                pass
             # remove the run ping file
             if os.path.exists(executing_ping_path):
                 os.unlink(executing_ping_path)
@@ -347,6 +351,10 @@ class AbstractStep(object):
                 else:
                     annotation_path, annotation_str = self.write_annotation(run_id, self._temp_directory)
                     raise StandardError("The step failed to produce an output file it announced: %s\n\nHere are the details:\n%s" % (os.path.basename(out_path), annotation_str))
+
+        for path, path_info in self.known_paths.items():
+            if os.path.exists(path):
+                self.known_paths[path]['size'] = os.path.getsize(path)
 
         self._temp_directory = None
 
@@ -443,10 +451,12 @@ class AbstractStep(object):
         if self._pipeline.git_dirty_diff:
             log['git_dirty_diff'] = self._pipeline.git_dirty_diff
 
-        annotation_path = os.path.join(path, '.' + run_id + '-annotation.yaml')
+        annotation_yaml = yaml.dump(log, default_flow_style = False)
+        annotation_path = os.path.join(path, ".%s-annotation-%s.yaml" % (run_id, hashlib.sha1(annotation_yaml).hexdigest()[0:8]))
+        
         # overwrite the annotation if it already exists
         with open(annotation_path, 'w') as f:
-            f.write(yaml.dump(log, default_flow_style = False))
+            f.write(annotation_yaml)
             
         try:
             gv = self.render_pipeline([log])
@@ -468,7 +478,7 @@ class AbstractStep(object):
             # we can still try to render it later from the annotation file
             pass
         
-        return annotation_path, yaml.dump(log, default_flow_style = False)
+        return annotation_path, annotation_yaml
     
     def get_temporary_path(self, prefix = '', designation = None):
         '''
@@ -586,8 +596,9 @@ class AbstractStep(object):
                 color = '#8ae234'
             elif log['step']['known_paths'][path]['type'] == 'step_file':
                 color = '#97b7c8'
-                if os.path.exists(path):
-                    label += "\\n%s" % misc.bytes_to_str(os.path.getsize(path))
+                if path in log['step']['known_paths']:
+                    if 'size' in log['step']['known_paths'][path]:
+                        label += "\\n%s" % misc.bytes_to_str(log['step']['known_paths'][path]['size'])
             hash['nodes'][misc.str_to_sha1(path)] = {
                 'label': label,
                 'fillcolor': color

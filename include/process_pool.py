@@ -347,7 +347,8 @@ class ProcessPool(object):
                     # remove pid from self.running_procs
                     self.running_procs.remove(pid)
                 except:
-                    raise StandardError("Caught a process which we didn't know: %d." % pid)
+                    if pid != os.getpid():
+                        raise StandardError("Caught a process which we didn't know: %d." % pid)
                 
                 self.proc_details[pid]['end_time'] = datetime.datetime.now()
                 
