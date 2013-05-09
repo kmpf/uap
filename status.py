@@ -49,7 +49,7 @@ def main():
                     indents[_] += indent
             lines = list()
             for index, step_name in enumerate(step_order):
-                lines.append(list(' ' * indents[index] + step_name))
+                lines.append(list(' ' * indents[index]))
             # draw horizontal line parts
             for index, step_name in enumerate(step_order):
                 child_order = [_ for _ in step_order if _ in p.steps[step_name].children_step_names]
@@ -71,7 +71,7 @@ def main():
                     for y in range(y0, y1):
                         lines[y][x] = "│"
 
-            lines = [''.join(_).replace("─└", "─┴") for _ in lines]
+            lines = ["%s%s (%s)" % (''.join(_).replace("─└", "─┴"), step_order[index], p.steps[step_order[index]].get_run_info_str()) for index, _ in enumerate(lines)]
             for line in lines:
                 print(line)
             exit(0)

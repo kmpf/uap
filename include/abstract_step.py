@@ -401,13 +401,7 @@ class AbstractStep(object):
         # but first invalidate the FS cache because things have changed by now...
         AbstractStep.fsc = fscache.FSCache()
         
-        count = {}
-        for _ in self.get_run_ids():
-            state = self.get_run_state(_)
-            if not state in count:
-                count[state] = 0
-            count[state] += 1
-        remaining_task_info = ', '.join(["%d %s" % (count[_], _.lower()) for _ in self._pipeline.states.order if _ in count])
+        remaining_task_info = self.get_run_info_str()
 
         message = "[OK] %s/%s successfully finished on %s\n" % (str(self), run_id, socket.gethostname())
         message += str(self) + ': ' + remaining_task_info + "\n"
@@ -425,6 +419,15 @@ class AbstractStep(object):
         Return full path to a configured tool.
         '''
         return copy.deepcopy(self._tools[key])
+    
+    def get_run_info_str(self):
+        count = {}
+        for _ in self.get_run_ids():
+            state = self.get_run_state(_)
+            if not state in count:
+                count[state] = 0
+            count[state] += 1
+        return ', '.join(["%d %s" % (count[_], _.lower()) for _ in self._pipeline.states.order if _ in count])
     
     def append_pipeline_log(self, log):
         if len(self._pipeline_log) == 0:
