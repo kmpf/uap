@@ -122,6 +122,9 @@ def main():
         if task_wish_list:
             if not str(task) in task_wish_list:
                 really_submit_this = False
+        if task.get_task_state() == p.states.EXECUTING:
+            print("Skipping %s because it is already executing." % str(task))
+            really_submit_this = False
         if really_submit_this:
             sys.stdout.write("Submitting task " + str(task) + " with " + str(task.step._cores) + " cores => ")
             process = subprocess.Popen(qsub_args, bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
