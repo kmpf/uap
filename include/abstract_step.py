@@ -73,6 +73,24 @@ class AbstractStep(object):
         
         self.known_paths = dict()
         
+        self.children_step_names = set()
+        
+        self.finalized = False
+        
+    def finalize(self):
+        if self.finalized:
+            return
+        
+        # find out which steps are in our family tree
+        self.ancestors = set()
+        for parent_step in self.dependencies:
+            parent_step.finalize()
+            self.ancestors.add(str(parent_step))
+            for grand_parent_step in parent_step.ancestors:
+                self.ancestors.add(grand_parent_step)
+            
+        self.finalized = True
+        
     def _reset(self):
         self.known_paths = dict()
         self._pipeline_log = dict()
@@ -89,6 +107,7 @@ class AbstractStep(object):
         if parent == self:
             raise StandardError("Cannot add a node as its own dependency.")
         self.dependencies.append(parent)
+        parent.children_step_names.add(str(self))
         
     def get_input_run_info(self):
         '''
@@ -809,7 +828,12 @@ class AbstractStep(object):
             self._connection_restrictions[connection] = constraints
         
     def require_tool(self, tool):
-        self._tools[tool] = copy.deepcopy(self._pipeline.config['tools'][tool]['path'])
+        if self._pipeline is not None:
+            if not tool in self._pipeline.config['tools']:
+                raise StandardError("%s requires %s but it's not declared in the configuration." % (self, tool))
+            self._tools[tool] = copy.deepcopy(self._pipeline.config['tools'][tool]['path'])
+        else:
+            self._tools[tool] = True
         
     def _get_ping_path_for_run_id(self, run_id, key):
         return os.path.join(self.get_output_directory(), '.%s-%s-ping.yaml' % (run_id, key))

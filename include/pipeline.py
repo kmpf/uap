@@ -200,7 +200,10 @@ class Pipeline(object):
                 self.topological_step_order.append(step_name)
                 assigned_steps.add(step_name)
                 unassigned_steps.remove(step_name)
-        
+                
+        # step four: finalize step (get child count, collect all dependencies)
+        for step in self.steps.values():
+            step.finalize()
 
     def print_tasks(self):
         '''

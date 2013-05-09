@@ -1,4 +1,5 @@
 #!./python_env/bin/python
+# encoding: utf-8
 
 import sys
 sys.path.append('./include')
@@ -11,10 +12,15 @@ def main():
     
     group_by_status = True
     summarize = False
+    graph = False
     
     if '--summarize' in sys.argv:
         sys.argv.remove('--summarize')
         summarize = True
+
+    if '--graph' in sys.argv:
+        sys.argv.remove('--graph')
+        graph = True
     
     if len(sys.argv) > 1:
         if sys.argv[1] == '--sources':
@@ -32,11 +38,50 @@ def main():
                 report['state'] = p.steps[step_name].get_run_state(run_id)
                 print(yaml.dump(report, default_flow_style = False))
     else:
+        if graph:
+            step_order = p.topological_step_order
+            indents = [0 for _ in step_order]
+            for index, line in enumerate(step_order):
+                step_name = step_order[index]
+                child_count = len(p.steps[step_name].children_step_names)
+                indent = child_count * 2
+                for _ in range(index + 1, len(step_order)):
+                    indents[_] += indent
+            lines = list()
+            for index, step_name in enumerate(step_order):
+                lines.append(list(' ' * indents[index] + step_name))
+            # draw horizontal line parts
+            for index, step_name in enumerate(step_order):
+                child_order = [_ for _ in step_order if _ in p.steps[step_name].children_step_names]
+                for child_index, child in enumerate(child_order):
+                    x0 = indents[index] + 1 + child_index * 2
+                    y = step_order.index(child)
+                    x1 = indents[y]
+                    for x in range(x0, x1):
+                        lines[y][x] = "─"
+                    lines[y][x0 - 1] = "└"
+                        
+            # draw vertical line parts
+            for index, step_name in enumerate(step_order):
+                child_order = [_ for _ in step_order if _ in p.steps[step_name].children_step_names]
+                for child_index, child in enumerate(child_order):
+                    x = indents[index] + child_index * 2
+                    y0 = index + 1
+                    y1 = step_order.index(child)
+                    for y in range(y0, y1):
+                        lines[y][x] = "│"
+
+            lines = [''.join(_).replace("─└", "─┴") for _ in lines]
+            for line in lines:
+                print(line)
+            exit(0)
         # print all tasks
         '''
         prints a summary of all tasks, indicating whether each taks is
           - ``[r]eady``
           - ``[w]aiting``
+          - ``[q]ueued``
+          - ``[e]xecuting``
           - ``[f]inished``
         '''
         tasks_for_status = {}

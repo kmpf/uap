@@ -9,20 +9,9 @@ class Cutadapt(AbstractStep):
     '''
     The cutadapt step can be used to clip adapter sequences from RNASeq reads.
     
-    Options:
-    
-    - ``adapter-R1`` and ``adapter-R2`` for paired-end reads
-    - ``adapter`` for non-paired-end reads
-    
-    Required tools:
-    
-    - cutadapt (https://code.google.com/p/cutadapt/)
-    - pigz (http://zlib.net/pigz/)
-    - cat4m
-    
     Any adapter may contain ``((INDEX))`` which will be replaced with every
-    sample's index. The resulting adapter is checked for sanity and a
-    StandardError is thrown if the adapter looks non-legit.
+    sample's index. The resulting adapter is checked for sanity and an
+    exception is thrown if the adapter looks non-legit.
     '''
     
     def __init__(self, pipeline):
@@ -37,6 +26,12 @@ class Cutadapt(AbstractStep):
         self.require_tool('cat4m')
         self.require_tool('pigz')
         self.require_tool('cutadapt')
+        
+        '''
+        self.add_option('adapter-R1', description = 'adapter for R1 reads (for paired-end reads)')
+        self.add_option('adapter-R2', description = 'adapter for R2 reads (for paired-end reads)')
+        self.add_option('adapter', description = 'adapter for non-paired-end reads')
+        '''
 
     def setup_runs(self, complete_input_run_info, connection_info):
         output_run_info = {}
