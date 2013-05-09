@@ -10,6 +10,11 @@ def main():
     p = pipeline.Pipeline()
     
     group_by_status = True
+    summarize = False
+    
+    if '--summarize' in sys.argv:
+        sys.argv.remove('--summarize')
+        summarize = True
     
     if len(sys.argv) > 1:
         if sys.argv[1] == '--sources':
@@ -49,8 +54,19 @@ def main():
                 heading = "%s tasks" % string.capwords(status)
                 print(heading)
                 print('-' * len(heading))
-                for task in tasks_for_status[status]:
-                    print("[%s] %s" % (task.get_task_state()[0].lower(), task))
+                if summarize:
+                    step_count = dict()
+                    step_order = list()
+                    for task in tasks_for_status[status]:
+                        if not str(task.step) in step_count:
+                            step_count[str(task.step)] = 0
+                            step_order.append(str(task.step))
+                        step_count[str(task.step)] += 1
+                    for step_name in step_order:
+                        print("[%s]%4d %s" % (status.lower()[0], step_count[step_name], step_name))
+                else:
+                    for task in tasks_for_status[status]:
+                        print("[%s] %s" % (task.get_task_state()[0].lower(), task))
                 print('')
         print("tasks: %d total, %s" % (len(p.all_tasks), ', '.join(["%d %s" % (len(tasks_for_status[_]), _.lower()) for _ in p.states.order if _ in tasks_for_status])))
         
