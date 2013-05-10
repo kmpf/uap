@@ -319,6 +319,9 @@ class AbstractStep(object):
         executing_ping_info = dict()
         executing_ping_info['start_time'] = datetime.datetime.now()
         executing_ping_info['host'] = socket.gethostname()
+        executing_ping_info['pid'] = os.getpid()
+        executing_ping_info['cwd'] = os.getcwd()
+        executing_ping_info['user'] = os.getlogin()
         with open(executing_ping_path, 'w') as f:
             f.write(yaml.dump(executing_ping_info, default_flow_style = False))
             
