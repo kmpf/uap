@@ -80,7 +80,7 @@ class CuffLinks(AbstractStep):
                 run_info['output_files']['features'].keys()[0], 
                 run_info['output_files']['features'].keys()[1], 
                 run_info['output_files']['fpkm_tracking'].keys()[0],
-                run_info['output_files']['fpkm_tracking'].keys()[0]
+                run_info['output_files']['fpkm_tracking'].keys()[1]
             ]})
             
         os.rename(os.path.join(cufflinks_out_path, 'transcripts.gtf'), run_info['info']['out-transcripts'])
