@@ -21,6 +21,7 @@ class HtSeqCount(AbstractStep):
         self.require_tool('htseq-count')
         self.require_tool('grep')
         self.require_tool('invertGood')
+        self.require_tool('samtools')
 
     def setup_runs(self, complete_input_run_info, connection_info):
         
@@ -32,6 +33,8 @@ class HtSeqCount(AbstractStep):
             self.options['type'] = 'exon'
         if not 'idattr' in self.options:
             self.options['idattr'] = 'gene_id'
+        if not 'fix_segemehl_copd' in self.options:
+            self.options['fix_segemehl_copd'] = False
             
         output_run_info = {}
         
@@ -65,14 +68,19 @@ class HtSeqCount(AbstractStep):
                 pigz = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
                 grep = [self.tool('grep'), '-v', "\t\\*\t"]
                 invertGood = [self.tool('invertGood')]
+                samtools = [self.tool('samtools'), 'view', '-h', '-']
                 htseq_count = [self.tool('htseq-count')]
                 for key in ('mode', 'stranded', 'type', 'idattr'):
                     htseq_count.extend(['--%s' % key, self.options[key]])
                 htseq_count.extend(['-', run_info['info']['features_path']])
         
                 pipeline.append(cat4m)
-                pipeline.append(pigz)
-                pipeline.append(grep)
-                pipeline.append(invertGood)
+                if run_info['info']['alignments_path'][-7:] == '.sam.gz':
+                    pipeline.append(pigz)
+                elif run_info['info']['alignments_path'][-4:] == '.bam':
+                    pipeline.append(samtools)
+                if self.options['fix_segemehl_copd'] == True:
+                    pipeline.append(grep)
+                    pipeline.append(invertGood)
                 pipeline.append(htseq_count, stdout_path = run_info['info']['counts_path'])
         
