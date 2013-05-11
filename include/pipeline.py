@@ -79,17 +79,22 @@ class Pipeline(object):
         file depends on.
         '''
         
+        self.output_files_created_by = dict()
+        '''
+        This dict stores a task name for every output file created by the pipeline.
+        '''
+        
         self.read_config()
 
         # collect all tasks
         self.task_for_task_id = {}
-        self.all_tasks = []
+        self.all_tasks_topologically_sorted = []
         for step_name in self.topological_step_order:
             step = self.steps[step_name]
             if not abstract_step.AbstractSourceStep in step.__class__.__bases__:
                 for run_index, run_id in enumerate(misc.natsorted(step.get_run_ids())):
                     task = task_module.Task(self, step, run_id, run_index)
-                    self.all_tasks.append(task)
+                    self.all_tasks_topologically_sorted.append(task)
                     if str(task) in self.task_for_task_id:
                         raise ConfigurationException("Duplicate task ID %s. Use the 'step_name' option to assign another step name." % str(task))
                     self.task_for_task_id[str(task)] = task
@@ -213,13 +218,13 @@ class Pipeline(object):
           - ``[f]inished``
         '''
         count = {}
-        for task in self.all_tasks:
+        for task in self.all_tasks_topologically_sorted:
             state = task.get_task_state()
             if not state in count:
                 count[state] = 0
             count[state] += 1
             print("[%s] %s" % (task.get_task_state()[0].lower(), task))
-        print("tasks: %d total, %s" % (len(self.all_tasks), ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())])))
+        print("tasks: %d total, %s" % (len(self.all_tasks_topologically_sorted), ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())])))
         
     def print_source_runs(self):
         for step_name in self.topological_step_order:
@@ -228,25 +233,14 @@ class Pipeline(object):
                 for run_id in misc.natsorted(step.get_run_ids()):
                     print("%s/%s" % (step, run_id))
 
-    def has_unfinished_tasks(self, task_list):
-        '''
-        returns True if there is at least one task in task_list which is not finished yet
-        '''
-        unfinished_tasks = [task for task in task_list if task.step.get_run_state(task.run_id) != self.states.FINISHED]
-        return len(unfinished_tasks) > 0
-
-    def pick_next_ready_task(self, task_list):
-        '''
-        returns the next ready task from task_list but does not remove it from the list
-        '''
-        ready_tasks = [task for task in task_list if task.step.get_run_state(task.run_id) == self.states.READY]
-        return ready_tasks[0]
-    
     def add_file_dependencies(self, output_path, input_paths):
         if output_path in self.file_dependencies:
             raise StandardError("Different steps/runs/tags want to create the same output file: %s." %
                 output_path)
         self.file_dependencies[output_path] = set(input_paths)
+        
+    def add_output_file_created_by(self, output_path, step_name, run_id):
+        self.output_files_created_by[output_path] = "%s/%s" % (step_name, run_id)
 
     def check_tools(self):
         '''

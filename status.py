@@ -85,7 +85,7 @@ def main():
           - ``[f]inished``
         '''
         tasks_for_status = {}
-        for task in p.all_tasks:
+        for task in p.all_tasks_topologically_sorted:
             state = task.get_task_state()
             if not state in tasks_for_status:
                 tasks_for_status[state] = list()
@@ -113,7 +113,7 @@ def main():
                     for task in tasks_for_status[status]:
                         print("[%s] %s" % (task.get_task_state()[0].lower(), task))
                 print('')
-        print("tasks: %d total, %s" % (len(p.all_tasks), ', '.join(["%d %s" % (len(tasks_for_status[_]), _.lower()) for _ in p.states.order if _ in tasks_for_status])))
+        print("tasks: %d total, %s" % (len(p.all_tasks_topologically_sorted), ', '.join(["%d %s" % (len(tasks_for_status[_]), _.lower()) for _ in p.states.order if _ in tasks_for_status])))
         
 if __name__ == '__main__':
     main()

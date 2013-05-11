@@ -181,11 +181,12 @@ class AbstractStep(object):
 
             self._run_info = fix_dict(self._run_info, fix_func_dict_subst, full_paths)
                         
-            # fill _file_dependencies
+            # define file dependencies
             for run_id in self._run_info.keys():
                 for tag in self._run_info[run_id]['output_files'].keys():
                     for output_path, input_paths in self._run_info[run_id]['output_files'][tag].items():
                         self._pipeline.add_file_dependencies(output_path, input_paths)
+                        self._pipeline.add_output_file_created_by(output_path, str(self), run_id)
                         
         # now that the _run_info exists, it remains constant, just return it
         return self._run_info
@@ -293,6 +294,8 @@ class AbstractStep(object):
         if os.path.exists(executing_ping_path):
             raise StandardError("%s/%s seems to be already running, exiting..." % (self, run_id))
         
+        queued_ping_path = self.get_queued_ping_path_for_run_id(run_id)
+        
         # create a temporary directory for the output files
         temp_directory = self.get_temp_output_directory()
         self._temp_directory = temp_directory
@@ -360,7 +363,18 @@ class AbstractStep(object):
                 pass
             # remove the run ping file
             if os.path.exists(executing_ping_path):
-                os.unlink(executing_ping_path)
+                try:
+                    os.unlink(executing_ping_path)
+                except OSError:
+                    pass
+            # remove the queued ping file
+            if os.path.exists(queued_ping_path):
+                try:
+                    os.unlink(queued_ping_path)
+                except OSError:
+                    pass
+                
+        # TODO: Clean this up. Re-think exceptions and task state transisitions.
         
         self.end_time = datetime.datetime.now()
         

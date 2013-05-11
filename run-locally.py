@@ -15,14 +15,21 @@ def main():
         # execute the specified tasks
         for task_id in sys.argv[1:]:
             task = p.task_for_task_id[task_id]
-            task.run()
+            if task.get_task_state() == p.states.FINISHED:
+                continue
+            if task.get_task_state() in [p.states.READY, p.states.QUEUED]:
+                task.run()
+            else:
+                raise StandardError("Unexpected task state for %s: %s" % (task, task.get_task_state()))
     else:
         # execute all tasks
-        task_list = copy.deepcopy(p.all_tasks)
-        while p.has_unfinished_tasks(task_list):
-            task = p.pick_next_ready_task(task_list)
-            task_list.remove(task)
-            task.run()
+        for task in p.all_tasks_topologically_sorted:
+            if task.get_task_state() == p.states.FINISHED:
+                continue
+            if task.get_task_state() in [p.states.READY, p.states.QUEUED]:
+                task.run()
+            else:
+                raise StandardError("Unexpected task state for %s: %s" % (task, task.get_task_state()))
 
 if __name__ == '__main__':
     try:

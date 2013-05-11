@@ -53,3 +53,12 @@ class Task(object):
             for path in outfiles.keys():
                 result.append(path)
         return result
+
+    def get_parent_tasks(self):
+        '''
+        Returns a list of parent tasks which this task depends on.
+        '''
+        result = set()
+        for path in self.input_files():
+            result.add(self.pipeline.task_for_task_id[self.pipeline.output_files_created_by[path]])
+        return list(result)

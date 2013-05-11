@@ -6,3 +6,5 @@
     sam_to_bam: 1000
     tophat2: 40
     cufflinks: 40
+"FIZI-LE-014":
+    default: 1
