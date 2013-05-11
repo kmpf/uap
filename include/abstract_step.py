@@ -270,12 +270,16 @@ class AbstractStep(object):
             return self._pipeline.states.FINISHED
         elif max_level == 1:
             executing_ping_path = self.get_executing_ping_path_for_run_id(run_id)
-            if os.path.exists(executing_ping_path):
-                if (datetime.datetime.now() - datetime.datetime.fromtimestamp(os.path.getmtime(executing_ping_path))).total_seconds() > AbstractStep.PING_TIMEOUT:
+            if AbstractStep.fsc.exists(executing_ping_path):
+                if (datetime.datetime.now() - datetime.datetime.fromtimestamp(AbstractStep.fsc.getmtime(executing_ping_path))).total_seconds() > AbstractStep.PING_TIMEOUT:
                     print("WARNING: The ping file at %s is stale. You should make sure that the task is not running somewhere and remove the file." % executing_ping_path)
                 return self._pipeline.states.EXECUTING
+            if AbstractStep.fsc.exists(self.get_queued_ping_path_for_run_id(run_id)):
+                return self._pipeline.states.QUEUED
             return self._pipeline.states.READY
         else:
+            if AbstractStep.fsc.exists(self.get_queued_ping_path_for_run_id(run_id)):
+                return self._pipeline.states.QUEUED
             return self._pipeline.states.WAITING
 
     def run(self, run_id):
