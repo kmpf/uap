@@ -26,6 +26,10 @@ class CuffLinks(AbstractStep):
         if not 'library_type' in self.options:
             raise StandardError("Required option is missing: library_type.")
         
+        if 'use_mask' in self.options:
+            if not os.path.exists(self.options['use_mask']):
+                raise StandardError("You specified use_mask but the file wasn't found.")
+        
         output_run_info = dict()
             
         for run_id, info in connection_info['in/alignments']['runs'].items():
@@ -57,6 +61,8 @@ class CuffLinks(AbstractStep):
                     'out-isoforms_fpkm_tracking': isoforms_fpkm_tracking_path
                 }
             }
+            if 'use_mask' in self.options:
+                run_info['info']['use_mask'] = self.options['use_mask']
             output_run_info[run_id] = run_info
             
         return output_run_info
@@ -71,9 +77,13 @@ class CuffLinks(AbstractStep):
                 self.tool('cufflinks'),
                 '-o', cufflinks_out_path,
                 '-p', '6', 
-                "--library-type=%s" % self.options['library_type'],
-                run_info['info']['in-alignments']
+                "--library-type=%s" % self.options['library_type']
             ]
+            
+            if 'use_mask' in run_info['info']:
+                cufflinks.extend(['--mask-file', run_info['info']['use_mask']])
+            
+            cufflinks.append(run_info['info']['in-alignments'])
 
             pool.launch(cufflinks, stderr_path = run_info['output_files']['log'].keys()[0], 
             hints = {'writes': [
