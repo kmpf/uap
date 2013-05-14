@@ -31,7 +31,7 @@ class RawFileSource(AbstractStep):
     def execute(self, run_id, run_info):
         with process_pool.ProcessPool(self) as pool:
             cat4m = [self.tool('cat4m'), self.options['path']]
-            pool.launch(curl, stdout_path = run_info['output_files']['raw'].keys()[0])
+            pool.launch(cat4m, stdout_path = run_info['output_files']['raw'].keys()[0])
             
         # TODO: verify checksum after process pool has finished
         #stdout_assert_sha1 = self.options['sha1']
