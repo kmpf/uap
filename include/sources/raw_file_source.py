@@ -21,7 +21,7 @@ class RawFileSource(AbstractStep):
             raise StandardError("missing 'sha1' key in raw_file_source")
         
         path = os.path.basename(urlparse.urlparse(self.options['path']).path)
-        output_run_info[''] = {}
+        output_run_info['download'] = {}
         output_run_info['download']['output_files'] = {}
         output_run_info['download']['output_files']['raw'] = {}
         output_run_info['download']['output_files']['raw'][path] = []
