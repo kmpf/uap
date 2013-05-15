@@ -38,6 +38,11 @@ def main():
     original_argv = copy.copy(sys.argv)
 
     p = pipeline.Pipeline()
+    
+    use_highmem = False
+    if '--highmem' in sys.argv:
+        use_highmem = True
+        sys.argv.remove('--highmem')
 
     task_wish_list = None
     if len(sys.argv) > 1:
@@ -114,6 +119,10 @@ def main():
         short_task_id = long_task_id[0:15]
 
         qsub_args = ['qsub', '-N', short_task_id]
+        if use_highmem:
+            qsub_args.append('-q')
+            qsub_args.append('highmem')
+            
         qsub_args.append('-e')
         qsub_args.append(os.path.join(task.step.get_output_directory(), '.' + long_task_id_with_run_id + '.stderr'))
         qsub_args.append('-o')
