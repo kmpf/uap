@@ -41,6 +41,7 @@ def main():
     
     use_highmem = False
     if '--highmem' in sys.argv:
+        print("Passing -l highmem to qsub...")
         use_highmem = True
         sys.argv.remove('--highmem')
 
@@ -120,7 +121,7 @@ def main():
 
         qsub_args = ['qsub', '-N', short_task_id]
         if use_highmem:
-            qsub_args.append('-q')
+            qsub_args.append('-l')
             qsub_args.append('highmem')
             
         qsub_args.append('-e')
