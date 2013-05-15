@@ -330,7 +330,7 @@ class Pipeline(object):
             for line in qstat_output.split("\n"):
                 try:
                     jid = int(line.strip().split(' ')[0])
-                    running_jids.add(jid)
+                    running_jids.add(str(jid))
                 except ValueError:
                     # this is not a JID
                     pass
@@ -351,7 +351,7 @@ class Pipeline(object):
                             run_problems.append((task, path, last_activity_difference, last_activity - start_time))
                     if which == 'queued':
                         info = yaml.load(open(path, 'r'))
-                        if not info['job_id'] in running_jids:
+                        if not str(info['job_id']) in running_jids:
                             queue_problems.append((task, path, info['submit_time']))
            
         show_hint = False
