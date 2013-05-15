@@ -10,7 +10,7 @@ class HtSeqCount(AbstractStep):
     def __init__(self, pipeline):
         super(HtSeqCount, self).__init__(pipeline)
         
-        self.set_cores(4)
+        self.set_cores(2)
         
         self.add_connection('in/alignments', constraints = {'min_files_per_run': 1, 'max_files_per_run': 1})
         self.add_connection('in/features', constraints = {'total_files': 1} )
