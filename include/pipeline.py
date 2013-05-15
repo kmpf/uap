@@ -5,6 +5,7 @@ import datetime
 import fscache
 import glob
 import json
+from operator import itemgetter
 import os
 import re
 import StringIO
@@ -15,6 +16,7 @@ import yaml
 import abstract_step
 import misc
 import task as task_module
+from xml.dom import minidom
 
 # an enum class, yanked from http://stackoverflow.com/questions/36932/whats-the-best-way-to-implement-an-enum-in-python
 class Enum(set):
@@ -305,3 +307,96 @@ class Pipeline(object):
                 # swallow all exception that happen here, failing notifications
                 # are no reason to crash the entire thing
                 pass
+
+    def check_ping_files(self, print_more_warnings = False, print_details = False, fix_problems = False):
+        run_problems = list()
+        queue_problems = list()
+        check_queue = True
+        
+        try:
+            qstat_output = subprocess.check_output(['qstat'])
+        except OSError:
+            check_queue = False
+        except subprocess.CalledProcessError:
+            # we don't have qstat here, don't check the queue
+            check_queue = False
+            
+        if print_more_warnings and not check_queue:
+            print("Attention, we cannot check stale queued ping files because this host does not have qstat.")
+            
+        running_jids = set()
+            
+        if check_queue:
+            for line in qstat_output.split("\n"):
+                try:
+                    jid = int(line.strip().split(' ')[0])
+                    running_jids.add(jid)
+                except ValueError:
+                    # this is not a JID
+                    pass
+        
+        now = datetime.datetime.now()
+        for which in ['run', 'queued']:
+            if not check_queue and which == 'queued':
+                continue
+            for task in self.all_tasks_topologically_sorted:
+                path = task.step._get_ping_path_for_run_id(task.run_id, which)
+                if os.path.exists(path):
+                    if which == 'run':
+                        info = yaml.load(open(path, 'r'))
+                        start_time = info['start_time']
+                        last_activity = datetime.datetime.fromtimestamp(abstract_step.AbstractStep.fsc.getmtime(path))
+                        last_activity_difference = now - last_activity
+                        if last_activity_difference.total_seconds() > abstract_step.AbstractStep.PING_TIMEOUT:
+                            run_problems.append((task, path, last_activity_difference, last_activity - start_time))
+                    if which == 'queued':
+                        info = yaml.load(open(path, 'r'))
+                        if not info['job_id'] in running_jids:
+                            queue_problems.append((task, path, info['submit_time']))
+           
+        show_hint = False
+        
+        if len(run_problems) > 0:
+            show_hint = True
+            label = "Warning: There are %d stale run ping files." % len(run_problems)
+            print(label)
+            if print_details:
+                print('-' * len(label))
+                run_problems = sorted(run_problems, key=itemgetter(2, 3), reverse=True)
+                for problem in run_problems:
+                    task = problem[0]
+                    path = problem[1]
+                    last_activity_difference = problem[2]
+                    ran_for = problem[3]
+                    print("dead since %13s, ran for %13s: %s" % (
+                        misc.duration_to_str(last_activity_difference), 
+                        misc.duration_to_str(ran_for), task))
+                print("")
+                    
+        if len(queue_problems) > 0:
+            show_hint = True
+            label = "Warning: There are %d tasks marked as queued, but they do not seem to be queued." % len(queue_problems)
+            print(label)
+            if print_details:
+                print('-' * len(label))
+                queue_problems = sorted(queue_problems, key=itemgetter(2), reverse=True)
+                for problem in queue_problems:
+                    task = problem[0]
+                    path = problem[1]
+                    start_time = problem[2]
+                    print("submitted at %13s: %s" % (start_time, task))
+                print("")
+                
+        if fix_problems:
+            all_problems = run_problems
+            all_problems.extend(queue_problems)
+            for problem in all_problems:
+                path = problem[1]
+                print("Now deleting %s..." % path)
+                os.unlink(path)
+                
+        if show_hint:
+            if print_more_warnings and not print_details:
+                print("Hint: Run ./fix-problems.py --details to see the details.")
+            if not fix_problems:
+                print("Hint: Run ./fix-problems.py --srsly to fix these problems (that is, delete all problematic ping files).")

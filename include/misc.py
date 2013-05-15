@@ -81,3 +81,15 @@ def bytes_to_str(num):
         num /= 1024.0
     return "%1.1f %sB" % (num, 'T')
 
+def duration_to_str(duration, long = False):
+    value = str(duration)
+    if not long:
+        if 'days' in value:
+            value = value.replace(' days,', 'd')
+        if 'day' in value:
+            value = value.replace(' day,', 'd')
+        if 'd' in value and ':' in value and (value.index(':') - value.index('d')) != 4:
+            value = value[:value.index('d') + 1] + ' ' + value[value.index('d') + 1:]
+    if '.' in value:
+        value = value[0:value.index('.') + 2]
+    return value
