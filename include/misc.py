@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import re
 
 def assign_strings(paths, tags):
@@ -93,3 +94,14 @@ def duration_to_str(duration, long = False):
     if '.' in value:
         value = value[0:value.index('.') + 2]
     return value
+
+def append_suffix_to_path(path, suffix):
+    dirname, filename = os.path.split(path)
+    if '.' in filename:
+        basename = filename[:filename.index('.')]
+        extension = filename[filename.index('.'):]
+    else:
+        basename = filename
+        extension = ''
+    filename = basename + '-' + suffix + extension
+    return os.path.join(dirname, filename)

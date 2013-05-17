@@ -90,6 +90,13 @@ class ProcessPool(object):
         # list of commands to be launched
         self.launch_calls = []
         
+        # List of processes we killed deliberately. Look: every time a 
+        # within a pipeline exits, we SIGTERM its predecessor. This is
+        # necessary because otherwise, stuff is hanging forever.
+        self.ok_to_fail = set()
+        
+        self.copy_processes_for_pid = dict()
+        
     def __enter__(self):
         return self
         
@@ -140,6 +147,7 @@ class ProcessPool(object):
         Append a message to the pipeline log.
         '''
         formatted_message = "[%s] %s" % (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), message)
+        #sys.stderr.write(formatted_message + "\n")
         self.log_entries.append(formatted_message)
         
     def get_log(self):
@@ -222,6 +230,8 @@ class ProcessPool(object):
         if keep_stdout_open:
             pipe = os.pipe()
         
+        self.copy_processes_for_pid[pid] = list()
+        
         for which in ['stdout', 'stderr']:
             report_path = self.get_temporary_path("%s-report" % which)
             sink_path = stdout_path if which == 'stdout' else stderr_path
@@ -230,7 +240,8 @@ class ProcessPool(object):
                 sink_path,
                 report_path, pid, which, 
                 pipe if which == 'stdout' else None)
-            
+                
+            self.copy_processes_for_pid[pid].append(listener_pid)
             self.copy_process_reports[listener_pid] = report_path
             
             if sink_path is not None:
@@ -332,6 +343,11 @@ class ProcessPool(object):
         while True:
             try:
                 # wait for the next child process to exit
+                if len(self.running_procs) == 0:
+                    # no more children running, we are done
+                    signal.alarm(0)
+                    self.log("Cancelling timeout (if there was one), all child processes have exited.")
+                    break
                 pid, exit_code_with_signal = os.wait()
                 if pid == watcher_pid:
                     try:
@@ -340,7 +356,8 @@ class ProcessPool(object):
                     except:
                         print("Warning: Couldn't load watcher report from %s." % watcher_report_path)
                         pass
-                    raise OSError
+                    # the process watcher has terminated, which is cool, I guess
+                    # (if it's the last child process, anyway)
                     continue
 
                 try:
@@ -349,7 +366,7 @@ class ProcessPool(object):
                 except:
                     if pid != os.getpid():
                         raise StandardError("Caught a process which we didn't know: %d." % pid)
-                
+                    
                 self.proc_details[pid]['end_time'] = datetime.datetime.now()
                 
                 signal_number = exit_code_with_signal & 255
@@ -369,6 +386,24 @@ class ProcessPool(object):
                     if signal_number in ProcessPool.SIGNAL_NAMES:
                         self.proc_details[pid]['signal_name'] = ProcessPool.SIGNAL_NAMES[signal_number]
                         
+                # now kill it's preceding process, if this is from a pipeline
+                if 'use_stdin_of' in self.proc_details[pid]:
+                    kpid = self.proc_details[pid]['use_stdin_of']
+                    pidlist = [kpid]
+                    if kpid in self.copy_processes_for_pid:
+                        pidlist.extend(self.copy_processes_for_pid[kpid])
+                    for kpid in pidlist:
+                        self.log("Now killing %d, the predecessor (or related copy process) of %d." % (kpid, pid))
+                        self.ok_to_fail.add(kpid)
+                        try:
+                            os.kill(kpid, signal.SIGTERM)
+                        except OSError, e:
+                            if e.errno == errno.ESRCH:
+                                # no such process
+                                pass
+                            else:
+                                raise
+                        
                 if pid in self.copy_process_reports:
                     report_path = self.copy_process_reports[pid]
                     if os.path.exists(report_path):
@@ -380,19 +415,38 @@ class ProcessPool(object):
             except TimeoutException:
                 self.log("Timeout, killing all child processes now.")
                 ProcessPool.kill_all_child_processes()
-            except OSError:
-                # no more children running, we are done
-                signal.alarm(0)
-                self.log("Cancelling timeout (if there was one), all child processes have exited.")
-                break
+            except OSError, e:
+                if e.errno == errno.ECHILD:
+                    # no more children running, we are done
+                    signal.alarm(0)
+                    self.log("Cancelling timeout (if there was one), all child processes have exited.")
+                    break
+                else:
+                    raise
             else:
                 if exit_code_with_signal != 0:
-                    # Oops, something went wrong. See what happens and terminate
-                    # all child processes in a few seconds.
-                    something_went_wrong = True
-                    signal.signal(signal.SIGALRM, timeout_handler)
-                    self.log("Terminating all children in %d seconds..." % ProcessPool.SIGTERM_TIMEOUT)
-                    signal.alarm(ProcessPool.SIGTERM_TIMEOUT)
+                    if not pid in self.ok_to_fail:
+                        # Oops, something went wrong. See what happens and terminate
+                        # all child processes in a few seconds.
+                        something_went_wrong = True
+                        signal.signal(signal.SIGALRM, timeout_handler)
+                        self.log("Terminating all children in %d seconds..." % ProcessPool.SIGTERM_TIMEOUT)
+                        signal.alarm(ProcessPool.SIGTERM_TIMEOUT)
+                        
+        # now wait for the watcher process, if it still exists
+        try:
+            os.waitpid(watcher_pid, 0)
+            try:
+                self.process_watcher_report = yaml.load(open(watcher_report_path))
+                os.unlink(watcher_report_path)
+            except:
+                print("Warning: Couldn't load watcher report from %s." % watcher_report_path)
+                pass
+        except OSError, e:
+            if e.errno == errno.ESRCH:
+                pass
+            else:
+                raise
                             
         if something_went_wrong:
             self.log("Pipeline crashed.")

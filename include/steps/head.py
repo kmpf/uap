@@ -2,92 +2,59 @@ import sys
 from abstract_step import *
 import copy
 import pipeline
-import unix_pipeline
+import re
+import process_pool
 import yaml
 
 class Head(AbstractStep):
-    '''
-    The head step filters the first few lines of any input file (1000 by 
-    default). Uncompressed and Gzip-compressed files are handled correctly.
-    This step is useful to drastically reduce the amount of data in order
-    to quickly test a pipeline.
-    
-    Options:
-    
-    - ``lines``: specify the number of lines that should be returned
-    '''
     
     def __init__(self, pipeline):
         super(Head, self).__init__(pipeline)
         
-        self.set_cores(6)
+        self.set_cores(4)
         
-        self.add_connection('out/*')
+        self.add_connection('in/*')
         
         self.require_tool('cat4m')
         self.require_tool('pigz')
         self.require_tool('head')
 
-    def setup_runs(self, input_run_info, connection_info):
-        count = 1000
-        if 'lines' in self.options:
-            count = self.options['lines']
-
+    def setup_runs(self, complete_input_run_info, connection_info):
+        
         output_run_info = {}
-        for input_run_id in input_run_info.keys():
-            output_run_info[input_run_id] = {
-                'output_files': {},
-                'info': {}
-            }
-            if 'info' in input_run_info[input_run_id]:
-                output_run_info[input_run_id]['info'] = input_run_info[input_run_id]['info']
-            output_run_info[input_run_id]['info']['head-count'] = count
-            for tag, input_files in input_run_info[input_run_id]['output_files'].items():
-                output_run_info[input_run_id]['output_files'][tag] = {}
-                for in_path in input_files.keys():
-                    out_path = in_path.replace('.fastq.gz', '-head.fastq.gz')
-                    out_path = copy.copy(in_path)
-                    if '.' in out_path:
-                        offset = out_path.index('.')
-                        out_path = out_path[:offset] + '-head' + out_path[offset:]
-                    else:
-                        out_path = out_path + '-head'
-                    output_run_info[input_run_id]['output_files'][tag][out_path] = [in_path]
+        
+        if not 'lines' in self.options:
+            self.options['lines'] = 1000
+        
+        for step_id, step_info in complete_input_run_info.items():
+            for run_id, run_info in step_info.items():
+                output_run_info[run_id] = dict()
+                output_run_info[run_id]['output_files'] = dict()
+                for tag, output_files in run_info['output_files'].items():
+                    self.add_connection('out/' + tag)
+                    output_run_info[run_id]['output_files'][tag] = dict()
+                    for output_path, input_paths in output_files.items():
+                        output_run_info[run_id]['output_files'][tag][misc.append_suffix_to_path(output_path, 'head')] = [output_path]
+        
         return output_run_info
-
+    
+    
     def execute(self, run_id, run_info):
-        for tag in run_info['output_files'].keys():
-            for outpath, inpaths in run_info['output_files'][tag].items():
-                if len(inpaths) != 1:
-                    raise StandardError("Expected one input file per output file.")
-
-                inpath = inpaths[0]
-                count = run_info['info']['head-count']
-
-                if inpath[-3:] == '.gz':
-                    # set up processes for a gz-compressed file
-                    cat4m = [self.tool('cat4m'), inpath]
-                    pigz1 = [self.tool('pigz'), '--processes', '2', '--decompress', '--stdout', '-']
-                    head = ['head', '-n', str(count)]
-                    pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '3', '-c']
-
-                    # create the pipeline and run it
-                    up = unix_pipeline.UnixPipeline()
-                    up.append(cat4m)
-                    up.append(pigz1)
-                    up.append(head)
-                    up.append(pigz2, stdout_path = outpath)
-
-                    unix_pipeline.wait()
-                else:
-                    # it's not a gz-compressed file
-                    cat4m = [self.tool('cat4m'), inpath]
-
-                    head = ['head', '-n', str(count)]
-
-                    # create the pipeline and run it
-                    up = unix_pipeline.UnixPipeline()
-                    up.append(cat4m)
-                    up.append(head, stdout_path = outpath)
-
-                    unix_pipeline.wait()
+        # process one file at a time
+        for tag, output_file_info in run_info['output_files'].items():
+            for output_path, input_paths in output_file_info.items():
+                with process_pool.ProcessPool(self) as pool:
+                    with pool.Pipeline(pool) as pipeline:
+                        cat4m = [self.tool('cat4m'), input_paths[0]]
+                        pigz1 = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+                        head = [self.tool('head'), '-n', str(self.options['lines'])]
+                        pigz2 = [self.tool('pigz'), '--processes', '2', '--blocksize', '4096', '--stdout']
+                
+                        if output_path[-3:] == '.gz':
+                            pipeline.append(cat4m)
+                            pipeline.append(pigz1)
+                            pipeline.append(head)
+                            pipeline.append(pigz2, stdout_path = output_path)
+                        else:
+                            pipeline.append(cat4m)
+                            pipeline.append(head, stdout_path = output_path)

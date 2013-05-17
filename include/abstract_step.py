@@ -724,8 +724,9 @@ class AbstractStep(object):
                 else:
                     label = "%s\\n(exited instantly)" % label
                     
-            if pid in log['pipeline_log']['process_watcher']['max']:
-                label += "\\n%1.1f%% CPU, %s RAM (%1.1f%%)" % (log['pipeline_log']['process_watcher']['max'][pid]['cpu_percent'], misc.bytes_to_str(log['pipeline_log']['process_watcher']['max'][pid]['rss']), log['pipeline_log']['process_watcher']['max'][pid]['memory_percent'])
+            if 'max' in log['pipeline_log']['process_watcher']:
+                if pid in log['pipeline_log']['process_watcher']['max']:
+                    label += "\\n%1.1f%% CPU, %s RAM (%1.1f%%)" % (log['pipeline_log']['process_watcher']['max'][pid]['cpu_percent'], misc.bytes_to_str(log['pipeline_log']['process_watcher']['max'][pid]['rss']), log['pipeline_log']['process_watcher']['max'][pid]['memory_percent'])
                 
             hash['nodes'][pid_hash(pid)] = {
                 'label': label,
@@ -805,14 +806,20 @@ class AbstractStep(object):
         start_time = log['start_time']
         end_time = log['end_time']
         duration = end_time - start_time
-
-        hash['graph_labels'][task_name] = "Task: %s\\lHost: %s, CPU: %1.1f%% , RAM: %s (%1.1f%%)\\lDuration: %s\\l\\l" % (
-            task_name, 
-            socket.gethostname(),
-            log['pipeline_log']['process_watcher']['max']['sum']['cpu_percent'], 
-            misc.bytes_to_str(log['pipeline_log']['process_watcher']['max']['sum']['rss']), 
-            log['pipeline_log']['process_watcher']['max']['sum']['memory_percent'],
-            duration)
+        
+        if 'max' in log['pipeline_log']['process_watcher']:
+            hash['graph_labels'][task_name] = "Task: %s\\lHost: %s, CPU: %1.1f%% , RAM: %s (%1.1f%%)\\lDuration: %s\\l\\l" % (
+                task_name, 
+                socket.gethostname(),
+                log['pipeline_log']['process_watcher']['max']['sum']['cpu_percent'], 
+                misc.bytes_to_str(log['pipeline_log']['process_watcher']['max']['sum']['rss']), 
+                log['pipeline_log']['process_watcher']['max']['sum']['memory_percent'],
+                duration)
+        else:
+            hash['graph_labels'][task_name] = "Task: %s\\lHost: %s\\lDuration: %s\\l\\l" % (
+                task_name, 
+                socket.gethostname(),
+                duration)
         return hash
 
     @classmethod
@@ -935,7 +942,7 @@ class AbstractStep(object):
         if in_key in self._connection_restrictions:
             for k, v in self._connection_restrictions[in_key].items():
                 if result['counts'][k] != v:
-                    raise StandardError("Connection constraint failed: %s/%s/%s should be %d but is %d." % (self, in_key, k, v, result['counts'][k]))
+                    raise StandardError("Connection constraint failed: %s/%s/%s should be %d but is %s." % (self, in_key, k, v, str(result['counts'][k])))
 
         return result
 
