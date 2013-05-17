@@ -659,6 +659,10 @@ Miscellaneous input files:
     
 Make ``run-locally.py`` exit gracefully on receiving SIGTERM.
 
+Show statistics for executing tasks:
+    When showing currently executing tasks, show how long this job has already been
+    running and how it relates to jobs that have already finished.
+
 Indices and tables
 ==================
 
