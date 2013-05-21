@@ -171,6 +171,7 @@ class ProcessPool(object):
                 
         log['log'] = copy.deepcopy(self.log_entries)
         log['process_watcher'] = copy.deepcopy(self.process_watcher_report)
+        log['ok_to_fail'] = copy.deepcopy(self.ok_to_fail)
         
         return log
         

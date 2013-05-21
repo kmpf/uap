@@ -715,9 +715,11 @@ class AbstractStep(object):
                 something_went_wrong = True
             color = "#fce94f"
             if something_went_wrong:
-                color = "#d5291a"
+                if not pid in log['pipeline_log']['ok_to_fail']:
+                    color = "#d5291a"
                 if 'signal' in proc_info:
-                    label = "%s\\n(received %s)" % (label, proc_info['signal_name'] if 'signal_name' in proc_info else 'signal %d' % proc_info['signal'])
+                    label = "%s\\n(received %s%s)" % (label, 'friendly ' if pid in log['pipeline_log']['ok_to_fail'] else '',
+                                                      proc_info['signal_name'] if 'signal_name' in proc_info else 'signal %d' % proc_info['signal'])
                 elif 'exit_code' in proc_info:
                     if proc_info['exit_code'] != 0:
                         label = "%s\\n(failed with exit code %d)" % (label, proc_info['exit_code'])
@@ -756,9 +758,11 @@ class AbstractStep(object):
                         something_went_wrong = True
                     color = "#fdf3a7"
                     if something_went_wrong:
-                        color = "#d5291a"
+                        if not pid in log['pipeline_log']['ok_to_fail']:
+                            color = "#d5291a"
                         if 'signal' in proc_info[key]:
-                            label = "%s\\n(received %s)" % (label, proc_info[key]['signal_name'] if 'signal_name' in proc_info[key] else 'signal %d' % proc_info[key]['signal'])
+                            label = "%s\\n(received %s%s)" % (label, "friendly " if pid in log['pipeline_log']['ok_to_fail'] else '',
+                                                              proc_info[key]['signal_name'] if 'signal_name' in proc_info[key] else 'signal %d' % proc_info[key]['signal'])
                         elif 'exit_code' in proc_info[key]:
                             if proc_info[key]['exit_code'] != 0:
                                 label = "%s\\n(failed with exit code %d)" % (label, proc_info[key]['exit_code'])
