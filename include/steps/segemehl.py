@@ -11,7 +11,7 @@ class Segemehl(AbstractStep):
     def __init__(self, pipeline):
         super(Segemehl, self).__init__(pipeline)
 
-        self.set_cores(12)
+        self.set_cores(6)
         
         self.add_connection('in/reads')
         self.add_connection('out/alignments')
@@ -80,7 +80,7 @@ class Segemehl(AbstractStep):
                     '-p', p,
                     '-u', fifo_path_unmapped,
                     '-H', '1',
-                    '-t', '10',
+                    '-t', '5',
                     '-s', '-S',
                     '-D', '0',
                     '-o', '/dev/stdout'

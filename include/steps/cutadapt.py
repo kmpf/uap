@@ -26,6 +26,7 @@ class Cutadapt(AbstractStep):
         self.require_tool('cat4m')
         self.require_tool('pigz')
         self.require_tool('cutadapt')
+        self.require_tool('fix_qnames')
         
         '''
         self.add_option('adapter-R1', description = 'adapter for R1 reads (for paired-end reads)')
@@ -34,6 +35,9 @@ class Cutadapt(AbstractStep):
         '''
 
     def setup_runs(self, complete_input_run_info, connection_info):
+        if not 'fix_qnames' in self.options:
+            self.options['fix_qnames'] = False
+            
         output_run_info = {}
         for step_name, step_input_info in complete_input_run_info.items():
             for input_run_id, input_run_info in step_input_info.items():
@@ -98,6 +102,8 @@ class Cutadapt(AbstractStep):
                 cat4m.extend(*sorted(run_info['output_files']['reads'].values()))
 
                 pigz1 = [self.tool('pigz'), '--processes', '1', '--decompress', '--stdout']
+                
+                fix_qnames = [self.tool('fix_qnames')]
 
                 cutadapt = [self.tool('cutadapt'), '-a', run_info['info']['adapter'], '-']
 
@@ -106,5 +112,7 @@ class Cutadapt(AbstractStep):
                 # create the pipeline and run it
                 pipeline.append(cat4m)
                 pipeline.append(pigz1)
+                if self.options['fix_qnames'] == True:
+                    pipeline.append(fix_qnames)
                 pipeline.append(cutadapt, stderr_path = run_info['output_files']['log'].keys()[0])
                 pipeline.append(pigz2, stdout_path = run_info['output_files']['reads'].keys()[0])
