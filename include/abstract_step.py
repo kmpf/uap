@@ -871,6 +871,20 @@ class AbstractStep(object):
         
     def get_queued_ping_path_for_run_id(self, run_id):
         return self._get_ping_path_for_run_id(run_id, 'queued')
+    
+    def find_upstream_info(self, run_id, key, expected = 1):
+        results = dict()
+        for dep in self.dependencies:
+            run_info = dep.get_run_info()
+            if run_id in run_info:
+                if 'info' in run_info[run_id]:
+                    if key in run_info[run_id]['info']:
+                        results[str(dep)] = run_info[run_id]['info'][key]
+            results.update(dep.find_upstream_info(run_id, key, None))
+        if expected is not None:
+            if len(results) != expected:
+                raise StandardError("Unable to determine upstream %s/%s info from %s." % (run_id, key, self))
+        return results
         
     def get_input_run_info_for_connection(self, in_key):
         if in_key[0:3] != 'in/':

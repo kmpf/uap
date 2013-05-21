@@ -40,8 +40,13 @@ class Cutadapt(AbstractStep):
                 for in_path in sorted(input_run_info['output_files']['reads'].keys()):
                     suffix = ''
                     which = None
-                    if input_run_info['info']['paired_end'] == True:
-                        which = input_run_info['info']['read_number'][os.path.basename(in_path)]
+                    if self.find_upstream_info(input_run_id, 'paired_end').values()[0]:
+                        #which = input_run_info['info']['read_number'][os.path.basename(in_path)]
+                        which = ''
+                        if '_R1' in os.path.basename(in_path):
+                            which = 'R1'
+                        elif '_R2' in os.path.basename(in_path):
+                            which = 'R2'
                         if not which in ['R1', 'R2']:
                             raise StandardError("Expected R1 and R2 input files, but got this: " + in_path)
                         suffix = '-' + which
@@ -53,7 +58,7 @@ class Cutadapt(AbstractStep):
                             'output_files': {},
                             'info': {}
                         }
-                        if input_run_info['info']['paired_end'] == True:
+                        if self.find_upstream_info(input_run_id, 'paired_end').values()[0]:
                             output_run_info[output_run_id]['info']['read_number'] = which
 
                     # find adapter
@@ -61,7 +66,7 @@ class Cutadapt(AbstractStep):
 
                     # insert correct index if necessary
                     if '((INDEX))' in adapter:
-                        index = input_run_info['info']['index']
+                        index = self.find_upstream_info(input_run_id, 'index').values()[0]
                         adapter = adapter.replace('((INDEX))', index)
 
                     # make sure the adapter is looking good
