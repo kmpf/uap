@@ -521,7 +521,7 @@ class AbstractStep(object):
                     candidate_tasks.add(task)
                 
         for task in candidate_tasks:
-            task.volatilize_if_possible()
+            task.volatilize_if_possible(srsly = True)
                             
         self._reset()
 

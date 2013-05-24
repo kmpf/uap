@@ -444,6 +444,13 @@ class Pipeline(object):
             if not fix_problems:
                 print("Hint: Run ./fix-problems.py --srsly to fix these problems (that is, delete all problematic ping files).")
 
-    def check_volatile_files(self):
+    def check_volatile_files(self, srsly = False):
+        collected_files = set()
         for task in self.all_tasks_topologically_sorted:
-            task.volatilize_if_possible()
+            collected_files |= task.volatilize_if_possible(srsly)
+        if not srsly and len(collected_files) > 0:
+            total_size = 0
+            for path in collected_files:
+                total_size += os.path.getsize(path)
+            print("Hint: You could save %s of disk space by volatilizing %d output files." % (misc.bytes_to_str(total_size), len(collected_files)))
+            print("Call ./volatilize.py --srsly to purge the files.")

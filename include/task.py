@@ -67,9 +67,10 @@ class Task(object):
             result.add(self.pipeline.task_for_task_id[self.pipeline.task_id_for_output_file[path]])
         return list(result)
     
-    def volatilize_if_possible(self):
+    def volatilize_if_possible(self, srsly = False):
+        result = set()
         if not self.step.options['_volatile']:
-            return
+            return set()
         for path_a in self.pipeline.output_files_for_task_id[str(self)]:
             if abstract_step.AbstractStep.fsc.exists(path_a):
                 # now check whether we can volatilize path A
@@ -87,26 +88,28 @@ class Task(object):
                             break
                     
                 if path_a_can_be_removed:
-                    print("[INFO] purging %s: %s" % (str(self), os.path.basename(path_a)))
-                    info = dict()
-                    info['self'] = dict()
-                    info['self']['size'] = abstract_step.AbstractStep.fsc.getsize(path_a)
-                    info['self']['mtime'] = abstract_step.AbstractStep.fsc.getmtime(path_a)
-                    info['downstream'] = dict()
-                    for path_b in path_a_dependent_files:
-                        info['downstream'][path_b] = dict()
-                        if abstract_step.AbstractStep.fsc.exists(path_b):
-                            info['downstream'][path_b]['size'] = abstract_step.AbstractStep.fsc.getsize(path_b)
-                            info['downstream'][path_b]['mtime'] = abstract_step.AbstractStep.fsc.getmtime(path_b)
-                        else:
-                            downstream_info = yaml.load(open(path_b + abstract_step.AbstractStep.VOLATILE_SUFFIX, 'r'))
-                            info['downstream'][path_b]['size'] = downstream_info['self']['size']
-                            info['downstream'][path_b]['mtime'] = downstream_info['self']['mtime']
+                    result.add(path_a)
+                    if srsly:
+                        print("[INFO] purging %s: %s" % (str(self), os.path.basename(path_a)))
+                        info = dict()
+                        info['self'] = dict()
+                        info['self']['size'] = abstract_step.AbstractStep.fsc.getsize(path_a)
+                        info['self']['mtime'] = abstract_step.AbstractStep.fsc.getmtime(path_a)
+                        info['downstream'] = dict()
+                        for path_b in path_a_dependent_files:
+                            info['downstream'][path_b] = dict()
+                            if abstract_step.AbstractStep.fsc.exists(path_b):
+                                info['downstream'][path_b]['size'] = abstract_step.AbstractStep.fsc.getsize(path_b)
+                                info['downstream'][path_b]['mtime'] = abstract_step.AbstractStep.fsc.getmtime(path_b)
+                            else:
+                                downstream_info = yaml.load(open(path_b + abstract_step.AbstractStep.VOLATILE_SUFFIX, 'r'))
+                                info['downstream'][path_b]['size'] = downstream_info['self']['size']
+                                info['downstream'][path_b]['mtime'] = downstream_info['self']['mtime']
+                            
+                        path_a_volatile = path_a + abstract_step.AbstractStep.VOLATILE_SUFFIX
+                        with open(path_a_volatile, 'w') as f:
+                            f.write(yaml.dump(info, default_flow_style = False))
                         
-                    path_a_volatile = path_a + abstract_step.AbstractStep.VOLATILE_SUFFIX
-                    with open(path_a_volatile, 'w') as f:
-                        f.write(yaml.dump(info, default_flow_style = False))
-                    
-                    os.utime(path_a_volatile, (os.path.getatime(path_a), os.path.getmtime(path_a)))
-                    os.unlink(path_a)
-    
+                        os.utime(path_a_volatile, (os.path.getatime(path_a), os.path.getmtime(path_a)))
+                        os.unlink(path_a)
+        return result
