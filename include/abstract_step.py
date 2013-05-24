@@ -237,7 +237,7 @@ class AbstractStep(object):
                             # the volatile file exists
                             try:
                                 # try to parse the YAML contents
-                                info = yaml.load(open(volatile_path, 'r'))
+                                info = AbstractStep.fsc.load_yaml_from_file(volatile_path)
                             except yaml.scanner.ScannerError:
                                 return path
                             
