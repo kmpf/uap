@@ -344,6 +344,31 @@ Finished tasks
 
 tasks: 5 total, 1 waiting, 1 ready, 3 finished</pre>
 </div>
+<p>To get a more concise summary, specify <tt class="docutils literal"><span class="pre">--summarize</span></tt>:</p>
+<div class="highlight-python"><pre>$ ./status.py --summarize
+Waiting tasks
+-------------
+[w]   1 cufflinks
+
+Ready tasks
+-----------
+[r]   1 tophat2
+
+Finished tasks
+--------------
+[f]   2 cutadapt
+[f]   1 fix_cutadapt
+
+tasks: 5 total, 1 waiting, 1 ready, 3 finished</pre>
+</div>
+<p>...or print a fancy ASCII art graph with <tt class="docutils literal"><span class="pre">--graph</span></tt>:</p>
+<div class="highlight-python"><pre>$ ./status.py --graph
+samples (1 finished)
+└─cutadapt (2 finished)
+  └─fix_cutadapt (1 finished)
+    └─tophat2 (1 ready)
+      └─cufflinks (1 waiting)</pre>
+</div>
 <p>Detailed information about a specific task can be obtained by specifying the
 task ID on the command line:</p>
 <div class="highlight-python"><pre>$ ./status.py cutadapt/Sample_COPD_2023-R1

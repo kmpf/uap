@@ -326,6 +326,35 @@ Here is an example output::
     [f] fix_cutadapt/Sample_COPD_2023
 
     tasks: 5 total, 1 waiting, 1 ready, 3 finished
+    
+To get a more concise summary, specify ``--summarize``::
+
+    $ ./status.py --summarize
+    Waiting tasks
+    -------------
+    [w]   1 cufflinks
+
+    Ready tasks
+    -----------
+    [r]   1 tophat2
+
+    Finished tasks
+    --------------
+    [f]   2 cutadapt
+    [f]   1 fix_cutadapt
+
+    tasks: 5 total, 1 waiting, 1 ready, 3 finished
+    
+...or print a fancy ASCII art graph with ``--graph``::
+
+    $ ./status.py --graph
+    samples (1 finished)
+    └─cutadapt (2 finished)
+      └─fix_cutadapt (1 finished)
+        └─tophat2 (1 ready)
+          └─cufflinks (1 waiting)
+
+
 
 ..
     Here is another example output with ``--test-run`` specified on the command 
