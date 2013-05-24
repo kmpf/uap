@@ -443,3 +443,7 @@ class Pipeline(object):
                 print("Hint: Run ./fix-problems.py --details to see the details.")
             if not fix_problems:
                 print("Hint: Run ./fix-problems.py --srsly to fix these problems (that is, delete all problematic ping files).")
+
+    def check_volatile_files(self):
+        for task in self.all_tasks_topologically_sorted:
+            task.volatilize_if_possible()

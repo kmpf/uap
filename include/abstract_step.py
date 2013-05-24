@@ -251,9 +251,19 @@ class AbstractStep(object):
                                 uncovered_files = self._pipeline.file_dependencies_reverse[path]
                                 
                             for downstream_path, downstream_info in info['downstream'].items():
+                                pv_downstream_path = downstream_path
                                 if not AbstractStep.fsc.exists(downstream_path):
+                                    # if the downstream file does not exist, try
+                                    # the volatile placeholder but only if the
+                                    # step which creates the file is marked as volatile
+                                    downstream_task_id = self._pipeline.task_id_for_output_file[downstream_path]
+                                    if downstream_task_id in self._pipeline.task_for_task_id:
+                                        downstream_task = self._pipeline.task_for_task_id[downstream_task_id]
+                                        if downstream_task.step.options['_volatile']:
+                                            pv_downstream_path = downstream_path + AbstractStep.VOLATILE_SUFFIX
+                                if not AbstractStep.fsc.exists(pv_downstream_path):
                                     return path
-                                if not AbstractStep.fsc.getmtime(downstream_path) >= info['self']['mtime']:
+                                if not AbstractStep.fsc.getmtime(pv_downstream_path) >= info['self']['mtime']:
                                     return path
                                 if downstream_path in uncovered_files:
                                     uncovered_files.remove(downstream_path)
@@ -511,39 +521,7 @@ class AbstractStep(object):
                     candidate_tasks.add(task)
                 
         for task in candidate_tasks:
-            for path_a in self._pipeline.output_files_for_task_id[str(task)]:
-                if AbstractStep.fsc.exists(path_a):
-                    # now check whether we can volatilize path A
-                    path_a_can_be_removed = True
-                    path_a_dependent_files = list()
-                    if path_a in self._pipeline.file_dependencies_reverse:
-                        for path_b in self._pipeline.file_dependencies_reverse[path_a]:
-                            path_a_dependent_files.append(path_b)
-                            if not AbstractStep.fsc.exists(path_b):
-                                path_a_can_be_removed = False
-                                break
-                            path_b_task = self._pipeline.task_for_task_id[self._pipeline.task_id_for_output_file[path_b]]
-                            if path_b_task.get_task_state() != self._pipeline.states.FINISHED:
-                                path_a_can_be_removed = False
-                                break
-                        
-                    if path_a_can_be_removed:
-                        info = dict()
-                        info['self'] = dict()
-                        info['self']['size'] = AbstractStep.fsc.getsize(path_a)
-                        info['self']['mtime'] = AbstractStep.fsc.getmtime(path_a)
-                        info['downstream'] = dict()
-                        for path_b in path_a_dependent_files:
-                            info['downstream'][path_b] = dict()
-                            info['downstream'][path_b]['size'] = AbstractStep.fsc.getsize(path_b)
-                            info['downstream'][path_b]['mtime'] = AbstractStep.fsc.getmtime(path_b)
-                            
-                        path_a_volatile = path_a + AbstractStep.VOLATILE_SUFFIX
-                        with open(path_a_volatile, 'w') as f:
-                            f.write(yaml.dump(info, default_flow_style = False))
-                        
-                        os.utime(path_a_volatile, (os.path.getatime(path_a), os.path.getmtime(path_a)))
-                        os.unlink(path_a)
+            task.volatilize_if_possible()
                             
         self._reset()
 

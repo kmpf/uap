@@ -117,6 +117,12 @@ def main():
             
     # now check ping files and print some warnings and instructions if something's fishy
     p.check_ping_files()
+    
+    # Now check whether we can volatilize files.
+    # This happens when you declare a step as volatile after all downstream 
+    # steps have been run - without the _volatile declaration, the files will
+    # remain untouched. 
+    p.check_volatile_files()
         
 if __name__ == '__main__':
     main()
