@@ -60,5 +60,5 @@ class Task(object):
         '''
         result = set()
         for path in self.input_files():
-            result.add(self.pipeline.task_for_task_id[self.pipeline.output_files_created_by[path]])
+            result.add(self.pipeline.task_for_output_file[path])
         return list(result)

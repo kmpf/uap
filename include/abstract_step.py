@@ -29,6 +29,7 @@ class AbstractStep(object):
     
     PING_TIMEOUT = 300
     PING_RENEW = 30
+    VOLATILE_SUFFIX = '.volatile.placeholder.yaml'
     
     def __init__(self, pipeline):
         
@@ -100,6 +101,8 @@ class AbstractStep(object):
 
     def set_options(self, options):
         self.options = options
+        if not '_volatile' in self.options:
+            self.options['_volatile'] = False
 
     def add_dependency(self, parent):
         if not isinstance(parent, AbstractStep):
@@ -186,7 +189,10 @@ class AbstractStep(object):
                 for tag in self._run_info[run_id]['output_files'].keys():
                     for output_path, input_paths in self._run_info[run_id]['output_files'][tag].items():
                         self._pipeline.add_file_dependencies(output_path, input_paths)
-                        self._pipeline.add_output_file_created_by(output_path, str(self), run_id)
+                        task_id = '%s/%s' % (str(self), run_id)
+                        self._pipeline.add_task_for_output_file(output_path, task_id)
+                        for inpath in input_paths:
+                            self._pipeline.add_task_for_input_file(inpath, task_id)
                         
         # now that the _run_info exists, it remains constant, just return it
         return self._run_info
@@ -216,19 +222,76 @@ class AbstractStep(object):
                 return path
 
     def get_run_state(self, run_id):
+        
+        def change_to_volatile_if_need_be(path):
+            if not AbstractStep.fsc.exists(path):
+                # the real output file does not exist
+                task_id = self._pipeline.task_id_for_output_file[path]
+                if task_id in self._pipeline.task_for_task_id:
+                    # there is a task which creates the output file
+                    task = self._pipeline.task_for_task_id[task_id]
+                    if task.step.options['_volatile'] == True:
+                        # the task is declared volatile
+                        volatile_path = path + AbstractStep.VOLATILE_SUFFIX
+                        if AbstractStep.fsc.exists(volatile_path):
+                            # the volatile file exists
+                            try:
+                                # try to parse the YAML contents
+                                info = yaml.load(open(volatile_path, 'r'))
+                            except yaml.scanner.ScannerError:
+                                return path
+                            
+                            # now check whether all downstream files are in place
+                            # and up-to-date
+                            # also check whether all downstream files as defined in
+                            # file_dependencies_reverse are covered
+                            
+                            uncovered_files = set()
+                            if path in self._pipeline.file_dependencies_reverse:
+                                uncovered_files = self._pipeline.file_dependencies_reverse[path]
+                                
+                            for downstream_path, downstream_info in info['downstream'].items():
+                                if not AbstractStep.fsc.exists(downstream_path):
+                                    return path
+                                if not AbstractStep.fsc.getmtime(downstream_path) >= info['self']['mtime']:
+                                    return path
+                                if downstream_path in uncovered_files:
+                                    uncovered_files.remove(downstream_path)
+                                
+                            if len(uncovered_files) > 0:
+                                return path
+                                
+                            return volatile_path
+            return path
 
         def path_up_to_date(outpath, inpaths):
-            if not AbstractStep.fsc.exists(outpath):
-                return False
+            # first, replace paths with volatile paths if the step is marked
+            # as volatile and the real path is missing
+            # but: only consider volatile placeholders if all child tasks
+            # are finished. That means if a child of a volatile
+            # step needs to be run because it has been added or an existing step
+            # has been modified, the volatile placeholders are ignored, thus
+            # turning the task from 'finished' to 'ready' or 'waiting'
+            # Hint: The pv_ prefix is for 'possibly volatile'
+            pv_outpath = outpath
+            pv_inpaths = list()
+            
+            if outpath in self._pipeline.task_id_for_output_file:
+                pv_outpath = change_to_volatile_if_need_be(outpath)
+                
             for inpath in inpaths:
-                if not AbstractStep.fsc.exists(inpath):
+                pv_inpaths.append(change_to_volatile_if_need_be(inpath))
+                
+            if not AbstractStep.fsc.exists(pv_outpath):
+                return False
+            for pv_inpath in pv_inpaths:
+                if not AbstractStep.fsc.exists(pv_inpath):
                     return False
-                if AbstractStep.fsc.getmtime(inpath) > AbstractStep.fsc.getmtime(outpath):
+                if AbstractStep.fsc.getmtime(pv_inpath) > AbstractStep.fsc.getmtime(pv_outpath):
                     return False
             return True
             
         def up_to_dateness_level(path, level = 0):
-            #print("up_to_dateness_level(path = %s, level = %d)" % (os.path.basename(path), level))
             result = level
             dep_paths = self._pipeline.file_dependencies[path]
             if not path_up_to_date(path, dep_paths):
@@ -429,7 +492,59 @@ class AbstractStep(object):
             attachment['name'] = 'details.png'
             attachment['data'] = open(annotation_path + '.png').read()
         self._pipeline.notify(message, attachment)
-
+        
+        # and now... check whether we have any volatile parents. If we find one,
+        # determine for each of its output files A whether all output files B which
+        # depend on A are already in place and whether the task which
+        # produced the output file B is finished. In that case, we can truncate
+        # output file A and rename it to act as a 'volatile placeholder'.
+        task_id = '%s/%s' % (self, run_id)
+        input_files = set()
+        if task_id in self._pipeline.input_files_for_task_id:
+            input_files = self._pipeline.input_files_for_task_id[task_id]
+        candidate_tasks = set()
+        for inpath in input_files:
+            task_id = self._pipeline.task_id_for_output_file[inpath]
+            if task_id in self._pipeline.task_for_task_id:
+                task = self._pipeline.task_for_task_id[task_id]
+                if task.step.options['_volatile'] == True:
+                    candidate_tasks.add(task)
+                
+        for task in candidate_tasks:
+            for path_a in self._pipeline.output_files_for_task_id[str(task)]:
+                if AbstractStep.fsc.exists(path_a):
+                    # now check whether we can volatilize path A
+                    path_a_can_be_removed = True
+                    path_a_dependent_files = list()
+                    if path_a in self._pipeline.file_dependencies_reverse:
+                        for path_b in self._pipeline.file_dependencies_reverse[path_a]:
+                            path_a_dependent_files.append(path_b)
+                            if not AbstractStep.fsc.exists(path_b):
+                                path_a_can_be_removed = False
+                                break
+                            path_b_task = self._pipeline.task_for_task_id[self._pipeline.task_id_for_output_file[path_b]]
+                            if path_b_task.get_task_state() != self._pipeline.states.FINISHED:
+                                path_a_can_be_removed = False
+                                break
+                        
+                    if path_a_can_be_removed:
+                        info = dict()
+                        info['self'] = dict()
+                        info['self']['size'] = AbstractStep.fsc.getsize(path_a)
+                        info['self']['mtime'] = AbstractStep.fsc.getmtime(path_a)
+                        info['downstream'] = dict()
+                        for path_b in path_a_dependent_files:
+                            info['downstream'][path_b] = dict()
+                            info['downstream'][path_b]['size'] = AbstractStep.fsc.getsize(path_b)
+                            info['downstream'][path_b]['mtime'] = AbstractStep.fsc.getmtime(path_b)
+                            
+                        path_a_volatile = path_a + AbstractStep.VOLATILE_SUFFIX
+                        with open(path_a_volatile, 'w') as f:
+                            f.write(yaml.dump(info, default_flow_style = False))
+                        
+                        os.utime(path_a_volatile, (os.path.getatime(path_a), os.path.getmtime(path_a)))
+                        os.unlink(path_a)
+                            
         self._reset()
 
     def tool(self, key):
