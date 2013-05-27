@@ -121,7 +121,7 @@ class Pipeline(object):
                     task = task_module.Task(self, step, run_id, run_index)
                     self.all_tasks_topologically_sorted.append(task)
                     if str(task) in self.task_for_task_id:
-                        raise ConfigurationException("Duplicate task ID %s. Use the 'step_name' option to assign another step name." % str(task))
+                        raise ConfigurationException("Duplicate task ID %s." % str(task))
                     self.task_for_task_id[str(task)] = task
 
         self.tool_versions = {}
@@ -231,15 +231,17 @@ class Pipeline(object):
                 assigned_steps.add(step_name)
                 unassigned_steps.remove(step_name)
                 
-        # step four: finalize step (get child count, collect all dependencies)
+        # step four: finalize step
         for step in self.steps.values():
             step.finalize()
 
     def print_tasks(self):
         '''
-        prints a summary of all tasks, indicating whether each taks is
+        prints a summary of all tasks, indicating whether each task is
           - ``[r]eady``
           - ``[w]aiting``
+          - ``[q]ueued``
+          - ``[e]xecuting``
           - ``[f]inished``
         '''
         count = {}
@@ -444,11 +446,14 @@ class Pipeline(object):
             if not fix_problems:
                 print("Hint: Run ./fix-problems.py --srsly to fix these problems (that is, delete all problematic ping files).")
 
-    def check_volatile_files(self, srsly = False):
+    def check_volatile_files(self, details = False, srsly = False):
         collected_files = set()
         for task in self.all_tasks_topologically_sorted:
             collected_files |= task.volatilize_if_possible(srsly)
         if not srsly and len(collected_files) > 0:
+            if details:
+                for path in sorted(collected_files):
+                    print(path)
             total_size = 0
             for path in collected_files:
                 total_size += os.path.getsize(path)

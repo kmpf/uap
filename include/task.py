@@ -90,7 +90,7 @@ class Task(object):
                 if path_a_can_be_removed:
                     result.add(path_a)
                     if srsly:
-                        print("[INFO] purging %s: %s" % (str(self), os.path.basename(path_a)))
+                        print("Now volatilizing %s: %s" % (str(self), os.path.basename(path_a)))
                         info = dict()
                         info['self'] = dict()
                         info['self']['size'] = abstract_step.AbstractStep.fsc.getsize(path_a)

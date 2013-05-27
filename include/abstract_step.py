@@ -223,55 +223,70 @@ class AbstractStep(object):
 
     def get_run_state(self, run_id):
         
+        def volatile_path_good(volatile_path):
+            '''
+            This function receives a volatile path and tries to load the placeholder
+            YAML data structure. It then checks all downstream paths, which may in
+            turn be volatile placeholder files.
+            '''
+            
+            # reconstruct original path from volatile placeholder path
+            path = volatile_path[:-len(AbstractStep.VOLATILE_SUFFIX)]
+            
+            if AbstractStep.fsc.exists(path):
+                # the original file still exists, ignore volatile placeholder
+                return False
+            
+            if not path in self._pipeline.task_id_for_output_file:
+                # there is no task which creates the output file
+                return False
+            
+            task_id = self._pipeline.task_id_for_output_file[path]
+            
+            task = self._pipeline.task_for_task_id[task_id]
+            if not task.step.options['_volatile']:
+                # the task is not declared volatile
+                return False
+            
+            if not AbstractStep.fsc.exists(volatile_path):
+                # the volatile placeholder does not exist
+                return False
+
+            try:
+                # try to parse the YAML contents
+                info = AbstractStep.fsc.load_yaml_from_file(volatile_path)
+            except yaml.scanner.ScannerError:
+                # error scanning YAML
+                return False
+            
+            # now check whether all downstream files are in place and up-to-date
+            # also check whether all downstream files as defined in
+            # file_dependencies_reverse are covered
+
+            uncovered_files = set()
+            if path in self._pipeline.file_dependencies_reverse:
+                uncovered_files = self._pipeline.file_dependencies_reverse[path]
+                
+            for downstream_path, downstream_info in info['downstream'].items():
+                pv_downstream_path = change_to_volatile_if_need_be(downstream_path)
+                if not AbstractStep.fsc.exists(pv_downstream_path):
+                    return False
+                if not AbstractStep.fsc.getmtime(pv_downstream_path) >= info['self']['mtime']:
+                    return False
+                if downstream_path in uncovered_files:
+                    uncovered_files.remove(downstream_path)
+                
+            if len(uncovered_files) > 0:
+                return False
+                
+            return True
+        
         def change_to_volatile_if_need_be(path):
             if not AbstractStep.fsc.exists(path):
                 # the real output file does not exist
-                task_id = self._pipeline.task_id_for_output_file[path]
-                if task_id in self._pipeline.task_for_task_id:
-                    # there is a task which creates the output file
-                    task = self._pipeline.task_for_task_id[task_id]
-                    if task.step.options['_volatile'] == True:
-                        # the task is declared volatile
-                        volatile_path = path + AbstractStep.VOLATILE_SUFFIX
-                        if AbstractStep.fsc.exists(volatile_path):
-                            # the volatile file exists
-                            try:
-                                # try to parse the YAML contents
-                                info = AbstractStep.fsc.load_yaml_from_file(volatile_path)
-                            except yaml.scanner.ScannerError:
-                                return path
-                            
-                            # now check whether all downstream files are in place
-                            # and up-to-date
-                            # also check whether all downstream files as defined in
-                            # file_dependencies_reverse are covered
-                            
-                            uncovered_files = set()
-                            if path in self._pipeline.file_dependencies_reverse:
-                                uncovered_files = self._pipeline.file_dependencies_reverse[path]
-                                
-                            for downstream_path, downstream_info in info['downstream'].items():
-                                pv_downstream_path = downstream_path
-                                if not AbstractStep.fsc.exists(downstream_path):
-                                    # if the downstream file does not exist, try
-                                    # the volatile placeholder but only if the
-                                    # step which creates the file is marked as volatile
-                                    downstream_task_id = self._pipeline.task_id_for_output_file[downstream_path]
-                                    if downstream_task_id in self._pipeline.task_for_task_id:
-                                        downstream_task = self._pipeline.task_for_task_id[downstream_task_id]
-                                        if downstream_task.step.options['_volatile']:
-                                            pv_downstream_path = downstream_path + AbstractStep.VOLATILE_SUFFIX
-                                if not AbstractStep.fsc.exists(pv_downstream_path):
-                                    return path
-                                if not AbstractStep.fsc.getmtime(pv_downstream_path) >= info['self']['mtime']:
-                                    return path
-                                if downstream_path in uncovered_files:
-                                    uncovered_files.remove(downstream_path)
-                                
-                            if len(uncovered_files) > 0:
-                                return path
-                                
-                            return volatile_path
+                volatile_path = path + AbstractStep.VOLATILE_SUFFIX
+                if volatile_path_good(volatile_path):
+                    return volatile_path
             return path
 
         def path_up_to_date(outpath, inpaths):
@@ -417,7 +432,8 @@ class AbstractStep(object):
         except:
             self.end_time = datetime.datetime.now()
             annotation_path, annotation_str = self.write_annotation(run_id, self._temp_directory)
-            message = "[BAD] %s/%s failed on %s\n\nHere are the details:\n%s" % (str(self), run_id, socket.gethostname(), annotation_str)
+            duration = self.end_time - self.start_time
+            message = "[BAD] %s/%s failed on %s after %s\n\nHere are the details:\n%s" % (str(self), run_id, socket.gethostname(), misc.duration_to_str(duration), annotation_str)
             attachment = None
             if os.path.exists(annotation_path + '.png'):
                 attachment = dict()
@@ -452,9 +468,14 @@ class AbstractStep(object):
         # if we're here, we can assume the step has finished successfully
         # now rename the output files (move from temp directory to
         # destination directory)
+        
         for tag in temp_run_info['output_files'].keys():
             for out_path in temp_run_info['output_files'][tag].keys():
                 destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
+                # first, delete a possibly existing volatile placeholder file
+                destination_path_volatile = destination_path + AbstractStep.VOLATILE_SUFFIX
+                if os.path.exists(destination_path_volatile):
+                    os.unlink(destination_path_volatile)
                 # TODO: if the destination path already exists, this will overwrite the file.
                 if os.path.exists(out_path):
                     os.rename(out_path, destination_path)
@@ -493,8 +514,8 @@ class AbstractStep(object):
         AbstractStep.fsc = fscache.FSCache()
         
         remaining_task_info = self.get_run_info_str()
-
-        message = "[OK] %s/%s successfully finished on %s\n" % (str(self), run_id, socket.gethostname())
+        
+        message = "[OK] %s/%s successfully finished on %s after %s\n" % (str(self), run_id, socket.gethostname(), misc.duration_to_str(self.end_time - self.start_time))
         message += str(self) + ': ' + remaining_task_info + "\n"
         attachment = None
         if os.path.exists(annotation_path + '.png'):
@@ -911,7 +932,7 @@ class AbstractStep(object):
                 log['pipeline_log']['process_watcher']['max']['sum']['cpu_percent'], 
                 misc.bytes_to_str(log['pipeline_log']['process_watcher']['max']['sum']['rss']), 
                 log['pipeline_log']['process_watcher']['max']['sum']['memory_percent'],
-                duration)
+                misc.duration_to_str(duration, long = True))
         else:
             hash['graph_labels'][task_name] = "Task: %s\\lHost: %s\\lDuration: %s\\l\\l" % (
                 task_name, 
