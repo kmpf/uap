@@ -9,6 +9,8 @@ import inspect
 import json
 import misc
 import os
+import process_pool
+import psutil
 import re
 import random
 import signal
@@ -223,7 +225,7 @@ class AbstractStep(object):
 
     def get_run_state(self, run_id):
         
-        def volatile_path_good(volatile_path):
+        def volatile_path_good(volatile_path, recurse = True):
             '''
             This function receives a volatile path and tries to load the placeholder
             YAML data structure. It then checks all downstream paths, which may in
@@ -251,7 +253,10 @@ class AbstractStep(object):
             if not AbstractStep.fsc.exists(volatile_path):
                 # the volatile placeholder does not exist
                 return False
-
+            
+            if not recurse:
+                return True
+            
             try:
                 # try to parse the YAML contents
                 info = AbstractStep.fsc.load_yaml_from_file(volatile_path)
@@ -268,24 +273,28 @@ class AbstractStep(object):
                 uncovered_files = self._pipeline.file_dependencies_reverse[path]
                 
             for downstream_path, downstream_info in info['downstream'].items():
-                pv_downstream_path = change_to_volatile_if_need_be(downstream_path)
-                if not AbstractStep.fsc.exists(pv_downstream_path):
-                    return False
-                if not AbstractStep.fsc.getmtime(pv_downstream_path) >= info['self']['mtime']:
-                    return False
-                if downstream_path in uncovered_files:
-                    uncovered_files.remove(downstream_path)
+                if downstream_path in self._pipeline.task_id_for_output_file:
+                    # only check this downstream file if there's a task which creates it,
+                    # otherwise, it may be a file which is no more used
+                    pv_downstream_path = change_to_volatile_if_need_be(downstream_path, recurse = False)
+                    if not AbstractStep.fsc.exists(pv_downstream_path):
+                        return False
+                    if not AbstractStep.fsc.getmtime(pv_downstream_path) >= info['self']['mtime']:
+                        return False
+                    if downstream_path in uncovered_files:
+                        uncovered_files.remove(downstream_path)
                 
             if len(uncovered_files) > 0:
+                # there are still files defined which are not covered by the placeholder
                 return False
                 
             return True
         
-        def change_to_volatile_if_need_be(path):
+        def change_to_volatile_if_need_be(path, recurse = True):
             if not AbstractStep.fsc.exists(path):
                 # the real output file does not exist
                 volatile_path = path + AbstractStep.VOLATILE_SUFFIX
-                if volatile_path_good(volatile_path):
+                if volatile_path_good(volatile_path, recurse):
                     return volatile_path
             return path
 
@@ -419,28 +428,27 @@ class AbstractStep(object):
             
         executing_ping_pid = os.fork()
         if executing_ping_pid == 0:
-            while True:
-                time.sleep(AbstractStep.PING_RENEW)
-                if os.path.exists(executing_ping_path):
-                    os.utime(executing_ping_path, None)
-            os._exit(0)
+            try:
+                signal.signal(signal.SIGTERM, signal.SIG_DFL)
+                signal.signal(signal.SIGINT, signal.SIG_IGN)
+                while True:
+                    time.sleep(AbstractStep.PING_RENEW)
+                    if os.path.exists(executing_ping_path):
+                        os.utime(executing_ping_path, None)
+            finally:
+                os._exit(0)
             
         self.start_time = datetime.datetime.now()
         self._pipeline.notify("[INFO] starting %s/%s on %s" % (str(self), run_id, socket.gethostname()))
+        caught_exception = None
         try:
             self.execute(run_id, temp_run_info)
-        except:
-            self.end_time = datetime.datetime.now()
-            annotation_path, annotation_str = self.write_annotation(run_id, self._temp_directory)
-            duration = self.end_time - self.start_time
-            message = "[BAD] %s/%s failed on %s after %s\n\nHere are the details:\n%s" % (str(self), run_id, socket.gethostname(), misc.duration_to_str(duration), annotation_str)
-            attachment = None
-            if os.path.exists(annotation_path + '.png'):
-                attachment = dict()
-                attachment['name'] = 'details.png'
-                attachment['data'] = open(annotation_path + '.png').read()
-            self._pipeline.notify(message, attachment)
-            raise
+        except Exception as e:
+            # Oh my. We have a situation. This is awkward. Tell the process pool to wrap up.
+            # This way, we can try to get process stats before shutting everything down.
+            process_pool.ProcessPool.kill()
+            # Store the exception, re-raise it later
+            caught_exception = e
         finally:
             try:
                 os.kill(executing_ping_pid, signal.SIGTERM)
@@ -465,86 +473,98 @@ class AbstractStep(object):
         
         self.end_time = datetime.datetime.now()
         
-        # if we're here, we can assume the step has finished successfully
-        # now rename the output files (move from temp directory to
-        # destination directory)
-        
-        for tag in temp_run_info['output_files'].keys():
-            for out_path in temp_run_info['output_files'][tag].keys():
-                destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
-                # first, delete a possibly existing volatile placeholder file
-                destination_path_volatile = destination_path + AbstractStep.VOLATILE_SUFFIX
-                if os.path.exists(destination_path_volatile):
-                    os.unlink(destination_path_volatile)
-                # TODO: if the destination path already exists, this will overwrite the file.
-                if os.path.exists(out_path):
-                    os.rename(out_path, destination_path)
-                else:
-                    annotation_path, annotation_str = self.write_annotation(run_id, self._temp_directory)
-                    raise StandardError("The step failed to produce an output file it announced: %s\n\nHere are the details:\n%s" % (os.path.basename(out_path), annotation_str))
+        if not self._pipeline.caught_signal and caught_exception is None:
+            # if we're here, we can assume the step has finished successfully
+            # now rename the output files (move from temp directory to
+            # destination directory)
+            
+            for tag in temp_run_info['output_files'].keys():
+                for out_path in temp_run_info['output_files'][tag].keys():
+                    destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
+                    # first, delete a possibly existing volatile placeholder file
+                    destination_path_volatile = destination_path + AbstractStep.VOLATILE_SUFFIX
+                    if os.path.exists(destination_path_volatile):
+                        os.unlink(destination_path_volatile)
+                    # TODO: if the destination path already exists, this will overwrite the file.
+                    if os.path.exists(out_path):
+                        os.rename(out_path, destination_path)
+                    else:
+                        caught_exception = StandardError("The step failed to produce an output file it announced: %s\n\nHere are the details:\n%s" % (os.path.basename(out_path), annotation_str))
 
         for path, path_info in self.known_paths.items():
             if os.path.exists(path):
                 self.known_paths[path]['size'] = os.path.getsize(path)
+                
+        annotation_path, annotation_str = self.write_annotation(run_id, self.get_output_directory() if ((self._pipeline.caught_signal is None) and (caught_exception is None)) else self._temp_directory)
 
         self._temp_directory = None
 
-        annotation_path, annotation_str = self.write_annotation(run_id, self.get_output_directory())
+        if self._pipeline.caught_signal is not None or caught_exception is not None:
+            message = "[BAD] %s/%s failed on %s after %s\n" % (str(self), run_id, socket.gethostname(), misc.duration_to_str(self.end_time - self.start_time))
+            message += "\nHere are the details:\n" + annotation_str
+            attachment = None
+            if os.path.exists(annotation_path + '.png'):
+                attachment = dict()
+                attachment['name'] = 'details.png'
+                attachment['data'] = open(annotation_path + '.png').read()
+            self._pipeline.notify(message, attachment)
+            if caught_exception is not None:
+                raise caught_exception
+        else:
+            # create a symbolic link to the annotation for every output file
+            for tag in temp_run_info['output_files'].keys():
+                for out_path in temp_run_info['output_files'][tag].keys():
+                    destination_path = os.path.join(self.get_output_directory(), '.' + os.path.basename(out_path) + '.annotation.yaml')
+                    # overwrite the symbolic link if it already exists
+                    if os.path.exists(destination_path):
+                        os.unlink(destination_path)
+                    oldwd = os.getcwd()
+                    os.chdir(os.path.dirname(destination_path))
+                    os.symlink(os.path.basename(annotation_path), os.path.basename(destination_path))
+                    os.chdir(oldwd)
 
-        # create a symbolic link to the annotation for every output file
-        for tag in temp_run_info['output_files'].keys():
-            for out_path in temp_run_info['output_files'][tag].keys():
-                destination_path = os.path.join(self.get_output_directory(), '.' + os.path.basename(out_path) + '.annotation.yaml')
-                # overwrite the symbolic link if it already exists
-                if os.path.exists(destination_path):
-                    os.unlink(destination_path)
-                oldwd = os.getcwd()
-                os.chdir(os.path.dirname(destination_path))
-                os.symlink(os.path.basename(annotation_path), os.path.basename(destination_path))
-                os.chdir(oldwd)
-
-        # finally, remove the temporary directory if it's empty
-        try:
-            os.rmdir(temp_directory)
-        except OSError:
-            pass
-        
-        # step has completed successfully, now determine how many jobs are still left
-        # but first invalidate the FS cache because things have changed by now...
-        AbstractStep.fsc = fscache.FSCache()
-        
-        remaining_task_info = self.get_run_info_str()
-        
-        message = "[OK] %s/%s successfully finished on %s after %s\n" % (str(self), run_id, socket.gethostname(), misc.duration_to_str(self.end_time - self.start_time))
-        message += str(self) + ': ' + remaining_task_info + "\n"
-        attachment = None
-        if os.path.exists(annotation_path + '.png'):
-            attachment = dict()
-            attachment['name'] = 'details.png'
-            attachment['data'] = open(annotation_path + '.png').read()
-        self._pipeline.notify(message, attachment)
-        
-        # and now... check whether we have any volatile parents. If we find one,
-        # determine for each of its output files A whether all output files B which
-        # depend on A are already in place and whether the task which
-        # produced the output file B is finished. In that case, we can truncate
-        # output file A and rename it to act as a 'volatile placeholder'.
-        task_id = '%s/%s' % (self, run_id)
-        input_files = set()
-        if task_id in self._pipeline.input_files_for_task_id:
-            input_files = self._pipeline.input_files_for_task_id[task_id]
-        candidate_tasks = set()
-        for inpath in input_files:
-            task_id = self._pipeline.task_id_for_output_file[inpath]
-            if task_id in self._pipeline.task_for_task_id:
-                task = self._pipeline.task_for_task_id[task_id]
-                if task.step.options['_volatile'] == True:
-                    candidate_tasks.add(task)
-                
-        for task in candidate_tasks:
-            task.volatilize_if_possible(srsly = True)
-                            
-        self._reset()
+            # finally, remove the temporary directory if it's empty
+            try:
+                os.rmdir(temp_directory)
+            except OSError:
+                pass
+            
+            # step has completed successfully, now determine how many jobs are still left
+            # but first invalidate the FS cache because things have changed by now...
+            AbstractStep.fsc = fscache.FSCache()
+            
+            remaining_task_info = self.get_run_info_str()
+            
+            message = "[OK] %s/%s successfully finished on %s after %s\n" % (str(self), run_id, socket.gethostname(), misc.duration_to_str(self.end_time - self.start_time))
+            message += str(self) + ': ' + remaining_task_info + "\n"
+            attachment = None
+            if os.path.exists(annotation_path + '.png'):
+                attachment = dict()
+                attachment['name'] = 'details.png'
+                attachment['data'] = open(annotation_path + '.png').read()
+            self._pipeline.notify(message, attachment)
+            
+            # and now... check whether we have any volatile parents. If we find one,
+            # determine for each of its output files A whether all output files B which
+            # depend on A are already in place and whether the task which
+            # produced the output file B is finished. In that case, we can truncate
+            # output file A and rename it to act as a 'volatile placeholder'.
+            task_id = '%s/%s' % (self, run_id)
+            input_files = set()
+            if task_id in self._pipeline.input_files_for_task_id:
+                input_files = self._pipeline.input_files_for_task_id[task_id]
+            candidate_tasks = set()
+            for inpath in input_files:
+                task_id = self._pipeline.task_id_for_output_file[inpath]
+                if task_id in self._pipeline.task_for_task_id:
+                    task = self._pipeline.task_for_task_id[task_id]
+                    if task.step.options['_volatile'] == True:
+                        candidate_tasks.add(task)
+                    
+            for task in candidate_tasks:
+                task.volatilize_if_possible(srsly = True)
+                                
+            self._reset()
 
     def tool(self, key):
         '''
@@ -587,6 +607,7 @@ class AbstractStep(object):
     def write_annotation(self, run_id, path):
         # now write the annotation
         log = {}
+        log['pid'] = os.getpid()
         log['step'] = {}
         log['step']['options'] = self.options
         log['step']['name'] = self.get_step_name()
@@ -594,6 +615,7 @@ class AbstractStep(object):
         log['run'] = {}
         log['run']['run_info'] = self.get_run_info()[run_id]
         log['run']['run_id'] = run_id
+        log['run']['temp_directory'] = self._temp_directory
         log['config'] = self._pipeline.config
         log['git_hash_tag'] = self._pipeline.git_hash_tag
         log['tool_versions'] = {}
@@ -604,6 +626,8 @@ class AbstractStep(object):
         log['end_time'] = self.end_time
         if self._pipeline.git_dirty_diff:
             log['git_dirty_diff'] = self._pipeline.git_dirty_diff
+        if self._pipeline.caught_signal is not None:
+            log['signal'] = self._pipeline.caught_signal
 
         annotation_yaml = yaml.dump(log, default_flow_style = False)
         annotation_path = os.path.join(path, ".%s-annotation-%s.yaml" % (run_id, hashlib.sha1(annotation_yaml).hexdigest()[0:8]))
@@ -838,7 +862,7 @@ class AbstractStep(object):
                     if proc_info['exit_code'] != 0:
                         label = "%s\\n(failed with exit code %d)" % (label, proc_info['exit_code'])
                 else:
-                    label = "%s\\n(exited instantly)" % label
+                    label = "%s\\n(no exit code)" % label
                     
             if 'max' in log['pipeline_log']['process_watcher']:
                 if pid in log['pipeline_log']['process_watcher']['max']:
@@ -881,7 +905,7 @@ class AbstractStep(object):
                             if proc_info[key]['exit_code'] != 0:
                                 label = "%s\\n(failed with exit code %d)" % (label, proc_info[key]['exit_code'])
                         else:
-                            label = "%s\\n(exited instantly)" % label
+                            label = "%s\\n(no exit code)" % label
                             
                                 
                     # add proc_which
@@ -925,19 +949,18 @@ class AbstractStep(object):
         end_time = log['end_time']
         duration = end_time - start_time
         
+        hash['graph_labels'][task_name] = "Task: %s\\lHost: %s\\lDuration: %s\\l" % (
+            task_name, 
+            socket.gethostname(),
+            misc.duration_to_str(duration, long = True))
         if 'max' in log['pipeline_log']['process_watcher']:
-            hash['graph_labels'][task_name] = "Task: %s\\lHost: %s, CPU: %1.1f%% , RAM: %s (%1.1f%%)\\lDuration: %s\\l\\l" % (
-                task_name, 
-                socket.gethostname(),
+            hash['graph_labels'][task_name] += "CPU: %1.1f%% , RAM: %s (%1.1f%%)\\l" % (
                 log['pipeline_log']['process_watcher']['max']['sum']['cpu_percent'], 
                 misc.bytes_to_str(log['pipeline_log']['process_watcher']['max']['sum']['rss']), 
-                log['pipeline_log']['process_watcher']['max']['sum']['memory_percent'],
-                misc.duration_to_str(duration, long = True))
-        else:
-            hash['graph_labels'][task_name] = "Task: %s\\lHost: %s\\lDuration: %s\\l\\l" % (
-                task_name, 
-                socket.gethostname(),
-                duration)
+                log['pipeline_log']['process_watcher']['max']['sum']['memory_percent'])
+        if 'signal' in log:
+            hash['graph_labels'][task_name] += "Caught signal: %s\\l" % process_pool.ProcessPool.SIGNAL_NAMES[log['signal']]
+        hash['graph_labels'][task_name] += "\\l"
         return hash
 
     @classmethod

@@ -17,6 +17,7 @@ import signal
 import subprocess
 import tempfile
 import time
+import traceback
 import yaml
 
 class TimeoutException(Exception):
@@ -30,6 +31,11 @@ class ProcessPool(object):
     TAIL_LENGTH = 1024
     COPY_BLOCK_SIZE = 4194304
     SIGTERM_TIMEOUT = 5
+    
+    process_watcher_pid = None
+
+    current_instance = None
+    process_pool_is_dead = False
 
     # signal names for numbers... kudos to http://stackoverflow.com/questions/2549939/get-signal-names-from-numbers-in-python
     SIGNAL_NAMES = dict((getattr(signal, n), n) for n in dir(signal) if n.startswith('SIG') and '_' not in n )
@@ -58,6 +64,9 @@ class ProcessPool(object):
             self.append_calls.append(call)
             
     def __init__(self, step):
+        if ProcessPool.process_pool_is_dead:
+            raise StandardError("We have encountered an error, stopping now...")
+        
         # the current step this ProcessPool is used in (for temporary paths etc.)
         self.step = step
         
@@ -98,6 +107,10 @@ class ProcessPool(object):
         self.copy_processes_for_pid = dict()
         
     def __enter__(self):
+        if ProcessPool.current_instance is not None:
+            raise StandardError("Sorry, only one instance of ProcessPool allowed at a time.")
+        ProcessPool.current_instance = self
+        
         return self
         
     def __exit__(self, type, value, traceback):
@@ -121,6 +134,8 @@ class ProcessPool(object):
                 os.unlink(_)
             except OSError:
                 pass
+            
+        ProcessPool.current_instance = None
         
     def get_temporary_path(self, prefix, designation = None):
         path = self.step.get_temporary_path(prefix, designation)
@@ -258,6 +273,8 @@ class ProcessPool(object):
     def _do_launch_copy_process(self, fin, fout_path, report_path, parent_pid, which, pipe):
         pid = os.fork()
         if pid == 0:
+            signal.signal(signal.SIGTERM, signal.SIG_DFL)
+            signal.signal(signal.SIGINT, signal.SIG_DFL)
             os.setsid()
             if pipe is not None:
                 os.close(pipe[0])
@@ -340,17 +357,16 @@ class ProcessPool(object):
         self.log("Now launching process watcher and waiting for all child processes to exit.")
         watcher_report_path = self.step.get_temporary_path('watcher-report')
         watcher_pid = self._launch_process_watcher(watcher_report_path)
+        ProcessPool.process_watcher_pid = watcher_pid
         something_went_wrong = False
         while True:
+            if len(self.running_procs) == 0:
+                break
             try:
                 # wait for the next child process to exit
-                if len(self.running_procs) == 0:
-                    # no more children running, we are done
-                    signal.alarm(0)
-                    self.log("Cancelling timeout (if there was one), all child processes have exited.")
-                    break
                 pid, exit_code_with_signal = os.wait()
                 if pid == watcher_pid:
+                    ProcessPool.process_watcher_pid = None
                     try:
                         self.process_watcher_report = yaml.load(open(watcher_report_path))
                         os.unlink(watcher_report_path)
@@ -366,9 +382,11 @@ class ProcessPool(object):
                     self.running_procs.remove(pid)
                 except:
                     if pid != os.getpid():
-                        raise StandardError("Caught a process which we didn't know: %d." % pid)
-                    
-                self.proc_details[pid]['end_time'] = datetime.datetime.now()
+                        #raise StandardError("Caught a process which we didn't know: %d." % pid)
+                        sys.stderr.write("Note: Caught a process which we didn't know: %d.\n" % pid)
+
+                if pid in self.proc_details:
+                    self.proc_details[pid]['end_time'] = datetime.datetime.now()
                 
                 signal_number = exit_code_with_signal & 255
                 exit_code = exit_code_with_signal >> 8
@@ -378,40 +396,44 @@ class ProcessPool(object):
                     if signal_number in ProcessPool.SIGNAL_NAMES:
                         what_happened = "has received %s (signal number %d)" % (ProcessPool.SIGNAL_NAMES[signal_number], signal_number)
                         
-                self.log("%s (PID %d) %s." % (self.proc_details[pid]['name'], pid, what_happened))
-
-                if signal_number == 0:
-                    self.proc_details[pid]['exit_code'] = exit_code
+                if pid in self.proc_details:
+                    self.log("%s (PID %d) %s." % (self.proc_details[pid]['name'], pid, what_happened))
                 else:
-                    self.proc_details[pid]['signal'] = signal_number
-                    if signal_number in ProcessPool.SIGNAL_NAMES:
-                        self.proc_details[pid]['signal_name'] = ProcessPool.SIGNAL_NAMES[signal_number]
-                        
-                # now kill it's preceding process, if this is from a pipeline
-                if 'use_stdin_of' in self.proc_details[pid]:
-                    kpid = self.proc_details[pid]['use_stdin_of']
-                    pidlist = [kpid]
-                    if kpid in self.copy_processes_for_pid:
-                        pidlist.extend(self.copy_processes_for_pid[kpid])
-                    for kpid in pidlist:
-                        self.log("Now killing %d, the predecessor (or related copy process) of %d." % (kpid, pid))
-                        self.ok_to_fail.add(kpid)
-                        try:
-                            os.kill(kpid, signal.SIGTERM)
-                        except OSError, e:
-                            if e.errno == errno.ESRCH:
-                                # no such process
-                                pass
-                            else:
-                                raise
-                        
-                if pid in self.copy_process_reports:
-                    report_path = self.copy_process_reports[pid]
-                    if os.path.exists(report_path):
-                        report = yaml.load(open(report_path, 'r'))
-                        os.unlink(report_path)
-                        if report is not None:
-                            self.proc_details[pid].update(report)
+                    self.log("PID %d %s." % (pid, what_happened))
+
+                if pid in self.proc_details:
+                    if signal_number == 0:
+                        self.proc_details[pid]['exit_code'] = exit_code
+                    else:
+                        self.proc_details[pid]['signal'] = signal_number
+                        if signal_number in ProcessPool.SIGNAL_NAMES:
+                            self.proc_details[pid]['signal_name'] = ProcessPool.SIGNAL_NAMES[signal_number]
+                            
+                    # now kill it's preceding process, if this is from a pipeline
+                    if 'use_stdin_of' in self.proc_details[pid]:
+                        kpid = self.proc_details[pid]['use_stdin_of']
+                        pidlist = [kpid]
+                        if kpid in self.copy_processes_for_pid:
+                            pidlist.extend(self.copy_processes_for_pid[kpid])
+                        for kpid in pidlist:
+                            self.log("Now killing %d, the predecessor (or related copy process) of %d." % (kpid, pid))
+                            self.ok_to_fail.add(kpid)
+                            try:
+                                os.kill(kpid, signal.SIGTERM)
+                            except OSError, e:
+                                if e.errno == errno.ESRCH:
+                                    # no such process
+                                    pass
+                                else:
+                                    raise
+                            
+                    if pid in self.copy_process_reports:
+                        report_path = self.copy_process_reports[pid]
+                        if os.path.exists(report_path):
+                            report = yaml.load(open(report_path, 'r'))
+                            os.unlink(report_path)
+                            if report is not None:
+                                self.proc_details[pid].update(report)
                 
             except TimeoutException:
                 self.log("Timeout, killing all child processes now.")
@@ -419,9 +441,13 @@ class ProcessPool(object):
             except OSError, e:
                 if e.errno == errno.ECHILD:
                     # no more children running, we are done
+                    sys.stderr.write("ProcessPool: There are no child processes left, exiting.\n")
                     signal.alarm(0)
                     self.log("Cancelling timeout (if there was one), all child processes have exited.")
                     break
+                elif e.errno == errno.EINTR:
+                    # a system call was interrupted, pfft.
+                    pass
                 else:
                     raise
             else:
@@ -446,6 +472,8 @@ class ProcessPool(object):
         except OSError, e:
             if e.errno == errno.ESRCH:
                 pass
+            elif e.errno == errno.ECHILD:
+                pass
             else:
                 raise
                             
@@ -455,108 +483,128 @@ class ProcessPool(object):
         
     def _launch_process_watcher(self, watcher_report_path):
         super_pid = os.getpid()
+        
         watcher_pid = os.fork()
         if watcher_pid == 0:
-            called_cpu_stat_for_childpid = set()
-            procs = {}
-            procs[super_pid] = psutil.Process(super_pid)
-            procs[os.getpid()] = psutil.Process(os.getpid())
-            for pid in self.running_procs:
-                try:
-                    procs[pid] = psutil.Process(pid)
-                except psutil._error.NoSuchProcess:
-                    pass
+            try:
+                signal.signal(signal.SIGTERM, signal.SIG_DFL)
+                signal.signal(signal.SIGINT, signal.SIG_IGN)
+                called_cpu_stat_for_childpid = set()
+                procs = {}
+                procs[super_pid] = psutil.Process(super_pid)
+                procs[os.getpid()] = psutil.Process(os.getpid())
+                for pid in self.running_procs:
+                    try:
+                        procs[pid] = psutil.Process(pid)
+                    except psutil._error.NoSuchProcess:
+                        pass
 
-            pid_list = copy.deepcopy(procs.keys())
-            for pid in pid_list:
-                proc = procs[pid]
-                try:
-                    cpu_percent = proc.get_cpu_percent(interval = None)
-                    # add values for all children
-                    if pid != super_pid:
-                        for p in proc.get_children(recursive = True):
-                            try:
-                                cpu_percent = p.get_cpu_percent(interval = None)
-                                called_cpu_stat_for_childpid.add(p.pid)
-                            except psutil._error.NoSuchProcess:
-                                pass
-                except psutil._error.NoSuchProcess:
-                    del procs[pid]
-
-            time.sleep(0.1)
-
-            iterations = 0
-            delay = 0.5
-            max_data = dict()
-            while True:
                 pid_list = copy.deepcopy(procs.keys())
-                sum_data = dict()
                 for pid in pid_list:
                     proc = procs[pid]
                     try:
-                        data = dict()
-                        data['cpu_percent'] = proc.get_cpu_percent(interval = None)
-                        data['memory_percent'] = proc.get_memory_percent()
-                        memory_info = proc.get_memory_info()
-                        data['rss'] = memory_info.rss
-                        data['vms'] = memory_info.vms
-                        
+                        cpu_percent = proc.get_cpu_percent(interval = None)
                         # add values for all children
                         if pid != super_pid:
                             for p in proc.get_children(recursive = True):
                                 try:
-                                    v = p.get_cpu_percent(interval = None)
-                                    if p.pid in called_cpu_stat_for_childpid:
-                                        data['cpu_percent'] += v
+                                    cpu_percent = p.get_cpu_percent(interval = None)
                                     called_cpu_stat_for_childpid.add(p.pid)
-                                    data['memory_percent'] += p.get_memory_percent()
-                                    memory_info = p.get_memory_info()
-                                    data['rss'] += memory_info.rss
-                                    data['vms'] += memory_info.vms
                                 except psutil._error.NoSuchProcess:
                                     pass
-                        
-                        if not pid in max_data:
-                            max_data[pid] = copy.deepcopy(data)
-                        for k, v in data.items():
-                            max_data[pid][k] = max(max_data[pid][k], v)
-
-                        if len(sum_data) == 0:
-                            for k, v in data.items():
-                                sum_data[k] = 0.0
-
-                        for k, v in data.items():
-                            sum_data[k] += v
-
                     except psutil._error.NoSuchProcess:
                         del procs[pid]
 
-                if not 'sum' in max_data:
-                    max_data['sum'] = copy.deepcopy(sum_data)
-                for k, v in sum_data.items():
-                    max_data['sum'][k] = max(max_data['sum'][k], v)
+                time.sleep(0.1)
 
-                if len(procs) <= 2:
-                    # there's nothing more to watch, write report and exit
-                    # (now there's only the controlling python process and
-                    # the process watcher itself
-                    with open(watcher_report_path, 'w') as f:
-                        report = dict()
-                        report['max'] = max_data
-                        f.write(yaml.dump(report, default_flow_style = False))
+                iterations = 0
+                delay = 0.5
+                max_data = dict()
+                while True:
+                    pid_list = copy.deepcopy(procs.keys())
+                    sum_data = dict()
+                    for pid in pid_list:
+                        proc = procs[pid]
+                        try:
+                            data = dict()
+                            data['cpu_percent'] = proc.get_cpu_percent(interval = None)
+                            data['memory_percent'] = proc.get_memory_percent()
+                            memory_info = proc.get_memory_info()
+                            data['rss'] = memory_info.rss
+                            data['vms'] = memory_info.vms
+                            
+                            # add values for all children
+                            if pid != super_pid:
+                                for p in proc.get_children(recursive = True):
+                                    try:
+                                        v = p.get_cpu_percent(interval = None)
+                                        if p.pid in called_cpu_stat_for_childpid:
+                                            data['cpu_percent'] += v
+                                        called_cpu_stat_for_childpid.add(p.pid)
+                                        data['memory_percent'] += p.get_memory_percent()
+                                        memory_info = p.get_memory_info()
+                                        data['rss'] += memory_info.rss
+                                        data['vms'] += memory_info.vms
+                                    except psutil._error.NoSuchProcess:
+                                        pass
+                            
+                            if not pid in max_data:
+                                max_data[pid] = copy.deepcopy(data)
+                            for k, v in data.items():
+                                max_data[pid][k] = max(max_data[pid][k], v)
 
-                    os._exit(0)
+                            if len(sum_data) == 0:
+                                for k, v in data.items():
+                                    sum_data[k] = 0.0
 
-                iterations += 1
-                if iterations == 10:
-                    delay = 1
-                if iterations == 20:
-                    delay = 2
-                if iterations == 30:
-                    delay = 10
-                time.sleep(delay)
+                            for k, v in data.items():
+                                sum_data[k] += v
+
+                        except psutil._error.NoSuchProcess:
+                            del procs[pid]
+
+                    if not 'sum' in max_data:
+                        max_data['sum'] = copy.deepcopy(sum_data)
+                    for k, v in sum_data.items():
+                        max_data['sum'][k] = max(max_data['sum'][k], v)
+
+                    if len(procs) <= 2:
+                        # there's nothing more to watch, write report and exit
+                        # (now there's only the controlling python process and
+                        # the process watcher itself
+                        with open(watcher_report_path, 'w') as f:
+                            report = dict()
+                            report['max'] = max_data
+                            f.write(yaml.dump(report, default_flow_style = False))
+
+                        os._exit(0)
+
+                    iterations += 1
+                    if iterations == 10:
+                        delay = 1
+                    if iterations == 20:
+                        delay = 2
+                    if iterations == 30:
+                        delay = 10
+                    time.sleep(delay)
+            finally:
+                os._exit(0)
         else:
             return watcher_pid
+
+    @classmethod
+    def kill(cls):
+        '''
+        Kills all user-launched processes. After that, the remaining process will end 
+        and a report will be written.
+        '''
+        ProcessPool.process_pool_is_dead = True
+        if ProcessPool.current_instance is not None:
+            for pid in ProcessPool.current_instance.copy_processes_for_pid.keys():
+                try:
+                    os.kill(pid, signal.SIGTERM)
+                except:
+                    pass
 
     @classmethod
     def kill_all_child_processes(cls):
@@ -571,3 +619,4 @@ class ProcessPool(object):
                 p.terminate()
             except psutil._error.NoSuchProcess:
                 pass
+        

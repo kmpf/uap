@@ -50,6 +50,8 @@ class Pipeline(object):
 
     def __init__(self):
         
+        self.caught_signal = None
+        
         self.git_dirty_diff = None
         
         # now determine the Git hash of the repository
@@ -331,7 +333,7 @@ class Pipeline(object):
         prints a notification to the screen and optionally delivers the
         message on additional channels (as defined by the configuration)
         '''
-        print(message)
+        print(message.split("\n")[0])
         if 'notify' in self.config:
             try:
                 notify = self.config['notify']
