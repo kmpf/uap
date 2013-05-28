@@ -53,24 +53,29 @@ class SamToBam(AbstractStep):
         sorted_bai_path = run_info['info']['out-bai']
         unsorted_bam_path = self.get_temporary_path('sam_to_bam_unsorted', 'output')
         
+        use_unsorted_bam_input = unsorted_bam_path
+        
         # samtools view
 
-        with process_pool.ProcessPool(self) as pool:
-            with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.tool('cat4m'), sam_path]
-                pigz1 = [self.tool('pigz'), '--processes', '2', '-d', '-c']
-                samtools = [self.tool('samtools'), 'view', '-Sbt', self.options['genome'], '-']
-                
-                pipeline.append(cat4m)
-                pipeline.append(pigz1)
-                pipeline.append(samtools, stdout_path = unsorted_bam_path)
-        
-        
+        if sam_path[-7:] == '.sam.gz':
+            with process_pool.ProcessPool(self) as pool:
+                with pool.Pipeline(pool) as pipeline:
+                    cat4m = [self.tool('cat4m'), sam_path]
+                    pigz1 = [self.tool('pigz'), '--processes', '2', '-d', '-c']
+                    samtools = [self.tool('samtools'), 'view', '-Sbt', self.options['genome'], '-']
+                    
+                    pipeline.append(cat4m)
+                    pipeline.append(pigz1)
+                    pipeline.append(samtools, stdout_path = unsorted_bam_path)
+        else:
+            # it must be a BAM file already
+            use_unsorted_bam_input = sam_path
+            
         # samtools sort
 
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.tool('cat4m'), unsorted_bam_path]
+                cat4m = [self.tool('cat4m'), use_unsorted_bam_input]
                 samtools = [self.tool('samtools'), 'sort']
                 if self.options['sort_by_name']:
                     samtools.append('-n')
@@ -85,4 +90,5 @@ class SamToBam(AbstractStep):
             pool.launch([self.tool('samtools'), 'index', sorted_bam_path, '/dev/stdout'],
                 stdout_path = sorted_bai_path, hints = {'reads': [sorted_bam_path]})
 
-        os.unlink(unsorted_bam_path)
+        if os.path.exists(unsorted_bam_path):
+            os.unlink(unsorted_bam_path)
