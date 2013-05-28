@@ -13,12 +13,17 @@ class SamToBam(AbstractStep):
         
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
+        self.add_connection('out/indices')
         
         self.require_tool('cat4m')
         self.require_tool('samtools')
         self.require_tool('pigz')
 
     def setup_runs(self, complete_input_run_info, connection_info):
+        
+        if not 'sort_by_name' in self.options:
+            self.options['sort_by_name'] = False
+            
         # make sure files are available
         for key in ['genome']:
             if not os.path.exists(self.options[key]):
@@ -31,7 +36,8 @@ class SamToBam(AbstractStep):
                 output_run_info[run_id]['output_files'] = {}
                 output_run_info[run_id]['output_files']['alignments']  = {}
                 output_run_info[run_id]['output_files']['alignments'][run_id + '.bam'] = input_run_info['output_files']['alignments'].keys()
-                output_run_info[run_id]['output_files']['alignments'][run_id + '.bam.bai'] = input_run_info['output_files']['alignments'].keys()
+                output_run_info[run_id]['output_files']['indices']  = {}
+                output_run_info[run_id]['output_files']['indices'][run_id + '.bam.bai'] = input_run_info['output_files']['alignments'].keys()
                 output_run_info[run_id]['info'] = {}
                 if len(input_run_info['output_files']['alignments'].keys()) != 1:
                     raise StandardError("Expected exactly one alignments file.")
@@ -65,7 +71,10 @@ class SamToBam(AbstractStep):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
                 cat4m = [self.tool('cat4m'), unsorted_bam_path]
-                samtools = [self.tool('samtools'), 'sort', '-', sorted_bam_path[:-4]]
+                samtools = [self.tool('samtools'), 'sort']
+                if self.options['sort_by_name']:
+                    samtools.append('-n')
+                samtools.extend(['-', sorted_bam_path[:-4]])
                 
                 pipeline.append(cat4m)
                 pipeline.append(samtools, hints = {'writes': [sorted_bam_path]})
