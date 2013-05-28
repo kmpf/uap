@@ -303,16 +303,14 @@ class Pipeline(object):
             if info['path'].__class__ == list:
                 command = copy.deepcopy(info['path'])
             if 'get_version' in info:
-                if info['get_version'] is None:
-                    self.tool_versions[tool_id] = {
-                        '(not applicable)'
-                    }
-                    continue
                 command.append(info['get_version'])
             exit_code = None
             try:
-                proc = subprocess.Popen(command, stdout = subprocess.PIPE,
-                    stderr = subprocess.PIPE, close_fds = True)
+                proc = subprocess.Popen(command, 
+                                        stdin = subprocess.PIPE, 
+                                        stdout = subprocess.PIPE,
+                                        stderr = subprocess.PIPE, close_fds = True)
+                proc.stdin.close()
             except:
                 raise ConfigurationException("Tool not found: %s" % info['path'])
             proc.wait()
