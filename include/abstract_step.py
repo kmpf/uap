@@ -4,7 +4,6 @@ sys.path.append('./include/sources')
 import copy
 import datetime
 import fscache
-import hashlib
 import inspect
 import json
 import misc
@@ -207,7 +206,7 @@ class AbstractStep(object):
         for k, v in self.options.items():
             if k[0] != '_':
                 options_without_dash_prefix[k] = v
-        return hashlib.sha1(json.dumps(options_without_dash_prefix, sort_keys=True)).hexdigest()[0:4]
+        return misc.str_to_sha1(json.dumps(options_without_dash_prefix, sort_keys=True))[0:4]
 
     def get_step_name(self):
         return self._step_name
@@ -433,6 +432,9 @@ class AbstractStep(object):
         executing_ping_info['host'] = socket.gethostname()
         executing_ping_info['pid'] = os.getpid()
         executing_ping_info['cwd'] = os.getcwd()
+        executing_ping_info['user'] = os.getlogin()
+        executing_ping_info['temp_directory'] = self._temp_directory
+        
         with open(executing_ping_path, 'w') as f:
             f.write(yaml.dump(executing_ping_info, default_flow_style = False))
             
@@ -443,8 +445,9 @@ class AbstractStep(object):
                 signal.signal(signal.SIGINT, signal.SIG_IGN)
                 while True:
                     time.sleep(AbstractStep.PING_RENEW)
-                    if os.path.exists(executing_ping_path):
-                        os.utime(executing_ping_path, None)
+                    # if the executing ping file is gone and the touching operation
+                    # fails, then SO BE IT!
+                    os.utime(executing_ping_path, None)
             finally:
                 os._exit(0)
             
@@ -466,16 +469,17 @@ class AbstractStep(object):
             except OSError:
                 # if the ping process was already killed, it's gone anyway
                 pass
-            # remove the run ping file
+            # don't remove the ping file, rename it so we can inspect it later
+            ping_file_suffix = misc.str_to_sha1_b62(self._temp_directory)[:6]
             if os.path.exists(executing_ping_path):
                 try:
-                    os.unlink(executing_ping_path)
+                    os.rename(executing_ping_path, executing_ping_path + '.' + ping_file_suffix)
                 except OSError:
                     pass
             # remove the queued ping file
             if os.path.exists(queued_ping_path):
                 try:
-                    os.unlink(queued_ping_path)
+                    os.rename(queued_ping_path, queued_ping_path + '.' + ping_file_suffix)
                 except OSError:
                     pass
                 
@@ -640,7 +644,7 @@ class AbstractStep(object):
             log['signal'] = self._pipeline.caught_signal
 
         annotation_yaml = yaml.dump(log, default_flow_style = False)
-        annotation_path = os.path.join(path, ".%s-annotation-%s.yaml" % (run_id, hashlib.sha1(annotation_yaml).hexdigest()[0:8]))
+        annotation_path = os.path.join(path, ".%s-annotation-%s.yaml" % (run_id, misc.str_to_sha1_b62(annotation_yaml)[:6]))
         
         # overwrite the annotation if it already exists
         with open(annotation_path, 'w') as f:
@@ -758,7 +762,7 @@ class AbstractStep(object):
         
         def pid_hash(pid, suffix = ''):
             hashtag = "%s/%s/%d/%s" % (log['step']['name'], log['run']['run_id'], pid, suffix)
-            return hashlib.sha1(hashtag).hexdigest()
+            return misc.str_to_sha1(hashtag)
         
         def file_hash(path):
             if 'real_path' in log['step']['known_paths'][path]:

@@ -72,6 +72,22 @@ def natsorted(l):
 def str_to_sha1(s):
     return hashlib.sha1(s).hexdigest()
 
+def str_to_sha1_b62(s):
+    digest = hashlib.sha1(s).digest()
+    number = 0
+    for c in digest:
+        number <<= 8
+        number += ord(c)
+    result = ''
+    alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    base = len(alphabet)
+    while number > 0:
+        digit = number % base
+        result += alphabet[digit]
+        number //= base
+    return result
+        
+    
 def bytes_to_str(num):
     for _, x in enumerate(['bytes','k','M','G']):
         if num < 1024.0:
