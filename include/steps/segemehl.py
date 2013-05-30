@@ -11,7 +11,7 @@ class Segemehl(AbstractStep):
     def __init__(self, pipeline):
         super(Segemehl, self).__init__(pipeline)
 
-        self.set_cores(6)
+        self.set_cores(12)
         
         self.add_connection('in/reads')
         self.add_connection('out/alignments')
