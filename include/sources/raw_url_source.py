@@ -20,7 +20,6 @@ class RawUrlSource(AbstractStep):
         if not 'sha1' in self.options:
             raise StandardError("missing 'sha1' key in raw_url_source")
         
-        
         path = os.path.basename(urlparse.urlparse(self.options['url']).path)
         output_run_info['download'] = {}
         output_run_info['download']['output_files'] = {}
@@ -32,7 +31,6 @@ class RawUrlSource(AbstractStep):
     def execute(self, run_id, run_info):
         with process_pool.ProcessPool(self) as pool:
             curl = [self.tool('curl'), self.options['url']]
-            
             pool.launch(curl, stdout_path = run_info['output_files']['raw'].keys()[0])
             
         # TODO: verify checksum after process pool has finished
