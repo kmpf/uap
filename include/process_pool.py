@@ -26,11 +26,16 @@ class TimeoutException(Exception):
 def timeout_handler(signum, frame):
     raise TimeoutException()
 
+def restore_sigpipe_handler():
+    # http://www.chiark.greenend.org.uk/ucgi/~cjwatson/blosxom/2009-07-02-python-sigpipe.html
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+    os.setsid()
+    
 class ProcessPool(object):
 
     TAIL_LENGTH = 1024
     COPY_BLOCK_SIZE = 4194304
-    SIGTERM_TIMEOUT = 5
+    SIGTERM_TIMEOUT = 10
     
     process_watcher_pid = None
 
@@ -226,7 +231,8 @@ class ProcessPool(object):
             stdin = use_stdin,
             stdout = subprocess.PIPE,
             stderr = subprocess.PIPE,
-            preexec_fn = os.setsid
+            preexec_fn = restore_sigpipe_handler,
+            close_fds = True
         )
         pid = proc.pid
         self.popen_procs[pid] = proc
@@ -273,8 +279,29 @@ class ProcessPool(object):
     def _do_launch_copy_process(self, fin, fout_path, report_path, parent_pid, which, pipe):
         pid = os.fork()
         if pid == 0:
+            
+            def write_report_and_exit():
+                try:
+                    # write report
+                    with open(report_path, 'w') as freport:
+                        #sys.stderr.write("[%d] writing report...\n" % os.getpid())
+                        report = dict()
+                        report['sha1'] = checksum.hexdigest()
+                        report['tail'] = tail
+                        report['length'] = length
+                        report['lines'] = newline_count
+                        freport.write(yaml.dump(report))
+                except:
+                    pass
+                
+                os._exit(0)
+                
+            def sigpipe_handler(signum, frame):
+                write_report_and_exit()
+            
             signal.signal(signal.SIGTERM, signal.SIG_DFL)
             signal.signal(signal.SIGINT, signal.SIG_DFL)
+            signal.signal(signal.SIGPIPE, sigpipe_handler)
             os.setsid()
             if pipe is not None:
                 os.close(pipe[0])
@@ -288,9 +315,12 @@ class ProcessPool(object):
             newline_count = 0
             
             while True:
+                #sys.stderr.write("[%d] reading from fin\n" % os.getpid())
                 block = fin.read(ProcessPool.COPY_BLOCK_SIZE)
+                #sys.stderr.write("[%d] actually read %d bytes from fin\n" % (os.getpid(), len(block)))
                 if len(block) == 0:
-                    # fin has been closed, let's call it a day
+                    # fin reports EOF, let's call it a day
+                    #sys.stderr.write("[%d] fin is at EOF\n" % os.getpid())
                     break
                     
                 # update checksum
@@ -311,32 +341,36 @@ class ProcessPool(object):
                 
                 # write block to output file
                 if fdout is not None:
+                    #sys.stderr.write("[%d] writing %d bytes to fdout\n" % (os.getpid(), len(block)))
                     bytes_written = os.write(fdout, block)
+                    #sys.stderr.write("[%d] actually wrote %d bytes to fdout\n" % (os.getpid(), bytes_written))
                     if bytes_written != len(block):
-                        sys.stderr.write("Could not write to fdout.\n")
+                        #sys.stderr.write("Could not write to fdout.\n")
                         os._exit(1)
                     
                 # write block to pipe
                 if pipe is not None:
+                    #sys.stderr.write("[%d] writing %d bytes to pipe[1]\n" % (os.getpid(), len(block)))
                     bytes_written = os.write(pipe[1], block)
+                    #sys.stderr.write("[%d] actually wrote %d bytes to pipe[1]\n" % (os.getpid(), bytes_written))
                     if bytes_written != len(block):
-                        sys.stderr.write("Could not write to pipe.\n")
+                        #sys.stderr.write("Could not write to pipe.\n")
                         os._exit(2)
                     
             # we're finished, close everything
+            #sys.stderr.write("[%d] closing fin...\n" % os.getpid())
+            fin.close()
+            #sys.stderr.write("[%d] done closing fin...\n" % os.getpid())
             if fdout is not None:
+                #sys.stderr.write("[%d] closing fdout...\n" % os.getpid())
                 os.close(fdout)
+                #sys.stderr.write("[%d] done closing fdout...\n" % os.getpid())
             if pipe is not None:
+                #sys.stderr.write("[%d] closing pipe[1]...\n" % os.getpid())
                 os.close(pipe[1])
+                #sys.stderr.write("[%d] done closing pipe[1]...\n" % os.getpid())
 
-            # write report
-            with open(report_path, 'w') as freport:
-                report = dict()
-                report['sha1'] = checksum.hexdigest()
-                report['tail'] = tail
-                report['length'] = length
-                report['lines'] = newline_count
-                freport.write(yaml.dump(report))
+            write_report_and_exit()
                 
             os._exit(0)
         else:
@@ -411,22 +445,22 @@ class ProcessPool(object):
                             
                     # now kill it's preceding process, if this is from a pipeline
                     if 'use_stdin_of' in self.proc_details[pid]:
-                        kpid = self.proc_details[pid]['use_stdin_of']
-                        pidlist = [kpid]
-                        if kpid in self.copy_processes_for_pid:
-                            pidlist.extend(self.copy_processes_for_pid[kpid])
+                        pidlist = list()
+                        pidlist.append(self.copy_processes_for_pid[self.proc_details[pid]['use_stdin_of']][0])
+                        pidlist.append(self.copy_processes_for_pid[self.proc_details[pid]['use_stdin_of']][1])
+                        pidlist.append(self.proc_details[pid]['use_stdin_of'])
                         for kpid in pidlist:
-                            self.log("Now killing %d, the predecessor (or related copy process) of %d." % (kpid, pid))
+                            self.log("Now killing %d, the predecessor of %d." % (kpid, pid))
                             self.ok_to_fail.add(kpid)
                             try:
-                                os.kill(kpid, signal.SIGTERM)
+                                os.kill(kpid, signal.SIGPIPE)
                             except OSError, e:
                                 if e.errno == errno.ESRCH:
-                                    # no such process
+                                    self.log("Couldn't kill %d: no such process." % kpid)
                                     pass
                                 else:
                                     raise
-                            
+                                
                     if pid in self.copy_process_reports:
                         report_path = self.copy_process_reports[pid]
                         if os.path.exists(report_path):
@@ -599,6 +633,9 @@ class ProcessPool(object):
         and a report will be written.
         '''
         ProcessPool.process_pool_is_dead = True
+        
+        signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(ProcessPool.SIGTERM_TIMEOUT)
         if ProcessPool.current_instance is not None:
             for pid in ProcessPool.current_instance.copy_processes_for_pid.keys():
                 try:
