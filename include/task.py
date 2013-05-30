@@ -16,6 +16,12 @@ class Task(object):
     def __str__(self):
         return '%s/%s' % (self.step.get_step_name(), self.run_id)
 
+    def get_task_state_basic(self):
+        '''
+        Proxy method for step.get_run_state().
+        '''
+        return self.step.get_run_state_basic(self.run_id)
+
     def get_task_state(self):
         '''
         Proxy method for step.get_run_state().

@@ -223,7 +223,7 @@ class AbstractStep(object):
             if not os.path.exists(path):
                 return path
 
-    def get_run_state(self, run_id):
+    def get_run_state_basic(self, run_id):
         
         def volatile_path_good(volatile_path, recurse = True):
             '''
@@ -367,17 +367,27 @@ class AbstractStep(object):
         if max_level == 0:
             return self._pipeline.states.FINISHED
         elif max_level == 1:
-            executing_ping_path = self.get_executing_ping_path_for_run_id(run_id)
-            if AbstractStep.fsc.exists(executing_ping_path):
+            return self._pipeline.states.READY
+        else:
+            return self._pipeline.states.WAITING
+
+    def get_run_state(self, run_id):
+        run_state = self.get_run_state_basic(run_id)
+        if run_state == self._pipeline.states.READY:
+            if AbstractStep.fsc.exists(self.get_executing_ping_path_for_run_id(run_id)):
+                # here, we just check whether the executing ping file exists,
+                # it doesn't matter whether it's been stale for a year
+                # (the user will get notified that there are stale ping files
+                # and can fix it with ./fix-problems.py, it's probably better
+                # to fix this explicitly
                 return self._pipeline.states.EXECUTING
             if AbstractStep.fsc.exists(self.get_queued_ping_path_for_run_id(run_id)):
                 return self._pipeline.states.QUEUED
-            return self._pipeline.states.READY
-        else:
+        elif run_state == self._pipeline.states.WAITING:
             if AbstractStep.fsc.exists(self.get_queued_ping_path_for_run_id(run_id)):
                 return self._pipeline.states.QUEUED
-            return self._pipeline.states.WAITING
-
+        return run_state
+        
     def run(self, run_id):
         # create the output directory if it doesn't exist yet
         if not os.path.isdir(self.get_output_directory()):
