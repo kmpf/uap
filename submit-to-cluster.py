@@ -181,6 +181,7 @@ def main():
         if state == p.states.READY:
             submit_task(task)
         if state == p.states.WAITING:
+            skip_this = False
             parent_job_ids = list()
             for parent_task in task.get_parent_tasks():
                 parent_state = parent_task.get_task_state()
@@ -196,12 +197,14 @@ def main():
                             (parent_task, parent_queued_ping_path))
                         raise
                 elif parent_state in [p.states.READY, p.states.WAITING]:
-                    raise StandardError("Cannot submit %s because its "
+                    skip_this = True
+                    print("Cannot submit %s because its "
                         "parent %s is %s when it should be queued, running, "
                         "or finished and the task selection as defined by "
                         "your command-line arguments do not request it to "
                         "submitted." % (task, parent_task, parent_state.lower()))
-            submit_task(task, parent_job_ids)
+            if not skip_this:
+                submit_task(task, parent_job_ids)
 
 if __name__ == '__main__':
     main()
