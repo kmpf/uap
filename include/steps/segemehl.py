@@ -80,7 +80,7 @@ class Segemehl(AbstractStep):
                     '-p', p,
                     '-u', fifo_path_unmapped,
                     '-H', '1',
-                    '-t', '5',
+                    '-t', '12',
                     '-s', '-S',
                     '-D', '0',
                     '-o', '/dev/stdout'
