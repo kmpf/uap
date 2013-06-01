@@ -6,3 +6,6 @@
 virtualenv python_env
 ./python_env/bin/pip install pyyaml numpy biopython psutil
 gcc -o tools/cat4m tools/cat4m.c
+git submodule update --init
+cd tools/pigz4m; make; cd ../..
+
