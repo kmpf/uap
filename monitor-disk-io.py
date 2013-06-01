@@ -113,7 +113,10 @@ def handle_line(pid, line):
                 fd = m.group(1)
             size = retval
             if fd and size:
-                sizek = int(size) / 1024
+                try:
+                    sizek = int(size) / 1024
+                except ValueError:
+                    return
                 path = '[unknown]'
                 try:
                     path = path_for_pid_and_fd[pid][fd]
