@@ -24,6 +24,7 @@ class TopHat2(AbstractStep):
         
         self.require_tool('cat4m')
         self.require_tool('pigz')
+        self.require_tool('pigz4m')
         self.require_tool('bowtie2')
         self.require_tool('tophat2')
         
@@ -86,6 +87,7 @@ class TopHat2(AbstractStep):
                 self.tool('tophat2'),
                 '--library-type', self.options['library_type'],
                 '--output-dir', tophat_out_path,
+                '--zpacker', self.tool('pigz4m'),
                 '-p', '6', self.options['index'], q, p
             ]
 
