@@ -215,10 +215,10 @@ class AbstractStep(object):
         return os.path.join(self._pipeline.config['destination_path'], 
             '%s-%s' % (self.get_step_name(), self.get_options_hashtag()))
 
-    def get_temp_output_directory(self):
+    def get_temp_output_directory(self, run_id):
         while True:
             token = ''.join(random.choice(string.ascii_lowercase + string.digits) for x in range(8))
-            path = os.path.join(self._pipeline.config['destination_path'], 'temp', 'temp-%s-%s' % (str(self), token))
+            path = os.path.join(self._pipeline.config['destination_path'], 'temp', 'temp-%s-%s-%s' % (str(self), run_id, token))
             if not os.path.exists(path):
                 return path
 
@@ -401,7 +401,7 @@ class AbstractStep(object):
         queued_ping_path = self.get_queued_ping_path_for_run_id(run_id)
         
         # create a temporary directory for the output files
-        temp_directory = self.get_temp_output_directory()
+        temp_directory = self.get_temp_output_directory(run_id)
         self._temp_directory = temp_directory
         os.makedirs(temp_directory)
 
