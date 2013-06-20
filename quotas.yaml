@@ -1,8 +1,0 @@
-"frontend[12]":
-    default: 80
-    segemehl: 5
-    cutadapt: 1000
-    fix_cutadapt: 1000
-    sam_to_bam: 1000
-    tophat2: 40
-    cufflinks: 40
