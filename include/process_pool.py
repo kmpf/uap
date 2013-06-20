@@ -299,8 +299,8 @@ class ProcessPool(object):
             def sigpipe_handler(signum, frame):
                 write_report_and_exit()
             
-            signal.signal(signal.SIGTERM, signal.SIG_DFL)
-            signal.signal(signal.SIGINT, signal.SIG_DFL)
+            signal.signal(signal.SIGTERM, sigpipe_handler)
+            signal.signal(signal.SIGINT, sigpipe_handler)
             signal.signal(signal.SIGPIPE, sigpipe_handler)
             os.setsid()
             if pipe is not None:
