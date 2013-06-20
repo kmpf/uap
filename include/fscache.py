@@ -1,4 +1,5 @@
 import os
+import yaml
 
 class FSCache:
     '''
@@ -23,6 +24,17 @@ class FSCache:
     
     def __init__(self):
         self.cache = dict()
+        
+    def load_yaml_from_file(self, path):
+        if not 'load_yaml_from_file' in self.cache:
+            self.cache['load_yaml_from_file'] = dict()
+            
+        if path in self.cache['load_yaml_from_file']:
+            return self.cache['load_yaml_from_file'][path]
+        
+        data = yaml.load(open(path, 'r'))
+        self.cache['load_yaml_from_file'][path] = data
+        return data
         
     def __getattr__(self, name):
         

@@ -46,6 +46,9 @@ This leaves you with:
   These annotations include detailed information for every output file,
   including which steps have been executed and the Git SHA1 hash of
   the pipeline repository at the time the data processing took place.
+  In many cases, these annotations also include information about all
+  inter-process streams and output files, including SHA1 checksums, file 
+  sizes, and line counts.
 
 Core aspects
 ------------
@@ -307,7 +310,7 @@ At any time, each task is in one of the following states:
 
 Here is an example output::
 
-    $ ./status.py --even-if-dirty
+    $ ./status.py
     Waiting tasks
     -------------
     [w] cufflinks/Sample_COPD_2023
@@ -323,6 +326,35 @@ Here is an example output::
     [f] fix_cutadapt/Sample_COPD_2023
 
     tasks: 5 total, 1 waiting, 1 ready, 3 finished
+    
+To get a more concise summary, specify ``--summarize``::
+
+    $ ./status.py --summarize
+    Waiting tasks
+    -------------
+    [w]   1 cufflinks
+
+    Ready tasks
+    -----------
+    [r]   1 tophat2
+
+    Finished tasks
+    --------------
+    [f]   2 cutadapt
+    [f]   1 fix_cutadapt
+
+    tasks: 5 total, 1 waiting, 1 ready, 3 finished
+    
+...or print a fancy ASCII art graph with ``--graph``::
+
+    $ ./status.py --graph
+    samples (1 finished)
+    └─cutadapt (2 finished)
+      └─fix_cutadapt (1 finished)
+        └─tophat2 (1 ready)
+          └─cufflinks (1 waiting)
+
+
 
 ..
     Here is another example output with ``--test-run`` specified on the command 
@@ -351,10 +383,10 @@ task ID on the command line::
     output_files:
       log:
         /home/michael/Desktop/rnaseq-pipeline/out/cutadapt-7708/Sample_COPD_2023-cutadapt-R1-log.txt:
-        - /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1-head.fastq.gz
+        - /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1.fastq.gz
       reads:
         /home/michael/Desktop/rnaseq-pipeline/out/cutadapt-7708/Sample_COPD_2023-cutadapt-R1.fastq.gz:
-        - /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1-head.fastq.gz
+        - /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1.fastq.gz
     state: FINISHED
 
 This data structure is called the "run info" of a certain run and it 
@@ -382,12 +414,12 @@ to see its details::
       index: ACAGTG
       paired_end: true
       read_number:
-        Sample_COPD_2023_R1-head.fastq.gz: R1
-        Sample_COPD_2023_R2-head.fastq.gz: R2
+        Sample_COPD_2023_R1.fastq.gz: R1
+        Sample_COPD_2023_R2.fastq.gz: R2
     output_files:
       reads:
-        /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1-head.fastq.gz: []
-        /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R2-head.fastq.gz: []
+        /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1.fastq.gz: []
+        /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R2.fastq.gz: []
       state: FINISHED
 
 
@@ -447,7 +479,7 @@ hostname of ``frontend1`` or ``frontend2`` (the name is a regular expression).
 A quota of 5 means that no more than 5 jobs of one kind will be run in 
 parallel.
 Different quotas can be defined for each step: because ``cutadapt`` is 
-highly IO-efficient, it has a higher quota.
+highly I/O-efficient, it has a higher quota.
 
 Annotations
 ===========
@@ -655,6 +687,10 @@ Miscellaneous input files:
     depends on.
     
 Make ``run-locally.py`` exit gracefully on receiving SIGTERM.
+
+Show statistics for executing tasks:
+    When showing currently executing tasks, show how long this job has already been
+    running and how it relates to jobs that have already finished.
 
 Indices and tables
 ==================

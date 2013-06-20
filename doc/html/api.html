@@ -53,211 +53,23 @@
 <h1>API documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="pipeline-specific-modules">
 <h2>Pipeline-specific modules<a class="headerlink" href="#pipeline-specific-modules" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="module-abstract_step">
-<span id="abstract-step"></span><h3>abstract_step<a class="headerlink" href="#module-abstract_step" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="abstract_step.AbstractStep">
-<em class="property">class </em><tt class="descclassname">abstract_step.</tt><tt class="descname">AbstractStep</tt><big>(</big><em>pipeline</em><big>)</big><a class="reference internal" href="_modules/abstract_step.html#AbstractStep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_step.AbstractStep" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="abstract_step.AbstractStep.dependencies">
-<tt class="descname">dependencies</tt><em class="property"> = None</em><a class="headerlink" href="#abstract_step.AbstractStep.dependencies" title="Permalink to this definition">¶</a></dt>
-<dd><p>All steps this step depends on.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="abstract_step.AbstractStep.execute">
-<tt class="descname">execute</tt><big>(</big><em>run_id</em>, <em>run_info</em><big>)</big><a class="reference internal" href="_modules/abstract_step.html#AbstractStep.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_step.AbstractStep.execute" title="Permalink to this definition">¶</a></dt>
-<dd><p>Raise NotImplementedError because every subclass must override this method.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="abstract_step.AbstractStep.get_input_run_info">
-<tt class="descname">get_input_run_info</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/abstract_step.html#AbstractStep.get_input_run_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_step.AbstractStep.get_input_run_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a dict with run info for each parent.</p>
-</dd></dl>
-
-<dl class="classmethod">
-<dt id="abstract_step.AbstractStep.get_step_class_for_key">
-<em class="property">classmethod </em><tt class="descname">get_step_class_for_key</tt><big>(</big><em>key</em><big>)</big><a class="reference internal" href="_modules/abstract_step.html#AbstractStep.get_step_class_for_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_step.AbstractStep.get_step_class_for_key" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a step (or source step) class for a given key which corresponds
-to the name of the module the class is defined in. Pass &#8216;cutadapt&#8217; and
-you will get the cutadapt.Cutadapt class which you may then instantiate.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="abstract_step.AbstractStep.get_temporary_fifo">
-<tt class="descname">get_temporary_fifo</tt><big>(</big><em>prefix=''</em>, <em>designation=None</em><big>)</big><a class="reference internal" href="_modules/abstract_step.html#AbstractStep.get_temporary_fifo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_step.AbstractStep.get_temporary_fifo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a temporary FIFO and return its path.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="abstract_step.AbstractStep.get_temporary_path">
-<tt class="descname">get_temporary_path</tt><big>(</big><em>prefix=''</em>, <em>designation=None</em><big>)</big><a class="reference internal" href="_modules/abstract_step.html#AbstractStep.get_temporary_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_step.AbstractStep.get_temporary_path" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a temporary path with the prefix specified. 
-The returned path will be in the temporary directory of the step 
-and will not exist yet.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="abstract_step.AbstractStep.options">
-<tt class="descname">options</tt><em class="property"> = None</em><a class="headerlink" href="#abstract_step.AbstractStep.options" title="Permalink to this definition">¶</a></dt>
-<dd><p>Options as specified in the configuration.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="abstract_step.AbstractStep.setup_runs">
-<tt class="descname">setup_runs</tt><big>(</big><em>input_run_info</em>, <em>connection_info={}</em><big>)</big><a class="reference internal" href="_modules/abstract_step.html#AbstractStep.setup_runs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_step.AbstractStep.setup_runs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Raise NotImplementedError because every subclass must override this method.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="abstract_step.AbstractStep.tool">
-<tt class="descname">tool</tt><big>(</big><em>key</em><big>)</big><a class="reference internal" href="_modules/abstract_step.html#AbstractStep.tool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_step.AbstractStep.tool" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return full path to a configured tool.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="abstract_step.AbstractSourceStep">
-<em class="property">class </em><tt class="descclassname">abstract_step.</tt><tt class="descname">AbstractSourceStep</tt><big>(</big><em>pipeline</em><big>)</big><a class="reference internal" href="_modules/abstract_step.html#AbstractSourceStep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_step.AbstractSourceStep" title="Permalink to this definition">¶</a></dt>
-<dd><p>A subclass all source steps inherit from and which distinguishes source
-steps from all real processing steps because they do not yield any tasks, 
-because their &#8220;output files&#8221; are in fact files which are already there.</p>
-<p>Note that the name might be a bit misleading because this class only
-applies to source steps which &#8216;serve&#8217; existing files. A step which has 
-no input but produces input data for other steps and actually has to do 
-something for it, on the other hand, would be a normal AbstractStep
-subclass because it produces tasks.</p>
-</dd></dl>
-
+<div class="section" id="abstract-step">
+<h3>abstract_step<a class="headerlink" href="#abstract-step" title="Permalink to this headline">¶</a></h3>
 </div>
-<div class="section" id="module-pipeline">
-<span id="pipeline"></span><h3>pipeline<a class="headerlink" href="#module-pipeline" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="pipeline.Pipeline">
-<em class="property">class </em><tt class="descclassname">pipeline.</tt><tt class="descname">Pipeline</tt><a class="reference internal" href="_modules/pipeline.html#Pipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipeline.Pipeline" title="Permalink to this definition">¶</a></dt>
-<dd><p>The Pipeline class represents the entire processing pipeline which is defined and 
-configured via the configuration file config.yaml.</p>
-<p>Individual steps may be defined in a tree, and their combination with samples
-as generated by one or more source leads to an array of tasks.</p>
-<dl class="method">
-<dt id="pipeline.Pipeline.check_tools">
-<tt class="descname">check_tools</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pipeline.html#Pipeline.check_tools"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipeline.Pipeline.check_tools" title="Permalink to this definition">¶</a></dt>
-<dd><p>checks whether all tools references by the configuration are available 
-and records their versions as determined by <tt class="docutils literal"><span class="pre">[tool]</span> <span class="pre">--version</span></tt> etc.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="pipeline.Pipeline.file_dependencies">
-<tt class="descname">file_dependencies</tt><em class="property"> = None</em><a class="headerlink" href="#pipeline.Pipeline.file_dependencies" title="Permalink to this definition">¶</a></dt>
-<dd><p>This dict stores file dependencies within this step, but regardless
-of step, output file tag or run ID. This dict has, for all output
-files generated by the pipeline, a set of input files that output
-file depends on.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pipeline.Pipeline.has_unfinished_tasks">
-<tt class="descname">has_unfinished_tasks</tt><big>(</big><em>task_list</em><big>)</big><a class="reference internal" href="_modules/pipeline.html#Pipeline.has_unfinished_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipeline.Pipeline.has_unfinished_tasks" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns True if there is at least one task in task_list which is not finished yet</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pipeline.Pipeline.notify">
-<tt class="descname">notify</tt><big>(</big><em>message</em>, <em>attachment=None</em><big>)</big><a class="reference internal" href="_modules/pipeline.html#Pipeline.notify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipeline.Pipeline.notify" title="Permalink to this definition">¶</a></dt>
-<dd><p>prints a notification to the screen and optionally delivers the
-message on additional channels (as defined by the configuration)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pipeline.Pipeline.pick_next_ready_task">
-<tt class="descname">pick_next_ready_task</tt><big>(</big><em>task_list</em><big>)</big><a class="reference internal" href="_modules/pipeline.html#Pipeline.pick_next_ready_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipeline.Pipeline.pick_next_ready_task" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns the next ready task from task_list but does not remove it from the list</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pipeline.Pipeline.print_tasks">
-<tt class="descname">print_tasks</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pipeline.html#Pipeline.print_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipeline.Pipeline.print_tasks" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>prints a summary of all tasks, indicating whether each taks is</dt>
-<dd><ul class="first last simple">
-<li><tt class="docutils literal"><span class="pre">[r]eady</span></tt></li>
-<li><tt class="docutils literal"><span class="pre">[w]aiting</span></tt></li>
-<li><tt class="docutils literal"><span class="pre">[f]inished</span></tt></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
+<div class="section" id="pipeline">
+<h3>pipeline<a class="headerlink" href="#pipeline" title="Permalink to this headline">¶</a></h3>
 </div>
-<div class="section" id="module-task">
-<span id="task"></span><h3>task<a class="headerlink" href="#module-task" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="task.Task">
-<em class="property">class </em><tt class="descclassname">task.</tt><tt class="descname">Task</tt><big>(</big><em>pipeline</em>, <em>step</em>, <em>run_id</em>, <em>run_index</em><big>)</big><a class="reference internal" href="_modules/task.html#Task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#task.Task" title="Permalink to this definition">¶</a></dt>
-<dd><p>A task represents a certain run of a certain step.</p>
-<dl class="method">
-<dt id="task.Task.get_task_state">
-<tt class="descname">get_task_state</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/task.html#Task.get_task_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#task.Task.get_task_state" title="Permalink to this definition">¶</a></dt>
-<dd><p>Proxy method for step.get_run_state().</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="task.Task.input_files">
-<tt class="descname">input_files</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/task.html#Task.input_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#task.Task.input_files" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a list of input files required by this task.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="task.Task.output_files">
-<tt class="descname">output_files</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/task.html#Task.output_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#task.Task.output_files" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a list of output files produced by this task.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="task.Task.run">
-<tt class="descname">run</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/task.html#Task.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#task.Task.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run the task. Skip if it&#8217;s already finished, otherwise raise 
-StandardError if it&#8217;s not ready.</p>
-</dd></dl>
-
-</dd></dl>
-
+<div class="section" id="task">
+<h3>task<a class="headerlink" href="#task" title="Permalink to this headline">¶</a></h3>
 </div>
 </div>
 <div class="section" id="miscellaneous-modules">
 <h2>Miscellaneous modules<a class="headerlink" href="#miscellaneous-modules" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="module-process_pool">
-<span id="process-pool"></span><h3>process_pool<a class="headerlink" href="#module-process_pool" title="Permalink to this headline">¶</a></h3>
-<p>This module can be used to launch child processes and wait for them.
-Processes may either run on their own or pipelines can be built with them.</p>
+<div class="section" id="process-pool">
+<h3>process_pool<a class="headerlink" href="#process-pool" title="Permalink to this headline">¶</a></h3>
 </div>
-<div class="section" id="module-fscache">
-<span id="fscache"></span><h3>fscache<a class="headerlink" href="#module-fscache" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="fscache.FSCache">
-<em class="property">class </em><tt class="descclassname">fscache.</tt><tt class="descname">FSCache</tt><a class="reference internal" href="_modules/fscache.html#FSCache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fscache.FSCache" title="Permalink to this definition">¶</a></dt>
-<dd><p>Use this class if you expect to make the same os.path.* calls many
-times during a short time. The first time you call a method with certain 
-arguments, the call is made, but all subsequent calls are served from a 
-cache.</p>
-<p>Usage example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Instantiate a new file system cache.</span>
-<span class="n">fsc</span> <span class="o">=</span> <span class="n">FSCache</span><span class="p">()</span>
-
-<span class="c"># This call will stat the file system.</span>
-<span class="k">print</span><span class="p">(</span><span class="n">fsc</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s">&#39;/home&#39;</span><span class="p">))</span>
-
-<span class="c"># This call will leave the file system alone, the cached result will be returned.</span>
-<span class="k">print</span><span class="p">(</span><span class="n">fsc</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s">&#39;/home&#39;</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>You may call any method which is available in os.path.</p>
-</dd></dl>
-
+<div class="section" id="fscache">
+<h3>fscache<a class="headerlink" href="#fscache" title="Permalink to this headline">¶</a></h3>
 </div>
 <div class="section" id="module-misc">
 <span id="misc"></span><h3>misc<a class="headerlink" href="#module-misc" title="Permalink to this headline">¶</a></h3>
@@ -294,14 +106,14 @@ cache.</p>
   <ul>
 <li><a class="reference internal" href="#">API documentation</a><ul>
 <li><a class="reference internal" href="#pipeline-specific-modules">Pipeline-specific modules</a><ul>
-<li><a class="reference internal" href="#module-abstract_step">abstract_step</a></li>
-<li><a class="reference internal" href="#module-pipeline">pipeline</a></li>
-<li><a class="reference internal" href="#module-task">task</a></li>
+<li><a class="reference internal" href="#abstract-step">abstract_step</a></li>
+<li><a class="reference internal" href="#pipeline">pipeline</a></li>
+<li><a class="reference internal" href="#task">task</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#miscellaneous-modules">Miscellaneous modules</a><ul>
-<li><a class="reference internal" href="#module-process_pool">process_pool</a></li>
-<li><a class="reference internal" href="#module-fscache">fscache</a></li>
+<li><a class="reference internal" href="#process-pool">process_pool</a></li>
+<li><a class="reference internal" href="#fscache">fscache</a></li>
 <li><a class="reference internal" href="#module-misc">misc</a></li>
 </ul>
 </li>

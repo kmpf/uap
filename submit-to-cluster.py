@@ -2,17 +2,48 @@
 
 import sys
 sys.path.append('./include')
+import abstract_step
+import fscache
 import pipeline
+import datetime
 import copy
 import os
 import re
 import subprocess
 import yaml
 
+'''
+By default, this script submits all tasks to a Sun GridEngine cluster via
+qsub. The list of tasks can be narrowed down by specifying a step name
+(in which case all runs of this steps will be considered) or individual
+tasks (step_name/run_id).
+
+At this point, we have a task wish list.
+
+This task wish list is now processed one by one (in topological order):
+
+- determine status of current task
+- if it's finished or running or queued, skip it
+- if it's ready, submit it
+- if it's waiting, there is at least one parent task which is not yet finished
+- determine all parent tasks which are not finished yet, for each parent:
+  - if it's running or queued, determine its job_id from the queued-ping file
+  - if it's ready or waiting, we must skip this task because it should have been 
+    enqueued a couple of iterations ago (this is because a selection has been
+    made and there are unfinished, non-running, unqueued dependencies)
+  - now add all these collected job_ids to the submission via -hold_jid
+'''
+
 def main():
     original_argv = copy.copy(sys.argv)
 
     p = pipeline.Pipeline()
+    
+    use_highmem = False
+    if '--highmem' in sys.argv:
+        print("Passing -l highmem to qsub...")
+        use_highmem = True
+        sys.argv.remove('--highmem')
 
     task_wish_list = None
     if len(sys.argv) > 1:
@@ -21,31 +52,21 @@ def main():
             if '/' in _:
                 task_wish_list.append(_)
             else:
-                for task in p.all_tasks:
+                for task in p.all_tasks_topologically_sorted:
                     if str(task)[0:len(_)] == _:
                         task_wish_list.append(str(task))
 
     tasks_left = []
 
-    # a hash of files which are already there or will be there once submitted jobs
-    # have completed
-    file_hash = {}
+    template = open('qsub-template.sh', 'r').read()
 
-    template = ''
-    with open('qsub-template.sh', 'r') as f:
-        template = f.read()
-
-    for task in p.all_tasks:
-        state = task.get_task_state()
-        if state != p.states.FINISHED:
-            tasks_left.append(task)
-        else:
-            for path in task.output_files():
-                if not path in file_hash:
-                    file_hash[path] = []
-                file_hash[path].append(str(task))
-
-    job_id_for_task = {}
+    for task in p.all_tasks_topologically_sorted:
+        if task_wish_list is not None:
+            if not str(task) in task_wish_list:
+                continue
+        tasks_left.append(task)
+                
+    print("Now attempting to submit %d jobs..." % len(tasks_left))
 
     quotas = dict()
     quotas['default'] = 5
@@ -72,7 +93,7 @@ def main():
     def submit_task(task, dependent_tasks_in = []):
         dependent_tasks = copy.copy(dependent_tasks_in)
 
-        step_name = next_task.step.get_step_name()
+        step_name = task.step.get_step_name()
         if not step_name in quota_jids:
             size = quotas[step_name] if step_name in quotas else quotas['default']
             quota_jids[step_name] = [None for _ in range(size)]
@@ -81,11 +102,6 @@ def main():
         quota_predecessor = quota_jids[step_name][quota_offset[step_name]]
         if quota_predecessor:
             dependent_tasks.append(quota_predecessor)
-
-        for path in task.output_files():
-            if not path in file_hash:
-                file_hash[path] = []
-            file_hash[path].append(str(task))
 
         submit_script = copy.copy(template)
         submit_script = submit_script.replace("#{CORES}", str(task.step._cores))
@@ -104,6 +120,10 @@ def main():
         short_task_id = long_task_id[0:15]
 
         qsub_args = ['qsub', '-N', short_task_id]
+        if use_highmem:
+            qsub_args.append('-l')
+            qsub_args.append('highmem')
+            
         qsub_args.append('-e')
         qsub_args.append(os.path.join(task.step.get_output_directory(), '.' + long_task_id_with_run_id + '.stderr'))
         qsub_args.append('-o')
@@ -122,6 +142,9 @@ def main():
         if task_wish_list:
             if not str(task) in task_wish_list:
                 really_submit_this = False
+        if task.get_task_state() == p.states.EXECUTING:
+            print("Skipping %s because it is already executing." % str(task))
+            really_submit_this = False
         if really_submit_this:
             sys.stdout.write("Submitting task " + str(task) + " with " + str(task.step._cores) + " cores => ")
             process = subprocess.Popen(qsub_args, bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
@@ -131,63 +154,57 @@ def main():
             response = process.stdout.read()
             job_id = re.search('Your job (\d+)', response).group(1)
             if job_id == None or len(job_id) == 0:
-                raise StandardError("Error: We couldn't parse a job id from this:\n" + response)
+                raise StandardError("Error: We couldn't parse a job_id from this:\n" + response)
+            
+            queued_ping_info = dict()
+            queued_ping_info['step'] = str(task.step)
+            queued_ping_info['run_id'] = task.run_id
+            queued_ping_info['job_id'] = job_id
+            queued_ping_info['submit_time'] = datetime.datetime.now()
+            with open(task.step.get_queued_ping_path_for_run_id(task.run_id), 'w') as f:
+                f.write(yaml.dump(queued_ping_info, default_flow_style = False))
 
             quota_jids[step_name][quota_offset[step_name]] = job_id
             quota_offset[step_name] = (quota_offset[step_name] + 1) % len(quota_jids[step_name])
 
-            job_id_for_task[str(task)] = job_id
-
             print("%s (%s)" % (job_id, short_task_id))
             if len(dependent_tasks) > 0:
                 print(" - with dependent tasks: " + ', '.join(dependent_tasks))
-        tasks_left.remove(task)
+                
+            abstract_step.AbstractStep.fsc = fscache.FSCache()
 
-    # first submit all tasks which are ready as per the file system
-    while len(tasks_left) > 0:
-        next_task = None
-        for task in tasks_left:
-            if task.get_task_state() == p.states.READY:
-                next_task = task
-                break
-
-        if next_task == None:
-            break
-
-        submit_task(next_task)
-
-    while len(tasks_left) > 0:
-        next_task = None
-        dependent_tasks = set()
-
-        for task in tasks_left:
-            # see which input files are required by the task and whether they are already in file_hash
-            can_start = True
-            dependent_tasks = set()
-            for path in task.input_files():
-                if path in file_hash:
-                    for t in file_hash[path]:
-                        dependent_tasks.add(t)
-                else:
-                    can_start = False
-                    break
-            if can_start:
-                next_task = task
-                break
-
-        if next_task == None:
-            print("Error: Unable to find next task while there are still tasks left, giving up :(")
-            exit(1)
-
-        jids = []
-        if len(dependent_tasks) > 0:
-            for _ in dependent_tasks:
-                if _ in job_id_for_task:
-                    jids.append(job_id_for_task[_])
-
-        submit_task(next_task, jids)
-
-    print("All tasks submitted successfully.")
+    for task in tasks_left:
+        state = task.get_task_state()
+        if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
+            print("Skipping %s because it is already %s..." % (str(task), state.lower()))
+            continue
+        if state == p.states.READY:
+            submit_task(task)
+        if state == p.states.WAITING:
+            skip_this = False
+            parent_job_ids = list()
+            for parent_task in task.get_parent_tasks():
+                parent_state = parent_task.get_task_state()
+                if parent_state in [p.states.EXECUTING, p.states.QUEUED]:
+                    # determine job_id from YAML queued ping file
+                    parent_job_id = None
+                    parent_queued_ping_path = parent_task.step.get_queued_ping_path_for_run_id(parent_task.run_id)
+                    try:
+                        parent_info = yaml.load(open(parent_queued_ping_path))
+                        parent_job_ids.append(parent_info['job_id'])
+                    except:
+                        print("Couldn't determine job_id of %s while trying to load %s." % 
+                            (parent_task, parent_queued_ping_path))
+                        raise
+                elif parent_state in [p.states.READY, p.states.WAITING]:
+                    skip_this = True
+                    print("Cannot submit %s because its "
+                        "parent %s is %s when it should be queued, running, "
+                        "or finished and the task selection as defined by "
+                        "your command-line arguments do not request it to "
+                        "submitted." % (task, parent_task, parent_state.lower()))
+            if not skip_this:
+                submit_task(task, parent_job_ids)
 
 if __name__ == '__main__':
     main()
