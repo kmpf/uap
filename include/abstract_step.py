@@ -209,7 +209,17 @@ class AbstractStep(object):
         return misc.str_to_sha1(json.dumps(options_without_dash_prefix, sort_keys=True))[0:4]
 
     def get_step_name(self):
+        '''
+        Returns the step name which is initially equal to the step type (== module name)
+        but can be changed via set_name() or from the YAML configuration.
+        '''
         return self._step_name
+
+    def get_step_type(self):
+        '''
+        Returns the original step name (== module name).
+        '''
+        return self.__module__
 
     def get_output_directory(self):
         return os.path.join(self._pipeline.config['destination_path'], 

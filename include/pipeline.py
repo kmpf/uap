@@ -72,7 +72,7 @@ class Pipeline(object):
         # dict of steps, steps are objects with inter-dependencies
         self.steps = dict()
         
-        # topological order of steps
+        # topological order of step names
         self.topological_step_order = list()
         
         self.file_dependencies = dict()
