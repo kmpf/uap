@@ -71,8 +71,13 @@ def main():
                     for y in range(y0, y1):
                         lines[y][x] = "│"
 
-            lines = ["%s%s (%s)" % (''.join(_).replace("─└", "─┴"), step_order[index], p.steps[step_order[index]].get_run_info_str()) for index, _ in enumerate(lines)]
-            for line in lines:
+            for index, _ in enumerate(lines):
+                original_step_name_label = ''
+                step = p.steps[step_order[index]]
+                if step.get_step_name() != step.get_step_type():
+                    original_step_name_label = ' (%s)' % step.get_step_type()
+
+                line = "%s%s%s [%s]" % (''.join(_).replace("─└", "─┴"), step.get_step_name(), original_step_name_label, step.get_run_info_str())
                 print(line)
         else:
             # print all tasks
