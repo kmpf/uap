@@ -31,6 +31,7 @@ class AbstractStep(object):
     PING_TIMEOUT = 300
     PING_RENEW = 30
     VOLATILE_SUFFIX = '.volatile.placeholder.yaml'
+    UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK']
     
     def __init__(self, pipeline):
         
@@ -70,6 +71,7 @@ class AbstractStep(object):
         self._connections = set()
         self._connection_restrictions = {}
         self._tools = dict()
+        self._defined_options = dict()
         
         self.needs_parents = False
         
@@ -101,9 +103,33 @@ class AbstractStep(object):
         self._step_name = step_name
 
     def set_options(self, options):
-        self.options = options
+        self.options = dict()
+        for key, value in options.items():
+            if key[0] == '_':
+                if not key in AbstractStep.UNDERSCORE_OPTIONS:
+                    raise StandardError("Invalid option in %s: %s" % (key, self))
+                self.options[key] = value
+            else:
+                if not key in self._defined_options:
+                    raise StandardError("Unknown option in %s (%s): %s." % (self, self.__module__, key))
+                if type(value) not in self._defined_options[key]['types']:
+                    raise StandardError("Invalid type for option %s - it's %s and should be one of %s." % (key, type(value), self._defined_options[key]['types']))
+                self.options[key] = value
+            
+        for key, info in self._defined_options.items():
+            if key not in self.options:
+                value = info['default']
+                if value == None:
+                    if info['optional'] == False:
+                        raise StandardError("Required option not set in %s: %s." % (self, key))
+                else:
+                    self.options[key] = value
+                
         if not '_volatile' in self.options:
             self.options['_volatile'] = False
+            
+        print(yaml.dump(self._defined_options, default_flow_style = False))
+        print(yaml.dump(self.options, default_flow_style = False ))
 
     def add_dependency(self, parent):
         if not isinstance(parent, AbstractStep):
@@ -1026,6 +1052,33 @@ class AbstractStep(object):
             self._tools[tool] = copy.deepcopy(self._pipeline.config['tools'][tool]['path'])
         else:
             self._tools[tool] = True
+
+    def add_option(self, key, *option_types, **kwargs):
+        if not 'optional' in kwargs:
+            kwargs['optional'] = False
+        for _ in ['default', 'label', 'description', 'group', 'tools']:
+            if not _ in kwargs: 
+                kwargs[_] = None
+
+        if key[0] == '_':
+            raise StandardError("Option key must not start with an underscore: %s." % key)
+        if key in self._defined_options:
+            raise StandardError("Option %s is already defined." % key)
+        if len(option_types) == 0:
+            raise StandardError("No option type specified for option %s." % key)
+        for option_type in option_types:
+            if not  option_type in [int, float, str, bool, list, dict]:
+                raise StandardError("Invalid type for option %s: %s." % (key, option_type))
+        if kwargs['optional'] and (kwargs['default'] != None):
+            if type(kwargs['default']) not in option_types:
+                raise StandardError("Type of default value (%s) does not match any of the declared possible types (%s)." % (type(kwargs['default']), option_types))
+
+        info = dict()
+        info['types'] = option_types
+        for _ in ['optional', 'default', 'label', 'description', 'group', 'tools']:
+            info[_] = kwargs[_]
+
+        self._defined_options[key] = info
         
     def _get_ping_path_for_run_id(self, run_id, key):
         return os.path.join(self.get_output_directory(), '.%s-%s-ping.yaml' % (run_id, key))

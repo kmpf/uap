@@ -14,6 +14,11 @@ class FastqSource(AbstractSourceStep):
         
         self.add_connection('out/reads')
 
+        self.add_option('indices', str, dict, optional = True)
+        self.add_option('pattern', str)
+        self.add_option('group', str)
+        self.add_option('paired_end', bool)
+        
     def setup_runs(self, input_run_info, connection_info):
         regex = re.compile(self.options['group'])
 
@@ -33,7 +38,7 @@ class FastqSource(AbstractSourceStep):
                 output_run_info[sample_id] = { 'output_files': { 'reads': {} }, 'info': { 'paired_end': self.options['paired_end'] } }
             output_run_info[sample_id]['output_files']['reads'][path] = []
 
-        if self.options['indices'].__class__ == str:
+        if type(self.options['indices']) == str:
             # read indices from CSV file or dictionary
             indices_path = self.options['indices']
             reader = csv.DictReader(open(indices_path))

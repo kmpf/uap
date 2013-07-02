@@ -31,6 +31,12 @@ class CuffLinks(AbstractStep):
                 raise StandardError("You specified use_mask but the file wasn't found.")
         
         output_run_info = dict()
+
+        print(yaml.dump(complete_input_run_info, default_flow_style = False))
+        print(yaml.dump(connection_info, default_flow_style = False))
+        exit(1)
+
+
             
         for run_id, info in connection_info['in/alignments']['runs'].items():
             transcripts_path = '%s-transcripts.gtf' % run_id
