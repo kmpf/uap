@@ -48,6 +48,10 @@
           <div class="body">
             
   <h1>Source code for task</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">abstract_step</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+
 <div class="viewcode-block" id="Task"><a class="viewcode-back" href="../api.html#task.Task">[docs]</a><span class="k">class</span> <span class="nc">Task</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A task represents a certain run of a certain step.</span>
@@ -62,6 +66,12 @@
     <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_id</span><span class="p">)</span>
 
+<div class="viewcode-block" id="Task.get_task_state_basic"><a class="viewcode-back" href="../api.html#task.Task.get_task_state_basic">[docs]</a>    <span class="k">def</span> <span class="nf">get_task_state_basic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Proxy method for step.get_run_state().</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">get_run_state_basic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_id</span><span class="p">)</span>
+</div>
 <div class="viewcode-block" id="Task.get_task_state"><a class="viewcode-back" href="../api.html#task.Task.get_task_state">[docs]</a>    <span class="k">def</span> <span class="nf">get_task_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Proxy method for step.get_run_state().</span>
@@ -102,7 +112,63 @@
         <span class="k">for</span> <span class="n">annotation</span><span class="p">,</span> <span class="n">outfiles</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="s">&#39;output_files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">outfiles</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">result</span></div></div>
+        <span class="k">return</span> <span class="n">result</span>
+</div>
+<div class="viewcode-block" id="Task.get_parent_tasks"><a class="viewcode-back" href="../api.html#task.Task.get_parent_tasks">[docs]</a>    <span class="k">def</span> <span class="nf">get_parent_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns a list of parent tasks which this task depends on.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_files</span><span class="p">():</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">task_for_task_id</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">task_id_for_output_file</span><span class="p">[</span><span class="n">path</span><span class="p">]])</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    </div>
+    <span class="k">def</span> <span class="nf">volatilize_if_possible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">srsly</span> <span class="o">=</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s">&#39;_volatile&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">path_a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">output_files_for_task_id</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)]:</span>
+            <span class="k">if</span> <span class="n">abstract_step</span><span class="o">.</span><span class="n">AbstractStep</span><span class="o">.</span><span class="n">fsc</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path_a</span><span class="p">):</span>
+                <span class="c"># now check whether we can volatilize path A</span>
+                <span class="n">path_a_can_be_removed</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="n">path_a_dependent_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">path_a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">file_dependencies_reverse</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">path_b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">file_dependencies_reverse</span><span class="p">[</span><span class="n">path_a</span><span class="p">]:</span>
+                        <span class="n">path_a_dependent_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path_b</span><span class="p">)</span>
+                        <span class="c"># don&#39;t check whether the output file B exists,</span>
+                        <span class="c"># it might also be volatile, rather check whether the</span>
+                        <span class="c"># task which creates B is finished</span>
+                        <span class="n">path_b_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">task_for_task_id</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">task_id_for_output_file</span><span class="p">[</span><span class="n">path_b</span><span class="p">]]</span>
+                        <span class="k">if</span> <span class="n">path_b_task</span><span class="o">.</span><span class="n">get_task_state</span><span class="p">()</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">FINISHED</span><span class="p">:</span>
+                            <span class="n">path_a_can_be_removed</span> <span class="o">=</span> <span class="bp">False</span>
+                            <span class="k">break</span>
+                    
+                <span class="k">if</span> <span class="n">path_a_can_be_removed</span><span class="p">:</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">path_a</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">srsly</span><span class="p">:</span>
+                        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Now volatilizing </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path_a</span><span class="p">)))</span>
+                        <span class="n">info</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+                        <span class="n">info</span><span class="p">[</span><span class="s">&#39;self&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+                        <span class="n">info</span><span class="p">[</span><span class="s">&#39;self&#39;</span><span class="p">][</span><span class="s">&#39;size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">abstract_step</span><span class="o">.</span><span class="n">AbstractStep</span><span class="o">.</span><span class="n">fsc</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">path_a</span><span class="p">)</span>
+                        <span class="n">info</span><span class="p">[</span><span class="s">&#39;self&#39;</span><span class="p">][</span><span class="s">&#39;mtime&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">abstract_step</span><span class="o">.</span><span class="n">AbstractStep</span><span class="o">.</span><span class="n">fsc</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">path_a</span><span class="p">)</span>
+                        <span class="n">info</span><span class="p">[</span><span class="s">&#39;downstream&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+                        <span class="k">for</span> <span class="n">path_b</span> <span class="ow">in</span> <span class="n">path_a_dependent_files</span><span class="p">:</span>
+                            <span class="n">info</span><span class="p">[</span><span class="s">&#39;downstream&#39;</span><span class="p">][</span><span class="n">path_b</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="n">abstract_step</span><span class="o">.</span><span class="n">AbstractStep</span><span class="o">.</span><span class="n">fsc</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path_b</span><span class="p">):</span>
+                                <span class="n">info</span><span class="p">[</span><span class="s">&#39;downstream&#39;</span><span class="p">][</span><span class="n">path_b</span><span class="p">][</span><span class="s">&#39;size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">abstract_step</span><span class="o">.</span><span class="n">AbstractStep</span><span class="o">.</span><span class="n">fsc</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">path_b</span><span class="p">)</span>
+                                <span class="n">info</span><span class="p">[</span><span class="s">&#39;downstream&#39;</span><span class="p">][</span><span class="n">path_b</span><span class="p">][</span><span class="s">&#39;mtime&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">abstract_step</span><span class="o">.</span><span class="n">AbstractStep</span><span class="o">.</span><span class="n">fsc</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">path_b</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">downstream_info</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">path_b</span> <span class="o">+</span> <span class="n">abstract_step</span><span class="o">.</span><span class="n">AbstractStep</span><span class="o">.</span><span class="n">VOLATILE_SUFFIX</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">))</span>
+                                <span class="n">info</span><span class="p">[</span><span class="s">&#39;downstream&#39;</span><span class="p">][</span><span class="n">path_b</span><span class="p">][</span><span class="s">&#39;size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">downstream_info</span><span class="p">[</span><span class="s">&#39;self&#39;</span><span class="p">][</span><span class="s">&#39;size&#39;</span><span class="p">]</span>
+                                <span class="n">info</span><span class="p">[</span><span class="s">&#39;downstream&#39;</span><span class="p">][</span><span class="n">path_b</span><span class="p">][</span><span class="s">&#39;mtime&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">downstream_info</span><span class="p">[</span><span class="s">&#39;self&#39;</span><span class="p">][</span><span class="s">&#39;mtime&#39;</span><span class="p">]</span>
+                            
+                        <span class="n">path_a_volatile</span> <span class="o">=</span> <span class="n">path_a</span> <span class="o">+</span> <span class="n">abstract_step</span><span class="o">.</span><span class="n">AbstractStep</span><span class="o">.</span><span class="n">VOLATILE_SUFFIX</span>
+                        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path_a_volatile</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">default_flow_style</span> <span class="o">=</span> <span class="bp">False</span><span class="p">))</span>
+                        
+                        <span class="n">os</span><span class="o">.</span><span class="n">utime</span><span class="p">(</span><span class="n">path_a_volatile</span><span class="p">,</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getatime</span><span class="p">(</span><span class="n">path_a</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">path_a</span><span class="p">)))</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">path_a</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
 </pre></div>
 
           </div>

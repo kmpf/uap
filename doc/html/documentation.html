@@ -1,0 +1,263 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Remaining original documentation &mdash; rnaseq-pipeline develop documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'develop',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="rnaseq-pipeline develop documentation" href="index.html" />
+    <link rel="next" title="API documentation" href="api.html" />
+    <link rel="prev" title="Setup the rnaseq-pipeline" href="how-to.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="how-to.html" title="Setup the rnaseq-pipeline"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">rnaseq-pipeline develop documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="setup">
+<h1>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h1>
+<p>The repository can be obtained like this:</p>
+<div class="highlight-python"><pre>$ git clone spechtm@bioinf1:/home/spechtm/rnaseq-pipeline.git</pre>
+</div>
+<p>After cloning the repository, run the bootstrapping script to create the
+required Python environment (which will be located in <tt class="docutils literal"><span class="pre">./python_env/</span></tt>):</p>
+<div class="highlight-python"><pre>$ ./bootstrap.sh</pre>
+</div>
+<p>There&#8217;s no harm in accidentally running this script multiple times.
+Also, it will compile <tt class="docutils literal"><span class="pre">cat4m</span></tt>, a tool which can be found at
+<tt class="docutils literal"><span class="pre">./tools/cat4m</span></tt> and which is able to read arbitrary input files in chunks
+of 4 MB and print them to stdout (we&#8217;ll need this often in the pipeline,
+as <tt class="docutils literal"><span class="pre">cat</span></tt> reads in system-default blocks of 32 kB which is ok for a normal
+system but leads to high I/O load on a cluster system).</p>
+<div class="section" id="the-configuration-file">
+<h2>The configuration file<a class="headerlink" href="#the-configuration-file" title="Permalink to this headline">¶</a></h2>
+<p>Next, edit <tt class="docutils literal"><span class="pre">config.sample.yaml</span></tt> and save it as <tt class="docutils literal"><span class="pre">config.yaml</span></tt>.
+Although writing the configuration may seem a bit complicated, the trouble
+pays off later because further interaction with the pipeline is quite simple.
+Here is a sample configuration:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="c1"># This is the rnaseq-pipeline configuration file.</span>
+
+<span class="l-Scalar-Plain">destination_path</span><span class="p-Indicator">:</span> <span class="s">&quot;/home/michael/test-pipeline/out&quot;</span>
+
+<span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
+    <span class="l-Scalar-Plain">fastq_source</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">pattern</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/home/michael/test-pipeline/fastq/*.fastq.gz</span>
+        <span class="l-Scalar-Plain">group</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">(Sample_COPD_\d+)_R[12]-head.fastq.gz</span>
+        <span class="l-Scalar-Plain">indices</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">copd-barcodes.csv</span>
+        <span class="l-Scalar-Plain">paired_end</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
+
+    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">fastq_source</span>
+        <span class="l-Scalar-Plain">adapter-R1</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG</span>
+        <span class="l-Scalar-Plain">adapter-R2</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT</span>
+
+<span class="l-Scalar-Plain">tools</span><span class="p-Indicator">:</span>
+    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/home/michael/Desktop/rnaseq-pipeline/tools/cutadapt-1.2.1/bin/cutadapt</span>
+        <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="s">&#39;--version&#39;</span>
+    <span class="l-Scalar-Plain">pigz</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pigz</span>
+        <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="s">&#39;--version&#39;</span>
+    <span class="l-Scalar-Plain">head</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">head</span>
+        <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="s">&#39;--version&#39;</span>
+    <span class="l-Scalar-Plain">cat4m</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">./tools/cat4m</span>
+</pre></div>
+</div>
+<p>In the configuration, the following aspects of the pipeline are defined:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">destination_path</span></tt> &#8211; this is where result files, annotations and
+temporary files are written to</li>
+<li><tt class="docutils literal"><span class="pre">steps</span></tt> &#8211; defines the processing step arranged in a DAG</li>
+<li><tt class="docutils literal"><span class="pre">tools</span></tt> &#8211; defines all tools used in the pipeline and how to determine
+their versions (for later reference)</li>
+<li><tt class="docutils literal"><span class="pre">email</span></tt> &#8211; when submitting jobs on a cluster, messages will be sent to
+this email address by the cluster scheduler (<a class="reference external" href="mailto:nobody&#37;&#52;&#48;example&#46;com">nobody<span>&#64;</span>example<span>&#46;</span>com</a> by default)</li>
+</ul>
+<div class="section" id="steps">
+<h3>Steps<a class="headerlink" href="#steps" title="Permalink to this headline">¶</a></h3>
+<p>Steps are defined in a directed acyclic graph.
+In the configuration, the <tt class="docutils literal"><span class="pre">steps</span></tt> dictionary contains a key for every
+step, therefore each step must have a unique name.
+There are two ways to name a step:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
+    <span class="c1"># here, the step name is unchanged, it&#39;s a cutadapt step which is also called &#39;cutadapt&#39;</span>
+    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">...</span> <span class="c1"># options following</span>
+
+    <span class="c1"># here, we also insert a cutadapt step, but we give it a different name: &#39;clip_adapters&#39;</span>
+    <span class="l-Scalar-Plain">clip_adapters (cutadapt)</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">...</span> <span class="c1"># options following</span>
+</pre></div>
+</div>
+<p>Source steps are special in the way that they provide files without doing
+anything, and they are usually the first steps in a pipeline because they
+have no dependencies.
+Regular steps, on the other hand, need to define their dependencies via
+the <tt class="docutils literal"><span class="pre">_depends</span></tt> key which may either be <tt class="docutils literal"><span class="pre">null</span></tt>, a step name, or a list
+of step names.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
+    <span class="c1"># the source step which depends on nothing</span>
+    <span class="l-Scalar-Plain">fastq_source</span><span class="p-Indicator">:</span>
+        <span class="c1"># ...</span>
+
+    <span class="c1"># the first processing step, which depends on the sources</span>
+    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">fastq_source</span>
+
+    <span class="c1"># the second processing step, which depends on the cutadapt step</span>
+    <span class="l-Scalar-Plain">fix_cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cutadapt</span>
+</pre></div>
+</div>
+<p>If you want to cut off entire branches of the step graph, set the <tt class="docutils literal"><span class="pre">_BREAK</span></tt>
+flag in a step definition, which will force the step to produce no runs
+(which will in turn give all following steps nothing to do, thereby
+effectively disabling these steps):</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
+    <span class="l-Scalar-Plain">fastq_source</span><span class="p-Indicator">:</span>
+        <span class="c1"># ...</span>
+
+    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">fastq_source</span>
+
+    <span class="c1"># this step and all following steps will not be executed</span>
+    <span class="l-Scalar-Plain">fix_cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cutadapt</span>
+        <span class="l-Scalar-Plain">_BREAK</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="tools">
+<h3>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">¶</a></h3>
+<p>All tools which are used in the pipeline must be specified in the
+configuration file.
+The pipeline determines and records their versions for future reference.</p>
+<p>By default, version determination is simply attempted by calling the program
+without command-line arguments.</p>
+<p>If a certain argument is required, specify it in <tt class="docutils literal"><span class="pre">get_version</span></tt>.
+If the tools does not return with an exit code of 0, find out which code it
+is by typing <tt class="docutils literal"><span class="pre">echo</span> <span class="pre">$?</span></tt> into Bash and specify the exit code in <tt class="docutils literal"><span class="pre">exit_code</span></tt>.</p>
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Setup</a><ul>
+<li><a class="reference internal" href="#the-configuration-file">The configuration file</a><ul>
+<li><a class="reference internal" href="#steps">Steps</a></li>
+<li><a class="reference internal" href="#tools">Tools</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="how-to.html"
+                        title="previous chapter">Setup the <strong>rnaseq-pipeline</strong></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="next chapter">API documentation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/documentation.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API documentation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="how-to.html" title="Setup the rnaseq-pipeline"
+             >previous</a> |</li>
+        <li><a href="index.html">rnaseq-pipeline develop documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Michael Specht.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

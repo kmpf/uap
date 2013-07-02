@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="rnaseq-pipeline develop documentation" href="#" />
-    <link rel="next" title="API documentation" href="api.html" /> 
+    <link rel="next" title="Setup the rnaseq-pipeline" href="how-to.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,7 +38,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="api.html" title="API documentation"
+          <a href="how-to.html" title="Setup the rnaseq-pipeline"
              accesskey="N">next</a> |</li>
         <li><a href="#">rnaseq-pipeline develop documentation</a> &raquo;</li> 
       </ul>
@@ -49,14 +49,56 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="introduction">
+  <div class="section" id="welcome-to-the-documentation-of-the-rnaseq-pipeline">
+<h1>Welcome to the documentation of the <strong>rnaseq-pipeline</strong><a class="headerlink" href="#welcome-to-the-documentation-of-the-rnaseq-pipeline" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>rnaseq-pipeline</strong> is a tool to configure, run, and control your high-throughput
+sequencing analysis.</p>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="how-to.html">Setup the <strong>rnaseq-pipeline</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#get-the-rnaseq-pipeline">Get the <strong>rnaseq-pipeline</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#create-your-config-yaml">Create your <em>config.yaml</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#example-configurations">Example configurations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="how-to.html#monitor-the-rnaseq-pipeline">Monitor the <strong>rnaseq-pipeline</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-to.html#scripts">Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#status-py">status.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#run-locally-py">run-locally.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#submit-to-cluster-py">submit-to-cluster.py</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="how-to.html#annotations">Annotations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-to.html#extend-the-rnaseq-pipeline">Extend the <strong>rnaseq-pipeline</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#implement-your-own-steps">Implement your own steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#add-the-new-step-to-your-configuration">Add the new step to your configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="how-to.html#to-do-list">To-do list</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-to.html#indices-and-tables">Indices and tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#the-configuration-file">The configuration file</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html#indices-and-tables">Indices and tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#pipeline-specific-modules">Pipeline-specific modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#miscellaneous-modules">Miscellaneous modules</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<p>The aim of this data processing pipeline is to enable robust and
-straightforward bioinformatics data evaluation.
-It is implemented in Python, runs under GNU/Linux and can be controlled from
-the command-line interface.
-Although the primary focus is the evaluation of RNASeq data, its design
-allows for a variety of other applications.</p>
+<p>The aim of this data processing pipeline is to enable robust and straightforward
+bioinformatics data evaluation. It is implemented in Python, runs under
+GNU/Linux and can be controlled from the command-line interface. Although the
+primary focus is the evaluation of RNASeq data, its design allows for a variety
+of other applications.</p>
 <div class="section" id="general-usage">
 <h2>General usage<a class="headerlink" href="#general-usage" title="Permalink to this headline">¶</a></h2>
 <p>This package <em>does not</em> provide a number of tools which are downloaded and
@@ -150,496 +192,10 @@ summarized).</li>
 </ul>
 </div>
 </div>
-<div class="section" id="setup">
-<h1>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h1>
-<p>The repository can be obtained like this:</p>
-<div class="highlight-python"><pre>$ git clone spechtm@bioinf1:/home/spechtm/rnaseq-pipeline.git</pre>
-</div>
-<p>After cloning the repository, run the bootstrapping script to create the
-required Python environment (which will be located in <tt class="docutils literal"><span class="pre">./python_env/</span></tt>):</p>
-<div class="highlight-python"><pre>$ ./bootstrap.sh</pre>
-</div>
-<p>There&#8217;s no harm in accidentally running this script multiple times.
-Also, it will compile <tt class="docutils literal"><span class="pre">cat4m</span></tt>, a tool which can be found at
-<tt class="docutils literal"><span class="pre">./tools/cat4m</span></tt> and which is able to read arbitrary input files in chunks
-of 4 MB and print them to stdout (we&#8217;ll need this often in the pipeline,
-as <tt class="docutils literal"><span class="pre">cat</span></tt> reads in system-default blocks of 32 kB which is ok for a normal
-system but leads to high I/O load on a cluster system).</p>
-<div class="section" id="the-configuration-file">
-<h2>The configuration file<a class="headerlink" href="#the-configuration-file" title="Permalink to this headline">¶</a></h2>
-<p>Next, edit <tt class="docutils literal"><span class="pre">config.sample.yaml</span></tt> and save it as <tt class="docutils literal"><span class="pre">config.yaml</span></tt>.
-Although writing the configuration may seem a bit complicated, the trouble
-pays off later because further interaction with the pipeline is quite simple.
-Here is a sample configuration:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="c1"># This is the rnaseq-pipeline configuration file.</span>
-
-<span class="l-Scalar-Plain">destination_path</span><span class="p-Indicator">:</span> <span class="s">&quot;/home/michael/test-pipeline/out&quot;</span>
-
-<span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
-    <span class="l-Scalar-Plain">fastq_source</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">pattern</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/home/michael/test-pipeline/fastq/*.fastq.gz</span>
-        <span class="l-Scalar-Plain">group</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">(Sample_COPD_\d+)_R[12]-head.fastq.gz</span>
-        <span class="l-Scalar-Plain">indices</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">copd-barcodes.csv</span>
-        <span class="l-Scalar-Plain">paired_end</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-
-    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">fastq_source</span>
-        <span class="l-Scalar-Plain">adapter-R1</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG</span>
-        <span class="l-Scalar-Plain">adapter-R2</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT</span>
-
-<span class="l-Scalar-Plain">tools</span><span class="p-Indicator">:</span>
-    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/home/michael/Desktop/rnaseq-pipeline/tools/cutadapt-1.2.1/bin/cutadapt</span>
-        <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="s">&#39;--version&#39;</span>
-    <span class="l-Scalar-Plain">pigz</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pigz</span>
-        <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="s">&#39;--version&#39;</span>
-    <span class="l-Scalar-Plain">head</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">head</span>
-        <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="s">&#39;--version&#39;</span>
-    <span class="l-Scalar-Plain">cat4m</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">./tools/cat4m</span>
-</pre></div>
-</div>
-<p>In the configuration, the following aspects of the pipeline are defined:</p>
-<ul class="simple">
-<li><tt class="docutils literal"><span class="pre">destination_path</span></tt> &#8211; this is where result files, annotations and
-temporary files are written to</li>
-<li><tt class="docutils literal"><span class="pre">steps</span></tt> &#8211; defines the processing step arranged in a DAG</li>
-<li><tt class="docutils literal"><span class="pre">tools</span></tt> &#8211; defines all tools used in the pipeline and how to determine
-their versions (for later reference)</li>
-<li><tt class="docutils literal"><span class="pre">email</span></tt> &#8211; when submitting jobs on a cluster, messages will be sent to
-this email address by the cluster scheduler (<a class="reference external" href="mailto:nobody&#37;&#52;&#48;example&#46;com">nobody<span>&#64;</span>example<span>&#46;</span>com</a> by default)</li>
-</ul>
-<div class="section" id="steps">
-<h3>Steps<a class="headerlink" href="#steps" title="Permalink to this headline">¶</a></h3>
-<p>Steps are defined in a directed acyclic graph.
-In the configuration, the <tt class="docutils literal"><span class="pre">steps</span></tt> dictionary contains a key for every
-step, therefore each step must have a unique name.
-There are two ways to name a step:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
-    <span class="c1"># here, the step name is unchanged, it&#39;s a cutadapt step which is also called &#39;cutadapt&#39;</span>
-    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">...</span> <span class="c1"># options following</span>
-
-    <span class="c1"># here, we also insert a cutadapt step, but we give it a different name: &#39;clip_adapters&#39;</span>
-    <span class="l-Scalar-Plain">clip_adapters (cutadapt)</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">...</span> <span class="c1"># options following</span>
-</pre></div>
-</div>
-<p>Source steps are special in the way that they provide files without doing
-anything, and they are usually the first steps in a pipeline because they
-have no dependencies.
-Regular steps, on the other hand, need to define their dependencies via
-the <tt class="docutils literal"><span class="pre">_depends</span></tt> key which may either be <tt class="docutils literal"><span class="pre">null</span></tt>, a step name, or a list
-of step names.</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
-    <span class="c1"># the source step which depends on nothing</span>
-    <span class="l-Scalar-Plain">fastq_source</span><span class="p-Indicator">:</span>
-        <span class="c1"># ...</span>
-
-    <span class="c1"># the first processing step, which depends on the sources</span>
-    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">fastq_source</span>
-
-    <span class="c1"># the second processing step, which depends on the cutadapt step</span>
-    <span class="l-Scalar-Plain">fix_cutadapt</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cutadapt</span>
-</pre></div>
-</div>
-<p>If you want to cut off entire branches of the step graph, set the <tt class="docutils literal"><span class="pre">_BREAK</span></tt>
-flag in a step definition, which will force the step to produce no runs
-(which will in turn give all following steps nothing to do, thereby
-effectively disabling these steps):</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
-    <span class="l-Scalar-Plain">fastq_source</span><span class="p-Indicator">:</span>
-        <span class="c1"># ...</span>
-
-    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">fastq_source</span>
-
-    <span class="c1"># this step and all following steps will not be executed</span>
-    <span class="l-Scalar-Plain">fix_cutadapt</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cutadapt</span>
-        <span class="l-Scalar-Plain">_BREAK</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="tools">
-<h3>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">¶</a></h3>
-<p>All tools which are used in the pipeline must be specified in the
-configuration file.
-The pipeline determines and records their versions for future reference.</p>
-<p>By default, version determination is simply attempted by calling the program
-without command-line arguments.</p>
-<p>If a certain argument is required, specify it in <tt class="docutils literal"><span class="pre">get_version</span></tt>.
-If the tools does not return with an exit code of 0, find out which code it
-is by typing <tt class="docutils literal"><span class="pre">echo</span> <span class="pre">$?</span></tt> into Bash and specify the exit code in <tt class="docutils literal"><span class="pre">exit_code</span></tt>.</p>
-</div>
-</div>
-</div>
-<div class="section" id="scripts">
-<h1>Scripts<a class="headerlink" href="#scripts" title="Permalink to this headline">¶</a></h1>
-<p>Once the project is set up, there are several scripts which can be used to
-execute and monitor the pipeline.
-All scripts have a couple of properties in common:</p>
-<ul class="simple">
-<li>On startup, the configuration is read, tools are checked, input files are
-collected, and all tasks are calculated.
-If any of these steps fails, the script will print an error message with
-a backtrace and it will crash.
-This may seem a bit harsh, but after all, it&#8217;s better to fail early than
-to fail late if failing is unavoidable.</li>
-<li>For convenience, a symbolic link called <tt class="docutils literal"><span class="pre">out</span></tt> will be placed in the
-pipeline&#8217;s directory which points to the output directory defined in the
-configuration file.
-If <tt class="docutils literal"><span class="pre">out</span></tt> already exists, it is left untouched.</li>
-</ul>
-<p>There are a couple of global command line parameters which are valid for all
-scripts (well, actually, it&#8217;s only one):</p>
-<ul>
-<li><dl class="first docutils">
-<dt><tt class="docutils literal"><span class="pre">--even-if-dirty</span></tt>:</dt>
-<dd><p class="first last">Before doing anything else, the pipeline checks whether its source code
-has been modified in any way via Git.
-If yes, processing is stopped immediately unless this flag is specified.
-If you specify the flag, the fact that the repository was dirty will be
-recorded in all annotations which are produces <em>including</em> a full Git diff.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>In the following, the scripts are described in detail.</p>
-<div class="section" id="status-py">
-<h2>status.py<a class="headerlink" href="#status-py" title="Permalink to this headline">¶</a></h2>
-<p>The status script lists all tasks resulting from the configured steps and
-input samples.
-At any time, each task is in one of the following states:</p>
-<ul class="simple">
-<li><strong>waiting</strong> &#8211; the task is waiting for input files to appear, or its input
-files are not up-to-date regarding their respective dependencies</li>
-<li><strong>ready</strong> &#8211; all input files are present and up-to-date regarding their
-upstream input files (and so on, recursively), the task is ready and can
-be started</li>
-<li><strong>queued</strong> &#8211; the task is currently queued and will be started &#8220;soon&#8221;
-(if you use a computing cluster)</li>
-<li><strong>executing</strong> &#8211; the task is currently running on this or another machine</li>
-<li><strong>finished</strong> &#8211; all output files are in place and up-to-date</li>
-</ul>
-<p>Here is an example output:</p>
-<div class="highlight-python"><pre>$ ./status.py
-Waiting tasks
--------------
-[w] cufflinks/Sample_COPD_2023
-
-Ready tasks
------------
-[r] tophat2/Sample_COPD_2023
-
-Finished tasks
---------------
-[f] cutadapt/Sample_COPD_2023-R1
-[f] cutadapt/Sample_COPD_2023-R2
-[f] fix_cutadapt/Sample_COPD_2023
-
-tasks: 5 total, 1 waiting, 1 ready, 3 finished</pre>
-</div>
-<p>To get a more concise summary, specify <tt class="docutils literal"><span class="pre">--summarize</span></tt>:</p>
-<div class="highlight-python"><pre>$ ./status.py --summarize
-Waiting tasks
--------------
-[w]   1 cufflinks
-
-Ready tasks
------------
-[r]   1 tophat2
-
-Finished tasks
---------------
-[f]   2 cutadapt
-[f]   1 fix_cutadapt
-
-tasks: 5 total, 1 waiting, 1 ready, 3 finished</pre>
-</div>
-<p>...or print a fancy ASCII art graph with <tt class="docutils literal"><span class="pre">--graph</span></tt>:</p>
-<div class="highlight-python"><pre>$ ./status.py --graph
-samples (1 finished)
-└─cutadapt (2 finished)
-  └─fix_cutadapt (1 finished)
-    └─tophat2 (1 ready)
-      └─cufflinks (1 waiting)</pre>
-</div>
-<p>Detailed information about a specific task can be obtained by specifying the
-task ID on the command line:</p>
-<div class="highlight-python"><pre>$ ./status.py cutadapt/Sample_COPD_2023-R1
-info:
-  adapter: AGATCGGAAGAGCACACGTCTGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG
-read_number: R1
-output_files:
-  log:
-    /home/michael/Desktop/rnaseq-pipeline/out/cutadapt-7708/Sample_COPD_2023-cutadapt-R1-log.txt:
-    - /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1.fastq.gz
-  reads:
-    /home/michael/Desktop/rnaseq-pipeline/out/cutadapt-7708/Sample_COPD_2023-cutadapt-R1.fastq.gz:
-    - /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1.fastq.gz
-state: FINISHED</pre>
-</div>
-<p>This data structure is called the &#8220;run info&#8221; of a certain run and it
-represents a kind of plan which includes information about which output
-files will be generated and which input files they depend on &#8211; this is
-stored in <tt class="docutils literal"><span class="pre">output_files</span></tt>.
-Furthermore, necessary information for actually executing the task are
-recorded in <tt class="docutils literal"><span class="pre">info</span></tt>.
-In this case, the final adapter has been determined by replacing <tt class="docutils literal"><span class="pre">((INDEX))</span></tt>
-in the configuration file&#8217;s <tt class="docutils literal"><span class="pre">adapter-R1</span></tt> with the actual barcode index of
-the sample.</p>
-<p>Because source steps produce no runs and therefore no tasks, they don&#8217;t
-appear in the list produced by <tt class="docutils literal"><span class="pre">status.py</span></tt>.
-To see their task IDs, specify <tt class="docutils literal"><span class="pre">--sources</span></tt>:</p>
-<div class="highlight-python"><pre>$ ./status.py --sources
-samples/Sample_COPD_2023</pre>
-</div>
-<p>You can then specify the ID of a source task like the ID of any other task
-to see its details:</p>
-<div class="highlight-python"><pre>$ ./status.py samples/Sample_COPD_2023
-info:
-  index: ACAGTG
-  paired_end: true
-  read_number:
-    Sample_COPD_2023_R1.fastq.gz: R1
-    Sample_COPD_2023_R2.fastq.gz: R2
-output_files:
-  reads:
-    /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R1.fastq.gz: []
-    /home/michael/Desktop/rnaseq-pipeline/copd-small/Sample_COPD_2023_R2.fastq.gz: []
-  state: FINISHED</pre>
-</div>
-</div>
-<div class="section" id="run-locally-py">
-<h2>run-locally.py<a class="headerlink" href="#run-locally-py" title="Permalink to this headline">¶</a></h2>
-<p>The <tt class="docutils literal"><span class="pre">run-locally.py</span></tt> script runs all non-finished tasks (or a subset)
-sequentially on the local machine.
-Feel free to cancel this script at any time, it won&#8217;t put your project in a
-confused state.
-However, if the <tt class="docutils literal"><span class="pre">run-locally.py</span></tt> script receives a SIGKILL signal, the
-currently executing job will continue to run and the corresponding task
-will be reported as <tt class="docutils literal"><span class="pre">executing</span></tt> by <tt class="docutils literal"><span class="pre">status.py</span></tt> for five more minutes
-(SIGTERM should be fine and exit gracefully but <em>doesn&#8217;t just yet</em>).
-After that time, you will be warned that a job is marked as being currently
-run but no activity has been seen for a while, along with further
-instructions about what to do in such a case (don&#8217;t worry, it shouldn&#8217;t
-happen by accident).</p>
-<p>To execute one or more certain tasks, specify the task IDs on the command
-line.
-To execute all tasks of a certain step, specify the step name on the command
-line.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Why is it safe to cancel the pipeline?
-The pipeline is written in a way which expects processes to fail or
-cluster jobs to disappear without notice.
-This problem is mitigated by a design which relies on file presence and
-file timestamps to determine whether a task is finished or not.
-Output files are automatically written to temporary locations and later
-moved to their real target directory, and it is not until the last file
-rename operation has finished that a task is regarded as finished.</p>
-</div>
-</div>
-<div class="section" id="submit-to-cluster-py">
-<h2>submit-to-cluster.py<a class="headerlink" href="#submit-to-cluster-py" title="Permalink to this headline">¶</a></h2>
-<p>The <tt class="docutils literal"><span class="pre">submit-to-cluster.py</span></tt> script determines which tasks still have to be
-carried out and submits the jobs to a GridEngine cluster by calling <tt class="docutils literal"><span class="pre">qsub</span></tt>.
-Dependencies are passed to <tt class="docutils literal"><span class="pre">qsub</span></tt> via the <tt class="docutils literal"><span class="pre">-hold_jid</span></tt> option, which means
-that jobs that depend on other jobs won&#8217;t get scheduled until their
-dependencies have been satisfied.
-The file <tt class="docutils literal"><span class="pre">qsub-template.sh</span></tt> is used to submit jobs, with <tt class="docutils literal"><span class="pre">#{</span> <span class="pre">}</span></tt> fields
-being substituted with appropriate values.</p>
-<p>The file <tt class="docutils literal"><span class="pre">quotas.yaml</span></tt> can be used to define different quotas for different
-systems:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="s">&quot;frontend[12]&quot;</span><span class="p-Indicator">:</span>
-    <span class="l-Scalar-Plain">default</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">5</span>
-    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">100</span>
-</pre></div>
-</div>
-<p>In the example above, a default quota of 5 is defined for hosts with a
-hostname of <tt class="docutils literal"><span class="pre">frontend1</span></tt> or <tt class="docutils literal"><span class="pre">frontend2</span></tt> (the name is a regular expression).
-A quota of 5 means that no more than 5 jobs of one kind will be run in
-parallel.
-Different quotas can be defined for each step: because <tt class="docutils literal"><span class="pre">cutadapt</span></tt> is
-highly I/O-efficient, it has a higher quota.</p>
-</div>
-</div>
-<div class="section" id="annotations">
-<h1>Annotations<a class="headerlink" href="#annotations" title="Permalink to this headline">¶</a></h1>
-<p>Upon successful completion of a task, an extensive YAML-formatted annotation
-is placed next to the output files in a file called
-<tt class="docutils literal"><span class="pre">.[task_id]-annotation.yaml</span></tt>.
-Also, for every output file, a symbolic link to this file is created:
-<tt class="docutils literal"><span class="pre">.[output_filename].annotation.yaml</span></tt>.</p>
-<p>Finally, the annotation is rendered via GraphViz, if available.
-Rendering can also be done at a later time using annotations as input.
-The annotation can be used to determine at a later time what exactly happened.
-Also, annotations may help to identify bottlenecks.</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="45%" />
-<col width="55%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><a class="first reference internal image-reference" href="_images/cutadapt.png"><img alt="_images/cutadapt.png" src="_images/cutadapt.png" style="height: 500px;" /></a>
-<p class="last">Annotation graph of a <tt class="docutils literal"><span class="pre">cutadapt</span></tt>
-run. CPU and RAM usage for individual
-processes are shown, file sizes
-and line counts are shown for
-output files and inter-process
-streams.</p>
-</td>
-<td><a class="first reference internal image-reference" href="_images/cpu-starving.png"><img alt="_images/cpu-starving.png" src="_images/cpu-starving.png" style="height: 500px;" /></a>
-<p class="last">In this graph, it becomes evident that
-the <tt class="docutils literal"><span class="pre">fix_cutadapt.py</span></tt> process in the middle
-gets throttled by the following two <tt class="docutils literal"><span class="pre">pigz</span></tt>
-processes, which only run with one core
-each and therefore cannot compress the
-results fast enough.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="id1">
-<h1>Steps<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
-<p>A detailed description of all availble steps follows.</p>
-<div class="section" id="source-steps">
-<h2>Source steps<a class="headerlink" href="#source-steps" title="Permalink to this headline">¶</a></h2>
-<p>Source steps provide input files for the pipeline, such as RNA sequences.</p>
-<div class="section" id="run-folder-source">
-<h3>Run folder source<a class="headerlink" href="#run-folder-source" title="Permalink to this headline">¶</a></h3>
-<p>Here&#8217;s an example:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">run_folder_source</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span> <span class="nv">path</span><span class="p-Indicator">:</span> <span class="nv">in</span> <span class="p-Indicator">}</span>
-</pre></div>
-</div>
-<p>This source looks for fastq.gz files in
-<tt class="docutils literal"><span class="pre">[path]/Unaligned/Project_*/Sample_*</span></tt> and pulls additional information from
-CSV sample sheets it finds.
-It also makes sure that index information for all samples is coherent and
-unambiguous.</p>
-</div>
-<div class="section" id="fastq-source">
-<h3>FASTQ source<a class="headerlink" href="#fastq-source" title="Permalink to this headline">¶</a></h3>
-<p>Here&#8217;s an example:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">fastq_source</span><span class="p-Indicator">:</span>
-    <span class="l-Scalar-Plain">pattern</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/data/original-fastq/&amp;#42;.fastq.gz</span>
-    <span class="l-Scalar-Plain">group</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">(Sample_COPD_\d+)_R[12].fastq.gz</span>
-    <span class="l-Scalar-Plain">indices</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">copd-barcodes.csv</span>
-</pre></div>
-</div>
-<p>Input files are collected as defined by <tt class="docutils literal"><span class="pre">pattern</span></tt> and grouped into samples
-according to <tt class="docutils literal"><span class="pre">group</span></tt>, which is a regular expression.
-All groups defined in the regex <tt class="docutils literal"><span class="pre">(</span>&nbsp; <span class="pre">)</span></tt> are used to construct the sample
-name, here it is used to declare that both R1 and R2 files belong to the
-same sample.
-Indices are read from the CSV file specified by <tt class="docutils literal"><span class="pre">indices</span></tt>.</p>
-<p><em>(detailed step descriptions to follow...)</em></p>
-</div>
-</div>
-</div>
-<div class="section" id="extending-the-pipeline">
-<h1>Extending the pipeline<a class="headerlink" href="#extending-the-pipeline" title="Permalink to this headline">¶</a></h1>
-<p>To add a new processing step, a single Python file must be placed in
-<tt class="docutils literal"><span class="pre">include/step</span></tt> which defines a class with two functions, one for planning
-all jobs based on a list of input files or runs and possibly additional
-information from previous steps and another function for running a specific
-job.</p>
-<div class="section" id="checklist">
-<h2>Checklist<a class="headerlink" href="#checklist" title="Permalink to this headline">¶</a></h2>
-<p>Here&#8217;s a couple of things which should be kept in mind when implementing new
-steps or modifying existing steps:</p>
-<ul>
-<li><p class="first">Make sure errors already show up in <tt class="docutils literal"><span class="pre">setup_runs</span></tt> instead of <tt class="docutils literal"><span class="pre">execute</span></tt>.
-That way, wasting precious cluster waiting time is avoided.
-Look out for things that may fail, and do them in <tt class="docutils literal"><span class="pre">setup_runs</span></tt>.
-Use the <tt class="docutils literal"><span class="pre">info</span></tt> entry in the returned <tt class="docutils literal"><span class="pre">run_info</span></tt> structure to pass the
-resulting information to <tt class="docutils literal"><span class="pre">execute</span></tt>.</p>
-</li>
-<li><p class="first">Likewise, make sure that the tools you&#8217;ll need in execute are already
-available in <tt class="docutils literal"><span class="pre">setup_runs</span></tt>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># make sure tools are available</span>
-<span class="bp">self</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="s">&#39;pigz&#39;</span><span class="p">)</span>
-<span class="bp">self</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="s">&#39;cutadapt&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</li>
-<li><p class="first">Make sure your disk access is as cluster-friendly as possible (which
-primarily means using large block sizes and preferably no seek operations).
-If possible, use <tt class="docutils literal"><span class="pre">unix_pipeline</span></tt> to wrap your commands in <tt class="docutils literal"><span class="pre">pigz</span></tt>,
-<tt class="docutils literal"><span class="pre">dd</span></tt>, or <tt class="docutils literal"><span class="pre">cat4m</span></tt> with a large block size like 4 MB.
-Although this is not possible in every case (for example when seeking
-in files is involved), it is straightforward with tools that read a
-continuous stream from <tt class="docutils literal"><span class="pre">stdin</span></tt> and write a continuous stream to
-<tt class="docutils literal"><span class="pre">stdout</span></tt>.</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="section" id="to-do-list">
-<h1>To-do list<a class="headerlink" href="#to-do-list" title="Permalink to this headline">¶</a></h1>
-<dl class="docutils">
-<dt>Timestamps:</dt>
-<dd><tt class="docutils literal"><span class="pre">unix_pipeline</span></tt> log messages should include timestamps.</dd>
-<dt>Getting started package:</dt>
-<dd>We need a small package which demonstrates a quick pipeline, including
-the configuration and all required tools.</dd>
-<dt>Steps should be able to access all ancestors:</dt>
-<dd>All upstream steps should be accessible via their step name or output
-file key.</dd>
-<dt>On-the-fly steps:</dt>
-<dd><p class="first">We need a way to skip writing certain output files and have them flow
-temporarily through a pipe only, if possible.
-This is a disk space-saving feature only and has no effect on the
-outcome of the pipeline. However, it would require that a step is
-capable of being run <em>on-the-fly</em> which means it must read and write in
-a single stream.</p>
-<p>Here&#8217;s an example:</p>
-<p class="last graphviz">
-<img src="_images/graphviz-663567c7698527d96be3c169697b33db4b725a6b.png" alt="digraph foo {
-    rankdir=LR;
-    splines=true;
-    graph [fontname = Helvetica, fontsize = 12, nodesep = 0.2, ranksep = 0.3];
-    node [fontname = Helvetica, fontsize = 12, shape = rect, style=filled, color=&quot;#404040&quot;, fillcolor=&quot;#ffffff&quot;];
-    edge [fontname = Helvetica, fontsize = 12, color=&quot;#404040&quot;];
-
-    segemehl [fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
-    in_reads [label = &quot;reads\n(fastq.gz)&quot;];
-    mapped_reads [label = &quot;mapped reads\n(sam.gz)&quot;];
-    some_filter [fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
-    filtered_reads [label = &quot;filtered reads\n(sam.gz)&quot;];
-    htseq_count [label = &quot;htseq-count&quot;, fillcolor = &quot;#fce94f&quot;, color = &quot;#c4a000&quot;];
-    counts [label = &quot;counts&quot;];
-
-    in_reads -&gt; segemehl -&gt; mapped_reads -&gt; some_filter -&gt; filtered_reads;
-    filtered_reads -&gt; htseq_count -&gt; counts;
-
-    subgraph cluster_food {
-        some_filter; filtered_reads;
-        label = &quot;on-the-fly step, filtered reads\nnever get written to disk&quot;;
-        graph [style=dashed, color=&quot;#808080&quot;];
-    }
-}" />
-</p>
-</dd>
-<dt>Miscellaneous input files:</dt>
-<dd>Genome files and their index such as used by segemehl should not be defined
-via a fixed path.
-For traceability, it would be preferable to specify the hg19.fa URL and
-checksum and have the index generated by a step which the segemehl step
-depends on.</dd>
-</dl>
-<p>Make <tt class="docutils literal"><span class="pre">run-locally.py</span></tt> exit gracefully on receiving SIGTERM.</p>
-<dl class="docutils">
-<dt>Show statistics for executing tasks:</dt>
-<dd>When showing currently executing tasks, show how long this job has already been
-running and how it relates to jobs that have already finished.</dd>
-</dl>
+<div class="section" id="remarks">
+<h1>Remarks<a class="headerlink" href="#remarks" title="Permalink to this headline">¶</a></h1>
+<p>This documentation has been created using <a class="reference external" href="http://sphinx-doc.org/">Sphinx</a>
+and <a class="reference external" href="http://docutils.sourceforge.net/rst.html">reStructuredText</a>.</p>
 </div>
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
@@ -648,15 +204,6 @@ running and how it relates to jobs that have already finished.</dd>
 <li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
 <li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
 </ul>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api.html#pipeline-specific-modules">Pipeline-specific modules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#miscellaneous-modules">Miscellaneous modules</a></li>
-</ul>
-</li>
-</ul>
-</div>
 </div>
 
 
@@ -667,48 +214,25 @@ running and how it relates to jobs that have already finished.</dd>
         <div class="sphinxsidebarwrapper">
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#">Welcome to the documentation of the <strong>rnaseq-pipeline</strong></a><ul>
+<li><a class="reference internal" href="#contents">Contents</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#introduction">Introduction</a><ul>
 <li><a class="reference internal" href="#general-usage">General usage</a></li>
 <li><a class="reference internal" href="#core-aspects">Core aspects</a></li>
 <li><a class="reference internal" href="#design">Design</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#setup">Setup</a><ul>
-<li><a class="reference internal" href="#the-configuration-file">The configuration file</a><ul>
-<li><a class="reference internal" href="#steps">Steps</a></li>
-<li><a class="reference internal" href="#tools">Tools</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#scripts">Scripts</a><ul>
-<li><a class="reference internal" href="#status-py">status.py</a></li>
-<li><a class="reference internal" href="#run-locally-py">run-locally.py</a></li>
-<li><a class="reference internal" href="#submit-to-cluster-py">submit-to-cluster.py</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#annotations">Annotations</a></li>
-<li><a class="reference internal" href="#id1">Steps</a><ul>
-<li><a class="reference internal" href="#source-steps">Source steps</a><ul>
-<li><a class="reference internal" href="#run-folder-source">Run folder source</a></li>
-<li><a class="reference internal" href="#fastq-source">FASTQ source</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#extending-the-pipeline">Extending the pipeline</a><ul>
-<li><a class="reference internal" href="#checklist">Checklist</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#to-do-list">To-do list</a></li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a><ul>
-</ul>
-</li>
+<li><a class="reference internal" href="#remarks">Remarks</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 
   <h4>Next topic</h4>
-  <p class="topless"><a href="api.html"
-                        title="next chapter">API documentation</a></p>
+  <p class="topless"><a href="how-to.html"
+                        title="next chapter">Setup the <strong>rnaseq-pipeline</strong></a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/index.txt"
@@ -741,7 +265,7 @@ running and how it relates to jobs that have already finished.</dd>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="api.html" title="API documentation"
+          <a href="how-to.html" title="Setup the rnaseq-pipeline"
              >next</a> |</li>
         <li><a href="#">rnaseq-pipeline develop documentation</a> &raquo;</li> 
       </ul>
