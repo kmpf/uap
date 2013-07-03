@@ -9,20 +9,9 @@ class Cutadapt(AbstractStep):
     '''
     The cutadapt step can be used to clip adapter sequences from RNASeq reads.
     
-    Options:
-    
-    - ``adapter-R1`` and ``adapter-R2`` for paired-end reads
-    - ``adapter`` for non-paired-end reads
-    
-    Required tools:
-    
-    - cutadapt (https://code.google.com/p/cutadapt/)
-    - pigz (http://zlib.net/pigz/)
-    - cat4m
-    
     Any adapter may contain ``((INDEX))`` which will be replaced with every
-    sample's index. The resulting adapter is checked for sanity and a
-    StandardError is thrown if the adapter looks non-legit.
+    sample's index. The resulting adapter is checked for sanity and an
+    exception is thrown if the adapter looks non-legit.
     '''
     
     def __init__(self, pipeline):
@@ -37,16 +26,31 @@ class Cutadapt(AbstractStep):
         self.require_tool('cat4m')
         self.require_tool('pigz')
         self.require_tool('cutadapt')
+        self.require_tool('fix_qnames')
+        
+        '''
+        self.add_option('adapter-R1', description = 'adapter for R1 reads (for paired-end reads)')
+        self.add_option('adapter-R2', description = 'adapter for R2 reads (for paired-end reads)')
+        self.add_option('adapter', description = 'adapter for non-paired-end reads')
+        '''
 
     def setup_runs(self, complete_input_run_info, connection_info):
+        if not 'fix_qnames' in self.options:
+            self.options['fix_qnames'] = False
+            
         output_run_info = {}
         for step_name, step_input_info in complete_input_run_info.items():
             for input_run_id, input_run_info in step_input_info.items():
                 for in_path in sorted(input_run_info['output_files']['reads'].keys()):
                     suffix = ''
                     which = None
-                    if input_run_info['info']['paired_end'] == True:
-                        which = input_run_info['info']['read_number'][os.path.basename(in_path)]
+                    if self.find_upstream_info(input_run_id, 'paired_end').values()[0]:
+                        #which = input_run_info['info']['read_number'][os.path.basename(in_path)]
+                        which = ''
+                        if '_R1' in os.path.basename(in_path):
+                            which = 'R1'
+                        elif '_R2' in os.path.basename(in_path):
+                            which = 'R2'
                         if not which in ['R1', 'R2']:
                             raise StandardError("Expected R1 and R2 input files, but got this: " + in_path)
                         suffix = '-' + which
@@ -58,7 +62,7 @@ class Cutadapt(AbstractStep):
                             'output_files': {},
                             'info': {}
                         }
-                        if input_run_info['info']['paired_end'] == True:
+                        if self.find_upstream_info(input_run_id, 'paired_end').values()[0]:
                             output_run_info[output_run_id]['info']['read_number'] = which
 
                     # find adapter
@@ -66,7 +70,7 @@ class Cutadapt(AbstractStep):
 
                     # insert correct index if necessary
                     if '((INDEX))' in adapter:
-                        index = input_run_info['info']['index']
+                        index = self.find_upstream_info(input_run_id, 'index').values()[0]
                         adapter = adapter.replace('((INDEX))', index)
 
                     # make sure the adapter is looking good
@@ -98,6 +102,8 @@ class Cutadapt(AbstractStep):
                 cat4m.extend(*sorted(run_info['output_files']['reads'].values()))
 
                 pigz1 = [self.tool('pigz'), '--processes', '1', '--decompress', '--stdout']
+                
+                fix_qnames = [self.tool('fix_qnames')]
 
                 cutadapt = [self.tool('cutadapt'), '-a', run_info['info']['adapter'], '-']
 
@@ -106,5 +112,7 @@ class Cutadapt(AbstractStep):
                 # create the pipeline and run it
                 pipeline.append(cat4m)
                 pipeline.append(pigz1)
+                if self.options['fix_qnames'] == True:
+                    pipeline.append(fix_qnames)
                 pipeline.append(cutadapt, stderr_path = run_info['output_files']['log'].keys()[0])
                 pipeline.append(pigz2, stdout_path = run_info['output_files']['reads'].keys()[0])

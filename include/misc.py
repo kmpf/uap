@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import re
 
 def assign_strings(paths, tags):
@@ -71,6 +72,22 @@ def natsorted(l):
 def str_to_sha1(s):
     return hashlib.sha1(s).hexdigest()
 
+def str_to_sha1_b62(s):
+    digest = hashlib.sha1(s).digest()
+    number = 0
+    for c in digest:
+        number <<= 8
+        number += ord(c)
+    result = ''
+    alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    base = len(alphabet)
+    while number > 0:
+        digit = number % base
+        result += alphabet[digit]
+        number //= base
+    return result
+        
+    
 def bytes_to_str(num):
     for _, x in enumerate(['bytes','k','M','G']):
         if num < 1024.0:
@@ -81,3 +98,26 @@ def bytes_to_str(num):
         num /= 1024.0
     return "%1.1f %sB" % (num, 'T')
 
+def duration_to_str(duration, long = False):
+    value = str(duration)
+    if not long:
+        if 'days' in value:
+            value = value.replace(' days,', 'd')
+        if 'day' in value:
+            value = value.replace(' day,', 'd')
+        if 'd' in value and ':' in value and (value.index(':') - value.index('d')) != 4:
+            value = value[:value.index('d') + 1] + ' ' + value[value.index('d') + 1:]
+    if '.' in value:
+        value = value[0:value.index('.') + 2]
+    return value
+
+def append_suffix_to_path(path, suffix):
+    dirname, filename = os.path.split(path)
+    if '.' in filename:
+        basename = filename[:filename.index('.')]
+        extension = filename[filename.index('.'):]
+    else:
+        basename = filename
+        extension = ''
+    filename = basename + '-' + suffix + extension
+    return os.path.join(dirname, filename)

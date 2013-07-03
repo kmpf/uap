@@ -28,18 +28,23 @@ proc_files = {}
 
 if not os.path.exists('_monitor_disk_io'):
     os.mkdir('_monitor_disk_io')
-
+    
 if len(sys.argv) > 1:
+    pigz = subprocess.Popen("pigz -p 2 -b 4096 -c > _monitor_disk_io/strace-out.txt.gz", 
+                            stdin = subprocess.PIPE, shell = True)
     args = ["strace", "-f", "-o", '/dev/stderr']
     args.extend(sys.argv[1:])
     p = subprocess.Popen(args, stderr = subprocess.PIPE)
     strace_out = p.stderr
-    with open('_monitor_disk_io/strace-out.txt', 'w') as f:
-        for line in strace_out:
-            f.write(line)
+    for line in strace_out:
+        pigz.stdin.write(line)
+    pigz.stdin.close()
+    pigz.wait()
     exit(0)
 
-strace_out = open('_monitor_disk_io/strace-out.txt', 'r')
+pigz = subprocess.Popen("pigz -p 1 -d -c _monitor_disk_io/strace-out.txt.gz", 
+                        stdout = subprocess.PIPE, shell = True)
+strace_out = pigz.stdout
 
 if len(glob.glob('_monitor_disk_io/*.proc.txt')) > 0:
     os.system("rm _monitor_disk_io/*.proc.txt")
@@ -108,7 +113,10 @@ def handle_line(pid, line):
                 fd = m.group(1)
             size = retval
             if fd and size:
-                sizek = int(size) / 1024
+                try:
+                    sizek = int(size) / 1024
+                except ValueError:
+                    return
                 path = '[unknown]'
                 try:
                     path = path_for_pid_and_fd[pid][fd]

@@ -61,8 +61,8 @@ class FastqSource(AbstractSourceStep):
             for sample_name in output_run_info.keys():
                 output_run_info[sample_name]['info']['read_number'] = {}
                 for path in output_run_info[sample_name]['output_files']['reads'].keys():
-                    isR1 = '_R1' in path
-                    isR2 = '_R2' in path
+                    isR1 = '_R1' in path or '-R1' in path
+                    isR2 = '_R2' in path or '-R2' in path
                     if isR1 and isR2:
                         raise StandardError("Unable to determine read_numer, seems to be both R1 and R2: " + path)
                     if (not isR1) and (not isR2):

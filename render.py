@@ -8,6 +8,12 @@ import pipeline
 import subprocess
 import yaml
 
+def escape(s):
+    result = ''
+    for c in s:
+        result += "x%x" % ord(c)
+    return result
+
 GRADIENTS = {
     'burn': [
         [0.0, '#ffffff'],
@@ -102,14 +108,14 @@ def main():
         if step_name != step.__module__:
             label = "%s\\n(%s)" % (step_name, step.__module__)
         f.write("    %s [label=\"%s\", style = filled, fillcolor = \"#fce94f\"];\n" % (step_name, label))
-        color = gradient(float(finished_runs) / total_runs, GRADIENTS['traffic_lights'])
+        color = gradient(float(finished_runs) / total_runs if total_runs > 0 else 0.0, GRADIENTS['traffic_lights'])
         color = mix(color, '#ffffff', 0.5)
-        f.write("    %s_progress [label=\"%1.0f%%\", style = filled, fillcolor = \"%s\" height = 0.3];\n" % (step_name, float(finished_runs) * 100.0 / total_runs, color))
+        f.write("    %s_progress [label=\"%1.0f%%\", style = filled, fillcolor = \"%s\" height = 0.3];\n" % (step_name, float(finished_runs) * 100.0 / total_runs if total_runs > 0 else 0.0, color))
         f.write("    %s -> %s_progress [arrowsize = 0];\n" % (step_name, step_name))
         f.write("    {rank=same; %s %s_progress}\n" % (step_name, step_name))
         
         for c in step._connections:
-            connection_key = ('%s/%s' % (step_name, c)).replace('/', '__')
+            connection_key = escape(('%s/%s' % (step_name, c)).replace('/', '__'))
             f.write("    %s [label=\"%s\", shape = ellipse, fontsize = 10];\n" % (connection_key, c))
             if c[0:3] == 'in/':
                 f.write("    %s -> %s;\n" % (connection_key, step_name))
@@ -147,8 +153,8 @@ def main():
                     if real_outkey[0:4] != 'out/':
                         continue
                     if out_key == real_outkey:
-                        connection_key = ('%s/%s' % (step_name, in_key)).replace('/', '__')
-                        other_connection_key = ('%s/%s' % (other_step.get_step_name(), out_key)).replace('/', '__')
+                        connection_key = escape(('%s/%s' % (step_name, in_key)).replace('/', '__'))
+                        other_connection_key = escape(('%s/%s' % (other_step.get_step_name(), out_key)).replace('/', '__'))
                         f.write("    %s -> %s;\n" % (other_connection_key, connection_key))
     f.write("}\n")
     
