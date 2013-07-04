@@ -42,7 +42,7 @@ class AbstractStep(object):
         All steps this step depends on.
         '''
         
-        self.options = {}
+        self._options = {}
         '''
         Options as specified in the configuration.
         '''
@@ -103,33 +103,38 @@ class AbstractStep(object):
         self._step_name = step_name
 
     def set_options(self, options):
-        self.options = dict()
+        self._options = dict()
+        
+        # set options
         for key, value in options.items():
             if key[0] == '_':
                 if not key in AbstractStep.UNDERSCORE_OPTIONS:
                     raise StandardError("Invalid option in %s: %s" % (key, self))
-                self.options[key] = value
+                self._options[key] = value
             else:
                 if not key in self._defined_options:
                     raise StandardError("Unknown option in %s (%s): %s." % (self, self.__module__, key))
                 if type(value) not in self._defined_options[key]['types']:
                     raise StandardError("Invalid type for option %s - it's %s and should be one of %s." % (key, type(value), self._defined_options[key]['types']))
-                self.options[key] = value
-            
+                if self._defined_options[key]['choices'] != None and value not in self._defined_options[key]['choices']:
+                    raise StandardError("Invalid value '%s' specified for option %s - possible values are %s." % (value, key, self._defined_options[key]['choices']))
+                self._options[key] = value
+
+        # set default values for unset options and make sure all required options have been set        
         for key, info in self._defined_options.items():
-            if key not in self.options:
+            if key not in self._options:
                 value = info['default']
                 if value == None:
                     if info['optional'] == False:
                         raise StandardError("Required option not set in %s: %s." % (self, key))
                 else:
-                    self.options[key] = value
+                    self._options[key] = value
                 
-        if not '_volatile' in self.options:
-            self.options['_volatile'] = False
+        if not '_volatile' in self._options:
+            self._options['_volatile'] = False
             
-        print(yaml.dump(self._defined_options, default_flow_style = False))
-        print(yaml.dump(self.options, default_flow_style = False ))
+        #print(yaml.dump(self._defined_options, default_flow_style = False))
+        #print(yaml.dump(self._options, default_flow_style = False ))
 
     def add_dependency(self, parent):
         if not isinstance(parent, AbstractStep):
@@ -165,7 +170,7 @@ class AbstractStep(object):
         if not self._run_info:
             # if _BREAK: true is specified in the configuration,
             # return no runs and thus cut off further processing
-            if '_BREAK' in self.options and self.options['_BREAK']:
+            if '_BREAK' in self._options and self._options['_BREAK']:
                 return dict()
                 
             # create input run info and simplify it a bit for setup_runs
@@ -229,7 +234,7 @@ class AbstractStep(object):
 
     def get_options_hashtag(self):
         options_without_dash_prefix = dict()
-        for k, v in self.options.items():
+        for k, v in self._options.items():
             if k[0] != '_':
                 options_without_dash_prefix[k] = v
         return misc.str_to_sha1(json.dumps(options_without_dash_prefix, sort_keys=True))[0:4]
@@ -281,7 +286,8 @@ class AbstractStep(object):
             task_id = self._pipeline.task_id_for_output_file[path]
             
             task = self._pipeline.task_for_task_id[task_id]
-            if not task.step.options['_volatile']:
+#            if not task.step.options['_volatile']:
+            if not task.step._options['_volatile']:
                 # the task is not declared volatile
                 return False
             
@@ -658,7 +664,7 @@ class AbstractStep(object):
         log = {}
         log['pid'] = os.getpid()
         log['step'] = {}
-        log['step']['options'] = self.options
+        log['step']['options'] = self._options
         log['step']['name'] = self.get_step_name()
         log['step']['known_paths'] = self.known_paths
         log['run'] = {}
@@ -1056,7 +1062,7 @@ class AbstractStep(object):
     def add_option(self, key, *option_types, **kwargs):
         if not 'optional' in kwargs:
             kwargs['optional'] = False
-        for _ in ['default', 'label', 'description', 'group', 'tools']:
+        for _ in ['default', 'label', 'description', 'group', 'tools', 'choices']:
             if not _ in kwargs: 
                 kwargs[_] = None
 
@@ -1066,6 +1072,8 @@ class AbstractStep(object):
             raise StandardError("Option %s is already defined." % key)
         if len(option_types) == 0:
             raise StandardError("No option type specified for option %s." % key)
+        if len(option_types) > 1 and kwargs['choices'] != None:
+            raise StandardError("You cannot define choices if multiple options types are defined (%s)." % key)
         for option_type in option_types:
             if not  option_type in [int, float, str, bool, list, dict]:
                 raise StandardError("Invalid type for option %s: %s." % (key, option_type))
@@ -1075,7 +1083,7 @@ class AbstractStep(object):
 
         info = dict()
         info['types'] = option_types
-        for _ in ['optional', 'default', 'label', 'description', 'group', 'tools']:
+        for _ in ['optional', 'default', 'label', 'description', 'group', 'tools', 'choices']:
             info[_] = kwargs[_]
 
         self._defined_options[key] = info
@@ -1088,8 +1096,8 @@ class AbstractStep(object):
         
     def get_queued_ping_path_for_run_id(self, run_id):
         return self._get_ping_path_for_run_id(run_id, 'queued')
-    
-    def find_upstream_info(self, run_id, key, expected = 1):
+
+    def find_upstream_info_as_hash(self, run_id, key, expected = 1):
         results = dict()
         for dep in self.dependencies:
             run_info = dep.get_run_info()
@@ -1097,20 +1105,34 @@ class AbstractStep(object):
                 if 'info' in run_info[run_id]:
                     if key in run_info[run_id]['info']:
                         results[str(dep)] = run_info[run_id]['info'][key]
-            results.update(dep.find_upstream_info(run_id, key, None))
+            results.update(dep.find_upstream_info_as_hash(run_id, key, None))
         if expected is not None:
             if len(results) != expected:
                 raise StandardError("Unable to determine upstream %s/%s info from %s." % (run_id, key, self))
         return results
-        
+
+    def find_upstream_info(self, run_id, key):
+        result = self.find_upstream_info_as_hash(run_id, key, expected = 1)
+        return result.values()[0]
+
+    def option(self, key):
+        if key not in self._defined_options:
+            raise StandardError("Cannot query undefined option %s in step %s." % (key, __module__))
+        return self._options[key]
+
+    def option_set_in_config(self, key):
+        if key not in self._defined_options:
+            raise StandardError("Cannot query undefined option %s in step %s." % (key, __module__))
+        return key in self._options
+
     def get_input_run_info_for_connection(self, in_key):
         if in_key[0:3] != 'in/':
             raise StandardError("in_key does not start with 'in/': %s" % in_key)
         out_key = in_key.replace('in/', 'out/')
         allowed_steps = None
-        if '_connect' in self.options:
-            if in_key in self.options['_connect']:
-                declaration = self.options['_connect'][in_key]
+        if '_connect' in self._options:
+            if in_key in self._options['_connect']:
+                declaration = self._options['_connect'][in_key]
                 if declaration.__class__ == str:
                     if '/' in declaration:
                         parts = declaration.split('/')
