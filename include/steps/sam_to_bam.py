@@ -58,7 +58,7 @@ class SamToBam(AbstractStep):
                 with pool.Pipeline(pool) as pipeline:
                     cat4m = [self.tool('cat4m'), sam_path]
                     pigz1 = [self.tool('pigz'), '--processes', '2', '-d', '-c']
-                    samtools = [self.tool('samtools'), 'view', '-Sbt', self.options['genome'], '-']
+                    samtools = [self.tool('samtools'), 'view', '-Sbt', self.option('genome'), '-']
                     
                     pipeline.append(cat4m)
                     pipeline.append(pigz1)
@@ -73,7 +73,7 @@ class SamToBam(AbstractStep):
             with pool.Pipeline(pool) as pipeline:
                 cat4m = [self.tool('cat4m'), use_unsorted_bam_input]
                 samtools = [self.tool('samtools'), 'sort']
-                if self.options['sort_by_name']:
+                if self.option('sort_by_name'):
                     samtools.append('-n')
                 samtools.extend(['-', sorted_bam_path[:-4]])
                 
