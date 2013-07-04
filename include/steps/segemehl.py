@@ -23,14 +23,12 @@ class Segemehl(AbstractStep):
         self.require_tool('segemehl')
 
 
-    def setup_runs(self, complete_input_run_info, connection_info):
-        # make sure files are available
-        for key in ['genome', 'index']:
-            if not os.path.exists(self.options[key]):
-                raise StandardError("Could not find %s file: %s" % (key, self.options[key]))
+        self.add_option('genome', str)
+        self.add_option('index', str)
 
-        if not 'swap_reads' in self.options:
-            self.options['swap_reads'] = False
+    def setup_runs(self, complete_input_run_info, connection_info):
+
+
             
         output_run_info = {}
         for step_name, step_input_info in complete_input_run_info.items():
@@ -61,21 +59,19 @@ class Segemehl(AbstractStep):
             fifo_path_genome = pool.get_temporary_fifo('segemehl-genome-fifo', 'input')
             fifo_path_unmapped = pool.get_temporary_fifo('segemehl-unmapped-fifo', 'output')
             
-            pool.launch([self.tool('cat4m'), self.options['genome'], '-o', fifo_path_genome])
+            pool.launch([self.tool('cat4m'), self.option('genome'), '-o', fifo_path_genome])
             
             with pool.Pipeline(pool) as pipeline:
             
                 q = run_info['info']['R1-in']
                 p = run_info['info']['R2-in']
                 
-                if self.options['swap_reads']:
-                    q = run_info['info']['R2-in']
-                    p = run_info['info']['R1-in']
+
                     
                 segemehl = [
                     self.tool('segemehl'),
                     '-d', fifo_path_genome,
-                    '-i', self.options['index'],
+                    '-i', self.option('index'),
                     '-q', q,
                     '-p', p,
                     '-u', fifo_path_unmapped,

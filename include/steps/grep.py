@@ -18,13 +18,14 @@ class Grep(AbstractStep):
         self.require_tool('cat4m')
         self.require_tool('pigz')
         self.require_tool('grep')
+        self.add_option('pattern', str, optional=False)
 
+        
     def setup_runs(self, complete_input_run_info, connection_info):
         
         output_run_info = {}
         
-        if not 'pattern' in self.options:
-            raise StandardError("pattern missing")
+
         
         for step_id, step_info in complete_input_run_info.items():
             for run_id, run_info in step_info.items():

@@ -18,17 +18,13 @@ class SamToBam(AbstractStep):
         self.require_tool('cat4m')
         self.require_tool('samtools')
         self.require_tool('pigz')
+        self.add_option('sort_by_name', bool, default= False)
+        self.add_option('genome', str, optional =False)
 
     def setup_runs(self, complete_input_run_info, connection_info):
         
-        if not 'sort_by_name' in self.options:
-            self.options['sort_by_name'] = False
-            
-        # make sure files are available
-        for key in ['genome']:
-            if not os.path.exists(self.options[key]):
-                raise StandardError("Could not find %s file: %s" % (key, self.options[key]))
 
+            
         output_run_info = {}
         for step_name, step_input_info in complete_input_run_info.items():
             for run_id, input_run_info in step_input_info.items():

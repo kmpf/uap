@@ -20,22 +20,17 @@ class HtSeqCount(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('htseq-count')
         self.require_tool('grep')
-        self.require_tool('invertGood')
         self.require_tool('samtools')
 
+        self.add_option('mode', str, default='mode')
+        self.add_option('stranded', str, optional=False)
+        self.add_option('type', str, default='exon')
+        self.add_option('idattr', str, default='gene_id')
+        
+        
     def setup_runs(self, complete_input_run_info, connection_info):
         
-        if not 'mode' in self.options:
-            self.options['mode'] = 'union'
-        if not 'stranded' in self.options:
-            self.options['stranded'] = 'yes'
-        if not 'type' in self.options:
-            self.options['type'] = 'exon'
-        if not 'idattr' in self.options:
-            self.options['idattr'] = 'gene_id'
-        if not 'fix_segemehl_copd' in self.options:
-            self.options['fix_segemehl_copd'] = False
-            
+                    
         output_run_info = {}
         
         features_path = connection_info['in/features']['runs'].values()[0].values()[0][0]
@@ -67,7 +62,6 @@ class HtSeqCount(AbstractStep):
                 cat4m = [self.tool('cat4m'), run_info['info']['alignments_path']]
                 pigz = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
                 grep = [self.tool('grep'), '-v', "\t\\*\t"]
-                invertGood = [self.tool('invertGood')]
                 samtools = [self.tool('samtools'), 'view', '-h', '-']
                 htseq_count = [self.tool('htseq-count')]
                 for key in ('mode', 'stranded', 'type', 'idattr'):
@@ -81,6 +75,5 @@ class HtSeqCount(AbstractStep):
                     pipeline.append(samtools)
                 if self.options['fix_segemehl_copd'] == True:
                     pipeline.append(grep)
-                    pipeline.append(invertGood)
                 pipeline.append(htseq_count, stdout_path = run_info['info']['counts_path'])
         

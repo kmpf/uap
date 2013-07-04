@@ -29,9 +29,7 @@ class Cutadapt(AbstractStep):
         self.require_tool('fix_qnames')
         
         '''
-        self.add_option('adapter-R1', description = 'adapter for R1 reads (for paired-end reads)')
-        self.add_option('adapter-R2', description = 'adapter for R2 reads (for paired-end reads)')
-        self.add_option('adapter', description = 'adapter for non-paired-end reads')
+        self.add_option('adapter', str, list) # list for paired-end reads, string for single-end reads
         '''
 
     def setup_runs(self, complete_input_run_info, connection_info):
@@ -44,7 +42,7 @@ class Cutadapt(AbstractStep):
                 for in_path in sorted(input_run_info['output_files']['reads'].keys()):
                     suffix = ''
                     which = None
-                    if self.find_upstream_info(input_run_id, 'paired_end').values()[0]:
+                    if self.find_upstream_info(input_run_id, 'paired_end'):
                         #which = input_run_info['info']['read_number'][os.path.basename(in_path)]
                         which = ''
                         if '_R1' in os.path.basename(in_path):
@@ -62,7 +60,7 @@ class Cutadapt(AbstractStep):
                             'output_files': {},
                             'info': {}
                         }
-                        if self.find_upstream_info(input_run_id, 'paired_end').values()[0]:
+                        if self.find_upstream_info(input_run_id, 'paired_end'):
                             output_run_info[output_run_id]['info']['read_number'] = which
 
                     # find adapter
@@ -70,7 +68,7 @@ class Cutadapt(AbstractStep):
 
                     # insert correct index if necessary
                     if '((INDEX))' in adapter:
-                        index = self.find_upstream_info(input_run_id, 'index').values()[0]
+                        index = self.find_upstream_info(input_run_id, 'index')
                         adapter = adapter.replace('((INDEX))', index)
 
                     # make sure the adapter is looking good

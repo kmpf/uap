@@ -21,22 +21,19 @@ class CuffLinks(AbstractStep):
         self.require_tool('cat4m')
         self.require_tool('pigz')
         self.require_tool('cufflinks')
-        
+
+        self.add_option('library_type',str)
+        self.add_option('use_mask',str, optional=True)
+
     def setup_runs(self, complete_input_run_info, connection_info):
-        if not 'library_type' in self.options:
-            raise StandardError("Required option is missing: library_type.")
+
         
-        if 'use_mask' in self.options:
-            if not os.path.exists(self.options['use_mask']):
-                raise StandardError("You specified use_mask but the file wasn't found.")
+
         
         output_run_info = dict()
 
-        print(yaml.dump(complete_input_run_info, default_flow_style = False))
-        print(yaml.dump(connection_info, default_flow_style = False))
-        exit(1)
-
-
+        #print(yaml.dump(complete_input_run_info, default_flow_style = False))
+        #print(yaml.dump(connection_info, default_flow_style = False))
             
         for run_id, info in connection_info['in/alignments']['runs'].items():
             transcripts_path = '%s-transcripts.gtf' % run_id
@@ -67,8 +64,9 @@ class CuffLinks(AbstractStep):
                     'out-isoforms_fpkm_tracking': isoforms_fpkm_tracking_path
                 }
             }
-            if 'use_mask' in self.options:
-                run_info['info']['use_mask'] = self.options['use_mask']
+
+            if self.option_set_in_config('use_mask'):
+                run_info['info']['use_mask'] = self.option('use_mask')
             output_run_info[run_id] = run_info
             
         return output_run_info

@@ -31,7 +31,7 @@ class AbstractStep(object):
     PING_TIMEOUT = 300
     PING_RENEW = 30
     VOLATILE_SUFFIX = '.volatile.placeholder.yaml'
-    UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK']
+    UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK', '_connect']
     
     def __init__(self, pipeline):
         

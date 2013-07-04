@@ -18,50 +18,50 @@ class FastqSource(AbstractSourceStep):
         self.add_option('pattern', str)
         self.add_option('group', str)
         self.add_option('paired_end', bool)
-        
+        self.add_option('sample_id_prefix', str, optional = True)
+                
     def setup_runs(self, input_run_info, connection_info):
-        regex = re.compile(self.options['group'])
+        regex = re.compile(self.option('group'))
 
         output_run_info = {}
 
-        if not 'paired_end' in self.options:
-            raise StandardError("missing paired_end key in source")
-
-        for path in glob.glob(self.options['pattern']):
+        for path in glob.glob(self.option('pattern')):
             match = regex.match(os.path.basename(path))
             sample_id_parts = []
-            if 'sample_id_prefix' in self.options:
-                sample_id_parts.append(self.options['sample_id_prefix'])
+            if self.option_set_in_config('sample_id_prefix'):
+                sample_id_parts.append(self.option('sample_id_prefix'))
             sample_id_parts += list(match.groups())
             sample_id = '_'.join(sample_id_parts)
             if not sample_id in output_run_info:
-                output_run_info[sample_id] = { 'output_files': { 'reads': {} }, 'info': { 'paired_end': self.options['paired_end'] } }
+                output_run_info[sample_id] = { 'output_files': { 'reads': {} }, 'info': { 'paired_end': self.option('paired_end') } }
             output_run_info[sample_id]['output_files']['reads'][path] = []
 
-        if type(self.options['indices']) == str:
-            # read indices from CSV file or dictionary
-            indices_path = self.options['indices']
-            reader = csv.DictReader(open(indices_path))
-            for row in reader:
-                sample_id = row['SampleID']
-                if sample_id in output_run_info:
-                    index = row['Index']
-                    if not 'index' in output_run_info[sample_id]['info']:
-                        output_run_info[sample_id]['info']['index'] = index
-                    else:
-                        if index != output_run_info[sample_id]['info']['index']:
-                            raise StandardError("Inconsistent index defined in sample sheets for sample " + sample_id)
-        else:
-            # indices are defined in the configuration
-            for sample_id, index in self.options['indices'].items():
-                if sample_id in output_run_info:
-                    if not 'index' in output_run_info[sample_id]['info']:
-                        output_run_info[sample_id]['info']['index'] = index
-                    else:
-                        if index != output_run_info[sample_id]['info']['index']:
-                            raise StandardError("Inconsistent index defined in sample sheets for sample " + sample_id)
+        if self.option_set_in_config('indices'):
+            if type(self.option('indices')) == str:
+                # read indices from CSV file or dictionary
+                indices_path = self.option('indices')
+                reader = csv.DictReader(open(indices_path))
+                for row in reader:
+                    sample_id = row['SampleID']
+                    if sample_id in output_run_info:
+                        index = row['Index']
+                        if not 'index' in output_run_info[sample_id]['info']:
+                            output_run_info[sample_id]['info']['index'] = index
+                        else:
+                            if index != output_run_info[sample_id]['info']['index']:
+                                raise StandardError("Inconsistent index defined in sample sheets for sample " + sample_id)
+            else:
+                # indices are defined in the configuration
+                for sample_id, index in self.option('indices').items():
+                    if sample_id in output_run_info:
+                        if not 'index' in output_run_info[sample_id]['info']:
+                            output_run_info[sample_id]['info']['index'] = index
+                        else:
+                            if index != output_run_info[sample_id]['info']['index']:
+                                raise StandardError("Inconsistent index defined in sample sheets for sample " + sample_id)
 
-        if self.options['paired_end'] == True:
+                        
+        if self.option('paired_end'):
             # determine R1/R2 info for each input file: read_number
             for sample_name in output_run_info.keys():
                 output_run_info[sample_name]['info']['read_number'] = {}

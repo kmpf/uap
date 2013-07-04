@@ -185,16 +185,16 @@ class Pipeline(object):
         # step two: set dependencies
         for step_name, step in self.steps.items():
             if not step.needs_parents:
-                if '_depends' in step.options:
+                if '_depends' in step._options:
                     raise ConfigurationException("%s must not have dependencies "
                         "because it declares no in/* connections (remove the "
                         "_depends key)." % step_name)
             else:
-                if not '_depends' in step.options:
+                if not '_depends' in step._options:
                     raise ConfigurationException("Missing key in step '%s': "
                         "_depends (set to null if the step has no dependencies)." 
                         % step_name)
-                depends = step.options['_depends']
+                depends = step._options['_depends']
                 if depends == None:
                     pass
                 else:
