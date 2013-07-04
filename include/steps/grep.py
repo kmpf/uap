@@ -48,7 +48,7 @@ class Grep(AbstractStep):
                     with pool.Pipeline(pool) as pipeline:
                         cat4m = [self.tool('cat4m'), input_paths[0]]
                         pigz1 = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
-                        grep = [self.tool('grep'), self.options['pattern']]
+                        grep = [self.tool('grep'), self.option('pattern')]
                         pigz2 = [self.tool('pigz'), '--processes', '2', '--blocksize', '4096', '--stdout']
                 
                         if output_path[-3:] == '.gz':
