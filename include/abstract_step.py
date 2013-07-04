@@ -613,7 +613,7 @@ class AbstractStep(object):
                 task_id = self._pipeline.task_id_for_output_file[inpath]
                 if task_id in self._pipeline.task_for_task_id:
                     task = self._pipeline.task_for_task_id[task_id]
-                    if task.step.options['_volatile'] == True:
+                    if task.step._options['_volatile'] == True:
                         candidate_tasks.add(task)
                     
             for task in candidate_tasks:
