@@ -65,7 +65,7 @@ class HtSeqCount(AbstractStep):
                 samtools = [self.tool('samtools'), 'view', '-h', '-']
                 htseq_count = [self.tool('htseq-count')]
                 for key in ('mode', 'stranded', 'type', 'idattr'):
-                    htseq_count.extend(['--%s' % key, self.options[key]])
+                    htseq_count.extend(['--%s' % key, self.option(key)])
                 htseq_count.extend(['-', run_info['info']['features_path']])
         
                 pipeline.append(cat4m)
@@ -73,7 +73,5 @@ class HtSeqCount(AbstractStep):
                     pipeline.append(pigz)
                 elif run_info['info']['alignments_path'][-4:] == '.bam':
                     pipeline.append(samtools)
-                if self.options['fix_segemehl_copd'] == True:
-                    pipeline.append(grep)
                 pipeline.append(htseq_count, stdout_path = run_info['info']['counts_path'])
         
