@@ -81,7 +81,7 @@ class CuffLinks(AbstractStep):
                 self.tool('cufflinks'),
                 '-o', cufflinks_out_path,
                 '-p', '6',
-                "--library-type=%s" % self.options['library_type']
+                "--library-type=%s" % self.option('library_type')
             ]
             
             if 'use_mask' in run_info['info']:
