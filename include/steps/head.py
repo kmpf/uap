@@ -18,13 +18,12 @@ class Head(AbstractStep):
         self.require_tool('cat4m')
         self.require_tool('pigz')
         self.require_tool('head')
+        
+        self.add_option('lines', int, default = 1000)
 
     def setup_runs(self, complete_input_run_info, connection_info):
         
         output_run_info = {}
-        
-        if not 'lines' in self.options:
-            self.options['lines'] = 1000
         
         for step_id, step_info in complete_input_run_info.items():
             for run_id, run_info in step_info.items():
@@ -47,7 +46,7 @@ class Head(AbstractStep):
                     with pool.Pipeline(pool) as pipeline:
                         cat4m = [self.tool('cat4m'), input_paths[0]]
                         pigz1 = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
-                        head = [self.tool('head'), '-n', str(self.options['lines'])]
+                        head = [self.tool('head'), '-n', str(self.option('lines'))]
                         pigz2 = [self.tool('pigz'), '--processes', '2', '--blocksize', '4096', '--stdout']
                 
                         if output_path[-3:] == '.gz':

@@ -12,13 +12,13 @@ class RunFolderSource(AbstractSourceStep):
         
         self.add_connection('out/reads')
         
+        self.add_option('path', str)
+        self.add_option('paired_end', bool)
+        
     def setup_runs(self, input_run_info, connection_info):
-        path = self.options['path']
+        path = self.option('path')
 
         output_run_info = {}
-
-        if not 'paired_end' in self.options:
-            raise StandardError("missing paired_end key in source")
 
         if not os.path.exists(path):
             raise ConfigurationException("Source path does not exist: " + path)
@@ -30,7 +30,7 @@ class RunFolderSource(AbstractSourceStep):
                 raise ConfigurationException("Duplicate sample: " + sample_name)
             
             if not sample_name in output_run_info:
-                output_run_info[sample_name] = { 'output_files': { 'reads': {} }, 'info': { 'paired_end': self.options['paired_end'] } }
+                output_run_info[sample_name] = { 'output_files': { 'reads': {} }, 'info': { 'paired_end': self.option('paired_end') } }
             
             for path in sorted(glob.glob(os.path.join(sample_path, '*.fastq.gz'))):
                 output_run_info[sample_name]['output_files']['reads'][path] = []
@@ -47,7 +47,7 @@ class RunFolderSource(AbstractSourceStep):
                     if index != output_run_info[sample_id]['info']['index']:
                         raise StandardError("Inconsistent index defined in sample sheets for sample " + sample_id)
 
-            if self.options['paired_end'] == True:
+            if self.option('paired_end') == True:
                 # determine R1/R2 info for each input file: read_number
                 output_run_info[sample_name]['info']['read_number'] = {}
                 for path in output_run_info[sample_name]['output_files']['reads'].keys():
