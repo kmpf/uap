@@ -28,14 +28,15 @@ class Cutadapt(AbstractStep):
         self.require_tool('cutadapt')
         self.require_tool('fix_qnames')
         
+        self.add_option('adapter-R1', str)
+        self.add_option('adapter-R2', str)
+        self.add_option('fix_qnames', bool, default = False)
+        
         '''
         self.add_option('adapter', str, list) # list for paired-end reads, string for single-end reads
         '''
 
     def setup_runs(self, complete_input_run_info, connection_info):
-        if not 'fix_qnames' in self.options:
-            self.options['fix_qnames'] = False
-            
         output_run_info = {}
         for step_name, step_input_info in complete_input_run_info.items():
             for input_run_id, input_run_info in step_input_info.items():
@@ -64,7 +65,7 @@ class Cutadapt(AbstractStep):
                             output_run_info[output_run_id]['info']['read_number'] = which
 
                     # find adapter
-                    adapter = self.options['adapter' + suffix]
+                    adapter = self.option('adapter' + suffix)
 
                     # insert correct index if necessary
                     if '((INDEX))' in adapter:
@@ -110,7 +111,7 @@ class Cutadapt(AbstractStep):
                 # create the pipeline and run it
                 pipeline.append(cat4m)
                 pipeline.append(pigz1)
-                if self.options['fix_qnames'] == True:
+                if self.option('fix_qnames') == True:
                     pipeline.append(fix_qnames)
                 pipeline.append(cutadapt, stderr_path = run_info['output_files']['log'].keys()[0])
                 pipeline.append(pigz2, stdout_path = run_info['output_files']['reads'].keys()[0])
