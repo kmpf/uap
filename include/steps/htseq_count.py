@@ -27,6 +27,9 @@ class HtSeqCount(AbstractStep):
         self.add_option('type', str, default='exon')
         self.add_option('idattr', str, default='gene_id')
         
+        # TODO: remove fix_segemehl_copd option
+        self.add_option('fix_segemehl_copd', bool, default = False)
+        
         
     def setup_runs(self, complete_input_run_info, connection_info):
         

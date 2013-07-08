@@ -29,6 +29,9 @@ class TopHat2(AbstractStep):
 
         self.add_option('index', str)
         self.add_option('library_type', str, choices = ['fr-unstranded', 'fr-firststrand', 'fr-secondstrand'])
+        
+        # TODO: remove swap_reads option
+        self.add_option('swap_reads', bool, default = False)
 
     def setup_runs(self, complete_input_run_info, connection_info):
         # make sure files are available

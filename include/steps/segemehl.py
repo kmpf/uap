@@ -25,6 +25,9 @@ class Segemehl(AbstractStep):
 
         self.add_option('genome', str)
         self.add_option('index', str)
+        
+        # TODO: remove swap_reads option
+        self.add_option('swap_reads', bool, default = False)
 
     def setup_runs(self, complete_input_run_info, connection_info):
 
