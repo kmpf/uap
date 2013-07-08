@@ -13,6 +13,7 @@ def main():
     group_by_status = True
     summarize = False
     graph = False
+    show_out_dirs = False
     
     if '--summarize' in sys.argv:
         sys.argv.remove('--summarize')
@@ -22,6 +23,10 @@ def main():
         sys.argv.remove('--graph')
         graph = True
     
+    if '--show-out-dirs' in sys.argv:
+        sys.argv.remove('--show-out-dirs')
+        show_out_dirs = True
+        
     if len(sys.argv) > 1:
         if sys.argv[1] == '--sources':
             # print all sources (i. e. instances of AbstractSourceStep)
@@ -38,7 +43,10 @@ def main():
                 report['state'] = p.steps[step_name].get_run_state(run_id)
                 print(yaml.dump(report, default_flow_style = False))
     else:
-        if graph:
+        if show_out_dirs:
+            for step_name in p.topological_step_order:
+                print(p.steps[step_name].get_output_directory())
+        elif graph:
             step_order = p.topological_step_order
             indents = [0 for _ in step_order]
             for index, line in enumerate(step_order):
