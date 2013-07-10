@@ -19,59 +19,51 @@ class FastqSource(AbstractSourceStep):
         self.add_option('group', str)
         self.add_option('paired_end', bool)
         self.add_option('sample_id_prefix', str, optional = True)
-                
-    def setup_runs(self, input_run_info, connection_info):
+        
+    def declare_runs(self):
         regex = re.compile(self.option('group'))
-
-        output_run_info = {}
-
+        
+        found_files = dict()
+        
+        # find FASTQ files
         for path in glob.glob(self.option('pattern')):
             match = regex.match(os.path.basename(path))
+            if match == None:
+                raise StandardError("Couldn't match regex /%s/ to file %s." % (self.option('group'), os.path.basename(path)))
+            
             sample_id_parts = []
             if self.option_set_in_config('sample_id_prefix'):
                 sample_id_parts.append(self.option('sample_id_prefix'))
+                
             sample_id_parts += list(match.groups())
             sample_id = '_'.join(sample_id_parts)
-            if not sample_id in output_run_info:
-                output_run_info[sample_id] = { 'output_files': { 'reads': {} }, 'info': { 'paired_end': self.option('paired_end') } }
-            output_run_info[sample_id]['output_files']['reads'][path] = []
+            if not sample_id in found_files:
+                found_files[sample_id] = list()
+            found_files[sample_id].append(path)
 
+        # declare a run for every sample
+        for run_id, paths in found_files.items():
+            with self.declare_run(run_id) as run:
+                run.add_public_info("paired_end", self.option("paired_end"))
+                for path in paths:
+                    run.add_output_file("reads", path, [])
+
+        # determine index information...
+        # retrieve each run and punch in the information
         if self.option_set_in_config('indices'):
             if type(self.option('indices')) == str:
-                # read indices from CSV file or dictionary
+                # read indices from CSV file
                 indices_path = self.option('indices')
                 reader = csv.DictReader(open(indices_path))
                 for row in reader:
                     sample_id = row['SampleID']
-                    if sample_id in output_run_info:
+                    run = self.get_run(sample_id)
+                    if run != None:
                         index = row['Index']
-                        if not 'index' in output_run_info[sample_id]['info']:
-                            output_run_info[sample_id]['info']['index'] = index
-                        else:
-                            if index != output_run_info[sample_id]['info']['index']:
-                                raise StandardError("Inconsistent index defined in sample sheets for sample " + sample_id)
+                        run.add_public_info('index', index)
             else:
                 # indices are defined in the configuration
                 for sample_id, index in self.option('indices').items():
-                    if sample_id in output_run_info:
-                        if not 'index' in output_run_info[sample_id]['info']:
-                            output_run_info[sample_id]['info']['index'] = index
-                        else:
-                            if index != output_run_info[sample_id]['info']['index']:
-                                raise StandardError("Inconsistent index defined in sample sheets for sample " + sample_id)
-
-                        
-        if self.option('paired_end'):
-            # determine R1/R2 info for each input file: read_number
-            for sample_name in output_run_info.keys():
-                output_run_info[sample_name]['info']['read_number'] = {}
-                for path in output_run_info[sample_name]['output_files']['reads'].keys():
-                    isR1 = '_R1' in path or '-R1' in path
-                    isR2 = '_R2' in path or '-R2' in path
-                    if isR1 and isR2:
-                        raise StandardError("Unable to determine read_numer, seems to be both R1 and R2: " + path)
-                    if (not isR1) and (not isR2):
-                        raise StandardError("Unable to determine read_numer, seems to be neither R1 nor R2: " + path)
-                    output_run_info[sample_name]['info']['read_number'][os.path.basename(path)] = 'R1' if isR1 else 'R2'
-                    
-        return output_run_info
+                    run = self.get_run(sample_id)
+                    if run != None:
+                        run.add_public_info('index', index)

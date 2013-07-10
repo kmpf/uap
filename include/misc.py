@@ -3,15 +3,28 @@ import json
 import os
 import re
 
+# an enum class, yanked from http://stackoverflow.com/questions/36932/whats-the-best-way-to-implement-an-enum-in-python
+class Enum(set):
+    def __init__(self, _list):
+        self.order = _list
+        super(Enum, self).__init__(_list)
+
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
 def assign_strings(paths, tags):
     '''
-    Assign strings (path names, for example) to tags. Example:
+    Assign N strings (path names, for example) to N tags. Example:
     
     - paths = ['RIB0000794-cutadapt-R1.fastq.gz', 'RIB0000794-cutadapt-R2.fastq.gz']
     - tags = ['R1', 'R2']
     - result = { 'R1': 'RIB0000794-cutadapt-R1.fastq.gz', 'R2': 'RIB0000794-cutadapt-R2.fastq.gz' }
       
     If this is not possible without ambiguities, a StandardError is thrown.
+    Attention: The number of paths must be equal to the number of tags, a 1:1 relation
+    is returned, if possible.
     '''
 
     def check_candidate(paths, tags, head, tail):
@@ -58,6 +71,17 @@ def assign_strings(paths, tags):
         raise StandardError("Unable to find an unambiguous mapping.")
     
     return results[results.keys()[0]]
+
+def assign_string(s, tags):
+    match = None
+    for tag in tags:
+        if tag in s:
+            if match != None:
+                raise StandardError("Could not unambiguously match %s to %s." % (s, tags))
+            match = tag
+    if match == None:
+        raise StandardError("Could not match %s to %s." % (s, tags))
+    return match
 
 def natsorted(l):
     '''

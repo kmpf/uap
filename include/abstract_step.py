@@ -24,6 +24,104 @@ import traceback
 import yaml
 
 
+class Run(object):
+    def __init__(self, step, run_id):
+        if '/' in run_id:
+            raise StandardError("Error: A run ID must not contain a slash: %s." % run_id)
+        self._step = step
+        self._run_id = run_id
+        self._private_info = dict()
+        self._public_info = dict()
+        self._output_files = dict()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        pass
+
+    def add_private_info(self, key, value):
+        if key in self._private_info and value != self._private_info[key]:
+            raise StandardError(
+                "You're trying to overwrite private info %s with %s, "
+                "but there's already a different value stored: %s." %
+                (key, value, self._private_info[key]))
+        self._private_info[key] = value
+
+    def add_public_info(self, key, value):
+        if key in self._public_info and value != self._public_info[key]:
+            raise StandardError(
+                "You're trying to overwrite public info %s with %s, "
+                "but there's already a different value stored: %s." %
+                (key, value, self._public_info[key]))
+        self._public_info[key] = value
+
+    def add_output_file(self, tag, out_path, in_paths):
+        # make sure there's no slash in out_path unless it's a source step
+        if '/' in out_path and AbstractSourceStep not in self._step.__class__.__bases__:
+            raise StandardError("There must be no slash (/) in any output "
+                "file declared by a step: %s." % out_path)
+        # make sure tag was declared with an outgoing connection
+        if 'out/' + tag not in self._step._connections:
+            raise StandardError("Invalid output_file tag '%s' in %s. "
+                "You might want to add self.add_connection('out/%s') "
+                "to the constructor of %s."
+                % (tag, str(self._step), tag, self._step.__module__))
+
+        if tag not in self._output_files:
+            self._output_files[tag] = dict()
+
+        if out_path in self._output_files[tag]:
+            raise StandardError(
+                "You're trying to re-add an output file which has already "
+                "been declared: %s." % out_path)
+
+        self._output_files[tag][out_path] = in_paths
+
+    def output_files(self):
+        result = dict()
+        for tag in self._output_files:
+            result[tag] = dict()
+            for out_path, in_paths in self._output_files[tag].items():
+                directory = self._step.get_output_directory_du_jour()
+                if directory != None:
+                    full_path = os.path.join(directory, out_path)
+                else:
+                    full_path = out_path
+                result[tag][full_path] = in_paths
+        return result
+
+    def get_single_output_file_for_tag(self, tag):
+        temp = self.output_files()
+        if len(temp[tag]) != 1:
+            raise StandardError("More than one output file declared for out/%s." % tag)
+        return temp[tag].keys()[0]
+
+    def get_input_files_for_output_file(self, out_path):
+        temp = self.output_files()
+        for tag in temp.keys():
+            if out_path in temp[tag].keys():
+                return sorted(temp[tag][out_path])
+        raise StandardError("Sorry, your output file couldn't be found in the dictionary: %s." % out_path)
+
+    def public_info(self, key):
+        return self._public_info[key]
+
+    def has_public_info(self, key):
+        return (key in self._public_info)
+
+    def private_info(self, key):
+        return self._private_info[key]
+
+    def as_dict(self):
+        result = dict()
+        result['output_files'] = self._output_files
+        result['private_info'] = self._private_info
+        result['public_info'] = self._public_info
+        result['run_id'] = self._run_id
+        return result
+
+
 class AbstractStep(object):
     
     fsc = fscache.FSCache()
@@ -33,6 +131,8 @@ class AbstractStep(object):
     VOLATILE_SUFFIX = '.volatile.placeholder.yaml'
     UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK', '_connect']
     
+    states = misc.Enum(['DEFAULT', 'DECLARING', 'EXECUTING'])
+
     def __init__(self, pipeline):
         
         self._pipeline = pipeline
@@ -53,10 +153,10 @@ class AbstractStep(object):
         to allow for multiple steps of the same kind.
         '''
         
-        self._run_info = None
+        self._runs = None
         '''
-        Cached run information. ``setup_runs`` is only called once, the
-        post-processed results are stored in here.
+        Cached run information. ``declare_runs`` is only called once, the
+        post-processed run objects are stored in here.
         '''
         
         self._temp_directory = None
@@ -81,6 +181,8 @@ class AbstractStep(object):
         
         self.finalized = False
         
+        self._state = AbstractStep.states.DEFAULT
+
     def finalize(self):
         if self.finalized:
             return
@@ -153,84 +255,47 @@ class AbstractStep(object):
             input_run_info[parent.get_step_name()] = copy.deepcopy(parent.get_run_info())
         return input_run_info
 
-    def setup_runs(self, input_run_info, connection_info = {}):
+    def declare_runs(self):
         '''
         Raise NotImplementedError because every subclass must override this method.
         '''
         raise NotImplementedError()
 
-    def execute(self, run_id, run_info):
+    def execute(self, run_id, run):
         '''
         Raise NotImplementedError because every subclass must override this method.
         '''
         raise NotImplementedError()
 
     def get_run_info(self):
-        # create run info if it doesn't exist yet
-        if not self._run_info:
+        # create runs if they don't exist yet
+        if not self._runs:
             # if _BREAK: true is specified in the configuration,
             # return no runs and thus cut off further processing
             if '_BREAK' in self._options and self._options['_BREAK']:
                 return dict()
                 
-            # create input run info and simplify it a bit for setup_runs
-            input_run_info = copy.deepcopy(self.get_input_run_info())
-            full_paths = dict()
-
-            # strip directories from file names, strip input files
-            for step_name in input_run_info.keys():
-                for run_id, run_info in input_run_info[step_name].items():
-                    for tag in run_info['output_files'].keys():
-                        for path in run_info['output_files'][tag].keys():
-                            basename = os.path.basename(path)
-                            if basename in full_paths:
-                                raise StandardError("There are multiple input filenames with the same basename.")
-                            full_paths[basename] = path
-                            run_info['output_files'][tag][basename] = run_info['output_files'][tag][path]
-                            run_info['output_files'][tag].pop(path)
-
-            connection_info = {}
-            for c in self._connections:
-                if c[0:3] != 'in/':
-                    continue
-                connection_info[c] = self.get_input_run_info_for_connection(c)
-                
-            self._run_info = self.setup_runs(input_run_info, connection_info)
+            self._runs = dict()
             
-            # verify run_ids and connection keys
-            for run_id, run_info in self._run_info.items():
-                if '/' in run_id:
-                    raise StandardError("Run IDs must not contain a slash ('/'): %s "
-                        "returns a run called %s." % (self, run_id))
-                for tag in run_info['output_files'].keys():
-                    if not 'out/' + tag in self._connections:
-                        raise StandardError("Invalid output_file tag '%s' in %s. "
-                            "You might want to add self.add_connection('out/%s')"
-                            "to the constructor of %s." 
-                            % (tag, str(self), tag, self.__class__))
+            self._state = AbstractStep.states.DECLARING
+            self.declare_runs()
+            self._state = AbstractStep.states.DEFAULT
             
-            for run_id, run_info in self._run_info.items():
-                for tag in run_info['output_files'].keys():
-                    for path in run_info['output_files'][tag].keys():
-                        full_paths[path] = os.path.join(self.get_output_directory(), path)
-
-            self._run_info = fix_dict(self._run_info, fix_func_dict_subst, full_paths)
-                        
             # define file dependencies
-            for run_id in self._run_info.keys():
-                for tag in self._run_info[run_id]['output_files'].keys():
-                    for output_path, input_paths in self._run_info[run_id]['output_files'][tag].items():
+            for run_id in self._runs.keys():
+                for tag in self._runs[run_id].output_files().keys():
+                    for output_path, input_paths in self._runs[run_id].output_files()[tag].items():
                         self._pipeline.add_file_dependencies(output_path, input_paths)
                         task_id = '%s/%s' % (str(self), run_id)
                         self._pipeline.add_task_for_output_file(output_path, task_id)
                         for inpath in input_paths:
                             self._pipeline.add_task_for_input_file(inpath, task_id)
-                        
-        # now that the _run_info exists, it remains constant, just return it
-        return self._run_info
+
+        # now that _runs exists, it remains constant, just return it
+        return copy.deepcopy(self._runs)
 
     def get_run_ids(self):
-        return self.get_run_info().keys()
+        return sorted(self.get_run_info().keys())
 
     def get_options_hashtag(self):
         options_without_dash_prefix = dict()
@@ -255,6 +320,22 @@ class AbstractStep(object):
     def get_output_directory(self):
         return os.path.join(self._pipeline.config['destination_path'], 
             '%s-%s' % (self.get_step_name(), self.get_options_hashtag()))
+
+    def get_output_directory_du_jour(self):
+        '''
+        Returns this step's output directory according to its current state:
+            - if we are currently calling a step's declare_runs() method, this
+              will return None
+            - if we are currently calling a step's execute() method, this will
+              return the temporary directory
+            - otherwise, it will return the real output directory
+        '''
+        if self._state == AbstractStep.states.DEFAULT:
+            return self.get_output_directory()
+        elif self._state == AbstractSourceStep.states.EXECUTING:
+            return self._temp_directory
+        else:
+            return None
 
     def get_temp_output_directory(self, run_id):
         while True:
@@ -401,8 +482,8 @@ class AbstractStep(object):
         
         run_info = self.get_run_info()
         max_level = 0
-        for tag in run_info[run_id]['output_files'].keys():
-            for output_file in run_info[run_id]['output_files'][tag].keys():
+        for tag, output_files in run_info[run_id].output_files().items():
+            for output_file in output_files:
                 max_level = max(max_level, up_to_dateness_level(output_file))
 
         if max_level == 0:
@@ -430,6 +511,10 @@ class AbstractStep(object):
         return run_state
         
     def run(self, run_id):
+
+        # this is the run we'll execute now
+        run = self._runs[run_id]
+
         # create the output directory if it doesn't exist yet
         if not os.path.isdir(self.get_output_directory()):
             os.makedirs(self.get_output_directory())
@@ -447,12 +532,9 @@ class AbstractStep(object):
         self._temp_directory = temp_directory
         os.makedirs(temp_directory)
 
-        # call execute() but pass output file paths with the temporary directory
-        temp_run_info = copy.deepcopy(self.get_run_info()[run_id])
-
         # prepare self.known_paths
         self.known_paths = dict()
-        for tag, tag_info in temp_run_info['output_files'].items():
+        for tag, tag_info in run.output_files().items():
             for output_path, input_paths in tag_info.items():
                 # add the real output path
                 self.known_paths[output_path] = {'type': 'output', 'designation': 'output', 'label': os.path.basename(output_path), 'type': 'step_file'}
@@ -461,13 +543,6 @@ class AbstractStep(object):
                 for input_path in input_paths:
                     self.known_paths[input_path] = {'type': 'input', 'designation': 'input', 'label': os.path.basename(input_path), 'type': 'step_file'}
 
-        temp_paths = {}
-        for tag in temp_run_info['output_files'].keys():
-            for out_path, in_paths in temp_run_info['output_files'][tag].items():
-                temp_paths[out_path] = os.path.join(temp_directory, os.path.basename(out_path))
-
-        temp_run_info = fix_dict(temp_run_info, fix_func_dict_subst, temp_paths)
-        
         # now write the run ping file
         executing_ping_info = dict()
         executing_ping_info['start_time'] = datetime.datetime.now()
@@ -495,14 +570,15 @@ class AbstractStep(object):
         self.start_time = datetime.datetime.now()
         self._pipeline.notify("[INFO] starting %s/%s on %s" % (str(self), run_id, socket.gethostname()))
         caught_exception = None
+        self._state = AbstractStep.states.EXECUTING
         try:
-            self.execute(run_id, temp_run_info)
+            self.execute(run_id, run)
         except Exception as e:
             # Oh my. We have a situation. This is awkward. Tell the process pool to wrap up.
             # This way, we can try to get process stats before shutting everything down.
             process_pool.ProcessPool.kill()
             # Store the exception, re-raise it later
-            caught_exception = e
+            caught_exception = sys.exc_info()
         finally:
             try:
                 os.kill(executing_ping_pid, signal.SIGTERM)
@@ -528,23 +604,24 @@ class AbstractStep(object):
         
         self.end_time = datetime.datetime.now()
         
-        if not self._pipeline.caught_signal and caught_exception is None:
+        if (not self._pipeline.caught_signal) and (caught_exception is None):
             # if we're here, we can assume the step has finished successfully
             # now rename the output files (move from temp directory to
             # destination directory)
             
-            for tag in temp_run_info['output_files'].keys():
-                for out_path in temp_run_info['output_files'][tag].keys():
+            for tag in run._output_files.keys():
+                for out_path in run._output_files[tag].keys():
+                    source_path = os.path.join(self._temp_directory, os.path.basename(out_path))
                     destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
                     # first, delete a possibly existing volatile placeholder file
                     destination_path_volatile = destination_path + AbstractStep.VOLATILE_SUFFIX
                     if os.path.exists(destination_path_volatile):
                         os.unlink(destination_path_volatile)
                     # TODO: if the destination path already exists, this will overwrite the file.
-                    if os.path.exists(out_path):
-                        os.rename(out_path, destination_path)
+                    if os.path.exists(source_path):
+                        os.rename(source_path, destination_path)
                     else:
-                        caught_exception = StandardError("The step failed to produce an output file it announced: %s\n\nHere are the details:\n%s" % (os.path.basename(out_path), annotation_str))
+                        caught_exception = (None, StandardError("The step failed to produce an output file it announced: %s." % os.path.basename(out_path)), None)
 
         for path, path_info in self.known_paths.items():
             if os.path.exists(path):
@@ -552,6 +629,7 @@ class AbstractStep(object):
                 
         annotation_path, annotation_str = self.write_annotation(run_id, self.get_output_directory() if ((self._pipeline.caught_signal is None) and (caught_exception is None)) else self._temp_directory)
 
+        self._state = AbstractStep.states.DEFAULT
         self._temp_directory = None
 
         if self._pipeline.caught_signal is not None or caught_exception is not None:
@@ -564,11 +642,11 @@ class AbstractStep(object):
                 attachment['data'] = open(annotation_path + '.png').read()
             self._pipeline.notify(message, attachment)
             if caught_exception is not None:
-                raise caught_exception
+                raise caught_exception[1], None, caught_exception[2]
         else:
             # create a symbolic link to the annotation for every output file
-            for tag in temp_run_info['output_files'].keys():
-                for out_path in temp_run_info['output_files'][tag].keys():
+            for tag in run._output_files.keys():
+                for out_path in run._output_files[tag].keys():
                     destination_path = os.path.join(self.get_output_directory(), '.' + os.path.basename(out_path) + '.annotation.yaml')
                     # overwrite the symbolic link if it already exists
                     if os.path.exists(destination_path):
@@ -709,6 +787,11 @@ class AbstractStep(object):
         except:
             # rendering the pipeline graph is not _that_ important, after all
             # we can still try to render it later from the annotation file
+            print("There was an error rendering the annotation.")
+            print("Here is the information but we'll keep calm and carry on:")
+            print(sys.exc_info()[1])
+            import traceback
+            traceback.print_tb(sys.exc_info()[2])
             pass
         
         return annotation_path, annotation_yaml
@@ -1102,9 +1185,8 @@ class AbstractStep(object):
         for dep in self.dependencies:
             run_info = dep.get_run_info()
             if run_id in run_info:
-                if 'info' in run_info[run_id]:
-                    if key in run_info[run_id]['info']:
-                        results[str(dep)] = run_info[run_id]['info'][key]
+                if run_info[run_id].has_public_info(key):
+                    results[str(dep)] = run_info[run_id].public_info(key)
             results.update(dep.find_upstream_info_as_hash(run_id, key, None))
         if expected is not None:
             if len(results) != expected:
@@ -1174,7 +1256,7 @@ class AbstractStep(object):
                 result['counts']['total_steps'] += 1
                 for run_id, run_info in step_info.items():
                     result['counts']['total_runs'] += 1
-                    paths = run_info['output_files'][bare_out_key].keys()
+                    paths = run_info.output_files()[bare_out_key].keys()
                     result['counts']['total_files'] += len(paths)
                     if not run_id in result['runs']:
                         result['runs'][run_id] = dict()
@@ -1199,6 +1281,28 @@ class AbstractStep(object):
 
         return result
 
+    def run_ids_and_input_files_for_connection(self, in_key):
+        result = self.get_input_run_info_for_connection(in_key)
+        for run_id, info in result['runs'].items():
+            input_files = list()
+            for step_name, input_paths in info.items():
+                input_files.extend(input_paths)
+            input_files = sorted(input_files)
+            yield run_id, input_files
+
+    def declare_run(self, run_id):
+        if run_id in self._runs:
+            raise StandardError("Cannot declare the same run ID twice: %s." % run_id)
+        run = Run(self, run_id)
+        self._runs[run_id] = run
+        return run
+
+    def get_run(self, run_id):
+        if run_id in self._runs:
+            return self._runs[run_id]
+        else:
+            return None
+
     
 class AbstractSourceStep(AbstractStep):
     '''
@@ -1215,19 +1319,3 @@ class AbstractSourceStep(AbstractStep):
 
     def __init__(self, pipeline):
         super(AbstractSourceStep, self).__init__(pipeline)
-
-def fix_dict(data, fix_func, *args):
-    if data.__class__ == list:
-        return [fix_dict(_, fix_func, *args) for _ in data]
-    elif data.__class__ == dict:
-        result = {}
-        for k, v in data.items():
-            result[fix_dict(k, fix_func, *args)] = fix_dict(v, fix_func, *args)
-        return result
-    else:
-        return fix_func(data, *args)
-
-def fix_func_dict_subst(v, full_paths):
-    if v in full_paths:
-        return full_paths[v]
-    return v
