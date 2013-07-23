@@ -2,6 +2,7 @@
 
 import sys
 sys.path.append('./include')
+import argsparse
 import copy
 import misc
 import os
@@ -10,6 +11,15 @@ import process_pool
 import signal
 import socket
 import yaml
+
+parser = argsparse.ArgumentParser(
+    description='This script starts the "rnaseq-pipeline" on the local machine.\n' +
+                'Start the complete pipeline as configured in config.yaml:\n' +
+                '$ ./run-locally.py \n' +
+                'Start a specific task:\n' +
+                '$ ./run-locally.py <task-ID>\n',
+    formatter_class=argsparse.RawTextHelpFormatter)
+args = parser.parse_args()
 
 def main():
     p = pipeline.Pipeline()

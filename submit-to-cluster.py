@@ -3,6 +3,7 @@
 import sys
 sys.path.append('./include')
 import abstract_step
+import argparse
 import fscache
 import pipeline
 import datetime
@@ -11,6 +12,24 @@ import os
 import re
 import subprocess
 import yaml
+
+parser = argparse.ArgumentParser(
+    description='This script submits all tasks configured in config.yaml to a ' +
+                'Sun GridEngine cluster via qsub. The list of tasks can be ' +
+                'narrowed down by specifying a step name (in which case all ' +
+                'runs of this steps will be considered) or individual tasks ' +
+                '(step_name/run_id).',
+    formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument("--highmem", 
+                    help="requests the highmem node of the cluster",
+                    action="store_true")
+parser.add_argument("-t","--task",
+                    nargs='*',
+                    type=str,
+                    help="")
+
+args = parser.parse_args()
+
 
 '''
 By default, this script submits all tasks to a Sun GridEngine cluster via
@@ -40,10 +59,9 @@ def main():
     p = pipeline.Pipeline()
     
     use_highmem = False
-    if '--highmem' in sys.argv:
+    if args.highmem:
         print("Passing -l highmem to qsub...")
         use_highmem = True
-        sys.argv.remove('--highmem')
 
     task_wish_list = None
     if len(sys.argv) > 1:

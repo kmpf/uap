@@ -10,7 +10,6 @@ class RawFileSource(AbstractStep):
         super(RawFileSource, self).__init__(pipeline)
 
         self.add_connection('out/raw')
-        self.require_tool('cat4m')
 
     def setup_runs(self, input_run_info, connection_info):
         output_run_info = {}
