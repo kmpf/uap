@@ -20,16 +20,37 @@ parser = argparse.ArgumentParser(
                 'runs of this steps will be considered) or individual tasks ' +
                 '(step_name/run_id).',
     formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument("--highmem", 
-                    help="requests the highmem node of the cluster",
-                    action="store_true")
-parser.add_argument("-t","--task",
+
+parser.add_argument("--highmem",
+                    dest="highmem",
+                    action="store_true",
+                    help="this flag must be set if the highmem node of the " +
+                    "cluster is being used.")
+
+parser.add_argument("--even-if-dirty",
+                    dest="even_if_dirty",
+                    action="store_true",
+                    help="Must be set if the local git repository " +
+                    "contains uncommited changes. Otherwise the pipeline " +
+                    "will not start.")
+
+parser.add_argument("-s", "--step",
+                    dest="step",
                     nargs='*',
                     type=str,
-                    help="")
+                    help="Can take multiple step names as input. A step name " +
+                    "is the name of any entry in the 'steps:' section " +
+                    "as defined in 'config.yaml'")
+
+parser.add_argument("-t","--task",
+                    dest="task",
+                    nargs='*',
+                    type=str,
+                    help="Can take multiple task ID(s) as input. A task ID " +
+                    "looks like ths 'step_name/run_id'. A list of all task IDs " +
+                    "is returned by running './status.py'.")
 
 args = parser.parse_args()
-
 
 '''
 By default, this script submits all tasks to a Sun GridEngine cluster via
@@ -63,10 +84,11 @@ def main():
         print("Passing -l highmem to qsub...")
         use_highmem = True
 
+    all_tasks = args.step + args.task
     task_wish_list = None
-    if len(sys.argv) > 1:
+    if len(all_tasks) >= 1:
         task_wish_list = list()
-        for _ in sys.argv[1:]:
+        for _ in all_tasks[1:]:
             if '/' in _:
                 task_wish_list.append(_)
             else:
@@ -129,7 +151,7 @@ def main():
             email = p.config['email']
         submit_script = submit_script.replace("#{EMAIL}", email)
         args = ['./run-locally.py']
-        if '--even-if-dirty' in original_argv:
+        if args.even_if_dirty:
             args.append('--even-if-dirty')
         args.append('"' + str(task) + '"')
         submit_script = submit_script.replace("#{COMMAND}", ' '.join(args))
