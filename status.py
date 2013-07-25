@@ -3,9 +3,68 @@
 
 import sys
 sys.path.append('./include')
+import argparse
 import pipeline
 import string
 import yaml
+
+'''
+By default, this script 
+
+'''
+
+
+parser = argparse.ArgumentParser(
+    description='This script submits all tasks configured in config.yaml to a ' +
+                'Sun GridEngine cluster via qsub. The list of tasks can be ' +
+                'narrowed down by specifying a step name (in which case all ' +
+                'runs of this steps will be considered) or individual tasks ' +
+                '(step_name/run_id).',
+    formatter_class=argparse.RawTextHelpFormatter)
+
+parser.add_argument("--summarize",
+                    dest="summarize",
+                    action="store_true",
+                    help="")
+
+parser.add_argument("--graph",
+                    dest="graph",
+                    action="store_true",
+                    help="")
+
+parser.add_argument("--even-if-dirty",
+                    dest="even_if_dirty",
+                    action="store_true",
+                    help="Must be set if the local git repository " +
+                    "contains uncommited changes. Otherwise the pipeline " +
+                    "will not start.")
+
+parser.add_argument("--sources",
+                    dest="sources",
+                    nargs='*',
+                    type=str,
+                    help="Can take multiple step names as input. A step name " +
+                    "is the name of any entry in the 'steps:' section " +
+                    "as defined in 'config.yaml'")
+
+parser.add_argument("-s", "--step",
+                    dest="step",
+                    nargs='*',
+                    type=str,
+                    help="Can take multiple step names as input. A step name " +
+                    "is the name of any entry in the 'steps:' section " +
+                    "as defined in 'config.yaml'")
+
+parser.add_argument("-t","--task",
+                    dest="task",
+                    nargs='*',
+                    type=str,
+                    help="Can take multiple task ID(s) as input. A task ID " +
+                    "looks like ths 'step_name/run_id'. A list of all task IDs " +
+                    "is returned by running './status.py'.")
+
+args = parser.parse_args()
+
 
 def main():
     p = pipeline.Pipeline()
@@ -14,12 +73,10 @@ def main():
     summarize = False
     graph = False
     
-    if '--summarize' in sys.argv:
-        sys.argv.remove('--summarize')
+    if summarize:
         summarize = True
 
-    if '--graph' in sys.argv:
-        sys.argv.remove('--graph')
+    if graph:
         graph = True
     
     if len(sys.argv) > 1:

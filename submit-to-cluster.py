@@ -13,6 +13,28 @@ import re
 import subprocess
 import yaml
 
+'''
+By default, this script submits all tasks to a Sun GridEngine cluster via
+qsub. The list of tasks can be narrowed down by specifying a step name
+(in which case all runs of this steps will be considered) or individual
+tasks (step_name/run_id).
+
+At this point, we have a task wish list.
+
+This task wish list is now processed one by one (in topological order):
+
+- determine status of current task
+- if it's finished or running or queued, skip it
+- if it's ready, submit it
+- if it's waiting, there is at least one parent task which is not yet finished
+- determine all parent tasks which are not finished yet, for each parent:
+  - if it's running or queued, determine its job_id from the queued-ping file
+  - if it's ready or waiting, we must skip this task because it should have been 
+    enqueued a couple of iterations ago (this is because a selection has been
+    made and there are unfinished, non-running, unqueued dependencies)
+  - now add all these collected job_ids to the submission via -hold_jid
+'''
+
 parser = argparse.ArgumentParser(
     description='This script submits all tasks configured in config.yaml to a ' +
                 'Sun GridEngine cluster via qsub. The list of tasks can be ' +
@@ -24,7 +46,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument("--highmem",
                     dest="highmem",
                     action="store_true",
-                    help="this flag must be set if the highmem node of the " +
+                    help="Must be set if the highmem node of the " +
                     "cluster is being used.")
 
 parser.add_argument("--even-if-dirty",
@@ -51,28 +73,6 @@ parser.add_argument("-t","--task",
                     "is returned by running './status.py'.")
 
 args = parser.parse_args()
-
-'''
-By default, this script submits all tasks to a Sun GridEngine cluster via
-qsub. The list of tasks can be narrowed down by specifying a step name
-(in which case all runs of this steps will be considered) or individual
-tasks (step_name/run_id).
-
-At this point, we have a task wish list.
-
-This task wish list is now processed one by one (in topological order):
-
-- determine status of current task
-- if it's finished or running or queued, skip it
-- if it's ready, submit it
-- if it's waiting, there is at least one parent task which is not yet finished
-- determine all parent tasks which are not finished yet, for each parent:
-  - if it's running or queued, determine its job_id from the queued-ping file
-  - if it's ready or waiting, we must skip this task because it should have been 
-    enqueued a couple of iterations ago (this is because a selection has been
-    made and there are unfinished, non-running, unqueued dependencies)
-  - now add all these collected job_ids to the submission via -hold_jid
-'''
 
 def main():
     original_argv = copy.copy(sys.argv)

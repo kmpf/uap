@@ -115,7 +115,7 @@ Setup
 
 The repository can be obtained like this::
 
-    $ git clone spechtm@bioinf1:/home/spechtm/rnaseq-pipeline.git
+    $ git clone git@github.com:tiennes/rnaseq-pipeline.git
 
 After cloning the repository, run the bootstrapping script to create the 
 required Python environment (which will be located in ``./python_env/``)::
@@ -242,17 +242,27 @@ effectively disabling these steps):
 Tools
 ~~~~~
 
-All tools which are used in the pipeline must be specified in the 
-configuration file.
-The pipeline determines and records their versions for future reference.
+All tools which are used in the pipeline must be specified in the configuration 
+file. The pipeline determines and records their versions for future reference.
 
 By default, version determination is simply attempted by calling the program
 without command-line arguments.
 
 If a certain argument is required, specify it in ``get_version``. 
-If the tools does not return with an exit code of 0, find out which code it
-is by typing ``echo $?`` into Bash and specify the exit code in ``exit_code``.
+If a tool does not exit with exit code 0, find out which code it is by typing
+``echo $?`` into Bash and specify the exit code in ``exit_code``.
+
+.. code-block:: yaml
+
+    tools:
+        cutadapt:
+            path: /home/michael/Desktop/rnaseq-pipeline/tools/cutadapt-1.2.1/bin/cutadapt
+            get_version: '--version'
             
+        head:
+            path: head
+            get_version: '--version'
+
 Scripts
 =======
 
@@ -262,7 +272,7 @@ All scripts have a couple of properties in common:
 
 * On startup, the configuration is read, tools are checked, input files are 
   collected, and all tasks are calculated. 
-  If any of these steps fails, the script will print an error message with 
+  If any of these steps fail, the script will print an error message with 
   a backtrace and it will crash.
   This may seem a bit harsh, but after all, it's better to fail early than
   to fail late if failing is unavoidable.
@@ -445,6 +455,47 @@ line.
 To execute all tasks of a certain step, specify the step name on the command 
 line.
 
+This script provides usage information::
+    
+    $ ./run-locally.py -h
+
+    usage: run-locally.py [-h] [--even-if-dirty] [-s [STEP [STEP ...]]]
+                          [-t [TASK [TASK ...]]]
+
+    This script starts the 'rnaseq-pipeline' on the local machine. It can be 
+    used to start:
+     * all tasks of the pipeline as configured in 'config.yaml'
+     * all tasks defined by a specific step in 'config.yaml'
+     * one or more steps
+
+    To start the complete pipeline as configured in 'config.yaml' execute:
+    $ ./run-locally.py
+
+    To start a specific step execute:
+    $ ./run-locally.py <step_name>
+
+    To start a specific task execute:
+    $ ./run-locally.py <step_name/run_id>
+
+    The step_name is the name of an entry in the 'steps:' section as defined in 
+    'config.yaml'. A specific task is defined via its task ID 'step_name/run_id'.
+    A list of all task IDs is returned by running './status.py'.
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      --even-if-dirty       Must be set if the local git repository contains 
+                            uncommited changes. Otherwise the pipeline will not 
+                            start.
+      -s [STEP [STEP ...]], --step [STEP [STEP ...]]
+                            Can take multiple step names as input. A step name 
+                            is the name of any entry in the 'steps:' section as 
+                            defined in 'config.yaml'
+      -t [TASK [TASK ...]], --task [TASK [TASK ...]]
+                            Can take multiple task ID(s) as input. A task ID 
+                            looks like ths 'step_name/run_id'. A list of all 
+                            task IDs is returned by running './status.py'.
+
+
 .. NOTE:: Why is it safe to cancel the pipeline? 
     The pipeline is written in a way which expects processes to fail or 
     cluster jobs to disappear without notice. 
@@ -462,7 +513,7 @@ carried out and submits the jobs to a GridEngine cluster by calling ``qsub``.
 Dependencies are passed to ``qsub`` via the ``-hold_jid`` option, which means 
 that jobs that depend on other jobs won't get scheduled until their 
 dependencies have been satisfied. 
-The file ``qsub-template.sh`` is used to submit jobs, with ``#{ }`` fields 
+The file ``qsub-template.sh`` is used to submit jobs, ``#{ }`` fields 
 being substituted with appropriate values.
 
 The file ``quotas.yaml`` can be used to define different quotas for different 
@@ -480,6 +531,35 @@ A quota of 5 means that no more than 5 jobs of one kind will be run in
 parallel.
 Different quotas can be defined for each step: because ``cutadapt`` is 
 highly I/O-efficient, it has a higher quota.
+
+
+This script provides usage information::
+    
+    $ ./run-locally.py -h
+    usage: submit-to-cluster.py [-h] [--highmem] [--even-if-dirty]
+                                [-s [STEP [STEP ...]]] [-t [TASK [TASK ...]]]
+
+    This script submits all tasks configured in config.yaml to a Sun GridEngine 
+    cluster via qsub. The list of tasks can be narrowed down by specifying a 
+    step name (in which case all runs of this steps will be considered) or 
+    individual tasks (step_name/run_id).
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      --highmem             this flag must be set if the highmem node of the 
+                            cluster is being used.
+      --even-if-dirty       Must be set if the local git repository contains 
+                            uncommited changes. Otherwise the pipeline will not 
+                            start.
+      -s [STEP [STEP ...]], --step [STEP [STEP ...]]
+                            Can take multiple step names as input. A step name 
+                            is the name of any entry in the 'steps:' section as 
+                            defined in 'config.yaml'
+      -t [TASK [TASK ...]], --task [TASK [TASK ...]]
+                            Can take multiple task ID(s) as input. A task ID 
+                            looks like ths 'step_name/run_id'. A list of all 
+                            task IDs is returned by running './status.py'.
+
 
 Annotations
 ===========
