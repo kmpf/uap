@@ -509,12 +509,13 @@ submit-to-cluster.py
 --------------------
 
 The ``submit-to-cluster.py`` script determines which tasks still have to be 
-carried out and submits the jobs to a GridEngine cluster by calling ``qsub``. 
+carried out and submits the jobs to a GridEngine cluster via ``qsub``. 
 Dependencies are passed to ``qsub`` via the ``-hold_jid`` option, which means 
 that jobs that depend on other jobs won't get scheduled until their 
 dependencies have been satisfied. 
 The file ``qsub-template.sh`` is used to submit jobs, ``#{ }`` fields 
-being substituted with appropriate values.
+being substituted with appropriate values. Each submitted job calls the 
+``run-locally.py`` script that actually tells the pipeline what to do.
 
 The file ``quotas.yaml`` can be used to define different quotas for different 
 systems:
@@ -559,6 +560,22 @@ This script provides usage information::
                             Can take multiple task ID(s) as input. A task ID 
                             looks like ths 'step_name/run_id'. A list of all 
                             task IDs is returned by running './status.py'.
+
+
+fix-problems.py
+---------------
+
+
+
+render.py
+---------
+
+
+volatilize.py
+-------------
+
+
+
 
 
 Annotations

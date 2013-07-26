@@ -61,12 +61,12 @@ def main():
     p = pipeline.Pipeline(arguments=args)
     
     group_by_status = True
-    
+
     if args.sources:
         # print all sources (i. e. instances of AbstractSourceStep)
         p.print_source_runs()
 
-    else len(args.task) >= 1:
+    else len( all_tasks ) >= 1:
         # print run infos of one or more specific tasks
         for task_id in args.task:
             parts = task_id.split('/')
