@@ -1022,7 +1022,7 @@ class AbstractStep(object):
     def require_tool(self, tool):
         if self._pipeline is not None:
             if not tool in self._pipeline.config['tools']:
-                raise StandardError("%s requires %s but it's not declared in the configuration." % (self, tool))
+                raise StandardError("%s requires the tool %s but it's not declared in the configuration." % (self, tool))
             self._tools[tool] = copy.deepcopy(self._pipeline.config['tools'][tool]['path'])
         else:
             self._tools[tool] = True
