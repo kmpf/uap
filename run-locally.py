@@ -42,6 +42,7 @@ parser.add_argument("--even-if-dirty",
 parser.add_argument("-s", "--step",
                     dest="step",
                     nargs='*',
+                    default=list(),
                     type=str,
                     help="Can take multiple step names as input. A step name " +
                     "is the name of any entry in the 'steps:' section " +
@@ -50,6 +51,7 @@ parser.add_argument("-s", "--step",
 parser.add_argument("-t","--task",
                     dest="task",
                     nargs='*',
+                    default=list(),
                     type=str,
                     help="Can take multiple task ID(s) as input. A task ID " +
                     "looks like ths 'step_name/run_id'. A list of all task IDs " +

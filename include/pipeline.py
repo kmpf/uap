@@ -62,7 +62,7 @@ class Pipeline(object):
         self.args = None
         if 'arguments' in kwargs:
             self.args = kwargs['arguments']
-        
+      
         if '-dirty' in self.git_hash_tag:
             if not self.args.even_if_dirty:
                 print("The repository has uncommitted changes, which is why " +

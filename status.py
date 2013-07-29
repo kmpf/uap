@@ -31,11 +31,13 @@ parser.add_argument("--summarize",
 parser.add_argument("--graph",
                     dest="graph",
                     action="store_true",
+                    default=False,
                     help="Displays the dependency graph of the pipeline")
 
 parser.add_argument("--even-if-dirty",
                     dest="even_if_dirty",
                     action="store_true",
+                    default=False,
                     help="Must be set if the local git repository " +
                     "contains uncommited changes. Otherwise the pipeline " +
                     "will not start.")
@@ -48,6 +50,7 @@ parser.add_argument("--sources",
 parser.add_argument("-t","--task",
                     dest="task",
                     nargs='*',
+                    default=list(),
                     type=str,
                     help="Displays only the named task IDs" +
                     "Can take multiple task ID(s) as input. A task ID " +
@@ -59,14 +62,13 @@ args = parser.parse_args()
 
 def main():
     p = pipeline.Pipeline(arguments=args)
-    
     group_by_status = True
 
     if args.sources:
         # print all sources (i. e. instances of AbstractSourceStep)
         p.print_source_runs()
 
-    else len( all_tasks ) >= 1:
+    elif len( args.task ) >= 1:
         # print run infos of one or more specific tasks
         for task_id in args.task:
             parts = task_id.split('/')
@@ -78,7 +80,7 @@ def main():
             report['state'] = p.steps[step_name].get_run_state(run_id)
             print(yaml.dump(report, default_flow_style = False))
         
-    else args.graph:
+    elif args.graph:
         step_order = p.topological_step_order
         indents = [0 for _ in step_order]
         for index, line in enumerate(step_order):
@@ -160,11 +162,11 @@ def main():
                 print('')
         print("tasks: %d total, %s" % (len(p.all_tasks_topologically_sorted), ', '.join(["%d %s" % (len(tasks_for_status[_]), _.lower()) for _ in p.states.order if _ in tasks_for_status])))
             
-# now check ping files and print some warnings and instructions if something's fishy
-p.check_ping_files()
+    # now check ping files and print some warnings and instructions if something's fishy
+    p.check_ping_files()
     
-# Now check whether we can volatilize files, but don't do it.
-p.check_volatile_files()
+    # Now check whether we can volatilize files, but don't do it.
+    p.check_volatile_files()
         
 if __name__ == '__main__':
     main()

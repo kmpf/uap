@@ -46,12 +46,14 @@ parser = argparse.ArgumentParser(
 parser.add_argument("--highmem",
                     dest="highmem",
                     action="store_true",
+                    default=False,
                     help="Must be set if the highmem node of the " +
                     "cluster is being used.")
 
 parser.add_argument("--even-if-dirty",
                     dest="even_if_dirty",
                     action="store_true",
+                    default=False,
                     help="Must be set if the local git repository " +
                     "contains uncommited changes. Otherwise the pipeline " +
                     "will not start.")
@@ -59,6 +61,7 @@ parser.add_argument("--even-if-dirty",
 parser.add_argument("-s", "--step",
                     dest="step",
                     nargs='*',
+                    default=list(),
                     type=str,
                     help="Can take multiple step names as input. A step name " +
                     "is the name of any entry in the 'steps:' section " +
@@ -67,6 +70,7 @@ parser.add_argument("-s", "--step",
 parser.add_argument("-t","--task",
                     dest="task",
                     nargs='*',
+                    default=list(),
                     type=str,
                     help="Can take multiple task ID(s) as input. A task ID " +
                     "looks like ths 'step_name/run_id'. A list of all task IDs " +
@@ -75,9 +79,7 @@ parser.add_argument("-t","--task",
 args = parser.parse_args()
 
 def main():
-    original_argv = copy.copy(sys.argv)
-
-    p = pipeline.Pipeline()
+    p = pipeline.Pipeline(arguments=args)
     
     use_highmem = False
     if args.highmem:
