@@ -87,10 +87,11 @@ def main():
         use_highmem = True
 
     all_tasks = args.step + args.task
+    print(all_tasks)
     task_wish_list = None
     if len(all_tasks) >= 1:
         task_wish_list = list()
-        for _ in all_tasks[1:]:
+        for _ in all_tasks:
             if '/' in _:
                 task_wish_list.append(_)
             else:
@@ -152,11 +153,11 @@ def main():
         if 'email' in p.config:
             email = p.config['email']
         submit_script = submit_script.replace("#{EMAIL}", email)
-        args = ['./run-locally.py']
+        command = ['./run-locally.py']
         if args.even_if_dirty:
-            args.append('--even-if-dirty')
-        args.append('"' + str(task) + '"')
-        submit_script = submit_script.replace("#{COMMAND}", ' '.join(args))
+            command.append('--even-if-dirty')
+        command.append('-t "' + str(task) + '"')
+        submit_script = submit_script.replace("#{COMMAND}", ' '.join(command))
 
         long_task_id_with_run_id = '%s_%s' % (str(task.step), task.run_id)
         long_task_id = str(task.step)
