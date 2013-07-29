@@ -77,7 +77,7 @@ def main():
     if len(all_tasks) >= 1:
         # execute the specified tasks
         task_list = list()
-        for task_id in sys.argv[1:]:
+        for task_id in all_tasks:
             task = p.task_for_task_id[task_id]
             task_list.append(task)
             
