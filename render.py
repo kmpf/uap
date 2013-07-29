@@ -24,11 +24,13 @@ parser = argparse.ArgumentParser(
 parser.add_argument("--all",
                     dest="all",
                     action="store_true",
+                    default=False,
                     help="Renders all ")
 
 parser.add_argument("-t","--task",
                     dest="task",
                     nargs='*',
+                    default=list(),
                     type=str,
                     help="Displays only the named task IDs" +
                     "Can take multiple task ID(s) as input. A task ID " +

@@ -73,7 +73,7 @@ def main():
     task_list = copy.deepcopy(p.all_tasks_topologically_sorted)
 
     all_tasks = args.step + args.task
-    print(all_tasks)
+
     if len(all_tasks) >= 1:
         # execute the specified tasks
         task_list = list()

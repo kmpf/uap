@@ -26,6 +26,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument("--summarize",
                     dest="summarize",
                     action="store_true",
+                    default=False,
                     help="Displays summarized information of the pipeline")
 
 parser.add_argument("--graph",
@@ -45,6 +46,7 @@ parser.add_argument("--even-if-dirty",
 parser.add_argument("--sources",
                     dest="sources",
                     action="store_true",
+                    default=False,
                     help="Displays only information about the source runs.")
 
 parser.add_argument("-t","--task",
