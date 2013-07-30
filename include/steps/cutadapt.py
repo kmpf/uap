@@ -98,7 +98,7 @@ class Cutadapt(AbstractStep):
     def execute(self, run_id, run):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
-                out_path = run.get_single_output_file_for_tag('reads')
+                out_path = run.get_single_output_file_for_annotation('reads')
 
                 # set up processes
                 cat4m = [self.tool('cat4m')]

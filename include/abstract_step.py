@@ -91,11 +91,15 @@ class Run(object):
                 result[tag][full_path] = in_paths
         return result
 
-    def get_single_output_file_for_tag(self, tag):
+    def get_single_output_file_for_annotation(self, annotation):
         temp = self.output_files()
-        if len(temp[tag]) != 1:
-            raise StandardError("More than one output file declared for out/%s." % tag)
-        return temp[tag].keys()[0]
+        if len(temp[annotation]) != 1:
+            raise StandardError("More than one output file declared for out/%s." % annotation)
+        return temp[annotation].keys()[0]
+
+    def get_output_files_for_annotation_and_tags(self, annotation, tags):
+        temp = self.output_files()
+        return misc.assign_strings(temp[annotation].keys(), tags)
 
     def get_input_files_for_output_file(self, out_path):
         temp = self.output_files()
@@ -1181,6 +1185,7 @@ class AbstractStep(object):
         return self._get_ping_path_for_run_id(run_id, 'queued')
 
     def find_upstream_info_as_hash(self, run_id, key, expected = 1):
+        #print("%s::find_upstream_info_as_hash(%s, %s, %s)" % (self, run_id, key, expected))
         results = dict()
         for dep in self.dependencies:
             run_info = dep.get_run_info()

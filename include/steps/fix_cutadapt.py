@@ -16,26 +16,32 @@ class FixCutadapt(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('fix_cutadapt')
 
-    def setup_runs(self, complete_input_run_info, connection_info):
-        output_run_info = {}
-        for step_name, step_input_info in complete_input_run_info.items():
-            for input_run_id, input_run_info in step_input_info.items():
-                if not 'read_number' in input_run_info['info']:
-                    raise StandardError("fix_cutadapt can only be run on paired-end sequenced samples.")
-                new_key = input_run_id.replace('-R1', '').replace('-R2', '')
-                if not new_key in output_run_info:
-                    output_run_info[new_key] = { 'output_files': { 'reads': {} }, 'info': {} }
-                output_run_info[new_key]['info'][input_run_info['info']['read_number'] + '-in'] = input_run_info['output_files']['reads'].keys()[0]
-                for in_path in sorted(input_run_info['output_files']['reads'].keys()):
-                    for _ in ['R1', 'R2']:
-                        k2 = new_key + '-fixed-' + _ + '.fastq.gz'
-                        if not k2 in output_run_info[new_key]['output_files']['reads']:
-                            output_run_info[new_key]['output_files']['reads'][k2] = []
-                        output_run_info[new_key]['output_files']['reads'][k2].append(in_path)
-                        output_run_info[new_key]['info'][_ + '-out'] = k2
-        return output_run_info
-
-    def execute(self, run_id, run_info):
+    def declare_runs(self):
+        # fetch all incoming run IDs which produce reads...
+        run_ids = dict()
+        for run_id, input_paths in self.run_ids_and_input_files_for_connection('in/reads'):
+            fixed_run_id = run_id[:-3]
+            which = run_id[-2:]
+            if not fixed_run_id in run_ids:
+                run_ids[fixed_run_id] = dict()
+            if len(input_paths) != 1:
+                raise StandardError("Expected one input file.")
+            run_ids[fixed_run_id][which] = input_paths[0]
+            
+        for run_id, input_paths in run_ids.items():
+            paired_end = self.find_upstream_info(run_id, 'paired_end')
+            if not paired_end:
+                raise StandardError("Not a paired end sample: %s" % run_id)
+            
+            with self.declare_run(run_id) as run:
+                for which in ['R1', 'R2']:
+                    out_path = "%s-fixed-%s.fastq.gz" % (run_id, which)
+                    run.add_output_file("reads", out_path, input_paths.values())
+                    run.add_private_info('in-%s' % which, input_paths[which])
+            
+    def execute(self, run_id, run):
+        out_paths = run.get_output_files_for_annotation_and_tags('reads', ['R1', 'R2'])
+        
         with process_pool.ProcessPool(self) as pool:
             fifo_in_R1 = pool.get_temporary_fifo('fifo_in_R1', 'input')
             fifo_in_R2 = pool.get_temporary_fifo('fifo_in_R2', 'input')
@@ -43,14 +49,14 @@ class FixCutadapt(AbstractStep):
             fifo_out_R2 = pool.get_temporary_fifo('fifo_out_R2', 'output')
             
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.tool('cat4m'), run_info['info']['R1-in']]
+                cat4m = [self.tool('cat4m'), run.private_info('in-R1')]
                 pigz = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
                 
                 pipeline.append(cat4m)
                 pipeline.append(pigz, stdout_path = fifo_in_R1)
         
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.tool('cat4m'), run_info['info']['R2-in']]
+                cat4m = [self.tool('cat4m'), run.private_info('in-R2')]
                 pigz = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
                 
                 pipeline.append(cat4m)
@@ -71,11 +77,11 @@ class FixCutadapt(AbstractStep):
                 pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '--stdout']
                 
                 pipeline.append(cat4m)
-                pipeline.append(pigz, stdout_path = run_info['info']['R1-out'])
+                pipeline.append(pigz, stdout_path = out_paths['R1'])
                 
             with pool.Pipeline(pool) as pipeline:
                 cat4m = [self.tool('cat4m'), fifo_out_R2]
                 pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '--stdout']
                 
                 pipeline.append(cat4m)
-                pipeline.append(pigz, stdout_path = run_info['info']['R2-out'])
+                pipeline.append(pigz, stdout_path = out_paths['R2'])
