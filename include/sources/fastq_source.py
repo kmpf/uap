@@ -26,7 +26,7 @@ class FastqSource(AbstractSourceStep):
         found_files = dict()
         
         # find FASTQ files
-        for path in glob.glob(self.option('pattern')):
+        for path in glob.glob(os.path.abspath(self.option('pattern'))):
             match = regex.match(os.path.basename(path))
             if match == None:
                 raise StandardError("Couldn't match regex /%s/ to file %s." % (self.option('group'), os.path.basename(path)))
