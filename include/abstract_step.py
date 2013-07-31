@@ -11,6 +11,7 @@ import os
 import process_pool
 import psutil
 import re
+import run as run_module
 import random
 import signal
 import socket
@@ -22,108 +23,6 @@ import textwrap
 import time
 import traceback
 import yaml
-
-
-class Run(object):
-    def __init__(self, step, run_id):
-        if '/' in run_id:
-            raise StandardError("Error: A run ID must not contain a slash: %s." % run_id)
-        self._step = step
-        self._run_id = run_id
-        self._private_info = dict()
-        self._public_info = dict()
-        self._output_files = dict()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        pass
-
-    def add_private_info(self, key, value):
-        if key in self._private_info and value != self._private_info[key]:
-            raise StandardError(
-                "You're trying to overwrite private info %s with %s, "
-                "but there's already a different value stored: %s." %
-                (key, value, self._private_info[key]))
-        self._private_info[key] = value
-
-    def add_public_info(self, key, value):
-        if key in self._public_info and value != self._public_info[key]:
-            raise StandardError(
-                "You're trying to overwrite public info %s with %s, "
-                "but there's already a different value stored: %s." %
-                (key, value, self._public_info[key]))
-        self._public_info[key] = value
-
-    def add_output_file(self, tag, out_path, in_paths):
-        # make sure there's no slash in out_path unless it's a source step
-        if '/' in out_path and AbstractSourceStep not in self._step.__class__.__bases__:
-            raise StandardError("There must be no slash (/) in any output "
-                "file declared by a step: %s." % out_path)
-        # make sure tag was declared with an outgoing connection
-        if 'out/' + tag not in self._step._connections:
-            raise StandardError("Invalid output_file tag '%s' in %s. "
-                "You might want to add self.add_connection('out/%s') "
-                "to the constructor of %s."
-                % (tag, str(self._step), tag, self._step.__module__))
-
-        if tag not in self._output_files:
-            self._output_files[tag] = dict()
-
-        if out_path in self._output_files[tag]:
-            raise StandardError(
-                "You're trying to re-add an output file which has already "
-                "been declared: %s." % out_path)
-
-        self._output_files[tag][out_path] = in_paths
-
-    def output_files(self):
-        result = dict()
-        for tag in self._output_files:
-            result[tag] = dict()
-            for out_path, in_paths in self._output_files[tag].items():
-                directory = self._step.get_output_directory_du_jour()
-                if directory != None:
-                    full_path = os.path.join(directory, out_path)
-                else:
-                    full_path = out_path
-                result[tag][full_path] = in_paths
-        return result
-
-    def get_single_output_file_for_annotation(self, annotation):
-        temp = self.output_files()
-        if len(temp[annotation]) != 1:
-            raise StandardError("More than one output file declared for out/%s." % annotation)
-        return temp[annotation].keys()[0]
-
-    def get_output_files_for_annotation_and_tags(self, annotation, tags):
-        temp = self.output_files()
-        return misc.assign_strings(temp[annotation].keys(), tags)
-
-    def get_input_files_for_output_file(self, out_path):
-        temp = self.output_files()
-        for tag in temp.keys():
-            if out_path in temp[tag].keys():
-                return sorted(temp[tag][out_path])
-        raise StandardError("Sorry, your output file couldn't be found in the dictionary: %s." % out_path)
-
-    def public_info(self, key):
-        return self._public_info[key]
-
-    def has_public_info(self, key):
-        return (key in self._public_info)
-
-    def private_info(self, key):
-        return self._private_info[key]
-
-    def as_dict(self):
-        result = dict()
-        result['output_files'] = self._output_files
-        result['private_info'] = self._private_info
-        result['public_info'] = self._public_info
-        result['run_id'] = self._run_id
-        return result
 
 
 class AbstractStep(object):
@@ -191,13 +90,8 @@ class AbstractStep(object):
         if self.finalized:
             return
         
-        # find out which steps are in our family tree
-        self.ancestors = set()
         for parent_step in self.dependencies:
             parent_step.finalize()
-            self.ancestors.add(str(parent_step))
-            for grand_parent_step in parent_step.ancestors:
-                self.ancestors.add(grand_parent_step)
             
         self.finalized = True
         
@@ -287,8 +181,8 @@ class AbstractStep(object):
             
             # define file dependencies
             for run_id in self._runs.keys():
-                for tag in self._runs[run_id].output_files().keys():
-                    for output_path, input_paths in self._runs[run_id].output_files()[tag].items():
+                for annotation in self._runs[run_id].output_files().keys():
+                    for output_path, input_paths in self._runs[run_id].output_files()[annotation].items():
                         self._pipeline.add_file_dependencies(output_path, input_paths)
                         task_id = '%s/%s' % (str(self), run_id)
                         self._pipeline.add_task_for_output_file(output_path, task_id)
@@ -1215,6 +1109,8 @@ class AbstractStep(object):
     def get_input_run_info_for_connection(self, in_key):
         if in_key[0:3] != 'in/':
             raise StandardError("in_key does not start with 'in/': %s" % in_key)
+        if in_key not in self._connections:
+            raise StandardError("Undeclared connection %s." % in_key)
         out_key = in_key.replace('in/', 'out/')
         allowed_steps = None
         if '_connect' in self._options:
@@ -1230,7 +1126,6 @@ class AbstractStep(object):
                         out_key = 'out/' + declaration
                 else:
                     raise StandardError("Invalid _connect value: %s" % yaml.dump(declaration))
-        bare_out_key = out_key.replace('out/', '')
         
         result = dict()
         result['counts'] = {
@@ -1257,26 +1152,27 @@ class AbstractStep(object):
             if allowed_steps is not None:
                 if not step_name in allowed_steps:
                     continue
-            if out_key in self._pipeline.steps[step_name]._connections:
-                result['counts']['total_steps'] += 1
-                for run_id, run_info in step_info.items():
-                    result['counts']['total_runs'] += 1
-                    paths = run_info.output_files()[bare_out_key].keys()
-                    result['counts']['total_files'] += len(paths)
-                    if not run_id in result['runs']:
-                        result['runs'][run_id] = dict()
-                    result['runs'][run_id][step_name] = paths
+            for key in self._pipeline.steps[step_name]._connections:
+                if out_key == 'out/*' or out_key == key:
+                    result['counts']['total_steps'] += 1
+                    for run_id, run_info in step_info.items():
+                        result['counts']['total_runs'] += 1
+                        paths = run_info.output_files()[key.replace('out/', '')].keys()
+                        result['counts']['total_files'] += len(paths)
+                        if not run_id in result['runs']:
+                            result['runs'][run_id] = dict()
+                        result['runs'][run_id][step_name] = paths
 
-                    steps_per_run = len(result['runs'][run_id])
-                    update_min_max('steps_per_run', steps_per_run)
+                        steps_per_run = len(result['runs'][run_id])
+                        update_min_max('steps_per_run', steps_per_run)
 
-                    files_per_step_and_run = len(result['runs'][run_id][step_name])
-                    update_min_max('files_per_step_and_run', files_per_step_and_run)
-                    
-                    files_per_run = 0
-                    for _ in result['runs'][run_id].values():
-                        files_per_run += len(_)
-                    update_min_max('files_per_run', files_per_run)
+                        files_per_step_and_run = len(result['runs'][run_id][step_name])
+                        update_min_max('files_per_step_and_run', files_per_step_and_run)
+                        
+                        files_per_run = 0
+                        for _ in result['runs'][run_id].values():
+                            files_per_run += len(_)
+                        update_min_max('files_per_run', files_per_run)
                     
         # check constraints, if any
         if in_key in self._connection_restrictions:
@@ -1287,6 +1183,11 @@ class AbstractStep(object):
         return result
 
     def run_ids_and_input_files_for_connection(self, in_key):
+        '''
+        Returns an iterator with run_id and input_files where:
+            - run_id is a string
+            - input_files is a list of input paths
+        '''
         result = self.get_input_run_info_for_connection(in_key)
         for run_id, info in result['runs'].items():
             input_files = list()
@@ -1295,10 +1196,20 @@ class AbstractStep(object):
             input_files = sorted(input_files)
             yield run_id, input_files
 
+    def annotation_for_input_file(self, path):
+        for dep in self.dependencies:
+            run_info = dep.get_run_info()
+            for run_id, run in run_info.items():
+                for annotation, in_paths in run.output_files().items():
+                    for in_path in in_paths:
+                        if path == in_path:
+                            return annotation
+        raise StandardError("Unable to determine annotation type for input file %s." % path)
+
     def declare_run(self, run_id):
         if run_id in self._runs:
             raise StandardError("Cannot declare the same run ID twice: %s." % run_id)
-        run = Run(self, run_id)
+        run = run_module.Run(self, run_id)
         self._runs[run_id] = run
         return run
 

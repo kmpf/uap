@@ -117,5 +117,5 @@ class Cutadapt(AbstractStep):
                 pipeline.append(pigz1)
                 if self.option('fix_qnames') == True:
                     pipeline.append(fix_qnames)
-                pipeline.append(cutadapt, stderr_path = run.get_single_output_file_for_tag('log'))
+                pipeline.append(cutadapt, stderr_path = run.get_single_output_file_for_annotation('log'))
                 pipeline.append(pigz2, stdout_path = out_path)
