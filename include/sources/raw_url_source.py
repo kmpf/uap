@@ -1,8 +1,8 @@
 import sys
 from abstract_step import *
 import os
-import urlparse
 import process_pool
+import urlparse
 
 class RawUrlSource(AbstractStep):
 
@@ -11,24 +11,36 @@ class RawUrlSource(AbstractStep):
 
         self.add_connection('out/raw')
         self.require_tool('curl')
+        self.require_tool('sha1sum')
         self.add_option('url', str, optional=False, description="download url")
         self.add_option('sha1', str, optional=True, description="sha1 cheksum of file")
         
-    def setup_runs(self, input_run_info, connection_info):
-        output_run_info = {}
-       
+    def declare_runs(self):
         path = os.path.basename(urlparse.urlparse(self.option('url')).path)
-        output_run_info['download'] = {}
-        output_run_info['download']['output_files'] = {}
-        output_run_info['download']['output_files']['raw'] = {}
-        output_run_info['download']['output_files']['raw'][path] = []
+        with self.declare_run('download') as run:
+            run.add_output_file('raw', path, [])
 
-        return output_run_info
-
-    def execute(self, run_id, run_info):
+    def execute(self, run_id, run):
+        
+        path = run.get_single_output_file_for_annotation('raw')
+        
+        # 1. download file and pipe to sha1sum
+        download_sha1_path = self.get_temporary_path()
         with process_pool.ProcessPool(self) as pool:
-            curl = [self.tool('curl'), self.option('url')]
-            pool.launch(curl, stdout_path = run_info['output_files']['raw'].keys()[0])
+            with pool.Pipeline(pool) as pipeline:
+                curl = [self.tool('curl'), self.option('url')]
+                sha1sum = [self.tool('sha1sum'), '-b', '-']
+                
+                pipeline.append(curl, stdout_path = path)
+                pipeline.append(sha1sum, stdout_path = download_sha1_path)
             
-        # TODO: verify checksum after process pool has finished
-        #stdout_assert_sha1 = self.options['sha1']
+        if self.option_set_in_config('sha1'):
+            with open(download_sha1_path, 'r') as f:
+                line = f.read().strip().split(' ')
+                if line[0] != self.option('sha1'):
+                    # rename the output file, so the run won't be completed successfully
+                    os.rename(path, path + '.mismatching.sha1')
+                    raise StandardError("Error: SHA1 mismatch.")
+
+        # remove the temporary file so that the temp directory can be deleted
+        os.unlink(download_sha1_path)
