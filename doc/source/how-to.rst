@@ -3,10 +3,11 @@
   80 characters if you can and start each sentence on a new line as it 
   decreases maintenance and makes diffs more readable.
 
-.. title:: How-to work with the rnaseq-pipeline
+.. title:: How to work with the rnaseq-pipeline
 
-This document aims to describe how a simple RNAseq analysis can be performed
-with the **rnaseq-pipeline**.
+..
+  This document aims to describe how a simple RNAseq analysis can be performed
+  with the **rnaseq-pipeline**.
 
 
 Setup the **rnaseq-pipeline**
@@ -18,19 +19,19 @@ Get the **rnaseq-pipeline**
 
 The repository can be obtained like this::
 
-    $ git clone git@github.com:tiennes/rnaseq-pipeline.git /path/to/repo
+    $ git clone git@github.com:tiennes/rnaseq-pipeline.git
 
-After cloning the repository, change into the created directory and run the
+After cloning the repository, change into the created directory and run the 
 bootstrapping script to create the required Python environment (which will be
 located in ``/path/to/repo/python_env/``)::
 
-    $ cd /path/to/repo
+    $ cd rnaseq-pipeline
     $ ./bootstrap.sh
 
 Create your *config.yaml*
 -------------------------
 
-Start by renaming the file *config.sample.yaml* into *config.yaml*::
+Start by copying the file *config.sample.yaml* into *config.yaml*::
 
     $ cp config.sample.yaml config.yaml
 
