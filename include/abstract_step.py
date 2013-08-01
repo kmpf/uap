@@ -189,8 +189,8 @@ class AbstractStep(object):
             
             # define file dependencies
             for run_id in self._runs.keys():
-                for annotation in self._runs[run_id].output_files().keys():
-                    for output_path, input_paths in self._runs[run_id].output_files()[annotation].items():
+                for annotation in self._runs[run_id].get_output_files().keys():
+                    for output_path, input_paths in self._runs[run_id].get_output_files()[annotation].items():
                         self._pipeline.add_file_dependencies(output_path, input_paths)
                         task_id = '%s/%s' % (str(self), run_id)
                         self._pipeline.add_task_for_output_file(output_path, task_id)
@@ -365,7 +365,7 @@ class AbstractStep(object):
         def up_to_dateness_level(path, level = 0):
             result = level
             dep_paths = self._pipeline.file_dependencies[path]
-            if not path_up_to_date(path, dep_paths):
+            if not is_path_up_to_date(path, dep_paths):
                 result = level + 1
             for dep_path in dep_paths:
                 recursive_result = up_to_dateness_level(dep_path, level + 1)
@@ -397,7 +397,7 @@ class AbstractStep(object):
         
         run_info = self.get_run_info()
         max_level = 0
-        for tag, output_files in run_info[run_id].output_files().items():
+        for tag, output_files in run_info[run_id].get_output_files().items():
             for output_file in output_files:
                 max_level = max(max_level, up_to_dateness_level(output_file))
 
@@ -473,7 +473,7 @@ class AbstractStep(object):
 
         # prepare self.known_paths
         self.known_paths = dict()
-        for tag, tag_info in run.output_files().items():
+        for tag, tag_info in run.get_output_files().items():
             for output_path, input_paths in tag_info.items():
                 # add the real output path
                 self.known_paths[output_path] = {'type': 'output', 'designation': 'output', 'label': os.path.basename(output_path), 'type': 'step_file'}
@@ -1153,7 +1153,7 @@ class AbstractStep(object):
             run_info = dep.get_run_info()
             if run_id in run_info:
                 if run_info[run_id].has_public_info(key):
-                    results[str(dep)] = run_info[run_id].public_info(key)
+                    results[str(dep)] = run_info[run_id].get_public_info(key)
             results.update(dep.find_upstream_info_as_hash(run_id, key, None))
         if expected is not None:
             if len(results) != expected:
@@ -1238,7 +1238,7 @@ class AbstractStep(object):
                     result['counts']['total_steps'] += 1
                     for run_id, run_info in step_info.items():
                         result['counts']['total_runs'] += 1
-                        paths = run_info.output_files()[key.replace('out/', '')].keys()
+                        paths = run_info.get_output_files()[key.replace('out/', '')].keys()
                         result['counts']['total_files'] += len(paths)
                         if not run_id in result['runs']:
                             result['runs'][run_id] = dict()
@@ -1298,7 +1298,7 @@ class AbstractStep(object):
         for dep in self.dependencies:
             run_info = dep.get_run_info()
             for run_id, run in run_info.items():
-                for annotation, in_paths in run.output_files().items():
+                for annotation, in_paths in run.get_output_files().items():
                     for in_path in in_paths:
                         if path == in_path:
                             return annotation
