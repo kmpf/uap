@@ -22,14 +22,16 @@ def doc_module(module_name, fout):
             fout.write(line.strip() + "\n")
         
     # print connections
+    fout.write("**Connections:**\n\n")
     fout.write(".. graphviz::\n")
     fout.write("\n")
     fout.write("   digraph foo {\n")
     fout.write("      rankdir = LR;\n")
-    fout.write("  splines = true;\n")
-    fout.write("    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", nodesep = 0.2, ranksep = 0.3];\n")
-    fout.write("    node [fontname = Helvetica, fontsize = 12, shape = rect];\n")
-    fout.write("    edge [fontname = Helvetica, fontsize = 12];\n")
+    fout.write("      splines = true;\n")
+    fout.write("      graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", nodesep = 0.2, ranksep = 0.3];\n")
+    fout.write("      node [fontname = Helvetica, fontsize = 12, shape = rect];\n")
+    fout.write("      edge [fontname = Helvetica, fontsize = 12];\n")
+    fout.write("      %s [style=filled, fillcolor=\"#fce94f\"];\n" % module_name)
     for index, c in enumerate(sorted(step._connections)):
         c = c.split('/')
         if c[0] == 'out':
@@ -39,6 +41,28 @@ def doc_module(module_name, fout):
             fout.write("      in_%d [label=\"%s\"];\n" % (index, c[1]))
             fout.write("      in_%d -> %s;\n" % (index, module_name))
     fout.write("   }    \n")
+    fout.write("\n")
+    
+    # print options
+    fout.write("**Options:**\n")
+    for key in sorted(step._defined_options.keys()):
+        option = step._defined_options[key]
+        print(option)
+        fout.write("  - **%s** (%s, %s)" % (
+            key, 
+            '/'.join([_.__name__ for _ in option['types']]),
+            'optional' if option['optional'] else 'required'
+            ))
+        if option['description']:
+            fout.write(" -- %s" % option['description'])
+        fout.write("\n")
+        fout.write("    \n")
+        if option['choices']:
+            fout.write("    - possible values:\n")
+            fout.write("    \n")
+            for v in sorted(option['choices']):
+                fout.write("      - %s\n" % v)
+            
     fout.write("\n")
 
     # print tools

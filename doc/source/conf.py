@@ -228,7 +228,8 @@ man_pages = [
     
 wd = os.getcwd()
 os.chdir('..')
-os.system("python stepdoc.py")
+if os.system("python stepdoc.py") != 0:
+    raise StandardError("Error running stepdoc.py")
 os.chdir(wd)
 
 # If true, show URL addresses after external links.
