@@ -100,6 +100,15 @@ class Run(object):
         self._output_files[tag][out_path] = in_paths
 
     def output_files(self):
+        '''
+        Return a dictionary of all defined output files, grouped by connection 
+        annotation::
+        
+           annotation_1:
+               out_path_1: [in_path_1, in_path_2, ...]
+               out_path_2: ...
+           annotation_2: ...
+        '''
         result = dict()
         for tag in self._output_files:
             result[tag] = dict()
@@ -113,16 +122,31 @@ class Run(object):
         return result
 
     def get_single_output_file_for_annotation(self, annotation):
+        '''
+        Retrieve exactly one output file of the given annotation, and crash
+        if there isn't exactly one.
+        '''
         temp = self.output_files()
         if len(temp[annotation]) != 1:
             raise StandardError("More than one output file declared for out/%s." % annotation)
         return temp[annotation].keys()[0]
 
     def get_output_files_for_annotation_and_tags(self, annotation, tags):
+        '''
+        Retrieve a set of output files of the given annotation, assigned to
+        the same number of specified tags. If you have two 'alignment' output files
+        and they are called *out-a.txt* and *out-b.txt*, you can use this function like this:
+        
+        - *tags*: ['a', 'b']
+        - result: {'a': 'out-a.txt', 'b': 'out-b.txt'}
+        '''
         temp = self.output_files()
         return misc.assign_strings(temp[annotation].keys(), tags)
 
     def get_input_files_for_output_file(self, out_path):
+        '''
+        Return all input files a given output file depends on.
+        '''
         temp = self.output_files()
         for tag in temp.keys():
             if out_path in temp[tag].keys():
@@ -130,12 +154,21 @@ class Run(object):
         raise StandardError("Sorry, your output file couldn't be found in the dictionary: %s." % out_path)
 
     def public_info(self, key):
+        '''
+        Query public information which must have been previously stored via *add_public_info()*.
+        '''
         return self._public_info[key]
 
     def has_public_info(self, key):
+        '''
+        Query whether a piece of public information has been defined.
+        '''
         return (key in self._public_info)
 
     def private_info(self, key):
+        '''
+        Query private information which must have been previously stored via *add_private_info()*.
+        '''
         return self._private_info[key]
 
     def as_dict(self):

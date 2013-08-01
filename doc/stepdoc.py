@@ -14,8 +14,11 @@ import yaml
 def doc_module(module_name, fout):
     step_class = abstract_step.AbstractStep.get_step_class_for_key(module_name)
     step = step_class(None)
+    fout.write(".. index:: %s\n" % module_name)
+    fout.write("\n")
     fout.write(module_name + "\n")
     fout.write('~' * len(module_name) + "\n\n")
+    fout.write("\n")
     if step.__doc__:
         doc = step.__doc__.split("\n")
         for line in doc:

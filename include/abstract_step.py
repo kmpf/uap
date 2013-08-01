@@ -87,6 +87,10 @@ class AbstractStep(object):
         self._state = AbstractStep.states.DEFAULT
 
     def finalize(self):
+        '''
+        Finalizes the step. The intention is to make further changes to the step
+        impossible, but apparently, it's checked nowhere at the moment.
+        '''
         if self.finalized:
             return
         
@@ -100,6 +104,10 @@ class AbstractStep(object):
         self._pipeline_log = dict()
 
     def set_name(self, step_name):
+        '''
+        Change the step name (which is initially set to the module name), in
+        case we need multiple steps of the same kind.
+        '''
         self._step_name = step_name
 
     def set_options(self, options):
@@ -243,6 +251,15 @@ class AbstractStep(object):
                 return path
 
     def get_run_state_basic(self, run_id):
+        '''
+        Determine the basic run state of a run, which is, at any time, one of 
+        **waiting**, **ready**, or **finished**.
+        
+        These states are determined from the current configuration and the timestamps 
+        of result files present in the file system. In addition to these three basic
+        states, there are two additional states which are less reliable
+        (see *get_run_state()*).
+        '''
         
         def volatile_path_good(volatile_path, recurse = True):
             '''
@@ -392,6 +409,24 @@ class AbstractStep(object):
             return self._pipeline.states.WAITING
 
     def get_run_state(self, run_id):
+        '''
+        Determine the run state (that is, not *basic* but *extended* run state) of a 
+        run, building on the value returned by *get_run_state_basic()*.
+        
+        If a run is **ready**, this will:
+          - return **executing** if an up-to-date *executing ping file* is found
+          - otherwise return **queued** if a *queued ping file* is found
+
+        If a run is **waiting**, this will:
+          - return **queued** if a *queued ping file* is found
+          
+        Otherwise, it will just return the value obtained from 
+        *get_run_state_basic()*.
+        
+        Attention: The status indicators **executing** and **queued** may be 
+        temporarily wrong due to the possiblity of having out-of-date ping files 
+        lying around.
+        '''
         run_state = self.get_run_state_basic(run_id)
         if run_state == self._pipeline.states.READY:
             if AbstractStep.fsc.exists(self.get_executing_ping_path_for_run_id(run_id)):
@@ -409,6 +444,12 @@ class AbstractStep(object):
         return run_state
         
     def run(self, run_id):
+        '''
+        Create a temporary output directory and execute a run. After the run
+        has finished, it is checked that all output files are in place and
+        the output files are moved to the final output location. Finally,
+        YAML annotations are written.
+        '''
 
         # this is the run we'll execute now
         run = self._runs[run_id]
@@ -636,6 +677,13 @@ class AbstractStep(object):
                         self._pipeline_log[k].update(log[k])
     
     def write_annotation(self, run_id, path):
+        '''
+        Write the YAML annotation after a successful or failed run and try to
+        render the process graph (but swallow any errors resulting from that --
+        after all, it's not *that* important to get the rendered graph, and it 
+        still can be created later from the YAML annotation).
+        '''
+        
         # now write the annotation
         log = {}
         log['pid'] = os.getpid()
@@ -1030,9 +1078,17 @@ class AbstractStep(object):
         raise StandardError("No suitable class found for module %s." % key)
     
     def set_cores(self, cores):
+        '''
+        Specify the number of CPU cores this step will use.
+        '''
         self._cores = cores
 
     def add_connection(self, connection, constraints = None):
+        '''
+        Add a connection, which must start with 'in/' or 'out/'.
+        '''
+        if not (connection[0:3] == 'in/' or connection[0:4] == 'out/'):
+            raise StandardError("A connection must start with 'in/' or 'out/'.")
         if connection[0:3] == 'in/':
             self.needs_parents = True
         self._connections.add(connection)
@@ -1040,6 +1096,9 @@ class AbstractStep(object):
             self._connection_restrictions[connection] = constraints
         
     def require_tool(self, tool):
+        '''
+        Declare that this step requires an external tool. Query it later with *tool()*.
+        '''
         if self._pipeline is not None:
             if not tool in self._pipeline.config['tools']:
                 raise StandardError("%s requires %s but it's not declared in the configuration." % (self, tool))
@@ -1048,6 +1107,9 @@ class AbstractStep(object):
             self._tools[tool] = True
 
     def add_option(self, key, *option_types, **kwargs):
+        '''
+        Add an option. Multiple types may be specified.
+        '''
         if not 'optional' in kwargs:
             kwargs['optional'] = False
         for _ in ['default', 'label', 'description', 'group', 'tools', 'choices']:
@@ -1086,7 +1148,6 @@ class AbstractStep(object):
         return self._get_ping_path_for_run_id(run_id, 'queued')
 
     def find_upstream_info_as_hash(self, run_id, key, expected = 1):
-        #print("%s::find_upstream_info_as_hash(%s, %s, %s)" % (self, run_id, key, expected))
         results = dict()
         for dep in self.dependencies:
             run_info = dep.get_run_info()
@@ -1100,15 +1161,28 @@ class AbstractStep(object):
         return results
 
     def find_upstream_info(self, run_id, key):
+        '''
+        Find a piece of public information in all upstream steps. If the information
+        is not found or defined in more than one upstream step, this will crash.
+        '''
+        # And boy, will it crash. SUH-MAAAASH! http://youtu.be/PbYD7sj6vxc?t=1m38s
+        
         result = self.find_upstream_info_as_hash(run_id, key, expected = 1)
         return result.values()[0]
 
     def option(self, key):
+        '''
+        Query an option.
+        '''
         if key not in self._defined_options:
             raise StandardError("Cannot query undefined option %s in step %s." % (key, __module__))
         return self._options[key]
 
     def option_set_in_config(self, key):
+        '''
+        Determine whether an optional option (that is, a non-required option) has been
+        set in the configuration.
+        '''
         if key not in self._defined_options:
             raise StandardError("Cannot query undefined option %s in step %s." % (key, __module__))
         return key in self._options
@@ -1203,7 +1277,28 @@ class AbstractStep(object):
             input_files = sorted(input_files)
             yield run_id, input_files
 
+    def get_n_input_file_for_connection(self, in_key, expected):
+        result = self.get_input_run_info_for_connection(in_key)
+        values = set()
+        for run_id, info in result['runs'].items():
+            for step_name, input_paths in info.items():
+                for path in input_paths:
+                    values.add(path)
+        if len(values) != 1:
+            raise StandardError("Expected exactly %d files for %s in %s, got %d instead." % (expected, in_key, self, len(values)))
+        return list(values)
+        
+    def get_single_input_file_for_connection(self, in_key):
+        '''
+        Return a single input file for a given connection, also make sure that
+        there's exactly one such input file.
+        '''
+        return self.get_n_input_file_for_connection(in_key, 1)[0]
+
     def annotation_for_input_file(self, path):
+        '''
+        Determine the annotation for a given input file (that is, the connection name).
+        '''
         for dep in self.dependencies:
             run_info = dep.get_run_info()
             for run_id, run in run_info.items():
@@ -1214,6 +1309,12 @@ class AbstractStep(object):
         raise StandardError("Unable to determine annotation type for input file %s." % path)
 
     def declare_run(self, run_id):
+        '''
+        Declare a run. Use it like this::
+        
+            with self.declare_run(run_id) as run:
+                # add output files and information to the run here
+        '''
         if run_id in self._runs:
             raise StandardError("Cannot declare the same run ID twice: %s." % run_id)
         run = run_module.Run(self, run_id)

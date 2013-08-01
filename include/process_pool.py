@@ -36,11 +36,35 @@ class ProcessPool(object):
     The process pool provides an environment for launching and monitoring processes.
     You can launch any number of unrelated processes plus any number of pipelines in
     which several processes are chained together.
+    
+    Use it like this::
+    
+        with process_pool.ProcessPool(self) as pool:
+            # launch processes or create pipelines here
+
+    When the scope opened by the *with* statement is left, all processes are
+    launched and being watched. The process pool then waits until all processes
+    have finished. You cannot launch a process pool within another process pool,
+    but you can launch multiple pipeline and independent processes within a single
+    process pool. Also, you can launch several process pools sequentially.
     '''
 
     TAIL_LENGTH = 1024
+    '''
+    Size of the tail which gets recorded from both *stdout* and *stderr* streams of 
+    every process launched with this class, in bytes.
+    '''
+    
     COPY_BLOCK_SIZE = 4194304
+    '''
+    When *stdout* or *stderr* streams should be written to output files, this is the
+    buffer size which is used for writing.
+    '''
+    
     SIGTERM_TIMEOUT = 10
+    '''
+    After a SIGTERM signal is issued, wait this many seconds before going postal.
+    '''
     
     process_watcher_pid = None
 
@@ -53,6 +77,11 @@ class ProcessPool(object):
     class Pipeline(object):
         '''
         This class can be used to chain multiple processes together.
+        
+        Use it like this::
+            
+            with pool.Pipeline(pool) as pipeline:
+                # append processes to the pipeline here
         '''
         def __init__(self, pool):
             pool.launch_calls.append(self)
@@ -65,6 +94,10 @@ class ProcessPool(object):
             pass
 
         def append(self, args, stdout_path = None, stderr_path = None, hints = {}):
+            '''
+            Append a process to the pipeline. Parameters get stored and are passed
+            to *ProcessPool.launch()* later, so the same behaviour applies.
+            '''
             call = {
                 'args': copy.deepcopy(args),
                 'stdout_path': copy.copy(stdout_path),
@@ -158,6 +191,24 @@ class ProcessPool(object):
         return path
     
     def launch(self, args, stdout_path = None, stderr_path = None, hints = {}):
+        '''
+        Launch a process. Arguments, including the program itself, are passed in *args*.
+        If the program is not a binary but a script which cannot be invoked directly
+        from the command line, the first element of *args* must be a list like 
+        this: *['python', 'script.py']*.
+        
+        Use *stdout_path* and *stderr_path* to redirect *stdout* and *stderr* streams to
+        files. In any case, the output of both streams gets watched, the process pool
+        calculates SHA1 checksums automatically and also keeps the last 1024 bytes of
+        every stream. This may be useful if a process crashes and writes error messages
+        to *stderr* in which case you can see them even if you didn't redirect *stderr*
+        to a log file.
+        
+        Hints can be specified but are not essential. They help to determine the
+        direction of arrows for the run annotation graphs rendered by GraphViz 
+        (sometimes, it's not clear from the command line whether a certain file is
+        an input or output file to a given process).
+        '''
         call = {
             'args': copy.deepcopy(args),
             'stdout_path': copy.copy(stdout_path),
@@ -216,6 +267,11 @@ class ProcessPool(object):
                 self._do_launch(info)
     
     def _do_launch(self, info, keep_stdout_open = False, use_stdin = None):
+        '''
+        Launch a process and after that, launch a copy process for *stdout* and
+        *stderr* each.
+        '''
+        
         args = copy.deepcopy(info['args'])
         stdout_path = copy.copy(info['stdout_path'])
         stderr_path = copy.copy(info['stderr_path'])
@@ -393,6 +449,9 @@ class ProcessPool(object):
             return pid
                 
     def _wait(self):
+        '''
+        Wait for all processes to exit.
+        '''
         self.log("Now launching process watcher and waiting for all child processes to exit.")
         watcher_report_path = self.step.get_temporary_path('watcher-report')
         watcher_pid = self._launch_process_watcher(watcher_report_path)
@@ -521,6 +580,14 @@ class ProcessPool(object):
             raise StandardError("Pipeline crashed.")        
         
     def _launch_process_watcher(self, watcher_report_path):
+        '''
+        Launch the process watcher via fork. The process watcher repeatedly
+        determines all child processes of the main process and determines their
+        current and maximum CPU and RAM usage.
+        Initially, this is done in short intervals (0.1 seconds), so that very
+        short-lived processes can be watched but the frequency drops quickly so
+        that after a while, child processes are only examined every 10 seconds.
+        '''
         super_pid = os.getpid()
         
         watcher_pid = os.fork()
