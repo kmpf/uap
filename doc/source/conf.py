@@ -47,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'rnaseq-pipeline'
-copyright = u'2013, Michael Specht'
+copyright = u"2013, Fraunhofer IZI"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -228,7 +228,8 @@ man_pages = [
     
 wd = os.getcwd()
 os.chdir('..')
-os.system("python stepdoc.py")
+if os.system("python stepdoc.py") != 0:
+    raise StandardError("Error running stepdoc.py")
 os.chdir(wd)
 
 # If true, show URL addresses after external links.

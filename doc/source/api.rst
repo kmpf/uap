@@ -14,6 +14,12 @@ abstract_step
     
 .. autoclass:: AbstractSourceStep
 
+pipeline
+~~~~~~~~
+
+.. automodule:: pipeline
+    :members:
+    
 run
 ~~~
 
@@ -22,12 +28,6 @@ run
 .. autoclass:: Run
     :members:
 
-pipeline
-~~~~~~~~
-
-.. automodule:: pipeline
-    :members:
-    
 task
 ~~~~
 
@@ -54,4 +54,3 @@ misc
 
 .. automodule:: misc
     :members:
-    

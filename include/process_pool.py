@@ -39,8 +39,21 @@ class ProcessPool(object):
     '''
 
     TAIL_LENGTH = 1024
+    '''
+    Size of the tail which gets recorded from both *stdout* and *stderr* streams of 
+    every process launched with this class, in bytes.
+    '''
+    
     COPY_BLOCK_SIZE = 4194304
+    '''
+    When *stdout* or *stderr* streams should be written to output files, this is the
+    buffer size which is used for writing.
+    '''
+    
     SIGTERM_TIMEOUT = 10
+    '''
+    After a SIGTERM signal is issued, wait this many seconds before going postal.
+    '''
     
     process_watcher_pid = None
 
