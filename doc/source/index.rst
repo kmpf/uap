@@ -20,6 +20,7 @@ Contents
 
    how-to
    documentation
+   steps
    api
 
 
