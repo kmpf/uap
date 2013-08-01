@@ -1006,21 +1006,28 @@ class AbstractStep(object):
         to the name of the module the class is defined in. Pass 'cutadapt' and
         you will get the cutadapt.Cutadapt class which you may then instantiate.
         '''
-        
-        # look for a subclass of AbstractSourceStep fist
-        classes = [_ for _ in inspect.getmembers(__import__(key), inspect.isclass) if AbstractSourceStep in _[1].__bases__]
-        if len(classes) > 0:
-            if len(classes) != 1:
-                raise StandardError("need exactly one subclass of AbstractSourceStep in " + key)
-            return classes[0][1]
 
-        # then, look for a subclass of AbstractStep fist
-        classes = [_ for _ in inspect.getmembers(__import__(key), inspect.isclass) if AbstractStep in _[1].__bases__]
-        classes = [_ for _ in classes if _[1] != AbstractSourceStep]
-        if len(classes) != 1:
-            print(classes)
-            raise StandardError("need exactly one subclass of AbstractStep in " + key)
-        return classes[0][1]
+        # Attention, import statement in class method coming right up!
+        # Ok, this is strange, I know. But we need the io_step.IOStep class now
+        # because we want to test whether module members are a subclass of this
+        # and if we import it right at the beginning of this file, we would create
+        # a circular reference, because AbstractStep is imported at the beginning
+        # of io_step. There's probably a better solution, but I think it doesn't
+        # hurt, either. Here goes the awkward line:
+        import io_step
+        
+        check_classes = [AbstractSourceStep, AbstractStep, io_step.IOStep]
+        for index, c in enumerate(check_classes):
+            classes = [_ for _ in inspect.getmembers(__import__(key), inspect.isclass) if c in _[1].__bases__]
+            for k in range(index):
+                classes = [_ for _ in classes if _[1] != check_classes[k]]
+            if len(classes) > 0:
+                if len(classes) != 1:
+                    print(classes)
+                    raise StandardError("need exactly one subclass of %s in %s" % (c, key))
+                return classes[0][1]
+
+        raise StandardError("No suitable class found for module %s." % key)
     
     def set_cores(self, cores):
         self._cores = cores
