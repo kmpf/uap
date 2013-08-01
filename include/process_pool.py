@@ -32,6 +32,11 @@ def restore_sigpipe_handler():
     os.setsid()
     
 class ProcessPool(object):
+    '''
+    The process pool provides an environment for launching and monitoring processes.
+    You can launch any number of unrelated processes plus any number of pipelines in
+    which several processes are chained together.
+    '''
 
     TAIL_LENGTH = 1024
     COPY_BLOCK_SIZE = 4194304

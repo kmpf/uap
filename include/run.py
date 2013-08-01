@@ -3,6 +3,15 @@ import misc
 import os
 
 class Run(object):
+    '''
+    The Run class is a helper class which represents a run in a step. Declare runs
+    inside AbstractStep.declare_runs() via::
+    
+        with self.declare_run(run_id) as run:
+            # declare output files, private and public info here
+            
+    After that, use the available methods to configure the tun.
+    '''
     def __init__(self, step, run_id):
         if '/' in run_id:
             raise StandardError("Error: A run ID must not contain a slash: %s." % run_id)
@@ -19,6 +28,15 @@ class Run(object):
         pass
 
     def add_private_info(self, key, value):
+        '''
+        Add private information to a run. Use this to store data which you will need 
+        when the run is executed. As opposed to public information, private information 
+        is not visible to subsequent steps.
+        
+        You can store paths to input files here, but not paths to output files as
+        their expected location is not defined until we're in *AbstractStep.execute*
+        (hint: they get written to a temporary directory inside *execute()*).
+        '''
         if key in self._private_info and value != self._private_info[key]:
             raise StandardError(
                 "You're trying to overwrite private info %s with %s, "
@@ -27,6 +45,11 @@ class Run(object):
         self._private_info[key] = value
 
     def add_public_info(self, key, value):
+        '''
+        Add public information to a run. For example, a FASTQ reader may store the
+        index barcode here for subsequent steps to query via 
+        ``AbstractStep.find_upstream_info()``.
+        '''
         if key in self._public_info and value != self._public_info[key]:
             raise StandardError(
                 "You're trying to overwrite public info %s with %s, "
@@ -35,6 +58,26 @@ class Run(object):
         self._public_info[key] = value
 
     def add_output_file(self, tag, out_path, in_paths):
+        '''
+        Add an output file to this run. Output file names must be unique across all
+        runs defined by a step, so it may be a good idea to include the run_id into
+        the output filename.
+
+        - *tag*: You must specify the connection annotation which must have been previously 
+          declared via *AbstractStep.add_connection("out/...")*, but this doesn't 
+          have to be done in the step constructor, it's also possible in *declare_runs()*
+          right before this method is called.
+        
+        - *out_path*: The output file path, without a directory. The pipeline assigns
+          directories for you (this parameter must not contain a slash).
+        
+        - *in_paths*: A list of input files this output file depends on. It is 
+          **crucial** to get this right, so that the pipeline can determine which steps
+          are up-to-date at any given time. You have to specify absolute paths here,
+          including a directory, and you can obtain them via 
+          *AbstractStep.run_ids_and_input_files_for_connection* and related functions.
+        '''
+        
         # make sure there's no slash in out_path unless it's a source step
         if '/' in out_path and abstract_step.AbstractSourceStep not in self._step.__class__.__bases__:
             raise StandardError("There must be no slash (/) in any output "
