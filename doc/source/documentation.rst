@@ -3,7 +3,7 @@
   80 characters if you can and start each sentence on a new line as it 
   decreases maintenance and makes diffs more readable.
 
-.. title:: How to work with the rnaseq-pipeline
+.. title:: Documentation
 
 ..
   This document aims to describe how a simple RNAseq analysis can be performed
