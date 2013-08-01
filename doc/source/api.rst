@@ -14,6 +14,14 @@ abstract_step
     
 .. autoclass:: AbstractSourceStep
 
+run
+~~~
+
+.. automodule:: run
+    
+.. autoclass:: Run
+    :members:
+
 pipeline
 ~~~~~~~~
 

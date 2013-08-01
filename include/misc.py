@@ -113,6 +113,9 @@ def str_to_sha1_b62(s):
         
     
 def bytes_to_str(num):
+    '''
+    Convert a number representing a number of bytes into a human-readable string such as "4.7 GB"
+    '''
     for _, x in enumerate(['bytes','k','M','G']):
         if num < 1024.0:
             if _ == 0:
@@ -123,6 +126,9 @@ def bytes_to_str(num):
     return "%1.1f %sB" % (num, 'T')
 
 def duration_to_str(duration, long = False):
+    '''
+    Minor adjustment for Python's duration to string conversion, removed microsecond accuracy and replaces 'days' with 'd'
+    '''
     value = str(duration)
     if not long:
         if 'days' in value:
@@ -136,6 +142,13 @@ def duration_to_str(duration, long = False):
     return value
 
 def append_suffix_to_path(path, suffix):
+    '''
+    Append a suffix to a path, for example:
+
+    - path: /home/michael/chocolate-cookies.txt.gz
+    - suffix: done right
+    - result: /home/michael/chocolate-cookies-done-right.txt.gz
+    '''
     dirname, filename = os.path.split(path)
     if '.' in filename:
         basename = filename[:filename.index('.')]

@@ -225,6 +225,12 @@ man_pages = [
     ('index', 'rnaseq-pipeline', u'rnaseq-pipeline Documentation',
      [u'Michael Specht'], 1)
 ]
+    
+wd = os.getcwd()
+os.chdir('..')
+if os.system("python stepdoc.py") != 0:
+    raise StandardError("Error running stepdoc.py")
+os.chdir(wd)
 
 # If true, show URL addresses after external links.
 #man_show_urls = False

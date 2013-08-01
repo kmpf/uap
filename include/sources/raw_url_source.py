@@ -12,8 +12,8 @@ class RawUrlSource(AbstractStep):
         self.add_connection('out/raw')
         self.require_tool('curl')
         self.require_tool('sha1sum')
-        self.add_option('url', str, optional=False, description="download url")
-        self.add_option('sha1', str, optional=True, description="sha1 cheksum of file")
+        self.add_option('url', str, optional=False, description="file URL")
+        self.add_option('sha1', str, optional=True, description="expected SHA1 checksum of downloaded file")
         
     def declare_runs(self):
         path = os.path.basename(urlparse.urlparse(self.option('url')).path)
