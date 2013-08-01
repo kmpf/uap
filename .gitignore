@@ -7,3 +7,5 @@ doc/doctrees
 _monitor_disk_io
 steps.svg
 *~
+doc/source/steps.rst
+doc/html/*
