@@ -47,7 +47,6 @@ def doc_module(module_name, fout):
     fout.write("**Options:**\n")
     for key in sorted(step._defined_options.keys()):
         option = step._defined_options[key]
-        print(option)
         fout.write("  - **%s** (%s, %s)" % (
             key, 
             '/'.join([_.__name__ for _ in option['types']]),
@@ -70,9 +69,13 @@ def doc_module(module_name, fout):
         fout.write("**Required tools:** %s\n" % ', '.join(sorted(step._tools.keys())))
         fout.write("\n")
         
-    if not abstract_step.AbstractSourceStep in step.__class__.__bases__:
-        # this is not a source step, print cores
-        fout.write("**Cores:** %s\n" % step._cores)
+    if abstract_step.AbstractSourceStep in step.__class__.__bases__:
+        # this is a source step which does not create any tasks
+        fout.write("This step provides input files which already exists and therefore creates no tasks in the pipeline.\n")
+        fout.write("\n")
+    else:
+        # this is a step which creates tasks
+        fout.write("**CPU Cores:** %s\n" % step._cores)
         fout.write("\n")
         
     
