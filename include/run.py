@@ -99,7 +99,7 @@ class Run(object):
 
         self._output_files[tag][out_path] = in_paths
 
-    def output_files(self):
+    def get_output_files(self):
         result = dict()
         for tag in self._output_files:
             result[tag] = dict()
@@ -122,6 +122,12 @@ class Run(object):
         temp = self.output_files()
         return misc.assign_strings(temp[annotation].keys(), tags)
 
+    def get_single_input_file_for_output_file(self, out_path):
+        temp = self.get_input_files_for_output_file(out_path)
+        if len(temp) != 1:
+            raise StandardError("More than one input file for output file %s." % out_path)
+        return temp[0]
+
     def get_input_files_for_output_file(self, out_path):
         temp = self.output_files()
         for tag in temp.keys():
@@ -129,13 +135,13 @@ class Run(object):
                 return sorted(temp[tag][out_path])
         raise StandardError("Sorry, your output file couldn't be found in the dictionary: %s." % out_path)
 
-    def public_info(self, key):
+    def get_public_info(self, key):
         return self._public_info[key]
 
     def has_public_info(self, key):
         return (key in self._public_info)
 
-    def private_info(self, key):
+    def get_private_info(self, key):
         return self._private_info[key]
 
     def as_dict(self):

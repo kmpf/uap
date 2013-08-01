@@ -28,7 +28,7 @@ class Segemehl(AbstractStep):
 
     def declare_runs(self):
         
-        for run_id, input_paths in self.run_ids_and_input_files_for_connection('in/reads'):
+        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
             
             with self.declare_run(run_id) as run:
                 read_files = misc.assign_strings(input_paths, ['R1','R2'])
@@ -47,17 +47,17 @@ class Segemehl(AbstractStep):
             fifo_path_genome = pool.get_temporary_fifo('segemehl-genome-fifo', 'input')
             fifo_path_unmapped = pool.get_temporary_fifo('segemehl-unmapped-fifo', 'output')
             
-            pool.launch([self.tool('cat4m'), self.option('genome'), '-o', fifo_path_genome])
+            pool.launch([self.get_tool('cat4m'), self.get_option('genome'), '-o', fifo_path_genome])
             
             with pool.Pipeline(pool) as pipeline:
             
-                q = run.private_info('R1-in')
-                p = run.private_info('R2-in')
+                q = run.get_private_info('R1-in')
+                p = run.get_private_info('R2-in')
                     
                 segemehl = [
-                    self.tool('segemehl'),
+                    self.get_tool('segemehl'),
                     '-d', fifo_path_genome,
-                    '-i', self.option('index'),
+                    '-i', self.get_option('index'),
                     '-q', q,
                     '-p', p,
                     '-u', fifo_path_unmapped,
@@ -68,14 +68,14 @@ class Segemehl(AbstractStep):
                     '-o', '/dev/stdout'
                 ]
                 
-                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
+                pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
                 
                 pipeline.append(segemehl, stderr_path = run.get_single_output_file_for_annotation('log'))
                 pipeline.append(pigz, stdout_path = run.get_single_output_file_for_annotation('alignments'))
                 
             with pool.Pipeline(pool) as pipeline:
-                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
+                pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
                 
-                pipeline.append([self.tool('cat4m'), fifo_path_unmapped])
+                pipeline.append([self.get_tool('cat4m'), fifo_path_unmapped])
                 pipeline.append(pigz, stdout_path = run.get_single_output_file_for_annotation('unmapped'))
                 

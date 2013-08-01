@@ -10,4 +10,4 @@ class Grep(io_step.IOStep):
         self.add_option('pattern', str, optional=False)
 
     def tool_command_line(self):
-        return [self.option('pattern')]
+        return [self.get_option('pattern')]

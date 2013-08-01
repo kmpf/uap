@@ -8,7 +8,7 @@ import yaml
 
 class RunFolderSource(AbstractSourceStep):
     def __init__(self, pipeline):
-        super(RunFolderSource, self).__init__(pipeline)
+        super(RunolderSource, self).__init__(pipeline)
         
         self.add_connection('out/reads')
         
@@ -16,7 +16,7 @@ class RunFolderSource(AbstractSourceStep):
         self.add_option('paired_end', bool)
         
     def setup_runs(self, input_run_info, connection_info):
-        path = self.option('path')
+        path = self.get_option('path')
 
         output_run_info = {}
 

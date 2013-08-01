@@ -11,4 +11,4 @@ class RawFileSource(AbstractSourceStep):
 
     def declare_runs(self):
         with self.declare_run('nop') as run:
-            run.add_output_file('raw', os.path.abspath(self.option('path')), [])
+            run.add_output_file('raw', os.path.abspath(self.get_option('path')), [])

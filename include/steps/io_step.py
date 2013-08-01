@@ -27,25 +27,25 @@ class IOStep(abstract_step.AbstractStep):
         
 
     def declare_runs(self):
-        for run_id, input_paths in self.run_ids_and_input_files_for_connection('in/*'):
+        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/*'):
             with self.declare_run(run_id) as run:
                 for in_path in input_paths:
-                    annotation = self.annotation_for_input_file(in_path)
+                    annotation = self.get_annotation_for_input_file(in_path)
                     self.add_connection('out/%s' % annotation)
                     run.add_output_file(annotation, misc.append_suffix_to_path(os.path.basename(in_path), self._tool), [in_path])
 
     
     def execute(self, run_id, run):
         # process one file at a time
-        for tag, output_file_info in run.output_files().items():
+        for tag, output_file_info in run.get_output_files().items():
             for output_path, input_paths in output_file_info.items():
                 with process_pool.ProcessPool(self) as pool:
                     with pool.Pipeline(pool) as pipeline:
-                        cat4m = [self.tool('cat4m'), input_paths[0]]
-                        pigz1 = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
-                        tool_command = [self.tool(self._tool)]
+                        cat4m = [self.get_tool('cat4m'), input_paths[0]]
+                        pigz1 = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+                        tool_command = [self.get_tool(self._tool)]
                         tool_command.extend(self.tool_command_line())
-                        pigz2 = [self.tool('pigz'), '--processes', '2', '--blocksize', '4096', '--stdout']
+                        pigz2 = [self.get_tool('pigz'), '--processes', '2', '--blocksize', '4096', '--stdout']
                 
                         if output_path[-3:] == '.gz':
                             pipeline.append(cat4m)

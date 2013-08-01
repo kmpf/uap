@@ -46,19 +46,19 @@ class FastqSource(AbstractSourceStep):
             description = "This optional prefix is prepended to every sample name.")
         
     def declare_runs(self):
-        regex = re.compile(self.option('group'))
+        regex = re.compile(self.get_option('group'))
         
         found_files = dict()
         
         # find FASTQ files
-        for path in glob.glob(os.path.abspath(self.option('pattern'))):
+        for path in glob.glob(os.path.abspath(self.get_option('pattern'))):
             match = regex.match(os.path.basename(path))
             if match == None:
-                raise StandardError("Couldn't match regex /%s/ to file %s." % (self.option('group'), os.path.basename(path)))
+                raise StandardError("Couldn't match regex /%s/ to file %s." % (self.get_option('group'), os.path.basename(path)))
             
             sample_id_parts = []
-            if self.option_set_in_config('sample_id_prefix'):
-                sample_id_parts.append(self.option('sample_id_prefix'))
+            if self.is_option_set_in_config('sample_id_prefix'):
+                sample_id_parts.append(self.get_option('sample_id_prefix'))
                 
             sample_id_parts += list(match.groups())
             sample_id = '_'.join(sample_id_parts)
@@ -69,16 +69,16 @@ class FastqSource(AbstractSourceStep):
         # declare a run for every sample
         for run_id, paths in found_files.items():
             with self.declare_run(run_id) as run:
-                run.add_public_info("paired_end", self.option("paired_end"))
+                run.add_public_info("paired_end", self.get_option("paired_end"))
                 for path in paths:
                     run.add_output_file("reads", path, [])
 
         # determine index information...
         # retrieve each run and punch in the information
-        if self.option_set_in_config('indices'):
-            if type(self.option('indices')) == str:
+        if self.is_option_set_in_config('indices'):
+            if type(self.get_option('indices')) == str:
                 # read indices from CSV file
-                indices_path = self.option('indices')
+                indices_path = self.get_option('indices')
                 reader = csv.DictReader(open(indices_path))
                 for row in reader:
                     sample_id = row['SampleID']
@@ -88,7 +88,7 @@ class FastqSource(AbstractSourceStep):
                         run.add_public_info('index', index)
             else:
                 # indices are defined in the configuration
-                for sample_id, index in self.option('indices').items():
+                for sample_id, index in self.get_option('indices').items():
                     run = self.get_run(sample_id)
                     if run != None:
                         run.add_public_info('index', index)

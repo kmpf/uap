@@ -19,7 +19,7 @@ class FixCutadapt(AbstractStep):
     def declare_runs(self):
         # fetch all incoming run IDs which produce reads...
         run_ids = dict()
-        for run_id, input_paths in self.run_ids_and_input_files_for_connection('in/reads'):
+        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
             fixed_run_id = run_id[:-3]
             which = run_id[-2:]
             if not fixed_run_id in run_ids:
@@ -49,21 +49,21 @@ class FixCutadapt(AbstractStep):
             fifo_out_R2 = pool.get_temporary_fifo('fifo_out_R2', 'output')
             
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.tool('cat4m'), run.private_info('in-R1')]
-                pigz = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+                cat4m = [self.get_tool('cat4m'), run.get_private_info('in-R1')]
+                pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']
                 
                 pipeline.append(cat4m)
                 pipeline.append(pigz, stdout_path = fifo_in_R1)
         
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.tool('cat4m'), run.private_info('in-R2')]
-                pigz = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+                cat4m = [self.get_tool('cat4m'), run.get_private_info('in-R2')]
+                pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']
                 
                 pipeline.append(cat4m)
                 pipeline.append(pigz, stdout_path = fifo_in_R2)
         
             fix_cutadapt = [
-                self.tool('fix_cutadapt'),
+                self.get_tool('fix_cutadapt'),
                 fifo_in_R1,
                 fifo_in_R2,
                 fifo_out_R1,
@@ -73,15 +73,15 @@ class FixCutadapt(AbstractStep):
             pool.launch(fix_cutadapt)
         
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.tool('cat4m'), fifo_out_R1]
-                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '--stdout']
+                cat4m = [self.get_tool('cat4m'), fifo_out_R1]
+                pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '--stdout']
                 
                 pipeline.append(cat4m)
                 pipeline.append(pigz, stdout_path = out_paths['R1'])
                 
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.tool('cat4m'), fifo_out_R2]
-                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '--stdout']
+                cat4m = [self.get_tool('cat4m'), fifo_out_R2]
+                pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '--stdout']
                 
                 pipeline.append(cat4m)
                 pipeline.append(pigz, stdout_path = out_paths['R2'])

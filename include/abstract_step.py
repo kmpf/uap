@@ -335,7 +335,7 @@ class AbstractStep(object):
                     return volatile_path
             return path
 
-        def path_up_to_date(outpath, inpaths):
+        def is_path_up_to_date(outpath, inpaths):
             # first, replace paths with volatile paths if the step is marked
             # as volatile and the real path is missing
             # but: only consider volatile placeholders if all child tasks
@@ -638,7 +638,7 @@ class AbstractStep(object):
                                 
             self._reset()
 
-    def tool(self, key):
+    def get_tool(self, key):
         '''
         Return full path to a configured tool.
         '''
@@ -1170,7 +1170,7 @@ class AbstractStep(object):
         result = self.find_upstream_info_as_hash(run_id, key, expected = 1)
         return result.values()[0]
 
-    def option(self, key):
+    def get_option(self, key):
         '''
         Query an option.
         '''
@@ -1178,7 +1178,7 @@ class AbstractStep(object):
             raise StandardError("Cannot query undefined option %s in step %s." % (key, __module__))
         return self._options[key]
 
-    def option_set_in_config(self, key):
+    def is_option_set_in_config(self, key):
         '''
         Determine whether an optional option (that is, a non-required option) has been
         set in the configuration.
@@ -1263,7 +1263,7 @@ class AbstractStep(object):
 
         return result
 
-    def run_ids_and_input_files_for_connection(self, in_key):
+    def get_run_ids_and_input_files_for_connection(self, in_key):
         '''
         Returns an iterator with run_id and input_files where:
             - run_id is a string
@@ -1291,7 +1291,7 @@ class AbstractStep(object):
     def get_single_input_file_for_connection(self, in_key):
         return self.get_n_input_file_for_connection(in_key, 1)[0]
 
-    def annotation_for_input_file(self, path):
+    def get_annotation_for_input_file(self, path):
         '''
         Determine the annotation for a given input file (that is, the connection name).
         '''

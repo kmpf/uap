@@ -10,4 +10,4 @@ class Head(io_step.IOStep):
         self.add_option('lines', int, default = 1000)
 
     def tool_command_line(self):
-        return ['-n', str(self.option('lines'))]
+        return ['-n', str(self.get_option('lines'))]

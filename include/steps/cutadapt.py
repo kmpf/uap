@@ -35,7 +35,7 @@ class Cutadapt(AbstractStep):
         
     def declare_runs(self):
         # fetch all incoming run IDs which produce reads...
-        for run_id, input_paths in self.run_ids_and_input_files_for_connection('in/reads'):
+        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
             is_paired_end = self.find_upstream_info(run_id, 'paired_end')
             
             # make sure that adapter/adapter-R1/adapter-R2 are set correctly
@@ -48,10 +48,10 @@ class Cutadapt(AbstractStep):
                 required_options = ['adapter']
                 forbidden_options = ['adapter-R1', 'adapter-R2']
             for key in required_options:
-                if not self.option_set_in_config(key):
+                if not self.is_option_set_in_config(key):
                     raise StandardError("Option %s required because sample %s is paired end!" % (key, run_id))
             for key in forbidden_options:
-                if self.option_set_in_config(key):
+                if self.is_option_set_in_config(key):
                     raise StandardError("Option %s not allowed because sample %s is paired end!" % (key, run_id))
 
             # decide which read type we'll handle based on whether this is
@@ -81,7 +81,7 @@ class Cutadapt(AbstractStep):
                         run.add_private_info('paired_end_read', which.replace('-', ''))
 
                     # add adapter information, insert correct index first if necessary
-                    adapter = self.option('adapter%s' % which)
+                    adapter = self.get_option('adapter%s' % which)
                     if '((INDEX))' in adapter:
                         index = self.find_upstream_info(run_id, 'index')
                         adapter = adapter.replace('((INDEX))', index)
@@ -101,21 +101,21 @@ class Cutadapt(AbstractStep):
                 out_path = run.get_single_output_file_for_annotation('reads')
 
                 # set up processes
-                cat4m = [self.tool('cat4m')]
+                cat4m = [self.get_tool('cat4m')]
                 cat4m.extend(sorted(run.get_input_files_for_output_file(out_path)))
 
-                pigz1 = [self.tool('pigz'), '--processes', '1', '--decompress', '--stdout']
+                pigz1 = [self.get_tool('pigz'), '--processes', '1', '--decompress', '--stdout']
                 
-                fix_qnames = [self.tool('fix_qnames')]
+                fix_qnames = [self.get_tool('fix_qnames')]
 
-                cutadapt = [self.tool('cutadapt'), '-a', run.private_info('adapter'), '-']
+                cutadapt = [self.get_tool('cutadapt'), '-a', run.get_private_info('adapter'), '-']
 
-                pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '1', '--stdout']
+                pigz2 = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '1', '--stdout']
 
                 # create the pipeline and run it
                 pipeline.append(cat4m)
                 pipeline.append(pigz1)
-                if self.option('fix_qnames') == True:
+                if self.get_option('fix_qnames') == True:
                     pipeline.append(fix_qnames)
                 pipeline.append(cutadapt, stderr_path = run.get_single_output_file_for_annotation('log'))
                 pipeline.append(pigz2, stdout_path = out_path)
