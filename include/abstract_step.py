@@ -1289,6 +1289,10 @@ class AbstractStep(object):
         return list(values)
         
     def get_single_input_file_for_connection(self, in_key):
+        '''
+        Return a single input file for a given connection, also make sure that
+        there's exactly one such input file.
+        '''
         return self.get_n_input_file_for_connection(in_key, 1)[0]
 
     def get_annotation_for_input_file(self, path):
