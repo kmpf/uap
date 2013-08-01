@@ -36,6 +36,9 @@ class Pipeline(object):
     '''
 
     states = misc.Enum(['WAITING', 'READY', 'QUEUED', 'EXECUTING', 'FINISHED'])
+    '''
+    Possible states a task can be in.
+    '''
 
     def __init__(self):
         
