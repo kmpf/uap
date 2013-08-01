@@ -122,12 +122,6 @@ class Run(object):
         temp = self.output_files()
         return misc.assign_strings(temp[annotation].keys(), tags)
 
-    def get_single_input_file_for_output_file(self, out_path):
-        temp = self.get_input_files_for_output_file(out_path)
-        if len(temp) != 1:
-            raise StandardError("More than one input file for output file %s." % out_path)
-        return temp[0]
-
     def get_input_files_for_output_file(self, out_path):
         temp = self.output_files()
         for tag in temp.keys():
