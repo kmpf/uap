@@ -7,6 +7,12 @@ import pipeline
 import yaml
 
 class RunFolderSource(AbstractSourceStep):
+    '''
+    This source looks for fastq.gz files in ``[path]/Unaligned/Project_*/Sample_*`` 
+    and pulls additional information from CSV sample sheets it finds. It also makes 
+    sure that index information for all samples is coherent and unambiguous.
+    '''
+    
     def __init__(self, pipeline):
         super(RunFolderSource, self).__init__(pipeline)
         
