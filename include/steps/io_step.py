@@ -16,6 +16,10 @@ class IOStep(abstract_step.AbstractStep):
         
         self.set_cores(4)
         self.add_connection('in/*')
+        # It's not necessary to declare the "out/*" connection here, as the real
+        # out connections are declare in declare_runs(). However, this is done
+        # here for cosmetic purposes so that it shows up the step documentation.
+        self.add_connection('out/*')
         
         self.require_tool('cat4m')
         self.require_tool('pigz')
