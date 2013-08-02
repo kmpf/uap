@@ -34,13 +34,9 @@ class HtSeqCount(AbstractStep):
     def declare_runs(self):
         
         features_path = [self.get_single_input_file_for_connection('in/features')]
-        print(features_path)
 
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
             alignments_path = input_paths
-            print(alignments_path)
-
-            print(features_path + alignments_path)
 
             with self.declare_run(run_id) as run:
                 run.add_private_info('alignments_path', alignments_path)
