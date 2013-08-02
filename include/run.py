@@ -127,7 +127,7 @@ class Run(object):
         Retrieve exactly one output file of the given annotation, and crash
         if there isn't exactly one.
         '''
-        temp = self.output_files()
+        temp = self.get_output_files()
         if len(temp[annotation]) != 1:
             raise StandardError("More than one output file declared for out/%s." % annotation)
         return temp[annotation].keys()[0]
@@ -141,14 +141,14 @@ class Run(object):
         - *tags*: ['a', 'b']
         - result: {'a': 'out-a.txt', 'b': 'out-b.txt'}
         '''
-        temp = self.output_files()
+        temp = self.get_output_files()
         return misc.assign_strings(temp[annotation].keys(), tags)
 
     def get_input_files_for_output_file(self, out_path):
         '''
         Return all input files a given output file depends on.
         '''
-        temp = self.output_files()
+        temp = self.get_output_files()
         for tag in temp.keys():
             if out_path in temp[tag].keys():
                 return sorted(temp[tag][out_path])
