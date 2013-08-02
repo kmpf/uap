@@ -26,18 +26,18 @@ class TopHat2(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('bowtie2')
         self.require_tool('tophat2')
-        
-    def setup_runs(self, complete_input_run_info, connection_info):
-        if not 'library_type' in self.options:
-            raise StandardError("Required option is missing: library_type.")
-            
-        # make sure files are available
-        if not os.path.exists(self.options['index'] + '.1.bt2'):
-            raise StandardError("Could not find %s file: %s" % (key, self.options[key]))
 
-        if not 'swap_reads' in self.options:
-            self.options['swap_reads'] = False
-            
+        self.add_option('index', str)
+        self.add_option('library_type', str, choices = ['fr-unstranded', 'fr-firststrand', 'fr-secondstrand'])
+        
+        # TODO: remove swap_reads option
+        self.add_option('swap_reads', bool, default = False)
+
+    def setup_runs(self, complete_input_run_info, connection_info):
+        # make sure files are available
+        if not os.path.exists(self.get_option('index') + '.1.bt2'):
+            raise StandardError("Could not find index file: %s.*" % self.get_option('index'))
+
         output_run_info = {}
         for step_name, step_input_info in complete_input_run_info.items():
             for run_id, input_run_info in step_input_info.items():
@@ -78,15 +78,12 @@ class TopHat2(AbstractStep):
             
             q = run_info['info']['R1-in']
             p = run_info['info']['R2-in']
-            if self.options['swap_reads']:
-                q = run_info['info']['R2-in']
-                p = run_info['info']['R1-in']
                 
             tophat2 = [
-                self.tool('tophat2'),
-                '--library-type', self.options['library_type'],
+                self.get_tool('tophat2'),
+                '--library-type', self.get_option('library_type'),
                 '--output-dir', tophat_out_path,
-                '-p', '6', self.options['index'], q, p
+                '-p', '6', self.get_option('index'), q, p
             ]
 
             pool.launch(tophat2, stderr_path = run_info['output_files']['log'].keys()[0], 

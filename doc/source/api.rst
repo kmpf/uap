@@ -20,6 +20,14 @@ pipeline
 .. automodule:: pipeline
     :members:
     
+run
+~~~
+
+.. automodule:: run
+    
+.. autoclass:: Run
+    :members:
+
 task
 ~~~~
 
@@ -46,4 +54,3 @@ misc
 
 .. automodule:: misc
     :members:
-    

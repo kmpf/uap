@@ -2,124 +2,30 @@
   This is the documentation for rnaseq-pipeline. Please keep lines under
   80 characters if you can and start each sentence on a new line as it 
   decreases maintenance and makes diffs more readable.
-  
-.. title:: rnaseq-pipeline
 
-Introduction
-============
+.. title:: Documentation
 
-The aim of this data processing pipeline is to enable robust and 
-straightforward bioinformatics data evaluation. 
-It is implemented in Python, runs under GNU/Linux and can be controlled from 
-the command-line interface. 
-Although the primary focus is the evaluation of RNASeq data, its design 
-allows for a variety of other applications.
+..
+  This document aims to describe how a simple RNAseq analysis can be performed
+  with the **rnaseq-pipeline**.
 
-General usage
--------------
 
-This package *does not* provide a number of tools which are downloaded and
-installed system-wide to provide certain functioniality.
-The intention of this system is to provide a robust and traceable framework
-for data evaluation in scientific experiments which uses other tools and
-manages individual data processing steps and their inter-dependencies.
-    
-The recommended workflow for running a data evaluation for an experiment is 
-as follows:
+Installation and setup
+======================
 
-1. Check-out the rnaseq-pipeline repository via Git.
-2. Setup the project by writing the configuration file.
-3. Add steps or other functionality as needed (optional).
-4. Run the pipeline.
-5. Have your changes (if there are any) merged back into the main repository,
-   to the advantage of the scientific community.
 
-This leaves you with:
-
-* Your original input files, which are left untouched.
-* The experiment-specific pipeline repository.  
-  You should keep this repository for later reference and you could even
-  make it publicly available along with your input files for anybody to
-  re-run the entire data evaluation or parts thereof.
-* The output directory containing all output files and comprehensive 
-  annotations.
-  These annotations include detailed information for every output file,
-  including which steps have been executed and the Git SHA1 hash of
-  the pipeline repository at the time the data processing took place.
-  In many cases, these annotations also include information about all
-  inter-process streams and output files, including SHA1 checksums, file 
-  sizes, and line counts.
-
-Core aspects
-------------
-
-**Robustness:**
-
-* All steps write their output files to a temporary location. 
-  Only if a step has completed successfully, the output files are copied to 
-  the correct output directory.
-* The output directory names are suffixed with a four-character hashtag 
-  which mirrors the options specified for the step.
-* Processing can be aborted and continued from the command line at any time. 
-  This way, cluster failures are less critical because output files do not
-  get compromised.
-* Errors are caught as early as possible. Tools are checked for availability, 
-  and the entire processing pipeline is calculated in advance before 
-  jobs are being started or submitted to a cluster.
-  
-**Traceability:**
-
-* Comprehensive annotations are written to the output directories, allowing 
-  for later investigation about what exactly happened.
-      
-**Simplicity:**
-
-* The entire processing pipeline is described via a configuration file. 
-  Steps are defined in a directed acyclic graph (DAG).
-* Interaction with the pipeline happens through a handful of scripts which 
-  are used to monitor the state of the pipeline and execute individual or all 
-  remaining steps.
-
-Design
-------
-
-The central part of the pipeline is its definition of the steps which are to 
-be carried out.
-Steps are organized in a dependency graph (a directed acyclic graph) -- every 
-step may have one or more parent steps, which may in turn have other parent 
-steps, and so on.
-Steps without parents are usually sources which provide source files, for
-example FASTQ files with the raw sequences obtained from the sequencer,
-genome sequence databases or annotation tracks.
-
-Each step defines a number of runs and each run represents a piece of the
-entire data evaluation, typically at the level of a single sample.
-A certain *run* of a certain *step* is called a *task*.
-While the steps only describe what needs to be done on a very abstract level,
-it is through the individual runs of each step that a pipeline-wide list of 
-actual tasks becomes available.
-Each run may provide a number of output files which depend on output files
-of one or several runs from parent steps.
-
-Source steps define a run for every input sample, and a subsequent step
-may:
-
-* define the same number of runs, 
-* define more runs (for example when R1 and R2 reads in a paired-end RNASeq 
-  experiment should be treated separately),
-* define fewer runs (usually towards the end of a pipeline, where results are
-  summarized).
-
-Setup
-=====
+Downloading the software
+------------------------
 
 The repository can be obtained like this::
 
-    $ git clone spechtm@bioinf1:/home/spechtm/rnaseq-pipeline.git
+    $ git clone git@github.com:tiennes/rnaseq-pipeline.git
 
-After cloning the repository, run the bootstrapping script to create the 
-required Python environment (which will be located in ``./python_env/``)::
+After cloning the repository, change into the created directory and run the 
+bootstrapping script to create the required Python environment (which will be
+located in ``./python_env/``)::
 
+    $ cd rnaseq-pipeline
     $ ./bootstrap.sh
 
 There's no harm in accidentally running this script multiple times. 
@@ -129,8 +35,8 @@ of 4 MB and print them to stdout (we'll need this often in the pipeline,
 as ``cat`` reads in system-default blocks of 32 kB which is ok for a normal
 system but leads to high I/O load on a cluster system).
 
-The configuration file
-----------------------
+Configuring the pipeline
+------------------------
 
 Next, edit ``config.sample.yaml`` and save it as ``config.yaml``. 
 Although writing the configuration may seem a bit complicated, the trouble 
@@ -168,93 +74,182 @@ Here is a sample configuration:
         cat4m:
             path: ./tools/cat4m
 
-In the configuration, the following aspects of the pipeline are defined:
+The configuration file consists of four sections (let's just call them sections, although 
+technically, they are keys):
 
-* ``destination_path`` -- this is where result files, annotations and 
-  temporary files are written to
-* ``steps`` -- defines the processing step arranged in a DAG
-* ``tools`` -- defines all tools used in the pipeline and how to determine 
-  their versions (for later reference)
+* ``destination_path`` -- points to the directory where the result files,
+  annotations and  temporary files are written to
 * ``email`` -- when submitting jobs on a cluster, messages will be sent to 
   this email address by the cluster scheduler (nobody@example.com by default)
-  
-Steps
-~~~~~
-  
-Steps are defined in a directed acyclic graph. 
-In the configuration, the ``steps`` dictionary contains a key for every
-step, therefore each step must have a unique name.
-There are two ways to name a step:
+* ``tools`` -- defines all tools used in the pipeline and how to determine 
+  their versions (for later reference)
+* ``steps`` -- defines the processing step and their order 
+
+If you want to know more about the notation that is used in this file, have a
+closer look at the `YAML definition <http://www.yaml.org/>`_.
+
+Sections of config.yaml
+***********************
+
+destination_path
+~~~~~~~~~~~~~~~~
+
+The value of ``destination_path`` is the directory where the pipeline is going
+to store the created files. It is possible to use a different directory for
+volatile files (see ).
 
 .. code-block:: yaml
 
-    steps:
-        # here, the step name is unchanged, it's a cutadapt step which is also called 'cutadapt'
-        cutadapt:
-            ... # options following
-            
-        # here, we also insert a cutadapt step, but we give it a different name: 'clip_adapters'
-        clip_adapters (cutadapt):
-            ... # options following
-            
-Source steps are special in the way that they provide files without doing
-anything, and they are usually the first steps in a pipeline because they
-have no dependencies.
-Regular steps, on the other hand, need to define their dependencies via
-the ``_depends`` key which may either be ``null``, a step name, or a list
-of step names.
+    destination_path: "/path/to/dir"
 
-.. code-block:: yaml
-
-    steps:
-        # the source step which depends on nothing
-        fastq_source:
-            # ...
-            
-        # the first processing step, which depends on the sources
-        cutadapt:
-            _depends: fastq_source
-        
-        # the second processing step, which depends on the cutadapt step
-        fix_cutadapt:
-            _depends: cutadapt
-                
-If you want to cut off entire branches of the step graph, set the ``_BREAK`` 
-flag in a step definition, which will force the step to produce no runs
-(which will in turn give all following steps nothing to do, thereby 
-effectively disabling these steps):
-        
-
-.. code-block:: yaml
-
-    steps:
-        fastq_source:
-            # ...
-            
-        cutadapt:
-            _depends: fastq_source
-        
-        # this step and all following steps will not be executed
-        fix_cutadapt:
-            _depends: cutadapt
-            _BREAK: true
-
-Tools
+email
 ~~~~~
 
-All tools which are used in the pipeline must be specified in the 
-configuration file.
-The pipeline determines and records their versions for future reference.
+The value of ``email`` is needed if the pipeline is executed on the cluster,
+where it is used to inform the person who started the pipeline about status
+changes of submitted jobs.
 
-By default, version determination is simply attempted by calling the program
-without command-line arguments.
+.. code-block:: yaml
 
-If a certain argument is required, specify it in ``get_version``. 
-If the tools does not return with an exit code of 0, find out which code it
-is by typing ``echo $?`` into Bash and specify the exit code in ``exit_code``.
+    email: "your.name@ufz.de"
+
+
+tools
+~~~~~
+
+The ``tools`` block describes all programs needed during the execution of the
+ pipeline.
+
+.. code-block:: yaml
+
+    tools:
+        # you don't have to specify a path if the tool can be found in $PATH
+        cat:
+            path: cat 
+            version: "--version"
+        # you have to specify a path if the tool can not be found in $PATH
+        cutadapt:
+            path: /path/to/cutadapt
+            version: "--version"
+
+steps
+~~~~~
+
+The ``steps`` block is the core of the pipeline, because it defines the order in
+which the different steps of the pipeline are executed. Each step must have a
+unique name. Therefore you should give each step a descriptive name followed by
+a blank and the step type enclosed in parentheses.
+
+There are two different types of steps:
+
+1. **source steps** are used to enter data into the pipeline, meaning they have no
+   predecessor step they depend on.
+2. **processing steps** depend upon one or more predecessor steps and create some 
+   output that can be used by successor steps.
+   
+All available steps are described in detail in the steps documentation: :doc:`steps`.
+
+Example configurations for various source steps are shown below:
+
+.. code-block:: yaml
+
+    # sources steps
+    steps:
+        # fastq_source provides a number of fastq.gz files as pipeline input
+        casava_output (fastq_source):
+            # a glob pattern
+            pattern: /home/kaempf/Projects/RNAseq_Jurkats+BaP/data/
+            group: (Sample_COPD_\d+)_R[12]-head.fastq.gz
+            indices: indices.csv
+            paired_end: yes
+
+        # run_folder_sources
+        fc1 (run_folder_source):
+            path: /data/bioinf/projects/data/Jurkats_BaP_Transcriptome/130108_SN928_0083_AD11VNACXX_Keep/
+            paired_end: yes
+        fc2 (run_folder_source):
+            path: /data/bioinf/projects/data/Jurkats_BaP_Transcriptome/130108_SN928_0084_BC0UT2ACXX_Keep/
+            paired_end: yes
             
-Scripts
-=======
+        # raw_file_source can provide any filesystem file as pipeline input
+        mapped_reads (raw_file_source):
+            path: data/H3K4me3_GCCAAT_L001_001.dup_rm.sam.gz
+            sha1: 835779504aa63f80c9e1008f93f554269d0ec506
+            
+        # raw_url_source can provide any downloadable file as pipeline input
+        gencode (raw_url_source):
+            url: ftp://ftp.sanger.ac.uk/pub/gencode/release_15/gencode.v15.annotation.gtf.gz
+            sha1: 9b272fde8bca544e6cd8621ddeec55aa09cf7a05
+
+
+Example configurations
+----------------------
+
+There is currently no step implemented to execute Illuminas CASAVA pipeline, which 
+converts BCL files to FASTQ files. Therefore all example configurations
+begin with a source step that relies on the availability of fastq.gz files.
+
+General sequencing analysis steps
+********************************* 
+
+Every analysis of high-throughput sequencing results starts with some basic
+steps. Irrespective of sequencing RNA or DNA, given a reference genome
+exists.
+
+1. Get the sequencing reads as input (most likely fastq.gz)
+2. Remove adapter sequences from your sequencing reads
+3. Align the sequencing reads onto the refernce genome
+
+After these steps are finished a lot of different analysis could be applied on
+the data. Furtheron example configurations for often used analyses are shown.
+The enumeration of steps show continues as if the basic steps were already
+performed.
+
+
+RNAseq analysis
+***************
+
+
+Differential expression
+~~~~~~~~~~~~~~~~~~~~~~~
+
+RNAseq analysis often aims at the discovery of differentially expressed
+(known) transcripts. Therefore mappped reads for at least two different samples
+have to be available.
+
+4. Get annotation set (for e.g. genes, transcripts, ...)
+5. Count the number of reads overlapping the annotation
+6. Perform statistical analysis, based on counts 
+
+Assemble novel transcripts
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As the publicly available annotations, e.g. from GENCODE, are probably not
+complete, the assembly of novel transcripts from RNAseq data is another task one
+would perform to invetsigate the transcriptome.
+
+
+ChIPseq analysis
+****************
+
+ChIPseq analysis aims at the discovery of genomic loci at which protein(s) of
+interest were bound. The experiment is an enrichment procedure using specific
+antibodies. The enrichment detection is normally performed by so called peak
+calling programs.
+
+4. Get negative control
+5. Peak calling
+
+
+Prepare UCSC genome browser tracks
+**********************************
+
+The conversion of sequencing data into an format that can be displayed by the
+UCSC genome browser is needed in almost all sequencing projects.
+
+
+Interacting with a pipeline
+===========================
 
 Once the project is set up, there are several scripts which can be used to 
 execute and monitor the pipeline. 
@@ -481,8 +476,8 @@ parallel.
 Different quotas can be defined for each step: because ``cutadapt`` is 
 highly I/O-efficient, it has a higher quota.
 
-Annotations
-===========
+Post-mortem pipeline analysis
+=============================
     
 Upon successful completion of a task, an extensive YAML-formatted annotation 
 is placed next to the output files in a file called 
@@ -506,128 +501,163 @@ Also, annotations may help to identify bottlenecks.
 | output files and inter-process        | each and therefore cannot compress the        |
 | streams.                              | results fast enough.                          |
 +---------------------------------------+-----------------------------------------------+
+
+
+Extending rnaseq-pipeline
+=========================
+
+
+Implement your own steps
+------------------------
+
+The provided pipeline can be easily extended by implementing new steps and
+sources. Therefore one does need some basic python programming skills. To add a
+new processing step, a single Python file must be placed in ``include/step``
+which defines a class with a constructor and two functions. The constructor
+(``__init__``) checks for the availability of required tools and tells the
+pipeline which connections this step expects (``in/``) and which it provides
+(``out/``). The first of the functions  (``setup_runs``) is used for planning all
+jobs based on a list of input files or runs and possibly additional information
+from previous steps and the second function (``execute``) is used to execute a
+specific job. The basic scaffold is shown below.
+
+.. code-block:: python
+
+    import sys
+    from abstract_step import *
+    import pipeline
+    import re
+    import process_pool
+    import yaml
     
-Steps
-=====
-
-A detailed description of all availble steps follows.
-               
-Source steps
-------------
-
-Source steps provide input files for the pipeline, such as RNA sequences.
-
-Run folder source
-~~~~~~~~~~~~~~~~~
-
-Here's an example:
-
-.. code-block:: yaml
-
-    - run_folder_source: { path: in }
-
-This source looks for fastq.gz files in 
-``[path]/Unaligned/Project_*/Sample_*`` and pulls additional information from 
-CSV sample sheets it finds. 
-It also makes sure that index information for all samples is coherent and 
-unambiguous.
-
-FASTQ source
-~~~~~~~~~~~~
-
-Here's an example:
-
-.. code-block:: yaml
-
-    - fastq_source:
-        pattern: /data/original-fastq/&#42;.fastq.gz
-        group: (Sample_COPD_\d+)_R[12].fastq.gz
-        indices: copd-barcodes.csv
-
-Input files are collected as defined by ``pattern`` and grouped into samples 
-according to ``group``, which is a regular expression. 
-All groups defined in the regex ``(  )`` are used to construct the sample 
-name, here it is used to declare that both R1 and R2 files belong to the 
-same sample. 
-Indices are read from the CSV file specified by ``indices``.
-
-..    
-    .. automodule:: abstract_source
-
-    .. autoclass:: AbstractSource
-        :members:
-
-*(detailed step descriptions to follow...)*
-
-..
-    Miscellaneous
-    -------------
-
-    Head
-    ~~~~
+    class Macs14(AbstractStep):
         
-    .. autosimpleclass:: head.Head
+        # the constructor
+        def __init__(self, pipeline):
+            super(Macs14, self).__init__(pipeline)
+
+            # define in and out connections the strings have to start with 'in/'
+            # or 'out/'
+            self.add_connection('in/something')
+            self.add_connection('out/tag1')
+            self.add_connection('out/tag2')
+            ...
+    
+            self.require_tool('cat4m')
+            self.require_tool('pigz')
+            ...
+
+        # all checks of options and input values should be done here
+        def setup_runs(self, complete_input_run_info, connection_info):
+            # a hash containing information about this step
+            output_run_info = {}
+
+            # analyze the complete_input_run_info hash provided by the pipeline
+            for step_name, step_input_info in complete_input_run_info.items():
+                for input_run_id, input_run_info in step_input_info.items():
+                   # assemble your output_run_info
+                   # output_run_info has to look like this
+                   output_run_info:
+                       run_id_1:
+                           "output_files":
+                               tag1:
+                                   output_file_1: [input_file_1, input_file_2, ...]
+                                   output_file_2: [input_file_1, input_file_2, ...]
+                               tag2:
+                                   output_file_3: [input_file_1, input_file_2, ...]
+                                   output_file_4: [input_file_1, input_file_2, ...]
+                           "info":
+                               ...
+                           more:
+                               ...
+                           keys:
+                               ...
+                       run_id_2:
+                           ...
+
+            return output_run_info
         
-    Preprocessing
-    -------------
-        
-    Adapter clipping
-    ~~~~~~~~~~~~~~~~
+        # called to actually launch the job (run_info is the hash returned from
+        # setup_runs)
+        def execute(self, run_id, run_info):
+    
+            with process_pool.ProcessPool(self) as pool:
+                with pool.Pipeline(pool) as pipeline:
+                    # assemble the steps pipline here
+                    pipeline.append(...)
+                    ...
+                    # finally launch it
+                    pool.launch(...)
 
-    Cutadapt
-    ^^^^^^^^
+The code shown above is the framework for a new step. The most essential part is
+the hash returned by setup_runs(), here called ``output_run_info``.
 
-    .. autosimpleclass:: cutadapt.Cutadapt
-        
-    Fix cutadapt
-    ^^^^^^^^^^^^
+:``run_id``:
+    It has to be the unique name of a run (obviously, because its a key value).
+    ``output_run_info`` can contain multiple ``run_id`` hashes.
 
-    .. autosimpleclass:: fix_cutadapt.FixCutadapt
-        
-    Aligners
-    --------
+:``"output_files"``:
+    This is the only hash key that has to have a fix name. This is used to link
+    input to output files.
 
-    Segemehl
-    ~~~~~~~~
+:``tag[12]``:
+    Every ``tag`` has to match ``\w+$`` in the string ``'out/tag'``, which was
+    given to ``self.add_connection('out/tag')``. This can be any string, but it
+    has to match with the last part of the connection string.
 
-    .. autosimpleclass:: segemehl.Segemehl
+:``output_file_\d``:
+    Each ``tag`` has to contain at least one such key. It has to be the name of
+    the output file produced by the connection ``'out/tag'``. The value of this
+    has to be a list of related input files. The list can have any number of
+    entries even zero. Multiple ``output_file_\d`` can rely on the same set of
+    input files.
 
-Extending the pipeline
-======================
+Also very important is to understand the concept of *connections*. They provide
+input files prior steps created already. The names of the connections can be
+arbitrarily chosen, but should **not** describe the file format but more general
+terms. For example an ``out/alignment`` can provide gzipped SAM or BAM files. So
+you have to check in setup runs for the file type provided by a connection and
+react accordingly. Inspect ``complete_input_run_info`` to find out what your
+step gets as input.
 
-To add a new processing step, a single Python file must be placed in 
-``include/step`` which defines a class with two functions, one for planning 
-all jobs based on a list of input files or runs and possibly additional 
-information from previous steps and another function for running a specific 
-job.
+Best practices
+**************
 
-
-Checklist
----------
-
-Here's a couple of things which should be kept in mind when implementing new 
+There are a couple of things which should be kept in mind when implementing new 
 steps or modifying existing steps:
 
 * Make sure errors already show up in ``setup_runs`` instead of ``execute``.
-  That way, wasting precious cluster waiting time is avoided. 
-  Look out for things that may fail, and do them in ``setup_runs``. 
-  Use the ``info`` entry in the returned ``run_info`` structure to pass the 
-  resulting information to ``execute``.
-* Likewise, make sure that the tools you'll need in execute are already 
-  available in ``setup_runs``::
+  Therefore look out for things that may fail in ``setup_runs``. Stick to *fail
+  early, fail often*. That way errors show up before submitting jobs to the
+  cluster and wasting precious cluster waiting time is avoided. 
+* Use the ``info`` entry in the returned ``output_run_info`` structure to pass
+  information gathered in ``setup_runs`` to ``execute``.
+* Likewise, make sure that the tools you'll need in ``execute`` are available.
+  Check for the availability of tools within the constructor ``__init__``.
+
+.. code-block:: python
   
     # make sure tools are available
-    self.tool('pigz')
-    self.tool('cutadapt')
+    self.require_tool('pigz')
+    self.require_tool('cutadapt')
     
 * Make sure your disk access is as cluster-friendly as possible (which 
   primarily means using large block sizes and preferably no seek operations). 
-  If possible, use ``unix_pipeline`` to wrap your commands in ``pigz``, 
-  ``dd``, or ``cat4m`` with a large block size like 4 MB. 
+  If possible, use ``unix_pipeline`` to wrap your commands in ``pigz``, ``dd``,
+  or ``cat4m`` with a large block size like 4 MB. 
   Although this is not possible in every case (for example when seeking 
   in files is involved), it is straightforward with tools that read a 
   continuous stream from ``stdin`` and write a continuous stream to 
   ``stdout``.
+
+
+
+Add the new step to your configuration
+--------------------------------------
+
+To insert a new step in a pipeline it has to be added into the ``config.yaml``.
+
+
 
 To-do list
 ==========
@@ -691,15 +721,3 @@ Make ``run-locally.py`` exit gracefully on receiving SIGTERM.
 Show statistics for executing tasks:
     When showing currently executing tasks, show how long this job has already been
     running and how it relates to jobs that have already finished.
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-.. toctree::
-    :maxdepth: 2
-
-    api

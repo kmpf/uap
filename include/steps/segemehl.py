@@ -7,7 +7,7 @@ import yaml
 
 class Segemehl(AbstractStep):
 
-    
+
     def __init__(self, pipeline):
         super(Segemehl, self).__init__(pipeline)
 
@@ -22,60 +22,42 @@ class Segemehl(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('segemehl')
 
-
-    def setup_runs(self, complete_input_run_info, connection_info):
-        # make sure files are available
-        for key in ['genome', 'index']:
-            if not os.path.exists(self.options[key]):
-                raise StandardError("Could not find %s file: %s" % (key, self.options[key]))
-
-        if not 'swap_reads' in self.options:
-            self.options['swap_reads'] = False
-            
-        output_run_info = {}
-        for step_name, step_input_info in complete_input_run_info.items():
-            for run_id, input_run_info in step_input_info.items():
-                output_run_info[run_id] = {}
-                output_run_info[run_id]['output_files'] = {}
-                output_run_info[run_id]['output_files']['alignments']  = {}
-                output_run_info[run_id]['output_files']['alignments'][run_id + '-segemehl-results.sam.gz'] = input_run_info['output_files']['reads'].keys()
-                output_run_info[run_id]['output_files']['unmapped']  = {}
-                output_run_info[run_id]['output_files']['unmapped'][run_id + '-segemehl-unmapped.fastq.gz'] = input_run_info['output_files']['reads'].keys()
-                output_run_info[run_id]['output_files']['log']  = {}
-                output_run_info[run_id]['output_files']['log'][run_id + '-segemehl-log.txt'] = input_run_info['output_files']['reads'].keys()
-                read_files = misc.assign_strings(input_run_info['output_files']['reads'].keys(), ['R1', 'R2'])
-                output_run_info[run_id]['info'] = {}
-                output_run_info[run_id]['info']['R1-in'] = read_files['R1']
-                output_run_info[run_id]['info']['R2-in'] = read_files['R2']
-
-        return output_run_info
-
-    def execute(self, run_id, run_info):
+        self.add_option('genome', str)
+        self.add_option('index', str)
         
-        out_name = run_info['output_files']['alignments'].keys()[0]
-        if out_name[-3:] != '.gz':
-            raise StandardError("Expected .gz in output file name")
+
+    def declare_runs(self):
+        
+        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
+            
+            with self.declare_run(run_id) as run:
+                read_files = misc.assign_strings(input_paths, ['R1','R2'])
+                run.add_output_file('alignments', '%s-segemehl-results.sam.gz' % run_id, input_paths)
+                run.add_output_file('unmapped', '%s-segemehl-unmapped.fastq.gz' % run_id, input_paths)
+                run.add_output_file('log', '%s-segemehl-log.txt' % run_id, input_paths)
+                
+                run.add_private_info('R1-in', read_files['R1'])
+                run.add_private_info('R2-in', read_files['R2'])
+
+
+    def execute(self, run_id, run):
 
         with process_pool.ProcessPool(self) as pool:
             
             fifo_path_genome = pool.get_temporary_fifo('segemehl-genome-fifo', 'input')
             fifo_path_unmapped = pool.get_temporary_fifo('segemehl-unmapped-fifo', 'output')
             
-            pool.launch([self.tool('cat4m'), self.options['genome'], '-o', fifo_path_genome])
+            pool.launch([self.get_tool('cat4m'), self.get_option('genome'), '-o', fifo_path_genome])
             
             with pool.Pipeline(pool) as pipeline:
             
-                q = run_info['info']['R1-in']
-                p = run_info['info']['R2-in']
-                
-                if self.options['swap_reads']:
-                    q = run_info['info']['R2-in']
-                    p = run_info['info']['R1-in']
+                q = run.get_private_info('R1-in')
+                p = run.get_private_info('R2-in')
                     
                 segemehl = [
-                    self.tool('segemehl'),
+                    self.get_tool('segemehl'),
                     '-d', fifo_path_genome,
-                    '-i', self.options['index'],
+                    '-i', self.get_option('index'),
                     '-q', q,
                     '-p', p,
                     '-u', fifo_path_unmapped,
@@ -86,14 +68,14 @@ class Segemehl(AbstractStep):
                     '-o', '/dev/stdout'
                 ]
                 
-                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
+                pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
                 
-                pipeline.append(segemehl, stderr_path = run_info['output_files']['log'].keys()[0])
-                pipeline.append(pigz, stdout_path = out_name)
+                pipeline.append(segemehl, stderr_path = run.get_single_output_file_for_annotation('log'))
+                pipeline.append(pigz, stdout_path = run.get_single_output_file_for_annotation('alignments'))
                 
             with pool.Pipeline(pool) as pipeline:
-                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
+                pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
                 
-                pipeline.append([self.tool('cat4m'), fifo_path_unmapped])
-                pipeline.append(pigz, stdout_path = run_info['output_files']['unmapped'].keys()[0])
+                pipeline.append([self.get_tool('cat4m'), fifo_path_unmapped])
+                pipeline.append(pigz, stdout_path = run.get_single_output_file_for_annotation('unmapped'))
                 

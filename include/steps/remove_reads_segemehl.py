@@ -44,11 +44,11 @@ class RemoveReadsSegemehl(AbstractStep):
     def execute(self, run_id, run_info):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.tool('cat4m'), run_info['info']['alignments-in']]
-                pigz1 = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
-                samtools = [self.tool('samtools'), 'view', '-h', '-']                
-                remove_reads_segemehl = [self.tool('remove_reads_segemehl')]
-                pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2']
+                cat4m = [self.get_tool('cat4m'), run_info['info']['alignments-in']]
+                pigz1 = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+                samtools = [self.get_tool('samtools'), 'view', '-h', '-']                
+                remove_reads_segemehl = [self.get_tool('remove_reads_segemehl')]
+                pigz2 = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2']
                 
                 pipeline.append(cat4m)
                 if run_info['info']['alignments-in'][-7:] == '.sam.gz':
