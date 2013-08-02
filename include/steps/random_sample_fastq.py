@@ -104,9 +104,9 @@ class RandomSampleFastq(AbstractStep):
 
             "chain for i in opt or sub fuction"
 
-            random_sample_fastq = [self.tool('random_sample_fastq'),
-                                   self.options['readtype'], 
-                                   '-z', 'y', '-n', str(self.options['reads']),
+            random_sample_fastq = [self.get_tool('random_sample_fastq'),
+                                   self.get_option['readtype'], 
+                                   '-z', 'y', '-n', str(self.get_option['reads']),
                                    '--FastqFileOut', 
                                    fifo_out_R1,
                                    fifo_out_R2,
@@ -114,8 +114,8 @@ class RandomSampleFastq(AbstractStep):
                                    run_info['info']['in-R1'],
                                    run_info['info']['in-R2']]
                                    
-            pigz1 = [self.tool('pigz'), '--stdout', '--processes', '1', '--blocksize', '4096', fifo_out_R1]
-            pigz2 = [self.tool('pigz'), '--stdout', '--processes', '1', '--blocksize', '4096', fifo_out_R2]
+            pigz1 = [self.get_tool('pigz'), '--stdout', '--processes', '1', '--blocksize', '4096', fifo_out_R1]
+            pigz2 = [self.get_tool('pigz'), '--stdout', '--processes', '1', '--blocksize', '4096', fifo_out_R2]
 
             pool.launch(random_sample_fastq)
             pool.launch(pigz1, stdout_path = run_info['info']['out-R1'])

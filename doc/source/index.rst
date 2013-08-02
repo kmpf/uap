@@ -6,32 +6,27 @@
 .. title:: rnaseq-pipeline
 
 
-Welcome to the documentation of the **rnaseq-pipeline**
-=======================================================
-
-The **rnaseq-pipeline** is a tool to configure, run, and control your high-throughput
-sequencing analysis.
-
-Contents
----------
-
-.. toctree::
-   :maxdepth: 2
-
-   how-to
-   documentation
-   steps
-   api
-
-
 Introduction
 ============
+
+The **rnaseq-pipeline** package is a framework to configure, run, and control
+high-throughput sequencing analyses.
 
 The aim of this data processing pipeline is to enable robust and straightforward
 bioinformatics data evaluation. It is implemented in Python, runs under
 GNU/Linux and can be controlled from the command-line interface. Although the
 primary focus is the evaluation of RNASeq data, its design allows for a variety
 of other applications.
+
+**Table of contents**
+
+.. toctree::
+   :maxdepth: 2
+
+   documentation
+   steps
+   api
+
 
 General usage
 -------------
@@ -128,16 +123,3 @@ may:
 * define fewer runs (usually towards the end of a pipeline, where results are
   summarized).
 
-
-Remarks
-=======
-
-This documentation has been created using `Sphinx <http://sphinx-doc.org/>`_
-and `reStructuredText <http://docutils.sourceforge.net/rst.html>`_.
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

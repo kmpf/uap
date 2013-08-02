@@ -3,6 +3,7 @@
 import sys
 sys.path.append('./include')
 import abstract_step
+import argparse
 import fscache
 import pipeline
 import datetime
@@ -34,21 +35,62 @@ This task wish list is now processed one by one (in topological order):
   - now add all these collected job_ids to the submission via -hold_jid
 '''
 
-def main():
-    original_argv = copy.copy(sys.argv)
+parser = argparse.ArgumentParser(
+    description='This script submits all tasks configured in config.yaml to a ' +
+                'Sun GridEngine cluster via qsub. The list of tasks can be ' +
+                'narrowed down by specifying a step name (in which case all ' +
+                'runs of this steps will be considered) or individual tasks ' +
+                '(step_name/run_id).',
+    formatter_class=argparse.RawTextHelpFormatter)
 
-    p = pipeline.Pipeline()
+parser.add_argument("--highmem",
+                    dest="highmem",
+                    action="store_true",
+                    default=False,
+                    help="Must be set if the highmem node of the " +
+                    "cluster is being used.")
+
+parser.add_argument("--even-if-dirty",
+                    dest="even_if_dirty",
+                    action="store_true",
+                    default=False,
+                    help="Must be set if the local git repository " +
+                    "contains uncommited changes. Otherwise the pipeline " +
+                    "will not start.")
+
+parser.add_argument("-s", "--step",
+                    dest="step",
+                    nargs='*',
+                    default=list(),
+                    type=str,
+                    help="Can take multiple step names as input. A step name " +
+                    "is the name of any entry in the 'steps:' section " +
+                    "as defined in 'config.yaml'")
+
+parser.add_argument("-t","--task",
+                    dest="task",
+                    nargs='*',
+                    default=list(),
+                    type=str,
+                    help="Can take multiple task ID(s) as input. A task ID " +
+                    "looks like ths 'step_name/run_id'. A list of all task IDs " +
+                    "is returned by running './status.py'.")
+
+args = parser.parse_args()
+
+def main():
+    p = pipeline.Pipeline(arguments=args)
     
     use_highmem = False
-    if '--highmem' in sys.argv:
+    if args.highmem:
         print("Passing -l highmem to qsub...")
         use_highmem = True
-        sys.argv.remove('--highmem')
 
+    all_tasks = args.step + args.task
     task_wish_list = None
-    if len(sys.argv) > 1:
+    if len(all_tasks) >= 1:
         task_wish_list = list()
-        for _ in sys.argv[1:]:
+        for _ in all_tasks[1:]:
             if '/' in _:
                 task_wish_list.append(_)
             else:
@@ -111,7 +153,7 @@ def main():
             email = p.config['email']
         submit_script = submit_script.replace("#{EMAIL}", email)
         args = ['./run-locally.py']
-        if '--even-if-dirty' in original_argv:
+        if args.even_if_dirty:
             args.append('--even-if-dirty')
         args.append('"' + str(task) + '"')
         submit_script = submit_script.replace("#{COMMAND}", ' '.join(args))

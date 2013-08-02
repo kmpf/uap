@@ -27,8 +27,8 @@ class TestRealign(AbstractStep):
     def setup_runs(self, complete_input_run_info, connection_info):
         # make sure files are available
         for key in ['genome']:
-            if not os.path.exists(self.options[key]):
-                raise StandardError("Could not find %s file: %s" % (key, self.options[key]))
+            if not os.path.exists(self.get_option(key)):
+                raise StandardError("Could not find %s file: %s" % (key, self.get_option(key) ))
 
         output_run_info = {}
         for step_name, step_input_info in complete_input_run_info.items():
@@ -49,8 +49,8 @@ class TestRealign(AbstractStep):
                 output_run_info[run_id]['info'] = {}
                 output_run_info[run_id]['info']['bam-in'] = [_ for _ in input_run_info['output_files']['alignments'].keys() if _[-4:] == '.bam'][0]
                 output_run_info[run_id]['info']['maxdist'] = '100'
-                if 'maxdist' in self.options:
-                    output_run_info[run_id]['info']['maxdist'] = str(self.options['maxdist'])
+                if self.get_option('maxdist'):
+                    output_run_info[run_id]['info']['maxdist'] = str(self.get_option('maxdist') )
 
 
         return output_run_info
@@ -62,31 +62,31 @@ class TestRealign(AbstractStep):
             fifo_path_splicesites = pool.get_temporary_fifo('splicesites-fifo', 'output')
             fifo_path_transrealigned = pool.get_temporary_fifo('transrealigned-fifo', 'output')
             
-            pool.launch([self.tool('cat4m'), self.options['genome'], '-o', fifo_path_genome])
+            pool.launch([self.get_tool('cat4m'), self.get_option('genome'), '-o', fifo_path_genome])
             
             with pool.Pipeline(pool) as pipeline:
                 cat4m = [
-                    self.tool('cat4m'),
+                    self.get_tool('cat4m'),
                     run_info['info']['bam-in']
                 ]
                 
                 samtools = [
-                    self.tool('samtools'),
+                    self.get_tool('samtools'),
                     'view', '-h', '-'
                 ]
                 
                 grep = [
-                    self.tool('grep'),
+                    self.get_tool('grep'),
                     '-v',
                     "\t\\*\t"
                 ]
                 
                 invertGood = [
-                    self.tool('invertGood')
+                    self.get_tool('invertGood')
                 ]
 
                 testrealign = [
-                    self.tool('testrealign'),
+                    self.get_tool('testrealign'),
                     '-q', '/dev/stdin',
                     '-d', fifo_path_genome,
                     '-t', '4',
@@ -96,7 +96,7 @@ class TestRealign(AbstractStep):
                     '-T', fifo_path_transrealigned
                 ]
                 
-                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
+                pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
                 
                 pipeline.append(cat4m)
                 pipeline.append(samtools)
@@ -105,6 +105,6 @@ class TestRealign(AbstractStep):
                 pipeline.append(testrealign, stderr_path = run_info['output_files']['log'].keys()[0])
                 pipeline.append(pigz, stdout_path = run_info['output_files']['alignments'].keys()[0])
             
-            pool.launch([self.tool('cat4m'), fifo_path_splicesites], stdout_path = run_info['output_files']['splicesites'].keys()[0])
+            pool.launch([self.get_tool('cat4m'), fifo_path_splicesites], stdout_path = run_info['output_files']['splicesites'].keys()[0])
             
-            pool.launch([self.tool('cat4m'), fifo_path_transrealigned], stdout_path = run_info['output_files']['transrealigned'].keys()[0])
+            pool.launch([self.get_tool('cat4m'), fifo_path_transrealigned], stdout_path = run_info['output_files']['transrealigned'].keys()[0])

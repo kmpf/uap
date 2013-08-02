@@ -99,7 +99,8 @@ class Run(object):
 
         self._output_files[tag][out_path] = in_paths
 
-    def output_files(self):
+
+    def get_output_files(self):
         '''
         Return a dictionary of all defined output files, grouped by connection 
         annotation::
@@ -153,7 +154,7 @@ class Run(object):
                 return sorted(temp[tag][out_path])
         raise StandardError("Sorry, your output file couldn't be found in the dictionary: %s." % out_path)
 
-    def public_info(self, key):
+    def get_public_info(self, key):
         '''
         Query public information which must have been previously stored via *add_public_info()*.
         '''
@@ -165,7 +166,7 @@ class Run(object):
         '''
         return (key in self._public_info)
 
-    def private_info(self, key):
+    def get_private_info(self, key):
         '''
         Query private information which must have been previously stored via *add_private_info()*.
         '''

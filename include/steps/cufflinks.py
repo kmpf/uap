@@ -65,8 +65,8 @@ class CuffLinks(AbstractStep):
                 }
             }
 
-            if self.option_set_in_config('use_mask'):
-                run_info['info']['use_mask'] = self.option('use_mask')
+            if self.is_option_set_in_config('use_mask'):
+                run_info['info']['use_mask'] = self.get_option('use_mask')
             output_run_info[run_id] = run_info
             
         return output_run_info
@@ -78,10 +78,10 @@ class CuffLinks(AbstractStep):
         with process_pool.ProcessPool(self) as pool:
             
             cufflinks = [
-                self.tool('cufflinks'),
+                self.get_tool('cufflinks'),
                 '-o', cufflinks_out_path,
                 '-p', '6',
-                "--library-type=%s" % self.options['library_type']
+                "--library-type=%s" % self.get_option['library_type']
             ]
             
             if 'use_mask' in run_info['info']:

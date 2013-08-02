@@ -49,11 +49,11 @@ class S2C(AbstractStep):
     def execute(self, run_id, run_info):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.tool('cat4m'), run_info['info']['alignments_path']]
-                pigz = [self.tool('pigz'), '--decompress', '--processes', '1', '--stdout']
-                s2c = [self.tool('s2c'), '-s', '/dev/stdin', '-o', self._temp_directory]
-                samtools = [self.tool('samtools'), 'view', '-Sb', '-']
-                samtools_sort = [self.tool('samtools'), 'sort', '-', run_info['info']['s2c_path'][:-4]]
+                cat4m = [self.get_tool('cat4m'), run_info['info']['alignments_path']]
+                pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+                s2c = [self.get_tool('s2c'), '-s', '/dev/stdin', '-o', self._temp_directory]
+                samtools = [self.get_tool('samtools'), 'view', '-Sb', '-']
+                samtools_sort = [self.get_tool('samtools'), 'sort', '-', run_info['info']['s2c_path'][:-4]]
                 
                 pipeline.append(cat4m)
                 pipeline.append(pigz)

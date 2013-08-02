@@ -35,8 +35,8 @@ class TopHat2(AbstractStep):
 
     def setup_runs(self, complete_input_run_info, connection_info):
         # make sure files are available
-        if not os.path.exists(self.option('index') + '.1.bt2'):
-            raise StandardError("Could not find index file: %s.*" % self.option('index'))
+        if not os.path.exists(self.get_option('index') + '.1.bt2'):
+            raise StandardError("Could not find index file: %s.*" % self.get_option('index'))
 
         output_run_info = {}
         for step_name, step_input_info in complete_input_run_info.items():
@@ -80,10 +80,10 @@ class TopHat2(AbstractStep):
             p = run_info['info']['R2-in']
                 
             tophat2 = [
-                self.tool('tophat2'),
-                '--library-type', self.option('library_type'),
+                self.get_tool('tophat2'),
+                '--library-type', self.get_option('library_type'),
                 '--output-dir', tophat_out_path,
-                '-p', '6', self.option('index'), q, p
+                '-p', '6', self.get_option('index'), q, p
             ]
 
             pool.launch(tophat2, stderr_path = run_info['output_files']['log'].keys()[0], 
