@@ -33,16 +33,16 @@ class HtSeqCount(AbstractStep):
         
     def declare_runs(self):
         
-        features_path = [self.get_single_input_file_for_connection('in/features')]
+        features_path = self.get_single_input_file_for_connection('in/features')
 
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
-            alignments_path = input_paths
+            alignments_path = input_paths[0]
 
             with self.declare_run(run_id) as run:
                 run.add_private_info('alignments_path', alignments_path)
                 run.add_private_info('features_path', features_path)
 
-                run.add_output_file('counts', '%s-counts.txt' % run_id, alignments_path + features_path)
+                run.add_output_file('counts', '%s-counts.txt' % run_id, [alignments_path, features_path])
 
 #        features_path = connection_info['in/features']['runs'].values()[0].values()[0][0]
 #        for run_id, info in connection_info['in/alignments']['runs'].items():
@@ -71,9 +71,10 @@ class HtSeqCount(AbstractStep):
             with pool.Pipeline(pool) as pipeline:
                 alignments_path = run.get_private_info('alignments_path')
                 features_path = run.get_private_info('features_path')
+
                 cat4m = [self.get_tool('cat4m'), alignments_path]
                 pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']
-                grep = [self.get_tool('grep'), '-v', "\t\\*\t"]
+#                grep = [self.get_tool('grep'), '-v', "\t\\*\t"]
                 samtools = [self.get_tool('samtools'), 'view', '-h', '-']
                 htseq_count = [self.get_tool('htseq-count')]
                 for key in ('mode', 'stranded', 'type', 'idattr'):
@@ -84,6 +85,7 @@ class HtSeqCount(AbstractStep):
                 
                 if alignments_path[-7:] == '.sam.gz':
                     pipeline.append(pigz)
-                elif aligenments_path[-4:] == '.bam':
+                elif alignments_path[-4:] == '.bam':
                     pipeline.append(samtools)
+                
                 pipeline.append(htseq_count, stdout_path = run.get_single_output_file_for_annotation('counts'))
