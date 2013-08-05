@@ -14,7 +14,7 @@ class RunFolderSource(AbstractSourceStep):
     '''
     
     def __init__(self, pipeline):
-        super(RunolderSource, self).__init__(pipeline)
+        super(RunFolderSource, self).__init__(pipeline)
         
         self.add_connection('out/reads')
         
