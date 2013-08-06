@@ -58,22 +58,13 @@ parser.add_argument("--even-if-dirty",
                     "contains uncommited changes. Otherwise the pipeline " +
                     "will not start.")
 
-parser.add_argument("-s", "--step",
-                    dest="step",
+parser.add_argument("step_task",
                     nargs='*',
                     default=list(),
                     type=str,
                     help="Can take multiple step names as input. A step name " +
                     "is the name of any entry in the 'steps:' section " +
-                    "as defined in 'config.yaml'")
-
-parser.add_argument("-t","--task",
-                    dest="task",
-                    nargs='*',
-                    default=list(),
-                    type=str,
-                    help="Can take multiple task ID(s) as input. A task ID " +
-                    "looks like ths 'step_name/run_id'. A list of all task IDs " +
+                    "as defined in 'config.yaml'. A list of all task IDs " +
                     "is returned by running './status.py'.")
 
 args = parser.parse_args()
@@ -86,11 +77,10 @@ def main():
         print("Passing -l highmem to qsub...")
         use_highmem = True
 
-    all_tasks = args.step + args.task
     task_wish_list = None
-    if len(all_tasks) >= 1:
+    if len(args.step_task) >= 1:
         task_wish_list = list()
-        for _ in all_tasks[1:]:
+        for _ in args.step_task:
             if '/' in _:
                 task_wish_list.append(_)
             else:
@@ -152,11 +142,11 @@ def main():
         if 'email' in p.config:
             email = p.config['email']
         submit_script = submit_script.replace("#{EMAIL}", email)
-        args = ['./run-locally.py']
+        command = ['./run-locally.py']
         if args.even_if_dirty:
-            args.append('--even-if-dirty')
-        args.append('"' + str(task) + '"')
-        submit_script = submit_script.replace("#{COMMAND}", ' '.join(args))
+            command.append('--even-if-dirty')
+        command.append('-t "' + str(task) + '"')
+        submit_script = submit_script.replace("#{COMMAND}", ' '.join(command))
 
         long_task_id_with_run_id = '%s_%s' % (str(task.step), task.run_id)
         long_task_id = str(task.step)
