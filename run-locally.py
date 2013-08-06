@@ -39,22 +39,14 @@ parser.add_argument("--even-if-dirty",
                     "contains uncommited changes. Otherwise the pipeline " +
                     "will not start.")
 
-parser.add_argument("-s", "--step",
-                    dest="step",
+
+parser.add_argument("step_task",
                     nargs='*',
                     default=list(),
                     type=str,
                     help="Can take multiple step names as input. A step name " +
                     "is the name of any entry in the 'steps:' section " +
-                    "as defined in 'config.yaml'")
-
-parser.add_argument("-t","--task",
-                    dest="task",
-                    nargs='*',
-                    default=list(),
-                    type=str,
-                    help="Can take multiple task ID(s) as input. A task ID " +
-                    "looks like ths 'step_name/run_id'. A list of all task IDs " +
+                    "as defined in 'config.yaml'. A list of all task IDs " +
                     "is returned by running './status.py'.")
 
 args = parser.parse_args()
@@ -72,12 +64,10 @@ def main():
 
     task_list = copy.deepcopy(p.all_tasks_topologically_sorted)
 
-    all_tasks = args.step + args.task
-
-    if len(all_tasks) >= 1:
+    if len(args.step_task) >= 1:
         # execute the specified tasks
         task_list = list()
-        for task_id in sys.argv[1:]:
+        for task_id in args.step_task:
             task = p.task_for_task_id[task_id]
             task_list.append(task)
             

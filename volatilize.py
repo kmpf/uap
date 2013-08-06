@@ -39,7 +39,7 @@ args = parser.parse_args()
 
 def main():
     p = pipeline.Pipeline()
-    p.check_volatile_files(details = ('--details' in sys.argv), srsly = ('--srsly' in sys.argv))
+    p.check_volatile_files(details = args.details, srsly = args.srsly)
         
 if __name__ == '__main__':
     main()

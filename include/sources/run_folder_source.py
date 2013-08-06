@@ -21,48 +21,74 @@ class RunFolderSource(AbstractSourceStep):
         self.add_option('path', str)
         self.add_option('paired_end', bool)
         
-    def setup_runs(self, input_run_info, connection_info):
+    def declare_runs(self):
         path = self.get_option('path')
 
-        output_run_info = {}
+        if not self.get_option('paired_end'):
+            raise StandardError("missing paired_end key in source")
 
         if not os.path.exists(path):
             raise ConfigurationException("Source path does not exist: " + path)
 
+        found_samples = dict()
+
         # find all samples
         for sample_path in glob.glob(os.path.join(path, 'Unaligned', 'Project_*', 'Sample_*')):
             sample_name = os.path.basename(sample_path).replace('Sample_', '')
-            if sample_name in output_run_info:
+            if sample_name in found_samples:
                 raise ConfigurationException("Duplicate sample: " + sample_name)
             
-            if not sample_name in output_run_info:
-                output_run_info[sample_name] = { 'output_files': { 'reads': {} }, 'info': { 'paired_end': self.option('paired_end') } }
-            
+            if not sample_name in found_samples:
+                found_samples[sample_name] = list()
+
             for path in sorted(glob.glob(os.path.join(sample_path, '*.fastq.gz'))):
-                output_run_info[sample_name]['output_files']['reads'][path] = []
+                found_samples[sample_name].append(path)
 
-            # read sample sheets
-            sample_sheet_path = os.path.join(sample_path, 'SampleSheet.csv')
-            reader = csv.DictReader(open(sample_sheet_path))
-            for row in reader:
-                sample_id = row['SampleID']
-                index = row['Index']
-                if not 'index' in output_run_info[sample_id]['info']:
-                    output_run_info[sample_id]['info']['index'] = index
-                else:
-                    if index != output_run_info[sample_id]['info']['index']:
-                        raise StandardError("Inconsistent index defined in sample sheets for sample " + sample_id)
+        # create a run for each sample in found_samples and store data therein
+        for run_id, paths in found_samples.items():
+            with self.declare_run(run_id) as run:
+                run.add_public_info('paired_end', self.get_option('paired_end'))
+                for path in paths:
+                    run.add_output_file('reads', path, [])
+                    
+                if self.get_option('paired_end') == True:
+                    # determine R1/R2 info for each input file: read_number
+                    r1_files = list()
+                    r2_files = list()
+                    for path in paths:
+                        isR1 = '_R1' in path
+                        isR2 = '_R2' in path
+                        if isR1 and isR2:
+                            raise StandardError("Unable to determine read_number, " +
+                                                "seems to be both R1 and R2: " + path)
+                        if (not isR1) and (not isR2):
+                            raise StandardError("Unable to determine read_number, " +
+                                                "seems to be neither R1 nor R2: " + path)
+                        if isR1:
+                            r1_files.append(os.path.basename(path))
+                        if isR2:
+                            r2_files.append(os.path.basename(path))
 
-            if self.option('paired_end') == True:
-                # determine R1/R2 info for each input file: read_number
-                output_run_info[sample_name]['info']['read_number'] = {}
-                for path in output_run_info[sample_name]['output_files']['reads'].keys():
-                    isR1 = '_R1' in path
-                    isR2 = '_R2' in path
-                    if isR1 and isR2:
-                        raise StandardError("Unable to determine read_numer, seems to be both R1 and R2: " + path)
-                    if (not isR1) and (not isR2):
-                        raise StandardError("Unable to determine read_numer, seems to be neither R1 nor R2: " + path)
-                    output_run_info[sample_name]['info']['read_number'][os.path.basename(path)] = 'R1' if isR1 else 'R2'
+                    run.add_public_info('R1', r1_files)
+                    run.add_public_info('R2', r2_files)
 
-        return output_run_info
+
+                # read sample sheets
+                sample_sheet_path = os.path.join(sample_path, 'SampleSheet.csv')
+                reader = csv.DictReader(open(sample_sheet_path))
+                # get and set indices
+                for row in reader:
+                    sample_id = row['SampleID']
+                    index = row['Index']
+                            
+                    if not sample_id in found_samples.keys():
+                        raise StandardError("Found sample %s in %s, but it shouldn't be here." 
+                                            % sample_id, sample_sheet_path)
+                    if not run.has_public_info('index'):
+                        run.add_public_info('index', index)
+                    else:
+                        if index != run.get_public_info('index'):
+                            raise StandardError("Inconsistent index defined in %s for sample %s"
+                                                % sample_sheet_path, sample_id)
+
+

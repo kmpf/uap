@@ -41,7 +41,6 @@ class Pipeline(object):
     '''
 
     def __init__(self, **kwargs):
-        
         self.caught_signal = None
         
         self.git_dirty_diff = None
@@ -51,12 +50,12 @@ class Pipeline(object):
 
         # check if we got passed an 'arguments' parameter
         # this parameter should contain a argparse.Namespace object
-        self.args = None
+        args = None
         if 'arguments' in kwargs:
-            self.args = kwargs['arguments']
+            args = kwargs['arguments']
       
         if '-dirty' in self.git_hash_tag:
-            if not self.args.even_if_dirty:
+            if not args.even_if_dirty:
                 print("The repository has uncommitted changes, which is why " +
                       "we will exit right now.")
                 print("If this is not a production environment, you can skip " +
