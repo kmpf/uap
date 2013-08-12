@@ -36,7 +36,8 @@ class Macs14(AbstractStep):
                 if self.get_option('control'):
                     control = self.get_option('control')
                     
-                    if control in run_id and not run.has_public_info('control_sample'):
+                    # Value for control has to be equal run_id
+                    if control == run_id and not run.has_public_info('control_sample'):
                         run.add_public_info('control_sample', control)
                         if len(input_paths) != 1:
                             raise StandardError("Control group %s consists of zero or multiple files %s" % control, input_paths.join(', '))
@@ -46,6 +47,7 @@ class Macs14(AbstractStep):
             run = self.get_run(run_id)
             if run != None:
                 if control_file:
+                    print("Control file: %s" % control_file)
                     run.add_private_info('control_file', control_file)
                 
     
