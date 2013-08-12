@@ -83,9 +83,9 @@ class Cutadapt(AbstractStep):
                     # add adapter information, insert correct index first if necessary
                     adapter = self.get_option('adapter%s' % which)
                     if '((INDEX))' in adapter:
-                        index = self.find_upstream_info(run_id, 'index')
+                        index = self.find_upstream_info(run_id, 'index%s' % which)
                         adapter = adapter.replace('((INDEX))', index)
-                    # make sure the adapter is looking good
+                     # make sure the adapter is looking good
                     if re.search('^[ACGT]+$', adapter) == None:
                         raise StandardError("Unable to come up with a legit-looking adapter: " + adapter)
                     run.add_private_info('adapter', adapter)

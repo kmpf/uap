@@ -79,13 +79,22 @@ class RunFolderSource(AbstractSourceStep):
                 # get and set indices
                 for row in reader:
                     sample_id = row['SampleID']
-                    index = row['Index']
-                            
                     if not sample_id in found_samples.keys():
                         raise StandardError("Found sample %s in %s, but it shouldn't be here." 
                                             % sample_id, sample_sheet_path)
-                    if not run.has_public_info('index'):
-                        run.add_public_info('index', index)
+
+                    index = row['Index'].split('-')
+
+                    if not (run.has_public_info('index-R1') or run.has_public_info('index-R2')):
+                        if len(index) == 2:
+                            run.add_public_info('index-R1', index[0])
+                            run.add_public_info('index-R2', index[1])
+                        elif len(index) == 1:
+                            run.add_public_info('index-R1', index[0])
+                        else:
+                            raise StandardError("Index %s is not a valid index in %s" 
+                                                % index.join('-'), indices_path)
+                            
                     else:
                         if index != run.get_public_info('index'):
                             raise StandardError("Inconsistent index defined in %s for sample %s"
