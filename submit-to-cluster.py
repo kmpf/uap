@@ -58,6 +58,13 @@ parser.add_argument("--highmem",
                     help="Must be set if the highmem node of the " +
                     "cluster is being used.")
 
+parser.add_argument("--oversubscribed",
+                    dest="oversubscribed",
+                    action="store_true",
+                    default=False,
+                    help="Must be set if segemehl jobs are going to run on " +
+                    "a special configured node.")
+
 parser.add_argument("step_task",
                     nargs='*',
                     default=list(),
@@ -73,10 +80,14 @@ def main():
     p = pipeline.Pipeline(arguments=args)
     
     use_highmem = False
+    use_oversubscribed = False
     if args.highmem:
         print("Passing -l highmem to qsub...")
         use_highmem = True
-
+    elif args.oversubscribed:
+        print("Using oversubscribed node.")
+        use_oversubscribed = True
+        
     task_wish_list = None
     if len(args.step_task) >= 1:
         task_wish_list = list()
@@ -93,6 +104,8 @@ def main():
     template = None
     if use_highmem:
         template = open('qsub-highmem-template.sh', 'r').read()
+    elif use_oversubscribed:
+        template = open('qsub-oversubscribed-template.sh', 'r').read()
     else:
         template = open('qsub-template.sh', 'r').read()
 
