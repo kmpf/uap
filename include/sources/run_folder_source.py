@@ -96,7 +96,8 @@ class RunFolderSource(AbstractSourceStep):
                                                 % index.join('-'), indices_path)
                             
                     else:
-                        if index != run.get_public_info('index'):
+                        if not(index != run.get_public_info('index-R1') or
+                               index != run.get_public_info('index-R2')):
                             raise StandardError("Inconsistent index defined in %s for sample %s"
                                                 % sample_sheet_path, sample_id)
 
