@@ -64,10 +64,9 @@ class Macs14(AbstractStep):
             fifo_path_control = list()
             fifo_path_treatment = list()
 
+            # if we have controls create Fifos for them
             if run.has_private_info('control_files'):
                 for control_file in run.get_private_info('control_files'):
-#                    print("Creating fifo for control %s" % os.path.basename(control_file)
-#                          .split('.')[0])
                     with pool.Pipeline(pool) as pipeline:
                         fifo_path_control.append(
                             pool.get_temporary_fifo(
@@ -82,7 +81,6 @@ class Macs14(AbstractStep):
 
             for treatment_file in run.get_private_info('treatment_files'):
                 with pool.Pipeline(pool) as pipeline:
-#                    print("Creating fifo for treatment %s" % os.path.basename(treatment_file).split('.')[0])
                     fifo_path_treatment.append(pool.get_temporary_fifo(
                         '%s-treatment-fifo' % os.path.basename(treatment_file).split('.')[0], 'input'))
                     cat4m = [self.get_tool('cat4m'), treatment_file]
