@@ -18,80 +18,97 @@ class Macs14(AbstractStep):
  
         self.require_tool('macs14')
         self.require_tool('cat4m')
+        self.require_tool('pigz')
 
-
-        self.add_option('control', str, default='')
-        self.add_option('format', str, default='AUTO')
+        self.add_option('control', list , default=list())
+        self.add_option('format', str, default='AUTO',
+                        choices=['ELAND', 'ELANDMULTI', 'ELANDMULTIPET',
+                                 'ELANDEXPORT', 'SAM', 'BAM', 'BOWTIE'])
         self.add_option('genome_size', str, default='hs')
+
 
     def declare_runs(self):
         
-        control_file = str
+        control_files = list()
+        validated_control_samples = list()
+        control_samples = list()
+        if self.get_option('control'):
+            control_samples.extend(self.get_option('control'))
 
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
             with self.declare_run(run_id) as run:
-                print(input_paths)
+#                print(input_paths)
                 run.add_output_file('log', '%s-macs14-log.txt' % run_id, input_paths)
+                if not input_paths:
+                    raise StandardError("No input files for run %s" % (run_id))
+                run.add_private_info('treatment_files', input_paths)
 
-                if self.get_option('control'):
-                    control = self.get_option('control')
-                    
-                    # Value for control has to be equal run_id
-                    if control == run_id and not run.has_public_info('control_sample'):
-                        run.add_public_info('control_sample', control)
-                        if len(input_paths) != 1:
-                            raise StandardError("Control group %s consists of zero or multiple files %s" % control, input_paths.join(', '))
-                        control_file = input_paths[0]
+                if run_id in control_samples:
+                    validated_control_samples.append(run_id)
+                    control_files.extend(input_paths)
 
         for run_id in self.get_run_ids():
             run = self.get_run(run_id)
             if run != None:
-                if control_file:
-                    print("Control file: %s" % control_file)
-                    run.add_private_info('control_file', control_file)
+                if validated_control_samples and control_files:
+#                    print("Control files for runID %s: %s" % (run_id, control_files))
+                    run.add_private_info('control_files', control_files)
+#                    print("Control samples for runID %s: %s" % (run_id, validated_control_samples))
+                    run.add_public_info('control_samples', validated_control_samples)
                 
     
     def execute(self, run_id, run):
 
         with process_pool.ProcessPool(self) as pool:
-            fifo_path_control = None
-            fifo_path_sample = None
-            if run.has_prublic_info('control_sample'):
+
+            fifo_path_control = list()
+            fifo_path_treatment = list()
+
+            if run.has_private_info('control_files'):
+                for control_file in run.get_private_info('control_files'):
+#                    print("Creating fifo for control %s" % os.path.basename(control_file)
+#                          .split('.')[0])
+                    with pool.Pipeline(pool) as pipeline:
+                        fifo_path_control.append(
+                            pool.get_temporary_fifo(
+                                '%s-control-fifo' % 
+                                os.path.basename(control_file).split('.')[0], 'input')
+                            )
+                        cat4m = [self.get_tool('cat4m'), control_file]
+                        pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1']
+                        pipeline.append(cat4m)
+                        print("Control Fifo: %s" % fifo_path_control[-1])
+                        pipeline.append(pigz, stdout_path = fifo_path_control[-1])
+
+            for treatment_file in run.get_private_info('treatment_files'):
                 with pool.Pipeline(pool) as pipeline:
-                    fifo_path_control = pool.get_temporary_fifo('macs14-control-fifo', 'input')
-                    cat4m = [self.get_tool('cat4m'), run.get_private_info('control_file')]
-                    pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1',
-                            fifo_path_control]
+#                    print("Creating fifo for treatment %s" % os.path.basename(treatment_file).split('.')[0])
+                    fifo_path_treatment.append(pool.get_temporary_fifo(
+                        '%s-treatment-fifo' % os.path.basename(treatment_file).split('.')[0], 'input'))
+                    cat4m = [self.get_tool('cat4m'), treatment_file]
+                    pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1']
                     pipeline.append(cat4m)
-                    pipeline.append(pigz)
+                    print("Treatment Fifo: %s" % fifo_path_treatment[-1])
+                    pipeline.append(pigz, stdout_path = fifo_path_treatment[-1])
 
             with pool.Pipeline(pool) as pipeline:
-                sample_file = run.get_single_input_file_for_annotation('alignments')
-                fifo_path_sample = pool.get_temporary_fifo('%s-fifo' % sample_file, 'input')
-                cat4m = [self.get_tool('cat4m'), sample_file]
-                pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1',
-                        fifo_path_sample]
-                pipeline.append(cat4m)
-                pipeline.append(pigz)
-
-            with pool.Pipeline(pool) as pipeline:
-
-                macs14 = [
-                    self.get_tool('macs14'),
-                    '--treatment', fifo_path_sample
-                    ]
+                macs14 = [self.get_tool('macs14'), '--treatment']
+                if not fifo_path_treatment:
+                    raise StandardError("No treatment files for %s to analyse with macs14" % run_id)
+                macs14.extend(fifo_path_treatment)
 
                 # if we do have control data use it
                 if fifo_path_control != None:
-                    macs14.extend(['--control', fifo_path_control])
-                
+                    macs14.extend(['--control'])
+                    macs14.extend(fifo_path_control)
+
                 macs14.extend([
                         '--format', self.get_option('format'),
-                        '--name', run.get_private_info()
+                        '--name', run_id
                         ])
-                pipeline.append(macs14, stdout_path=run.get_private_info())
+                pipeline.append(macs14)
 
-                # MACS14 use without control sampel
+                # MACS14 use without control sample
                 # macs14 --treatment=$j --format=BED --name $(basename $j .bed) -S >
                 #        $(basename $j .bed).log
 
