@@ -162,7 +162,7 @@ def main():
         command = ['./run-locally.py']
         if args.even_if_dirty:
             command.append('--even-if-dirty')
-        command.append('-t "' + str(task) + '"')
+        command.append('"' + str(task) + '"')
         submit_script = submit_script.replace("#{COMMAND}", ' '.join(command))
 
         long_task_id_with_run_id = '%s_%s' % (str(task.step), task.run_id)
