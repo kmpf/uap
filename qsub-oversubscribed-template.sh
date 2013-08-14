@@ -7,7 +7,7 @@
 #$ -m as                      # e-mail notification on aborting and suspending jobs
 #$ -M #{EMAIL}                # e-mail notification address
 #$ -l h_rt=96:00:00           # runtime of your job
-#$ -l h_vmem=5G              # memory per core for your job
+#$ -l h_vmem=8G              # memory per core for your job
 #$ -l h_vmem_oversubscribed   # let this job run on a special segemehl node
 #$ -l m_core=#{CORES}         # use only nodes where all #{CORES} cores are available
 
