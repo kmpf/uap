@@ -61,44 +61,17 @@ class Macs14(AbstractStep):
 
         with process_pool.ProcessPool(self) as pool:
 
-            fifo_path_control = list()
-            fifo_path_treatment = list()
-
-            # if we have controls create Fifos for them
-            if run.has_private_info('control_files'):
-                for control_file in run.get_private_info('control_files'):
-                    with pool.Pipeline(pool) as pipeline:
-                        fifo_path_control.append(
-                            pool.get_temporary_fifo(
-                                '%s-control-fifo' % 
-                                os.path.basename(control_file).split('.')[0], 'input')
-                            )
-                        cat4m = [self.get_tool('cat4m'), control_file]
-                        pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1']
-                        pipeline.append(cat4m)
-                        print("Control Fifo: %s" % fifo_path_control[-1])
-                        pipeline.append(pigz, stdout_path = fifo_path_control[-1])
-
-            for treatment_file in run.get_private_info('treatment_files'):
-                with pool.Pipeline(pool) as pipeline:
-                    fifo_path_treatment.append(pool.get_temporary_fifo(
-                        '%s-treatment-fifo' % os.path.basename(treatment_file).split('.')[0], 'input'))
-                    cat4m = [self.get_tool('cat4m'), treatment_file]
-                    pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1']
-                    pipeline.append(cat4m)
-                    print("Treatment Fifo: %s" % fifo_path_treatment[-1])
-                    pipeline.append(pigz, stdout_path = fifo_path_treatment[-1])
-
             with pool.Pipeline(pool) as pipeline:
+
                 macs14 = [self.get_tool('macs14'), '--treatment']
-                if not fifo_path_treatment:
+                if not run.has_private_info('treatment_files'):
                     raise StandardError("No treatment files for %s to analyse with macs14" % run_id)
-                macs14.extend(fifo_path_treatment)
+                macs14.extend(run.get_private_info('treatment_files'))
 
                 # if we do have control data use it
-                if fifo_path_control != None:
+                if run.has_private_info('control_files'):
                     macs14.extend(['--control'])
-                    macs14.extend(fifo_path_control)
+                    macs14.extend(run.get_private_info('control_files'))
 
                 macs14.extend([
                         '--format', self.get_option('format'),
