@@ -24,7 +24,7 @@ class RunFolderSource(AbstractSourceStep):
     def declare_runs(self):
         path = self.get_option('path')
 
-        if not self.get_option('paired_end'):
+        if not self.is_option_set_in_config('paired_end'):
             raise StandardError("missing paired_end key in source")
 
         if not os.path.exists(path):
