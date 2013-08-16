@@ -13,8 +13,12 @@ class Macs14(AbstractStep):
         self.set_cores(4)
 
         self.add_connection('in/alignments')
-#        self.add_connection('out/peaks')
         self.add_connection('out/log')
+        self.add_connection('out/peaks')
+        self.add_connection('out/summits')
+        self.add_connection('out/diagnosis')
+#        self.add_connection('out/model')
+        self.add_connection('out/negative-peaks')
  
         self.require_tool('macs14')
         self.require_tool('cat4m')
@@ -32,13 +36,22 @@ class Macs14(AbstractStep):
         control_files = list()
         validated_control_samples = list()
         control_samples = list()
+
         if self.get_option('control'):
             control_samples.extend(self.get_option('control'))
 
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
             with self.declare_run(run_id) as run:
-#                print(input_paths)
+
                 run.add_output_file('log', '%s-macs14-log.txt' % run_id, input_paths)
+                run.add_output_file('peaks', '%s-macs14-peaks.bed' % run_id, input_paths)
+                run.add_output_file('peaks', '%s-macs14-peaks.xls' % run_id, input_paths)
+                run.add_output_file('summits', '%s-macs14-summits.bed' % run_id, input_paths)
+                run.add_output_file('diagnosis', '%s-macs14-diag.xls' % run_id, input_paths)
+#                run.add_output_file('model', '%s-macs14-model.r' % run_id, input_paths)
+                run.add_output_file('negative-peaks', '%s-macs14-negative-peaks.xls' 
+                                    % run_id, input_paths)
+
                 if not input_paths:
                     raise StandardError("No input files for run %s" % (run_id))
                 run.add_private_info('treatment_files', input_paths)
@@ -55,29 +68,69 @@ class Macs14(AbstractStep):
                     run.add_private_info('control_files', control_files)
 #                    print("Control samples for runID %s: %s" % (run_id, validated_control_samples))
                     run.add_public_info('control_samples', validated_control_samples)
-                
+               
     
     def execute(self, run_id, run):
 
+        macs_out_directory = self.get_temporary_path('macs14-out')
+
         with process_pool.ProcessPool(self) as pool:
+            macs14 = [self.get_tool('macs14'), '--treatment']
+            if not run.has_private_info('treatment_files'):
+                raise StandardError("No treatment files for %s to analyse with macs14" % run_id)
+            macs14.extend(run.get_private_info('treatment_files'))
+            
+            # if we do have control data use it
+            if run.has_private_info('control_files'):
+                macs14.extend(['--control'])
+                macs14.extend(run.get_private_info('control_files'))
 
-            with pool.Pipeline(pool) as pipeline:
+            macs14.extend([
+                    '--format', self.get_option('format'),
+                    '--name', run_id,
+                    '--diag'
+                    ])
 
-                macs14 = [self.get_tool('macs14'), '--treatment']
-                if not run.has_private_info('treatment_files'):
-                    raise StandardError("No treatment files for %s to analyse with macs14" % run_id)
-                macs14.extend(run.get_private_info('treatment_files'))
+            try:
+                os.mkdir(macs_out_directory)
+            except OSError:
+                pass
+            os.chdir(macs_out_directory)
 
-                # if we do have control data use it
-                if run.has_private_info('control_files'):
-                    macs14.extend(['--control'])
-                    macs14.extend(run.get_private_info('control_files'))
+            pool.launch(macs14, stdout_path=run.get_single_output_file_for_annotation('log'))
 
-                macs14.extend([
-                        '--format', self.get_option('format'),
-                        '--name', run_id
-                        ])
-                pipeline.append(macs14)
+
+        peaks_files = run.get_output_files_for_annotation_and_tags('peaks', ['xls', 'bed'])
+        try:
+            os.rename(os.path.join(macs_out_directory, '%s_peaks.bed' % run_id), 
+                      peaks_files['bed'])
+        except OSError:
+            print('No file: %s' % os.path.join(macs_out_directory, '%s_peaks.bed' % run_id))
+        try:
+            os.rename(os.path.join(macs_out_directory, '%s_peaks.xls' % run_id), 
+                      peaks_files['xls'])
+        except OSError:
+            print('No file: %s' % os.path.join(macs_out_directory, '%s_peaks.xls' % run_id))
+        try:
+            os.rename(os.path.join(macs_out_directory, '%s_summits.bed' % run_id), 
+                      run.get_single_output_file_for_annotation('summits'))
+        except OSError:
+            print('No file: %s' % os.path.join(macs_out_directory, '%s_summits.bed' % run_id))
+        try:
+            os.rename(os.path.join(macs_out_directory, '%s_diag.xls' % run_id),
+                      run.get_single_output_file_for_annotation('diagnosis'))
+        except OSError:
+            print('No file: %s' % os.path.join(macs_out_directory, '%s_diag.xls' % run_id))
+#        try:
+#            os.rename(os.path.join(macs_out_directory, '%s_model.r' % run_id), 
+#                      run.get_single_output_file_for_annotation('model'))
+#        except OSError:
+#            print('No file: %s' % os.path.join(macs_out_directory, '%s_model.r' % run_id))
+        try:
+            os.rename(os.path.join(macs_out_directory, '%s_negative_peaks.xls' % run_id), 
+                      run.get_single_output_file_for_annotation('negative-peaks'))
+        except OSError:
+            print('No file: %s' % os.path.join(macs_out_directory, '%s_negative_peaks.xls' % run_id))
 
                 # MACS14 use without control sample
                 # macs14 --treatment=$j --format=BED --name $(basename $j .bed) -S >
