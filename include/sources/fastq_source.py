@@ -84,11 +84,29 @@ class FastqSource(AbstractSourceStep):
                     sample_id = row['SampleID']
                     run = self.get_run(sample_id)
                     if run != None:
-                        index = row['Index']
-                        run.add_public_info('index', index)
+                        index = row['Index'].split('-')
+                        if not (run.has_public_info('index-R1') or run.has_public_info('index-R2')):
+                            if len(index) == 2:
+                                run.add_public_info('index-R1', index[0])
+                                run.add_public_info('index-R2', index[1])
+                            elif len(index) == 1:
+                                run.add_public_info('index-R1', index[0])
+                            else:
+                                raise StandardError("Index %s is not a valid index in %s" 
+                                                    % index.join('-'), indices_path)
             else:
                 # indices are defined in the configuration
                 for sample_id, index in self.get_option('indices').items():
                     run = self.get_run(sample_id)
                     if run != None:
-                        run.add_public_info('index', index)
+                        idx = index.split('-')
+                        if not (run.has_public_info('index-R1') or run.has_public_info('index-R2')):
+                            if len(idx) == 2:
+                                run.add_public_info('index-R1', idx[0])
+                                run.add_public_info('index-R2', idx[1])
+                            elif len(idx) == 1:
+                                run.add_public_info('index-R1', idx[0])
+                            else:
+                                raise StandardError("Index %s is not a valid index in %s" 
+                                                    % idx.join('-'), indices_path)
+

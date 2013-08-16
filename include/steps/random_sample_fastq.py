@@ -40,7 +40,7 @@ class RandomSampleFastq(AbstractStep):
 
          RIB00001: Run
         for run_id, step_info in connection_info['in/reads']['runs'].items():
-            paired_end = self.find_upstream_info('paired_end')
+            paired_end = self.find_upstream_info(run_id, 'paired_end')
             with self.create_run(run_id) as run:
             
                 f = run.add_output_file(outpath)

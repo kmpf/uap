@@ -43,13 +43,6 @@ parser = argparse.ArgumentParser(
                 '(step_name/run_id).',
     formatter_class=argparse.RawTextHelpFormatter)
 
-parser.add_argument("--highmem",
-                    dest="highmem",
-                    action="store_true",
-                    default=False,
-                    help="Must be set if the highmem node of the " +
-                    "cluster is being used.")
-
 parser.add_argument("--even-if-dirty",
                     dest="even_if_dirty",
                     action="store_true",
@@ -57,6 +50,13 @@ parser.add_argument("--even-if-dirty",
                     help="Must be set if the local git repository " +
                     "contains uncommited changes. Otherwise the pipeline " +
                     "will not start.")
+
+parser.add_argument("--highmem",
+                    dest="highmem",
+                    action="store_true",
+                    default=False,
+                    help="Must be set if the highmem node of the " +
+                    "cluster is being used.")
 
 parser.add_argument("step_task",
                     nargs='*',
@@ -90,7 +90,11 @@ def main():
 
     tasks_left = []
 
-    template = open('qsub-template.sh', 'r').read()
+    template = None
+    if use_highmem:
+        template = open('qsub-highmem-template.sh', 'r').read()
+    else:
+        template = open('qsub-template.sh', 'r').read()
 
     for task in p.all_tasks_topologically_sorted:
         if task_wish_list is not None:
