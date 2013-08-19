@@ -52,7 +52,7 @@ class Cutadapt(AbstractStep):
             # paired end or not
             read_types = list()
             if not is_paired_end:
-                read_types = ['']
+                read_types = ['-R1']
             else:
                 read_types = ['-R1', '-R2']
 
@@ -61,7 +61,7 @@ class Cutadapt(AbstractStep):
             for _ in read_types:
                 input_path_bins[_] = list()
             for path in input_paths:
-                which = ''
+                which = '-R1'
                 if is_paired_end:
                     which = '-' + misc.assign_string(os.path.basename(path), ['R1', 'R2'])
                 input_path_bins[which].append(path)
@@ -75,16 +75,12 @@ class Cutadapt(AbstractStep):
                         run.add_private_info('paired_end_read', which.replace('-', ''))
 
                     # add adapter information, insert correct index first if necessary
-                    if is_paired_end:
-                        adapter = self.get_option('adapter%s' % which)
-                    else:
-                        adapter = self.get_option('adapter-R1')
+                    adapter = self.get_option('adapter%s' % which)
+                    
                     if '((INDEX))' in adapter:
-                        if is_paired_end:
-                            index = self.find_upstream_info(run_id, 'index%s' % which)
-                        else:
-                            index = self.find_upstream_info(run_id, 'index-R1')
-                        adapter = adapter.replace('((INDEX))', index)
+                        index = self.find_upstream_info(run_id, 'index%s' % which)
+                    
+                    adapter = adapter.replace('((INDEX))', index)
                      # make sure the adapter is looking good
                     if re.search('^[ACGT]+$', adapter) == None:
                         raise StandardError("Unable to come up with a legit-looking adapter: " + adapter)
