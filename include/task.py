@@ -47,7 +47,7 @@ class Task(object):
         '''
         result = set()
         run_info = self.step.get_run_info()[self.run_id]
-        for annotation, outfiles in run_info['output_files'].items():
+        for annotation, outfiles in run_info.get_output_files().items():
             for outpath, infiles in outfiles.items():
                 for path in infiles:
                     result.add(path)
@@ -59,7 +59,7 @@ class Task(object):
         '''
         result = []
         run_info = self.step.get_run_info()[self.run_id]
-        for annotation, outfiles in run_info['output_files'].items():
+        for annotation, outfiles in run_info.get_output_files().items():
             for path in outfiles.keys():
                 result.append(path)
         return result
@@ -71,6 +71,7 @@ class Task(object):
         result = set()
         for path in self.input_files():
             result.add(self.pipeline.task_for_task_id[self.pipeline.task_id_for_output_file[path]])
+
         return list(result)
     
     def volatilize_if_possible(self, srsly = False):
