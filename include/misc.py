@@ -32,9 +32,12 @@ def assign_strings(paths, tags):
         for path in paths:
             if path[:len(head)] != head:
                 return None
-            if path[-len(tail):] != tail:
-                return None
-            chopped.append((path[len(head):-len(tail)], path))
+            if len(tail) == 0:
+                chopped.append((path[len(head):], path))
+            else:
+                if path[-len(tail):] != tail:
+                    return None
+                chopped.append((path[len(head):-len(tail)], path))
 
         if [_[0] for _ in sorted(chopped)] == sorted(tags):
             result = {}
@@ -62,6 +65,7 @@ def assign_strings(paths, tags):
                     # now try chopping off head and tail from every path
                     # and see whether we can unambiguously assign a path
                     # to every tag, if yes, we have a result candidate
+
                     result_candidate = check_candidate(paths, tags, head, tail)
                     if result_candidate:
                         results[json.dumps(result_candidate, sort_keys = True)] = result_candidate

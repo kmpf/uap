@@ -21,32 +21,24 @@ class SamToBam(AbstractStep):
         self.add_option('sort_by_name', bool, default= False)
         self.add_option('genome', str, optional =False)
 
-    def setup_runs(self, complete_input_run_info, connection_info):
+    def declare_runs(self):
         
+        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
+            with self.declare_run(run_id) as run:
 
-            
-        output_run_info = {}
-        for step_name, step_input_info in complete_input_run_info.items():
-            for run_id, input_run_info in step_input_info.items():
-                output_run_info[run_id] = {}
-                output_run_info[run_id]['output_files'] = {}
-                output_run_info[run_id]['output_files']['alignments']  = {}
-                output_run_info[run_id]['output_files']['alignments'][run_id + '.bam'] = input_run_info['output_files']['alignments'].keys()
-                output_run_info[run_id]['output_files']['indices']  = {}
-                output_run_info[run_id]['output_files']['indices'][run_id + '.bam.bai'] = input_run_info['output_files']['alignments'].keys()
-                output_run_info[run_id]['info'] = {}
-                if len(input_run_info['output_files']['alignments'].keys()) != 1:
+                if len(input_paths) != 1:
                     raise StandardError("Expected exactly one alignments file.")
-                output_run_info[run_id]['info']['in-sam']  = input_run_info['output_files']['alignments'].keys()[0]
-                output_run_info[run_id]['info']['out-bam']  = run_id + '.bam'
-                output_run_info[run_id]['info']['out-bai']  = run_id + '.bam.bai'
 
-        return output_run_info
+                basename = os.path.basename(input_paths[0]).split('.')[0]
+                run.add_output_file('alignments', basename + '.bam', input_paths)
+                run.add_output_file('indices', basename + '.bam.bai', input_paths)
 
-    def execute(self, run_id, run_info):
-        sam_path = run_info['info']['in-sam']
-        sorted_bam_path = run_info['info']['out-bam']
-        sorted_bai_path = run_info['info']['out-bai']
+                run.add_private_info('in-sam', input_paths[0])
+
+    def execute(self, run_id, run):
+        sam_path = run.get_private_info('in-sam')
+        sorted_bam_path = run.get_single_output_file_for_annotation('alignments')
+        sorted_bai_path = run.get_single_output_file_for_annotation('indices')
         unsorted_bam_path = self.get_temporary_path('sam_to_bam_unsorted', 'output')
         
         use_unsorted_bam_input = unsorted_bam_path
