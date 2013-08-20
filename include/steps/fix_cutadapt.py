@@ -17,23 +17,39 @@ class FixCutadapt(AbstractStep):
         self.require_tool('fix_cutadapt')
 
     def declare_runs(self):
+        # fetch all incoming run IDs which produce reads...
+        run_ids = dict()
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
             is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
-            print(type(input_paths))
-            print(input_paths)
+
+            if is_paired_end:
+                # chop of '-R1' or '-R2' respectively
+                fixed_run_id = run_id[:-3]
+                # but keep info if 'R1' or 'R2'
+                which = run_id[-2:]
+                if not fixed_run_id in run_ids:
+                    run_ids[fixed_run_id] = list()
+                if len(input_paths) != 1:
+                    raise StandardError("Expected one input file.")
+                run_ids[fixed_run_id].extend(input_paths)
+            else:
+                if len(input_paths) != 1:
+                    raise StandardError("Expected one input file.")
+                run_ids[run_id] = input_paths
+
+        for run_id, input_paths in run_ids.items():
+            is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
+
             if is_paired_end:
                 with self.declare_run(run_id) as run:
                     run.add_private_info('paired_end', is_paired_end)
-                    in_files = {'R1': list(), 'R2': list()}
-                    for input_path in input_paths:
-                        which = misc.assign_string(input_path, ['R1', 'R2'])
-                        in_files[which].append(input_path)
-
+                    if len(input_paths) != 2:
+                        raise StandardError("Expected two input files and got %s." % input_paths)
+                    input_files = misc.assign_strings(input_paths, ['R1', 'R2'])
                     for which in ['R1', 'R2']:
                         out_path = "%s-fixed-%s.fastq.gz" % (run_id, which)
-                        run.add_output_file("reads", out_path, in_files.values())
-                        run.add_private_info('in-%s' % which, in_files[which])
- 
+                        run.add_output_file("reads", out_path, input_paths)
+                        run.add_private_info('in-%s' % which, input_files[which])          
             else:
                 with self.declare_run(run_id) as run:
                     run.add_private_info('paired_end', is_paired_end)
@@ -73,11 +89,11 @@ class FixCutadapt(AbstractStep):
                 self.get_tool('fix_cutadapt'),
                 fifo_in_R1
                 ]
-            if is_paired_end:
-                fix_cutadapt.append(fifo_in_R2)
             fix_cutadapt.append(fifo_out_R1)
             if is_paired_end:
-                fix_cutadapt.append(fifo_out_R2)
+                fix_cutadapt.append('--R2-in', fifo_in_R2)
+            if is_paired_end:
+                fix_cutadapt.append('--R2-out', fifo_out_R2)
             
             pool.launch(fix_cutadapt)
         

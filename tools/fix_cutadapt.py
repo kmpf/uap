@@ -6,40 +6,45 @@ def main():
     parser = argparse.ArgumentParser(
         description='This script reads one or two fastq files, line-by-line '+
         'and removes reads or read pairs if at least one read is empty.',
+        prog = 'fix_cutadapt',
         formatter_class=argparse.RawTextHelpFormatter)
     
-    parser.add_argument("in_file1",
+    parser.add_argument('--version',
+                        action='version',
+                        version='%(prog)s 0.01')
+
+    parser.add_argument("r1_in",
                         help="This file or fifo contains the " +
                         "first set of reads.")
 
-    parser.add_argument("--in_file2",
-                        dest="in_file2",
+    parser.add_argument("--R2-in",
+                        dest="r2_in",
                         default=None,
                         help="This file or fifo contains the " +
                         "second set of reads.")
 
-    parser.add_argument("out_file1",
+    parser.add_argument("r1_out",
                         help="To this file or fifo are the reads from " +
                         "in-file1 written without empty lines.")
 
-    parser.add_argument("--out_file2",
-                        dest="out_file2",
+    parser.add_argument("--R2-out",
+                        dest="r2_out",
                         default=None,
                         help="This file or fifo contains the " +
                         "second set of reads.")
 
     args = parser.parse_args()        
 
-    fin1 = open(args.in_file1, 'r')
-    fin2 = args.in_file2
-    fout1 = open(args.out_file1, 'w')
-    fout2 = args.out_file2
+    fin1 = open(args.r1_in, 'r')
+    fin2 = None
+    fout1 = open(args.r1_out, 'w')
+    fout2 = None
 
     if args.in_file2 is not None:
-        fin2 = open(args.in_file2, 'r')
+        fin2 = open(args.r2_in, 'r')
 
     if args.out_file2 is not None:
-        fout2 = open(args.out_file2, 'w')
+        fout2 = open(args.r2_out, 'w')
 
     rcount = 0
     wcount = 0
