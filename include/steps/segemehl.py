@@ -31,8 +31,8 @@ class Segemehl(AbstractStep):
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
             
             with self.declare_run(run_id) as run:
-                is_paired_end = self.find_upstream_info(run_id, 'paired_end')
-                
+                is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
+                run.add_private_info('paired_end', is_paired_end)
                 if is_paired_end:
                     read_files = misc.assign_strings(input_paths, ['R1','R2'])
                     run.add_private_info('R1-in', read_files['R1'])
@@ -50,7 +50,7 @@ class Segemehl(AbstractStep):
 
 
     def execute(self, run_id, run):
-        is_paired_end = self.find_upstream_info(run_id, 'paired_end')
+        is_paired_end = run.get_private_info('paired_end')
         with process_pool.ProcessPool(self) as pool:
             
             fifo_path_genome = pool.get_temporary_fifo('segemehl-genome-fifo', 'input')

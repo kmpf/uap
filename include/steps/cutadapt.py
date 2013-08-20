@@ -36,7 +36,7 @@ class Cutadapt(AbstractStep):
     def declare_runs(self):
         # fetch all incoming run IDs which produce reads...
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
-            is_paired_end = self.find_upstream_info(run_id, 'paired_end')
+            is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
 
             # make sure that adapter-R1/adapter-R2 are set correctly
             # according to paired_end info... this kind of mutual exclusive option
@@ -78,7 +78,7 @@ class Cutadapt(AbstractStep):
                     adapter = self.get_option('adapter%s' % which)
                     
                     if '((INDEX))' in adapter:
-                        index = self.find_upstream_info(run_id, 'index%s' % which)
+                        index = self.find_upstream_info_for_input_paths(input_paths, 'index%s' % which)
                     
                     adapter = adapter.replace('((INDEX))', index)
                      # make sure the adapter is looking good

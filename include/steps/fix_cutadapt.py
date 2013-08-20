@@ -20,7 +20,7 @@ class FixCutadapt(AbstractStep):
         # fetch all incoming run IDs which produce reads...
         run_ids = dict()
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
-            is_paired_end = self.find_upstream_info(run_id, 'paired_end')
+            is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
 
             if is_paired_end:
                 # chop of '-R1' or '-R2' respectively
@@ -38,23 +38,25 @@ class FixCutadapt(AbstractStep):
                 run_ids[run_id] = input_paths
 
         for run_id, input_paths in run_ids.items():
-            is_paired_end = self.find_upstream_info(run_id, 'paired_end')
+            is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
 
             if is_paired_end:
                 with self.declare_run(run_id) as run:
+                    run.add_private_info('paired_end', is_paired_end)
                     for which in ['R1', 'R2']:
                         out_path = "%s-fixed-%s.fastq.gz" % (run_id, which)
                         run.add_output_file("reads", out_path, input_paths.values())
                         run.add_private_info('in-%s' % which, input_paths[which])          
             else:
                 with self.declare_run(run_id) as run:
+                    run.add_private_info('paired_end', is_paired_end)
                     out_path = "%s-fixed.fastq.gz" % run_id
                     run.add_output_file("reads", out_path, input_paths)
                     run.add_private_info('in-R1', input_paths)
 
             
     def execute(self, run_id, run):
-        is_paired_end = self.find_upstream_info(run_id, 'paired_end')
+        is_paired_end = run.get_private_info('paired_end')
         if is_paired_end:
             out_paths = run.get_output_files_for_annotation_and_tags('reads', ['R1', 'R2'])
         else:

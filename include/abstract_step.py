@@ -1147,29 +1147,35 @@ class AbstractStep(object):
     def get_queued_ping_path_for_run_id(self, run_id):
         return self._get_ping_path_for_run_id(run_id, 'queued')
 
-    def find_upstream_info_as_hash(self, run_id, key, expected = 1):
-        results = dict()
-        for dep in self.dependencies:
-            run_info = dep.get_run_info()
-            if run_id in run_info:
-                if run_info[run_id].has_public_info(key):
-                    results[str(dep)] = run_info[run_id].get_public_info(key)
-            results.update(dep.find_upstream_info_as_hash(run_id, key, None))
+    def find_upstream_info_for_input_paths_as_set(self, input_paths, key, expected = 1):
+        task_ids = set()
+        for path in input_paths:
+            task_ids.add(self._pipeline.task_id_for_output_file[path])
+        results = set()
+        for task_id in task_ids:
+            task = self._pipeline.task_for_task_id[task_id]
+            step = task.step
+            run_id = task.run_id
+            run = step._runs[run_id]
+            if run.has_public_info(key):
+            	results.add(run.get_public_info(key))
+            results |= self.find_upstream_info_for_input_paths_as_set(task.input_files(), key, None)
+        
         if expected is not None:
             if len(results) != expected:
-                raise StandardError("Unable to determine upstream %s/%s info from %s." % (run_id, key, self))
+                raise StandardError("Unable to determine upstream %s info from %s." % (key, self))
         return results
-
-    def find_upstream_info(self, run_id, key):
+        
+    def find_upstream_info_for_input_paths(self, input_paths, key):
         '''
         Find a piece of public information in all upstream steps. If the information
         is not found or defined in more than one upstream step, this will crash.
         '''
         # And boy, will it crash. SUH-MAAAASH! http://youtu.be/PbYD7sj6vxc?t=1m38s
-        
-        result = self.find_upstream_info_as_hash(run_id, key, expected = 1)
-        return result.values()[0]
 
+        result = self.find_upstream_info_for_input_paths_as_set(input_paths, key, expected = 1)
+        return list(result)[0]
+                                                                
     def get_option(self, key):
         '''
         Query an option.
