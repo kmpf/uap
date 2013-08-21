@@ -56,7 +56,7 @@ class Cutadapt(AbstractStep):
             else:
                 read_types = ['-R1', '-R2']
 
-            # put input files into R1/R2 bins (or one single '' bin)
+            # put input files into R1/R2 bins (or one single R1 bin)
             input_path_bins = dict()
             for _ in read_types:
                 input_path_bins[_] = list()

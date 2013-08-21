@@ -18,8 +18,9 @@ class SamToBam(AbstractStep):
         self.require_tool('cat4m')
         self.require_tool('samtools')
         self.require_tool('pigz')
+
         self.add_option('sort_by_name', bool, default= False)
-        self.add_option('genome', str, optional =False)
+        self.add_option('genome', str, optional=False)
 
     def declare_runs(self):
         
