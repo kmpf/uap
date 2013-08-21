@@ -47,7 +47,7 @@ class Macs14(AbstractStep):
                 run.add_output_file('peaks', '%s-macs14-peaks.bed' % run_id, input_paths)
                 run.add_output_file('peaks', '%s-macs14-peaks.xls' % run_id, input_paths)
                 run.add_output_file('summits', '%s-macs14-summits.bed' % run_id, input_paths)
-                run.add_output_file('diagnosis', '%s-macs14-diag.xls' % run_id, input_paths)
+#                run.add_output_file('diagnosis', '%s-macs14-diag.xls' % run_id, input_paths)
 #                run.add_output_file('model', '%s-macs14-model.r' % run_id, input_paths)
                 run.add_output_file('negative-peaks', '%s-macs14-negative-peaks.xls' 
                                     % run_id, input_paths)
@@ -87,8 +87,7 @@ class Macs14(AbstractStep):
 
             macs14.extend([
                     '--format', self.get_option('format'),
-                    '--name', run_id,
-                    '--diag'
+                    '--name', run_id
                     ])
 
             try:
@@ -105,22 +104,22 @@ class Macs14(AbstractStep):
             os.rename(os.path.join(macs_out_directory, '%s_peaks.bed' % run_id), 
                       peaks_files['bed'])
         except OSError:
-            print('No file: %s' % os.path.join(macs_out_directory, '%s_peaks.bed' % run_id))
+            raise StandardError('No file: %s' % os.path.join(macs_out_directory, '%s_peaks.bed' % run_id))
         try:
             os.rename(os.path.join(macs_out_directory, '%s_peaks.xls' % run_id), 
                       peaks_files['xls'])
         except OSError:
-            print('No file: %s' % os.path.join(macs_out_directory, '%s_peaks.xls' % run_id))
+            raise StandardError('No file: %s' % os.path.join(macs_out_directory, '%s_peaks.xls' % run_id))
         try:
             os.rename(os.path.join(macs_out_directory, '%s_summits.bed' % run_id), 
                       run.get_single_output_file_for_annotation('summits'))
         except OSError:
-            print('No file: %s' % os.path.join(macs_out_directory, '%s_summits.bed' % run_id))
-        try:
-            os.rename(os.path.join(macs_out_directory, '%s_diag.xls' % run_id),
-                      run.get_single_output_file_for_annotation('diagnosis'))
-        except OSError:
-            print('No file: %s' % os.path.join(macs_out_directory, '%s_diag.xls' % run_id))
+            raise StandardError('No file: %s' % os.path.join(macs_out_directory, '%s_summits.bed' % run_id))
+#        try:
+#            os.rename(os.path.join(macs_out_directory, '%s_diag.xls' % run_id),
+#                      run.get_single_output_file_for_annotation('diagnosis'))
+#        except OSError:
+#            print('No file: %s' % os.path.join(macs_out_directory, '%s_diag.xls' % run_id))
 #        try:
 #            os.rename(os.path.join(macs_out_directory, '%s_model.r' % run_id), 
 #                      run.get_single_output_file_for_annotation('model'))
@@ -130,7 +129,7 @@ class Macs14(AbstractStep):
             os.rename(os.path.join(macs_out_directory, '%s_negative_peaks.xls' % run_id), 
                       run.get_single_output_file_for_annotation('negative-peaks'))
         except OSError:
-            print('No file: %s' % os.path.join(macs_out_directory, '%s_negative_peaks.xls' % run_id))
+            raise StandardError('No file: %s' % os.path.join(macs_out_directory, '%s_negative_peaks.xls' % run_id))
 
                 # MACS14 use without control sample
                 # macs14 --treatment=$j --format=BED --name $(basename $j .bed) -S >
