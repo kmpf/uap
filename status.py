@@ -54,7 +54,7 @@ parser.add_argument("-t","--task",
                     nargs='*',
                     default=list(),
                     type=str,
-                    help="Displays only the named task IDs" +
+                    help="Displays only the named task IDs. " +
                     "Can take multiple task ID(s) as input. A task ID " +
                     "looks like ths 'step_name/run_id'. A list of all " +
                     "task IDs is returned by running './status.py'.")
@@ -78,7 +78,7 @@ def main():
                 raise StandardError("Invalid task ID %s." % task_id)
             step_name = parts[0]
             run_id = parts[1]
-            report = p.steps[step_name].get_run_info()[run_id]
+            report = p.steps[step_name].get_run_info()[run_id].as_dict()
             report['state'] = p.steps[step_name].get_run_state(run_id)
             print(yaml.dump(report, default_flow_style = False))
         
