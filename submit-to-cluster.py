@@ -197,7 +197,16 @@ def main():
             really_submit_this = False
         if really_submit_this:
             sys.stdout.write("Submitting task " + str(task) + " with " + str(task.step._cores) + " cores => ")
-            process = subprocess.Popen(qsub_args, bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+            process = None
+            try:
+                process = subprocess.Popen(qsub_args, bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+            except OSError as e:
+                if e.errno == os.errno.ENOENT:
+                    raise StandardError("Seems there is no qsub system. Maybe " +
+                                        "you are not executing this script on " +
+                                        "the cluster")
+                else:
+                    raise e
             process.stdin.write(submit_script)
             process.stdin.close()
             process.wait()
