@@ -68,8 +68,13 @@ def main():
         # execute the specified tasks
         task_list = list()
         for task_id in args.step_task:
-            task = p.task_for_task_id[task_id]
-            task_list.append(task)
+            if '/' in task_id:
+                task = p.task_for_task_id[task_id]
+                task_list.append(task)
+            else:
+                for task in p.all_tasks_topologically_sorted:
+                    if str(task)[0:len(task_id)] == task_id:
+                        task_list.append(task)
             
     # execute all tasks
     for task in task_list:

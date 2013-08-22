@@ -24,6 +24,9 @@ class S2C(AbstractStep):
 
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
             with self.declare_run(run_id) as run:
+                if len(input_paths) != 1:
+                    raise StandardError("Expected exactly one alignments file.")
+                run.add_private_info('in-alignment', input_paths[0])
                 run.add_output_file('alignments', '%s-cufflinks-compatible-sorted.bam' % run_id, input_paths)
                 run.add_output_file('log', '%s-log.txt' % run_id, input_paths)
 
@@ -53,7 +56,7 @@ class S2C(AbstractStep):
     def execute(self, run_id, run):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
-                alignments_path = self.get_single_input_file_for_connection('in/alignments')
+                alignments_path = run.get_private_info('in-alignment')
                 cat4m = [self.get_tool('cat4m'), alignments_path]
                 pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']
                 s2c = [self.get_tool('s2c'), '-s', '/dev/stdin', '-o', self._temp_directory]
