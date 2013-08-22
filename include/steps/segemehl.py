@@ -68,16 +68,16 @@ class Segemehl(AbstractStep):
                     ]
 
                 if is_paired_end:
-                    segemehl.extend('-p', run.get_private_info('R2-in'))
+                    segemehl.extend(['-p', run.get_private_info('R2-in')})
                 
-                segemehl.extend(
+                segemehl.extend([
                     '-u', fifo_path_unmapped,
                     '-H', '1',
                     '-t', '11',
                     '-s', '-S',
                     '-D', '0',
                     '-o', '/dev/stdout'
-                )
+                ])
                 
                 pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
                 
