@@ -68,7 +68,7 @@ class Segemehl(AbstractStep):
                     ]
 
                 if is_paired_end:
-                    segemehl.extend(['-p', run.get_private_info('R2-in')})
+                    segemehl.extend(['-p', run.get_private_info('R2-in')])
                 
                 segemehl.extend([
                     '-u', fifo_path_unmapped,
