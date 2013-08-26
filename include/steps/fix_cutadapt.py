@@ -87,9 +87,9 @@ class FixCutadapt(AbstractStep):
         
             fix_cutadapt = [
                 self.get_tool('fix_cutadapt'),
-                fifo_in_R1
+                fifo_in_R1,
+                fifo_out_R1
                 ]
-            fix_cutadapt.append(fifo_out_R1)
             if is_paired_end:
                 fix_cutadapt.append('--R2-in', fifo_in_R2)
             if is_paired_end:
