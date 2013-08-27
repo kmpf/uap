@@ -39,12 +39,15 @@ class Segemehl(AbstractStep):
                     run.add_private_info('R2-in', read_files['R2'])
                 else:
                     if len(input_paths) != 1:
-                        raise StandardError("Sample %s is unpaired, but has not exactly one input file %s" 
-                                            % (run_id, input_paths))
+                        raise StandardError("Sample %s is unpaired, but has not " +
+                                            "exactly one input file %s" %
+                                            (run_id, input_paths))
                     run.add_private_info('R1-in', input_paths)
 
-                run.add_output_file('alignments', '%s-segemehl-results.sam.gz' % run_id, input_paths)
-                run.add_output_file('unmapped', '%s-segemehl-unmapped.fastq.gz' % run_id, input_paths)
+                run.add_output_file('alignments', '%s-segemehl-results.sam.gz' % run_id,
+                                    input_paths)
+                run.add_output_file('unmapped', '%s-segemehl-unmapped.fastq.gz' % run_id,
+                                    input_paths)
                 run.add_output_file('log', '%s-segemehl-log.txt' % run_id, input_paths)
                 
 
