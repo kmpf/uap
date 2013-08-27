@@ -22,7 +22,7 @@ def main():
         columns = bed_line.split('\t')
         if re.search('2$', columns[3]):
             columns[5] = '-' if columns[5] == '+' else '+'
-        print('\t'.join(columns))    
+        sys.stdout.write('\t'.join(columns) + '\n')    
 
 if __name__ == '__main__':
     main()
