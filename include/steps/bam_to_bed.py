@@ -8,7 +8,7 @@ import yaml
 class BamToBed(AbstractStep):
 
     def __init__(self, pipeline):
-        super(BamToBedgraph, self).__init__(pipeline)
+        super(BamToBed, self).__init__(pipeline)
         
         self.set_cores(4)
         
@@ -19,11 +19,14 @@ class BamToBed(AbstractStep):
         self.require_tool('samtools')
         self.require_tool('bedtools')
         self.require_tool('mate_pair_strand_switch')
+        self.require_tool('sort')
 
     def declare_runs(self):
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
             with self.declare_run(run_id) as run:
-                
+                is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
+                run.add_private_info('paired_end', is_paired_end)
+
                 if len(input_paths) != 1:
                     raise StandardError("Expected exactly one alignment file. Got %s"
                                         % input_paths)
@@ -37,16 +40,22 @@ class BamToBed(AbstractStep):
                 run.add_private_info('in-bam', input_paths[0])
                 
     def execute(self, run_id, run):
+        is_paired_end = run.get_private_info('paired_end')
         bam_path = run.get_private_info('in-bam')
         bed_file = run.get_private_info('out-bed')
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
-                cat4m_in = [self.get_tool('cat4m'), bam_path]
-                samtools = [self.get_tool('samtools'), '-bf', '0x2', '-']
+                cat4m = [self.get_tool('cat4m'), bam_path]
+                samtools = [self.get_tool('samtools'), 'view', '-bf', '0x2', '-']
                 bedtools = [self.get_tool('bedtools'), 'bamtobed', '-i', 'stdin']
                 strand_switch = [self.get_tool('mate_pair_strand_switch')]
+                sort = [self.get_tool('sort'), '-k1,1', '-k2,2n']
                 
                 pipeline.append(cat4m)
-                pipeline.append(samtools)
+                if is_paired_end:
+                    pipeline.append(samtools)
                 pipeline.append(bedtools)
-                pipeline.append(strand_switch, stdout_path = bed_file)
+                if is_paired_end:
+                    pipeline.append(strand_switch)
+                pipeline.append(sort, stdout_path = run.get_single_output_file_for_annotation('alignments'))
+                
