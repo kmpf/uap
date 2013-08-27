@@ -59,13 +59,17 @@ class FixCutadapt(AbstractStep):
             
     def execute(self, run_id, run):
         is_paired_end = run.get_private_info('paired_end')
+        out_paths = None
         if is_paired_end:
             out_paths = run.get_output_files_for_annotation_and_tags('reads', ['R1', 'R2'])
         else:
             out_paths = run.get_output_files_for_annotation_and_tags('reads', [run_id])
+        print(out_paths)
         with process_pool.ProcessPool(self) as pool:
             fifo_in_R1 = pool.get_temporary_fifo('fifo_in_R1', 'input')
+            fifo_in_R2 = None
             fifo_out_R1 = pool.get_temporary_fifo('fifo_out_R1', 'output')
+            fifo_out_R2 = None
             if is_paired_end:
                 fifo_in_R2 = pool.get_temporary_fifo('fifo_in_R2', 'input')
                 fifo_out_R2 = pool.get_temporary_fifo('fifo_out_R2', 'output')
@@ -73,7 +77,6 @@ class FixCutadapt(AbstractStep):
             with pool.Pipeline(pool) as pipeline:
                 cat4m = [self.get_tool('cat4m'), run.get_private_info('in-R1')]
                 pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']
-                
                 pipeline.append(cat4m)
                 pipeline.append(pigz, stdout_path = fifo_in_R1)
                 
@@ -81,28 +84,24 @@ class FixCutadapt(AbstractStep):
                 with pool.Pipeline(pool) as pipeline:
                     cat4m = [self.get_tool('cat4m'), run.get_private_info('in-R2')]
                     pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']
-                
                     pipeline.append(cat4m)
                     pipeline.append(pigz, stdout_path = fifo_in_R2)
         
-            fix_cutadapt = [
-                self.get_tool('fix_cutadapt'),
-                fifo_in_R1,
-                fifo_out_R1
-                ]
+            fix_cutadapt = [self.get_tool('fix_cutadapt'), fifo_in_R1, fifo_out_R1]
             if is_paired_end:
-                fix_cutadapt.append('--R2-in', fifo_in_R2)
+                fix_cutadapt.extend(['--R2-in', fifo_in_R2])
             if is_paired_end:
-                fix_cutadapt.append('--R2-out', fifo_out_R2)
-            
+                fix_cutadapt.extend(['--R2-out', fifo_out_R2])
             pool.launch(fix_cutadapt)
-        
+            
             with pool.Pipeline(pool) as pipeline:
                 cat4m = [self.get_tool('cat4m'), fifo_out_R1]
-                pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '--stdout']
-                
+                pigz = [self.get_tool('pigz'), 
+                        '--blocksize', '4096', 
+                        '--processes', '2', 
+                        '--stdout']
                 pipeline.append(cat4m)
-                out_path = str()
+                out_path = None
                 if is_paired_end:
                     out_path = out_paths['R1']
                 else:
@@ -112,7 +111,9 @@ class FixCutadapt(AbstractStep):
             if is_paired_end:
                 with pool.Pipeline(pool) as pipeline:
                     cat4m = [self.get_tool('cat4m'), fifo_out_R2]
-                    pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '--stdout']
-                
+                    pigz = [self.get_tool('pigz'), 
+                            '--blocksize', '4096', 
+                            '--processes', '2', 
+                            '--stdout']
                     pipeline.append(cat4m)
                     pipeline.append(pigz, stdout_path = out_paths['R2'])

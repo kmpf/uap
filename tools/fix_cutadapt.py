@@ -40,10 +40,10 @@ def main():
     fout1 = open(args.r1_out, 'w')
     fout2 = None
 
-    if args.in_file2 is not None:
+    if args.r2_in is not None:
         fin2 = open(args.r2_in, 'r')
 
-    if args.out_file2 is not None:
+    if args.r2_out is not None:
         fout2 = open(args.r2_out, 'w')
 
     rcount = 0
