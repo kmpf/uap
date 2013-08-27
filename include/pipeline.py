@@ -116,13 +116,14 @@ class Pipeline(object):
         self.all_tasks_topologically_sorted = []
         for step_name in self.topological_step_order:
             step = self.steps[step_name]
-            if not abstract_step.AbstractSourceStep in step.__class__.__bases__:
-                for run_index, run_id in enumerate(misc.natsorted(step.get_run_ids())):
-                    task = task_module.Task(self, step, run_id, run_index)
+            for run_index, run_id in enumerate(misc.natsorted(step.get_run_ids())):
+                task = task_module.Task(self, step, run_id, run_index)
+                if not abstract_step.AbstractSourceStep in step.__class__.__bases__:
+                    # this is a source step, so don't add it to the list of to-do tasks
                     self.all_tasks_topologically_sorted.append(task)
-                    if str(task) in self.task_for_task_id:
-                        raise ConfigurationException("Duplicate task ID %s." % str(task))
-                    self.task_for_task_id[str(task)] = task
+                if str(task) in self.task_for_task_id:
+                    raise ConfigurationException("Duplicate task ID %s." % str(task))
+                self.task_for_task_id[str(task)] = task
 
         self.tool_versions = {}
         self.check_tools()

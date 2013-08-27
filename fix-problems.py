@@ -44,7 +44,7 @@ parser.add_argument("--even-if-dirty",
 args = parser.parse_args()
 
 def main():
-    p = pipeline.Pipeline()
+    p = pipeline.Pipeline(arguments=args)
     p.check_ping_files(print_more_warnings = True, print_details = args.details, fix_problems = args.srsly)
         
 if __name__ == '__main__':

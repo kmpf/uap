@@ -31,17 +31,29 @@ class Segemehl(AbstractStep):
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
             
             with self.declare_run(run_id) as run:
-                read_files = misc.assign_strings(input_paths, ['R1','R2'])
-                run.add_output_file('alignments', '%s-segemehl-results.sam.gz' % run_id, input_paths)
-                run.add_output_file('unmapped', '%s-segemehl-unmapped.fastq.gz' % run_id, input_paths)
+                is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
+                run.add_private_info('paired_end', is_paired_end)
+                if is_paired_end:
+                    read_files = misc.assign_strings(input_paths, ['R1','R2'])
+                    run.add_private_info('R1-in', read_files['R1'])
+                    run.add_private_info('R2-in', read_files['R2'])
+                else:
+                    if len(input_paths) != 1:
+                        raise StandardError("Sample %s is unpaired, but has not " +
+                                            "exactly one input file %s" %
+                                            (run_id, input_paths))
+                    run.add_private_info('R1-in', input_paths)
+
+                run.add_output_file('alignments', '%s-segemehl-results.sam.gz' % run_id,
+                                    input_paths)
+                run.add_output_file('unmapped', '%s-segemehl-unmapped.fastq.gz' % run_id,
+                                    input_paths)
                 run.add_output_file('log', '%s-segemehl-log.txt' % run_id, input_paths)
                 
-                run.add_private_info('R1-in', read_files['R1'])
-                run.add_private_info('R2-in', read_files['R2'])
 
 
     def execute(self, run_id, run):
-
+        is_paired_end = run.get_private_info('paired_end')
         with process_pool.ProcessPool(self) as pool:
             
             fifo_path_genome = pool.get_temporary_fifo('segemehl-genome-fifo', 'input')
@@ -50,23 +62,25 @@ class Segemehl(AbstractStep):
             pool.launch([self.get_tool('cat4m'), self.get_option('genome'), '-o', fifo_path_genome])
             
             with pool.Pipeline(pool) as pipeline:
-            
-                q = run.get_private_info('R1-in')
-                p = run.get_private_info('R2-in')
-                    
+                                
                 segemehl = [
                     self.get_tool('segemehl'),
                     '-d', fifo_path_genome,
                     '-i', self.get_option('index'),
-                    '-q', q,
-                    '-p', p,
+                    '-q', run.get_private_info('R1-in')
+                    ]
+
+                if is_paired_end:
+                    segemehl.extend(['-p', run.get_private_info('R2-in')])
+                
+                segemehl.extend([
                     '-u', fifo_path_unmapped,
                     '-H', '1',
-                    '-t', '12',
+                    '-t', '11',
                     '-s', '-S',
                     '-D', '0',
                     '-o', '/dev/stdout'
-                ]
+                ])
                 
                 pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
                 

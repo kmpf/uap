@@ -28,46 +28,40 @@ class Cutadapt(AbstractStep):
         self.require_tool('cutadapt')
         self.require_tool('fix_qnames')
         
-        self.add_option('adapter-R1', str, optional = True)
+        self.add_option('adapter-R1', str, optional = False)
         self.add_option('adapter-R2', str, optional = True)
-        self.add_option('adapter', str, optional = True)
+#        self.add_option('adapter', str, optional = True)
         self.add_option('fix_qnames', bool, default = False)
         
     def declare_runs(self):
         # fetch all incoming run IDs which produce reads...
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
-            is_paired_end = self.find_upstream_info(run_id, 'paired_end')
-            
-            # make sure that adapter/adapter-R1/adapter-R2 are set correctly
+            is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
+
+            # make sure that adapter-R1/adapter-R2 are set correctly
             # according to paired_end info... this kind of mutual exclusive option
             # checking is quite complicated, so we do it here.
+
             if is_paired_end:
-                required_options = ['adapter-R1', 'adapter-R2']
-                forbidden_options = ['adapter']
-            else:
-                required_options = ['adapter']
-                forbidden_options = ['adapter-R1', 'adapter-R2']
-            for key in required_options:
-                if not self.is_option_set_in_config(key):
-                    raise StandardError("Option %s required because sample %s is paired end!" % (key, run_id))
-            for key in forbidden_options:
-                if self.is_option_set_in_config(key):
-                    raise StandardError("Option %s not allowed because sample %s is paired end!" % (key, run_id))
+                if not self.is_option_set_in_config('adapter-R2'):
+                    raise StandardError("Option 'adapter-R2' required because sample %s is paired end!" % run_id)
+            elif self.is_option_set_in_config('adapter-R2'):
+                    raise StandardError("Option 'adapter-R2' not allowed because sample %s is paired end!" % run_id)
 
             # decide which read type we'll handle based on whether this is
             # paired end or not
             read_types = list()
             if not is_paired_end:
-                read_types = ['']
+                read_types = ['-R1']
             else:
                 read_types = ['-R1', '-R2']
 
-            # put input files into R1/R2 bins (or one single '' bin)
+            # put input files into R1/R2 bins (or one single R1 bin)
             input_path_bins = dict()
             for _ in read_types:
                 input_path_bins[_] = list()
             for path in input_paths:
-                which = ''
+                which = '-R1'
                 if is_paired_end:
                     which = '-' + misc.assign_string(os.path.basename(path), ['R1', 'R2'])
                 input_path_bins[which].append(path)
@@ -82,10 +76,12 @@ class Cutadapt(AbstractStep):
 
                     # add adapter information, insert correct index first if necessary
                     adapter = self.get_option('adapter%s' % which)
+                    
                     if '((INDEX))' in adapter:
-                        index = self.find_upstream_info(run_id, 'index')
-                        adapter = adapter.replace('((INDEX))', index)
-                    # make sure the adapter is looking good
+                        index = self.find_upstream_info_for_input_paths(input_paths, 'index%s' % which)
+                    
+                    adapter = adapter.replace('((INDEX))', index)
+                     # make sure the adapter is looking good
                     if re.search('^[ACGT]+$', adapter) == None:
                         raise StandardError("Unable to come up with a legit-looking adapter: " + adapter)
                     run.add_private_info('adapter', adapter)

@@ -25,7 +25,10 @@ class S2cFix(AbstractStep):
 
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
             with self.declare_run(run_id) as run:
+                if len(input_paths) != 1:
+                    raise StandardError("Expected exactly one alignments file, but got this %s" % input_paths)
                 run.add_output_file('alignments', '%s-s2c-fixed.bam' % run_id, input_paths)
+                run.add_private_info('in-alignments', input_paths[0])
 
 #        for run_id, info in connection_info['in/alignments']['runs'].items():
 #            fix_path = 
@@ -48,7 +51,8 @@ class S2cFix(AbstractStep):
     def execute(self, run_id, run):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.get_tool('cat4m'), self.get_single_input_file_for_connection('in/alignments')]
+                in_alignment = run.get_private_info('in-alignments')
+                cat4m = [self.get_tool('cat4m'), in_alignment]
                 samtools = [self.get_tool('samtools'), 'view', '-h', '-']
                 fix_s2c = [self.get_tool('fix_s2c'), ]
                 samtools_2 = [self.get_tool('samtools'), 'view', '-Shb', '-']

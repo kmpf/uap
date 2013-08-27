@@ -24,7 +24,7 @@ class RunFolderSource(AbstractSourceStep):
     def declare_runs(self):
         path = self.get_option('path')
 
-        if not self.get_option('paired_end'):
+        if not self.is_option_set_in_config('paired_end'):
             raise StandardError("missing paired_end key in source")
 
         if not os.path.exists(path):
@@ -79,16 +79,30 @@ class RunFolderSource(AbstractSourceStep):
                 # get and set indices
                 for row in reader:
                     sample_id = row['SampleID']
-                    index = row['Index']
-                            
                     if not sample_id in found_samples.keys():
                         raise StandardError("Found sample %s in %s, but it shouldn't be here." 
                                             % sample_id, sample_sheet_path)
-                    if not run.has_public_info('index'):
-                        run.add_public_info('index', index)
-                    else:
-                        if index != run.get_public_info('index'):
+
+                    index = row['Index'].split('-')
+
+                    if len(index) == 2:
+                        if not run.has_public_info('index-R1') and not run.has_public_info('index-R2'):
+                            run.add_public_info('index-R1', index[0])
+                            run.add_public_info('index-R2', index[1])
+                        else: 
+                            stored_index = (run.get_public_info('index-R1') + '-' 
+                                            + run.get_public_info('index-R2'))
+                            if index.join('-') != stored_index:
+                                raise StandardError("Inconsistent index defined in %s for sample %s"
+                                                % (sample_sheet_path, sample_id))
+
+                    elif len(index) == 1:
+                        if not run.has_public_info('index-R1'):
+                            run.add_public_info('index-R1', index[0])
+                        elif index[0] != run.get_public_info('index-R1'):
                             raise StandardError("Inconsistent index defined in %s for sample %s"
-                                                % sample_sheet_path, sample_id)
+                                                % (sample_sheet_path, sample_id))
 
-
+                    else:
+                        raise StandardError("Unknown index definition %s found in %s" % 
+                                            (index.join('-'), sample_sheet_path))

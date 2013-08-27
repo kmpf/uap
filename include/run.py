@@ -172,6 +172,12 @@ class Run(object):
         '''
         return self._private_info[key]
 
+    def has_private_info(self, key):
+        '''
+        Query whether a piece of public information has been defined.
+        '''
+        return (key in self._private_info)
+
     def as_dict(self):
         result = dict()
         result['output_files'] = self._output_files

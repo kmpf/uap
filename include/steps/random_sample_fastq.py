@@ -17,92 +17,32 @@ class RandomSampleFastq(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('random_sample_fastq')
 
-
         self.add_option('sample_size', int, default = 1000)
         
+    def declare_runs(self):
 
-        
-        
-
-    def setup_runs(self, complete_input_run_info, connection_info):
-        
-        
-        print(yaml.dump(complete_input_run_info, default_flow_style = False))
-        print(yaml.dump(connection_info, default_flow_style = False))
-
-
-
+        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
+            with self.declare_run(run_id) as run:
+                is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
+                if is_paired_end:
+                    run.add_output_file('reads', "%s-subsample-R1.fastq.gz" % run_id, input_paths)
+                    run.add_output_file('reads', "%s-subsample-R2.fastq.gz" % run_id, input_paths)
+                else:
+                    raise StandardError("At the moment, random_sample_fastq only supports paired end in this step config")
             
-        output_run_info = {}
-        '''
-        RIB0001:
-         ;kl d;lks g;kf g
 
-         RIB00001: Run
-        for run_id, step_info in connection_info['in/reads']['runs'].items():
-            paired_end = self.find_upstream_info('paired_end')
-            with self.create_run(run_id) as run:
-            
-                f = run.add_output_file(outpath)
-                f.add_input_file(...)
-                
-                run.add_output_file(outpath, ( ... ))
-                run.add_input_file_for_output_file(outpath, ...)
-                
-                run.set_public_info('paired_end', True)
-                run.set_private_info('whoohoo', 'yesss')
-        '''
-                        
-        for run_id, step_info in connection_info['in/reads']['runs'].items():
-            paired_end = self.find_upstream_info(run_id, 'paired_end')
-
-            if paired_end == True:
-                out_path_R1 = "%s-subsample-R1.fastq.gz" % run_id
-                out_path_R2 = "%s-subsample-R2.fastq.gz" % run_id
-                output_run_info[run_id] = { 
-                    'output_files': {
-                        'reads': {
-                            out_path_R1: [],
-                            out_path_R2: []
-                            }
-                        },
-                    'info': { },
-                    'private_info': {
-                        'paired_end': paired_end
-                        }
-                    }
-            else:
-                raise StandardError("At the moment, random_sample_fastq only supports paired end in this step config")
-            
                 # in-R1, in-R2, out-R1, out-R2
-            
-            if (len(step_info) != 1):
-                raise StandardError("At the moment, random_sample_fastq may only have one parent which produces reads.")
-            for step_name, paths in step_info.items():
-                if len(paths) != 2:
+                if not len(input_paths) == 2:
                     raise StandardError("At the moment, exactly two input files are required.")
-                x = misc.assign_strings(paths, ['R1', 'R2'])
-                output_run_info[run_id]['info']['in-R1'] = x['R1']
-                output_run_info[run_id]['info']['in-R2'] = x['R2']
-                output_run_info[run_id]['info']['out-R1'] = out_path_R1
-                output_run_info[run_id]['info']['out-R2'] = out_path_R2
-                for path in paths:
-                    output_run_info[run_id]['output_files']['reads'][out_path_R1].append(path)
-                    output_run_info[run_id]['output_files']['reads'][out_path_R2].append(path)
-                
 
-        print(yaml.dump(output_run_info, default_flow_style = False))
+                input_files = misc.assign_strings(input_paths, ['R1', 'R2'])
+                run.add_private_info('in-R1', input_files['R1'])
+                run.add_private_info('in-R2', input_files['R2'])
 
-        return output_run_info
-
-    def execute(self, run_id, run_info):
+    def execute(self, run_id, run):
         with process_pool.ProcessPool(self) as pool:
             fifo_out_R1 = pool.get_temporary_fifo('fifo_out_R1', 'output')
             fifo_out_R2 = pool.get_temporary_fifo('fifo_out_R2', 'output')
-
-
-
-            "chain for i in opt or sub fuction"
 
             random_sample_fastq = [self.get_tool('random_sample_fastq'),
                                    self.get_option['readtype'], 
@@ -111,13 +51,16 @@ class RandomSampleFastq(AbstractStep):
                                    fifo_out_R1,
                                    fifo_out_R2,
                                    '--FastqFile',
-                                   run_info['info']['in-R1'],
-                                   run_info['info']['in-R2']]
+                                   run.get_private_info('in-R1'),
+                                   run.get_private_info('in-R2')]
                                    
-            pigz1 = [self.get_tool('pigz'), '--stdout', '--processes', '1', '--blocksize', '4096', fifo_out_R1]
-            pigz2 = [self.get_tool('pigz'), '--stdout', '--processes', '1', '--blocksize', '4096', fifo_out_R2]
-
             pool.launch(random_sample_fastq)
-            pool.launch(pigz1, stdout_path = run_info['info']['out-R1'])
-            pool.launch(pigz2, stdout_path = run_info['info']['out-R2'])
+
+            pigz1 = [self.get_tool('pigz'), '--stdout', '--processes', '1',
+                     '--blocksize', '4096', fifo_out_R1]
+            pigz2 = [self.get_tool('pigz'), '--stdout', '--processes', '1',
+                     '--blocksize', '4096', fifo_out_R2]
+            output_files = run.get_output_files_for_annotation_and_tags('reads', ['R1', 'R2']))
+            pool.launch(pigz1, stdout_path = run.get_private_info('out-R1'))
+            pool.launch(pigz2, stdout_path = run.get_private_info('out-R2'))
             
