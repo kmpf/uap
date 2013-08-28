@@ -5,10 +5,10 @@ import re
 import yaml
 
 
-class BamToBedgraph(AbstractStep):
+class BedToBedgraph(AbstractStep):
 
     def __init__(self, pipeline):
-        super(BamToBedgraph, self).__init__(pipeline)
+        super(BedToBedgraph, self).__init__(pipeline)
         
         self.set_cores(4)
         
@@ -26,10 +26,11 @@ class BamToBedgraph(AbstractStep):
                 
                 if len(input_paths) != 1:
                     raise StandardError("Expected exactly one alignment file.")
-                if  input_paths[0][-4:] != '.bam':
-                    raise StandardError("%s file suffix is not '.bam'. " +
-                                        "Please provide a BAM file" % input_paths[0])
+                if  input_paths[0][-4:] != '.bed':
+                    raise StandardError("%s file suffix is not '.bed'. " +
+                                        "Please provide a BED file" % input_paths[0])
 
+                run.add_private_info('in-bed', input_paths[0])
                 if self.get_option('strand-specific'):
                     plus_file = os.path.basename(input_paths[0])[:-4] + '.plus.bedgraph'
                     minus_file = os.path.basename(input_paths[0])[:-4] + '.minus.bedgraph'
@@ -52,7 +53,7 @@ class BamToBedgraph(AbstractStep):
 
 
     def execute(self, run_id, run):
-        bam_path = run.get_private_info('in-bam')
+        bed_path = run.get_private_info('in-bed')
         bg_files = run.get_private_info('bg-files')
         bg_trackopts = run.get_private_info('bg_trackopts')
         track_info = dict()
@@ -70,7 +71,7 @@ class BamToBedgraph(AbstractStep):
         for track_path, trackopts in track_info.items():
             with process_pool.ProcessPool(self) as pool:
                 with pool.Pipeline(pool) as pipeline:
-                    cat4m_in = [self.get_tool('cat4m'), bam_path]
+                    cat4m_in = [self.get_tool('cat4m'), bed_path]
                     bedtools = [self.get_tool('bedtools'), 'genomecov',
                                 '-trackline',
                                 '-trackopts', trackopts,
