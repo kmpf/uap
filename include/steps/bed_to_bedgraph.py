@@ -41,8 +41,8 @@ class BedToBedgraph(AbstractStep):
                     bg_files = [plus_file, minus_file]
                     run.add_private_info('bg-files', bg_files)
 
-                    plus_trackopts = '\"name=\"%s\"+ description=\"%s plus strand\"\"' % (run_id, run_id)
-                    minus_trackopts = '\"name=\"%s\"- description=\"%s minus strand\"\"' % (run_id, run_id)
+                    plus_trackopts = 'name=\"%s\"+ description=\"%s plus strand\"' % (run_id, run_id)
+                    minus_trackopts = 'name=\"%s\"- description=\"%s minus strand\"' % (run_id, run_id)
                     bg_trackopts = [plus_trackopts, minus_trackopts]
                     run.add_private_info('bg-trackopts', bg_trackopts)
                 else:
@@ -50,7 +50,7 @@ class BedToBedgraph(AbstractStep):
                     run.add_output_file('tracks', bg_file, input_paths)
                     run.add_private_info('bg-files', [bg_file])
 
-                    bg_trackopts = ['\"name=\"%s\" description=\"%s\"\"' % (run_id, run_id)]
+                    bg_trackopts = ['name=\"%s\" description=\"%s\"' % (run_id, run_id)]
                     run.add_private_info('bg-trackopts', bg_trackopts)
 
     def execute(self, run_id, run):
