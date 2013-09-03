@@ -152,7 +152,7 @@ class Run(object):
         for tag in temp.keys():
             if out_path in temp[tag].keys():
                 return sorted(temp[tag][out_path])
-        raise StandardError("Sorry, your output file couldn't be found in the dictionary: %s." % out_path)
+        raise StandardError("Sorry, your output '%s' file couldn't be found in the dictionary: %s." % (out_path, temp))
 
     def get_public_info(self, key):
         '''
