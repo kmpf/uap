@@ -87,11 +87,8 @@ class FastqSource(AbstractSourceStep):
                         index = row['Index'].split('-')
                         if not (run.has_public_info('index-R1') or run.has_public_info('index-R2')):
                             if len(index) == 2:
-                                index_r1 = index[0]
-                                complements = string.maketrans('acgtACGT', 'tgcaTGCA')
-                                index_r2 = index[1].translate(complements)[::-1]
-                                run.add_public_info('index-R1', index_r1)
-                                run.add_public_info('index-R2', index_r2)
+                                run.add_public_info('index-R1', index[0])
+                                run.add_public_info('index-R2', index[1])
                             elif len(index) == 1:
                                 run.add_public_info('index-R1', index[0])
                             else:
