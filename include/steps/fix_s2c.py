@@ -9,7 +9,7 @@ class S2cFix(AbstractStep):
     def __init__(self, pipeline):
         super(S2cFix, self).__init__(pipeline)
         
-        self.set_cores(6)
+        self.set_cores(2)
         
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')

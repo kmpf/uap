@@ -42,7 +42,7 @@ class Segemehl(AbstractStep):
                         raise StandardError("Sample %s is unpaired, but has not " +
                                             "exactly one input file %s" %
                                             (run_id, input_paths))
-                    run.add_private_info('R1-in', input_paths)
+                    run.add_private_info('R1-in', input_paths[0])
 
                 run.add_output_file('alignments', '%s-segemehl-results.sam.gz' % run_id,
                                     input_paths)

@@ -79,8 +79,11 @@ class Cutadapt(AbstractStep):
                     
                     if '((INDEX))' in adapter:
                         index = self.find_upstream_info_for_input_paths(input_paths, 'index%s' % which)
-                    
-                    adapter = adapter.replace('((INDEX))', index)
+                        if which == '-R2':
+                            complements = string.maketrans('acgtACGT', 'tgcaTGCA')
+                            index = index.translate(complements)[::-1]
+
+                        adapter = adapter.replace('((INDEX))', index)
                      # make sure the adapter is looking good
                     if re.search('^[ACGT]+$', adapter) == None:
                         raise StandardError("Unable to come up with a legit-looking adapter: " + adapter)

@@ -58,4 +58,3 @@ class BamToBed(AbstractStep):
                 if is_paired_end:
                     pipeline.append(strand_switch)
                 pipeline.append(sort, stdout_path = run.get_single_output_file_for_annotation('alignments'))
-                
