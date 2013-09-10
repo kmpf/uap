@@ -94,35 +94,36 @@ def main():
             lines = list()
             for index, step_name in enumerate(step_order):
                 lines.append(list(' ' * indents[index]))
-            # draw horizontal line parts
-            for index, step_name in enumerate(step_order):
-                child_order = [_ for _ in step_order if _ in p.steps[step_name].children_step_names]
-                for child_index, child in enumerate(child_order):
-                    x0 = indents[index] + 1 + child_index * 2
-                    y = step_order.index(child)
-                    x1 = indents[y]
-                    for x in range(x0, x1):
-                        lines[y][x] = "─"
-                    lines[y][x0 - 1] = "└"
-                    
-            # draw vertical line parts
-            for index, step_name in enumerate(step_order):
-                child_order = [_ for _ in step_order if _ in p.steps[step_name].children_step_names]
-                for child_index, child in enumerate(child_order):
-                    x = indents[index] + child_index * 2
-                    y0 = index + 1
-                    y1 = step_order.index(child)
-                    for y in range(y0, y1):
-                        lines[y][x] = "│"
 
-            for index, _ in enumerate(lines):
-                original_step_name_label = ''
-                step = p.steps[step_order[index]]
-                if step.get_step_name() != step.get_step_type():
-                    original_step_name_label = ' (%s)' % step.get_step_type()
+        # draw horizontal line parts
+        for index, step_name in enumerate(step_order):
+            child_order = [_ for _ in step_order if _ in p.steps[step_name].children_step_names]
+            for child_index, child in enumerate(child_order):
+                x0 = indents[index] + 1 + child_index * 2
+                y = step_order.index(child)
+                x1 = indents[y]
+                for x in range(x0, x1):
+                    lines[y][x] = "─"
+                lines[y][x0 - 1] = "└"
 
-                line = "%s%s%s [%s]" % (''.join(_).replace("─└", "─┴"), step.get_step_name(), original_step_name_label, step.get_run_info_str())
-                print(line)
+        # draw vertical line parts
+        for index, step_name in enumerate(step_order):
+            child_order = [_ for _ in step_order if _ in p.steps[step_name].children_step_names]
+            for child_index, child in enumerate(child_order):
+                x = indents[index] + child_index * 2
+                y0 = index + 1
+                y1 = step_order.index(child)
+                for y in range(y0, y1):
+                    lines[y][x] = "│"
+
+        for index, _ in enumerate(lines):
+            original_step_name_label = ''
+            step = p.steps[step_order[index]]
+            if step.get_step_name() != step.get_step_type():
+                original_step_name_label = ' (%s)' % step.get_step_type()
+
+            line = "%s%s%s [%s]" % (''.join(_).replace("─└", "─┴"), step.get_step_name(), original_step_name_label, step.get_run_info_str())
+            print(line)
     else:
         # print all tasks
         '''
