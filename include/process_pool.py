@@ -289,7 +289,7 @@ class ProcessPool(object):
                 raise StandardError("The command to be launched '%s' contains " +
                                     "non-string argument '%s'. Therefore the " +
                                     "command will fail. Please fix this type " +
-                                    "issue." % (args, argument)
+                                    "issue." % (args, argument))
 
         # launch the process and always pipe stdout and stderr because we
         # want to watch both streams, regardless of whether stdout should 
