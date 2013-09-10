@@ -9,8 +9,10 @@ from yaml import dump
 
 class Fastqc(AbstractStep):
     '''
-    The fastqc step  is a wrapper for the fastqc tool. It generates some quality metrics for fastq files.
-    _a link: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/ 
+    | The fastqc step  is a wrapper for the fastqc tool. 
+    | It generates some quality metrics for fastq files.
+    | http://www.bioinformatics.babraham.ac.uk/projects/fastqc/ 
+    | For this specific instance only the zip archive is preserved
     '''
     
     def __init__(self, pipeline):
@@ -29,8 +31,6 @@ class Fastqc(AbstractStep):
         
     def declare_runs(self):
         # fetch all incoming run IDs which produce reads...
-        print('DECLARE')
-
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
             is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
 
@@ -54,15 +54,12 @@ class Fastqc(AbstractStep):
             # now declare runs
             for which in read_types:
                 with self.declare_run("%s%s" % (run_id, which)) as run:
-                    print('declare')
                     my_path = input_path_bins[which]
-                    print yaml.dump(my_path)
+                    #weired python way to get 'file' of 'file.bla.txt'
                     input_base = os.path.basename(my_path[0]).split('.', 1)[0]
 
-                    #R334-fixed-R1_fastqc
-                    #fastqc does not allow individual naming of files 
+                    #fastqc does not allow individual naming of files but appends _fastqc to input file 
                     run.add_private_info('fastqc_default_name' , ''.join([input_base, '_fastqc']))
-                    run.add_private_info('fastqc_output_name' , "%s%s_fastqc" % (run_id, which))
                     run.add_output_file("fastqc_report", "%s%s-fastqc.zip" % (run_id, which), input_path_bins[which])
                     run.add_output_file("log_stderr", "%s-fastqstderr%s-log_stderr.txt" % (run_id, which), input_path_bins[which])
 
@@ -88,17 +85,17 @@ class Fastqc(AbstractStep):
 
                 
                 # create the pipeline and run it
-                #pipeline.append(fastqc)
-                pipeline.append(fastqc, stderr_path = run.get_single_output_file_for_annotation('log_stderr'))                   
+                log_stderr = run.get_single_output_file_for_annotation('log_stderr')
+                pipeline.append(fastqc, stderr_path = log_stderr)                   
 
 
 
 
         fastqc_default_name = run.get_private_info('fastqc_default_name')
-        fastqc_report_basename  = run.get_private_info('fastqc_default_name') + '.zip'
+        fastqc_report_basename  = fastqc_default_name + '.zip'
 
         full_path_zipped_fastqc_report = os.path.join(fastqc_out_dir,  fastqc_report_basename)
-        unzipped_fastqc_report = os.path.join(fastqc_out_dir,  fastqc_default_name)
+
 
         
         try:
@@ -107,8 +104,9 @@ class Fastqc(AbstractStep):
             raise StandardError("os.rename failed of %s to %s" % full_path_zipped_fastqc_report, out_path) 
 
 
-
+ 
         # in case of:
+        #unzipped_fastqc_report = os.path.join(fastqc_out_dir,  fastqc_default_name)
         #try:
         #    shutil.rmtree(unzipped_fastqc_report)
         #except OSError:
