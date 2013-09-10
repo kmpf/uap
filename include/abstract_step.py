@@ -507,7 +507,7 @@ class AbstractStep(object):
                 os._exit(0)
             
         self.start_time = datetime.datetime.now()
-        self._pipeline.notify("[INFO] starting %s/%s on %s" % (str(self), run_id, socket.gethostname()))
+        self._pipeline.notify("[INFO] [%s] starting %s/%s on %s" % (self._pipeline.config['id'], str(self), run_id, socket.gethostname()))
         caught_exception = None
         self._state = AbstractStep.states.EXECUTING
         try:
@@ -691,8 +691,9 @@ class AbstractStep(object):
         log['step']['options'] = self._options
         log['step']['name'] = self.get_step_name()
         log['step']['known_paths'] = self.known_paths
+        log['step']['cores'] = self._cores
         log['run'] = {}
-        log['run']['run_info'] = self.get_run_info()[run_id]
+        log['run']['run_info'] = self.get_run_info()[run_id].as_dict()
         log['run']['run_id'] = run_id
         log['run']['temp_directory'] = self._temp_directory
         log['config'] = self._pipeline.config
@@ -1038,8 +1039,9 @@ class AbstractStep(object):
             socket.gethostname(),
             misc.duration_to_str(duration, long = True))
         if 'max' in log['pipeline_log']['process_watcher']:
-            hash['graph_labels'][task_name] += "CPU: %1.1f%% , RAM: %s (%1.1f%%)\\l" % (
-                log['pipeline_log']['process_watcher']['max']['sum']['cpu_percent'], 
+            hash['graph_labels'][task_name] += "CPU: %1.1f%%, %d CORES_Requested , RAM: %s (%1.1f%%)\\l" % (
+                log['pipeline_log']['process_watcher']['max']['sum']['cpu_percent'],
+                log['step']['cores'],
                 misc.bytes_to_str(log['pipeline_log']['process_watcher']['max']['sum']['rss']), 
                 log['pipeline_log']['process_watcher']['max']['sum']['memory_percent'])
         if 'signal' in log:

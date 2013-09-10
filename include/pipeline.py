@@ -133,6 +133,10 @@ class Pipeline(object):
         #print >> sys.stderr, "Reading configuration..."
         self.config = yaml.load(open('config.yaml'))
 
+        if not 'id' in self.config:
+            self.config['id'] = 'Flying piggies'
+        
+        
         if not 'destination_path' in self.config:
             raise ConfigurationException("Missing key: destination_path")
         if not os.path.exists(self.config['destination_path']):
