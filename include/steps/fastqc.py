@@ -18,12 +18,11 @@ class Fastqc(AbstractStep):
     def __init__(self, pipeline):
         super(Fastqc, self).__init__(pipeline)
         
-        self.set_cores(4)
+        self.set_cores(1)
         
         self.add_connection('in/reads')
         self.add_connection('out/fastqc_report')
         self.add_connection('out/log_stderr')
-
         
         self.require_tool('fastqc')
         self.add_option('contaminent-file', str, optional =True)
@@ -61,12 +60,7 @@ class Fastqc(AbstractStep):
                     #fastqc does not allow individual naming of files but appends _fastqc to input file 
                     run.add_private_info('fastqc_default_name' , ''.join([input_base, '_fastqc']))
                     run.add_output_file("fastqc_report", "%s%s-fastqc.zip" % (run_id, which), input_path_bins[which])
-                    run.add_output_file("log_stderr", "%s-fastqstderr%s-log_stderr.txt" % (run_id, which), input_path_bins[which])
-
-                    
-
-
-
+                    run.add_output_file("log_stderr", "%s%s-fastqcr-log_stderr.txt" % (run_id, which), input_path_bins[which])
 
     def execute(self, run_id, run):
         with process_pool.ProcessPool(self) as pool:
