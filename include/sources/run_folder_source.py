@@ -2,6 +2,7 @@ import sys
 from abstract_step import *
 import csv
 import glob
+import string
 import os
 import pipeline
 import yaml
