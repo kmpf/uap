@@ -29,8 +29,8 @@ class BedToBedgraph(AbstractStep):
                 if len(input_paths) != 1:
                     raise StandardError("Expected exactly one alignment file.")
                 if  input_paths[0][-4:] != '.bed':
-                    raise StandardError("%s file suffix is not '.bed'. " +
-                                        "Please provide a BED file" % input_paths[0])
+                    raise StandardError("%s file suffix is not '.bed'. " % input_paths[0] +
+                                        "Please provide a BED file")
 
                 run.add_private_info('in-bed', input_paths[0])
                 if is_strand_specific:

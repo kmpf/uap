@@ -286,10 +286,10 @@ class ProcessPool(object):
             
         for argument in args:
             if not isinstance(argument, str):
-                raise StandardError("The command to be launched '%s' contains " +
-                                    "non-string argument '%s'. Therefore the " +
-                                    "command will fail. Please fix this type " +
-                                    "issue." % (args, argument))
+                raise StandardError("The command to be launched '%s' " % args +
+                                    "contains non-string argument '%s'. " % argument + 
+                                    "Therefore the command will fail. Please " +
+                                    "fix this type issue.")
 
         # launch the process and always pipe stdout and stderr because we
         # want to watch both streams, regardless of whether stdout should 
