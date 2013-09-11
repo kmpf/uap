@@ -23,6 +23,7 @@ module load python/2.7.3-1-virtual
 module load git
 module load graphviz
 module load pigz
+module load jdk
 module load samtools
 module load boost
 
