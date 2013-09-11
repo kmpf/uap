@@ -1085,6 +1085,12 @@ class AbstractStep(object):
         '''
         self._cores = cores
 
+    def get_cores(self):
+        '''
+        Returns the number of cores used in this step.
+        '''
+        return self._cores
+
     def add_connection(self, connection, constraints = None):
         '''
         Add a connection, which must start with 'in/' or 'out/'.

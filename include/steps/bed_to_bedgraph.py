@@ -29,8 +29,8 @@ class BedToBedgraph(AbstractStep):
                 if len(input_paths) != 1:
                     raise StandardError("Expected exactly one alignment file.")
                 if  input_paths[0][-4:] != '.bed':
-                    raise StandardError("%s file suffix is not '.bed'. " +
-                                        "Please provide a BED file" % input_paths[0])
+                    raise StandardError("%s file suffix is not '.bed'. " % input_paths[0] +
+                                        "Please provide a BED file")
 
                 run.add_private_info('in-bed', input_paths[0])
                 if is_strand_specific:
@@ -41,9 +41,9 @@ class BedToBedgraph(AbstractStep):
                     bg_files = [plus_file, minus_file]
                     run.add_private_info('bg-files', bg_files)
 
-                    plus_trackopts = 'name=\"%s\"+ description=\"%s plus strand\"' % (run_id, run_id)
-                    minus_trackopts = 'name=\"%s\"- description=\"%s minus strand\"' % (run_id, run_id)
-                    bg_trackopts = [plus_trackopts, minus_trackopts]
+                    plus_trackopts = 'name=\"%s +\" description=\"%s plus strand\"' % (run_id, run_id)
+                    minus_trackopts = 'name=\"%s -\" description=\"%s minus strand\"' % (run_id, run_id)
+                    bg_trackopts = {'plus' : plus_trackopts, 'minus' : minus_trackopts}
                     run.add_private_info('bg-trackopts', bg_trackopts)
                 else:
                     bg_file = os.path.basename(input_paths[0])[:-4] + '.bedgraph'
@@ -62,9 +62,9 @@ class BedToBedgraph(AbstractStep):
         if is_strand_specific:
             if len(bg_files) == 2 and len(bg_trackopts) == 2:
                 files = misc.assign_strings(bg_files, ['plus','minus'])
-                trackopts = misc.assign_strings(bg_trackopts, ['plus','minus'])
+#                trackopts = misc.assign_strings(bg_trackopts, ['plus','minus'])
                 for strand in ['plus', 'minus']:
-                    track_info[files[strand]] = trackopts[strand]
+                    track_info[files[strand]] = bg_trackopts[strand]
             else:
                 raise StandardError("Expected two output files and track infos, " +
                                     "but instead got this output files %s and track " +
