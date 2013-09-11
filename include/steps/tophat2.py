@@ -138,8 +138,7 @@ class TopHat2(AbstractStep):
                                       \n\t old_dir       : {0} \
                                       \n\t old_basename  : {1} \
                                       \n\t key_for_target: {2} \
-                                      \n\t target_path   : {3} '.format(tophat2_out_path, i, target_name, run.get_single_output_file_for_annotation(target_name))
-
+                                      \n\t target_path   : {3} '.format(tophat2_out_path, i, target_name, run.get_single_output_file_for_annotation(target_name)))
 
         misc_logs = run.get_single_output_file_for_annotation('misc_logs')
         with open(misc_logs, 'w') as f:
