@@ -80,17 +80,6 @@ class TopHat2(AbstractStep):
                 run.add_output_file('prep_reads', '%s-tophat2-prep_reads.info' % run_id, input_paths)
                 
 
-        tophat2_generic_names = [ 'accepted_hits.bam', 'unmapped.bam', 'insertions.bed', 'deletions.bed', 'junctions.bed', 'prep_reads.info']
-        print 'enter'
-        for i  in  tophat2_generic_names:
-            target_name = i.split('.')[0]
-            print(i)
-            try:
-                os.exist( 'accepted_hits')
-            except:
-                raise StandardError( '\n\tSomething went wrong: {0} \
-                                      \n\tNo file: {1} '.format  (i, target_name)) 
-        exit(1)
 
 
 
