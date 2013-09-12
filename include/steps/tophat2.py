@@ -7,20 +7,23 @@ import yaml
 
 
 class TopHat2(AbstractStep):
+    '''
+    TopHat is a fast splice junction mapper for RNA-Seq reads.
+    It aligns RNA-Seq reads to mammalian-sized
+    genomes using the ultra high-throughput short read aligner Bowtie
+    , and then analyzes the mapping results to identify splice junctions between exons.
+
+    http://tophat.cbcb.umd.edu/
+    
+    typical command line::
+
+        tophat [options]* <index_base> <reads1_1[,...,readsN_1]> [reads1_2,...readsN_2]
+
+
+    '''
     
     def __init__(self, pipeline):
         super(TopHat2, self).__init__(pipeline)
-        """
-        TopHat is a fast splice junction mapper for RNA-Seq reads.
-        It aligns RNA-Seq reads to mammalian-sized
-        genomes using the ultra high-throughput short read aligner Bowtie
-        , and then analyzes the mapping results to identify splice junctions between exons.
-        http://tophat.cbcb.umd.edu/
-        typical command line::
-        
-           tophat [options]* <index_base> <reads1_1[,...,readsN_1]> [reads1_2,...readsN_2] 
-        
-        """
         self.set_cores(6)
         
         self.add_connection('in/reads')
@@ -32,7 +35,7 @@ class TopHat2(AbstractStep):
         self.add_connection('out/misc_logs')
         self.add_connection('out/log_stderr')
         self.add_connection('out/prep_reads')
-        
+
         self.require_tool('cat4m')
         self.require_tool('pigz')
         self.require_tool('bowtie2')
