@@ -112,8 +112,6 @@ class TopHat2(AbstractStep):
 
 
                 log_stderr = run.get_single_output_file_for_annotation('log_stderr')
-                print log_stderr
-                print tophat2
                 pipeline.append(tophat2, stderr_path = log_stderr)                   
 
 
