@@ -31,13 +31,17 @@ class BamToBed(AbstractStep):
                     raise StandardError("Expected exactly one alignment file. Got %s"
                                         % input_paths)
                 if  input_paths[0][-4:] != '.bam':
-                    raise StandardError("%s file suffix is not '.bam'. " +
+                    raise StandardError("%s file suffix is not '.bam'. "
                                         "Please provide a BAM file" % input_paths[0])
                 
                 bed_file = os.path.basename(input_paths[0])[:-4] + '.bed'
                 run.add_output_file('alignments', bed_file, input_paths)
+#                print('alignments: %s , %s'  % (bed_file, input_paths))
                 run.add_private_info('out-bed', bed_file)
+#                print('out-bed: %s' % bed_file)
                 run.add_private_info('in-bam', input_paths[0])
+#                print('in-bam: %s' % input_paths[0])
+#                exit(1)
                 
     def execute(self, run_id, run):
         is_paired_end = run.get_private_info('paired_end')
