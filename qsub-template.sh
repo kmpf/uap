@@ -26,5 +26,7 @@ module load pigz
 module load jdk
 module load samtools
 module load boost
+module load tophat
+module load bedtools
 
 #{COMMAND}

@@ -60,7 +60,7 @@ class RandomSampleFastq(AbstractStep):
                      '--blocksize', '4096', fifo_out_R1]
             pigz2 = [self.get_tool('pigz'), '--stdout', '--processes', '1',
                      '--blocksize', '4096', fifo_out_R2]
-            output_files = run.get_output_files_for_annotation_and_tags('reads', ['R1', 'R2']))
+            output_files = run.get_output_files_for_annotation_and_tags('reads', ['R1', 'R2'])
             pool.launch(pigz1, stdout_path = run.get_private_info('out-R1'))
             pool.launch(pigz2, stdout_path = run.get_private_info('out-R2'))
             

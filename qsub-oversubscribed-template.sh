@@ -26,5 +26,7 @@ module load graphviz
 module load pigz
 module load samtools
 module load boost
+module load tophat
+module load bedtools
 
 #{COMMAND}
