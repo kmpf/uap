@@ -35,6 +35,7 @@ class TopHat2(AbstractStep):
         self.add_connection('out/misc_logs')
         self.add_connection('out/log_stderr')
         self.add_connection('out/prep_reads')
+        self.add_connection('out/align_summary')
 
         self.require_tool('cat4m')
         self.require_tool('pigz')
