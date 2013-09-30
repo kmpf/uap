@@ -30,10 +30,11 @@ class SamToBam(AbstractStep):
                 if len(input_paths) != 1:
                     raise StandardError("Expected exactly one alignments file.")
                 
-                basename = os.path.basename(input_paths[0]).split('.')
-                sam_index = basename.index('sam')
-                basename = basename[:sam_index]
-                basename = '.'.join(basename)
+                
+                basename = os.path.basename(input_paths[0]).split('.')[0]
+                #sam_index = basename.index('sam')
+                #basename = basename[:sam_index]
+                #basename = '.'.join(basename)
                 run.add_output_file('alignments', basename + '.bam', input_paths)
                 run.add_output_file('indices', basename + '.bam.bai', input_paths)
 
