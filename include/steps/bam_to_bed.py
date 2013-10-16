@@ -6,6 +6,20 @@ import yaml
 
 
 class BamToBed(AbstractStep):
+    '''
+    This step converts BAM files into BED files. It executes different command line
+    pipelines for single-end and paired-end data.
+
+    Single-end read data is converted via::
+    
+        cat4m <bam-file> | bedtools bamtobed -i stdin | sort -k1,1 -k2,2n > <bed-file>
+
+    Paired-end read data is converted via::
+
+        cat4m <bam-file> | samtools view -bf 0x2 - | bedtools bamtobed -i stdin |
+        mate_pair_strand_switch | sort -k1,1 -k2,2n > <bed-file>
+
+    '''
 
     def __init__(self, pipeline):
         super(BamToBed, self).__init__(pipeline)
