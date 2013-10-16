@@ -95,8 +95,7 @@ class BedToBedgraph(AbstractStep):
                             bedtools.extend(['-strand', '-'])
                         
                     bedtools.extend(['-g', self.get_option('genome'), '-i', 'stdin'])
-#
-                    cat4m_out = [self.get_tool('cat4m'), '-']
+
                     out_path = None
                     if is_strand_specific:
                         out_paths = run.get_output_files_for_annotation_and_tags('tracks', ['plus', 'minus'])
