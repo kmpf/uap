@@ -37,26 +37,24 @@ class Post_Sawdust(AbstractStep):
 
                 if is_paired_end: 
                     run.add_private_info('read_type', 'paired')
-                    raise StandardError("PAIRED")
                 else:
                     run.add_private_info('read_type', 'single')
-                    raise StandardError("UNPAIRED")
+                
                     
     def execute(self, run_id, run):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
                 alignments_path = run.get_private_info('in-alignment')
                 cat4m = [self.get_tool('cat4m'), alignments_path]
-                pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+                samtools_front = [self.get_tool('samtools'), 'view', '-h', '-'] 
                 post_sawdust = [self.get_tool('post_sawdust'),
                                 '--library-type', self.get_option('library_type'),
                                 '--seq-type', self.get_option('seq_type'),
                                 '--read-type',run.get_private_info('read_type')]
                 samtools = [self.get_tool('samtools'), 'view', '-Shbo',   run.get_single_output_file_for_annotation('alignments'), '-']
 
-                
                 pipeline.append(cat4m)
-                pipeline.append(pigz)
+                pipeline.append(samtools_front)
                 pipeline.append(post_sawdust, stderr_path = run.get_single_output_file_for_annotation('log_stderr'))
                 pipeline.append(samtools)
 
