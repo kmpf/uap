@@ -20,7 +20,6 @@ class Post_Sawdust(AbstractStep):
 
         self.require_tool('post_sawdust')
         self.require_tool('samtools')
-        self.require_tool('pigz')
         self.require_tool('cat4m')
         
     def declare_runs(self):
