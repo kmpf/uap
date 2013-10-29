@@ -48,13 +48,7 @@ class Cuffmerge(AbstractStep):
             run.add_output_file('log_stderr', '%s-cuffmerge-log_stderr.txt' % run_id, cufflinks_sample_gtf)
             run.add_private_info('cufflinks_sample_gtf', cufflinks_sample_gtf)
             
-            # run.add_output_file('unmapped', '%s-tophat2-unmapped.bam' % run_id, input_paths)
-            
-            # run.add_output_file('misc_logs', '%s-tophat2-misc_logs.yaml' % run_id, input_paths)
-            # run.add_output_file('insertions', '%s-tophat2-insertions.bed' % run_id, input_paths)
-            # run.add_output_file('junctions', '%s-tophat2-junctions.bed' % run_id, input_paths)
-            # run.add_output_file('deletions', '%s-tophat2-deletions.bed' % run_id, input_paths)
-            # run.add_output_file('prep_reads', '%s-tophat2-prep_reads.info' % run_id, input_paths)
+
             
               
     def execute(self, run_id, run):
