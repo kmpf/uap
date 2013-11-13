@@ -9,7 +9,7 @@ class TestRealign(AbstractStep):
     def __init__(self, pipeline):
         super(TestRealign, self).__init__(pipeline)
         
-        self.set_cores(8)
+        self.set_cores(12)
         
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
