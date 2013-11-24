@@ -9,102 +9,84 @@ class TestRealign(AbstractStep):
     def __init__(self, pipeline):
         super(TestRealign, self).__init__(pipeline)
         
-        self.set_cores(8)
+        self.set_cores(12)
         
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
         self.add_connection('out/splicesites')
         self.add_connection('out/transrealigned')
-        self.add_connection('out/log')
-        
+        self.add_connection('out/log_stderr')
+
+        self.add_option('genome', str)
+        self.add_option('maxdist', int , default=100)
         self.require_tool('testrealign')
         self.require_tool('samtools')
         self.require_tool('pigz')
         self.require_tool('cat4m')
-        self.require_tool('grep')
-        self.require_tool('invertGood')
+        
+        
 
-    def setup_runs(self, complete_input_run_info, connection_info):
-        # make sure files are available
-        for key in ['genome']:
-            if not os.path.exists(self.options[key]):
-                raise StandardError("Could not find %s file: %s" % (key, self.options[key]))
 
-        output_run_info = {}
-        for step_name, step_input_info in complete_input_run_info.items():
-            for run_id, input_run_info in step_input_info.items():
-                output_run_info[run_id] = {}
-                output_run_info[run_id]['output_files'] = {}
-                # TODO: only depend on bam, not on bai
-                # TODO: make this more generic (query language-like)
-                output_run_info[run_id]['output_files']['alignments'] = {}
-                output_run_info[run_id]['output_files']['alignments'][run_id + '-realigned.sam.gz'] = input_run_info['output_files']['alignments'].keys()
-                output_run_info[run_id]['output_files']['splicesites']  = {}
-                output_run_info[run_id]['output_files']['splicesites'][run_id + '-splicesites.bed'] = input_run_info['output_files']['alignments'].keys()
-                output_run_info[run_id]['output_files']['transrealigned']  = {}
-                output_run_info[run_id]['output_files']['transrealigned'][run_id + '-transrealigned.bed'] = input_run_info['output_files']['alignments'].keys()
-                output_run_info[run_id]['output_files']['log']  = {}
-                output_run_info[run_id]['output_files']['log'][run_id + '-testrealign-log.txt'] = input_run_info['output_files']['alignments'].keys()
+
+
+
+
+        """
+        [-Evn] -d <file> [<file> ...] -q <file> [<file> ...] [-t <n>] [-U <file>] [-T <file>] [-o <file>] [-M <n>]
+        Heuristic mapping of short sequences
+        time  /home/hackermu/Downloads/segemehl_svn/segemehl/testrealign.x -d /data/bioinf/Data/Indices/hg19/hg19.fa -q bla.sam.gz  -t 12 -o temp
+        -d, --database <file> [<file> ...]  list of path/filename(s) of database sequence(s)
+        -q, --query <file> [<file> ...]     path/filename of alignment file
+        -E, --expand                        expand
+        -v, --verbose                       verbose
+        -n, --norealign                     do not realign
+        -t, --threads <n>                   start <n> threads for realigning (default:1)
+
+        -o, --outfile <file>                path/filename of output sam file (default:none)
+
+        
+        """
+
+        
+
+
+    def declare_runs(self):
+        
+        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
+            with self.declare_run(run_id) as run:
+                run.add_private_info('in-alignment', input_paths[0])
+                run.add_output_file('alignments', '%s-segemehl-realigned.bam' % run_id,input_paths)
+                run.add_output_file('splicesites', '%s-segemehl-splicesites.bed' % run_id,input_paths)
+                run.add_output_file('transrealigned', '%s-segemehl-transrealigned.bed' % run_id,input_paths)
+                run.add_output_file("log_stderr", "%s-segemehl-log_stderr.txt" % run_id, input_paths)
                 
-                output_run_info[run_id]['info'] = {}
-                output_run_info[run_id]['info']['bam-in'] = [_ for _ in input_run_info['output_files']['alignments'].keys() if _[-4:] == '.bam'][0]
-                output_run_info[run_id]['info']['maxdist'] = '100'
-                if 'maxdist' in self.options:
-                    output_run_info[run_id]['info']['maxdist'] = str(self.options['maxdist'])
 
 
-        return output_run_info
 
-    def execute(self, run_id, run_info):
+    def execute(self, run_id, run):
         with process_pool.ProcessPool(self) as pool:
-            
+            print('huhu')
             fifo_path_genome = pool.get_temporary_fifo('genome-fifo', 'input')
-            fifo_path_splicesites = pool.get_temporary_fifo('splicesites-fifo', 'output')
-            fifo_path_transrealigned = pool.get_temporary_fifo('transrealigned-fifo', 'output')
+
             
-            pool.launch([self.tool('cat4m'), self.options['genome'], '-o', fifo_path_genome])
+            pool.launch([self.get_tool('cat4m'), self.get_option('genome'), '-o', fifo_path_genome])
             
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [
-                    self.tool('cat4m'),
-                    run_info['info']['bam-in']
-                ]
+                in_alignment = run.get_private_info('in-alignment')                 
+                samtools_front = [self.get_tool('samtools'), 'view', '-h', in_alignment]
                 
-                samtools = [
-                    self.tool('samtools'),
-                    'view', '-h', '-'
-                ]
-                
-                grep = [
-                    self.tool('grep'),
-                    '-v',
-                    "\t\\*\t"
-                ]
-                
-                invertGood = [
-                    self.tool('invertGood')
-                ]
-
                 testrealign = [
-                    self.tool('testrealign'),
-                    '-q', '/dev/stdin',
+                    self.get_tool('testrealign'),
                     '-d', fifo_path_genome,
-                    '-t', '4',
-                    '-M', run_info['info']['maxdist'],
-                    '-o', '/dev/stdout',
-                    '-U', fifo_path_splicesites,
-                    '-T', fifo_path_transrealigned
-                ]
-                
-                pigz = [self.tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
-                
-                pipeline.append(cat4m)
-                pipeline.append(samtools)
-                pipeline.append(grep)
-                pipeline.append(invertGood)
-                pipeline.append(testrealign, stderr_path = run_info['output_files']['log'].keys()[0])
-                pipeline.append(pigz, stdout_path = run_info['output_files']['alignments'].keys()[0])
-            
-            pool.launch([self.tool('cat4m'), fifo_path_splicesites], stdout_path = run_info['output_files']['splicesites'].keys()[0])
-            
-            pool.launch([self.tool('cat4m'), fifo_path_transrealigned], stdout_path = run_info['output_files']['transrealigned'].keys()[0])
+                    '-q', '/dev/stdin',
+                    '-U', run.get_single_output_file_for_annotation('splicesites'),
+                    '-T', run.get_single_output_file_for_annotation('transrealigned'),
+                    '-t', '6'
+                    ]
+
+                samtools_out = [self.get_tool('samtools'), 'view', '-Shbo',   run.get_single_output_file_for_annotation('alignments'), '-']
+                pipeline.append(samtools_front)
+                pipeline.append(testrealign, stderr_path = run.get_single_output_file_for_annotation('log_stderr'))
+                pipeline.append(samtools_out)
+
+            print('huhu')

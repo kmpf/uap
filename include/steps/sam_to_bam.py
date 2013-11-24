@@ -18,35 +18,32 @@ class SamToBam(AbstractStep):
         self.require_tool('cat4m')
         self.require_tool('samtools')
         self.require_tool('pigz')
+
         self.add_option('sort_by_name', bool, default= False)
-        self.add_option('genome', str, optional =False)
+        self.add_option('genome', str, optional=False)
 
-    def setup_runs(self, complete_input_run_info, connection_info):
+    def declare_runs(self):
         
+        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
+            with self.declare_run(run_id) as run:
 
-            
-        output_run_info = {}
-        for step_name, step_input_info in complete_input_run_info.items():
-            for run_id, input_run_info in step_input_info.items():
-                output_run_info[run_id] = {}
-                output_run_info[run_id]['output_files'] = {}
-                output_run_info[run_id]['output_files']['alignments']  = {}
-                output_run_info[run_id]['output_files']['alignments'][run_id + '.bam'] = input_run_info['output_files']['alignments'].keys()
-                output_run_info[run_id]['output_files']['indices']  = {}
-                output_run_info[run_id]['output_files']['indices'][run_id + '.bam.bai'] = input_run_info['output_files']['alignments'].keys()
-                output_run_info[run_id]['info'] = {}
-                if len(input_run_info['output_files']['alignments'].keys()) != 1:
+                if len(input_paths) != 1:
                     raise StandardError("Expected exactly one alignments file.")
-                output_run_info[run_id]['info']['in-sam']  = input_run_info['output_files']['alignments'].keys()[0]
-                output_run_info[run_id]['info']['out-bam']  = run_id + '.bam'
-                output_run_info[run_id]['info']['out-bai']  = run_id + '.bam.bai'
+                
+                
+                basename = os.path.basename(input_paths[0]).split('.')[0]
+                #sam_index = basename.index('sam')
+                #basename = basename[:sam_index]
+                #basename = '.'.join(basename)
+                run.add_output_file('alignments', basename + '.bam', input_paths)
+                run.add_output_file('indices', basename + '.bam.bai', input_paths)
 
-        return output_run_info
+                run.add_private_info('in-sam', input_paths[0])
 
-    def execute(self, run_id, run_info):
-        sam_path = run_info['info']['in-sam']
-        sorted_bam_path = run_info['info']['out-bam']
-        sorted_bai_path = run_info['info']['out-bai']
+    def execute(self, run_id, run):
+        sam_path = run.get_private_info('in-sam')
+        sorted_bam_path = run.get_single_output_file_for_annotation('alignments')
+        sorted_bai_path = run.get_single_output_file_for_annotation('indices')
         unsorted_bam_path = self.get_temporary_path('sam_to_bam_unsorted', 'output')
         
         use_unsorted_bam_input = unsorted_bam_path
@@ -56,9 +53,9 @@ class SamToBam(AbstractStep):
         if sam_path[-7:] == '.sam.gz':
             with process_pool.ProcessPool(self) as pool:
                 with pool.Pipeline(pool) as pipeline:
-                    cat4m = [self.tool('cat4m'), sam_path]
-                    pigz1 = [self.tool('pigz'), '--processes', '2', '-d', '-c']
-                    samtools = [self.tool('samtools'), 'view', '-Sbt', self.option('genome'), '-']
+                    cat4m = [self.get_tool('cat4m'), sam_path]
+                    pigz1 = [self.get_tool('pigz'), '--processes', '2', '-d', '-c']
+                    samtools = [self.get_tool('samtools'), 'view', '-Sbt', self.get_option('genome'), '-']
                     
                     pipeline.append(cat4m)
                     pipeline.append(pigz1)
@@ -71,9 +68,9 @@ class SamToBam(AbstractStep):
 
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.tool('cat4m'), use_unsorted_bam_input]
-                samtools = [self.tool('samtools'), 'sort']
-                if self.option('sort_by_name'):
+                cat4m = [self.get_tool('cat4m'), use_unsorted_bam_input]
+                samtools = [self.get_tool('samtools'), 'sort']
+                if self.get_option('sort_by_name'):
                     samtools.append('-n')
                 samtools.extend(['-', sorted_bam_path[:-4]])
                 
@@ -83,7 +80,7 @@ class SamToBam(AbstractStep):
         # samtools index
         
         with process_pool.ProcessPool(self) as pool:
-            pool.launch([self.tool('samtools'), 'index', sorted_bam_path, '/dev/stdout'],
+            pool.launch([self.get_tool('samtools'), 'index', sorted_bam_path, '/dev/stdout'],
                 stdout_path = sorted_bai_path, hints = {'reads': [sorted_bam_path]})
 
         if os.path.exists(unsorted_bam_path):

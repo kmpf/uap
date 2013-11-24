@@ -1,12 +1,52 @@
 #!./python_env/bin/python
+# encoding: utf-8
 
 import sys
 sys.path.append('./include')
 import abstract_step
+import argparse
 import os
 import pipeline
 import subprocess
 import yaml
+
+'''
+This script uses graphviz to produce graphs that display information about the 
+tasks processed by the pipeline. 
+'''
+
+parser = argparse.ArgumentParser(
+    description="This script displays by default information about all tasks " +
+                "of the pipeline as configured in 'config.yaml'. But the " +
+                "displayed information can be narrowed down via command " +
+                "line options.",
+    formatter_class=argparse.RawTextHelpFormatter)
+
+parser.add_argument("--even-if-dirty",
+                    dest="even_if_dirty",
+                    action="store_true",
+                    default=False,
+                    help="Must be set if the local git repository " +
+                    "contains uncommited changes. Otherwise the pipeline " +
+                    "will not start.")
+
+parser.add_argument("--all",
+                    dest="all",
+                    action="store_true",
+                    default=False,
+                    help="Renders all ")
+
+parser.add_argument("-t","--task",
+                    dest="task",
+                    nargs='*',
+                    default=list(),
+                    type=str,
+                    help="Displays only the named task IDs" +
+                    "Can take multiple task ID(s) as input. A task ID " +
+                    "looks like ths 'step_name/run_id'. A list of all " +
+                    "task IDs is returned by running './status.py'.")
+
+args = parser.parse_args()
 
 def escape(s):
     result = ''
@@ -60,18 +100,18 @@ def gradient(x, gradient):
 
 
 def main():
-    p = pipeline.Pipeline()
+    p = pipeline.Pipeline(arguments=args)
     
-    if len(sys.argv) > 1:
+    if args.all or args.task:
         logs = []
-        if sys.argv[1] == '--all':
+        if args.all:
             for task in p.task_for_task_id.values():
                 annotation_path = os.path.join(task.step.get_output_directory(), '.%s-annotation.yaml' % task.run_id)
                 if os.path.exists(annotation_path):
                     log = yaml.load(open(annotation_path))
                     logs.append(log)
         else:
-            for task_id in sys.argv[1:]:
+            for task_id in args.task:
                 task = p.task_for_task_id[task_id]
                 annotation_path = os.path.join(task.step.get_output_directory(), '.%s-annotation.yaml' % task.run_id)
                 if os.path.exists(annotation_path):

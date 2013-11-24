@@ -3,6 +3,7 @@
 import sys
 sys.path.append('./include')
 import abstract_step
+import argparse
 import fscache
 import pipeline
 import datetime
@@ -34,21 +35,63 @@ This task wish list is now processed one by one (in topological order):
   - now add all these collected job_ids to the submission via -hold_jid
 '''
 
-def main():
-    original_argv = copy.copy(sys.argv)
+parser = argparse.ArgumentParser(
+    description='This script submits all tasks configured in config.yaml to a ' +
+                'Sun GridEngine cluster via qsub. The list of tasks can be ' +
+                'narrowed down by specifying a step name (in which case all ' +
+                'runs of this steps will be considered) or individual tasks ' +
+                '(step_name/run_id).',
+    formatter_class=argparse.RawTextHelpFormatter)
 
-    p = pipeline.Pipeline()
+parser.add_argument("--even-if-dirty",
+                    dest="even_if_dirty",
+                    action="store_true",
+                    default=False,
+                    help="Must be set if the local git repository " +
+                    "contains uncommited changes. Otherwise the pipeline " +
+                    "will not start.")
+
+parser.add_argument("--highmem",
+                    dest="highmem",
+                    action="store_true",
+                    default=False,
+                    help="Must be set if the highmem node of the " +
+                    "cluster is being used.")
+
+parser.add_argument("--oversubscribed",
+                    dest="oversubscribed",
+                    action="store_true",
+                    default=False,
+                    help="Must be set if segemehl jobs are going to run on " +
+                    "a special configured node.")
+
+parser.add_argument("step_task",
+                    nargs='*',
+                    default=list(),
+                    type=str,
+                    help="Can take multiple step names as input. A step name " +
+                    "is the name of any entry in the 'steps:' section " +
+                    "as defined in 'config.yaml'. A list of all task IDs " +
+                    "is returned by running './status.py'.")
+
+args = parser.parse_args()
+
+def main():
+    p = pipeline.Pipeline(arguments=args)
     
     use_highmem = False
-    if '--highmem' in sys.argv:
+    use_oversubscribed = False
+    if args.highmem:
         print("Passing -l highmem to qsub...")
         use_highmem = True
-        sys.argv.remove('--highmem')
-
+    elif args.oversubscribed:
+        print("Using oversubscribed node.")
+        use_oversubscribed = True
+        
     task_wish_list = None
-    if len(sys.argv) > 1:
+    if len(args.step_task) >= 1:
         task_wish_list = list()
-        for _ in sys.argv[1:]:
+        for _ in args.step_task:
             if '/' in _:
                 task_wish_list.append(_)
             else:
@@ -58,7 +101,13 @@ def main():
 
     tasks_left = []
 
-    template = open('qsub-template.sh', 'r').read()
+    template = None
+    if use_highmem:
+        template = open('qsub-highmem-template.sh', 'r').read()
+    elif use_oversubscribed:
+        template = open('qsub-oversubscribed-template.sh', 'r').read()
+    else:
+        template = open('qsub-template.sh', 'r').read()
 
     for task in p.all_tasks_topologically_sorted:
         if task_wish_list is not None:
@@ -110,11 +159,11 @@ def main():
         if 'email' in p.config:
             email = p.config['email']
         submit_script = submit_script.replace("#{EMAIL}", email)
-        args = ['./run-locally.py']
-        if '--even-if-dirty' in original_argv:
-            args.append('--even-if-dirty')
-        args.append('"' + str(task) + '"')
-        submit_script = submit_script.replace("#{COMMAND}", ' '.join(args))
+        command = ['./run-locally.py']
+        if args.even_if_dirty:
+            command.append('--even-if-dirty')
+        command.append('"' + str(task) + '"')
+        submit_script = submit_script.replace("#{COMMAND}", ' '.join(command))
 
         long_task_id_with_run_id = '%s_%s' % (str(task.step), task.run_id)
         long_task_id = str(task.step)
@@ -148,7 +197,16 @@ def main():
             really_submit_this = False
         if really_submit_this:
             sys.stdout.write("Submitting task " + str(task) + " with " + str(task.step._cores) + " cores => ")
-            process = subprocess.Popen(qsub_args, bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+            process = None
+            try:
+                process = subprocess.Popen(qsub_args, bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+            except OSError as e:
+                if e.errno == os.errno.ENOENT:
+                    raise StandardError("Seems there is no qsub system. Maybe " +
+                                        "you are not executing this script on " +
+                                        "the cluster")
+                else:
+                    raise e
             process.stdin.write(submit_script)
             process.stdin.close()
             process.wait()
