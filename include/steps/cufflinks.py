@@ -74,7 +74,9 @@ class CuffLinks(AbstractStep):
                     mask = self.get_option('use_mask')
                     cufflinks.extend(['--mask-file', mask])
 
+
                 cufflinks.extend(run.get_private_info('in-bam'))            
+
 
                 print cufflinks
 
