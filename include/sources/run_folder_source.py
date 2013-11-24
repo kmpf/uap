@@ -29,7 +29,7 @@ class RunFolderSource(AbstractSourceStep):
             raise StandardError("missing paired_end key in source")
 
         if not os.path.exists(path):
-            raise ConfigurationException("Source path does not exist: " + path)
+            raise StandardError("Source path does not exist: " + path)
 
         found_samples = dict()
 
@@ -37,7 +37,7 @@ class RunFolderSource(AbstractSourceStep):
         for sample_path in glob.glob(os.path.join(path, 'Unaligned', 'Project_*', 'Sample_*')):
             sample_name = os.path.basename(sample_path).replace('Sample_', '')
             if sample_name in found_samples:
-                raise ConfigurationException("Duplicate sample: " + sample_name)
+                raise StandardError("Duplicate sample: " + sample_name)
             
             if not sample_name in found_samples:
                 found_samples[sample_name] = list()
