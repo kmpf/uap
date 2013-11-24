@@ -4,108 +4,80 @@ import glob
 import misc
 import process_pool
 import yaml
+import hashlib
 
 
-class CuffMerge(AbstractStep):
+class Cuffmerge(AbstractStep):
+    '''
+    Cuffmerge is included in the cufflinks package.
+    http://cufflinks.cbcb.umd.edu/manual.html
+    '''
     
     def __init__(self, pipeline):
-        super(CuffMerge, self).__init__(pipeline)
-
+        super(Cuffmerge, self).__init__(pipeline)
         self.set_cores(6)
         
-        self.add_connection('in/alignments')
+        self.add_connection('in/features')
         self.add_connection('out/features')
-        self.add_connection('out/skipped')
-        self.add_connection('out/genes-fpkm')
-        self.add_connection('out/isoforms_fpkm')
+        self.add_connection('out/assemblies_txt')
         self.add_connection('out/log_stderr')
-        
+        self.add_connection('out/run_log')
+
         self.require_tool('cat4m')
         self.require_tool('pigz')
         self.require_tool('cuffmerge')
 
-        self.add_option('genome',str)
-        self.add_option('use_mask',str, optional=True)
+        self.add_option('genome', str)
+        self.add_option('reference', str)
+        self.add_option('run_id', str)
+      
+
 
     def declare_runs(self):
-        input_files=list()
-        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
-            input_files=input_files.extend(input_paths)
-#
+        ### make sure files are available
 
-
-        run_id="cuffmerge"
+        cufflinks_sample_gtf = []
+        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/features'):
+            cufflinks_sample_gtf.append(input_paths[0])
+            
+        run_id = self.get_option('run_id')
         with self.declare_run(run_id) as run:
+            run.add_output_file('features', '%s-cuffmerge-merged.gtf' % run_id, cufflinks_sample_gtf)
+            run.add_output_file('run_log', '%s-cuffmerge-run.log' % run_id, cufflinks_sample_gtf)
+            run.add_output_file('assemblies_txt', '%s-cuffmerge-assemblies.txt' % run_id, cufflinks_sample_gtf)
+            run.add_output_file('log_stderr', '%s-cuffmerge-log_stderr.txt' % run_id, cufflinks_sample_gtf)
+            run.add_private_info('cufflinks_sample_gtf', cufflinks_sample_gtf)
+            
 
-                run.add_output_file('log_stderr', '%s-cufflinks-log.txt'  % run_id, input_paths)
-                run.add_output_file('features', '%s-transcripts.gtf'  % run_id, input_paths)
-                run.add_output_file('skipped', '%s-skipped.gtf'  % run_id, input_paths)
-                run.add_output_file('genes-fpkm', '%s-genes.fpkm_tracking'  % run_id, input_paths)
-                run.add_output_file('isoforms_fpkm', '%s-isoforms.fpkm_tracking'  % run_id, input_paths)
-                
-                run.add_private_info 
-                if not input_files:
-                    raise StandardError("No input files for run %s" % (run_id))             
-
-
-                if self.is_option_set_in_config('use_mask'):
-                    mask = self.get_option('use_mask')
-                    if not os.path.exists(mask):
-                        raise StandardError('Maskfile not found %s' % mask )
-                    else:
-                        run.add_private_info('mask_file', mask)
-
-                run.add_private_info('in-bam', input_files)
-                exit(1)
-
+            
+              
     def execute(self, run_id, run):
-
-
-        cufflinks_out_path = self.get_temporary_path('cufflinks-out')
         
+        assemblies  = self.get_temporary_path('assemblies.txt-', 'file')
+        #cuffmerge_out_path = self.get_temporary_path('cuffmerge-out')
+        cuffmerge_out_path = self.get_output_directory_du_jour()
+        
+        
+        f  = open(assemblies, 'w')
+        for i in run.get_private_info('cufflinks_sample_gtf'):
+            f.write(i + '\n')
+        f.close()
+            
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
-
                 cores = str(self.get_cores())
-                cufflinks = [
-                    self.get_tool('cufflinks'),
-                    '-o', cufflinks_out_path,
-                    '-p', cores,
-                    "--library-type=%s" % self.get_option('library_type')
-                    ]
-            
-
-                if self.is_option_set_in_config('use_mask'):
-                    mask = self.get_option('use_mask')
-                    cufflinks.extend(['--mask-file', mask])
-
-                cufflinks.extend(run.get_private_info('in-bam'))
-            
-
-                print(cufflinks)
-                
-
+                cuffmerge = [self.get_tool('cuffmerge'),
+                             '-o', cuffmerge_out_path,
+                             '-s', self.get_option('genome'),
+                             '-p', cores,
+                             '-g', self.get_option('reference'),
+                             assemblies]
                 log_stderr = run.get_single_output_file_for_annotation('log_stderr')
-                print log_stderr
-          
-            
-                add_hints = {'writes': [
-                        run.get_single_output_file_for_annotation('skipped'),
-                        run.get_single_output_file_for_annotation('features'),
-                        run.get_single_output_file_for_annotation('genes-fpkm'),
-                        run.get_single_output_file_for_annotation('isoforms_fpkm')
-                        ]
-                            }
+                pipeline.append(cuffmerge, stderr_path = log_stderr)                   
 
-                pipeline.append(cufflinks, stderr_path= log_stderr, hints=add_hints)
 
-            
-        os.rename(os.path.join(cufflinks_out_path, 'transcripts.gtf'), run.get_single_output_file_for_annotation('features'))
-        os.rename(os.path.join(cufflinks_out_path, 'skipped.gtf'), run.get_single_output_file_for_annotation('skipped'))
-        os.rename(os.path.join(cufflinks_out_path, 'genes.fpkm_tracking'), run.get_single_output_file_for_annotation('genes-fpkm'))
-        os.rename(os.path.join(cufflinks_out_path, 'isoforms.fpkm_tracking'), run.get_single_output_file_for_annotation('isoforms_fpkm'))
+        os.rename(os.path.join(cuffmerge_out_path, 'merged.gtf'), run.get_single_output_file_for_annotation('features'))
+        os.rename(assemblies, run.get_single_output_file_for_annotation('assemblies_txt'))
+        os.rename(os.path.join(cuffmerge_out_path, 'logs/run.log'), run.get_single_output_file_for_annotation('run_log'))
+        os.rmdir(os.path.join(cuffmerge_out_path, 'logs'))
         
-        try:
-            os.rmdir(cufflinks_out_path)
-        except OSError:
-            pass
