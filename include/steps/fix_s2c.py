@@ -48,6 +48,7 @@ class S2cFix(AbstractStep):
 #            output_run_info[run_id] = run_info
 #        return output_run_info
 
+
     def execute(self, run_id, run):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
@@ -57,6 +58,7 @@ class S2cFix(AbstractStep):
                 fix_s2c = [self.get_tool('fix_s2c'), ]
                 samtools_2 = [self.get_tool('samtools'), 'view', '-Shb', '-']
                 samtools_sort = [self.get_tool('samtools'), 'sort','-n', '-', run.get_single_output_file_for_annotation('alignments')[:-4]]
+
                 
                 pipeline.append(cat4m)
                 pipeline.append(samtools)

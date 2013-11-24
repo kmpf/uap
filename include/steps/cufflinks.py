@@ -69,14 +69,14 @@ class CuffLinks(AbstractStep):
                     '-p', cores,
                     "--library-type=%s" % self.get_option('library_type')
                     ]
-            
 
                 if self.is_option_set_in_config('use_mask'):
                     mask = self.get_option('use_mask')
                     cufflinks.extend(['--mask-file', mask])
 
-                cufflinks.extend(run.get_private_info('in-bam'))
-            
+
+                cufflinks.extend(run.get_private_info('in-bam'))            
+
 
                 print cufflinks
 
