@@ -35,6 +35,7 @@ class TopHat2(AbstractStep):
         self.add_connection('out/misc_logs')
         self.add_connection('out/log_stderr')
         self.add_connection('out/prep_reads')
+        self.add_connection('out/align_summary')
 
         self.require_tool('cat4m')
         self.require_tool('pigz')
@@ -78,19 +79,7 @@ class TopHat2(AbstractStep):
                 run.add_output_file('junctions', '%s-tophat2-junctions.bed' % run_id, input_paths)
                 run.add_output_file('deletions', '%s-tophat2-deletions.bed' % run_id, input_paths)
                 run.add_output_file('prep_reads', '%s-tophat2-prep_reads.info' % run_id, input_paths)
-                
-
-
-
-
-
-
-
-
-
-
-
-                
+                run.add_output_file('align_summary', '%s-tophat2-align_summary.txt' % run_id, input_paths)
 
     def execute(self, run_id, run):
         tophat2_out_path = self.get_temporary_path('tophat-out')
@@ -116,7 +105,7 @@ class TopHat2(AbstractStep):
 
 
                 
-        tophat2_generic_names = [ 'accepted_hits.bam', 'unmapped.bam', 'insertions.bed', 'deletions.bed', 'junctions.bed', 'prep_reads.info']
+        tophat2_generic_names = [ 'accepted_hits.bam', 'unmapped.bam', 'insertions.bed', 'deletions.bed', 'junctions.bed', 'prep_reads.info', 'align_summary.txt']
         for i  in  tophat2_generic_names:
             target_name = i.split('.')[0]
             if (target_name == 'accepted_hits'):

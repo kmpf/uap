@@ -81,4 +81,3 @@ class Cuffmerge(AbstractStep):
         os.rename(os.path.join(cuffmerge_out_path, 'logs/run.log'), run.get_single_output_file_for_annotation('run_log'))
         os.rmdir(os.path.join(cuffmerge_out_path, 'logs'))
         
-
