@@ -1,0 +1,541 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>RNASeq Pipeline Documentation</title>
+<style type='text/css'>
+body {
+    font-family: Arial;
+    font-size: 12pt;
+    background-color: #f8f8f8;
+    padding: 0;
+    margin: 0;
+}
+
+#content {
+    background-color: #fff;
+    margin-left: auto;
+    margin-right: auto;
+    padding-right: 2em;
+    padding-left: 19em;
+    padding-top: 1.4em;
+    padding-bottom: 1em;
+}
+
+div.attention {
+    padding-left: 70px;
+    background: url(emblem-important.png) 11px 10px no-repeat;
+    border-top: 1px solid #d8822f;
+    border-bottom: 1px solid #d8822f;
+    background-color: #fae5d0;
+    padding-right: 1em;
+}
+
+div.information {
+    padding-left: 70px;
+    background: url(dialog-information.png) 11px 10px no-repeat;
+    border-top: 1px solid #bac6d1;
+    border-bottom: 1px solid #bac6d1;
+    background-color: #f5f8fb;
+    padding-right: 1em;
+}
+
+div.background {
+    padding-left: 70px;
+    background: url(help-browser.png) 11px 10px no-repeat;
+    border-top: 1px solid #bac6d1;
+    border-bottom: 1px solid #bac6d1;
+    background-color: #f5f8fb;
+    padding-right: 1em;
+}
+
+@media print
+{
+    a {
+        color: black!important;
+    }
+    body {
+        background-color: white;
+    }
+    #content {
+        border: 0;
+        -moz-box-shadow: none;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+        padding: 0;
+    }
+    table {
+        -moz-box-shadow: none;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+    }
+    listing {
+        -moz-box-shadow: none;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+    }
+    .toc {
+        display: none!important;
+    }
+
+    code {
+        background-color: none!important;
+        border: none!important;
+        padding-left: 0!important;
+        padding-right: 0!important;
+    }
+}
+
+dd {
+    margin-bottom: 0.5em;
+}
+
+code {
+    background-color:rgba(0,0,0,0.05);
+    border: 1px solid rgba(0,0,0,0.2);
+    font-size: 85%;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    border-radius: 0.3em;
+    margin-bottom: 1px;
+    line-height: 150%;
+}
+
+.textmarker {
+    background-color: #fce94f;
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+}
+
+code.highlight {
+    background-color: #fdf3a7;
+    border: 1px solid #edd400;
+}
+
+table {
+    -moz-box-shadow: 2px 2px 8px #aaa;
+    -webkit-box-shadow: 2px 2px 8px #aaa;
+    box-shadow: 2px 2px 8px #aaa;
+    margin-bottom: 1.5em;
+    border-collapse: collapse;
+}
+
+table.noborder {
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    margin-bottom: 1.5em;
+    border-collapse: collapse;
+}
+
+table th
+{
+    text-align: left;
+    font-weight: bold;
+    padding: 0.2em 0.8em 0.2em 0.8em;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    vertical-align: top;
+}
+
+table th.nobold
+{
+    font-weight: normal;
+    vertical-align: top;
+}
+
+table td
+{
+    padding: 0.2em 0.8em 0.2em 0.8em;
+    border: 1px solid #ddd;
+    vertical-align: top;
+}
+
+table.noborder td
+{
+    border: 0;
+}
+
+listing
+{
+    background-color: #f8f8f8;
+    white-space: pre;
+    border: 1px solid #888;
+    -moz-box-shadow: 2px 2px 8px #aaa;
+    -webkit-box-shadow: 2px 2px 8px #aaa;
+    box-shadow: 2px 2px 8px #aaa;
+    margin-bottom: 1.5em;
+    padding: 1em;
+    border-radius: 8px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+    font-size: 90%;
+}
+
+.toc
+{
+    font-size: 80%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 17em;
+    background-color: #f8f8f8;
+    border-right: 1px solid #aaa;
+    height: 100%;
+    -moz-box-shadow: 2px 2px 8px #aaa;
+    -webkit-box-shadow: 2px 2px 8px #aaa;
+    box-shadow: 2px 2px 8px #aaa;
+    padding: 1em;
+    padding-bottom: 1.5em;
+    padding-left: 2em;
+    padding-right: 2em;
+    overflow: auto;
+}
+
+p {
+    text-align: justify;
+}
+
+dt {
+    margin-bottom: 0.4em;
+}
+
+.toc ul
+{
+    list-style: none;
+    padding-left: 0;
+}
+
+.toc ul li
+{
+    margin-bottom: 0;
+}
+
+.toc ul li.first
+{
+    padding-left: 0em;
+    font-weight: bold;
+    margin-bottom: 1em;
+}
+
+.toc ul li.later
+{
+    font-weight: normal;
+}
+
+.toc ul > li > ul > li > ul > li.later
+{
+    padding-left: 1.5em;
+}
+
+.toc a
+{
+    color: #555753;
+}
+
+.toc a:visited
+{
+    color: #555753;
+}
+
+div.test {
+    background-color: #99b2d1;
+    border-top: 1px solid #3465a4;
+    border-bottom: 1px solid #3465a4;
+    padding: 0.5em;
+    padding-left: 1em;
+    padding-right: 1em;
+    text-align: justify;
+}
+
+a {
+    color: #204a87;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a:visited {
+    color: #204a87;
+}
+
+.title {
+    font-weight: bold;
+    font-size: 22pt;
+    margin-bottom: 1em;
+}
+
+h1 {
+    font-size: 18pt;
+}
+
+h2 {
+    font-size: 16pt;
+}
+
+h3 {
+    font-size: 14pt;
+}
+
+h4 {
+    font-size: 12pt;
+}
+
+h5 {
+    font-size: 12pt;
+    font-weight: normal;
+    font-style: italic;
+}
+
+li {
+    margin-bottom: 0.2em;
+}
+
+</style>
+</head>
+
+<body>
+<div id='content'>
+<div class='title'>RNASeq pipeline documentation</div>
+<div class='toc'>
+<ul>
+	<li class="first">1&nbsp;&nbsp;<a href='#h1'>Introduction</a></li>
+	<li class="first">2&nbsp;&nbsp;<a href='#h2'>Setup</a>
+	<ul>
+		<li class="later">2.1&nbsp;&nbsp;<a href='#h3'>The configuration file</a></li>
+		<li class="later">2.2&nbsp;&nbsp;<a href='#h4'>Sources</a>
+		<ul>
+			<li class="later">2.2.1&nbsp;&nbsp;<a href='#h5'>Run folder source</a></li>
+			<li class="later">2.2.2&nbsp;&nbsp;<a href='#h6'><span class="caps">FASTQ</span> source</a></li>
+		</ul></li>
+		<li class="later">2.3&nbsp;&nbsp;<a href='#h7'>Steps</a>
+		<ul>
+			<li class="later">2.3.1&nbsp;&nbsp;<a href='#h8'>break</a></li>
+			<li class="later">2.3.2&nbsp;&nbsp;<a href='#h9'>head</a></li>
+			<li class="later">2.3.3&nbsp;&nbsp;<a href='#h10'>cutadapt</a></li>
+			<li class="later">2.3.4&nbsp;&nbsp;<a href='#h11'>fix_cutadapt</a></li>
+			<li class="later">2.3.5&nbsp;&nbsp;<a href='#h12'>analyze_cutadapt</a></li>
+			<li class="later">2.3.6&nbsp;&nbsp;<a href='#h13'>segemehl</a></li>
+		</ul></li>
+		<li class="later">2.4&nbsp;&nbsp;<a href='#h14'>Tools</a></li>
+	</ul></li>
+	<li class="first">3&nbsp;&nbsp;<a href='#h15'>Scripts</a>
+	<ul>
+		<li class="later">3.1&nbsp;&nbsp;<a href='#h16'>status.py</a></li>
+		<li class="later">3.2&nbsp;&nbsp;<a href='#h17'>run-locally.py</a></li>
+		<li class="later">3.3&nbsp;&nbsp;<a href='#h18'>submit-to-cluster.py</a></li>
+	</ul></li>
+	<li class="first">4&nbsp;&nbsp;<a href='#h19'>Extending the pipeline</a>
+	<ul>
+		<li class="later">4.1&nbsp;&nbsp;<a href='#h20'>Checklist</a></li>
+	</ul></li>
+</ul>
+</div>
+<h1 id="h1">1&nbsp;&nbsp;Introduction</h1>
+<p>The aim of this data processing pipeline is to enable simple and robust bioinformatics data evaluation.</p>
+<p><strong>Simplicity:</strong></p>
+<ul>
+	<li>The entire processing pipeline is described via a config file. Step are defined in a tree, and output files are written into a directory structure mirroring this tree.</li>
+	<li>To add a new processing step, a single Python file must be placed in <code>include/step</code> which defines a class with two functions, one for planning all jobs based on a list of input files or runs and possibly additional information from previous steps and another function for running a specific job.</li>
+</ul>
+<p><strong>Robustness:</strong></p>
+<ul>
+	<li>All steps write their output files to a temporary location (a fact which a step is not aware of). Only if a step has completed successfully, the output files are copied to the correct output directory.</li>
+	<li>The output directory names are suffixed with a eight-character hashtag which mirrors the options specified for the step.</li>
+	<li>Processing can be aborted and continued from the command line at any time. This way, cluster failures are less critical.</li>
+	<li>Comprehensive annotations are written to the output directories, allowing for later investigation.</li>
+	<li>Errors are caught as early as possible. Tools are checked for availability, the entire processing pipeline is calculated in advance.</li>
+</ul>
+<p>A pipeline is defined by two aspects:</p>
+<ul>
+	<li>the steps it carries out, with dependencies defined via a tree</li>
+	<li>its input samples</li>
+</ul>
+<p>The combination of <em>steps</em> and <em>samples</em> result in a list of <em>tasks</em>, which can be executed sequentially or can be submitted to a cluster.</p>
+<div class='information'>
+<p>The design decision that steps are defined as a tree instead of a full directed acyclic graph means that a step cannot have more than one direct parent, like a directory in a file system cannot have more than one parent directory. This means that a step cannot use the output of two different steps as its input.</p>
+</div>
+<h1 id="h2">2&nbsp;&nbsp;Setup</h1>
+<p>After cloning the repository, run the bootstrapping script to create the required Python environment (which will be located in <code>./python_env/</code>):</p>
+<listing>$ ./bootstrap.sh
+</listing><p>There&#8217;s no harm in accidentally running this script multiple times.</p>
+<h2 id="h3">2.1&nbsp;&nbsp;The configuration file</h2>
+<p>Next, edit <code>config.sample.yaml</code> and save it as <code>config.yaml</code>. Although writing the configuration may seem a bit complicated, it pays off later because further interaction with the pipeline is quite simple. Here is a sample configuration:</p>
+<listing># This is the rnaseq-pipeline configuration file.
+email: micha.specht@gmail.com
+sources:
+   - run_folder_source: { path: in }
+destination_path: out
+steps: |
+    - cutadapt {
+        adapter-R1: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG"
+        adapter-R2: "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT"
+      }
+        - fix_cutadapt
+tools:
+    cutadapt:
+        path: 'tools/cutadapt-1.2.1/bin/cutadapt'
+        get_version: '--version'
+    pigz:
+        path: 'pigz'
+        get_version: '--version'
+    dd:
+        path: 'dd'
+        get_version: '--version'
+</listing><p>In the configuration, the following aspects of the pipeline are defined:</p>
+<ul>
+	<li><code>sources</code> &#8211; there can be multiple sources of different types:
+	<ul>
+		<li>run folders</li>
+		<li>plain fastq.gz files with additional information</li>
+	</ul></li>
+	<li><code>destination_path</code> &#8211; this is where result files, annotations and temporary files are written to</li>
+	<li><code>steps</code> &#8211; defines the processing step arranged in a tree</li>
+	<li><code>tools</code> &#8211; defines all tools used in the pipeline and how to determine their versions (for later reference)</li>
+	<li><code>email</code> &#8211; when submitting jobs on a cluster, messages will be sent to this email address (nobody@example.com by default)</li>
+</ul>
+<h2 id="h4">2.2&nbsp;&nbsp;Sources</h2>
+<p>In the following, the different types of sources are described in detail.</p>
+<h3 id="h5">2.2.1&nbsp;&nbsp;Run folder source</h3>
+<p>Here&#8217;s an example:</p>
+<listing>- run_folder_source: { path: in }
+</listing><p>This source looks for fastq.gz files in <code>[path]/Unaligned/Project_*/Sample_*</code> and pulls additional information from <span class="caps">CSV</span> sample sheets it finds. It also makes sure that index information for all samples is coherent and unambiguous.</p>
+<h3 id="h6">2.2.2&nbsp;&nbsp;<span class="caps">FASTQ</span> source</h3>
+<p>Here&#8217;s an example:</p>
+<listing>- fastq_source:
+    pattern: /data/original-fastq/&#42;.fastq.gz
+    group: (Sample_COPD_\d+)_R[12].fastq.gz
+    indices: copd-barcodes.csv
+</listing><p>Input files are collected as defined by <code>pattern</code> and grouped into samples according to <code>group</code>, which is a regular expression. All groups defined in the regex <code>(  )</code> are used to construct the sample name, here it is used to declare that both R1 and R2 files belong to the same sample. Indices are read from the <span class="caps">CSV</span> file defined by <code>indices</code>.</p>
+<h2 id="h7">2.3&nbsp;&nbsp;Steps</h2>
+<p>Steps are defined as a tree. However, the syntax is a bit peculiar: The <code>|</code> after <code>steps:</code> defines a string spanning multiple lines in which line breaks and indentation is maintained (this is <span class="caps">YAML</span> syntax). The string is later parsed by the pipeline and the most important parts are the individual steps which are to be performed. The relationship betweens steps is declared via indentation.</p>
+<div class='background'>
+<p>Why do we need the | symbol in the steps definition? Neither the list nor the dictionary syntax allow for a concise definition of a step tree with options. Think of the step definition as a nested list with an option hash attached to every item.</p>
+</div>
+<p>Steps may have options, which must be placed in between <code>{</code> curly braces <code>}</code> . Options can be specified on a single line (in this case, individual key/value pairs must be separated by comma) or may span multiple lines, following standard <span class="caps">YAML</span> block syntax.</p>
+<h3 id="h8">2.3.1&nbsp;&nbsp;break</h3>
+<p>There&#8217;s a special step called <code>break</code>. It may be placed multiple times in the tree and it cuts off further processing from where it is. This may be helpful for building up a pipeline step by step.</p>
+<h3 id="h9">2.3.2&nbsp;&nbsp;head</h3>
+<p>The <code>head</code> step produces a shortened version of every input file. It is automatically prepended to the pipeline if <code>--test-run</code> is specified on the command line.</p>
+<p>Parameters:</p>
+<ul>
+	<li><code>lines</code> (optional) &#8211; number of lines (default: 1000)</li>
+</ul>
+<h3 id="h10">2.3.3&nbsp;&nbsp;cutadapt</h3>
+<p>The <code>cutadapt</code> step clips adapter sequences from <span class="caps">FASTQ</span> sequences using <a href="https://code.google.com/p/cutadapt/">cutadapt</a>.
+Use <code>adapter-R1</code> and <code>adapter-R2</code> to specify adapters for R1 and R2 reads, use <code>((INDEX))</code> as a placeholder which will be substituted with each sample&#8217;s index barcode.</p>
+<listing>- cutadapt {
+    adapter-R1: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG"
+    adapter-R2: "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT"
+  }
+</listing><h3 id="h11">2.3.4&nbsp;&nbsp;fix_cutadapt</h3>
+<p>In some cases, when a sequence starts with an adapter, cutadapt discards the entire sequence, which subsequently causes segemehl to crash. To remedy problems like this, <code>fix_cutadapt</code> discards both R1 and R2 sequences if one of them is empty.</p>
+<h3 id="h12">2.3.5&nbsp;&nbsp;analyze_cutadapt</h3>
+&hellip;<h3 id="h13">2.3.6&nbsp;&nbsp;segemehl</h3>
+&hellip;<h2 id="h14">2.4&nbsp;&nbsp;Tools</h2>
+<p>Tools are also specified in the configuration file, along with a command line parameter which is used by the pipeline to both test whether the tool is available and to record the version in log files. The pipeline also tests whether this call returns an exit code of 0, otherwise, the whole thing will crash. If you need a tool which is known to return a non-zero exit code, <code>exit_code</code> may be used to specify the expected exit code:</p>
+<listing>segemehl:
+    path: /home/michael/IZI/segemehl/segemehl.x
+    get_version: ''
+    exit_code: 255
+</listing><h1 id="h15">3&nbsp;&nbsp;Scripts</h1>
+<p>Once the project is set up, there are several scripts which can be used to execute and monitor the pipeline. All scripts have a couple of properties in common:</p>
+<ul>
+	<li>On startup, the configuration is read, tools are checked, input files are collected, and all tasks are calculated. If any of these steps fails, the script will print an error message with a backtrace and it will crash.</li>
+	<li>For convenience, a symbolic link called <code>out</code> will be placed in the pipeline&#8217;s directory which points to the output directory defined in the configuration file. If <code>out</code> already exists, this step is skipped.</li>
+</ul>
+<p>There are a couple of global command line parameters which are valid for all scripts:</p>
+<ul>
+	<li><code>--even-if-dirty</code> &#8211; Before doing anything else, the pipeline checks whether its source code has been modified in any way via Git. If yes, processing is stopped immediately unless this flag is specified.</li>
+	<li><code>--test-run</code> &#8211; When this parameter is specified, a <code>head</code> step is placed before all first-level steps in the step tree, which returns the first 1000 lines of every input file. That way, a pipeline can be tested very quickly with a small input data set.</li>
+</ul>
+<p>In the following, the scripts are described in detail.</p>
+<h2 id="h16">3.1&nbsp;&nbsp;status.py</h2>
+<p>The status script lists all tasks resulting from the configured steps and input samples. At the beginning of each line, the status of each task is denoted by <code>[w]</code>, <code>[r]</code>, and <code>[f]</code>, corresponding to:</p>
+<ul>
+	<li><strong>waiting</strong> &#8211; the taks is waiting for input files to appear or to be updated</li>
+	<li><strong>ready</strong> &#8211; all input files are present and up-to-date regarding their upstream input files, task can be started</li>
+	<li><strong>finished</strong> &#8211; all output files are in place and up-to-date</li>
+</ul>
+<div class='attention'>
+<p>In the current design, there is no mechanism to indicate whether a task is currently running or has been submitted to a cluster.</p>
+</div>
+<p>Here is an example output:</p>
+<listing>$ ./status.py
+[r] cutadapt/RIB0000784-R1
+[r] cutadapt/RIB0000784-R2
+[r] cutadapt/RIB0000770-R2
+[r] cutadapt/RIB0000770-R1
+[w] cutadapt/fix_cutadapt/RIB0000770
+[w] cutadapt/fix_cutadapt/RIB0000784
+tasks: 6 total, 4 ready, 2 waiting
+</listing><p>Here is another example output with <code>--test-run</code> specified on the command line. Here, all top-level steps are prepended with a <code>head</code> step, which is reflected in the task IDs:</p>
+<listing>$ ./status.py --test-run
+[r] head/cutadapt/RIB0000784
+[r] head/cutadapt/RIB0000770
+[w] head/cutadapt/RIB0000784-R1
+[w] head/cutadapt/RIB0000784-R2
+[w] head/cutadapt/RIB0000770-R2
+[w] head/cutadapt/RIB0000770-R1
+[w] head/cutadapt/fix_cutadapt/RIB0000770
+[w] head/cutadapt/fix_cutadapt/RIB0000784
+tasks: 8 total, 2 ready, 6 waiting
+</listing><p>Detailed information about a specific task can be obtained by specifying the task ID on the command line:</p>
+<listing>$ ./status.py cutadapt/RIB0000770-R1
+info:
+  adapter: AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTAGCTTATCTCGTATGCCGTCTTCTGCTTG
+  read: R1
+output_files:
+  log:
+    out/cutadapt-7708988d/RIB0000770-cutadapt-R1-log.txt:
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L001_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L002_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L003_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L004_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L005_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L006_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L007_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L008_R1_001.fastq.gz
+  reads:
+    out/cutadapt-7708988d/RIB0000770-cutadapt-R1.fastq.gz:
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L001_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L002_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L003_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L004_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L005_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L006_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L007_R1_001.fastq.gz
+    - in/Unaligned/Project_A/Sample_RIB0000770/RIB0000770_TAGCTT_L008_R1_001.fastq.gz
+</listing><p>The details of this data structure are explained below. It represents a kind of plan which includes information about which output files will be generated and which input files they depend on &#8211; this is stored in <code>output_files</code>. Furthermore, necessary information for actually executing the task are recorded in <code>info</code>. In this case, the final adapter has been determined by replacing <code>((INDEX))</code> in the configuration file&#8217;s <code>adapter-R1</code> with the actual barcode index of the sample.</p>
+<h2 id="h17">3.2&nbsp;&nbsp;run-locally.py</h2>
+<p>The <code>run-locally.py</code> script runs all non-finished tasks sequentially on the local machine. Feel free to cancel this script at any time, it won&#8217;t put your project in a confused state.</p>
+<p>To execute one or more certain tasks, specify the task IDs on the command line.</p>
+<div class='background'>
+<p>Why is it safe to cancel the pipeline? The pipeline is written in a way which expects processes to fail or cluster jobs to disappear without notice. This problem is mitigated by a design which relies on file presence and file timestamps to determine whether a task is finished or not. Output files are automatically written to temporary locations and later moved to their real target directory, and it is not until the last file rename operation has finished that a task is regarded as finished.</p>
+</div>
+<h2 id="h18">3.3&nbsp;&nbsp;submit-to-cluster.py</h2>
+<p>The <code>submit-to-cluster.py</code> script determines which tasks still have to be carried out and submits the jobs to a GridEngine cluster by calling <code>qsub</code>. Dependencies are passed to <code>qsub</code> via the <code>-hold_jid</code> option, which means that jobs that depend on other jobs won&#8217;t get scheduled until their dependencies have been satisfied.
+The file <code>qsub-template.sh</code> is used to submit jobs, with <code>#{  }</code> fields being substituted with appropriate values.</p>
+<p>The file <code>quotas.yaml</code> can be used to define different quotas for different systems:</p>
+<listing>"frontend[12]":
+    default: 5
+</listing><p>In the example above, a default quota of 5 is defined for hosts with a hostname of <code>frontend1</code> or <code>frontend2</code> (the name is a regular expression). Different quotas can be defined for each step. A quota of 5 means that no more than 5 jobs of on kind (the same step) will be run in parallel.</p>
+<h1 id="h19">4&nbsp;&nbsp;Extending the pipeline</h1>
+<h2 id="h20">4.1&nbsp;&nbsp;Checklist</h2>
+<p>Here&#8217;s a couple of things which should be kept in mind when implementing new steps or modifying existing steps:</p>
+<ul>
+	<li>Make sure errors already show up in <code>setup_runs</code> instead of <code>execute</code>. That way, wasting precious cluster waiting is avoided. Look out for things that may easily fail, and do them in <code>setup_runs</code>. Use the <code>info</code> entry in the returned <code>run_info</code> structure to pass the resulting information to <code>execute</code>.</li>
+	<li>Likewise, make sure that the tools you&#8217;ll need in execute are already available in <code>setup_runs</code>:
+<listing># make sure tools are available
+self.tool('pigz')
+self.tool('cutadapt')
+</listing></li>
+	<li>Make sure your disk access is as cluster-friendly as possible (which primarily means using large block sizes). If possible, use <code>unix_pipeline</code> to wrap your commands in <code>pigz</code> or <code>dd</code> with a block size of at least 4 MB. Although this is not possible in every case (for example when seeking inside files is involved), it is straightforward with tools that read a continuous stream from <code>stdin</code> and write a continuous stream to <code>stdout</code>.</li>
+</ul>
+</div>
+</body>
+
+</html>

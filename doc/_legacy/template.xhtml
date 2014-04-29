@@ -1,0 +1,306 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>RNASeq Pipeline Documentation</title>
+<style type='text/css'>
+body {
+    font-family: Arial;
+    font-size: 12pt;
+    background-color: #f8f8f8;
+    padding: 0;
+    margin: 0;
+}
+
+#content {
+    background-color: #fff;
+    margin-left: auto;
+    margin-right: auto;
+    padding-right: 2em;
+    padding-left: 19em;
+    padding-top: 1.4em;
+    padding-bottom: 1em;
+}
+
+div.attention {
+    padding-left: 70px;
+    background: url(emblem-important.png) 11px 10px no-repeat;
+    border-top: 1px solid #d8822f;
+    border-bottom: 1px solid #d8822f;
+    background-color: #fae5d0;
+    padding-right: 1em;
+}
+
+div.information {
+    padding-left: 70px;
+    background: url(dialog-information.png) 11px 10px no-repeat;
+    border-top: 1px solid #bac6d1;
+    border-bottom: 1px solid #bac6d1;
+    background-color: #f5f8fb;
+    padding-right: 1em;
+}
+
+div.background {
+    padding-left: 70px;
+    background: url(help-browser.png) 11px 10px no-repeat;
+    border-top: 1px solid #bac6d1;
+    border-bottom: 1px solid #bac6d1;
+    background-color: #f5f8fb;
+    padding-right: 1em;
+}
+
+@media print
+{
+    a {
+        color: black!important;
+    }
+    body {
+        background-color: white;
+    }
+    #content {
+        border: 0;
+        -moz-box-shadow: none;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+        padding: 0;
+    }
+    table {
+        -moz-box-shadow: none;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+    }
+    listing {
+        -moz-box-shadow: none;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+    }
+    .toc {
+        display: none!important;
+    }
+
+    code {
+        background-color: none!important;
+        border: none!important;
+        padding-left: 0!important;
+        padding-right: 0!important;
+    }
+}
+
+dd {
+    margin-bottom: 0.5em;
+}
+
+code {
+    background-color:rgba(0,0,0,0.05);
+    border: 1px solid rgba(0,0,0,0.2);
+    font-size: 85%;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    border-radius: 0.3em;
+    margin-bottom: 1px;
+    line-height: 150%;
+}
+
+.textmarker {
+    background-color: #fce94f;
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+}
+
+code.highlight {
+    background-color: #fdf3a7;
+    border: 1px solid #edd400;
+}
+
+table {
+    -moz-box-shadow: 2px 2px 8px #aaa;
+    -webkit-box-shadow: 2px 2px 8px #aaa;
+    box-shadow: 2px 2px 8px #aaa;
+    margin-bottom: 1.5em;
+    border-collapse: collapse;
+}
+
+table.noborder {
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    margin-bottom: 1.5em;
+    border-collapse: collapse;
+}
+
+table th
+{
+    text-align: left;
+    font-weight: bold;
+    padding: 0.2em 0.8em 0.2em 0.8em;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    vertical-align: top;
+}
+
+table th.nobold
+{
+    font-weight: normal;
+    vertical-align: top;
+}
+
+table td
+{
+    padding: 0.2em 0.8em 0.2em 0.8em;
+    border: 1px solid #ddd;
+    vertical-align: top;
+}
+
+table.noborder td
+{
+    border: 0;
+}
+
+listing
+{
+    background-color: #f8f8f8;
+    white-space: pre;
+    border: 1px solid #888;
+    -moz-box-shadow: 2px 2px 8px #aaa;
+    -webkit-box-shadow: 2px 2px 8px #aaa;
+    box-shadow: 2px 2px 8px #aaa;
+    margin-bottom: 1.5em;
+    padding: 1em;
+    border-radius: 8px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+    font-size: 90%;
+}
+
+.toc
+{
+    font-size: 80%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 17em;
+    background-color: #f8f8f8;
+    border-right: 1px solid #aaa;
+    height: 100%;
+    -moz-box-shadow: 2px 2px 8px #aaa;
+    -webkit-box-shadow: 2px 2px 8px #aaa;
+    box-shadow: 2px 2px 8px #aaa;
+    padding: 1em;
+    padding-bottom: 1.5em;
+    padding-left: 2em;
+    padding-right: 2em;
+    overflow: auto;
+}
+
+p {
+    text-align: justify;
+}
+
+dt {
+    margin-bottom: 0.4em;
+}
+
+.toc ul
+{
+    list-style: none;
+    padding-left: 0;
+}
+
+.toc ul li
+{
+    margin-bottom: 0;
+}
+
+.toc ul li.first
+{
+    padding-left: 0em;
+    font-weight: bold;
+    margin-bottom: 1em;
+}
+
+.toc ul li.later
+{
+    font-weight: normal;
+}
+
+.toc ul > li > ul > li > ul > li.later
+{
+    padding-left: 1.5em;
+}
+
+.toc a
+{
+    color: #555753;
+}
+
+.toc a:visited
+{
+    color: #555753;
+}
+
+div.test {
+    background-color: #99b2d1;
+    border-top: 1px solid #3465a4;
+    border-bottom: 1px solid #3465a4;
+    padding: 0.5em;
+    padding-left: 1em;
+    padding-right: 1em;
+    text-align: justify;
+}
+
+a {
+    color: #204a87;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a:visited {
+    color: #204a87;
+}
+
+.title {
+    font-weight: bold;
+    font-size: 22pt;
+    margin-bottom: 1em;
+}
+
+h1 {
+    font-size: 18pt;
+}
+
+h2 {
+    font-size: 16pt;
+}
+
+h3 {
+    font-size: 14pt;
+}
+
+h4 {
+    font-size: 12pt;
+}
+
+h5 {
+    font-size: 12pt;
+    font-weight: normal;
+    font-style: italic;
+}
+
+li {
+    margin-bottom: 0.2em;
+}
+
+</style>
+</head>
+
+<body>
+<div id='content'>
+#{TEXTILE}
+</div>
+</body>
+
+</html>
