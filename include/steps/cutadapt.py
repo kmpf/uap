@@ -28,6 +28,7 @@ class Cutadapt(AbstractStep):
         self.require_tool('cutadapt')
         self.require_tool('fix_qnames')
         
+        self.add_option('adapter-type', str, optional=True)
         self.add_option('adapter-R1', str, optional = False)
         self.add_option('adapter-R2', str, optional = True)
 #        self.add_option('adapter', str, optional = True)
@@ -38,6 +39,11 @@ class Cutadapt(AbstractStep):
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
             is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
 
+            ## Make sure the adapter type is one of a, b or g 
+            if self.is_option_set_in_config('adapter-type'):
+                if not (self.get_option('adapter-type') in set(['a','b','g'])):
+                    raise StandardError("Option 'adapter-type' must be either 'a','b', or 'g'!")
+                                
             # make sure that adapter-R1/adapter-R2 are set correctly
             # according to paired_end info... this kind of mutual exclusive option
             # checking is quite complicated, so we do it here.
@@ -46,7 +52,7 @@ class Cutadapt(AbstractStep):
                 if not self.is_option_set_in_config('adapter-R2'):
                     raise StandardError("Option 'adapter-R2' required because sample %s is paired end!" % run_id)
             elif self.is_option_set_in_config('adapter-R2'):
-                    raise StandardError("Option 'adapter-R2' not allowed because sample %s is paired end!" % run_id)
+                    raise StandardError("Option 'adapter-R2' not allowed because sample %s is not paired end!" % run_id)
 
             # decide which read type we'll handle based on whether this is
             # paired end or not
@@ -102,12 +108,16 @@ class Cutadapt(AbstractStep):
                 # set up processes
                 cat4m = [self.get_tool('cat4m')]
                 cat4m.extend(sorted(run.get_input_files_for_output_file(out_path)))
-
+                if self.is_option_set_in_config('adapter-type'):
+                    adapterType = '-' + self.get_option('adapter-type')
+                else:
+                    adapterType='-a'
+                
                 pigz1 = [self.get_tool('pigz'), '--processes', '1', '--decompress', '--stdout']
                 
                 fix_qnames = [self.get_tool('fix_qnames')]
 
-                cutadapt = [self.get_tool('cutadapt'), '-a', run.get_private_info('adapter'), '-']
+                cutadapt = [self.get_tool('cutadapt'), adapterType, run.get_private_info('adapter'), '-']
 
                 pigz2 = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '1', '--stdout']
 
