@@ -1,0 +1,4 @@
+Summary: Implement support for SLURM.
+Categories: yq8646-features
+
+Here's a cheat sheet: http://slurm.schedmd.com/rosetta.pdf
