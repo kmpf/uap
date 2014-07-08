@@ -520,7 +520,7 @@ class Pipeline(object):
     '''
     Shorthand to retrieve a cluster-type-dependent command line part (this is a list)
     '''
-   def ccla(self, key, value):
+    def ccla(self, key, value):
         result = Pipeline.cluster_config[self.cluster_type][key]
         if '%s' in result:
             return [result % value]
