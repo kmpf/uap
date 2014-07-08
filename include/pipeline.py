@@ -45,7 +45,7 @@ class Pipeline(object):
            {'submit': 'sbatch',
             'stat': 'squeue',
             'template': 'sbatch-template.sh',
-            'hold_jid': '-d=[afterany:%s]',
+            'hold_jid': '--dependency=[afterany:%s]',
             'set_job_name': '--job-name=%s',
             'set_stderr': '-e',
             'set_stdout': '-o'},
