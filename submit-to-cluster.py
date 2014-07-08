@@ -179,7 +179,8 @@ def main():
         long_task_id = str(task.step)
         short_task_id = long_task_id[0:15]
 
-        submit_script_args = [p.cc('submit'), p.cc('set_job_name'), short_task_id]
+        submit_script_args = [p.cc('submit')]
+        submit_script_args += p.ccla('set_job_name', short_task_id)
         # TODO: Maybe it should be possible to specify arbitrary options on the command line which just get passed on the submit tool
         if use_highmem:
             submit_script_args.append('-l')
@@ -196,8 +197,7 @@ def main():
             os.makedirs(task.step.get_output_directory())
 
         if len(dependent_tasks) > 0:
-            submit_script_args.append(p.cc('hold_jid'))
-            submit_script_args.append(','.join(dependent_tasks))
+            submit_script_args += p.ccla('hold_jid', (':' if p.cluster_type == 'slurm' else ',').join(dependent_tasks))
 
         really_submit_this = True
         if task_wish_list:

@@ -43,10 +43,10 @@ class Pipeline(object):
     cluster_config = {
         'slurm':
            {'submit': 'sbatch',
-            'stat': 'sinfo',
+            'stat': 'squeue',
             'template': 'sbatch-template.sh',
-            'hold_jid': '???',
-            'set_job_name': '???',
+            'hold_jid': '-d=[afterany:%s]',
+            'set_job_name': '--job-name=%s',
             'set_stderr': '-e',
             'set_stdout': '-o'},
         'sge':
@@ -512,7 +512,17 @@ class Pipeline(object):
         self.cluster_type = cluster_type
 
     '''
-    Shorthand to retrieve a cluster-type-dependent command or filename.
+    Shorthand to retrieve a cluster-type-dependent command or filename (cc == cluster command).
     '''
     def cc(self, key):
         return Pipeline.cluster_config[self.cluster_type][key]
+
+    '''
+    Shorthand to retrieve a cluster-type-dependent command line part (this is a list)
+    '''
+   def ccla(self, key, value):
+        result = Pipeline.cluster_config[self.cluster_type][key]
+        if '%s' in result:
+            return [result % value]
+        else:
+            return [result, value]
