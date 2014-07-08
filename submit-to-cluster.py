@@ -14,8 +14,8 @@ import subprocess
 import yaml
 
 '''
-By default, this script submits all tasks to a Sun GridEngine cluster via
-qsub. The list of tasks can be narrowed down by specifying a step name
+By default, this script submits all tasks to a compute cluster via a
+submit script. The list of tasks can be narrowed down by specifying a step name
 (in which case all runs of this steps will be considered) or individual
 tasks (step_name/run_id).
 
@@ -33,11 +33,12 @@ This task wish list is now processed one by one (in topological order):
     enqueued a couple of iterations ago (this is because a selection has been
     made and there are unfinished, non-running, unqueued dependencies)
   - now add all these collected job_ids to the submission via -hold_jid
+    (or whatever the argument is for the cluster used)
 '''
 
 parser = argparse.ArgumentParser(
     description='This script submits all tasks configured in config.yaml to a ' +
-                'Sun GridEngine cluster via qsub. The list of tasks can be ' +
+                'Sun GridEngine or SLURM cluster. The list of tasks can be ' +
                 'narrowed down by specifying a step name (in which case all ' +
                 'runs of this steps will be considered) or individual tasks ' +
                 '(step_name/run_id).',
@@ -48,8 +49,14 @@ parser.add_argument("--even-if-dirty",
                     action="store_true",
                     default=False,
                     help="Must be set if the local git repository " +
-                    "contains uncommited changes. Otherwise the pipeline " +
+                    "contains uncommitted changes. Otherwise the pipeline " +
                     "will not start.")
+
+parser.add_argument("--cluster",
+                    dest="cluster",
+                    type=str,
+                    default="auto",
+                    help="Specify the cluster type (sge, slurm), defaults to auto.")
 
 parser.add_argument("--highmem",
                     dest="highmem",
@@ -78,7 +85,7 @@ args = parser.parse_args()
 
 def main():
     p = pipeline.Pipeline(arguments=args)
-    
+
     use_highmem = False
     use_oversubscribed = False
     if args.highmem:
@@ -101,13 +108,16 @@ def main():
 
     tasks_left = []
 
-    template = None
-    if use_highmem:
-        template = open('qsub-highmem-template.sh', 'r').read()
-    elif use_oversubscribed:
-        template = open('qsub-oversubscribed-template.sh', 'r').read()
-    else:
-        template = open('qsub-template.sh', 'r').read()
+    # TODO: We shouldn't use three different templates just to specify another option.
+    print("# TODO: We shouldn't use three different templates just to specify another option.")
+    # template = None
+    # if use_highmem:
+    #     template = open('qsub-highmem-template.sh', 'r').read()
+    # elif use_oversubscribed:
+    #     template = open('qsub-oversubscribed-template.sh', 'r').read()
+    # else:
+    #     template = open('qsub-template.sh', 'r').read()
+    template = open(p.cc('template'), 'r').read()
 
     for task in p.all_tasks_topologically_sorted:
         if task_wish_list is not None:
@@ -169,15 +179,16 @@ def main():
         long_task_id = str(task.step)
         short_task_id = long_task_id[0:15]
 
-        qsub_args = ['qsub', '-N', short_task_id]
+        submit_script_args = [p.cc('submit'), p.cc('set_job_name'), short_task_id]
+        # TODO: Maybe it should be possible to specify arbitrary options on the command line which just get passed on the submit tool
         if use_highmem:
-            qsub_args.append('-l')
-            qsub_args.append('highmem')
+            submit_script_args.append('-l')
+            submit_script_args.append('highmem')
             
-        qsub_args.append('-e')
-        qsub_args.append(os.path.join(task.step.get_output_directory(), '.' + long_task_id_with_run_id + '.stderr'))
-        qsub_args.append('-o')
-        qsub_args.append(os.path.join(task.step.get_output_directory(), '.' + long_task_id_with_run_id + '.stdout'))
+        submit_script_args.append(p.cc('set_stderr'))
+        submit_script_args.append(os.path.join(task.step.get_output_directory(), '.' + long_task_id_with_run_id + '.stderr'))
+        submit_script_args.append(p.cc('set_stdout'))
+        submit_script_args.append(os.path.join(task.step.get_output_directory(), '.' + long_task_id_with_run_id + '.stdout'))
 
         # create the output directory if it doesn't exist yet
         # this is necessary here because otherwise, qsub will complain
@@ -185,8 +196,8 @@ def main():
             os.makedirs(task.step.get_output_directory())
 
         if len(dependent_tasks) > 0:
-            qsub_args.append("-hold_jid")
-            qsub_args.append(','.join(dependent_tasks))
+            submit_script_args.append(p.cc('hold_jid'))
+            submit_script_args.append(','.join(dependent_tasks))
 
         really_submit_this = True
         if task_wish_list:
@@ -199,18 +210,19 @@ def main():
             sys.stdout.write("Submitting task " + str(task) + " with " + str(task.step._cores) + " cores => ")
             process = None
             try:
-                process = subprocess.Popen(qsub_args, bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+                process = subprocess.Popen(submit_script_args, bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
             except OSError as e:
                 if e.errno == os.errno.ENOENT:
-                    raise StandardError("Seems there is no qsub system. Maybe " +
+                    raise StandardError("Unable to launch %s. Maybe " +
                                         "you are not executing this script on " +
-                                        "the cluster")
+                                        "the cluster" % p.cc('submit'))
                 else:
                     raise e
             process.stdin.write(submit_script)
             process.stdin.close()
             process.wait()
             response = process.stdout.read()
+            print("GOT A RESPONSE: %s" % response)
             job_id = re.search('Your job (\d+)', response).group(1)
             if job_id == None or len(job_id) == 0:
                 raise StandardError("Error: We couldn't parse a job_id from this:\n" + response)
