@@ -49,7 +49,7 @@ class BamToBed(AbstractStep):
                 samtools = [self.get_tool('samtools'), 'view', '-bf', '0x2', '-']
                 bedtools = [self.get_tool('bedtools'), 'bamtobed', '-i', 'stdin']
                 strand_switch = [self.get_tool('mate_pair_strand_switch')]
-                sort = [self.get_tool('sort'), '-k1,1', '-k2,2n']
+                sort = [self.get_tool('sort'), '-k1,1', '-k2,2n', '-T', self.get_output_directory_du_jour()]
                 
                 pipeline.append(cat4m)
                 if is_paired_end:
