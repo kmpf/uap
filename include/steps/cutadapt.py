@@ -28,90 +28,93 @@ class Cutadapt(AbstractStep):
         self.require_tool('cutadapt')
         self.require_tool('fix_qnames')
         
-        self.add_option('adapter-R1', str)
-        self.add_option('adapter-R2', str)
+        self.add_option('adapter-R1', str, optional = False)
+        self.add_option('adapter-R2', str, optional = True)
+#        self.add_option('adapter', str, optional = True)
         self.add_option('fix_qnames', bool, default = False)
         
-        '''
-        self.add_option('adapter', str, list) # list for paired-end reads, string for single-end reads
-        '''
+    def declare_runs(self):
+        # fetch all incoming run IDs which produce reads...
+        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
+            is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
 
-    def setup_runs(self, complete_input_run_info, connection_info):
-        output_run_info = {}
-        for step_name, step_input_info in complete_input_run_info.items():
-            for input_run_id, input_run_info in step_input_info.items():
-                for in_path in sorted(input_run_info['output_files']['reads'].keys()):
-                    suffix = ''
-                    which = None
-                    if self.find_upstream_info(input_run_id, 'paired_end'):
-                        #which = input_run_info['info']['read_number'][os.path.basename(in_path)]
-                        which = ''
-                        if '_R1' in os.path.basename(in_path):
-                            which = 'R1'
-                        elif '_R2' in os.path.basename(in_path):
-                            which = 'R2'
-                        if not which in ['R1', 'R2']:
-                            raise StandardError("Expected R1 and R2 input files, but got this: " + in_path)
-                        suffix = '-' + which
+            # make sure that adapter-R1/adapter-R2 are set correctly
+            # according to paired_end info... this kind of mutual exclusive option
+            # checking is quite complicated, so we do it here.
 
-                    output_run_id = input_run_id + suffix
+            if is_paired_end:
+                if not self.is_option_set_in_config('adapter-R2'):
+                    raise StandardError("Option 'adapter-R2' required because sample %s is paired end!" % run_id)
+            elif self.is_option_set_in_config('adapter-R2'):
+                    raise StandardError("Option 'adapter-R2' not allowed because sample %s is paired end!" % run_id)
 
-                    if not output_run_id in output_run_info:
-                        output_run_info[output_run_id] = {
-                            'output_files': {},
-                            'info': {}
-                        }
-                        if self.find_upstream_info(input_run_id, 'paired_end'):
-                            output_run_info[output_run_id]['info']['read_number'] = which
+            # decide which read type we'll handle based on whether this is
+            # paired end or not
+            read_types = list()
+            if not is_paired_end:
+                read_types = ['-R1']
+            else:
+                read_types = ['-R1', '-R2']
 
-                    # find adapter
-                    adapter = self.option('adapter' + suffix)
+            # put input files into R1/R2 bins (or one single R1 bin)
+            input_path_bins = dict()
+            for _ in read_types:
+                input_path_bins[_] = list()
+            for path in input_paths:
+                which = '-R1'
+                if is_paired_end:
+                    which = '-' + misc.assign_string(os.path.basename(path), ['R1', 'R2'])
+                input_path_bins[which].append(path)
 
-                    # insert correct index if necessary
+            # now declare two runs
+            for which in read_types:
+                with self.declare_run("%s%s" % (run_id, which)) as run:
+                    # add paired end information
+                    run.add_private_info('paired_end', is_paired_end)
+                    if is_paired_end:
+                        run.add_private_info('paired_end_read', which.replace('-', ''))
+
+                    # add adapter information, insert correct index first if necessary
+                    adapter = self.get_option('adapter%s' % which)
+                    
                     if '((INDEX))' in adapter:
-                        index = self.find_upstream_info(input_run_id, 'index')
-                        adapter = adapter.replace('((INDEX))', index)
+                        index = self.find_upstream_info_for_input_paths(input_paths, 'index%s' % which)
+                        if which == '-R2':
+                            complements = string.maketrans('acgtACGT', 'tgcaTGCA')
+                            index = index.translate(complements)[::-1]
 
-                    # make sure the adapter is looking good
+                        adapter = adapter.replace('((INDEX))', index)
+                     # make sure the adapter is looking good
                     if re.search('^[ACGT]+$', adapter) == None:
                         raise StandardError("Unable to come up with a legit-looking adapter: " + adapter)
-                    output_run_info[output_run_id]['info']['adapter'] = adapter
+                    run.add_private_info('adapter', adapter)
 
-                    for t in [('reads', input_run_id + '-cutadapt' + suffix + '.fastq.gz'),
-                            ('log', input_run_id + '-cutadapt' + suffix + '-log.txt')]:
-                        pathkey = t[0]
-                        path = t[1]
-                        if not pathkey in output_run_info[output_run_id]['output_files']:
-                            output_run_info[output_run_id]['output_files'][pathkey] = {}
-                        if not path in output_run_info[output_run_id]['output_files'][pathkey]:
-                            output_run_info[output_run_id]['output_files'][pathkey][path] = []
-                        output_run_info[output_run_id]['output_files'][pathkey][path].append(in_path)
+                    # add output files: reads and log
+                    run.add_output_file("reads", "%s-cutadapt%s.fastq.gz" % (run_id, which), input_path_bins[which])
+                    run.add_output_file("log", "%s-cutadapt%s-log.txt" % (run_id, which), input_path_bins[which])
 
-        return output_run_info
 
-    def execute(self, run_id, run_info):
-        # basic sanity check
-        if len(run_info['output_files']['reads']) != 1:
-            raise StandardError("Expected a single output file.")
-
+    def execute(self, run_id, run):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
+                out_path = run.get_single_output_file_for_annotation('reads')
+
                 # set up processes
-                cat4m = [self.tool('cat4m')]
-                cat4m.extend(*sorted(run_info['output_files']['reads'].values()))
+                cat4m = [self.get_tool('cat4m')]
+                cat4m.extend(sorted(run.get_input_files_for_output_file(out_path)))
 
-                pigz1 = [self.tool('pigz'), '--processes', '1', '--decompress', '--stdout']
+                pigz1 = [self.get_tool('pigz'), '--processes', '1', '--decompress', '--stdout']
                 
-                fix_qnames = [self.tool('fix_qnames')]
+                fix_qnames = [self.get_tool('fix_qnames')]
 
-                cutadapt = [self.tool('cutadapt'), '-a', run_info['info']['adapter'], '-']
+                cutadapt = [self.get_tool('cutadapt'), '-a', run.get_private_info('adapter'), '-']
 
-                pigz2 = [self.tool('pigz'), '--blocksize', '4096', '--processes', '1', '--stdout']
+                pigz2 = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '1', '--stdout']
 
                 # create the pipeline and run it
                 pipeline.append(cat4m)
                 pipeline.append(pigz1)
-                if self.option('fix_qnames') == True:
+                if self.get_option('fix_qnames') == True:
                     pipeline.append(fix_qnames)
-                pipeline.append(cutadapt, stderr_path = run_info['output_files']['log'].keys()[0])
-                pipeline.append(pigz2, stdout_path = run_info['output_files']['reads'].keys()[0])
+                pipeline.append(cutadapt, stderr_path = run.get_single_output_file_for_annotation('log'))
+                pipeline.append(pigz2, stdout_path = out_path)
