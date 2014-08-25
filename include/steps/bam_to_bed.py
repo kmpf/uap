@@ -71,13 +71,16 @@ class BamToBed(AbstractStep):
             with pool.Pipeline(pool) as pipeline:
                 cat4m = [self.get_tool('cat4m'), bam_path]
                 samtools = [self.get_tool('samtools'), 'view', '-bf', '0x2', '-']
-                bedtools = [self.get_tool('bedtools'), 'bamtobed', '-i', 'stdin']
+                bedtools = [self.get_tool('bedtools'), 'bamtobed', '-split', '-i', 'stdin', ]
                 strand_switch = [self.get_tool('mate_pair_strand_switch')]
+
                 sort_buffer_size = self.get_cores() * 4
                 tmp_dir = run.get_private_info('tmp_dir')
                 sort = [self.get_tool('sort'), '--temporary-directory=%s' % tmp_dir,
                         '--buffer-size=%sG' % sort_buffer_size, '-k1,1', '-k2,2n'] 
 
+#                sort = [self.get_tool('sort'), '-k1,1', '-k2,2n', '-T', self.get_output_directory_du_jour()]
+                
                 pipeline.append(cat4m)
                 if is_paired_end:
                     pipeline.append(samtools)
