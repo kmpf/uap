@@ -42,7 +42,7 @@ class TopHat2(AbstractStep):
         self.require_tool('bowtie2')
         self.require_tool('tophat2')
 
-        self.add_option('genome', str)
+#        self.add_option('genome', str)
         self.add_option('index', str)
 
         self.add_option('library_type', str, choices = ['fr-unstranded', 'fr-firststrand', 'fr-secondstrand'])
