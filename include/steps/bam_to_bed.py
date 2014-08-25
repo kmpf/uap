@@ -78,6 +78,8 @@ class BamToBed(AbstractStep):
                 sort = [self.get_tool('sort'), '--temporary-directory=%s' % tmp_dir,
                         '--buffer-size=%sG' % sort_buffer_size, '-k1,1', '-k2,2n'] 
 
+#                sort = [self.get_tool('sort'), '-k1,1', '-k2,2n', '-T', self.get_output_directory_du_jour()]
+                
                 pipeline.append(cat4m)
                 if is_paired_end:
                     pipeline.append(samtools)
