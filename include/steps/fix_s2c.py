@@ -3,13 +3,12 @@ from abstract_step import *
 import process_pool
 import yaml
 
-
 class S2cFix(AbstractStep):
 
     def __init__(self, pipeline):
         super(S2cFix, self).__init__(pipeline)
         
-        self.set_cores(2)
+        self.set_cores(6)
         
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
@@ -19,7 +18,6 @@ class S2cFix(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('cat4m')
         self.require_tool('samtools')
-
 
     def declare_runs(self):
 
@@ -48,8 +46,7 @@ class S2cFix(AbstractStep):
 #            output_run_info[run_id] = run_info
 #        return output_run_info
 
-
-    def execute(self, run_id, run):
+    def execute(self, run_id, run_info):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
                 in_alignment = run.get_private_info('in-alignments')
@@ -64,4 +61,5 @@ class S2cFix(AbstractStep):
                 pipeline.append(samtools)
                 pipeline.append(fix_s2c)
                 pipeline.append(samtools_2)
+
                 pipeline.append(samtools_sort, hints = {'writes': run.get_single_output_file_for_annotation('alignments')})

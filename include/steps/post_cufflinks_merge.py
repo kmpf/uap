@@ -15,8 +15,13 @@ class Post_Cufflinks_Merge(AbstractStep):
         self.add_connection('out/features')
         self.add_connection('out/log_stderr')
 
-        self.add_option('remove_gencode', bool,   default=False )
-        self.add_option('remove_unstranded', bool, default=False)
+        self.add_option('remove_gencode'     , bool,   default=False )
+        self.add_option('remove_unstranded'  , bool,   default=False)
+        self.add_option('remove_by_gene_name', bool, default=False)
+        self.add_option('string', str, optional=True )
+        self.add_option('filter_by_class', bool, default=False)
+        self.add_option('class_list', str, optional=True)
+        self.add_option('filter_by_class_and_gene_name', bool, default=False)
 
         self.require_tool('post_cufflinks_merge')
         self.require_tool('cat4m')
@@ -44,7 +49,17 @@ class Post_Cufflinks_Merge(AbstractStep):
                     post_cufflinks_merge.extend(['--remove-gencode'])
                 if self.get_option('remove_unstranded'):
                     post_cufflinks_merge.extend(['--remove-unstranded'])
-                
+                if self.get_option('remove_by_gene_name'):
+                    post_cufflinks_merge.extend(['--remove-by-gene-name'])
+                if self.get_option('filter_by_class'):
+                    post_cufflinks_merge.extend(['--filter-by-class'])
+                if self.get_option('filter_by_class_and_gene_name'):
+                    post_cufflinks_merge.extend(['--filter-by-class-and-gene-name'])
+                if self.get_option('string'):
+                    post_cufflinks_merge.extend(['--string', self.get_option('string')])
+                if self.get_option('class_list'):
+                    post_cufflinks_merge.extend(['--class-list', self.get_option('class_list')])
+
                 pipeline.append(cat4m)
                 pipeline.append(post_cufflinks_merge, stdout_path = run.get_single_output_file_for_annotation('features'),
                                 stderr_path = run.get_single_output_file_for_annotation('log_stderr'))

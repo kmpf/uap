@@ -20,6 +20,10 @@ Downloading the software
 The repository can be obtained like this::
 
     $ git clone git@github.com:tiennes/rnaseq-pipeline.git
+    
+We'll need ``virtualenv``, so install it if you don't have it already:
+
+    $ sudo apt-get install python-virtualenv
 
 After cloning the repository, change into the created directory and run the 
 bootstrapping script to create the required Python environment (which will be

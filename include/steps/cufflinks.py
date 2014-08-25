@@ -15,10 +15,8 @@ class CuffLinks(AbstractStep):
         
         self.add_connection('in/alignments')
         self.add_connection('out/features')
-        self.add_connection('out/skipped')
-        self.add_connection('out/genes-fpkm')
-        self.add_connection('out/isoforms_fpkm')
-        self.add_connection('out/log_stderr')
+        self.add_connection('out/fpkm_tracking')
+        self.add_connection('out/log')
         
         self.require_tool('cat4m')
         self.require_tool('pigz')
@@ -27,36 +25,54 @@ class CuffLinks(AbstractStep):
         self.add_option('library_type',str)
         self.add_option('use_mask',str, optional=True)
 
-    def declare_runs(self):
-        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
-            with self.declare_run(run_id) as run:
+    def setup_runs(self, complete_input_run_info, connection_info):
 
-                run.add_output_file('log_stderr', '%s-cufflinks-log.txt'  % run_id, input_paths)
-                run.add_output_file('features', '%s-transcripts.gtf'  % run_id, input_paths)
-                run.add_output_file('skipped', '%s-skipped.gtf'  % run_id, input_paths)
-                run.add_output_file('genes-fpkm', '%s-genes.fpkm_tracking'  % run_id, input_paths)
-                run.add_output_file('isoforms_fpkm', '%s-isoforms.fpkm_tracking'  % run_id, input_paths)
-                
-                run.add_private_info 
-                if not input_paths:
-                    raise StandardError("No input files for run %s" % (run_id))             
+        
 
+        
+        output_run_info = dict()
 
-                if self.is_option_set_in_config('use_mask'):
-                    mask = self.get_option('use_mask')
-                    if not os.path.exists(mask):
-                        raise StandardError('Maskfile not found %s' % mask )
-                    else:
-                        run.add_private_info('mask_file', mask)
+        #print(yaml.dump(complete_input_run_info, default_flow_style = False))
+        #print(yaml.dump(connection_info, default_flow_style = False))
+            
+        for run_id, info in connection_info['in/alignments']['runs'].items():
+            transcripts_path = '%s-transcripts.gtf' % run_id
+            skipped_path = '%s-skipped.gtf' % run_id
+            genes_fpkm_tracking_path = '%s-genes.fpkm_tracking' % run_id
+            isoforms_fpkm_tracking_path = '%s-isoforms.fpkm_tracking' % run_id
+            log_path = '%s-cufflinks-log.txt' % run_id
+            alignments_path = info.values()[0][0]
+            run_info = {
+                'output_files': {
+                    'features': {
+                        transcripts_path: [alignments_path],
+                        skipped_path: [alignments_path]
+                    },
+                    'fpkm_tracking': {
+                        genes_fpkm_tracking_path: [alignments_path],
+                        isoforms_fpkm_tracking_path: [alignments_path]
+                    },
+                    'log': {
+                        log_path: [alignments_path]
+                    },
+                },
+                'info': {
+                    'in-alignments': alignments_path,
+                    'out-transcripts': transcripts_path,
+                    'out-skipped': skipped_path,
+                    'out-genes_fpkm_tracking': genes_fpkm_tracking_path,
+                    'out-isoforms_fpkm_tracking': isoforms_fpkm_tracking_path
+                }
+            }
 
-                run.add_private_info('in-bam', input_paths)
-                        
+            if self.option_set_in_config('use_mask'):
+                run_info['info']['use_mask'] = self.option('use_mask')
+            output_run_info[run_id] = run_info
+            
+        return output_run_info
 
-    def execute(self, run_id, run):
-
-
-
-
+    def execute(self, run_id, run_info):
+        
         cufflinks_out_path = self.get_temporary_path('cufflinks-out')
         
         with process_pool.ProcessPool(self) as pool:
@@ -85,21 +101,20 @@ class CuffLinks(AbstractStep):
                 print log_stderr
           
             
-                add_hints = {'writes': [
-                        run.get_single_output_file_for_annotation('skipped'),
-                        run.get_single_output_file_for_annotation('features'),
-                        run.get_single_output_file_for_annotation('genes-fpkm'),
-                        run.get_single_output_file_for_annotation('isoforms_fpkm')
-                        ]
-                            }
+            cufflinks.append(run_info['info']['in-alignments'])
 
-                pipeline.append(cufflinks, stderr_path= log_stderr, hints=add_hints)
-
+            pool.launch(cufflinks, stderr_path = run_info['output_files']['log'].keys()[0], 
+            hints = {'writes': [
+                run_info['output_files']['features'].keys()[0], 
+                run_info['output_files']['features'].keys()[1], 
+                run_info['output_files']['fpkm_tracking'].keys()[0],
+                run_info['output_files']['fpkm_tracking'].keys()[1]
+            ]})
             
-        os.rename(os.path.join(cufflinks_out_path, 'transcripts.gtf'), run.get_single_output_file_for_annotation('features'))
-        os.rename(os.path.join(cufflinks_out_path, 'skipped.gtf'), run.get_single_output_file_for_annotation('skipped'))
-        os.rename(os.path.join(cufflinks_out_path, 'genes.fpkm_tracking'), run.get_single_output_file_for_annotation('genes-fpkm'))
-        os.rename(os.path.join(cufflinks_out_path, 'isoforms.fpkm_tracking'), run.get_single_output_file_for_annotation('isoforms_fpkm'))
+        os.rename(os.path.join(cufflinks_out_path, 'transcripts.gtf'), run_info['info']['out-transcripts'])
+        os.rename(os.path.join(cufflinks_out_path, 'skipped.gtf'), run_info['info']['out-skipped'])
+        os.rename(os.path.join(cufflinks_out_path, 'genes.fpkm_tracking'), run_info['info']['out-genes_fpkm_tracking'])
+        os.rename(os.path.join(cufflinks_out_path, 'isoforms.fpkm_tracking'), run_info['info']['out-isoforms_fpkm_tracking'])
         
         try:
             os.rmdir(cufflinks_out_path)
