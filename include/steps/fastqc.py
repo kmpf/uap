@@ -35,9 +35,9 @@ class Fastqc(AbstractStep):
 
             # decide which read type we'll handle based on whether this is
             # paired end or not
-            read_types = ['-R1']
+            read_types = ['_R1']
             if  is_paired_end:
-                read_types.append('-R2')
+                read_types.append('_R2')
 
 
             # put input files into R1/R2 bins (or one single R1 bin)
