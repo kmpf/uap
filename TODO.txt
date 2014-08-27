@@ -24,3 +24,5 @@ Tasks:
   - we need a well-defined ontology of file types regardless of actual file type, more from the semantic perspective
 - fix quoting in result graph rendering (when " appears in a command line, the dot file gets messed up)
 - add a random suffix to SGE's stdout and stderr log filenames
+
+- information about created public_info should be better documented
