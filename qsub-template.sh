@@ -18,5 +18,27 @@
 ## does the actual work
 ##
 source /etc/profile.d/000-modules.sh    # makes the module system available to your job
+module load emacs/24.3-2_gcc_4.8.1_CentOS6
+    
+# Load language modules and support modules
+module load R/3.1.0-1_gcc_4.8.1_CentOS6
+module load perl/5.20/1-1_CentOS6
+module load python/2.7.6-2_gcc_4.8.1_CentOS6-virtual
+
+# Load bioinformatics modules
+module load bamtools/2.3.0-1_CentOS6
+module load bedtools/2.20.1-1_CentOS6
+module load samtools/0.1.19-1_CentOS6
+module load tophat/2.0.12-1_CentOS6
+module load picard-tools/1.117-1_CentOS6
+module load casava/1.8.2-4_CentOS6
+module load fastqc/0.11.2-1_CentOS6
+module load cutadapt/1.4.1-1_CentOS6
+module load segemehl/0.1.9-1_CentOS6
+    
+# Load support modules
+module load git/1.9.2-2_gcc_4.8.1_CentOS6
+module load lapack/3.5.0-1_gcc_4.8.1_CentOS6
+
 
 #{COMMAND}
