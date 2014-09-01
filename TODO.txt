@@ -26,3 +26,7 @@ Tasks:
 - add a random suffix to SGE's stdout and stderr log filenames
 
 - information about created public_info should be better documented
+
+
+Problems:
+- if different sources contain identically named samples they are probably gone overwrite there output files handled wrong

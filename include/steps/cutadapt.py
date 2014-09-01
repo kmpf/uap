@@ -121,7 +121,7 @@ class Cutadapt(AbstractStep):
                                                 adapter)
                         run.add_private_info('adapter', adapter)
                     elif self.is_option_set_in_config('adapter-file'):
-                        adapter = "file:".join( self.get_option('adapter-file') )
+                        adapter = "file:" + self.get_option('adapter-file')
                         run.add_private_info('adapter', adapter)
                     # add output files: reads and log
                     run.add_output_file("reads", "%s-cutadapt%s.fastq.gz" 
