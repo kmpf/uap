@@ -25,7 +25,7 @@ class Macs2(AbstractStep):
         self.require_tool('pigz')
 
 #        self.add_option('treatment', str, list) # bekommen wir ja immer
-        self.add_option('control', str, list)
+        self.add_option('control', dict, optional=False)
         self.add_option('format', str, default='AUTO',
                         choices=['ELAND', 'ELANDMULTI', 'ELANDMULTIPET', 
                                  'ELANDEXPORT', 'BED', 'SAM', 'BAM', 'BAMPE', 
@@ -50,105 +50,121 @@ class Macs2(AbstractStep):
 
     def declare_runs(self):
         
-
-        validated_control_samples = list()
-        control_samples = dict()
-
-        if self.get_option('control'):
-            control_samples.update(self.get_option('control'))
+        control_samples = self.get_option('control')
 
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection(
                 'in/alignments'):
-            with self.declare_run(run_id) as run:
 
-                run.add_output_file('log', '%s-macs2-log.txt' % run_id, 
-                                    input_paths)
-                run.add_output_file('peaks', '%s-macs2-peaks.bed' % run_id,
-                                    input_paths)
-                run.add_output_file('peaks', '%s-macs2-peaks.xls' % run_id, 
-                                    input_paths)
-                run.add_output_file('summits', '%s-macs2-summits.bed' % run_id, 
-                                    input_paths)
-                run.add_output_file('model', '%s-macs2-model.r' % run_id, 
-                                    input_paths)
-                run.add_output_file('negative-peaks', '%s-macs2-negative-peaks.xls'
-                                    % run_id, input_paths)
+            for control_id, treatment_list in control_samples.iteritems():
+                if run_id in treatment_list:
+                    new_run_id = "%s-%s" % (run_id, control_id)
 
-                if not input_paths:
-                    raise StandardError("No input files for run %s" % (run_id))
-                run.add_private_info('treatment_files', input_paths)
+                    with self.declare_run(new_run_id) as run:
+
+                        # STDOUT goes here
+                        run.add_output_file('log', '%s-macs2-log.txt'
+                                            % new_run_id, input_paths)
+                        run.add_output_file('peaks', '%s-macs2-peaks.bed' 
+                                            % new_run_id, input_paths)
+                        run.add_output_file('peaks', '%s-macs2-peaks.xls' 
+                                            % new_run_id, input_paths)
+                        run.add_output_file('summits', '%s-macs2-summits.bed' 
+                                            % new_run_id, input_paths)
+                        run.add_output_file('model', '%s-macs2-model.r' 
+                                            % new_run_id, input_paths)
+#                        run.add_output_file('negative-peaks', 
+#                                            '%s-macs2-negative-peaks.xls'
+#                                            % new_run_id, input_paths)
+
+                        if not input_paths:
+                            raise StandardError("No input files for run %s" 
+                                                % (run_id))
+                        run.add_private_info('treatment_files', input_paths)
                 
-                control_files = list()
-                for control_id, treatment_list in control_samples.iteritems():
-                    if run_id in treatment_list:
-                        paths = self.get_input_files_for_run_id_and_connection(
-                            control_id, 'in/alignments')
-                        control_files.extend(paths)
+                        control_files =  self.get_input_files_for_run_id_and_connection(control_id, 'in/alignments')
 
-                run.add_private_info('control_files', control_files)
+                        run.add_private_info('control_files', control_files)
                
-                print('Treatment: ' + " ".join(input_paths) )
-                print('Control(s): ' + " ".join(control_files) )
     
     def execute(self, run_id, run):
 
         macs_out_directory = self.get_temporary_path('macs2-out')
-
-        for control_file in run.get_private_info('control_files'):
-            with process_pool.ProcessPool(self) as pool:
-                macs2 = [self.get_tool('macs2'), 'callpeak', '--treatment']
-                if not run.has_private_info('treatment_files'):
-                    raise StandardError("No treatment files for %s to analyse with macs2" % run_id)
-                macs2.extend( [" ".join(run.get_private_info('treatment_files'))] )
-                # if we do have control data use it
-                if not control_file == None:
-                    macs2.extend(['--control', control_file ])
-
-                macs2.extend([
-                    '--format', self.get_option('format'),
-                    '--name', run_id
-                ])
-                print(macs2)
-
-                try:
-                    os.mkdir(macs_out_directory)
-                except OSError:
-                    pass
-                    os.chdir(macs_out_directory)
-
-                    pool.launch(macs2, stdout_path = run.get_single_output_file_for_annotation('log') )
-
-                    peaks_files = run.get_output_files_for_annotation_and_tags('peaks', ['xls', 'bed'])
         
-                    # Rename MACS2 generated output files so the connection
+        with process_pool.ProcessPool(self) as pool:
+            macs2 = [self.get_tool('macs2'), 'callpeak', '--treatment']
+            if not run.has_private_info('treatment_files'):
+                raise StandardError("No treatment files for %s to analyse with macs2" % run_id)
+            macs2.extend( [" ".join(run.get_private_info('treatment_files'))] )
+            # if we do have control data use it
+            if not run.has_private_info('control_files'):
+                raise StandardError("No control files for %s to analyse with macs2"
+                                    % run_id)
+                
+            macs2.extend(['--control', 
+                          " ".join(run.get_private_info('control_files')) ])
 
-                try:
-                    os.rename(os.path.join(macs_out_directory, 
-                                           '%s_peaks.bed' % run_id), 
-                              peaks_files['bed'])
-                except OSError:
-                    raise StandardError('No file: %s' % os.path.join( macs_out_directory, '%s_peaks.bed' % run_id))
+            macs2.extend([
+                '--format', self.get_option('format'),
+                '--name', run_id
+            ])
+            print(" ".join(macs2) )
 
-                try:
-                    os.rename(os.path.join(macs_out_directory,
-                                           '%s_peaks.xls' % run_id), 
-                              peaks_files['xls'])
-                except OSError:
-                    raise StandardError('No file: %s' % os.path.join(macs_out_directory, '%s_peaks.xls' % run_id))
+            try:
+                os.mkdir(macs_out_directory)
+            except OSError:
+                pass
+                os.chdir(macs_out_directory)
 
-                try:
-                    os.rename(os.path.join(macs_out_directory, '%s_summits.bed' % run_id), run.get_single_output_file_for_annotation('summits'))
-                except OSError:
-                    raise StandardError('No file: %s' % os.path.join(macs_out_directory, '%s_summits.bed' % run_id))
+            pool.launch(macs2, stdout_path = 
+                        run.get_single_output_file_for_annotation('log') )
 
-                try:
-                    os.rename(os.path.join(macs_out_directory, '%s_model.r' % run_id), run.get_single_output_file_for_annotation('model'))
-                except OSError:
-                    file_name = run.get_single_output_file_for_annotation('model')
-                    with file(file_name, 'a'):
-                        os.utime(file_name, None)
+            peaks_files = run.get_output_files_for_annotation_and_tags(
+                'peaks', ['xls', 'bed'])
+                
+            # Rename MACS2 generated output files so the connection
 
-                try:
-                    os.rename(os.path.join(macs_out_directory, '%s_negative_peaks.xls' % run_id), run.get_single_output_file_for_annotation('negative-peaks'))
-                except OSError:
-                    raise StandardError('No file: %s' % os.path.join(macs_out_directory, '%s_negative_peaks.xls' % run_id))
+            try:
+                os.rename(os.path.join(macs_out_directory, 
+                                       '%s_peaks.narrowPeak' % run_id), 
+                          peaks_files['bed'])
+            except OSError:
+                raise StandardError('No file: %s' 
+                                    % os.path.join( macs_out_directory, 
+                                                    '%s_peaks.bed' % run_id))
+
+            try:
+                os.rename(os.path.join(macs_out_directory,
+                                       '%s_peaks.xls' % run_id), 
+                          peaks_files['xls'])
+            except OSError:
+                raise StandardError('No file: %s' 
+                                    % os.path.join( macs_out_directory, 
+                                                   '%s_peaks.xls' % run_id))
+
+            try:
+                os.rename(os.path.join(macs_out_directory, '%s_summits.bed'
+                                       % run_id), 
+                          run.get_single_output_file_for_annotation('summits'))
+            except OSError:
+                raise StandardError('No file: %s' 
+                                    % os.path.join(macs_out_directory, 
+                                                   '%s_summits.bed' % run_id))
+
+            try:
+                os.rename(os.path.join(macs_out_directory, '%s_model.r' % run_id), 
+                          run.get_single_output_file_for_annotation('model'))
+            except OSError:
+                file_name = run.get_single_output_file_for_annotation('model')
+                with file(file_name, 'a'):
+                    os.utime(file_name, None)
+
+#            try:
+#                os.rename(os.path.join(macs_out_directory, '%s_negative_peaks.xls'
+#                                       % run_id), 
+#                          run.get_single_output_file_for_annotation(
+#                              'negative-peaks'))
+#            except OSError:
+#                raise StandardError('No file: %s' 
+#                                    % os.path.join(macs_out_directory,
+#                                                   '%s_negative_peaks.xls'
+#                                                   % run_id))
