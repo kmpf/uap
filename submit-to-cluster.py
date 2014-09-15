@@ -223,7 +223,9 @@ def main():
             process.wait()
             response = process.stdout.read()
             print("GOT A RESPONSE: %s" % response)
-            job_id = re.search('Your job (\d+)', response).group(1)
+            job_id = re.search(p.cc('parse_job_id'), response).group(1)
+
+
             if job_id == None or len(job_id) == 0:
                 raise StandardError("Error: We couldn't parse a job_id from this:\n" + response)
             

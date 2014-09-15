@@ -48,7 +48,9 @@ class Pipeline(object):
             'hold_jid': '--dependency=[afterany:%s]',
             'set_job_name': '--job-name=%s',
             'set_stderr': '-e',
-            'set_stdout': '-o'},
+            'set_stdout': '-o',
+            'parse_job_id': 'Submitted batch job (\d+)'},
+
         'sge':
            {'submit': 'qsub',
             'stat': 'qstat',
@@ -56,7 +58,8 @@ class Pipeline(object):
             'hold_jid': '-hold_jid',
             'set_job_name': '-N',
             'set_stderr': '-e',
-            'set_stdout': '-o'}
+            'set_stdout': '-o',
+            'parse_job_id': 'Your job (\d+)'}
     }
     '''
     Cluster-related configuration for every cluster system supported.
@@ -401,6 +404,8 @@ class Pipeline(object):
         
         try:
             stat_output = subprocess.check_output([self.cc('stat')])
+        except KeyError:
+            check_queue = False
         except OSError:
             check_queue = False
         except subprocess.CalledProcessError:
@@ -502,8 +507,15 @@ class Pipeline(object):
             print("Call ./volatilize.py --srsly to purge the files.")
 
     def autodetect_cluster_type(self):
-        print("Auto cluster type detection: Implement me!")
-        exit(1)
+        
+
+        if (subprocess.check_output( ["sbatch", "--version"])[:6] == "slurm "):
+            return "slurm"
+        if (subprocess.check_output(["qstat", "-help"] )[:4] == "SGE "):
+            return "sge"
+            
+        return None
+
 
     def set_cluster_type(self, cluster_type):
         if not cluster_type in Pipeline.cluster_config:
