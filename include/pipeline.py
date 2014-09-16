@@ -45,7 +45,7 @@ class Pipeline(object):
            {'submit': 'sbatch',
             'stat': 'squeue',
             'template': 'sbatch-template.sh',
-            'hold_jid': '--dependency=[afterany:%s]',
+            'hold_jid': '--dependency=afterany:%s',
             'set_job_name': '--job-name=%s',
             'set_stderr': '-e',
             'set_stdout': '-o',
@@ -97,14 +97,13 @@ class Pipeline(object):
         try:
             # set cluster type
             if args.cluster == 'auto':
-                self.autodetect_cluster_type()
+                self.set_cluster_type(self.autodetect_cluster_type())
             else:
                 self.set_cluster_type(args.cluster)
         except AttributeError:
             # cluster type is not an applicable parameter here, and that's fine
             # (we're probably in run-locally.py)
             pass
-
         # the configuration as read from config.yaml
         self.config = dict()
 
@@ -508,7 +507,6 @@ class Pipeline(object):
 
     def autodetect_cluster_type(self):
         
-
         if (subprocess.check_output( ["sbatch", "--version"])[:6] == "slurm "):
             return "slurm"
         if (subprocess.check_output(["qstat", "-help"] )[:4] == "SGE "):
