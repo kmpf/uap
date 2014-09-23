@@ -11,7 +11,7 @@ class Segemehl(AbstractStep):
     def __init__(self, pipeline):
         super(Segemehl, self).__init__(pipeline)
 
-        self.set_cores(30)
+        self.set_cores(24)
         
         self.add_connection('in/reads')
         self.add_connection('out/alignments')
@@ -55,13 +55,11 @@ class Segemehl(AbstractStep):
     def execute(self, run_id, run):
         is_paired_end = run.get_private_info('paired_end')
         with process_pool.ProcessPool(self) as pool:
-
-
-
-            fifo_path_genome = '/mnt/fhgfs_ribdata/references/hg19/hg19.fa'
-
             
-            #pool.launch([self.get_tool('cat4m'), self.get_option('genome'), '-o', fifo_path_genome])
+            fifo_path_genome = pool.get_temporary_fifo('segemehl-genome-fifo', 'input')
+            fifo_path_unmapped = pool.get_temporary_fifo('segemehl-unmapped-fifo', 'output')
+            
+            pool.launch([self.get_tool('cat4m'), self.get_option('genome'), '-o', fifo_path_genome])
             
             with pool.Pipeline(pool) as pipeline:
                                 
@@ -76,62 +74,21 @@ class Segemehl(AbstractStep):
                     segemehl.extend(['-p', run.get_private_info('R2-in')])
                 
                 segemehl.extend([
-                    '-u', '/tmp/foo/unmapp.bla',
+                    '-u', fifo_path_unmapped,
                     '-H', '1',
-                    '-t', '30',
+                    '-t', '20',
                     '-s', '-S',
                     '-D', '0',
-                    '-o', '/tmp/foo/nej'
                 ])
                 
                 pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
                 print(segemehl)
-                print (" " .join(segemehl))
                 pipeline.append(segemehl, stderr_path = run.get_single_output_file_for_annotation('log'))
-                #pipeline.append(pigz, stdout_path = run.get_single_output_file_for_annotation('alignments'))
+                pipeline.append(pigz, stdout_path = run.get_single_output_file_for_annotation('alignments'))
                 
+            with pool.Pipeline(pool) as pipeline:
+                pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
                 
-                
-
-
-    # def execute(self, run_id, run):
-    #     is_paired_end = run.get_private_info('paired_end')
-    #     with process_pool.ProcessPool(self) as pool:
-            
-    #         fifo_path_genome = pool.get_temporary_fifo('segemehl-genome-fifo', 'input')
-    #         fifo_path_unmapped = pool.get_temporary_fifo('segemehl-unmapped-fifo', 'output')
-            
-    #         pool.launch([self.get_tool('cat4m'), self.get_option('genome'), '-o', fifo_path_genome])
-            
-    #         with pool.Pipeline(pool) as pipeline:
-                                
-    #             segemehl = [
-    #                 self.get_tool('segemehl'),
-    #                 '-d', fifo_path_genome,
-    #                 '-i', self.get_option('index'),
-    #                 '-q', run.get_private_info('R1-in')
-    #                 ]
-
-    #             if is_paired_end:
-    #                 segemehl.extend(['-p', run.get_private_info('R2-in')])
-                
-    #             segemehl.extend([
-    #                 '-u', fifo_path_unmapped,
-    #                 '-H', '1',
-    #                 '-t', '30',
-    #                 '-s', '-S',
-    #                 '-D', '0',
-    #                 '-o', '/dev/stdout'
-    #             ])
-                
-    #             pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
-    #             print(segemehl)
-    #             pipeline.append(segemehl, stderr_path = run.get_single_output_file_for_annotation('log'))
-    #             pipeline.append(pigz, stdout_path = run.get_single_output_file_for_annotation('alignments'))
-                
-    #         with pool.Pipeline(pool) as pipeline:
-    #             pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
-                
-    #             pipeline.append([self.get_tool('cat4m'), fifo_path_unmapped])
-    #             pipeline.append(pigz, stdout_path = run.get_single_output_file_for_annotation('unmapped'))
+                pipeline.append([self.get_tool('cat4m'), fifo_path_unmapped])
+                pipeline.append(pigz, stdout_path = run.get_single_output_file_for_annotation('unmapped'))
 
