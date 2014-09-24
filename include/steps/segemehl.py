@@ -82,7 +82,6 @@ class Segemehl(AbstractStep):
                 ])
                 
                 pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
-                print(segemehl)
                 pipeline.append(segemehl, stderr_path = run.get_single_output_file_for_annotation('log'))
                 pipeline.append(pigz, stdout_path = run.get_single_output_file_for_annotation('alignments'))
                 
