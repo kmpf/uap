@@ -74,7 +74,9 @@ class RunFolderSource(AbstractSourceStep):
                     run.add_public_info('R2', r2_files)
 
 
+
                 # read sample sheets
+                sample_path =  (os.path.dirname(paths[0]))
                 sample_sheet_path = os.path.join(sample_path, 'SampleSheet.csv')
                 reader = csv.DictReader(open(sample_sheet_path))
                 # get and set indices
