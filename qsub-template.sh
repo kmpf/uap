@@ -31,8 +31,9 @@ module load picard-tools/1.117-1_CentOS6
 module load casava/1.8.2-4_CentOS6
 module load fastqc/0.11.2-1_CentOS6
 module load cutadapt/1.4.1-1_CentOS6
-module load segemehl/0.1.9-1_CentOS6
-    
+module load segemehl/04182013-mod-stdout_CentOS6
+module load MACS/2.1.0_CentOS6
+
 # Load support modules
 module load git/1.9.2-2_gcc_4.8.1_CentOS6
 module load lapack/3.5.0-1_gcc_4.8.1_CentOS6
