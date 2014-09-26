@@ -113,6 +113,3 @@ class Segemehl(AbstractStep):
                 pipeline.append([self.get_tool('cat4m'), fifo_path_unmapped])
                 pipeline.append(pigz, stdout_path = run.get_single_output_file_for_annotation('unmapped'))
                 
-                print(run.get_single_output_file_for_annotation('alignments'))
-                print(run.get_single_output_file_for_annotation('unmapped'))
-                print(run.get_single_output_file_for_annotation('log'))
