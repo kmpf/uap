@@ -1,0 +1,3 @@
+Summary: Remove unnecessary options from submit-to-cluster.py
+
+The formerly added options to support special flags on the cluster can be removed
