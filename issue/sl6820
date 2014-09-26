@@ -1,4 +1,5 @@
 Summary: Add option to display commands executed by the pipeline
+Categories: yq8646-features
 
 It seems to be necessary to include this option in the run-locally.py script;
 It would help debugging steps, because the command can be directly executed without the pipeline
