@@ -36,10 +36,10 @@ This task wish list is now processed one by one (in topological order):
 '''
 
 parser = argparse.ArgumentParser(
-    description='This script submits all tasks configured in config.yaml to a ' +
-                'Sun GridEngine cluster via qsub. The list of tasks can be ' +
-                'narrowed down by specifying a step name (in which case all ' +
-                'runs of this steps will be considered) or individual tasks ' +
+    description='This script submits all tasks configured in config.yaml to a '
+                'Sun GridEngine cluster via qsub. The list of tasks can be '
+                'narrowed down by specifying a step name (in which case all '
+                'runs of this steps will be considered) or individual tasks '
                 '(step_name/run_id).',
     formatter_class=argparse.RawTextHelpFormatter)
 
@@ -47,47 +47,24 @@ parser.add_argument("--even-if-dirty",
                     dest="even_if_dirty",
                     action="store_true",
                     default=False,
-                    help="Must be set if the local git repository " +
-                    "contains uncommited changes. Otherwise the pipeline " +
+                    help="Must be set if the local git repository "
+                    "contains uncommited changes. Otherwise the pipeline "
                     "will not start.")
-
-parser.add_argument("--highmem",
-                    dest="highmem",
-                    action="store_true",
-                    default=False,
-                    help="Must be set if the highmem node of the " +
-                    "cluster is being used.")
-
-parser.add_argument("--oversubscribed",
-                    dest="oversubscribed",
-                    action="store_true",
-                    default=False,
-                    help="Must be set if segemehl jobs are going to run on " +
-                    "a special configured node.")
 
 parser.add_argument("step_task",
                     nargs='*',
                     default=list(),
                     type=str,
-                    help="Can take multiple step names as input. A step name " +
-                    "is the name of any entry in the 'steps:' section " +
-                    "as defined in 'config.yaml'. A list of all task IDs " +
+                    help="Can take multiple step names as input. A step name "
+                    "is the name of any entry in the 'steps:' section "
+                    "as defined in 'config.yaml'. A list of all task IDs " 
                     "is returned by running './status.py'.")
 
 args = parser.parse_args()
 
 def main():
     p = pipeline.Pipeline(arguments=args)
-    
-    use_highmem = False
-    use_oversubscribed = False
-    if args.highmem:
-        print("Passing -l highmem to qsub...")
-        use_highmem = True
-    elif args.oversubscribed:
-        print("Using oversubscribed node.")
-        use_oversubscribed = True
-        
+            
     task_wish_list = None
     if len(args.step_task) >= 1:
         task_wish_list = list()
@@ -101,13 +78,7 @@ def main():
 
     tasks_left = []
 
-    template = None
-    if use_highmem:
-        template = open('qsub-highmem-template.sh', 'r').read()
-    elif use_oversubscribed:
-        template = open('qsub-oversubscribed-template.sh', 'r').read()
-    else:
-        template = open('qsub-template.sh', 'r').read()
+    template = open('qsub-template.sh', 'r').read()
 
     for task in p.all_tasks_topologically_sorted:
         if task_wish_list is not None:
