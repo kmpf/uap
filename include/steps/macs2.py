@@ -64,9 +64,9 @@ class Macs2(AbstractStep):
                         # STDOUT goes here
                         run.add_output_file('log', '%s-macs2-log.txt'
                                             % new_run_id, input_paths)
-                        run.add_output_file('peaks', '%s-macs2-peaks.bed' 
+                        run.add_output_file('peaks', '%s-macs2-narrowPeaks.bed'
                                             % new_run_id, input_paths)
-                        run.add_output_file('peaks', '%s-macs2-peaks.xls' 
+                        run.add_output_file('peaks', '%s-macs2-narrowPeaks.xls' 
                                             % new_run_id, input_paths)
                         run.add_output_file('summits', '%s-macs2-summits.bed' 
                                             % new_run_id, input_paths)
@@ -88,75 +88,85 @@ class Macs2(AbstractStep):
     
     def execute(self, run_id, run):
 
+        # Get the name for a temporary directory
         macs_out_directory = self.get_temporary_path('macs2-out')
-        
+
         with process_pool.ProcessPool(self) as pool:
+            # MACS2 shall call peaks
             macs2 = [self.get_tool('macs2'), 'callpeak', '--treatment']
+            
+            # Fail if there is no treatment file
             if not run.has_private_info('treatment_files'):
                 raise StandardError("No treatment files for %s to analyse with macs2" % run_id)
             macs2.extend( [" ".join(run.get_private_info('treatment_files'))] )
-            # if we do have control data use it
+
+            # and if there is no control file
             if not run.has_private_info('control_files'):
-                raise StandardError("No control files for %s to analyse with macs2"
-                                    % run_id)
-                
+                raise StandardError("No control files for %s to analyse with macs2" % run_id)
             macs2.extend(['--control', 
                           " ".join(run.get_private_info('control_files')) ])
 
+            if self.is_option_set_in_config('broad'):
+                macs2.extend(['--broad'])
+
             macs2.extend([
                 '--format', self.get_option('format'),
-                '--name', run_id
+                '--name', run_id,
+                '--outdir', macs_out_directory
             ])
-            print(" ".join(macs2) )
-
+            
             try:
                 os.mkdir(macs_out_directory)
             except OSError:
                 pass
                 os.chdir(macs_out_directory)
 
-            pool.launch(macs2, stdout_path = 
-                        run.get_single_output_file_for_annotation('log') )
-
             peaks_files = run.get_output_files_for_annotation_and_tags(
                 'peaks', ['xls', 'bed'])
+
+            pool.launch(macs2, stdout_path = 
+                        run.get_single_output_file_for_annotation('log') )
                 
-            # Rename MACS2 generated output files so the connection
+            # Rename MACS2 generated output files so they can be properly moved
+#       try:
+#           if os.path.isfile(peaks_files['bed']):
+#               print("BED file %s exists!" % peaks_files['bed'])
+#       except:
+#           raise StandardError("Datei %s nicht existent!" % peaks_files['bed'])
 
-            try:
-                os.rename(os.path.join(macs_out_directory, 
-                                       '%s_peaks.narrowPeak' % run_id), 
-                          peaks_files['bed'])
-            except OSError:
-                raise StandardError('No file: %s' 
-                                    % os.path.join( macs_out_directory, 
-                                                    '%s_peaks.bed' % run_id))
+        try:
+            print("Narrow Peak BED file: " + peaks_files['bed'])
+            os.rename(os.path.join(macs_out_directory, '%s_peaks.narrowPeak' 
+                                   % run_id), peaks_files['bed'])
+        except OSError:
+            raise StandardError('No file: %s' 
+                                % os.path.join(macs_out_directory,
+                                               '%s_peaks.narrowPeak' % run_id))
 
-            try:
-                os.rename(os.path.join(macs_out_directory,
-                                       '%s_peaks.xls' % run_id), 
-                          peaks_files['xls'])
-            except OSError:
-                raise StandardError('No file: %s' 
-                                    % os.path.join( macs_out_directory, 
-                                                   '%s_peaks.xls' % run_id))
+        try:
+            os.rename(os.path.join(macs_out_directory, '%s_peaks.xls' % run_id),
+                      peaks_files['xls'])
+        except OSError:
+            raise StandardError('No file: %s' 
+                                % os.path.join( macs_out_directory, 
+                                                '%s_peaks.xls' % run_id))
 
-            try:
-                os.rename(os.path.join(macs_out_directory, '%s_summits.bed'
-                                       % run_id), 
-                          run.get_single_output_file_for_annotation('summits'))
-            except OSError:
-                raise StandardError('No file: %s' 
-                                    % os.path.join(macs_out_directory, 
-                                                   '%s_summits.bed' % run_id))
+        try:
+            os.rename(os.path.join(macs_out_directory, '%s_summits.bed'
+                                   % run_id), 
+                      run.get_single_output_file_for_annotation('summits'))
+        except OSError:
+            raise StandardError('No file: %s' 
+                                % os.path.join(macs_out_directory, 
+                                               '%s_summits.bed' % run_id))
 
-            try:
-                os.rename(os.path.join(macs_out_directory, '%s_model.r' % run_id), 
-                          run.get_single_output_file_for_annotation('model'))
-            except OSError:
-                file_name = run.get_single_output_file_for_annotation('model')
-                with file(file_name, 'a'):
-                    os.utime(file_name, None)
+        try:
+            os.rename(os.path.join(macs_out_directory, '%s_model.r' % run_id), 
+                      run.get_single_output_file_for_annotation('model'))
+        except OSError:
+            file_name = run.get_single_output_file_for_annotation('model')
+            with file(file_name, 'a'):
+                os.utime(file_name, None)
 
 #            try:
 #                os.rename(os.path.join(macs_out_directory, '%s_negative_peaks.xls'
