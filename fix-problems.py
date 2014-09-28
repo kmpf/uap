@@ -20,6 +20,14 @@ parser = argparse.ArgumentParser(
                 "line options.",
     formatter_class=argparse.RawTextHelpFormatter)
 
+
+parser.add_argument("--cluster",
+                    dest="cluster",
+                    type=str,
+                    default="auto",
+                    help="Specify the cluster type (sge, slurm), defaults to auto.")
+
+
 parser.add_argument("--details",
                     dest="details",
                     action="store_true",

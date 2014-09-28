@@ -1,6 +1,6 @@
 import sys
-sys.path.append('./include/steps')
-sys.path.append('./include/sources')
+sys.path.insert(0, './include/steps')
+sys.path.insert(0, './include/sources')
 import copy
 import datetime
 import fscache

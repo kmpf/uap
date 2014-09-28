@@ -40,11 +40,41 @@ class Pipeline(object):
     Possible states a task can be in.
     '''
 
+    cluster_config = {
+        'slurm':
+           {'submit': 'sbatch',
+            'stat': 'squeue',
+            'template': 'sbatch-template.sh',
+            'hold_jid': '--dependency=afterany:%s',
+            'set_job_name': '--job-name=%s',
+            'set_stderr': '-e',
+            'set_stdout': '-o',
+            'parse_job_id': 'Submitted batch job (\d+)'},
+
+        'sge':
+           {'submit': 'qsub',
+            'stat': 'qstat',
+            'template': 'qsub-template.sh',
+            'hold_jid': '-hold_jid',
+            'set_job_name': '-N',
+            'set_stderr': '-e',
+            'set_stdout': '-o',
+            'parse_job_id': 'Your job (\d+)'}
+    }
+    '''
+    Cluster-related configuration for every cluster system supported.
+    '''
+
     def __init__(self, **kwargs):
         self.caught_signal = None
         
         self.git_dirty_diff = None
         
+        self.cluster_type = None
+        '''
+        The cluster type to be used (must be one of the keys specified in cluster_config).
+        '''
+
         # now determine the Git hash of the repository
         self.git_hash_tag = subprocess.check_output(['git', 'describe', '--all', '--dirty', '--long']).strip()
 
@@ -63,7 +93,17 @@ class Pipeline(object):
                       "line.")
                 exit(1)
             self.git_dirty_diff = subprocess.check_output(['git', 'diff'])
-            
+
+        try:
+            # set cluster type
+            if args.cluster == 'auto':
+                self.set_cluster_type(self.autodetect_cluster_type())
+            else:
+                self.set_cluster_type(args.cluster)
+        except AttributeError:
+            # cluster type is not an applicable parameter here, and that's fine
+            # (we're probably in run-locally.py)
+            pass
         # the configuration as read from config.yaml
         self.config = dict()
 
@@ -362,20 +402,22 @@ class Pipeline(object):
         check_queue = True
         
         try:
-            qstat_output = subprocess.check_output(['qstat'])
+            stat_output = subprocess.check_output([self.cc('stat')])
+        except KeyError:
+            check_queue = False
         except OSError:
             check_queue = False
         except subprocess.CalledProcessError:
-            # we don't have qstat here, don't check the queue
+            # we don't have a stat tool here, don't check the queue
             check_queue = False
             
         if print_more_warnings and not check_queue:
-            print("Attention, we cannot check stale queued ping files because this host does not have qstat.")
+            print("Attention, we cannot check stale queued ping files because this host does not have %s." % self.cc('stat'))
             
         running_jids = set()
             
         if check_queue:
-            for line in qstat_output.split("\n"):
+            for line in stat_output.split("\n"):
                 try:
                     jid = int(line.strip().split(' ')[0])
                     running_jids.add(str(jid))
@@ -462,3 +504,35 @@ class Pipeline(object):
                 total_size += os.path.getsize(path)
             print("Hint: You could save %s of disk space by volatilizing %d output files." % (misc.bytes_to_str(total_size), len(collected_files)))
             print("Call ./volatilize.py --srsly to purge the files.")
+
+    def autodetect_cluster_type(self):
+        
+        if (subprocess.check_output( ["sbatch", "--version"])[:6] == "slurm "):
+            return "slurm"
+        if (subprocess.check_output(["qstat", "-help"] )[:4] == "SGE "):
+            return "sge"
+            
+        return None
+
+
+    def set_cluster_type(self, cluster_type):
+        if not cluster_type in Pipeline.cluster_config:
+            print("Unknown cluster type: %s (choose one of %s)." % (cluster_type, ', '.join(Pipeline.self.cluster_config.keys())))
+            exit(1)
+        self.cluster_type = cluster_type
+
+    '''
+    Shorthand to retrieve a cluster-type-dependent command or filename (cc == cluster command).
+    '''
+    def cc(self, key):
+        return Pipeline.cluster_config[self.cluster_type][key]
+
+    '''
+    Shorthand to retrieve a cluster-type-dependent command line part (this is a list)
+    '''
+    def ccla(self, key, value):
+        result = Pipeline.cluster_config[self.cluster_type][key]
+        if '%s' in result:
+            return [result % value]
+        else:
+            return [result, value]
