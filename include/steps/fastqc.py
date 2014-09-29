@@ -46,7 +46,7 @@ class Fastqc(AbstractStep):
                 input_path_bins[_] = list()
 
             for path in input_paths:
-                which = '-' + misc.assign_string(os.path.basename(path), ['R1', 'R2'])
+                which = '_' + misc.assign_string(os.path.basename(path), ['R1', 'R2'])
                 input_path_bins[which].append(path) 
                    
 
