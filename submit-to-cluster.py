@@ -78,20 +78,7 @@ def main():
 
     tasks_left = []
 
-<<<<<<< HEAD
-    # TODO: We shouldn't use three different templates just to specify another option.
-    print("# TODO: We shouldn't use three different templates just to specify another option.")
-    # template = None
-    # if use_highmem:
-    #     template = open('qsub-highmem-template.sh', 'r').read()
-    # elif use_oversubscribed:
-    #     template = open('qsub-oversubscribed-template.sh', 'r').read()
-    # else:
-    #     template = open('qsub-template.sh', 'r').read()
     template = open(p.cc('template'), 'r').read()
-=======
-    template = open('qsub-template.sh', 'r').read()
->>>>>>> wx5076-remove-unnecessary-options-from-submit-to-cluster-py
 
     for task in p.all_tasks_topologically_sorted:
         if task_wish_list is not None:
