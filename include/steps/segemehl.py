@@ -32,7 +32,7 @@ class Segemehl(AbstractStep):
     def __init__(self, pipeline):
         super(Segemehl, self).__init__(pipeline)
 
-        self.set_cores(8)
+        self.set_cores(12)
         
         self.add_connection('in/reads')
         self.add_connection('out/alignments')
@@ -70,7 +70,6 @@ class Segemehl(AbstractStep):
                 run.add_output_file('unmapped', '%s-segemehl-unmapped.fastq.gz' % run_id,
                                     input_paths)
                 run.add_output_file('log', '%s-segemehl-log.txt' % run_id, input_paths)
-                
 
 
     def execute(self, run_id, run):
@@ -97,14 +96,12 @@ class Segemehl(AbstractStep):
                 segemehl.extend([
                     '-u', fifo_path_unmapped,
                     '-H', '1',
-                    '-t', '7',
+                    '-t', '20',
                     '-s', '-S',
                     '-D', '0',
-                    '-o', '/dev/stdout'
                 ])
                 
                 pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
-                
                 pipeline.append(segemehl, stderr_path = run.get_single_output_file_for_annotation('log'))
                 pipeline.append(pigz, stdout_path = run.get_single_output_file_for_annotation('alignments'))
                 
@@ -113,4 +110,4 @@ class Segemehl(AbstractStep):
                 
                 pipeline.append([self.get_tool('cat4m'), fifo_path_unmapped])
                 pipeline.append(pigz, stdout_path = run.get_single_output_file_for_annotation('unmapped'))
-                
+

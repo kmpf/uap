@@ -27,11 +27,14 @@ class Cutadapt(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('cutadapt')
         self.require_tool('fix_qnames')
-        
+
+        # Options for cutadapt
         self.add_option('adapter-type', str, optional=True)
-        self.add_option('adapter-R1', str, optional = False)
+        self.add_option('adapter-R1', str, optional = True)
         self.add_option('adapter-R2', str, optional = True)
-#        self.add_option('adapter', str, optional = True)
+        self.add_option('adapter-file', str, optional=True)
+        self.add_option('minimal-length', int, default=10, optional=True)
+
         self.add_option('fix_qnames', bool, default = False)
         
     def declare_runs(self):
@@ -42,17 +45,33 @@ class Cutadapt(AbstractStep):
             ## Make sure the adapter type is one of a, b or g 
             if self.is_option_set_in_config('adapter-type'):
                 if not (self.get_option('adapter-type') in set(['a','b','g'])):
-                    raise StandardError("Option 'adapter-type' must be either 'a','b', or 'g'!")
+                    raise StandardError("Option 'adapter-type' must be either"+
+                                        " 'a','b', or 'g'!")
                                 
-            # make sure that adapter-R1/adapter-R2 are set correctly
-            # according to paired_end info... this kind of mutual exclusive option
-            # checking is quite complicated, so we do it here.
+            # make sure that adapter-R1/adapter-R2 or adapter-file are set
+            # correctly according to paired_end info... this kind of mutual 
+            # exclusive option checking is a bit tedious, so we do it here.
 
             if is_paired_end:
-                if not self.is_option_set_in_config('adapter-R2'):
-                    raise StandardError("Option 'adapter-R2' required because sample %s is paired end!" % run_id)
-            elif self.is_option_set_in_config('adapter-R2'):
-                    raise StandardError("Option 'adapter-R2' not allowed because sample %s is not paired end!" % run_id)
+                if ( not self.is_option_set_in_config('adapter-R2') and 
+                     not self.is_option_set_in_config('adapter-file') ):
+                    raise StandardError("Option 'adapter-R2' or " +
+                                        "'adapter-file' required because " +
+                                        "sample %s is paired end!" % run_id)
+            elif ( self.is_option_set_in_config('adapter-R2') and
+                   not self.is_option_set_in_config('adapter-file') ):
+                raise StandardError("Option 'adapter-R2' not allowed because " +
+                                    "sample %s is not paired end!" % run_id)
+
+            if ( self.is_option_set_in_config('adapter-file') and
+                 self.is_option_set_in_config('adapter-R1') ):
+                raise StandardError("Option 'adapter-R1' and 'adapter-file' " +
+                                    "are both set but are mutually exclusive!" )
+            if ( not self.is_option_set_in_config('adapter-file') and
+                 not self.is_option_set_in_config('adapter-R1') ):
+                raise StandardError("Option 'adapter-R1' or 'adapter-file' " +
+                                    "required to call cutadapt for sample %s!" % 
+                                    run_id)
 
             # decide which read type we'll handle based on whether this is
             # paired end or not
@@ -69,7 +88,8 @@ class Cutadapt(AbstractStep):
             for path in input_paths:
                 which = '-R1'
                 if is_paired_end:
-                    which = '-' + misc.assign_string(os.path.basename(path), ['R1', 'R2'])
+                    which = '-' + misc.assign_string(os.path.basename(path), 
+                                                     ['R1', 'R2'])
                 input_path_bins[which].append(path)
 
             # now declare two runs
@@ -78,27 +98,36 @@ class Cutadapt(AbstractStep):
                     # add paired end information
                     run.add_private_info('paired_end', is_paired_end)
                     if is_paired_end:
-                        run.add_private_info('paired_end_read', which.replace('-', ''))
+                        run.add_private_info('paired_end_read', 
+                                             which.replace('-', ''))
 
-                    # add adapter information, insert correct index first if necessary
-                    adapter = self.get_option('adapter%s' % which)
-                    
-                    if '((INDEX))' in adapter:
-                        index = self.find_upstream_info_for_input_paths(input_paths, 'index%s' % which)
-                        if which == '-R2':
+                    if self.is_option_set_in_config('adapter%s' % which):
+                        # add adapter information, insert correct index first if 
+                        # necessary
+                        adapter = self.get_option('adapter%s' % which)
+                        
+                        # create reverse complement of Index sequence 
+                        if '((INDEX))' in adapter:
+                            index = self.find_upstream_info_for_input_paths(
+                                input_paths, 'index%s' % which)
                             complements = string.maketrans('acgtACGT', 'tgcaTGCA')
                             index = index.translate(complements)[::-1]
-
-                        adapter = adapter.replace('((INDEX))', index)
-                     # make sure the adapter is looking good
-                    if re.search('^[ACGT]+$', adapter) == None:
-                        raise StandardError("Unable to come up with a legit-looking adapter: " + adapter)
-                    run.add_private_info('adapter', adapter)
-
+                            adapter = adapter.replace('((INDEX))', index)
+                            
+                        # make sure the adapter is looking good
+                        if re.search('^[ACGT]+$', adapter) == None:
+                            raise StandardError("Unable to come up with a "+
+                                                "legit-looking adapter: " + 
+                                                adapter)
+                        run.add_private_info('adapter', adapter)
+                    elif self.is_option_set_in_config('adapter-file'):
+                        adapter = "file:" + self.get_option('adapter-file')
+                        run.add_private_info('adapter', adapter)
                     # add output files: reads and log
-                    run.add_output_file("reads", "%s-cutadapt%s.fastq.gz" % (run_id, which), input_path_bins[which])
-                    run.add_output_file("log", "%s-cutadapt%s-log.txt" % (run_id, which), input_path_bins[which])
-
+                    run.add_output_file("reads", "%s-cutadapt%s.fastq.gz" 
+                                        % (run_id, which), input_path_bins[which])
+                    run.add_output_file("log", "%s-cutadapt%s-log.txt" 
+                                        % (run_id, which), input_path_bins[which])
 
     def execute(self, run_id, run):
         with process_pool.ProcessPool(self) as pool:
@@ -113,18 +142,22 @@ class Cutadapt(AbstractStep):
                 else:
                     adapterType='-a'
                 
-                pigz1 = [self.get_tool('pigz'), '--processes', '1', '--decompress', '--stdout']
+                pigz1 = [self.get_tool('pigz'), '--processes', '1', 
+                         '--decompress', '--stdout']
                 
                 fix_qnames = [self.get_tool('fix_qnames')]
 
-                cutadapt = [self.get_tool('cutadapt'), adapterType, run.get_private_info('adapter'), '-']
+                cutadapt = [self.get_tool('cutadapt'), adapterType, 
+                            run.get_private_info('adapter'), '-']
 
-                pigz2 = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '1', '--stdout']
+                pigz2 = [self.get_tool('pigz'), '--blocksize', '4096', 
+                         '--processes', '1', '--stdout']
 
                 # create the pipeline and run it
                 pipeline.append(cat4m)
                 pipeline.append(pigz1)
                 if self.get_option('fix_qnames') == True:
                     pipeline.append(fix_qnames)
-                pipeline.append(cutadapt, stderr_path = run.get_single_output_file_for_annotation('log'))
+                pipeline.append(cutadapt, stderr_path = 
+                                run.get_single_output_file_for_annotation('log'))
                 pipeline.append(pigz2, stdout_path = out_path)
