@@ -506,24 +506,19 @@ class Pipeline(object):
             print("Call ./volatilize.py --srsly to purge the files.")
 
     def autodetect_cluster_type(self):
-        cluster_type = str
         try:
-            cluster_type = subprocess.check_output( ["sbatch", "--version"])[:6]
-        except:
-            print(cluster_type)
-
-        try:
-            cluster_type = subprocess.check_output(["qstat", "-help"] )[:4]
-        except:
-            print(cluster_type)
-
-        if ( cluster_type == "slurm "):
+            if ( subprocess.check_output( ["sbatch", "--version"])[:6] == "slurm "):
             return "slurm"
-        if ( cluster_type == "SGE "):
-            return "sge"
+        except OSError:
+            pass
+
+        try:
+            if ( subprocess.check_output(["qstat", "-help"] )[:4] == "SGE "):
+                return "sge"
+        except OSError:
+            pass
             
         return None
-
 
     def set_cluster_type(self, cluster_type):
         if not cluster_type in Pipeline.cluster_config:
