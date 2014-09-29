@@ -6,12 +6,33 @@ import yaml
 
 
 class Segemehl(AbstractStep):
+    '''
+    segemehl is a software to map short sequencer reads to reference genomes. 
+    Unlike other methods, segemehl is able to detect not only mismatches but 
+    also insertions and deletions. Furthermore, segemehl is not limited to a 
+    specific read length and is able to mapprimer- or polyadenylation 
+    contaminated reads correctly.
 
+    This step creates at first two FIFOs. The first through which segemehl gets 
+    its genome data and the second to which it writes unmapped reads::
+
+       mkfifo genome_fifo unmapped_fifo
+       cat4m <genome-fasta> -o genome_fifo
+
+    The executed segemehl command is this::
+
+        segemehl -d genome_fifo -i <genome-index-file> -q <read1-fastq> [-p <read2-fastq>] -u unmapped_fifo -H 1 -t 11 -s -S -D 0 -o /dev/stdout |  pigz --blocksize 4096 --processes 2 -c
+
+    The unmapped reads are saved via these commands::
+
+        cat4m unmapped_fifo | pigz --blocksize 4096 --processes 2 -c > <unmapped-fastq>
+
+    '''
 
     def __init__(self, pipeline):
         super(Segemehl, self).__init__(pipeline)
 
-        self.set_cores(24)
+        self.set_cores(12)
         
         self.add_connection('in/reads')
         self.add_connection('out/alignments')
@@ -49,7 +70,6 @@ class Segemehl(AbstractStep):
                 run.add_output_file('unmapped', '%s-segemehl-unmapped.fastq.gz' % run_id,
                                     input_paths)
                 run.add_output_file('log', '%s-segemehl-log.txt' % run_id, input_paths)
-                
 
 
     def execute(self, run_id, run):

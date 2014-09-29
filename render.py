@@ -1,4 +1,5 @@
 #!./python_env/bin/python
+# encoding: utf-8
 
 import sys
 sys.path.append('./include')
@@ -20,6 +21,14 @@ parser = argparse.ArgumentParser(
                 "displayed information can be narrowed down via command " +
                 "line options.",
     formatter_class=argparse.RawTextHelpFormatter)
+
+parser.add_argument("--even-if-dirty",
+                    dest="even_if_dirty",
+                    action="store_true",
+                    default=False,
+                    help="Must be set if the local git repository " +
+                    "contains uncommited changes. Otherwise the pipeline " +
+                    "will not start.")
 
 parser.add_argument("--all",
                     dest="all",

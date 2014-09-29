@@ -17,7 +17,7 @@ class Macs14(AbstractStep):
         self.add_connection('out/peaks')
         self.add_connection('out/summits')
         self.add_connection('out/diagnosis')
-#        self.add_connection('out/model')
+        self.add_connection('out/model')
         self.add_connection('out/negative-peaks')
  
         self.require_tool('macs14')
@@ -47,6 +47,7 @@ class Macs14(AbstractStep):
                 run.add_output_file('peaks', '%s-macs14-peaks.bed' % run_id, input_paths)
                 run.add_output_file('peaks', '%s-macs14-peaks.xls' % run_id, input_paths)
                 run.add_output_file('summits', '%s-macs14-summits.bed' % run_id, input_paths)
+                run.add_output_file('model', '%s-macs14-model.r' % run_id, input_paths)
                 run.add_output_file('negative-peaks', '%s-macs14-negative-peaks.xls' 
                                     % run_id, input_paths)
 
@@ -92,7 +93,6 @@ class Macs14(AbstractStep):
 
             pool.launch(macs14, stdout_path = run.get_single_output_file_for_annotation('log') )
 
-
         peaks_files = run.get_output_files_for_annotation_and_tags('peaks', ['xls', 'bed'])
         try:
             os.rename(os.path.join(macs_out_directory, '%s_peaks.bed' % run_id), 
@@ -112,6 +112,13 @@ class Macs14(AbstractStep):
         except OSError:
             raise StandardError('No file: %s' % os.path.join(macs_out_directory, 
                                                              '%s_summits.bed' % run_id))
+        try:
+            os.rename(os.path.join(macs_out_directory, '%s_model.r' % run_id), 
+                      run.get_single_output_file_for_annotation('model'))
+        except OSError:
+            file_name = run.get_single_output_file_for_annotation('model')
+            with file(file_name, 'a'):
+                os.utime(file_name, None)
         try:
             os.rename(os.path.join(macs_out_directory, '%s_negative_peaks.xls' % run_id), 
                       run.get_single_output_file_for_annotation('negative-peaks'))

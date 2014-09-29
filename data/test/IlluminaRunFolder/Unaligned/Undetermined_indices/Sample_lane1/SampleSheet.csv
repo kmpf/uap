@@ -1,0 +1,2 @@
+FCID,Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator,SampleProject
+C0UTRACXX,1,lane1,unknown,Undetermined,Clusters with unmatched barcodes for lane 1,N,PE,schreibs,Undetermined_indices

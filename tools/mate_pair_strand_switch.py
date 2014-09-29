@@ -14,10 +14,15 @@ def main():
     parser.add_argument('--version',
                         action='version',
                         version='%(prog)s 0.01 alpha')
+    parser.add_argument('infile', nargs='?', type=argparse.FileType('r'),
+                    default=sys.stdin, help ="Infile default reads from stdin")
+    parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
+                    default=sys.stdout, help ="Outfile default writes to stdout")
+
 
     args = parser.parse_args()
 
-    for bed_line in fileinput.input():
+    for bed_line in args.infile:
         bed_line = bed_line.rstrip()
         columns = bed_line.split('\t')
         if re.search('2$', columns[3]):

@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 
-make html
-#cp -R ./html ~/Documents/rnaseq-pipeline-doc/
+echo "[make_doc.sh] Creating documentation as HTML"
+make html && echo "[make_doc.sh] HTML has been successfully created."
 
-#make latexpdf
-#cp -R ./latex ~/Documents/rnaseq-pipeline-doc/
+while [[ "$pdf" != "y" ]] && [[ "$pdf" != "n" ]]; do
+    read -p "[make_doc.sh] Create PDF of documentation? [y/n] " pdf
+done
+
+if [[ "$pdf" == "y" ]] ; then
+    echo "[make_doc.sh] Creating documentation as PDF"
+    make latexpdf && echo "[make_doc.sh] PDF has been successfully created."
+fi

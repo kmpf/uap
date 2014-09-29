@@ -17,10 +17,12 @@ down via command line options.
 
 
 parser = argparse.ArgumentParser(
-    description="This script displays by default information about all tasks " +
-                "of the pipeline as configured in 'config.yaml'. But the " +
-                "displayed information can be narrowed down via command " +
-                "line options.",
+    description="This script displays by default information about all tasks "
+                "of the pipeline as configured in 'config.yaml'. But the "
+                "displayed information can be narrowed down via command "
+                "line options.\n"
+                "IMPORTANT: Hints given by this script are just valid if YOU "
+                "submitted the jobs to the cluster.",
     formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument("--cluster",

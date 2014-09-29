@@ -1279,7 +1279,7 @@ class AbstractStep(object):
 
     def get_run_ids_and_input_files_for_connection(self, in_key):
         '''
-        Returns an iterator with run_id and input_files where:
+        Returns an iterator/generator with run_id and input_files where:
             - run_id is a string
             - input_files is a list of input paths
         '''
@@ -1291,6 +1291,20 @@ class AbstractStep(object):
             input_files = sorted(input_files)
             yield run_id, input_files
 
+    def get_input_files_for_run_id_and_connection(self, run_id, in_key):
+        '''
+        Returns a list of all input files given a run_id and a connection
+        '''
+        result = self.get_input_run_info_for_connection(in_key)
+        info = result['runs'][run_id]
+        input_files = list()
+        for step_name, input_paths in info.items():
+            input_files.extend(input_paths)
+        input_files = sorted(input_files)
+        return input_files
+        
+        
+
     def get_n_input_file_for_connection(self, in_key, expected):
         result = self.get_input_run_info_for_connection(in_key)
         values = set()
@@ -1298,7 +1312,7 @@ class AbstractStep(object):
             for step_name, input_paths in info.items():
                 for path in input_paths:
                     values.add(path)
-        if len(values) != 1:
+        if len(values) != expected:
             raise StandardError("Expected exactly %d files for %s in %s, got %d instead." % (expected, in_key, self, len(values)))
         return list(values)
         
@@ -1311,8 +1325,10 @@ class AbstractStep(object):
 
     def get_annotation_for_input_file(self, path):
         '''
-        Determine the annotation for a given input file (that is, the connection name).
+        Determine the annotation for a given input file (that is, the connection
+        name).
         '''
+        # that's four nested loops
         for dep in self.dependencies:
             run_info = dep.get_run_info()
             for run_id, run in run_info.items():

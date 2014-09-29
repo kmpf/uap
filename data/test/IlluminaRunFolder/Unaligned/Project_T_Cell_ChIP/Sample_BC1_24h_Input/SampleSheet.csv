@@ -1,0 +1,5 @@
+FCID,Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator,SampleProject
+C0UTRACXX,2,BC1_24h_Input,hg19,ATCACG,BC1_24h_Input,N,PE,schreibs,T_Cell_ChIP
+C0UTRACXX,4,BC1_24h_Input,hg19,ATCACG,BC1_24h_Input,N,PE,schreibs,T_Cell_ChIP
+C0UTRACXX,5,BC1_24h_Input,hg19,ATCACG,BC1_24h_Input,N,PE,schreibs,T_Cell_ChIP
+C0UTRACXX,7,BC1_24h_Input,hg19,ATCACG,BC1_24h_Input,N,PE,schreibs,T_Cell_ChIP
