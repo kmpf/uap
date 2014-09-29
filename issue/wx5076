@@ -1,4 +1,0 @@
-Summary: Remove unnecessary options from submit-to-cluster.py
-Categories: iz0067-outdated
-
-The formerly added options to support special flags on the cluster can be removed
