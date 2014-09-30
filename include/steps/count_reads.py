@@ -27,8 +27,6 @@ class CountReads(AbstractStep):
         # because both are set everytime samtools is called
         set_bits = self.get_option('set_FLAG_bits')
         unset_bits = self.get_option('unset_FLAG_bits')
-        print(set_bits)
-        print(unset_bits)
         if len(set_bits) != len(unset_bits):
             raise StandardError("set_FLAG_bits has %s elements but " +
                                 "unset_FLAG_bits has %s elements. Both " +
@@ -68,9 +66,9 @@ class CountReads(AbstractStep):
                 run.add_private_info('files-dict', files_dict)
 
     def execute(self, run_id, run):
-        alignment_path = run.get_private_info('in-alignment')
+        alignment_path = run.get_private_info('in-alignment')[0]
         temp_count_files = run.get_private_info('temp-count-files')
-        files_dict = run.get_private_info('files_dict')
+        files_dict = run.get_private_info('files-dict')
         single_count_dir = self.get_temporary_path('single-counts')        
 
         # samtools view -c 
@@ -79,31 +77,28 @@ class CountReads(AbstractStep):
         # geschrieben werden!!!
 
         with process_pool.ProcessPool(self) as pool:
-            for i in range(len(set_bits)):
+            for i in range(len(self.get_option('set_FLAG_bits'))):
                 counts_file = single_count_dir + temp_count_files[i]
-                print(counts_file)
                 with pool.Pipeline(pool) as pipeline:
                     cat4m = [self.get_tool('cat4m'), alignment_path]
                     samtools = [self.get_tool('samtools'), 'view', '-c',
-                                '-f', self.get_option('unset_FLAG_bits')[i],
-                                '-F', self.get_option('set_FLAG_bits')[i],
-                                '-q', self.get_option('exclude_MAPQ_smaller_than')]
-                    samtools.extend(['-', counts_file])
-                    
-                    print(samtools,join(","))
-                    exit(1)
-                    
+                                '-f', '%s' % self.get_option('unset_FLAG_bits')[i],
+                                '-F', '%s' % self.get_option('set_FLAG_bits')[i],
+                                '-q', '%s' % self.get_option('exclude_MAPQ_smaller_than'),
+                                '-']
+                    print(" ".join(samtools))
                     pipeline.append(cat4m)
-                    pipeline.append(samtools)
+                    pipeline.append(samtools, stdout_path = counts_file)
 
         # Read in all count files and create the final statistics file
+        print("here I am")
         header = ["FLAGS_SET", "FLAGS_UNSET"]
         statistics_file = open(
             run.get_single_output_file_for_annotation('statistics'), 'w')
-        statistics_file.write( header.join(",") + ",COUNTS")
+        statistics_file.write( ",".join(header) + ",COUNTS\n")
         for count_file in files_dict:
             f = open(single_count_dir + count_file)
             counts = f.readline()
-            line = "%s, %s, %s"  % ( files_dict[count_file][header[0]],
+            line = "%s, %s, %s\n"  % ( files_dict[count_file][header[0]],
                                      files_dict[count_file][header[1]], counts)
             statistics_file.write( line )
