@@ -96,7 +96,7 @@ class Segemehl(AbstractStep):
                 segemehl.extend([
                     '-u', fifo_path_unmapped,
                     '-H', '1',
-                    '-t', '20',
+                    '-t', '%s' % self.get_cores(),
                     '-s', '-S',
                     '-D', '0',
                 ])
