@@ -1,5 +1,0 @@
-FCID,Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator,SampleProject
-C0UTRACXX,1,BC3_naive_H3K27me3_CS,hg19,AGTCAA,BC3_naive_H3K27me3_CS,N,PE,schreibs,T_Cell_ChIP
-C0UTRACXX,3,BC3_naive_H3K27me3_CS,hg19,AGTCAA,BC3_naive_H3K27me3_CS,N,PE,schreibs,T_Cell_ChIP
-C0UTRACXX,6,BC3_naive_H3K27me3_CS,hg19,AGTCAA,BC3_naive_H3K27me3_CS,N,PE,schreibs,T_Cell_ChIP
-C0UTRACXX,8,BC3_naive_H3K27me3_CS,hg19,AGTCAA,BC3_naive_H3K27me3_CS,N,PE,schreibs,T_Cell_ChIP
