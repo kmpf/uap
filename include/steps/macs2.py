@@ -173,3 +173,9 @@ class Macs2(AbstractStep):
                            run.get_single_output_file_for_annotation(key))
             except OSError:
                 raise StandardError('No file: %s' % output_files[key])
+
+        try:
+            os.rmdir(macs_out_directory)
+        except OSError:
+            print("(Should be logged): Directory %s could not be removed. Still files in directory?" 
+                  % macs_out_directory)
