@@ -14,12 +14,19 @@ class Macs2(AbstractStep):
 
         self.add_connection('in/alignments')
         self.add_connection('out/log')
-        self.add_connection('out/peaks')
-        self.add_connection('out/summits')
         self.add_connection('out/diagnosis')
         self.add_connection('out/model')
-        self.add_connection('out/negative-peaks')
- 
+        # here go either narrow or broad peaks
+        self.add_connection('out/peaks')
+        self.add_connection('out/peaks-xls')
+        # just exist for narrow peaks
+        self.add_connection('out/summits')
+#        self.add_connection('out/negative-peaks')
+        # just exist for broad peaks
+        self.add_connection('out/gapped-peaks')
+
+
+
         self.require_tool('macs2')
         self.require_tool('cat4m')
         self.require_tool('pigz')
@@ -61,16 +68,26 @@ class Macs2(AbstractStep):
 
                     with self.declare_run(new_run_id) as run:
 
-                        # STDOUT goes here
-                        run.add_output_file('log', '%s-macs2-log.txt'
-                                            % new_run_id, input_paths)
-                        run.add_output_file('peaks', '%s-macs2-narrowPeaks.bed'
-                                            % new_run_id, input_paths)
-                        run.add_output_file('peaks', '%s-macs2-narrowPeaks.xls' 
-                                            % new_run_id, input_paths)
-                        run.add_output_file('summits', '%s-macs2-summits.bed' 
-                                            % new_run_id, input_paths)
+                        # Files which are created by using --broad
+                        if self.is_option_set_in_config('broad'):
+                            run.add_output_file('peaks', '%s-macs2_broadPeaks.broadPeak'
+                                                % new_run_id, input_paths)
+                            run.add_output_file('peaks-xls', '%s-macs2-broadPeaks.xls' 
+                                                % new_run_id, input_paths)
+                            run.add_output_file('gapped-peaks', '%s-macs2_peaks.gappedPeak'
+                                                % new_run_id, input_paths)
+                        # Files which are created otherwise
+                        if not self.is_option_set_in_config('broad'):
+                            run.add_output_file('peaks', '%s-macs2-narrowPeaks.narrowPeak'
+                                                % new_run_id, input_paths)
+                            run.add_output_file('peaks-xls', '%s-macs2-narrowPeaks.xls' 
+                                                % new_run_id, input_paths)
+                            run.add_output_file('summits', '%s-macs2-summits.bed' 
+                                                % new_run_id, input_paths)
+
                         run.add_output_file('model', '%s-macs2-model.r' 
+                                            % new_run_id, input_paths)
+                        run.add_output_file('log', '%s-macs2-log.txt'
                                             % new_run_id, input_paths)
 #                        run.add_output_file('negative-peaks', 
 #                                            '%s-macs2-negative-peaks.xls'
@@ -121,9 +138,6 @@ class Macs2(AbstractStep):
                 pass
                 os.chdir(macs_out_directory)
 
-            peaks_files = run.get_output_files_for_annotation_and_tags(
-                'peaks', ['xls', 'bed'])
-
             pool.launch(macs2, stdout_path = 
                         run.get_single_output_file_for_annotation('log') )
                 
@@ -134,47 +148,28 @@ class Macs2(AbstractStep):
 #       except:
 #           raise StandardError("Datei %s nicht existent!" % peaks_files['bed'])
 
-        try:
-            print("Narrow Peak BED file: " + peaks_files['bed'])
-            os.rename(os.path.join(macs_out_directory, '%s_peaks.narrowPeak' 
-                                   % run_id), peaks_files['bed'])
-        except OSError:
-            raise StandardError('No file: %s' 
-                                % os.path.join(macs_out_directory,
-                                               '%s_peaks.narrowPeak' % run_id))
 
-        try:
-            os.rename(os.path.join(macs_out_directory, '%s_peaks.xls' % run_id),
-                      peaks_files['xls'])
-        except OSError:
-            raise StandardError('No file: %s' 
-                                % os.path.join( macs_out_directory, 
-                                                '%s_peaks.xls' % run_id))
+        # Define connection:path_to_file dict for general files
+        output_files = {'model': os.path.join(macs_out_directory, '%s_model.r' % run_id),
+                        'peaks-xls': os.path.join(macs_out_directory, '%s_peaks.xls' % run_id)}
 
-        try:
-            os.rename(os.path.join(macs_out_directory, '%s_summits.bed'
-                                   % run_id), 
-                      run.get_single_output_file_for_annotation('summits'))
-        except OSError:
-            raise StandardError('No file: %s' 
-                                % os.path.join(macs_out_directory, 
-                                               '%s_summits.bed' % run_id))
+        # Extend dict for broad peaks specific files
+        if self.is_option_set_in_config('broad'):
+            output_files.update(
+                {'peaks': os.path.join(macs_out_directory, '%s_peaks.broadPeak' % run_id),
+                 'gapped-peaks': os.path.join(macs_out_directory, '%s_peaks.gappedPeak' % run_id)}
+             )
 
-        try:
-            os.rename(os.path.join(macs_out_directory, '%s_model.r' % run_id), 
-                      run.get_single_output_file_for_annotation('model'))
-        except OSError:
-            file_name = run.get_single_output_file_for_annotation('model')
-            with file(file_name, 'a'):
-                os.utime(file_name, None)
+        # Extend dict for narrow peaks specific files
+        if not self.is_option_set_in_config('broad'):
+            output_files.update(
+                {'peaks': os.path.join(macs_out_directory, '%s_peaks.narrowPeak' % run_id),
+                 'summits': os.path.join(macs_out_directory, '%s_summits.bed' % run_id)}
+             )
 
-#            try:
-#                os.rename(os.path.join(macs_out_directory, '%s_negative_peaks.xls'
-#                                       % run_id), 
-#                          run.get_single_output_file_for_annotation(
-#                              'negative-peaks'))
-#            except OSError:
-#                raise StandardError('No file: %s' 
-#                                    % os.path.join(macs_out_directory,
-#                                                   '%s_negative_peaks.xls'
-#                                                   % run_id))
+        for key, temp_file in output_files.iteritems():
+            try:
+                os.rename( output_files[key], 
+                           run.get_single_output_file_for_annotation(key))
+            except OSError:
+                raise StandardError('No file: %s' % output_files[key])
