@@ -13,15 +13,12 @@ steps:
     fc1 (run_folder_source):
         path: data/test/IlluminaRunFolder/
         paired_end: yes
-    # Quality control of sequencing run
 
+    # FASTQC: Generates a quality control reports of FASTQ files
     fastqc:
         _depends: fc1
 
-    # Remove adapter sequences from reads
-    # Adapters are:
-    # R1 sequence of the TruSeq/ScriptSeq index adapter
-    # R2 reverse complement sequence of the TruSeq/ScriptSeq universal adapter 
+    # Cutadapt: Removes adapter sequences from raw reads
     cutadapt:
         _depends: fc1
         # adapter-R1: CAAGCAGAAGACGGCATACGAGAT
@@ -30,6 +27,9 @@ steps:
         ## Reading adapters from FASTA file introduced with v1.5
         adapter-file: './data/adapter_sequences/truseq_adapter_v1_v2_LT_ChIP_revcmp.fasta'
         fix_qnames: false
+
+    count_fastq (count_raw_reads):
+        _depends: fc1   
 
 #    fix_cutadapt:
 #        _depends: cutadapt
@@ -103,10 +103,10 @@ tools:
         exit_code: 0
 
     # URL: http://broadinstitute.github.io/picard/
-    MarkDuplicates:
-        path: 'MarkDuplicates'
-        get_version: '--version'
-        exit_code: 1
+#    MarkDuplicates:
+#        path: 'MarkDuplicates'
+#        get_version: '--version'
+#        exit_code: 1
 
     # URL: http://zlib.net/pigz/
     pigz: 
@@ -133,10 +133,10 @@ tools:
         exit_code: 255
 
     # URL: http://ccb.jhu.edu/software/tophat/index.shtml
-    tophat2:
-        path: 'tophat2'
-        get_version: '--version'
-        exit_code: 0
+#    tophat2:
+#        path: 'tophat2'
+#        get_version: '--version'
+#        exit_code: 0
 
 #    bedGraphToBigWig:
 #        path: '/data/bioinf/tools/UCSC-tools/bedGraphToBigWig'
