@@ -103,7 +103,7 @@ class AbstractStep(object):
         self.known_paths = dict()
         self._pipeline_log = dict()
 
-    def set_name(self, step_name):
+    def set_step_name(self, step_name):
         '''
         Change the step name (which is initially set to the module name), in
         case we need multiple steps of the same kind.
@@ -213,7 +213,7 @@ class AbstractStep(object):
     def get_step_name(self):
         '''
         Returns the step name which is initially equal to the step type (== module name)
-        but can be changed via set_name() or from the YAML configuration.
+        but can be changed via set_step_name() or from the YAML configuration.
         '''
         return self._step_name
 
