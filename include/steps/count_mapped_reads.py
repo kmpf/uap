@@ -4,10 +4,10 @@ import process_pool
 import yaml
 
 
-class CountReads(AbstractStep):
+class CountMappedReads(AbstractStep):
 
     def __init__(self, pipeline):
-        super(CountReads, self).__init__(pipeline)
+        super(CountMappedReads, self).__init__(pipeline)
         
         self.set_cores(4)
         

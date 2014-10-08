@@ -1,9 +1,9 @@
 # This is the rnaseq-pipeline configuration file.
 # 
-destination_path: "/gpfs1/data/bioinf/projects/code/projects_misc/2014_T_Cell_ChIPseq/data/test/out"
+destination_path: "data/test/out"
 
 constants:
-    - &genome data/bioinf/Data/Indices/hg19/hg19.fa
+    - &genome /data/bioinf/Data/Indices/hg19/hg19.fa
     - &genome_index /data/bioinf/Data/Indices/hg19/hg19.fa.fai
     - &segemehl_genome_index /data/bioinf/Data/Indices/hg19/hg19.idx
     - &bowtie2_genome_index /data/bioinf/genomes/data/animalia/chordata/mammalia/rodentia/homo_sapiens/hg19/indices/hg19 
@@ -11,7 +11,7 @@ constants:
 
 steps:
     fc1 (run_folder_source):
-        path: /gpfs1/data/bioinf/projects/code/projects_misc/2014_T_Cell_ChIPseq/data/test/IlluminaRunFolder/
+        path: data/test/IlluminaRunFolder/
         paired_end: yes
     # Quality control of sequencing run
 
@@ -61,8 +61,80 @@ steps:
 #        _depends: sam_to_bam
 
 tools:
+    ##################
+    # External Tools #
+    ##################
+
+    # URL: https://github.com/arq5x/bedtools2
     bedtools:
         path: 'bedtools'
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
+    bowtie2:
+        path: 'bowtie2'
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://cufflinks.cbcb.umd.edu/
+    cufflinks:
+        path: 'cufflinks'
+        get_version: '--version'
+        exit_code: 1
+
+    # URL: https://github.com/marcelm/cutadapt
+    cutadapt:
+        path: 'cutadapt'
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+    fastqc:
+        path: 'fastqc'
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: https://github.com/taoliu/MACS/
+    # Installation via 'pip install MACS2'
+    macs2:
+        path: 'macs2'
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://broadinstitute.github.io/picard/
+    MarkDuplicates:
+        path: 'MarkDuplicates'
+        get_version: '--version'
+        exit_code: 1
+
+    # URL: http://zlib.net/pigz/
+    pigz: 
+        path: 'pigz'
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://smithlabresearch.org/software/preseq/
+    preseq:
+        path: 'preseq'
+        get_version: ''
+        exit_code: 0
+    
+    # URL: http://www.htslib.org/
+    samtools:
+        path: 'samtools'
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
+    segemehl:
+        path: 'segemehl.x'
+        get_version: ''
+        exit_code: 255
+
+    # URL: http://ccb.jhu.edu/software/tophat/index.shtml
+    tophat2:
+        path: 'tophat2'
         get_version: '--version'
         exit_code: 0
 
@@ -71,23 +143,13 @@ tools:
 #        get_version: ''
 #        exit_code: 255
 
-    bowtie2:
-        path: 'bowtie2'
-        get_version: '--version'
-        exit_code: 0
+
+    ##################
+    # Internal Tools #
+    ##################
 
     cat4m:
         path: './tools/cat4m'
-
-    cutadapt:
-        path: 'cutadapt'
-        get_version: '--version'
-        exit_code: 0
-
-    fastqc:
-        path: 'fastqc'
-        get_version: '--version'
-        exit_code: 0
 
     fix_cutadapt:
         path: './tools/fix_cutadapt.py'
@@ -101,28 +163,9 @@ tools:
     fix_qnames:
         path: ['./python_env/bin/python', './tools/fix_qnames.py']
 
-    head:
-        path: 'head'
-        get_version: '--version'
-
-    macs2:
-        path: 'macs2'
-        get_version: '--version'
-        exit_code: 0
-
-    MarkDuplicates:
-        path: 'MarkDuplicates'
-        get_version: '--version'
-        exit_code: 1
-
     mate_pair_strand_switch:
         path: ['./python_env/bin/python', './tools/mate_pair_strand_switch.py']
         get_version: '--version' 
-        exit_code: 0
-
-    pigz:
-        path: 'pigz'
-        get_version: '--version'
         exit_code: 0
 
     remove_reads_segemehl:
@@ -134,22 +177,19 @@ tools:
         get_version: ''
         exit_code: 2
 
-    samtools:
-        path: 'samtools'
-        get_version: ''
-        exit_code: 1
+    ##############
+    # Unix Tools #
+    ##############
 
-    segemehl:
-        path: 'segemehl.x'
-        get_version: ''
-        exit_code: 255
+    wc:
+        path: 'wc'
+        get_version: '--version'
+
+    head:
+        path: 'head'
+        get_version: '--version'
 
     sort:
         path: 'sort'
-        get_version: '--version'
-        exit_code: 0
-
-    tophat2:
-        path: 'tophat2'
         get_version: '--version'
         exit_code: 0
