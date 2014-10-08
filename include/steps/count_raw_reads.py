@@ -18,76 +18,68 @@ class CountRawReads(AbstractStep):
         self.require_tool('pigz')
 
     def declare_runs(self):
-        # create runs and check file types
-        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
-            with self.declare_run(run_id) as run:
-                # Only one BAM/SAM file expected as input file
-                if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file.")
+        # get a list of all read files we have to count
+        sample_files_dict = dict()
+        reads_counts_files = dict()
+        read_files = list()
+        # Check that all files are fastq.gz files
+        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
+            sample_files_dict[run_id] = input_paths
+            read_files.extend(input_paths)
+            for f in input_paths:
+                if not f.endswith("fastq.gz"):
+                    raise StandardError("Input file %s is not ending with "
+                                        "'fastq.gz'." % f)
+                basename = os.path.basename(f)
+                reads_counts_files[f] = basename.replace("fastq.gz", "counts")
 
-                basename = os.path.basename(input_paths[0]).split('.')
-                if 'sam' in basename:
-                    sam_index = basename.index('sam')
-                    basename = basename[:sam_index]
-                elif 'bam' in basename:
-                    bam_index  = basename.index('bam')
-                    basename = basename[:bam_index]
-                else:
-                    raise StandardError("File %s is neither a BAM nor SAM file" % 
-                                        (input_paths[0]) )
-                basename = '.'.join(basename)
-        
-                files_dict = {}
-                temp_count_files = []
-                for i in range(len(set_bits)):
-                    count_file = basename + "-f_%s_-F_%s.txt" % (set_bits[i], unset_bits[i])
-                    temp_count_files.append(count_file)
-                    files_dict[count_file] = {'FLAGS_SET': set_bits[i],
-                                              'FLAGS_UNSET': unset_bits[i] }
+        # Create new run ID name
+        run_id = "%s" % ( self.get_step_name() )
+        print(run_id)
 
-                run.add_output_file('statistics', basename + 
-                                    '.read_statistics.txt', input_paths)
-                run.add_private_info('in-alignment', input_paths)                
-                run.add_private_info('temp-count-files', temp_count_files)
-                run.add_private_info('files-dict', files_dict)
+        # Create the new single run (just one)
+        with self.declare_run(run_id) as run:
+            # Define the output file which will be created
+            print(len(read_files))
+            run.add_output_file('statistics', run_id + 
+                                '.raw_read_statistics.txt', read_files)
+            # Store the map of run_id to input_paths as private info
+            run.add_private_info('read-files', sample_files_dict)
+            # Store the map of input_files to count_files as private info
+            run.add_private_info('reads-counts-files', reads_counts_files)
 
     def execute(self, run_id, run):
-        alignment_path = run.get_private_info('in-alignment')
-        temp_count_files = run.get_private_info('temp-count-files')
-        files_dict = run.get_private_info('files_dict')
-        single_count_dir = self.get_temporary_path('single-counts')        
+        print("Over here!")
+        read_files = run.get_private_info('read-files')
+        reads_counts_files = run.get_private_info('reads-counts-files')
 
-        # samtools view -c 
-        # Ich will hier einen Schritt haben in dem ich eine beliebige Anzahl an 
-        # Auswertungen machen kann und die dann ordentlich in eine Datei 
-        # geschrieben werden!!!
-
+        # Initialize process pool
         with process_pool.ProcessPool(self) as pool:
-            for i in range(len(set_bits)):
-                counts_file = single_count_dir + temp_count_files[i]
-                print(counts_file)
-                with pool.Pipeline(pool) as pipeline:
-                    cat4m = [self.get_tool('cat4m'), alignment_path]
-                    samtools = [self.get_tool('samtools'), 'view', '-c',
-                                '-f', self.get_option('unset_FLAG_bits')[i],
-                                '-F', self.get_option('set_FLAG_bits')[i],
-                                '-q', self.get_option('exclude_MAPQ_smaller_than')]
-                    samtools.extend(['-', counts_file])
-                    
-                    print(samtools,join(","))
-                    exit(1)
-                    
-                    pipeline.append(cat4m)
-                    pipeline.append(samtools)
+            # Each file from each sample is counted and the result 
+            # (a single number) is stored in a temporary file
+            for sample, input_paths in read_files:
+                for raw_reads in input_paths:
+                    with pool.Pipeline(pool) as pipeline:
+                
+                        pigz = [self.get_tool('pigz'), '--decompress', 
+                                '--blocksize', '4096', '--processes', '2', '-c']
+                        pipeline.append(pigz)
+                        echo = [self.get_tool('echo'), '$((`wc -l`/4))']
+                        pipeline.append(
+                            echo, stdout_path = reads_counts_files[raw_reads])
 
         # Read in all count files and create the final statistics file
-        header = ["FLAGS_SET", "FLAGS_UNSET"]
+        header = ["SAMPLE_NAME", "RAW_READS"]
         statistics_file = open(
             run.get_single_output_file_for_annotation('statistics'), 'w')
-        statistics_file.write( header.join(",") + ",COUNTS")
-        for count_file in files_dict:
-            f = open(single_count_dir + count_file)
-            counts = f.readline()
-            line = "%s, %s, %s"  % ( files_dict[count_file][header[0]],
-                                     files_dict[count_file][header[1]], counts)
-            statistics_file.write( line )
+        statistics_file.write( header.join(",") )
+        # Collect all results for each sample, add them up and store them in the
+        # final result file
+        results = dict()
+        for sample, input_paths in read_files:
+            results = 0
+            for raw_reads in input_paths:
+                f = open(reads_counts_files[raw_reads])
+                counts = f.readline()
+                results += counts
+            statistics_file.write( "%s, %s" % (sample, results) )

@@ -27,8 +27,7 @@ class CountMappedReads(AbstractStep):
         # because both are set everytime samtools is called
         set_bits = self.get_option('set_FLAG_bits')
         unset_bits = self.get_option('unset_FLAG_bits')
-        print(set_bits)
-        print(unset_bits)
+
         if len(set_bits) != len(unset_bits):
             raise StandardError("set_FLAG_bits has %s elements but " +
                                 "unset_FLAG_bits has %s elements. Both " +
@@ -89,10 +88,7 @@ class CountMappedReads(AbstractStep):
                                 '-F', self.get_option('set_FLAG_bits')[i],
                                 '-q', self.get_option('exclude_MAPQ_smaller_than')]
                     samtools.extend(['-', counts_file])
-                    
-                    print(samtools,join(","))
-                    exit(1)
-                    
+                                        
                     pipeline.append(cat4m)
                     pipeline.append(samtools)
 
