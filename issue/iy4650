@@ -1,4 +1,4 @@
 Summary: Relative paths issue in run folder source step
-Categories: rp8300-run-folder-source, ru4172-sources
+Categories: jd0101-bugs, rp8300-run-folder-source, ru4172-sources
 
 If relative paths are used in run folder source, subsequent steps are in waiting rather then ready state.
