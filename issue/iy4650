@@ -1,0 +1,3 @@
+Summary: Relative paths issue in run folder source step
+
+If relative paths are used in run folder source, subsequent steps are in waiting rather then ready state.
