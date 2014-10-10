@@ -69,7 +69,7 @@ class CountReads(AbstractStep):
         alignment_path = run.get_private_info('in-alignment')[0]
         temp_count_files = run.get_private_info('temp-count-files')
         files_dict = run.get_private_info('files-dict')
-        single_count_dir = self.get_temporary_path('single-counts')        
+        temp_count_dir = self.get_temporary_path('single-counts')        
 
         # samtools view -c 
         # Ich will hier einen Schritt haben in dem ich eine beliebige Anzahl an 
@@ -78,7 +78,7 @@ class CountReads(AbstractStep):
 
         with process_pool.ProcessPool(self) as pool:
             for i in range(len(self.get_option('set_FLAG_bits'))):
-                counts_file = single_count_dir + temp_count_files[i]
+                count_file = temp_count_dir + temp_count_files[i]
                 with pool.Pipeline(pool) as pipeline:
                     cat4m = [self.get_tool('cat4m'), alignment_path]
                     samtools = [self.get_tool('samtools'), 'view', '-c',
@@ -88,17 +88,19 @@ class CountReads(AbstractStep):
                                 '-']
                     print(" ".join(samtools))
                     pipeline.append(cat4m)
-                    pipeline.append(samtools, stdout_path = counts_file)
+                    pipeline.append(samtools, stdout_path = count_file)
 
         # Read in all count files and create the final statistics file
         print("here I am")
         header = ["FLAGS_SET", "FLAGS_UNSET"]
         statistics_file = open(
             run.get_single_output_file_for_annotation('statistics'), 'w')
+
         statistics_file.write( ",".join(header) + ",COUNTS\n")
+
         for count_file in files_dict:
-            f = open(single_count_dir + count_file)
+            f = open(temp_count_dir + count_file)
             counts = f.readline()
-            line = "%s, %s, %s\n"  % ( files_dict[count_file][header[0]],
+            line = "%s, %s, %s"  % ( files_dict[count_file][header[0]],
                                      files_dict[count_file][header[1]], counts)
             statistics_file.write( line )
