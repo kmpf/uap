@@ -67,10 +67,10 @@ class CountMappedReads(AbstractStep):
                 run.add_private_info('files-dict', files_dict)
 
     def execute(self, run_id, run):
-        alignment_path = run.get_private_info('in-alignment')
+        alignment_path = run.get_private_info('in-alignment')[0]
         temp_count_files = run.get_private_info('temp-count-files')
-        files_dict = run.get_private_info('files_dict')
-        single_count_dir = self.get_temporary_path('single-counts')        
+        files_dict = run.get_private_info('files-dict')
+        temp_count_dir = self.get_temporary_path('single-counts')        
 
         # samtools view -c 
         # Ich will hier einen Schritt haben in dem ich eine beliebige Anzahl an 
@@ -78,9 +78,8 @@ class CountMappedReads(AbstractStep):
         # geschrieben werden!!!
 
         with process_pool.ProcessPool(self) as pool:
-            for i in range(len(set_bits)):
-                counts_file = single_count_dir + temp_count_files[i]
-                print(counts_file)
+            for i in range(len(self.get_option('set_FLAG_bits'))):
+                count_file = temp_count_dir + temp_count_files[i]
                 with pool.Pipeline(pool) as pipeline:
                     cat4m = [self.get_tool('cat4m'), alignment_path]
                     samtools = [self.get_tool('samtools'), 'view', '-c',
@@ -90,15 +89,18 @@ class CountMappedReads(AbstractStep):
                     samtools.extend(['-', counts_file])
                                         
                     pipeline.append(cat4m)
-                    pipeline.append(samtools)
+                    pipeline.append(samtools, stdout_path = count_file)
 
         # Read in all count files and create the final statistics file
+        print("here I am")
         header = ["FLAGS_SET", "FLAGS_UNSET"]
         statistics_file = open(
             run.get_single_output_file_for_annotation('statistics'), 'w')
-        statistics_file.write( header.join(",") + ",COUNTS")
+
+        statistics_file.write( ",".join(header) + ",COUNTS\n")
+
         for count_file in files_dict:
-            f = open(single_count_dir + count_file)
+            f = open(temp_count_dir + count_file)
             counts = f.readline()
             line = "%s, %s, %s"  % ( files_dict[count_file][header[0]],
                                      files_dict[count_file][header[1]], counts)
