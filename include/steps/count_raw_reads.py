@@ -3,6 +3,32 @@ from abstract_step import *
 import process_pool
 import yaml
 
+# Taken from:
+# http://stackoverflow.com/questions/2023608/check-what-files-are-open-in-python
+#import __builtin__
+#openfiles = set()
+#oldfile = __builtin__.file
+#class newfile(oldfile):
+#    def __init__(self, *args):
+#        self.x = args[0]
+#        print "### OPENING %s ###" % str(self.x)
+#        oldfile.__init__(self, *args)
+#        openfiles.add(self)
+#        printOpenFiles()
+#
+#    def close(self):
+#        print "### CLOSING %s ###" % str(self.x)
+#        oldfile.close(self)
+#        openfiles.remove(self)
+#oldopen = __builtin__.open
+#def newopen(*args):
+#    return newfile(*args)
+#__builtin__.file = newfile
+#__builtin__.open = newopen
+#
+#def printOpenFiles():
+#    print "### %d OPEN FILES: [%s]" % (len(openfiles), ", ".join(f.x for f in openfiles))
+#    print "### %d OPEN FILES" % len(openfiles)
 
 class CountRawReads(AbstractStep):
 
@@ -19,67 +45,54 @@ class CountRawReads(AbstractStep):
 
     def declare_runs(self):
         # get a list of all read files we have to count
-        sample_files_dict = dict()
+        sample_input_paths_dict = dict()
         reads_counts_files = dict()
         read_files = list()
         # Check that all files are fastq.gz files
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
-            sample_files_dict[run_id] = input_paths
+            sample_input_paths_dict[run_id] = input_paths
             read_files.extend(input_paths)
-            for f in input_paths:
-                if not f.endswith("fastq.gz"):
-                    raise StandardError("Input file %s is not ending with "
-                                        "'fastq.gz'." % f)
-                basename = os.path.basename(f)
-                reads_counts_files[f] = basename.replace("fastq.gz", "counts")
 
-        # Create new run ID name
-        run_id = "%s" % ( self.get_step_name() )
-        print(run_id)
-
-        # Create the new single run (just one)
+        run_id = self.get_step_name()
         with self.declare_run(run_id) as run:
-            # Define the output file which will be created
-            print(len(read_files))
             run.add_output_file('statistics', run_id + 
                                 '.raw_read_statistics.txt', read_files)
-            # Store the map of run_id to input_paths as private info
-            run.add_private_info('read-files', sample_files_dict)
-            # Store the map of input_files to count_files as private info
-            run.add_private_info('reads-counts-files', reads_counts_files)
+            run.add_private_info('sample_input_paths', sample_input_paths_dict)
 
     def execute(self, run_id, run):
-        print("Over here!")
-        read_files = run.get_private_info('read-files')
-        reads_counts_files = run.get_private_info('reads-counts-files')
+        out_path = run.get_single_output_file_for_annotation('statistics')
+        sample_input_paths_dict = run.get_private_info('sample_input_paths')
+        temp_count_dir = self.get_temporary_path('raw-counts')
 
-        # Initialize process pool
-        with process_pool.ProcessPool(self) as pool:
-            # Each file from each sample is counted and the result 
-            # (a single number) is stored in a temporary file
-            for sample, input_paths in read_files:
-                for raw_reads in input_paths:
-                    with pool.Pipeline(pool) as pipeline:
+        try:
+            os.mkdir(temp_count_dir)
+        except OSError:
+            pass
+
+        with open(out_path, 'w') as statistics_file:
+            header = ["SAMPLE_NAME", "RAW_READS"]
+            statistics_file.write( ",".join(header) + "\n" )
+        
+            for sample, input_paths in sample_input_paths_dict.iteritems():
+                temp_count_file = os.path.join(
+                    temp_count_dir, "%s.counts" % sample)
                 
+                with process_pool.ProcessPool(self) as pool:
+                    
+                    with pool.Pipeline(pool) as pipeline:
+                        
                         pigz = [self.get_tool('pigz'), '--decompress', 
                                 '--blocksize', '4096', '--processes', '2', '-c']
+                        pigz.extend(input_paths)
+                        wc = [self.get_tool('wc'), '-l']
+                        
                         pipeline.append(pigz)
-                        echo = [self.get_tool('echo'), '$((`wc -l`/4))']
-                        pipeline.append(
-                            echo, stdout_path = reads_counts_files[raw_reads])
-
-        # Read in all count files and create the final statistics file
-        header = ["SAMPLE_NAME", "RAW_READS"]
-        statistics_file = open(
-            run.get_single_output_file_for_annotation('statistics'), 'w')
-        statistics_file.write( header.join(",") )
-        # Collect all results for each sample, add them up and store them in the
-        # final result file
-        results = dict()
-        for sample, input_paths in read_files:
-            results = 0
-            for raw_reads in input_paths:
-                f = open(reads_counts_files[raw_reads])
-                counts = f.readline()
-                results += counts
-            statistics_file.write( "%s, %s" % (sample, results) )
+                        pipeline.append(wc, stdout_path = temp_count_file)
+                
+                f = open(temp_count_file)
+                counts = int(f.readline().rstrip())
+                f.close()
+                counts += (counts / 4)
+                print("Sample: %s; Counts: %s" % (sample, counts))
+                statistics_file.write( "%s, %s\n" % (sample, counts))
+                
