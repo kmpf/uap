@@ -58,20 +58,6 @@ parser.add_argument("--cluster",
                     default="auto",
                     help="Specify the cluster type (sge, slurm), defaults to auto.")
 
-parser.add_argument("--highmem",
-                    dest="highmem",
-                    action="store_true",
-                    default=False,
-                    help="Must be set if the highmem node of the " +
-                    "cluster is being used.")
-
-parser.add_argument("--oversubscribed",
-                    dest="oversubscribed",
-                    action="store_true",
-                    default=False,
-                    help="Must be set if segemehl jobs are going to run on " +
-                    "a special configured node.")
-
 parser.add_argument("step_task",
                     nargs='*',
                     default=list(),
@@ -85,15 +71,6 @@ args = parser.parse_args()
 
 def main():
     p = pipeline.Pipeline(arguments=args)
-
-    use_highmem = False
-    use_oversubscribed = False
-    if args.highmem:
-        print("Passing -l highmem to qsub...")
-        use_highmem = True
-    elif args.oversubscribed:
-        print("Using oversubscribed node.")
-        use_oversubscribed = True
         
     task_wish_list = None
     if len(args.step_task) >= 1:
@@ -108,15 +85,6 @@ def main():
 
     tasks_left = []
 
-    # TODO: We shouldn't use three different templates just to specify another option.
-    print("# TODO: We shouldn't use three different templates just to specify another option.")
-    # template = None
-    # if use_highmem:
-    #     template = open('qsub-highmem-template.sh', 'r').read()
-    # elif use_oversubscribed:
-    #     template = open('qsub-oversubscribed-template.sh', 'r').read()
-    # else:
-    #     template = open('qsub-template.sh', 'r').read()
     template = open(p.cc('template'), 'r').read()
 
     for task in p.all_tasks_topologically_sorted:
@@ -182,10 +150,6 @@ def main():
 
         submit_script_args = [p.cc('submit')]
         submit_script_args += p.ccla('set_job_name', short_task_id)
-        # TODO: Maybe it should be possible to specify arbitrary options on the command line which just get passed on the submit tool
-        if use_highmem:
-            submit_script_args.append('-l')
-            submit_script_args.append('highmem')
             
         submit_script_args.append(p.cc('set_stderr'))
         submit_script_args.append(os.path.join(task.step.get_output_directory(), '.' + long_task_id_with_run_id + '.stderr'))

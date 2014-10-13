@@ -28,10 +28,9 @@ module load samtools/0.1.19-1_CentOS6
 module load bowtie2/2.2.3-1-CentOS6
 module load tophat/2.0.12-1_CentOS6
 module load picard-tools/1.117-1_CentOS6
-module load casava/1.8.2-4_CentOS6
 module load fastqc/0.11.2-1_CentOS6
 module load cutadapt/1.4.1-1_CentOS6
-module load segemehl/04182013-mod-stdout_CentOS6
+module load segemehl/0.1.9-1_CentOS6
 module load MACS/2.1.0_CentOS6
 
 # Load support modules
