@@ -90,9 +90,8 @@ class CountRawReads(AbstractStep):
                         pipeline.append(wc, stdout_path = temp_count_file)
                 
                 f = open(temp_count_file)
-                counts = int(f.readline().rstrip())
+                counts = (int(f.readline().rstrip()) / 4)
                 f.close()
-                counts += (counts / 4)
-                print("Sample: %s; Counts: %s" % (sample, counts))
+
                 statistics_file.write( "%s, %s\n" % (sample, counts))
                 
