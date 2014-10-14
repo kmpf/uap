@@ -220,7 +220,7 @@ class Pipeline(object):
             step_class = abstract_step.AbstractStep.get_step_class_for_key(module_name)
             step = step_class(self)
             
-            step.set_name(step_name)
+            step.set_step_name(step_name)
             step.set_options(step_description)
             
             self.steps[step_name] = step

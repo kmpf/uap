@@ -24,7 +24,7 @@ class RunFolderSource(AbstractSourceStep):
         
     def declare_runs(self):
         path = self.get_option('path')
-
+        path = os.path.abspath(path)
         if not self.is_option_set_in_config('paired_end'):
             raise StandardError("missing paired_end key in source")
 
@@ -78,7 +78,9 @@ class RunFolderSource(AbstractSourceStep):
                 # read sample sheets
                 sample_path =  (os.path.dirname(paths[0]))
                 sample_sheet_path = os.path.join(sample_path, 'SampleSheet.csv')
-                reader = csv.DictReader(open(sample_sheet_path))
+                csv_file = open(sample_sheet_path)
+                reader = csv.DictReader(csv_file)
+
                 # get and set indices
                 for row in reader:
                     sample_id = row['SampleID']
@@ -109,3 +111,5 @@ class RunFolderSource(AbstractSourceStep):
                     else:
                         raise StandardError("Unknown index definition %s found in %s" % 
                                             (index.join('-'), sample_sheet_path))
+
+                csv_file.close()
