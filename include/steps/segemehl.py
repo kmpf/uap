@@ -92,11 +92,12 @@ class Segemehl(AbstractStep):
 
                 if is_paired_end:
                     segemehl.extend(['-p', run.get_private_info('R2-in')])
-                
+                cores = str(self.get_cores() - 4)
+
                 segemehl.extend([
                     '-u', fifo_path_unmapped,
                     '-H', '1',
-                    '-t', '20',
+                    '-t', cores,
                     '-s', '-S',
                     '-D', '0',
                 ])

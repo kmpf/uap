@@ -1,6 +1,7 @@
 import sys
 from abstract_step import *
 import os
+import glob
 
 class RawFileSource(AbstractSourceStep):
 
@@ -19,7 +20,11 @@ class RawFileSource(AbstractSourceStep):
                         "in a sample name of ``Sample_1``. You can specify multiple "
                         "capture groups in the regular expression.")
 
+        self.add_option('sample_id_prefix', str, optional=True )
+
         self.add_connection('out/raw')
+
+
 
     def declare_runs(self):
         regex = re.compile(self.get_option('group'))

@@ -1,5 +1,0 @@
-FCID,Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator,SampleProject
-C0UTRACXX,1,Index_7,hg19,CAGATC,Index_7,N,PE,schreibs,T_Cell_ChIP
-C0UTRACXX,3,Index_7,hg19,CAGATC,Index_7,N,PE,schreibs,T_Cell_ChIP
-C0UTRACXX,6,Index_7,hg19,CAGATC,Index_7,N,PE,schreibs,T_Cell_ChIP
-C0UTRACXX,8,Index_7,hg19,CAGATC,Index_7,N,PE,schreibs,T_Cell_ChIP

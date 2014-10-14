@@ -9,4 +9,6 @@ _monitor_disk_io
 steps.svg
 *~
 doc/source/steps.rst
+data/test
+data/adapter_sequences
 
