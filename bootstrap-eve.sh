@@ -16,7 +16,7 @@ if [[ -n "$missing" ]]; then
 fi
 
 virtualenv python_env
-./python_env/bin/pip install pyyaml numpy biopython psutil
+./python_env/bin/pip install pyyaml psutil biopython numpy
 ./python_env/bin/easy_install -f http://biopython.org/DIST/ biopython
 
 # Installation of NumPy on EVE #

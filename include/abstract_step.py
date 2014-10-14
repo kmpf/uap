@@ -103,7 +103,7 @@ class AbstractStep(object):
         self.known_paths = dict()
         self._pipeline_log = dict()
 
-    def set_name(self, step_name):
+    def set_step_name(self, step_name):
         '''
         Change the step name (which is initially set to the module name), in
         case we need multiple steps of the same kind.
@@ -158,7 +158,7 @@ class AbstractStep(object):
         '''
         input_run_info = dict()
         for parent in self.dependencies:
-            input_run_info[parent.get_step_name()] = copy.deepcopy(parent.get_run_info())
+            input_run_info[parent.get_step_name()] = parent.get_run_info()
         return input_run_info
 
     def declare_runs(self):
@@ -198,7 +198,7 @@ class AbstractStep(object):
                             self._pipeline.add_task_for_input_file(inpath, task_id)
 
         # now that _runs exists, it remains constant, just return it
-        return copy.deepcopy(self._runs)
+        return self._runs
 
     def get_run_ids(self):
         return sorted(self.get_run_info().keys())
@@ -213,7 +213,7 @@ class AbstractStep(object):
     def get_step_name(self):
         '''
         Returns the step name which is initially equal to the step type (== module name)
-        but can be changed via set_name() or from the YAML configuration.
+        but can be changed via set_step_name() or from the YAML configuration.
         '''
         return self._step_name
 
@@ -642,7 +642,7 @@ class AbstractStep(object):
         '''
         Return full path to a configured tool.
         '''
-        return copy.deepcopy(self._tools[key])
+        return self._tools[key]
     
     def get_run_info_str(self):
         count = {}
@@ -655,7 +655,7 @@ class AbstractStep(object):
     
     def append_pipeline_log(self, log):
         if len(self._pipeline_log) == 0:
-            self._pipeline_log = copy.deepcopy(log)
+            self._pipeline_log = log
         else:
             for k in log.keys():
                 if k == 'process_watcher':
@@ -666,7 +666,7 @@ class AbstractStep(object):
                                     for k3 in self._pipeline_log[k][k2][_].keys():
                                         self._pipeline_log[k][k2][_][k3] = max(self._pipeline_log[k][k2][_][k3], log[k][k2][_][k3])
                                 else:
-                                    self._pipeline_log[k][k2][_] = copy.deepcopy(log[k][k2][_])
+                                    self._pipeline_log[k][k2][_] = log[k][k2][_]
                         else:
                             self._pipeline_log[k][k2].update(log[k][k2])
                             
@@ -1114,7 +1114,7 @@ class AbstractStep(object):
         if self._pipeline is not None:
             if not tool in self._pipeline.config['tools']:
                 raise StandardError("%s requires the tool %s but it's not declared in the configuration." % (self, tool))
-            self._tools[tool] = copy.deepcopy(self._pipeline.config['tools'][tool]['path'])
+            self._tools[tool] = self._pipeline.config['tools'][tool]['path']
         else:
             self._tools[tool] = True
 
