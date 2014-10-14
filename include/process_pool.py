@@ -20,6 +20,7 @@ import time
 import traceback
 import yaml
 
+
 class TimeoutException(Exception):
     pass
 
@@ -473,7 +474,9 @@ class ProcessPool(object):
                 if pid == watcher_pid:
                     ProcessPool.process_watcher_pid = None
                     try:
-                        self.process_watcher_report = yaml.load(open(watcher_report_path))
+                        f = open(watcher_report_path)
+                        self.process_watcher_report = yaml.load(f)
+                        f.close()
                         os.unlink(watcher_report_path)
                     except:
                         print("Warning: Couldn't load watcher report from %s." % watcher_report_path)
@@ -535,7 +538,9 @@ class ProcessPool(object):
                     if pid in self.copy_process_reports:
                         report_path = self.copy_process_reports[pid]
                         if os.path.exists(report_path):
-                            report = yaml.load(open(report_path, 'r'))
+                            f = open(report_path, 'r')
+                            report = yaml.load(f)
+                            f.close()
                             os.unlink(report_path)
                             if report is not None:
                                 self.proc_details[pid].update(report)
@@ -569,7 +574,9 @@ class ProcessPool(object):
         try:
             os.waitpid(watcher_pid, 0)
             try:
-                self.process_watcher_report = yaml.load(open(watcher_report_path))
+                f = open(watcher_report_path)
+                self.process_watcher_report = yaml.load(f)
+                f.close()
                 os.unlink(watcher_report_path)
             except:
                 print("Warning: Couldn't load watcher report from %s." % watcher_report_path)

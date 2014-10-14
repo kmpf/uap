@@ -40,10 +40,13 @@ steps:
 #        genome: *genome
 #        index: *segemehl_genome_index
 
-#    tophat2:
-#        _depends: fix_cutadapt
-#        library_type: 'fr-unstranded'
-#        index: *bowtie2_genome_index
+    tophat2:
+        _depends: cutadapt
+        library_type: 'fr-unstranded'
+        index: *bowtie2_genome_index
+
+    count_tophat2 (count_mapped_reads):
+        _depends: tophat2
 
 #    s2c:
 #        _depends: segemehl
@@ -133,10 +136,10 @@ tools:
         exit_code: 255
 
     # URL: http://ccb.jhu.edu/software/tophat/index.shtml
-#    tophat2:
-#        path: 'tophat2'
-#        get_version: '--version'
-#        exit_code: 0
+    tophat2:
+        path: 'tophat2'
+        get_version: '--version'
+        exit_code: 0
 
 #    bedGraphToBigWig:
 #        path: '/data/bioinf/tools/UCSC-tools/bedGraphToBigWig'
@@ -181,9 +184,10 @@ tools:
     # Unix Tools #
     ##############
 
-    wc:
-        path: 'wc'
-        get_version: '--version'
+    echo:
+        path: 'echo'
+        get_version: ''
+        exit_code: 0
 
     head:
         path: 'head'
@@ -193,3 +197,7 @@ tools:
         path: 'sort'
         get_version: '--version'
         exit_code: 0
+
+    wc:
+        path: 'wc'
+        get_version: '--version'

@@ -12,7 +12,9 @@ class CountMappedReads(AbstractStep):
         self.set_cores(4)
         
         self.add_connection('in/alignments')
-        self.add_connection('out/statistics')
+        self.add_connection('in/unmapped')
+        self.add_connection('out/mapped-counts')
+        self.add_connection('out/unmapped-counts')
         
         self.require_tool('cat4m')
         self.require_tool('samtools')
@@ -29,79 +31,138 @@ class CountMappedReads(AbstractStep):
         unset_bits = self.get_option('unset_FLAG_bits')
 
         if len(set_bits) != len(unset_bits):
-            raise StandardError("set_FLAG_bits has %s elements but " +
-                                "unset_FLAG_bits has %s elements. Both " +
+            raise StandardError("set_FLAG_bits has %s elements but "
+                                "unset_FLAG_bits has %s elements. Both "
                                 "options need to have same length.")
 
-        # create runs and check file types
-        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
-            with self.declare_run(run_id) as run:
-                # Only one BAM/SAM file expected as input file
-                if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file.")
+        # Get run_id and input files for 'in/alignment' connection
+        sample_mapped_paths_dict = dict()
+        sample_unmapped_paths_dict = dict()
+        alignment_files = list()
+        unmapped_files = list()
 
-                basename = os.path.basename(input_paths[0]).split('.')
-                if 'sam' in basename:
-                    sam_index = basename.index('sam')
-                    basename = basename[:sam_index]
-                elif 'bam' in basename:
-                    bam_index  = basename.index('bam')
-                    basename = basename[:bam_index]
-                else:
-                    raise StandardError("File %s is neither a BAM nor SAM file" % 
-                                        (input_paths[0]) )
-                basename = '.'.join(basename)
-        
-                files_dict = {}
-                temp_count_files = []
-                for i in range(len(set_bits)):
-                    count_file = basename + "-f_%s_-F_%s.txt" % (set_bits[i], unset_bits[i])
-                    temp_count_files.append(count_file)
-                    files_dict[count_file] = {'FLAGS_SET': set_bits[i],
-                                              'FLAGS_UNSET': unset_bits[i] }
+        for run_id, alignments_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
+            # Get the according input files for 'in/unmapped'
+            unmapped_paths = get_input_files_for_run_id_and_connection(
+                run_id, 'in/unmapped')
+            # Only one BAM/SAM file expected as input file
+            if len(alignments_paths) != 1:
+                raise StandardError("Expected exactly one file with mapped reads.")
+                
+            if len(unmapped_paths) != 1:
+                raise StandardError("Expected exactly one file with unmapped reads.")
+            sample_mapped_paths_dict[run_id] = alignments_paths[0]
+            sample_unmapped_paths_dict[run_id] = unmapped_paths[0]
+            alignments_files.extend(alignment_paths)
+            unmapped_files.extend(unmapped_paths)
+            
 
-                run.add_output_file('statistics', basename + 
-                                    '.read_statistics.txt', input_paths)
-                run.add_private_info('in-alignment', input_paths)                
-                run.add_private_info('temp-count-files', temp_count_files)
-                run.add_private_info('files-dict', files_dict)
+#            for name, files in 
+#            {'mapped': alignments_paths, 'unmapped': unmapped_paths}.iteritems():
+#                # Create a list of files to store the temporary results in
+ ##               temp_count_files = []
+ #               for i in range(len(set_bits)):
+ #                   count_file = "%s-f_%s_-F_%s.txt" % 
+ #                   (basename, set_bits[i], unset_bits[i])
+ #                   temp_count_files.append(count_file)
+                    
+        # Name the run as the step
+        run_id = self.get_step_name()
+
+        with self.declare_run(run_id) as run:
+            run.add_private_info('sample-mapped-paths', 
+                                 sample_mapped_paths_dict)
+            run.add_private_info('sample-unmapped-paths', 
+                                 sample_unmapped_paths_dict)
+            run.add_output_file('mapped-counts', 
+                                '%s_mapped_counts.txt' % run_id,
+                                alignments_files)
+            run.add_output_file('unmapped-counts',
+                                '%s_unmapped_counts.txt' % run_id,
+                                unmapped_files)
 
     def execute(self, run_id, run):
-        alignment_path = run.get_private_info('in-alignment')[0]
-        temp_count_files = run.get_private_info('temp-count-files')
-        files_dict = run.get_private_info('files-dict')
-        temp_count_dir = self.get_temporary_path('single-counts')        
+        # Get the names of the announced output files
+        out_mapped_path = run.get_single_output_file_for_annotation('mapped-counts')
+        out_unmapped_path = run.get_single_output_file_for_annotation('unmapped-counts')
+        # Get the input files per sample and connection
+        sample_mapped_paths_dict = run.get_private_info('sample-mapped-paths')
+        sample_unmapped_paths_dict = run.get_private_info('sample-unmapped-paths')
+        # Get names of temporary output directories
+        temp_mapped_dir = self.get_temporary_path('mapped-counts')
+        temp_unmapped_dir = self.get_temporary_path('unmapped-counts')
+        # try to create the temporary directories
+        try:
+            os.mkdir(temp_mapped_dir)
+        except OSError:
+            pass
+        
+        try:
+            os.mkdir(temp_unmapped_dir)
+        except OSError:
+            pass
+        
+        set_bits = self.get_option('set_FLAG_bits')
+        unset_bits = self.get_option('unset_FLAG_bits')
 
-        # samtools view -c 
-        # Ich will hier einen Schritt haben in dem ich eine beliebige Anzahl an 
-        # Auswertungen machen kann und die dann ordentlich in eine Datei 
-        # geschrieben werden!!!
-
-        with process_pool.ProcessPool(self) as pool:
+        mapped_counts = open(out_mapped_path, 'w')
+        header = ["FLAGS_SET", "FLAGS_UNSET", "COUNTS"]
+        mapped_counts.write( ",".join(header) + "\n")
+        
+        for sample, input_path in sample_mapped_paths_dict.iteritems():
             for i in range(len(self.get_option('set_FLAG_bits'))):
-                count_file = temp_count_dir + temp_count_files[i]
-                with pool.Pipeline(pool) as pipeline:
-                    cat4m = [self.get_tool('cat4m'), alignment_path]
-                    samtools = [self.get_tool('samtools'), 'view', '-c',
-                                '-f', self.get_option('unset_FLAG_bits')[i],
-                                '-F', self.get_option('set_FLAG_bits')[i],
-                                '-q', self.get_option('exclude_MAPQ_smaller_than')]
-                    samtools.extend(['-', counts_file])
+                out_file = temp_os.path.join(
+                    temp_mapped_dir, "%s-f_%s_-F_%s.txt" % 
+                    (sample, set_bits[i], unset_bits[i]))
+                
+                with process_pool.ProcessPool(self) as pool:
+                    with pool.Pipeline(pool) as pipeline:
+                        cat4m = [self.get_tool('cat4m'), input_path]
+                        samtools = [self.get_tool('samtools'), 'view', '-c',
+                                    '-f', unset_bits[i],
+                                    '-F', set_bits[i],
+                                    '-q', self.get_option(
+                                        'exclude_MAPQ_smaller_than'),
+                                    '-', '-o', '-']
                                         
-                    pipeline.append(cat4m)
-                    pipeline.append(samtools, stdout_path = count_file)
+                        pipeline.append(cat4m)
+                        pipeline.append(samtools, stdout_path = out_file)
+                        
+                f = open(out_file)
+                counts = int(f.readline().rstrip())
+                f.close()
 
-        # Read in all count files and create the final statistics file
-        print("here I am")
-        header = ["FLAGS_SET", "FLAGS_UNSET"]
-        statistics_file = open(
-            run.get_single_output_file_for_annotation('statistics'), 'w')
+                mapped_counts = open(out_mapped_path, 'a')
+                mapped_counts.write("%s,%s,%s" % 
+                                    (set_bits[i], unset_bits[i], sample))
 
-        statistics_file.write( ",".join(header) + ",COUNTS\n")
+        unmapped_counts = open(out_unmapped_path, 'w')
+        header = ["", ""]
+        unmapped_counts.write( ",".join(header) + "\n")                            
 
-        for count_file in files_dict:
-            f = open(temp_count_dir + count_file)
-            counts = f.readline()
-            line = "%s, %s, %s"  % ( files_dict[count_file][header[0]],
-                                     files_dict[count_file][header[1]], counts)
-            statistics_file.write( line )
+        for sample, input_path in sample_unmapped_paths_dict.iteritems():
+            for i in range(len(self.get_option('set_FLAG_bits'))):
+                out_file = temp_os.path.join(
+                    temp_mapped_dir, "%s-f_%s_-F_%s.txt" % 
+                    (sample, set_bits[i], unset_bits[i]))
+                
+                with process_pool.ProcessPool(self) as pool:
+                    with pool.Pipeline(pool) as pipeline:
+                        cat4m = [self.get_tool('cat4m'), input_path]
+                        samtools = [self.get_tool('samtools'), 'view', '-c',
+                                    '-f', unset_bits[i],
+                                    '-F', set_bits[i],
+                                    '-q', self.get_option(
+                                        'exclude_MAPQ_smaller_than'),
+                                    '-', '-o', '-']
+                                        
+                        pipeline.append(cat4m)
+                        pipeline.append(samtools, stdout_path = out_file)
+                        
+                f = open(out_file)
+                counts = int(f.readline().rstrip())
+                f.close()
+
+                unmapped_counts = open(out_unmapped_path, 'a')
+                unmapped_counts.write("%s,%s,%s" % 
+                                    (set_bits[i], unset_bits[i], sample))

@@ -32,7 +32,9 @@ class FSCache:
         if path in self.cache['load_yaml_from_file']:
             return self.cache['load_yaml_from_file'][path]
         
-        data = yaml.load(open(path, 'r'))
+        f = open(path, 'r')
+        data = yaml.load(f)
+        f.close()
         self.cache['load_yaml_from_file'][path] = data
         return data
         

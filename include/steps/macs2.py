@@ -104,12 +104,11 @@ class Macs2(AbstractStep):
                
     
     def execute(self, run_id, run):
-
         # Get the name for a temporary directory
         macs_out_directory = self.get_temporary_path('macs2-out')
 
         with process_pool.ProcessPool(self) as pool:
-            # MACS2 shall call peaks
+            # Assemble MACS2 command
             macs2 = [self.get_tool('macs2'), 'callpeak', '--treatment']
             
             # Fail if there is no treatment file
@@ -137,18 +136,12 @@ class Macs2(AbstractStep):
             except OSError:
                 pass
                 os.chdir(macs_out_directory)
-
+                
             pool.launch(macs2, stdout_path = 
                         run.get_single_output_file_for_annotation('log') )
                 
             # Rename MACS2 generated output files so they can be properly moved
-#       try:
-#           if os.path.isfile(peaks_files['bed']):
-#               print("BED file %s exists!" % peaks_files['bed'])
-#       except:
-#           raise StandardError("Datei %s nicht existent!" % peaks_files['bed'])
-
-
+            
         # Define connection:path_to_file dict for general files
         output_files = {'model': os.path.join(macs_out_directory, '%s_model.r' % run_id),
                         'peaks-xls': os.path.join(macs_out_directory, '%s_peaks.xls' % run_id)}

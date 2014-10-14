@@ -93,5 +93,5 @@ class CountRawReads(AbstractStep):
                 counts = (int(f.readline().rstrip()) / 4)
                 f.close()
 
-                statistics_file.write( "%s, %s\n" % (sample, counts))
+                statistics_file.write( "%s,%s\n" % (sample, counts))
                 
