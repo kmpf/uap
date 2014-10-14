@@ -736,7 +736,7 @@ class AbstractStep(object):
             # we can still try to render it later from the annotation file
             print("There was an error rendering the annotation.")
             print("Here is the information but we'll keep calm and carry on:")
-            print(sys.exc_info()[1])
+            print(sys.exc_info())
             import traceback
             traceback.print_tb(sys.exc_info()[2])
             pass
@@ -836,8 +836,9 @@ class AbstractStep(object):
             return misc.str_to_sha1(hashtag)
         
         def file_hash(path):
-            if 'real_path' in log['step']['known_paths'][path]:
-                path = log['step']['known_paths'][path]['real_path']
+            if path in log['step']['known_paths']:
+                if 'real_path' in log['step']['known_paths'][path]:
+                    path = log['step']['known_paths'][path]['real_path']
             return misc.str_to_sha1(path)
         
         #print(yaml.dump(self.known_paths, default_flow_style = False))
@@ -849,6 +850,9 @@ class AbstractStep(object):
         hash['graph_labels'] = dict()
         
         def add_file_node(path):
+            if not path in log['step']['known_paths']:
+                return
+                
             if 'real_path' in log['step']['known_paths'][path]:
                 path = log['step']['known_paths'][path]['real_path']
             label = log['step']['known_paths'][path]['label']
