@@ -133,9 +133,8 @@ class CountMappedReads(AbstractStep):
 
         for sample, input_path in sample_unmapped_paths_dict.iteritems():
             for i in range(len(self.get_option('set_FLAG_bits'))):
-                out_file = temp_os.path.join(
-                    temp_mapped_dir, "%s-f_%s_-F_%s.txt" % 
-                    (sample, set_bits[i], unset_bits[i]))
+                out_file = os.path.join( temp_mapped_dir, "%s-f_%s_-F_%s.txt" %
+                                         (sample, set_bits[i], unset_bits[i]))
                 
                 with process_pool.ProcessPool(self) as pool:
                     with pool.Pipeline(pool) as pipeline:
