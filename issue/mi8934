@@ -1,3 +1,8 @@
 Summary: Information about steps should be available from the command line
 
-Hallo, mal sehen ob ich das hier sehe!
+Each step should be inspectable and provide information about:
+* available options
+* Input/output connections
+* added public_info 
+* general step info
+* executed command
