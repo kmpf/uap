@@ -644,7 +644,7 @@ class ProcessPool(object):
                 for pid in self.running_procs:
                     try:
                         procs[pid] = psutil.Process(pid)
-                    except psutil._error.NoSuchProcess:
+                    except psutil.NoSuchProcess:
                         pass
 
                 pid_list = copy.deepcopy(procs.keys())
@@ -658,9 +658,9 @@ class ProcessPool(object):
                                 try:
                                     cpu_percent = p.get_cpu_percent(interval = None)
                                     called_cpu_stat_for_childpid.add(p.pid)
-                                except psutil._error.NoSuchProcess:
+                                except psutil.NoSuchProcess:
                                     pass
-                    except psutil._error.NoSuchProcess:
+                    except psutil.NoSuchProcess:
                         del procs[pid]
 
                 time.sleep(0.1)
@@ -693,7 +693,7 @@ class ProcessPool(object):
                                         memory_info = p.get_memory_info()
                                         data['rss'] += memory_info.rss
                                         data['vms'] += memory_info.vms
-                                    except psutil._error.NoSuchProcess:
+                                    except psutil.NoSuchProcess:
                                         pass
                             
                             if not pid in max_data:
@@ -708,7 +708,7 @@ class ProcessPool(object):
                             for k, v in data.items():
                                 sum_data[k] += v
 
-                        except psutil._error.NoSuchProcess:
+                        except psutil.NoSuchProcess:
                             del procs[pid]
 
                     if not 'sum' in max_data:
@@ -735,6 +735,8 @@ class ProcessPool(object):
                     if iterations == 30:
                         delay = 10
                     time.sleep(delay)
+            except:
+                print(sys.exc_info())
             finally:
                 os._exit(0)
         else:
@@ -768,6 +770,6 @@ class ProcessPool(object):
         for p in proc.get_children(recursive = True):
             try:
                 p.terminate()
-            except psutil._error.NoSuchProcess:
+            except psutil.NoSuchProcess:
                 pass
         
