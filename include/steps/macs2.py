@@ -107,6 +107,13 @@ class Macs2(AbstractStep):
         # Get the name for a temporary directory
         macs_out_directory = self.get_temporary_path('macs2-out')
 
+        try:
+            os.mkdir(macs_out_directory)
+        except OSError:
+            pass
+            os.chdir(macs_out_directory)
+
+
         with process_pool.ProcessPool(self) as pool:
             # Assemble MACS2 command
             macs2 = [self.get_tool('macs2'), 'callpeak', '--treatment']
@@ -115,28 +122,22 @@ class Macs2(AbstractStep):
             if not run.has_private_info('treatment_files'):
                 raise StandardError("No treatment files for %s to analyse with macs2" % run_id)
             macs2.extend( [" ".join(run.get_private_info('treatment_files'))] )
-
+            
             # and if there is no control file
             if not run.has_private_info('control_files'):
                 raise StandardError("No control files for %s to analyse with macs2" % run_id)
             macs2.extend(['--control', 
                           " ".join(run.get_private_info('control_files')) ])
-
+            
             if self.is_option_set_in_config('broad'):
                 macs2.extend(['--broad'])
-
+                
             macs2.extend([
                 '--format', self.get_option('format'),
                 '--name', run_id,
                 '--outdir', macs_out_directory
             ])
             
-            try:
-                os.mkdir(macs_out_directory)
-            except OSError:
-                pass
-                os.chdir(macs_out_directory)
-                
             pool.launch(macs2, stdout_path = 
                         run.get_single_output_file_for_annotation('log') )
                 
@@ -145,28 +146,27 @@ class Macs2(AbstractStep):
         # Define connection:path_to_file dict for general files
         output_files = {'model': os.path.join(macs_out_directory, '%s_model.r' % run_id),
                         'peaks-xls': os.path.join(macs_out_directory, '%s_peaks.xls' % run_id)}
-
+        
         # Extend dict for broad peaks specific files
         if self.is_option_set_in_config('broad'):
             output_files.update(
                 {'peaks': os.path.join(macs_out_directory, '%s_peaks.broadPeak' % run_id),
                  'gapped-peaks': os.path.join(macs_out_directory, '%s_peaks.gappedPeak' % run_id)}
              )
-
+        else:
         # Extend dict for narrow peaks specific files
-        if not self.is_option_set_in_config('broad'):
             output_files.update(
                 {'peaks': os.path.join(macs_out_directory, '%s_peaks.narrowPeak' % run_id),
                  'summits': os.path.join(macs_out_directory, '%s_summits.bed' % run_id)}
              )
-
+            
         for key, temp_file in output_files.iteritems():
             try:
-                os.rename( output_files[key], 
+                os.rename( temp_file, 
                            run.get_single_output_file_for_annotation(key))
             except OSError:
-                raise StandardError('No file: %s' % output_files[key])
-
+                raise StandardError('No file: %s' % temp_file)
+                
         try:
             os.rmdir(macs_out_directory)
         except OSError:

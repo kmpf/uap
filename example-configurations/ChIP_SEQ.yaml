@@ -28,7 +28,7 @@ steps:
         adapter-file: './data/adapter_sequences/truseq_adapter_v1_v2_LT_ChIP_revcmp.fasta'
         fix_qnames: false
 
-    count_fastq (count_raw_reads):
+    count_fastq (count_raw_reads_crashing):
         _depends: fc1   
 
 #    fix_cutadapt:
@@ -47,6 +47,13 @@ steps:
 
     count_tophat2 (count_mapped_reads):
         _depends: tophat2
+
+#        _depends: cutadapt
+#        library_type: 'fr-unstranded'
+#        index: *bowtie2_genome_index
+
+#    count_tophat2 (count_mapped_reads):
+#        _depends: tophat2
 
 #    s2c:
 #        _depends: segemehl
@@ -183,6 +190,11 @@ tools:
     ##############
     # Unix Tools #
     ##############
+
+    echo:
+        path: 'echo'
+        get_version: ''
+        exit_code: 0
 
     echo:
         path: 'echo'
