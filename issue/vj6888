@@ -1,3 +1,6 @@
 Summary: Remove temporary created files
 Categories: gu3729-macs2, hm4146-count-mapped-reads, jd0101-bugs, jh7351-count-raw-reads
 
+I think the only thing we have to do is to change the os.rename calls to 'mv' calls were possible,
+because the pipeline will remove the remaining temporary directories if they are empty.
+Only if 'mv' can not do the job we need to do stuff in python and delete the directories at the end.
