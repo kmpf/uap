@@ -345,12 +345,10 @@ class Pipeline(object):
         self.input_files_for_task_id[task_id].add(input_path)
 
     def check_command(self, command):
-        if command.__class__ == str:
-            return
         for argument in command:
             if not isinstance(argument, str):
                 raise StandardError(
-                    "The command to be launched '%s' " % args +
+                    "The command to be launched '%s' " % command +
                     "contains non-string argument '%s'. " % argument + 
                     "Therefore the command will fail. Please " +
                     "fix this type issue.")
@@ -366,10 +364,10 @@ class Pipeline(object):
         for tool_id, info in self.config['tools'].items():
             tool_check_info = dict()
             # Execute command to prepare tool (if configured)
-            if 'pre-command' in info:
-                pre_command = [copy.deepcopy(info['pre-command'])]
-                if info['pre-command'].__class__ == list:
-                    pre_command = copy.deepcopy(info['pre-command'])
+            if 'pre_command' in info:
+                pre_command = [copy.deepcopy(info['pre_command'])]
+                if info['pre_command'].__class__ == list:
+                    pre_command = copy.deepcopy(info['pre_command'])
                 self.check_command(pre_command)
                     
                 try:
@@ -383,10 +381,8 @@ class Pipeline(object):
 
                 except:
                     raise ConfigurationException(
-                        "Error while executing 'pre-command': %s\n"
-                        "STDOUT: %s\nSTDERR: %s" % (" ".join(pre_command), 
-                                                    proc.stdout.read(),
-                                                    proc.stderr.read()) )
+                        "Error while executing 'pre_command' for %s: %s" %
+                        (tool_id, " ".join(pre_command)) )
                 pre_proc.wait()
                 tool_check_info.update({
                     'pre-command': (' '.join(pre_command)).strip(),
@@ -428,10 +424,10 @@ class Pipeline(object):
                     "%d)" % (tool_id, ' '.join(command), exit_code, 
                              expected_exit_code))
             # Execute clean-up command (if configured)
-            if 'post-command' in info:
-                post_command = [copy.deepcopy(info['post-command'])]
-                if info['post-command'].__class__ == list:
-                    post_command = copy.deepcopy(info['post-command'])
+            if 'post_command' in info:
+                post_command = [copy.deepcopy(info['post_command'])]
+                if info['post_command'].__class__ == list:
+                    post_command = copy.deepcopy(info['post_command'])
                 self.check_command(post_command)
                 try:
                     post_proc = subprocess.Popen(
@@ -443,10 +439,9 @@ class Pipeline(object):
                     proc.stdin.close()
                 except:
                     raise ConfigurationException(
-                        "Error while executing 'post-command': %s\n"
-                        "STDOUT: %s\nSTDERR: %s" % (" ".join(post_command), 
-                                                    post_proc.stdout.read(),
-                                                    post_proc.stderr.read()) )
+                        "Error while executing 'post_command' for %s: %s" %
+                        (tool_id, " ".join(post_command)) )
+
                 post_proc.wait()
                 tool_check_info.update({
                     'post-command': (' '.join(post_command)).strip(),
