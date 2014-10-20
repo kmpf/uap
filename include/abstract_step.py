@@ -653,7 +653,7 @@ class AbstractStep(object):
         '''
         return self._tools[key]
     
-    def get_post_tools_usage(self)
+    def get_post_tools_usage(self):
         '''
         Return dictionary with commands to execute after finishing any other
         command of this step

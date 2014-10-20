@@ -421,7 +421,7 @@ class ProcessPool(object):
                     break
                     
                 # update checksum
-                checkum.update(block)
+                checksum.update(block)
                 
                 # update tail
                 if len(block) >= ProcessPool.TAIL_LENGTH:

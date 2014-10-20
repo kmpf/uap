@@ -371,7 +371,6 @@ class Pipeline(object):
                 if info['pre-command'].__class__ == list:
                     pre_command = copy.deepcopy(info['pre-command'])
                 self.check_command(pre_command)
-                except:
                     
                 try:
                     pre_proc = subprocess.Popen(
@@ -409,7 +408,7 @@ class Pipeline(object):
                         stdout = subprocess.PIPE,
                         stderr = subprocess.PIPE, 
                         close_fds = True)
-                    proc.stdin.close()
+                proc.stdin.close()
             except:
                 raise ConfigurationException("Tool not found: %s" % info['path'])
             proc.wait()
