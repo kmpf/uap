@@ -154,14 +154,23 @@ class ProcessPool(object):
     def __enter__(self):
         if ProcessPool.current_instance is not None:
             raise StandardError("Sorry, only one instance of ProcessPool allowed at a time.")
-        ProcessPool.current_instance = self        
+        ProcessPool.current_instance = self
+        
+        # First we have to execute the pre-tools-usage commands
+        pre_commands = self.step.get_pre_tools_usage().values()
+        if len(pre_commands) > 0:
+            for command in pre_commands:
+                self.launch(command)
+        
         return self
         
     def __exit__(self, type, value, traceback):
-        # Hier müssten die _pre_tools_usage Kommandos HÖCHSTWAHRSCHEINLICH
-        # ausgeführt werden am besten wäre es die Kommandos in die Liste aller
-        # auszuführenden Prozesse aufzunehmen und sie damit innerhalb der 
-        # Pipeline zu loggen
+        # Last we have to execute the post-tools-usage commands
+        post_commands = self.step.get_post_tools_usage().values()
+        if len(post_commands) > 0:
+            for command in post_commands:
+                self.launch(command)
+
 
         # now launch all processes...
         self._launch_all_processes()
@@ -172,12 +181,10 @@ class ProcessPool(object):
         except:
             # pass log to step even if there was a problem
             self.step.append_pipeline_log(self.get_log())
-            # Hier müssten die _post_tools_usage Kommandos ausgeführt werden
             raise
         
         # if there was no exception, still pass log to step
         self.step.append_pipeline_log(self.get_log())
-        # Hier müssten die _post_tools_usage Kommandos ausgeführt werden
 
         # remove all temporary files we know of
         for _ in self.temp_paths:

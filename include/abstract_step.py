@@ -75,7 +75,7 @@ class AbstractStep(object):
         self._connection_restrictions = {}
         self._pre_tools_usage = dict()
         self._tools = dict()
-        self._post_tool_usage = dict()
+        self._post_tools_usage = dict()
         self._defined_options = dict()
         
         self.needs_parents = False
@@ -639,6 +639,13 @@ class AbstractStep(object):
                 task.volatilize_if_possible(srsly = True)
                                 
             self._reset()
+    
+    def get_pre_tools_usage(self):
+        '''
+        Return dictionary with commands to execute before starting any other
+        command of this step
+        '''
+        return self._pre_tools_usage
 
     def get_tool(self, key):
         '''
@@ -646,6 +653,14 @@ class AbstractStep(object):
         '''
         return self._tools[key]
     
+    def get_post_tools_usage(self)
+        '''
+        Return dictionary with commands to execute after finishing any other
+        command of this step
+        '''
+        return self._post_tools_usage
+
+
     def get_run_info_str(self):
         count = {}
         for _ in self.get_run_ids():
