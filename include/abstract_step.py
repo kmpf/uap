@@ -73,7 +73,9 @@ class AbstractStep(object):
         self._cores = 1
         self._connections = set()
         self._connection_restrictions = {}
+        self._pre_tools_usage = dict()
         self._tools = dict()
+        self._post_tool_usage = dict()
         self._defined_options = dict()
         
         self.needs_parents = False
@@ -1105,12 +1107,16 @@ class AbstractStep(object):
         
     def require_tool(self, tool):
         '''
-        Declare that this step requires an external tool. Query it later with *tool()*.
+        Declare that this step requires an external tool. Query it later with *get_tool()*.
         '''
         if self._pipeline is not None:
             if not tool in self._pipeline.config['tools']:
                 raise StandardError("%s requires the tool %s but it's not declared in the configuration." % (self, tool))
-            self._tools[tool] = copy.deepcopy(self._pipeline.config['tools'][tool]['path'])
+            self._tools[tool] = self._pipeline.config['tools'][tool]['path']
+            if 'pre-command' in self._pipeline.config['tools'][tool]:
+                self._pre_tools_usage[tool] = self._pipeline.config['tools'][tool]['pre-command']
+            if 'post-command' in self._pipeline.config['tools'][tool]:
+                self._post_tools_usage[tool] = self._pipeline.config['tools'][tool]['post-command']
         else:
             self._tools[tool] = True
 

@@ -24,6 +24,7 @@ class TimeoutException(Exception):
     pass
 
 def timeout_handler(signum, frame):
+    time.sleep(3600)
     raise TimeoutException()
 
 def restore_sigpipe_handler():
@@ -152,11 +153,15 @@ class ProcessPool(object):
     def __enter__(self):
         if ProcessPool.current_instance is not None:
             raise StandardError("Sorry, only one instance of ProcessPool allowed at a time.")
-        ProcessPool.current_instance = self
-        
+        ProcessPool.current_instance = self        
         return self
         
     def __exit__(self, type, value, traceback):
+        # Hier müssten die _pre_tools_usage Kommandos HÖCHSTWAHRSCHEINLICH
+        # ausgeführt werden am besten wäre es die Kommandos in die Liste aller
+        # auszuführenden Prozesse aufzunehmen und sie damit innerhalb der 
+        # Pipeline zu loggen
+
         # now launch all processes...
         self._launch_all_processes()
 
@@ -166,19 +171,33 @@ class ProcessPool(object):
         except:
             # pass log to step even if there was a problem
             self.step.append_pipeline_log(self.get_log())
+            # Hier müssten die _post_tools_usage Kommandos ausgeführt werden
             raise
         
         # if there was no exception, still pass log to step
         self.step.append_pipeline_log(self.get_log())
-        
+        # Hier müssten die _post_tools_usage Kommandos ausgeführt werden
+
         # remove all temporary files we know of
         for _ in self.temp_paths:
             try:
                 os.unlink(_)
             except OSError:
                 pass
-            
+        
         ProcessPool.current_instance = None
+
+    def check_subprocess_command(self, command):
+        for argument in command:
+            if not isinstance(argument, str):
+                raise 
+
+# StandardError(
+#                    "The command to be launched '%s' " % args +
+#                    "contains non-string argument '%s'. " % argument + 
+#                    "Therefore the command will fail. Please " +
+#                    "fix this type issue.")
+
         
     def get_temporary_path(self, prefix, designation = None):
         path = self.step.get_temporary_path(prefix, designation)
@@ -192,22 +211,22 @@ class ProcessPool(object):
     
     def launch(self, args, stdout_path = None, stderr_path = None, hints = {}):
         '''
-        Launch a process. Arguments, including the program itself, are passed in *args*.
-        If the program is not a binary but a script which cannot be invoked directly
-        from the command line, the first element of *args* must be a list like 
-        this: *['python', 'script.py']*.
+        Launch a process. Arguments, including the program itself, are passed in
+        *args*. If the program is not a binary but a script which cannot be 
+        invoked directly from the command line, the first element of *args* must
+        be a list like this: *['python', 'script.py']*.
         
-        Use *stdout_path* and *stderr_path* to redirect *stdout* and *stderr* streams to
-        files. In any case, the output of both streams gets watched, the process pool
-        calculates SHA1 checksums automatically and also keeps the last 1024 bytes of
-        every stream. This may be useful if a process crashes and writes error messages
-        to *stderr* in which case you can see them even if you didn't redirect *stderr*
-        to a log file.
+        Use *stdout_path* and *stderr_path* to redirect *stdout* and *stderr* 
+        streams to files. In any case, the output of both streams gets watched,
+        the process pool calculates SHA1 checksums automatically and also keeps
+        the last 1024 bytes of every stream. This may be useful if a process
+        crashes and writes error messages to *stderr* in which case you can see
+        them even if you didn't redirect *stderr* to a log file.
         
         Hints can be specified but are not essential. They help to determine the
         direction of arrows for the run annotation graphs rendered by GraphViz 
-        (sometimes, it's not clear from the command line whether a certain file is
-        an input or output file to a given process).
+        (sometimes, it's not clear from the command line whether a certain file
+        is an input or output file to a given process).
         '''
         call = {
             'args': copy.deepcopy(args),
@@ -284,12 +303,14 @@ class ProcessPool(object):
             new_args.extend(args[1:])
             args = new_args
             
-        for argument in args:
-            if not isinstance(argument, str):
-                raise StandardError("The command to be launched '%s' " % args +
-                                    "contains non-string argument '%s'. " % argument + 
-                                    "Therefore the command will fail. Please " +
-                                    "fix this type issue.")
+        try:
+            self.check_subprocess_command(args)
+        except:
+            raise StandardError(
+                "The command to be launched '%s' " % args +
+                "contains non-string argument '%s'. " % argument + 
+                "Therefore the command will fail. Please " +
+                "fix this type issue.")
 
         # launch the process and always pipe stdout and stderr because we
         # want to watch both streams, regardless of whether stdout should 
@@ -392,7 +413,7 @@ class ProcessPool(object):
                     break
                     
                 # update checksum
-                checksum.update(block)
+                checkum.update(block)
                 
                 # update tail
                 if len(block) >= ProcessPool.TAIL_LENGTH:
