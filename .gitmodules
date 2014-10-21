@@ -4,3 +4,6 @@
 [submodule "tools/misc-bio-stuff"]
 	path = tools/misc-bio-stuff
 	url = https://github.com/tiennes/misc-bio-stuff.git
+[submodule "data"]
+	path = data
+	url = git@github.com:kmpf/hts-seq-data.git
