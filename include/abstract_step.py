@@ -73,7 +73,9 @@ class AbstractStep(object):
         self._cores = 1
         self._connections = set()
         self._connection_restrictions = {}
+        self._pre_tools_usage = dict()
         self._tools = dict()
+        self._post_tools_usage = dict()
         self._defined_options = dict()
         
         self.needs_parents = False
@@ -637,6 +639,13 @@ class AbstractStep(object):
                 task.volatilize_if_possible(srsly = True)
                                 
             self._reset()
+    
+    def get_pre_tools_usage(self):
+        '''
+        Return dictionary with commands to execute before starting any other
+        command of this step
+        '''
+        return self._pre_tools_usage
 
     def get_tool(self, key):
         '''
@@ -644,6 +653,14 @@ class AbstractStep(object):
         '''
         return self._tools[key]
     
+    def get_post_tools_usage(self):
+        '''
+        Return dictionary with commands to execute after finishing any other
+        command of this step
+        '''
+        return self._post_tools_usage
+
+
     def get_run_info_str(self):
         count = {}
         for _ in self.get_run_ids():
@@ -736,7 +753,7 @@ class AbstractStep(object):
             # we can still try to render it later from the annotation file
             print("There was an error rendering the annotation.")
             print("Here is the information but we'll keep calm and carry on:")
-            print(sys.exc_info()[1])
+            print(sys.exc_info())
             import traceback
             traceback.print_tb(sys.exc_info()[2])
             pass
@@ -836,8 +853,9 @@ class AbstractStep(object):
             return misc.str_to_sha1(hashtag)
         
         def file_hash(path):
-            if 'real_path' in log['step']['known_paths'][path]:
-                path = log['step']['known_paths'][path]['real_path']
+            if path in log['step']['known_paths']:
+                if 'real_path' in log['step']['known_paths'][path]:
+                    path = log['step']['known_paths'][path]['real_path']
             return misc.str_to_sha1(path)
         
         #print(yaml.dump(self.known_paths, default_flow_style = False))
@@ -849,6 +867,9 @@ class AbstractStep(object):
         hash['graph_labels'] = dict()
         
         def add_file_node(path):
+            if not path in log['step']['known_paths']:
+                return
+                
             if 'real_path' in log['step']['known_paths'][path]:
                 path = log['step']['known_paths'][path]['real_path']
             label = log['step']['known_paths'][path]['label']
@@ -1105,12 +1126,16 @@ class AbstractStep(object):
         
     def require_tool(self, tool):
         '''
-        Declare that this step requires an external tool. Query it later with *tool()*.
+        Declare that this step requires an external tool. Query it later with *get_tool()*.
         '''
         if self._pipeline is not None:
             if not tool in self._pipeline.config['tools']:
                 raise StandardError("%s requires the tool %s but it's not declared in the configuration." % (self, tool))
             self._tools[tool] = self._pipeline.config['tools'][tool]['path']
+            if 'pre-command' in self._pipeline.config['tools'][tool]:
+                self._pre_tools_usage[tool] = self._pipeline.config['tools'][tool]['pre-command']
+            if 'post-command' in self._pipeline.config['tools'][tool]:
+                self._post_tools_usage[tool] = self._pipeline.config['tools'][tool]['post-command']
         else:
             self._tools[tool] = True
 

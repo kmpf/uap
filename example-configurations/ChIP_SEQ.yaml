@@ -19,17 +19,17 @@ steps:
         _depends: fc1
 
     # Cutadapt: Removes adapter sequences from raw reads
-    cutadapt:
-        _depends: fc1
-        # adapter-R1: CAAGCAGAAGACGGCATACGAGAT
-        # adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
-        adapter-type: 'g'
-        ## Reading adapters from FASTA file introduced with v1.5
-        adapter-file: './data/adapter_sequences/truseq_adapter_v1_v2_LT_ChIP_revcmp.fasta'
-        fix_qnames: false
+#    cutadapt:
+#        _depends: fc1
+#        # adapter-R1: CAAGCAGAAGACGGCATACGAGAT
+#        # adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+#        adapter-type: 'g'
+#        ## Reading adapters from FASTA file introduced with v1.5
+#        adapter-file: './data/adapter_sequences/truseq_adapter_v1_v2_LT_ChIP_revcmp.fasta'
+#        fix_qnames: false
 
-    count_fastq (count_raw_reads):
-        _depends: fc1   
+#    count_fastq (count_raw_reads_crashing):
+#        _depends: fc1   
 
 #    fix_cutadapt:
 #        _depends: cutadapt
@@ -40,13 +40,20 @@ steps:
 #        genome: *genome
 #        index: *segemehl_genome_index
 
-    tophat2:
-        _depends: cutadapt
-        library_type: 'fr-unstranded'
-        index: *bowtie2_genome_index
+#    tophat2:
+#        _depends: cutadapt
+#        library_type: 'fr-unstranded'
+#        index: *bowtie2_genome_index
 
-    count_tophat2 (count_mapped_reads):
-        _depends: tophat2
+#    count_tophat2 (count_mapped_reads):
+#        _depends: tophat2
+
+#        _depends: cutadapt
+#        library_type: 'fr-unstranded'
+#        index: *bowtie2_genome_index
+
+#    count_tophat2 (count_mapped_reads):
+#        _depends: tophat2
 
 #    s2c:
 #        _depends: segemehl
@@ -94,6 +101,8 @@ tools:
 
     # URL: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
     fastqc:
+        pre_command: ['./do_echo.sh', 'Hallo']
+        post_command: ./do_echo.sh '10'
         path: 'fastqc'
         get_version: '--version'
         exit_code: 0
@@ -183,6 +192,11 @@ tools:
     ##############
     # Unix Tools #
     ##############
+
+    echo:
+        path: 'echo'
+        get_version: ''
+        exit_code: 0
 
     echo:
         path: 'echo'

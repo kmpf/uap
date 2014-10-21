@@ -72,11 +72,16 @@ class Pipeline(object):
         
         self.cluster_type = None
         '''
-        The cluster type to be used (must be one of the keys specified in cluster_config).
+        The cluster type to be used (must be one of the keys specified in
+        cluster_config).
         '''
 
         # now determine the Git hash of the repository
-        self.git_hash_tag = subprocess.check_output(['git', 'describe', '--all', '--dirty', '--long']).strip()
+        command = ['git', 'describe', '--all', '--dirty', '--long']
+        try:
+            self.git_hash_tag = subprocess.check_output(command).strip()
+        except:
+            raise StandardError("Execution of %s failed." % " ".join(command))
 
         # check if we got passed an 'arguments' parameter
         # this parameter should contain a argparse.Namespace object
@@ -92,7 +97,12 @@ class Pipeline(object):
                       "this test by specifying --even-if-dirty on the command " +
                       "line.")
                 exit(1)
-            self.git_dirty_diff = subprocess.check_output(['git', 'diff'])
+                command = ['git', 'diff']
+                try:
+                    self.git_dirty_diff = subprocess.check_output(command)
+                except:
+                    raise StandardError("Execution of %s failed." % 
+                                        " ".join(command))
 
         try:
             # set cluster type
@@ -334,6 +344,16 @@ class Pipeline(object):
             self.input_files_for_task_id[task_id] = set()
         self.input_files_for_task_id[task_id].add(input_path)
 
+    def check_command(self, command):
+        for argument in command:
+            if not isinstance(argument, str):
+                raise StandardError(
+                    "The command to be launched '%s' " % command +
+                    "contains non-string argument '%s'. " % argument + 
+                    "Therefore the command will fail. Please " +
+                    "fix this type issue.")
+        return
+
     def check_tools(self):
         '''
         checks whether all tools references by the configuration are available 
@@ -342,32 +362,95 @@ class Pipeline(object):
         if not 'tools' in self.config:
             return
         for tool_id, info in self.config['tools'].items():
+            tool_check_info = dict()
+            # Execute command to prepare tool (if configured)
+            if 'pre_command' in info:
+                pre_command = [copy.deepcopy(info['pre_command'])]
+                if info['pre_command'].__class__ == list:
+                    pre_command = copy.deepcopy(info['pre_command'])
+                self.check_command(pre_command)
+                    
+                try:
+                    pre_proc = subprocess.Popen(
+                        pre_command,
+                        stdin = subprocess.PIPE,
+                        stdout = subprocess.PIPE,
+                        stderr = subprocess.PIPE, 
+                        close_fds = True)
+                    proc.stdin.close()
+
+                except:
+                    raise ConfigurationException(
+                        "Error while executing 'pre_command' for %s: %s" %
+                        (tool_id, " ".join(pre_command)) )
+                pre_proc.wait()
+                tool_check_info.update({
+                    'pre-command': (' '.join(pre_command)).strip(),
+                    'pre-command-exit-code': pre_proc.returncode,
+                    'pre-command-response': (pre_proc.stdout.read() + 
+                                             pre_proc.stderr.read()).strip()
+                })
+            # Execute command to check if tool is available
             command = [copy.deepcopy(info['path'])]
             if info['path'].__class__ == list:
                 command = copy.deepcopy(info['path'])
+            self.check_command(command)
             if 'get_version' in info:
                 command.append(info['get_version'])
-            exit_code = None
             try:
-                proc = subprocess.Popen(command, 
-                                        stdin = subprocess.PIPE, 
-                                        stdout = subprocess.PIPE,
-                                        stderr = subprocess.PIPE, close_fds = True)
+                proc = subprocess.Popen(
+                        command,
+                        stdin = subprocess.PIPE,
+                        stdout = subprocess.PIPE,
+                        stderr = subprocess.PIPE, 
+                        close_fds = True)
                 proc.stdin.close()
             except:
                 raise ConfigurationException("Tool not found: %s" % info['path'])
             proc.wait()
+            exit_code = None
             exit_code = proc.returncode
-            self.tool_versions[tool_id] = {
+            tool_check_info.update({
                 'command': (' '.join(command)).strip(),
                 'exit_code': exit_code,
                 'response': (proc.stdout.read() + proc.stderr.read()).strip()
-            }
+            })
             expected_exit_code = 0
             if 'exit_code' in info:
                 expected_exit_code = info['exit_code']
             if exit_code != expected_exit_code:
-                raise ConfigurationException("Tool check failed for %s: %s - exit code is: %d (expected %d)" % (tool_id, ' '.join(command), exit_code, expected_exit_code))
+                raise ConfigurationException(
+                    "Tool check failed for %s: %s - exit code is: %d (expected "
+                    "%d)" % (tool_id, ' '.join(command), exit_code, 
+                             expected_exit_code))
+            # Execute clean-up command (if configured)
+            if 'post_command' in info:
+                post_command = [copy.deepcopy(info['post_command'])]
+                if info['post_command'].__class__ == list:
+                    post_command = copy.deepcopy(info['post_command'])
+                self.check_command(post_command)
+                try:
+                    post_proc = subprocess.Popen(
+                        post_command,
+                        stdin = subprocess.PIPE,
+                        stdout = subprocess.PIPE,
+                        stderr = subprocess.PIPE, 
+                        close_fds = True)
+                    proc.stdin.close()
+                except:
+                    raise ConfigurationException(
+                        "Error while executing 'post_command' for %s: %s" %
+                        (tool_id, " ".join(post_command)) )
+
+                post_proc.wait()
+                tool_check_info.update({
+                    'post-command': (' '.join(post_command)).strip(),
+                    'post-command-exit-code': post_proc.returncode,
+                    'post-command-response': (post_proc.stdout.read() + 
+                                              post_proc.stderr.read()).strip()
+                })
+            # Store captured information
+            self.tool_versions[tool_id] = tool_check_info
 
     def notify(self, message, attachment = None):
         '''
