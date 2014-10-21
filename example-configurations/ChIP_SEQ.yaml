@@ -101,8 +101,8 @@ tools:
 
     # URL: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
     fastqc:
-        pre_command: ['./do_echo.sh', 'Hallo']
-        post_command: ./do_echo.sh '10'
+        pre_command: ['echo', 'Enter']
+        post_command: ['echo', 'Leave']
         path: 'fastqc'
         get_version: '--version'
         exit_code: 0
