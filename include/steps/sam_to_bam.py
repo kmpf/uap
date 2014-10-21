@@ -50,7 +50,7 @@ class SamToBam(AbstractStep):
         sam_path = run.get_private_info('in-sam')
         sorted_bam_path = run.get_single_output_file_for_annotation('alignments')
         sorted_bai_path = run.get_single_output_file_for_annotation('indices')
-        unsorted_bam_path = self.get_temporay_path('sam_to_bam_unsorted', 'output')
+        unsorted_bam_path = self.get_temporary_path('sam_to_bam_unsorted', 'output')
         
         use_unsorted_bam_input = unsorted_bam_path
         
