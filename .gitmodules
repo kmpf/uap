@@ -1,9 +1,9 @@
 [submodule "tools/pigz4m"]
 	path = tools/pigz4m
 	url = git://github.com/specht/pigz.git
-[submodule "tools/misc-bio-stuff"]
-	path = tools/misc-bio-stuff
-	url = git://github.com/tiennes/misc-bio-stuff.git
 [submodule "data"]
 	path = data
 	url = git://github.com/kmpf/hts-seq-data.git
+[submodule "tools/miscbiostuff"]
+        path = tools/miscbiostuff
+        url = git://github.com/tiennes/misc-bio-stuff.git
