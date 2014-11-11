@@ -7,6 +7,6 @@
 [submodule "tools/miscbiostuff"]
         path = tools/miscbiostuff
         url = git://github.com/tiennes/misc-bio-stuff.git
-[submodule "ht-seq-data"]
-	path = ht-seq-data
+[submodule "tools/ht-seq-data"]
+	path = tools/ht-seq-data
 	url = git://github.com/kmpf/hts-seq-data.git
