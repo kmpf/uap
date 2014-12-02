@@ -373,16 +373,17 @@ class Pipeline(object):
                 try:
                     pre_proc = subprocess.Popen(
                         pre_command,
-                        stdin = subprocess.PIPE,
+                        stdin = None,
                         stdout = subprocess.PIPE,
                         stderr = subprocess.PIPE, 
                         close_fds = True)
                     proc.stdin.close()
 
-                except:
+                except OSError as e:
                     raise ConfigurationException(
-                        "Error while executing 'pre_command' for %s: %s" %
-                        (tool_id, " ".join(pre_command)) )
+                        "Error while executing 'pre_command' for %s: %s\n"
+                        "Error Nr.: %s Error Message: %s" % 
+                        (tool_id, " ".join(pre_command), e.errno, e.strerror))
                 pre_proc.wait()
                 tool_check_info.update({
                     'pre-command': (' '.join(pre_command)).strip(),
