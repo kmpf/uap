@@ -175,9 +175,9 @@ def main():
                 
                 out_key = in_key.replace('in/', 'out/')
                 allowed_steps = None
-                if '_connect' in step.options:
-                    if in_key in step.options['_connect']:
-                        declaration = step.options['_connect'][in_key]
+                if '_connect' in step._options:
+                    if in_key in step._options['_connect']:
+                        declaration = step._options['_connect'][in_key]
                         if declaration.__class__ == str:
                             if '/' in declaration:
                                 parts = declaration.split('/')
