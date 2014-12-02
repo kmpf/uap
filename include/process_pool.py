@@ -150,27 +150,71 @@ class ProcessPool(object):
         self.ok_to_fail = set()
         
         self.copy_processes_for_pid = dict()
+
+    def check_command(self, command):
+        for argument in command:
+            if not isinstance(argument, str):
+                raise StandardError(
+                    "The command to be launched '%s' " % command +
+                    "contains non-string argument '%s'. " % argument + 
+                    "Therefore the command will fail. Please " +
+                    "fix this type issue.")
+        return
+
+
+    def load_unload_module(self, module_cmd):
+        if module_cmd.__class__ == str:
+            module_cmd = [module_cmd]
+            
+        for command in module_cmd:
+            if type(command) is str:
+                command = command.split()
+            self.check_command(command)
+            
+            try:
+                proc = subprocess.Popen(
+                    command,
+                    stdin = None,
+                    stdout = subprocess.PIPE,
+                    stderr = subprocess.PIPE,
+                    close_fds = True)
+                
+            except OSError as e:
+                raise ConfigurationException(
+                    "Error while executing '%s' "
+                    "Error no.: %s Error message: %s" % 
+                    (" ".join(command), e.errno, e.strerror))
+
+            (output, error) = proc.communicate()
+            exec output
+
+        return
         
     def __enter__(self):
         if ProcessPool.current_instance is not None:
             raise StandardError("Sorry, only one instance of ProcessPool allowed at a time.")
         ProcessPool.current_instance = self
         
-        # First we have to execute the pre-tools-usage commands
-        pre_commands = self.step.get_pre_tools_usage().values()
+        # First we have to add the pre_command commands for execution
+        pre_commands = self.step.get_pre_commands().values()
         if len(pre_commands) > 0:
-            for command in pre_commands:
-                self.launch(command)
-        
+            for pre_command in pre_commands:
+                self.launch(pre_command)
+                
         return self
         
     def __exit__(self, type, value, traceback):
-        # Last we have to execute the post-tools-usage commands
-        post_commands = self.step.get_post_tools_usage().values()
+        # Lastly we have to add the post_command commands for execution
+        post_commands = self.step.get_post_commands().values()
         if len(post_commands) > 0:
             for command in post_commands:
                 self.launch(command)
 
+        # before everything is launched load the necessary modules
+        module_loads = self.step.get_module_loads().values()
+        if len(module_loads) > 0:
+            for module_load in module_loads:
+                self.load_unload_module(module_load)
 
         # now launch all processes...
         self._launch_all_processes()
@@ -185,6 +229,12 @@ class ProcessPool(object):
         
         # if there was no exception, still pass log to step
         self.step.append_pipeline_log(self.get_log())
+
+        # after finishing gracefully unload modules
+        module_unloads = self.step.get_module_unloads().values()
+        if len(module_unloads) > 0:
+            for module_unload in module_unloads:
+                self.load_unload_module(module_unload)
 
         # remove all temporary files we know of
         for _ in self.temp_paths:
