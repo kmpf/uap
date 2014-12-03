@@ -30,6 +30,6 @@ export LDFLAGS=$LDFLAGS_BAK && export CPPFLAGS=$CPPFLAGS_BAK
 unset $LDFLAGS_BAK && unset $CPPFLAGS_BAK
 
 gcc -o tools/cat4m tools/cat4m.c
-git submodule update --init
+git submodule update --init --recursive
 cd tools/pigz4m; make; cd ../..
 
