@@ -151,16 +151,15 @@ class ProcessPool(object):
         
         self.copy_processes_for_pid = dict()
 
-    def check_command(self, command):
+    def check_subprocess_command(self, command):
         for argument in command:
             if not isinstance(argument, str):
-                raise StandardError(
-                    "The command to be launched '%s' " % command +
+                raise  StandardError(
+                    "The command to be launched '%s' " % args +
                     "contains non-string argument '%s'. " % argument + 
                     "Therefore the command will fail. Please " +
                     "fix this type issue.")
         return
-
 
     def load_unload_module(self, module_cmd):
         if module_cmd.__class__ == str:
@@ -169,7 +168,7 @@ class ProcessPool(object):
         for command in module_cmd:
             if type(command) is str:
                 command = command.split()
-            self.check_command(command)
+            self.check_subprocess_command(command)
             
             try:
                 proc = subprocess.Popen(
@@ -187,6 +186,9 @@ class ProcessPool(object):
 
             (output, error) = proc.communicate()
             exec output
+            sys.stderr.write("Execute:\t%s\n" % ' '.join(command))
+            sys.stderr.write(error)
+            sys.stderr.flush()
 
         return
         
@@ -244,18 +246,6 @@ class ProcessPool(object):
                 pass
         
         ProcessPool.current_instance = None
-
-    def check_subprocess_command(self, command):
-        for argument in command:
-            if not isinstance(argument, str):
-                raise 
-
-# StandardError(
-#                    "The command to be launched '%s' " % args +
-#                    "contains non-string argument '%s'. " % argument + 
-#                    "Therefore the command will fail. Please " +
-#                    "fix this type issue.")
-
         
     def get_temporary_path(self, prefix, designation = None):
         path = self.step.get_temporary_path(prefix, designation)
@@ -348,7 +338,7 @@ class ProcessPool(object):
         Launch a process and after that, launch a copy process for *stdout* and
         *stderr* each.
         '''
-        
+        import numpy
         args = copy.deepcopy(info['args'])
         stdout_path = copy.copy(info['stdout_path'])
         stderr_path = copy.copy(info['stderr_path'])
@@ -361,14 +351,7 @@ class ProcessPool(object):
             new_args.extend(args[1:])
             args = new_args
             
-        try:
-            self.check_subprocess_command(args)
-        except:
-            raise StandardError(
-                "The command to be launched '%s' " % args +
-                "contains non-string argument '%s'. " % argument + 
-                "Therefore the command will fail. Please " +
-                "fix this type issue.")
+        self.check_subprocess_command(args)
 
         # launch the process and always pipe stdout and stderr because we
         # want to watch both streams, regardless of whether stdout should 
@@ -394,6 +377,10 @@ class ProcessPool(object):
             'hints': hints
         }
         self.log("Launched %s as PID %d." % (' '.join(args), pid))
+        sys.stderr.write("Launched %s as PID %d.\n" % (' '.join(args), pid))
+#        (output, error) = proc.communicate()
+#        sys.stderr.write(error)
+        sys.stderr.flush()
 
         pipe = None
         if keep_stdout_open:
@@ -464,6 +451,7 @@ class ProcessPool(object):
             while True:
                 #sys.stderr.write("[%d] reading from fin\n" % os.getpid())
                 block = fin.read(ProcessPool.COPY_BLOCK_SIZE)
+                sys.stderr.write("%s\n" % block)
                 #sys.stderr.write("[%d] actually read %d bytes from fin\n" % (os.getpid(), len(block)))
                 if len(block) == 0:
                     # fin reports EOF, let's call it a day
@@ -549,6 +537,9 @@ class ProcessPool(object):
             try:
                 # wait for the next child process to exit
                 pid, exit_code_with_signal = os.wait()
+                sys.stderr.write("PID: %s, Exit code: %s\n" % 
+                                 (pid, exit_code_with_signal))
+                sys.stderr.flush()
                 if pid == watcher_pid:
                     ProcessPool.process_watcher_pid = None
                     try:
