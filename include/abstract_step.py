@@ -642,7 +642,7 @@ class AbstractStep(object):
                                 
             self._reset()
     
-    def get_pre_commads(self):
+    def get_pre_commands(self):
         '''
         Return dictionary with commands to execute before starting any other
         command of this step
