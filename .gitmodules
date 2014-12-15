@@ -7,3 +7,4 @@
 [submodule "data"]
 	path = data
 	url = git://github.com/kmpf/hts-seq-data.git
+

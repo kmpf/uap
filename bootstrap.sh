@@ -21,6 +21,3 @@ virtualenv python_env
 gcc -o tools/cat4m tools/cat4m.c
 git submodule update --init --recursive
 cd tools/pigz4m; make; cd ../..
-#unpack test data
-echo 'unpacking test data: tar -C data -xzf data/data.tar.gz'
-tar -C data -xzf data/data.tar.gz
