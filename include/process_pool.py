@@ -192,6 +192,16 @@ class ProcessPool(object):
 
         return
         
+    def launch_pre_post_command(self, commands):
+        if commands.__class__ == str:
+            commands = [commands]
+            
+        for command in commands:
+            if type(command) is str:
+                command = command.split()
+            
+            self.launch(command)
+
     def __enter__(self):
         if ProcessPool.current_instance is not None:
             raise StandardError("Sorry, only one instance of ProcessPool allowed at a time.")
@@ -200,8 +210,7 @@ class ProcessPool(object):
         # First we have to add the pre_command commands for execution
         pre_commands = self.step.get_pre_commands().values()
         if len(pre_commands) > 0:
-            for pre_command in pre_commands:
-                self.launch(pre_command)
+            self.launch_pre_post_command(pre_commands)
                 
         return self
         
@@ -209,8 +218,7 @@ class ProcessPool(object):
         # Lastly we have to add the post_command commands for execution
         post_commands = self.step.get_post_commands().values()
         if len(post_commands) > 0:
-            for command in post_commands:
-                self.launch(command)
+            self.launch_pre_post_command(post_commands)
 
         # before everything is launched load the necessary modules
         module_loads = self.step.get_module_loads().values()
@@ -338,7 +346,6 @@ class ProcessPool(object):
         Launch a process and after that, launch a copy process for *stdout* and
         *stderr* each.
         '''
-        import numpy
         args = copy.deepcopy(info['args'])
         stdout_path = copy.copy(info['stdout_path'])
         stderr_path = copy.copy(info['stderr_path'])
@@ -352,7 +359,7 @@ class ProcessPool(object):
             args = new_args
             
         self.check_subprocess_command(args)
-
+        sys.stderr.write("Launch: %s %s\n" % (args, type(args)) )
         # launch the process and always pipe stdout and stderr because we
         # want to watch both streams, regardless of whether stdout should 
         # be passed on to another process
@@ -378,8 +385,6 @@ class ProcessPool(object):
         }
         self.log("Launched %s as PID %d." % (' '.join(args), pid))
         sys.stderr.write("Launched %s as PID %d.\n" % (' '.join(args), pid))
-#        (output, error) = proc.communicate()
-#        sys.stderr.write(error)
         sys.stderr.flush()
 
         pipe = None

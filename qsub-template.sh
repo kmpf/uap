@@ -8,37 +8,18 @@
 #$ -M #{EMAIL}                # e-mail notification address
 #$ -l h_rt=96:00:00           # runtime of your job
 #$ -l h_vmem=8G               # memory per core for your job
-##$ -l m_core=#{CORES}         # use only nodes where all #{CORES} cores are available
-#$ -l centos6
+#$ -l m_core=#{CORES}         # use only nodes where all #{CORES} cores are available
 
-# loading important environment stuff
-#[ -r ~/.bash_profile ] && . ~/.bash_profile
+## Execute command
 
-##
-## does the actual work
-##
-source /etc/profile.d/000-modules.sh    # makes the module system available to your job
-export MODULEPATH="/global/apps/modulefiles:$MODULEPATH"
-    
-# Load bioinformatics modules
-module load pigz/2.3.1-1-CentOS6
-module load bamtools/2.3.0-1_CentOS6
-module load bedtools/2.20.1-1_CentOS6
-module load samtools/0.1.19-1_CentOS6
-module load bowtie2/2.2.3-1-CentOS6
-module load tophat/2.0.12-1_CentOS6
-module load picard-tools/1.117-1_CentOS6
-module load fastqc/0.11.2-1_CentOS6
-module load cutadapt/1.4.1-1_CentOS6
-module load segemehl/0.1.9-1_CentOS6
-module load MACS/2.1.0_CentOS6
+module list 2>&1 > module_list.before.txt
 
-# Load support modules
-module load git/1.9.2-2_gcc_4.8.1_CentOS6
-module load lapack/3.5.0-1_gcc_4.8.1_CentOS6
+module load sge
+#module load python/2/7.6-2-virtual
+#module load git/1.9.2-2_gcc_4.8.1
 
-# source python_env/bin/activate
+modulecmd python load tophat/2.0.13-1 2>&1 tophat2.python.txt
 
-# [ -r ~/.bashrc ]       && . ~/.bashrc
+module list 2>&1 > module_list.after.txt
 
 #{COMMAND}
