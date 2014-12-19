@@ -408,6 +408,7 @@ class Pipeline(object):
             return
         for tool_id, info in self.config['tools'].items():
             tool_check_info = dict()
+
             # Load module(s) and execute command if configured
             for pre_cmd in (x for x in ('module_load', 'pre_command') 
                              if x in info):
