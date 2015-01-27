@@ -13,10 +13,11 @@ The **rnaseq-pipeline** package is a framework to configure, run, and control
 high-throughput sequencing analyses.
 
 The aim of this data processing pipeline is to enable robust and straightforward
-bioinformatics data evaluation. It is implemented in Python, runs under
-GNU/Linux and can be controlled from the command-line interface. Although the
-primary focus is the evaluation of RNASeq data, its design allows for a variety
-of other applications.
+bioinformatics data evaluation.
+It is implemented in Python, runs under GNU/Linux and can be controlled from the
+command-line interface.
+Although the primary focus is the evaluation of sequencing data, its design
+allows for a variety of other applications.
 
 **Table of contents**
 
@@ -129,7 +130,8 @@ Remarks
 
 This documentation has been created using `Sphinx <http://sphinx-doc.org/>`_
 and `reStructuredText <http://docutils.sourceforge.net/rst.html>`_.
-=======
+
+=====
 Setup
 =====
 

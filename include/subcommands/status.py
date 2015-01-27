@@ -2,8 +2,8 @@
 # encoding: utf-8
 
 import sys
-sys.path.append('./include')
 import argparse
+import pipeline
 import string
 import yaml
 
@@ -15,61 +15,61 @@ down via command line options.
 '''
 
 
-parser = argparse.ArgumentParser(
-    description="This script displays by default information about all tasks "
-                "of the pipeline as configured in 'config.yaml'. But the "
-                "displayed information can be narrowed down via command "
-                "line options.\n"
-                "IMPORTANT: Hints given by this script are just valid if YOU "
-                "submitted the jobs to the cluster.",
-    formatter_class=argparse.RawTextHelpFormatter)
+#parser = argparse.ArgumentParser(
+#    description="This script displays by default information about all tasks "
+#                "of the pipeline as configured in 'config.yaml'. But the "
+#                "displayed information can be narrowed down via command "
+#                "line options.\n"
+#                "IMPORTANT: Hints given by this script are just valid if YOU "
+#                "submitted the jobs to the cluster.",
+#    formatter_class=argparse.RawTextHelpFormatter)
+#
+#parser.add_argument("--cluster",
+#                    dest="cluster",
+#                    type=str,
+#                    default="auto",
+#                    help="Specify the cluster type (sge, slurm), defaults to auto.")
+#
+#parser.add_argument("--summarize",
+#                    dest="summarize",
+#                    action="store_true",
+#                    default=False,
+#                    help="Displays summarized information of the pipeline")
+#
+#parser.add_argument("--graph",
+#                    dest="graph",
+#                    action="store_true",
+#                    default=False,
+#                    help="Displays the dependency graph of the pipeline")
+#
+#parser.add_argument("--even-if-dirty",
+#                    dest="even_if_dirty",
+#                    action="store_true",
+#                    default=False,
+#                    help="Must be set if the local git repository " +
+#                    "contains uncommited changes. Otherwise the pipeline " +
+#                    "will not start.")
+#
+#parser.add_argument("--sources",
+#                    dest="sources",
+#                    action="store_true",
+#                    default=False,
+#                    help="Displays only information about the source runs.")
+#
+#parser.add_argument("-t","--task",
+#                    dest="task",
+#                    nargs='*',
+#                    default=list(),
+#                    type=str,
+#                    help="Displays only the named task IDs. " +
+#                    "Can take multiple task ID(s) as input. A task ID " +
+#                    "looks like ths 'step_name/run_id'. A list of all " +
+#                    "task IDs is returned by running './status.py'.")
+#
+#args = parser.parse_args()
 
-parser.add_argument("--cluster",
-                    dest="cluster",
-                    type=str,
-                    default="auto",
-                    help="Specify the cluster type (sge, slurm), defaults to auto.")
 
-parser.add_argument("--summarize",
-                    dest="summarize",
-                    action="store_true",
-                    default=False,
-                    help="Displays summarized information of the pipeline")
-
-parser.add_argument("--graph",
-                    dest="graph",
-                    action="store_true",
-                    default=False,
-                    help="Displays the dependency graph of the pipeline")
-
-parser.add_argument("--even-if-dirty",
-                    dest="even_if_dirty",
-                    action="store_true",
-                    default=False,
-                    help="Must be set if the local git repository " +
-                    "contains uncommited changes. Otherwise the pipeline " +
-                    "will not start.")
-
-parser.add_argument("--sources",
-                    dest="sources",
-                    action="store_true",
-                    default=False,
-                    help="Displays only information about the source runs.")
-
-parser.add_argument("-t","--task",
-                    dest="task",
-                    nargs='*',
-                    default=list(),
-                    type=str,
-                    help="Displays only the named task IDs. " +
-                    "Can take multiple task ID(s) as input. A task ID " +
-                    "looks like ths 'step_name/run_id'. A list of all " +
-                    "task IDs is returned by running './status.py'.")
-
-args = parser.parse_args()
-
-
-def main():
+def main(args):
     p = pipeline.Pipeline(arguments=args)
     group_by_status = True
 
@@ -178,5 +178,5 @@ def main():
     # Now check whether we can volatilize files, but don't do it.
     p.check_volatile_files()
         
-if __name__ == '__main__':
-    main()
+#if __name__ == '__main__':
+#    main()
