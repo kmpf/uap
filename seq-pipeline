@@ -56,7 +56,7 @@ parser.add_argument(
     "config",
     help="Path to YAML file which holds the pipeline configuration. It has " +
     "to follow the structure given in the documentation.",
-    metavar="/path/to/<project-config>.yaml",
+    metavar="<project-config>.yaml",
     type=argparse.FileType('r'))
 
 parser.add_argument(
@@ -294,4 +294,3 @@ volatilize_parser.set_defaults(func=volatilize.main)
 
 args = parser.parse_args()
 args.func(args)
-

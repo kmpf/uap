@@ -103,7 +103,6 @@ class Pipeline(object):
                 except:
                     raise StandardError("Execution of %s failed." % 
                                         " ".join(command))
-
         try:
             # set cluster type
             if args.cluster == 'auto':
@@ -159,7 +158,7 @@ class Pipeline(object):
         This dict stores a set of output files for every task id in the pipeline.
         '''
 
-        self.read_config()
+        self.read_config(args.config)
 
         # collect all tasks
         self.task_for_task_id = {}
@@ -179,12 +178,13 @@ class Pipeline(object):
         self.check_tools()
 
     # read configuration and make sure it's good
-    def read_config(self):
+    def read_config(self, config_file):
         #print >> sys.stderr, "Reading configuration..."
-        self.config = yaml.load(open('config.yaml'))
+#        self.config = yaml.load(open('config.yaml'))
+        self.config = yaml.load(config_file)
 
         if not 'id' in self.config:
-            self.config['id'] = 'Flying piggies'
+            self.config['id'] = config_file.name
         
         
         if not 'destination_path' in self.config:
