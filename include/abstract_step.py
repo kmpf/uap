@@ -73,9 +73,11 @@ class AbstractStep(object):
         self._cores = 1
         self._connections = set()
         self._connection_restrictions = {}
-        self._pre_tools_usage = dict()
+        self._pre_command = dict()
+        self._module_load = dict()
         self._tools = dict()
-        self._post_tools_usage = dict()
+        self._module_unload = dict()
+        self._post_command = dict()
         self._defined_options = dict()
         
         self.needs_parents = False
@@ -640,12 +642,19 @@ class AbstractStep(object):
                                 
             self._reset()
     
-    def get_pre_tools_usage(self):
+    def get_pre_commands(self):
         '''
         Return dictionary with commands to execute before starting any other
         command of this step
         '''
-        return self._pre_tools_usage
+        return self._pre_command
+
+    def get_module_loads(self):
+        '''
+        Return dictionary with module load commands to execute before starting
+        any other command of this step
+        '''
+        return self._module_load
 
     def get_tool(self, key):
         '''
@@ -653,12 +662,20 @@ class AbstractStep(object):
         '''
         return self._tools[key]
     
-    def get_post_tools_usage(self):
+    def get_module_unloads(self):
+        '''
+        Return dictionary with module unload commands to execute before starting
+        any other command of this step
+        '''
+        return self._module_unload
+
+
+    def get_post_commands(self):
         '''
         Return dictionary with commands to execute after finishing any other
         command of this step
         '''
-        return self._post_tools_usage
+        return self._post_command
 
 
     def get_run_info_str(self):
@@ -1126,16 +1143,21 @@ class AbstractStep(object):
         
     def require_tool(self, tool):
         '''
-        Declare that this step requires an external tool. Query it later with *get_tool()*.
+        Declare that this step requires an external tool. Query it later with 
+        *get_tool()*.
         '''
         if self._pipeline is not None:
             if not tool in self._pipeline.config['tools']:
                 raise StandardError("%s requires the tool %s but it's not declared in the configuration." % (self, tool))
             self._tools[tool] = self._pipeline.config['tools'][tool]['path']
-            if 'pre-command' in self._pipeline.config['tools'][tool]:
-                self._pre_tools_usage[tool] = self._pipeline.config['tools'][tool]['pre-command']
-            if 'post-command' in self._pipeline.config['tools'][tool]:
-                self._post_tools_usage[tool] = self._pipeline.config['tools'][tool]['post-command']
+            if 'pre_command' in self._pipeline.config['tools'][tool]:
+                self._pre_command[tool] = self._pipeline.config['tools'][tool]['pre_command']
+            if 'module_load' in self._pipeline.config['tools'][tool]:
+                self._module_load[tool] = self._pipeline.config['tools'][tool]['module_load']
+            if 'module_load' in self._pipeline.config['tools'][tool]:
+                self._module_unload[tool] = self._pipeline.config['tools'][tool]['module_unload']
+            if 'post_command' in self._pipeline.config['tools'][tool]:
+                self._post_command[tool] = self._pipeline.config['tools'][tool]['post_command']
         else:
             self._tools[tool] = True
 

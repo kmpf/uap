@@ -150,27 +150,81 @@ class ProcessPool(object):
         self.ok_to_fail = set()
         
         self.copy_processes_for_pid = dict()
+
+    def check_subprocess_command(self, command):
+        for argument in command:
+            if not isinstance(argument, str):
+                raise  StandardError(
+                    "The command to be launched '%s' " % args +
+                    "contains non-string argument '%s'. " % argument + 
+                    "Therefore the command will fail. Please " +
+                    "fix this type issue.")
+        return
+
+    def load_unload_module(self, module_cmd):
+        if module_cmd.__class__ == str:
+            module_cmd = [module_cmd]
+            
+        for command in module_cmd:
+            if type(command) is str:
+                command = command.split()
+            self.check_subprocess_command(command)
+            
+            try:
+                proc = subprocess.Popen(
+                    command,
+                    stdin = None,
+                    stdout = subprocess.PIPE,
+                    stderr = subprocess.PIPE,
+                    close_fds = True)
+                
+            except OSError as e:
+                raise ConfigurationException(
+                    "Error while executing '%s' "
+                    "Error no.: %s Error message: %s" % 
+                    (" ".join(command), e.errno, e.strerror))
+
+            (output, error) = proc.communicate()
+            exec output
+            sys.stderr.write("Execute:\t%s\n" % ' '.join(command))
+            sys.stderr.write(error)
+            sys.stderr.flush()
+
+        return
         
+    def launch_pre_post_command(self, commands):
+        if commands.__class__ == str:
+            commands = [commands]
+            
+        for command in commands:
+            if type(command) is str:
+                command = command.split()
+            
+            self.launch(command)
+
     def __enter__(self):
         if ProcessPool.current_instance is not None:
             raise StandardError("Sorry, only one instance of ProcessPool allowed at a time.")
         ProcessPool.current_instance = self
         
-        # First we have to execute the pre-tools-usage commands
-        pre_commands = self.step.get_pre_tools_usage().values()
+        # First we have to add the pre_command commands for execution
+        pre_commands = self.step.get_pre_commands().values()
         if len(pre_commands) > 0:
-            for command in pre_commands:
-                self.launch(command)
-        
+            self.launch_pre_post_command(pre_commands)
+                
         return self
         
     def __exit__(self, type, value, traceback):
-        # Last we have to execute the post-tools-usage commands
-        post_commands = self.step.get_post_tools_usage().values()
+        # Lastly we have to add the post_command commands for execution
+        post_commands = self.step.get_post_commands().values()
         if len(post_commands) > 0:
-            for command in post_commands:
-                self.launch(command)
+            self.launch_pre_post_command(post_commands)
 
+        # before everything is launched load the necessary modules
+        module_loads = self.step.get_module_loads().values()
+        if len(module_loads) > 0:
+            for module_load in module_loads:
+                self.load_unload_module(module_load)
 
         # now launch all processes...
         self._launch_all_processes()
@@ -186,6 +240,12 @@ class ProcessPool(object):
         # if there was no exception, still pass log to step
         self.step.append_pipeline_log(self.get_log())
 
+        # after finishing gracefully unload modules
+        module_unloads = self.step.get_module_unloads().values()
+        if len(module_unloads) > 0:
+            for module_unload in module_unloads:
+                self.load_unload_module(module_unload)
+
         # remove all temporary files we know of
         for _ in self.temp_paths:
             try:
@@ -194,18 +254,6 @@ class ProcessPool(object):
                 pass
         
         ProcessPool.current_instance = None
-
-    def check_subprocess_command(self, command):
-        for argument in command:
-            if not isinstance(argument, str):
-                raise 
-
-# StandardError(
-#                    "The command to be launched '%s' " % args +
-#                    "contains non-string argument '%s'. " % argument + 
-#                    "Therefore the command will fail. Please " +
-#                    "fix this type issue.")
-
         
     def get_temporary_path(self, prefix, designation = None):
         path = self.step.get_temporary_path(prefix, designation)
@@ -298,7 +346,6 @@ class ProcessPool(object):
         Launch a process and after that, launch a copy process for *stdout* and
         *stderr* each.
         '''
-        
         args = copy.deepcopy(info['args'])
         stdout_path = copy.copy(info['stdout_path'])
         stderr_path = copy.copy(info['stderr_path'])
@@ -311,15 +358,8 @@ class ProcessPool(object):
             new_args.extend(args[1:])
             args = new_args
             
-        try:
-            self.check_subprocess_command(args)
-        except:
-            raise StandardError(
-                "The command to be launched '%s' " % args +
-                "contains non-string argument '%s'. " % argument + 
-                "Therefore the command will fail. Please " +
-                "fix this type issue.")
-
+        self.check_subprocess_command(args)
+        sys.stderr.write("Launch: %s %s\n" % (args, type(args)) )
         # launch the process and always pipe stdout and stderr because we
         # want to watch both streams, regardless of whether stdout should 
         # be passed on to another process
@@ -344,6 +384,8 @@ class ProcessPool(object):
             'hints': hints
         }
         self.log("Launched %s as PID %d." % (' '.join(args), pid))
+        sys.stderr.write("Launched %s as PID %d.\n" % (' '.join(args), pid))
+        sys.stderr.flush()
 
         pipe = None
         if keep_stdout_open:
@@ -414,6 +456,7 @@ class ProcessPool(object):
             while True:
                 #sys.stderr.write("[%d] reading from fin\n" % os.getpid())
                 block = fin.read(ProcessPool.COPY_BLOCK_SIZE)
+                sys.stderr.write("%s\n" % block)
                 #sys.stderr.write("[%d] actually read %d bytes from fin\n" % (os.getpid(), len(block)))
                 if len(block) == 0:
                     # fin reports EOF, let's call it a day
@@ -499,6 +542,9 @@ class ProcessPool(object):
             try:
                 # wait for the next child process to exit
                 pid, exit_code_with_signal = os.wait()
+                sys.stderr.write("PID: %s, Exit code: %s\n" % 
+                                 (pid, exit_code_with_signal))
+                sys.stderr.flush()
                 if pid == watcher_pid:
                     ProcessPool.process_watcher_pid = None
                     try:

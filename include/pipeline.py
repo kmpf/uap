@@ -354,6 +354,51 @@ class Pipeline(object):
                     "fix this type issue.")
         return
 
+    def exec_pre_post_calls(self, tool_id, info_key, info_command, 
+                            tool_check_info):
+        if info_command.__class__ == str:
+            info_command = [info_command]
+            
+        for command in info_command:
+            if type(command) is str:
+                command = command.split()
+            self.check_command(command)
+            
+            try:
+                proc = subprocess.Popen(
+                    command,
+                    stdin = None,
+                    stdout = subprocess.PIPE,
+                    stderr = subprocess.PIPE,
+                    close_fds = True)
+                
+            except OSError as e:
+                raise ConfigurationException(
+                    "Error while executing '%s' for %s: %s "
+                    "Error no.: %s Error message: %s" % 
+                    (info_key, tool_id, " ".join(command), e.errno, e.strerror))
+
+            command_call = info_key
+            command_exit_code = '%s-exit-code' % info_key
+            command_response = '%s-respone' % info_key        
+            (output, error) = proc.communicate()
+            if info_key in ['module_load', 'module_unload']:
+                exec output
+                tool_check_info.update({
+                    command_call : (' '.join(command)).strip(),
+                    command_exit_code : proc.returncode
+                })
+                sys.stderr.write("Execute:\t%s\n" % ' '.join(command))
+                sys.stderr.write(error)
+                sys.stderr.flush()
+            else:
+                tool_check_info.update({
+                    command_call : (' '.join(command)).strip(),
+                    command_exit_code : proc.returncode,
+                    command_response : (output + error)
+                })
+            return tool_check_info
+
     def check_tools(self):
         '''
         checks whether all tools references by the configuration are available 
@@ -363,33 +408,13 @@ class Pipeline(object):
             return
         for tool_id, info in self.config['tools'].items():
             tool_check_info = dict()
-            # Execute command to prepare tool (if configured)
-            if 'pre_command' in info:
-                pre_command = [copy.deepcopy(info['pre_command'])]
-                if info['pre_command'].__class__ == list:
-                    pre_command = copy.deepcopy(info['pre_command'])
-                self.check_command(pre_command)
-                    
-                try:
-                    pre_proc = subprocess.Popen(
-                        pre_command,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE, 
-                        close_fds = True)
-                    proc.stdin.close()
 
-                except:
-                    raise ConfigurationException(
-                        "Error while executing 'pre_command' for %s: %s" %
-                        (tool_id, " ".join(pre_command)) )
-                pre_proc.wait()
-                tool_check_info.update({
-                    'pre-command': (' '.join(pre_command)).strip(),
-                    'pre-command-exit-code': pre_proc.returncode,
-                    'pre-command-response': (pre_proc.stdout.read() + 
-                                             pre_proc.stderr.read()).strip()
-                })
+            # Load module(s) and execute command if configured
+            for pre_cmd in (x for x in ('module_load', 'pre_command') 
+                             if x in info):
+                tool_check_info = self.exec_pre_post_calls(
+                    tool_id, pre_cmd, info[pre_cmd], tool_check_info)
+                
             # Execute command to check if tool is available
             command = [copy.deepcopy(info['path'])]
             if info['path'].__class__ == list:
@@ -405,8 +430,10 @@ class Pipeline(object):
                         stderr = subprocess.PIPE, 
                         close_fds = True)
                 proc.stdin.close()
-            except:
-                raise ConfigurationException("Tool not found: %s" % info['path'])
+            except OSError as e:
+                raise ConfigurationException("Error while checking Tool %s " 
+                                             "Error no.: %s Error message: %s" %
+                                             (info['path'], e.errno, e.strerror))
             proc.wait()
             exit_code = None
             exit_code = proc.returncode
@@ -423,32 +450,12 @@ class Pipeline(object):
                     "Tool check failed for %s: %s - exit code is: %d (expected "
                     "%d)" % (tool_id, ' '.join(command), exit_code, 
                              expected_exit_code))
-            # Execute clean-up command (if configured)
-            if 'post_command' in info:
-                post_command = [copy.deepcopy(info['post_command'])]
-                if info['post_command'].__class__ == list:
-                    post_command = copy.deepcopy(info['post_command'])
-                self.check_command(post_command)
-                try:
-                    post_proc = subprocess.Popen(
-                        post_command,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE, 
-                        close_fds = True)
-                    proc.stdin.close()
-                except:
-                    raise ConfigurationException(
-                        "Error while executing 'post_command' for %s: %s" %
-                        (tool_id, " ".join(post_command)) )
 
-                post_proc.wait()
-                tool_check_info.update({
-                    'post-command': (' '.join(post_command)).strip(),
-                    'post-command-exit-code': post_proc.returncode,
-                    'post-command-response': (post_proc.stdout.read() + 
-                                              post_proc.stderr.read()).strip()
-                })
+            # Execute clean-up command (if configured)
+            for info_key in (x for x in ('module_unload', 'post_command') 
+                             if x in info):
+                tool_check_info = self.exec_pre_post_calls(
+                    tool_id, info_key, info[info_key], tool_check_info)
             # Store captured information
             self.tool_versions[tool_id] = tool_check_info
 
