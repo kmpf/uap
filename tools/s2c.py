@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Gero Doose gero@bioinf.uni-leipzig.de
 # python script for parsing the output of segemehl into a cufflinks-compatible output.
 # Usage: reads the segemehl /remapper/ realigner-output-file (SAM format) either from stdin or from a file given as the first script argument
@@ -5,15 +7,18 @@
 # Example: python s2c.py -s mymap.sam -g hg19.fa > mymap_cufflinks_compatible.sam
 # Example:  samtools view -h mymap.bam | python s2c.py -s - -g hg19.fa | samtools view -Sb - | samtools sort - mymap_cufflinks_compatible_sorted.bam
 
-
 from __future__ import division
+import os
+seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
+activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
+execfile(activate_this_file, dict(__file__=activate_this_file))
 import pdb
 import sys
 import subprocess
 import re
 import tempfile
 import argparse
-import os
+
 from Bio import SeqIO
  
 

@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+import os
+seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
+activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
+execfile(activate_this_file, dict(__file__=activate_this_file))
 import sys
 import argparse
 import fileinput
