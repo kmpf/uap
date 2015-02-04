@@ -136,7 +136,8 @@ def main(args):
         if 'email' in p.config:
             email = p.config['email']
         submit_script = submit_script.replace("#{EMAIL}", email)
-        command = ['./run-locally.py']
+        config_file_path = args.config.name
+        command = ['seq-pipeline', config_file_path, 'run-locally']
         if args.even_if_dirty:
             command.append('--even-if-dirty')
         command.append('"' + str(task) + '"')
