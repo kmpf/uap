@@ -192,8 +192,8 @@ class Pipeline(object):
         if not os.path.exists(self.config['destination_path']):
             raise ConfigurationException("Destination path does not exist: " + self.config['destination_path'])
 
-        if not os.path.exists("out"):
-            os.symlink(self.config['destination_path'], 'out')
+        if not os.path.exists("%s-out" % self.config['id']):
+            os.symlink(self.config['destination_path'], '%s-out' % self.config['id'])
 
         self.build_steps()
         
@@ -424,11 +424,11 @@ class Pipeline(object):
                 command.append(info['get_version'])
             try:
                 proc = subprocess.Popen(
-                        command,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE, 
-                        close_fds = True)
+                    command,
+                    stdin = subprocess.PIPE,
+                    stdout = subprocess.PIPE,
+                    stderr = subprocess.PIPE, 
+                    close_fds = True)
                 proc.stdin.close()
             except OSError as e:
                 raise ConfigurationException("Error while checking Tool %s " 
@@ -442,6 +442,9 @@ class Pipeline(object):
                 'exit_code': exit_code,
                 'response': (proc.stdout.read() + proc.stderr.read()).strip()
             })
+            # print("Command: %s" % tool_check_info['command'])
+            # print("Exit Code: %s" % tool_check_info['exit_code'])
+            # print("Response: %s" % tool_check_info['response'])
             expected_exit_code = 0
             if 'exit_code' in info:
                 expected_exit_code = info['exit_code']
