@@ -1,17 +1,18 @@
-#!./python_env/bin/python
-# encoding: utf-8
+#!/usr/bin/env python
 
-import argparse
 import os
-import sys
+seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
+activate_this_file = '%s/python_env/bin/activate_this.py' % seq_pipeline_path
+execfile(activate_this_file, dict(__file__=activate_this_file))
+import argparse
 import string
+import sys
 import yaml
 
 '''
 Adjust sys.path so everything we need can be found
 '''
 
-seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 include_path = '%s/include' % seq_pipeline_path
 if include_path not in sys.path:
     sys.path.append(include_path)
@@ -26,6 +27,13 @@ if subcommand_path not in sys.path:
     sys.path.append(subcommand_path)
 
 from include.subcommands import fix_problems, render, run_locally, status, submit_to_cluster, volatilize
+
+'''
+Set environment variables for git, so it does use the correct repository
+'''
+
+os.environ["GIT_DIR"] = "%s/.git" % seq_pipeline_path
+os.environ["GIT_WORK_TREE"] = seq_pipeline_path
 
 '''
 This script allows access to all commands which are provided by the pipeline.
