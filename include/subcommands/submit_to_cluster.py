@@ -1,4 +1,4 @@
-#!./python_env/bin/python
+#!/usr/bin/env python
 
 import sys
 import abstract_step
