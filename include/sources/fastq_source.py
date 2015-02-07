@@ -44,6 +44,16 @@ class FastqSource(AbstractSourceStep):
         
         self.add_option('sample_id_prefix', str, optional = True,
             description = "This optional prefix is prepended to every sample name.")
+
+        self.add_option('first_read', str, 
+                        description = "Part of the file name that marks all "
+                        "files containing sequencing data of the first read. "
+                        "Example: 'R1.fastq' or '_1.fastq'")
+        self.add_option('second_read', str, optional = True, default = "",
+                        description = "Part of the file name that marks all "
+                        "files containing sequencing data of the second read. "
+                        "Example: 'R2.fastq' or '_2.fastq'")
+
         
     def declare_runs(self):
         regex = re.compile(self.get_option('group'))
@@ -72,6 +82,12 @@ class FastqSource(AbstractSourceStep):
                 run.add_public_info("paired_end", self.get_option("paired_end"))
                 for path in paths:
                     run.add_output_file("reads", path, [])
+                # save public information
+                if self.get_option("paired_end") and self.get_option("second_read") is "":
+                    raise StandardError("Required option 'second_read' needs to "
+                                        " be set because 'paired_end: %s' " % self.get_option("paired_end"))
+                run.add_public_info("first_read", self.get_option("first_read"))
+                run.add_public_info("second_read", self.get_option("second_read"))
 
         # determine index information...
         # retrieve each run and punch in the information

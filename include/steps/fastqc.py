@@ -32,12 +32,14 @@ class Fastqc(AbstractStep):
         # fetch all incoming run IDs which produce reads...
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
             is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
+            first_read = self.find_upstream_info_for_input_paths(input_paths, 'first_read')
+            second_read = self.find_upstream_info_for_input_paths(input_paths, 'second_read')
 
             # decide which read type we'll handle based on whether this is
             # paired end or not
-            read_types = ['_R1']
+            read_types = [first_read]
             if  is_paired_end:
-                read_types.append('_R2')
+                read_types.append(second_read)
 
 
             # put input files into R1/R2 bins (or one single R1 bin)
@@ -46,10 +48,10 @@ class Fastqc(AbstractStep):
                 input_path_bins[_] = list()
 
             for path in input_paths:
-                which = '_' + misc.assign_string(os.path.basename(path), ['R1', 'R2'])
+                which = misc.assign_string(os.path.basename(path), read_types)
                 input_path_bins[which].append(path) 
-                   
-
+                
+                
             # now declare runs
             for which in read_types:
                 with self.declare_run("%s%s" % (run_id, which)) as run:
