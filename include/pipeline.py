@@ -495,7 +495,8 @@ class Pipeline(object):
         check_queue = True
         
         try:
-            stat_output = subprocess.check_output([self.cc('stat')])
+            stat_output = subprocess.check_output([self.cc('stat')], 
+                                                  stderr = subprocess.STDOUT)
         except KeyError:
             check_queue = False
         except OSError:
@@ -508,7 +509,7 @@ class Pipeline(object):
             print("Attention, we cannot check stale queued ping files because this host does not have %s." % self.cc('stat'))
             
         running_jids = set()
-            
+        
         if check_queue:
             for line in stat_output.split("\n"):
                 try:
