@@ -156,6 +156,24 @@ class AbstractStep(object):
         self.dependencies.append(parent)
         parent.children_step_names.add(str(self))
         
+    def which_extensions_match_file_path(self, filepath, extensions):
+        extension_list = list()
+        if type(filepath) is not str:
+            raise StandardError("Filename must be string. Got %s of type %s"
+                                % (filepath, type(filepath)) )
+        for ext in extensions:
+            if type(ext) is not str:
+                raise StandardError("File extension must be ")
+            else:
+                extension_list.append(ext)
+        
+        ext_in_filename = list()
+        file_parts = os.path.basename(filepath).split(".")
+        for ext in extension_list:
+            if ext in file_parts:
+                ext_in_filename.append(ext)
+        return ext_in_filename
+
     def get_input_run_info(self):
         '''
         Return a dict with run info for each parent.
@@ -340,14 +358,16 @@ class AbstractStep(object):
             return path
 
         def is_path_up_to_date(outpath, inpaths):
-            # first, replace paths with volatile paths if the step is marked
-            # as volatile and the real path is missing
-            # but: only consider volatile placeholders if all child tasks
-            # are finished. That means if a child of a volatile
-            # step needs to be run because it has been added or an existing step
-            # has been modified, the volatile placeholders are ignored, thus
-            # turning the task from 'finished' to 'ready' or 'waiting'
-            # Hint: The pv_ prefix is for 'possibly volatile'
+            '''
+            first, replace paths with volatile paths if the step is marked
+            as volatile and the real path is missing
+            but: only consider volatile placeholders if all child tasks
+            are finished. That means if a child of a volatile
+            step needs to be run because it has been added or an existing step
+            has been modified, the volatile placeholders are ignored, thus
+            turning the task from 'finished' to 'ready' or 'waiting'
+            Hint: The pv_ prefix is for 'possibly volatile'
+            '''
             pv_outpath = outpath
             pv_inpaths = list()
             
