@@ -1,0 +1,3 @@
+Summary: Make development of new steps more easy
+
+* I would try to use decorators to modify/read out/add information to the implemented steps method
