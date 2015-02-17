@@ -1,0 +1,4 @@
+Summary: Add generic R / python step
+
+* This steps should help using custom-made scripts
+* the connection between input files and script call must be standardized
