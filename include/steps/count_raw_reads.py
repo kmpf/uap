@@ -42,14 +42,25 @@ class CountRawReads(AbstractStep):
         
         self.require_tool('wc')
         self.require_tool('pigz')
+        self.require_tool('cat')
 
     def declare_runs(self):
         # get a list of all read files we have to count
         sample_input_paths_dict = dict()
         reads_counts_files = dict()
         read_files = list()
-        # Check that all files are fastq.gz files
+
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
+            # Check that all files are fastq.gz files
+            for _ in input_paths:
+                ext_matches =  self.which_extensions_match_file_path(
+                    _, ("fastq", "gz", "gzip"))
+                if len(ext_matches) == 0:
+                    raise StandardError(
+                        "File %s has none of these extensions %s. "
+                        "Can't handle it."
+                        % (_, ", ".join()) )
+
             sample_input_paths_dict[run_id] = input_paths
             read_files.extend(input_paths)
 
@@ -76,17 +87,26 @@ class CountRawReads(AbstractStep):
             for sample, input_paths in sample_input_paths_dict.iteritems():
                 temp_count_file = os.path.join(
                     temp_count_dir, "%s.counts" % sample)
+
+                all_files_gzipped = True
+                for _ in input_paths:
+                    if len( self.which_extensions_match_file_path(_, ("gz", "gzip")) ) == 0:
+                        all_files_gzipped = False
                 
                 with process_pool.ProcessPool(self) as pool:
-                    
                     with pool.Pipeline(pool) as pipeline:
-                        
-                        pigz = [self.get_tool('pigz'), '--decompress', 
-                                '--blocksize', '4096', '--processes', '2', '-c']
-                        pigz.extend(input_paths)
+                        if all_files_gzipped:
+                            pigz = [self.get_tool('pigz'), '--decompress', 
+                                    '--blocksize', '4096', '--processes', 
+                                    '2', '-c']
+                            pigz.extend(input_paths)
+                            pipeline.append(pigz)
+                        else:
+                            cat = [self.get_tool('cat')]
+                            cat.extend(input_paths)
+                            pipeline.append(cat)
+
                         wc = [self.get_tool('wc'), '-l']
-                        
-                        pipeline.append(pigz)
                         pipeline.append(wc, stdout_path = temp_count_file)
                 
                 f = open(temp_count_file)
