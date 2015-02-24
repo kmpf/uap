@@ -40,11 +40,16 @@ class Pipeline(object):
     Possible states a task can be in.
     '''
 
+    pipeline_path = os.path.dirname(os.path.realpath(__file__))
+    '''
+    Absolute path to this very file. It is used to circumvent path issues.
+    '''
+
     cluster_config = {
         'slurm':
            {'submit': 'sbatch',
             'stat': 'squeue',
-            'template': 'sbatch-template.sh',
+            'template': pipeline_path + '/../submit-scripts/sbatch-template.sh',
             'hold_jid': '--dependency=afterany:%s',
             'set_job_name': '--job-name=%s',
             'set_stderr': '-e',
@@ -54,7 +59,7 @@ class Pipeline(object):
         'sge':
            {'submit': 'qsub',
             'stat': 'qstat',
-            'template': 'qsub-template.sh',
+            'template': pipeline_path + '/../submit-scripts/qsub-template.sh',
             'hold_jid': '-hold_jid',
             'set_job_name': '-N',
             'set_stderr': '-e',
