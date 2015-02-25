@@ -32,28 +32,41 @@ class Fastqc(AbstractStep):
         # fetch all incoming run IDs which produce reads...
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
             is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
-            first_read = self.find_upstream_info_for_input_paths(input_paths, 'first_read')
-            second_read = self.find_upstream_info_for_input_paths(input_paths, 'second_read')
+            try:
+                first_read = self.find_upstream_info_for_input_paths(
+                    input_paths, 'first_read')
+            except StandardError:
+                pass
+            
+            try:
+                second_read = self.find_upstream_info_for_input_paths(
+                    input_paths, 'second_read')
+            except StandardError:
+                pass
 
             # decide which read type we'll handle based on whether this is
             # paired end or not
-            read_types = [first_read]
+            read_types = {first_read: '_R1'}
             if  is_paired_end:
-                read_types.append(second_read)
-
+                read_types[second_read] = '_R2'
 
             # put input files into R1/R2 bins (or one single R1 bin)
             input_path_bins = dict()
-            for _ in read_types:
-                input_path_bins[_] = list()
+            for k, v in read_types.items():
+                input_path_bins[v] = list()
 
             for path in input_paths:
-                which = misc.assign_string(os.path.basename(path), read_types)
-                input_path_bins[which].append(path) 
-                
-                
+                which_read = misc.assign_string(os.path.basename(path), read_types.keys())
+                if which_read == first_read:
+                    input_path_bins[read_types[first_read]].append(path) 
+                elif which_read == second_read:
+                    input_path_bins[read_types[second_read]].append(path)
+                else:
+                    raise StandardError("[fastqc.py]: Couldn't match %s nor %s to %s" 
+                                        % (first_read, second_read, path))
+
             # now declare runs
-            for which in read_types:
+            for which in read_types.values():
                 with self.declare_run("%s%s" % (run_id, which)) as run:
                     my_path = input_path_bins[which]
                     #weired python way to get 'file' of 'file.bla.txt'
@@ -72,34 +85,23 @@ class Fastqc(AbstractStep):
 
                 out_path = run.get_single_output_file_for_annotation('fastqc_report')
                 in_path  = run.get_input_files_for_output_file(out_path)
-
-                
                 
                 # set up processes                              
                 fastqc = [self.get_tool('fastqc'), '--noextract', '-o', fastqc_out_dir]
                 fastqc.extend(in_path)
 
-                
                 # create the pipeline and run it
                 log_stderr = run.get_single_output_file_for_annotation('log_stderr')
                 pipeline.append(fastqc, stderr_path = log_stderr)                   
 
-
-
-
         fastqc_default_name = run.get_private_info('fastqc_default_name')
         fastqc_report_basename  = fastqc_default_name + '.zip'
-
         full_path_zipped_fastqc_report = os.path.join(fastqc_out_dir,  fastqc_report_basename)
-
-
         
         try:
             os.rename(full_path_zipped_fastqc_report, out_path)
         except OSError:
-            raise StandardError("os.rename failed of %s to %s" % full_path_zipped_fastqc_report, out_path) 
-
-
+            raise StandardError("os.rename failed of %s to %s" % full_path_zipped_fastqc_report, out_path)
  
         # in case of:
         #unzipped_fastqc_report = os.path.join(fastqc_out_dir,  fastqc_default_name)

@@ -9,9 +9,10 @@ import yaml
 
 class RunFolderSource(AbstractSourceStep):
     '''
-    This source looks for fastq.gz files in ``[path]/Unaligned/Project_*/Sample_*`` 
-    and pulls additional information from CSV sample sheets it finds. It also makes 
-    sure that index information for all samples is coherent and unambiguous.
+    This source looks for fastq.gz files in 
+    ``[path]/Unaligned/Project_*/Sample_*`` and pulls additional information
+    from CSV sample sheets it finds. It also makes sure that index information
+    for all samples is coherent and unambiguous.
     '''
     
     def __init__(self, pipeline):
@@ -21,6 +22,15 @@ class RunFolderSource(AbstractSourceStep):
         
         self.add_option('path', str)
         self.add_option('paired_end', bool)
+        self.add_option('first_read', str, default = "_R1",
+            description = "Part of the file name that marks all "
+                "files containing sequencing data of the first read. "
+                "Example: '_R1.fastq' or '_1.fastq'")
+
+        self.add_option('second_read', str, default = "_R2",
+            description = "Part of the file name that marks all "
+                "files containing sequencing data of the second read. "
+                "Example: 'R2.fastq' or '_2.fastq'")
         
     def declare_runs(self):
         path = self.get_option('path')
@@ -49,10 +59,15 @@ class RunFolderSource(AbstractSourceStep):
         for run_id, paths in found_samples.items():
             with self.declare_run(run_id) as run:
                 run.add_public_info('paired_end', self.get_option('paired_end'))
+                # At least there is one read
+                run.add_public_info('first_read', self.get_option('first_read'))
                 for path in paths:
                     run.add_output_file('reads', path, [])
                     
                 if self.get_option('paired_end') == True:
+                    # So paired end it is. There has to be a second read
+                    run.add_public_info('second_read', 
+                        self.get_option('second_read'))
                     # determine R1/R2 info for each input file: read_number
                     r1_files = list()
                     r2_files = list()
@@ -60,11 +75,13 @@ class RunFolderSource(AbstractSourceStep):
                         isR1 = '_R1' in path
                         isR2 = '_R2' in path
                         if isR1 and isR2:
-                            raise StandardError("Unable to determine read_number, " +
-                                                "seems to be both R1 and R2: " + path)
+                            raise StandardError("Unable to determine "
+                                "read_number, seems to be both R1 and R2: " 
+                                + path)
                         if (not isR1) and (not isR2):
-                            raise StandardError("Unable to determine read_number, " +
-                                                "seems to be neither R1 nor R2: " + path)
+                            raise StandardError("Unable to determine "
+                                "read_number, seems to be neither R1 nor R2: " 
+                                + path)
                         if isR1:
                             r1_files.append(os.path.basename(path))
                         if isR2:
