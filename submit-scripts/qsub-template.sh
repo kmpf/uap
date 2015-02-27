@@ -12,14 +12,4 @@
 
 ## Execute command
 
-module list 2>&1 > module_list.before.txt
-
-module load sge
-#module load python/2/7.6-2-virtual
-#module load git/1.9.2-2_gcc_4.8.1
-
-modulecmd python load tophat/2.0.13-1 2>&1 tophat2.python.txt
-
-module list 2>&1 > module_list.after.txt
-
 #{COMMAND}
