@@ -10,7 +10,7 @@ class Run(object):
         with self.declare_run(run_id) as run:
             # declare output files, private and public info here
             
-    After that, use the available methods to configure the tun.
+    After that, use the available methods to configure the run.
     '''
     def __init__(self, step, run_id):
         if '/' in run_id:
