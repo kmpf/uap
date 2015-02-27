@@ -49,7 +49,7 @@ class FastqSource(AbstractSourceStep):
             description = "This optional prefix is prepended to every sample "
                 "name.")
 
-        self.add_option('sample_to_files_map', dict, str, optional=True
+        self.add_option('sample_to_files_map', dict, str, optional=True,
             description = "A listing of sample names and their "
                 "associated files. This must be provided as a YAML "
                 "dictionary.")
