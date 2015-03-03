@@ -39,7 +39,7 @@ class Fastqc(AbstractStep):
                 
                 # fastqc does not allow individual naming of files but 
                 # appends _fastqc to input file 
-                run.add_private_info('first_read_fastqc_default_name',
+                run.add_private_info('fastqc_default_name',
                                      ''.join([input_base, '_fastqc']))
                 run.add_output_file("first_read_fastqc_report", 
                                     "%s_R1-fastqc.zip" 
@@ -59,73 +59,12 @@ class Fastqc(AbstractStep):
             
                 # fastqc does not allow individual naming of files but 
                 # appends _fastqc to input file 
-                run.add_private_info('second_read_fastqc_default_name',
-                                     ''.join([input_base, '_fastqc']))
                 run.add_output_file("second_read_fastqc_report", 
                                     "%s_R2-fastqc.zip" % run_id, input_paths)
                 run.add_output_file("second_read_log_stderr", 
                                     "%s_R2-fastqc-log_stderr.txt" 
                                     % run_id, input_paths)
 
-
-
-#            is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
-#            try:
-#                first_read = self.find_upstream_info_for_input_paths(
-#                    input_paths, 'first_read')
-#            except StandardError:
-#                pass
-#            
-#            try:
-#                second_read = self.find_upstream_info_for_input_paths(
-#                    input_paths, 'second_read')
-#            except StandardError:
-#                pass
-#
-#            # decide which read type we'll handle based on whether this is
-#            # paired end or not
-#            read_types = {first_read: '_R1'}
-#            if  is_paired_end:
-#                read_types[second_read] = '_R2'
-#
-#            # put input files into R1/R2 bins (or one single R1 bin)
-#            input_path_bins = dict()
-#            for k, v in read_types.items():
-#                input_path_bins[v] = list()
-#
-#            for path in input_paths:
-#                which_read = misc.assign_string(os.path.basename(path), read_types.keys())
-#                if which_read == first_read:
-#                    input_path_bins[read_types[first_read]].append(path) 
-#                elif which_read == second_read:
-#                    input_path_bins[read_types[second_read]].append(path)
-#                else:
-#                    raise StandardError("[fastqc.py]: Couldn't match %s nor %s "
-#                        "to %s" % (first_read, second_read, path))
-#
-#            # now declare runs
-#            for which in read_types.values():
-#                with self.declare_run("%s%s" % (run_id, which)) as run:
-#                    my_path = input_path_bins[which]
-#                    #weired python way to get 'file' of 'file.bla.txt'
-#                    input_base = os.path.basename(my_path[0]).split('.', 1)[0]
-#
-#                    if first_read in read_types:
-#                        run.update_public_info("first_read", 
-#                            read_types[first_read])
-#                    if second_read in read_types:
-#                        run.update_public_info("second_read", 
-#                            read_types[second_read])
-#                    # fastqc does not allow individual naming of files but 
-#                    # appends _fastqc to input file 
-#                    run.add_private_info('fastqc_default_name',
-#                        ''.join([input_base, '_fastqc']))
-#                    run.add_output_file("fastqc_report", "%s%s-fastqc.zip" 
-#                        % (run_id, which), input_path_bins[which])
-#                    run.add_output_file("log_stderr", 
-#                        "%s%s-fastqc-log_stderr.txt" % (run_id, which), 
-#                        input_path_bins[which])
-#
     def execute(self, run_id, run):
         for read in ['first_read', 'second_read']:
             with process_pool.ProcessPool(self) as pool:

@@ -36,6 +36,7 @@ class Cutadapt(AbstractStep):
         self.add_option('adapter-R1', str, optional = True)
         self.add_option('adapter-R2', str, optional = True)
         self.add_option('adapter-file', str, optional=True)
+        self.add_option('use_reverse_complement', bool, default=False)
         self.add_option('minimal-length', int, default=10, optional=True)
 
         self.add_option('fix_qnames', bool, default = False)
@@ -100,14 +101,17 @@ class Cutadapt(AbstractStep):
                         # necessary
                         adapter = self.get_option('adapter%s' % read_types[read])
                         
-                        # create reverse complement of Index sequence 
+                        # add index to adapter sequence if necessary
                         if '((INDEX))' in adapter:
                             index = self.find_upstream_info_for_input_paths(
                                 found_files[run_id][read], 'index%s' 
                                 % read_types[read])
-                            complements = string.maketrans('acgtACGT', 'tgcaTGCA')
-                            index = index.translate(complements)[::-1]
                             adapter = adapter.replace('((INDEX))', index)
+                        
+                        # create reverse complement if we are asked for it
+                        if self.get_option('use_reverse_complement'):
+                            complements = string.maketrans('acgtACGT', 'tgcaTGCA')
+                            adapter = adapter.translate(complements)[::-1]
                             
                         # make sure the adapter is looking good
                         if re.search('^[ACGT]+$', adapter) == None:
