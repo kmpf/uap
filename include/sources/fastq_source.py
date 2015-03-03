@@ -24,7 +24,8 @@ class FastqSource(AbstractSourceStep):
     def __init__(self, pipeline):
         super(FastqSource, self).__init__(pipeline)
         
-        self.add_connection('out/reads')
+        self.add_connection('out/first_read')
+        self.add_connection('out/second_read')
 
         self.add_option('pattern', str, optional = True,
             description = "A file name pattern, for example "
@@ -59,15 +60,20 @@ class FastqSource(AbstractSourceStep):
                 "files containing sequencing data of the first read. "
                 "Example: 'R1.fastq' or '_1.fastq'")
 
-        self.add_option('second_read', str, optional = True, default = "",
+        self.add_option('second_read', str, default = "",
             description = "Part of the file name that marks all "
                 "files containing sequencing data of the second read. "
                 "Example: 'R2.fastq' or '_2.fastq'")
 
-        
     def declare_runs(self):
         # found_files holds the runIDs and their related files
         found_files = dict()
+        read_types = dict()
+        if self.get_option('first_read'):
+            read_types['first_read'] = self.get_option('first_read')
+
+        if self.get_option('second_read'):
+            read_types['second_read'] = self.get_option('second_read')
 
         if self.is_option_set_in_config('group') and self.is_option_set_in_config('pattern'):
             regex = re.compile(self.get_option('group'))
@@ -79,26 +85,43 @@ class FastqSource(AbstractSourceStep):
                     raise StandardError("Couldn't match regex /%s/ to file %s."
                         % (self.get_option('group'), os.path.basename(path)))
             
+                # Construct sample_id
                 sample_id_parts = []
                 if self.is_option_set_in_config('sample_id_prefix'):
                     sample_id_parts.append(self.get_option('sample_id_prefix'))
                 
                 sample_id_parts += list(match.groups())
                 sample_id = '_'.join(sample_id_parts)
+
                 if not sample_id in found_files:
-                    found_files[sample_id] = list()
-                found_files[sample_id].append(path)
+                    found_files[sample_id] = dict()
+                # either finds a single match or throws an error
+                which_read = misc.assign_string(os.path.basename(path),
+                                                read_types.values())
+                # so this is save because which_read can only be a value from
+                # read_types
+                if not which_read in found_files[sample_id]:
+                    found_files[sample_id][which_read] = list()
+                found_files[sample_id][which_read].append(path)
 
         elif self.is_option_set_in_config('sample_to_files_map'):
-            for run_id, paths in self.get_option('sample_to_files_map').items():
+            for sample, paths in self.get_option('sample_to_files_map').items():
+                sample_id = sample
                 for path in paths:
                     if not os.path.isfile(path):
                         raise StandardError("[fastq_source]: %s is no file. "
                                             "Please provide correct path." 
                                             % path)
-                    if not run_id in found_files:
-                        found_files[run_id] = list()
-                    found_files[run_id].append(path)
+                if not sample_id in found_files:
+                    found_files[sample_id] = dict()
+                # either finds a single match or throws an error
+                which_read = misc.assign_string(os.path.basename(path),
+                                                read_types.values())
+                # so this is save because which_read can only be a value from
+                # read_types
+                if not which_read in found_files[sample_id]:
+                    found_files[sample_id][which_read] = list()
+                found_files[sample_id][which_read].append(path)
 
         else:
             raise StandardError("[raw_file_source]: Either 'group' AND 'pattern'"
@@ -106,11 +129,17 @@ class FastqSource(AbstractSourceStep):
                                 "set. ")
 
         # declare a run for every sample
-        for run_id, paths in found_files.items():
+        for run_id in found_files.keys():
             with self.declare_run(run_id) as run:
                 run.add_public_info("paired_end", self.get_option("paired_end"))
-                for path in paths:
-                    run.add_output_file("reads", path, [])
+                for read in ['first_read', 'second_read']:
+                    if read in read_types.keys():
+                        for path in found_files[run_id][read_types[read]]:
+                            run.add_output_file(read, path, [])
+                    # always set the out connection even for zero files
+                    else:
+                        run.add_empty_output_connection(read)
+
                 # save public information
                 if self.get_option("paired_end") and not self.is_option_set_in_config("second_read"):
                     raise StandardError("Required option 'second_read' needs to "

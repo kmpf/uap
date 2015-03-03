@@ -311,7 +311,9 @@ class Pipeline(object):
                 count[state] = 0
             count[state] += 1
             print("[%s] %s" % (task.get_task_state()[0].lower(), task))
-        print("tasks: %d total, %s" % (len(self.all_tasks_topologically_sorted), ', '.join([str(count[_]) + ' ' + _.lower() for _ in sorted(count.keys())])))
+        print("tasks: %d total, %s" % (len(self.all_tasks_topologically_sorted),
+            ', '.join([str(count[_]) + ' ' 
+                       + _.lower() for _ in sorted(count.keys())])))
         
     def print_source_runs(self):
         for step_name in self.topological_step_order:
@@ -322,8 +324,8 @@ class Pipeline(object):
 
     def add_file_dependencies(self, output_path, input_paths):
         if output_path in self.file_dependencies:
-            raise StandardError("Different steps/runs/tags want to create the same output file: %s." %
-                output_path)
+            raise StandardError("Different steps/runs/tags want to create "
+                                "the same output file: %s." % output_path)
         self.file_dependencies[output_path] = set(input_paths)
         
         for inpath in input_paths:
@@ -333,7 +335,8 @@ class Pipeline(object):
         
     def add_task_for_output_file(self, output_path, task_id):
         if output_path in self.task_id_for_output_file:
-            raise StandardError("More than one step is trying to create the same output file: %s." % output_path)
+            raise StandardError("More than one step is trying to create the "
+                "same output file: %s." % output_path)
         self.task_id_for_output_file[output_path] = task_id
         
         if not task_id in self.output_files_for_task_id:

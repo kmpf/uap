@@ -46,8 +46,8 @@ class Run(object):
 
     def add_public_info(self, key, value):
         '''
-        Add public information to a run. For example, a FASTQ reader may store the
-        index barcode here for subsequent steps to query via 
+        Add public information to a run. For example, a FASTQ reader may store 
+        the index barcode here for subsequent steps to query via 
         ``AbstractStep.find_upstream_info()``.
         '''
         if key in self._public_info and value != self._public_info[key]:
@@ -57,25 +57,41 @@ class Run(object):
                 (key, value, self._public_info[key]))
         self._public_info[key] = value
 
+    def update_public_info(self, key, value):
+        '''
+        Update public information already existing in a run. For example, all
+        steps which handle FASTQ files want to know how to distinguish between
+        files of read 1 and files of read 2. So each step that provides FASTQ
+        should update this information if the file names are altered.
+        The stored information can be acquired via:
+        ``AbstractStep.find_upstream_info()``.
+        '''
+        if not key in self._public_info:
+            raise StandardError("The key %s doesn't exist yet as public info."
+                "Please use add_public_info(%s, %s)" % (key, key, value))
+        else:
+            self._public_info[key] = value
+
     def add_output_file(self, tag, out_path, in_paths):
         '''
-        Add an output file to this run. Output file names must be unique across all
-        runs defined by a step, so it may be a good idea to include the run_id into
-        the output filename.
-
-        - *tag*: You must specify the connection annotation which must have been previously 
-          declared via *AbstractStep.add_connection("out/...")*, but this doesn't 
-          have to be done in the step constructor, it's also possible in *declare_runs()*
-          right before this method is called.
-        
-        - *out_path*: The output file path, without a directory. The pipeline assigns
-          directories for you (this parameter must not contain a slash).
-        
-        - *in_paths*: A list of input files this output file depends on. It is 
-          **crucial** to get this right, so that the pipeline can determine which steps
-          are up-to-date at any given time. You have to specify absolute paths here,
-          including a directory, and you can obtain them via 
-          *AbstractStep.run_ids_and_input_files_for_connection* and related functions.
+        Add an output file to this run. Output file names must be unique across
+        all runs defined by a step, so it may be a good idea to include the 
+        run_id into the output filename.
+        - *tag*: You must specify the connection annotation which must have been
+                 previously declared via *AbstractStep.add_connection("out/...")*,
+                 but this doesn't have to be done in the step constructor, it's
+                 also possible in *declare_runs()* right before this method is
+                 called.
+        - *out_path*: The output file path, without a directory. The pipeline 
+                      assigns directories for you (this parameter must not 
+                      contain a slash).
+        - *in_paths*: A list of input files this output file depends on. It is
+                      **crucial** to get this right, so that the pipeline can
+                      determine which steps are up-to-date at any given time.
+                      You have to specify absolute paths here, including a 
+                      directory, and you can obtain them via 
+                      *AbstractStep.run_ids_and_input_files_for_connection*
+                      and related functions.
         '''
         
         # make sure there's no slash in out_path unless it's a source step
@@ -99,6 +115,26 @@ class Run(object):
 
         self._output_files[tag][out_path] = in_paths
 
+    def add_empty_output_connection(self, tag):
+        '''
+        
+        '''
+        # make sure tag was declared with an outgoing connection
+        if 'out/' + tag not in self._step._connections:
+            raise StandardError("Invalid output_file tag '%s' in %s. "
+                "You might want to add self.add_connection('out/%s') "
+                "to the constructor of %s."
+                % (tag, str(self._step), tag, self._step.__module__))
+
+        if tag not in self._output_files:
+            self._output_files[tag] = dict()
+
+        if None in self._output_files[tag]:
+            raise StandardError(
+                "You're trying to re-declare %s as an empty output connection "
+                % tag)
+
+        self._output_files[tag][None] = None
 
     def get_output_files(self):
         '''
@@ -115,7 +151,7 @@ class Run(object):
             result[tag] = dict()
             for out_path, in_paths in self._output_files[tag].items():
                 directory = self._step.get_output_directory_du_jour()
-                if directory != None:
+                if directory != None and out_path != None:
                     full_path = os.path.join(directory, out_path)
                 else:
                     full_path = out_path

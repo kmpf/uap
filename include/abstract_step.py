@@ -213,11 +213,16 @@ class AbstractStep(object):
             for run_id in self._runs.keys():
                 for annotation in self._runs[run_id].get_output_files().keys():
                     for output_path, input_paths in self._runs[run_id].get_output_files()[annotation].items():
-                        self._pipeline.add_file_dependencies(output_path, input_paths)
-                        task_id = '%s/%s' % (str(self), run_id)
-                        self._pipeline.add_task_for_output_file(output_path, task_id)
-                        for inpath in input_paths:
-                            self._pipeline.add_task_for_input_file(inpath, task_id)
+                        # proceed if we have normal output_path/input_paths
+                        if output_path != None and input_paths != None:
+                            self._pipeline.add_file_dependencies(output_path,
+                                                                 input_paths)
+                            task_id = '%s/%s' % (str(self), run_id)
+                            self._pipeline.add_task_for_output_file(output_path,
+                                                                    task_id)
+                            for inpath in input_paths:
+                                self._pipeline.add_task_for_input_file(inpath,
+                                                                       task_id)
 
         # now that _runs exists, it remains constant, just return it
         return self._runs
@@ -277,17 +282,17 @@ class AbstractStep(object):
         Determine the basic run state of a run, which is, at any time, one of 
         **waiting**, **ready**, or **finished**.
         
-        These states are determined from the current configuration and the timestamps 
-        of result files present in the file system. In addition to these three basic
-        states, there are two additional states which are less reliable
-        (see *get_run_state()*).
+        These states are determined from the current configuration and the
+        timestamps of result files present in the file system. In addition to
+        these three basic states, there are two additional states which are less
+        reliable (see *get_run_state()*).
         '''
         
         def volatile_path_good(volatile_path, recurse = True):
             '''
-            This function receives a volatile path and tries to load the placeholder
-            YAML data structure. It then checks all downstream paths, which may in
-            turn be volatile placeholder files.
+            This function receives a volatile path and tries to load the
+            placeholder YAML data structure. It then checks all downstream
+            paths, which may in turn be volatile placeholder files.
             '''
             
             # reconstruct original path from volatile placeholder path
@@ -333,9 +338,11 @@ class AbstractStep(object):
                 
             for downstream_path, downstream_info in info['downstream'].items():
                 if downstream_path in self._pipeline.task_id_for_output_file:
-                    # only check this downstream file if there's a task which creates it,
-                    # otherwise, it may be a file which is no more used
-                    pv_downstream_path = change_to_volatile_if_need_be(downstream_path, recurse = False)
+                    # only check this downstream file if there's a task which 
+                    # creates it, otherwise, it may be a file which is no more
+                    # used
+                    pv_downstream_path = change_to_volatile_if_need_be(
+                        downstream_path, recurse = False)
                     if not AbstractStep.fsc.exists(pv_downstream_path):
                         return False
                     if not AbstractStep.fsc.getmtime(pv_downstream_path) >= info['self']['mtime']:
@@ -422,8 +429,10 @@ class AbstractStep(object):
         run_info = self.get_run_info()
         max_level = 0
         for tag, output_files in run_info[run_id].get_output_files().items():
-            for output_file in output_files:
-                max_level = max(max_level, up_to_dateness_level(output_file))
+            # output_files can be None if the connection is empty
+            for output_file, input_files in output_files.items():
+                if output_file != None and input_files != None:
+                    max_level = max(max_level, up_to_dateness_level(output_file))
 
         if max_level == 0:
             return self._pipeline.states.FINISHED
@@ -434,8 +443,8 @@ class AbstractStep(object):
 
     def get_run_state(self, run_id):
         '''
-        Determine the run state (that is, not *basic* but *extended* run state) of a 
-        run, building on the value returned by *get_run_state_basic()*.
+        Determine the run state (that is, not *basic* but *extended* run state) 
+        of a run, building on the value returned by *get_run_state_basic()*.
         
         If a run is **ready**, this will:
           - return **executing** if an up-to-date *executing ping file* is found
