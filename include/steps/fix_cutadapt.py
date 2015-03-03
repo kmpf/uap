@@ -24,7 +24,6 @@ class FixCutadapt(AbstractStep):
         read_types = {'first_read': '-R1', 'second_read': '-R2'}
         paired_end_info = dict()
 
-        # run_ids = dict()
         for read in read_types.keys():
             for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/%s' % read):
                 if input_paths != [None]:

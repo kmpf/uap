@@ -34,7 +34,8 @@ class Segemehl(AbstractStep):
 
         self.set_cores(12)
         
-        self.add_connection('in/reads')
+        self.add_connection('in/first_read')
+        self.add_connection('in/second_read')
         self.add_connection('out/alignments')
         self.add_connection('out/unmapped')
         self.add_connection('out/log')
@@ -48,50 +49,67 @@ class Segemehl(AbstractStep):
         
 
     def declare_runs(self):
-        
-        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
-            
+        found_files = dict()
+        read_types = {'first_read': '-R1', 'second_read': '-R2'}
+        paired_end_info = dict()
+
+        for read in read_types.keys():
+            for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/%s' % read):
+                if input_paths != [None]:
+                    paired_end_info[run_id] = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
+
+                # save information per file in found_files
+                if not run_id in found_files:
+                    found_files[run_id] = dict()
+
+                if not read in found_files[run_id]:
+                    found_files[run_id][read] = list()
+                # Check if we get exactly one input file
+                if len(input_paths) != 1:
+                    raise StandardError("Expected one input file.")
+                found_files[run_id][read].extend(input_paths)
+
+        for run_id in found_files.keys():
             with self.declare_run(run_id) as run:
-                is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
-                run.add_private_info('paired_end', is_paired_end)
-                if is_paired_end:
-                    read_files = misc.assign_strings(input_paths, ['R1','R2'])
-                    run.add_private_info('R1-in', read_files['R1'])
-                    run.add_private_info('R2-in', read_files['R2'])
-                else:
-                    if len(input_paths) != 1:
-                        raise StandardError("Sample %s is unpaired, but has not " +
-                                            "exactly one input file %s" %
-                                            (run_id, input_paths))
-                    run.add_private_info('R1-in', input_paths[0])
-
-                run.add_output_file('alignments', '%s-segemehl-results.sam.gz' % run_id,
+                run.add_private_info('paired_end', paired_end_info[run_id])
+                input_paths = list()
+                for read in found_files[run_id].keys():
+                    run.add_private_info(read, found_files[run_id][read])
+                    input_paths.extend(found_files[run_id][read])
+                
+                run.add_output_file('alignments', '%s-segemehl-results.sam.gz' 
+                                    % run_id, input_paths)
+                run.add_output_file('unmapped', '%s-segemehl-unmapped.fastq.gz'
+                                    % run_id, input_paths)
+                run.add_output_file('log', '%s-segemehl-log.txt' % run_id, 
                                     input_paths)
-                run.add_output_file('unmapped', '%s-segemehl-unmapped.fastq.gz' % run_id,
-                                    input_paths)
-                run.add_output_file('log', '%s-segemehl-log.txt' % run_id, input_paths)
-
 
     def execute(self, run_id, run):
+        read_types = {'first_read': '-R1', 'second_read': '-R2'}
         is_paired_end = run.get_private_info('paired_end')
+        first_read_path = run.get_private_info('first_read')
+        second_read_path = None
+        if is_paired_end:
+            second_read_path = run.get_private_info('second_read')
         with process_pool.ProcessPool(self) as pool:
+            fifo_path_genome = pool.get_temporary_fifo(
+                'segemehl-genome-fifo', 'input')
+            fifo_path_unmapped = pool.get_temporary_fifo(
+                'segemehl-unmapped-fifo', 'output')
             
-            fifo_path_genome = pool.get_temporary_fifo('segemehl-genome-fifo', 'input')
-            fifo_path_unmapped = pool.get_temporary_fifo('segemehl-unmapped-fifo', 'output')
-            
-            pool.launch([self.get_tool('cat4m'), self.get_option('genome'), '-o', fifo_path_genome])
+            pool.launch([self.get_tool('cat4m'), self.get_option('genome'), 
+                         '-o', fifo_path_genome])
             
             with pool.Pipeline(pool) as pipeline:
-                                
                 segemehl = [
                     self.get_tool('segemehl'),
                     '-d', fifo_path_genome,
                     '-i', self.get_option('index'),
-                    '-q', run.get_private_info('R1-in')
+                    '-q', first_read_path
                     ]
 
                 if is_paired_end:
-                    segemehl.extend(['-p', run.get_private_info('R2-in')])
+                    segemehl.extend(['-p', second_read_path])
                 cores = str(self.get_cores() - 4)
 
                 segemehl.extend([
@@ -102,13 +120,33 @@ class Segemehl(AbstractStep):
                     '-D', '0',
                 ])
                 
-                pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
-                pipeline.append(segemehl, stderr_path = run.get_single_output_file_for_annotation('log'))
-                pipeline.append(pigz, stdout_path = run.get_single_output_file_for_annotation('alignments'))
+                pigz = [
+                    self.get_tool('pigz'), 
+                    '--blocksize', '4096', 
+                    '--processes', '2', '-c'
+                ]
+                pipeline.append(
+                    segemehl, 
+                    stderr_path = run.get_single_output_file_for_annotation(
+                        'log')
+                )
+                pipeline.append(
+                    pigz, 
+                    stdout_path = run.get_single_output_file_for_annotation(
+                        'alignments')
+                )
                 
             with pool.Pipeline(pool) as pipeline:
-                pigz = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
+                pigz = [
+                    self.get_tool('pigz'), 
+                    '--blocksize', '4096', 
+                    '--processes', '2', '-c'
+                ]
                 
                 pipeline.append([self.get_tool('cat4m'), fifo_path_unmapped])
-                pipeline.append(pigz, stdout_path = run.get_single_output_file_for_annotation('unmapped'))
+                pipeline.append(
+                    pigz, 
+                    stdout_path = run.get_single_output_file_for_annotation(
+                        'unmapped')
+                )
 
