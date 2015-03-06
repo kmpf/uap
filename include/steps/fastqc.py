@@ -39,7 +39,7 @@ class Fastqc(AbstractStep):
                 
                 # fastqc does not allow individual naming of files but 
                 # appends _fastqc to input file 
-                run.add_private_info('fastqc_default_name',
+                run.add_private_info('first_read_fastqc_default_name',
                                      ''.join([input_base, '_fastqc']))
                 run.add_output_file("first_read_fastqc_report", 
                                     "%s_R1-fastqc.zip" 
@@ -59,6 +59,8 @@ class Fastqc(AbstractStep):
             
                 # fastqc does not allow individual naming of files but 
                 # appends _fastqc to input file 
+                run.add_private_info('second_read_fastqc_default_name',
+                                     ''.join([input_base, '_fastqc']))
                 run.add_output_file("second_read_fastqc_report", 
                                     "%s_R2-fastqc.zip" % run_id, input_paths)
                 run.add_output_file("second_read_log_stderr", 
@@ -67,9 +69,10 @@ class Fastqc(AbstractStep):
 
     def execute(self, run_id, run):
         for read in ['first_read', 'second_read']:
+            fastqc_out_dir = None
             with process_pool.ProcessPool(self) as pool:
                 with pool.Pipeline(pool) as pipeline:
-                    # Fastqc only allows to write to a directory 
+                    # Fastqc only allows to write to a directory
                     fastqc_out_dir =  self.get_output_directory_du_jour()
 
                     out_path = run.get_single_output_file_for_annotation(
@@ -85,13 +88,13 @@ class Fastqc(AbstractStep):
                 # create the pipeline and run it
                 log_stderr = run.get_single_output_file_for_annotation(
                     '%s_log_stderr' % read)
-                pipeline.append(fastqc, stderr_path = log_stderr)                   
-
-        fastqc_default_name = run.get_private_info('fastqc_default_name')
-        fastqc_report_basename  = fastqc_default_name + '.zip'
-        full_path_zipped_fastqc_report = os.path.join(fastqc_out_dir,  fastqc_report_basename)
+                pipeline.append(fastqc, stderr_path = log_stderr)
+                
+            fastqc_default_name = run.get_private_info('%s_fastqc_default_name' % read)
+            fastqc_report_basename  = fastqc_default_name + '.zip'
+            full_path_zipped_fastqc_report = os.path.join(fastqc_out_dir,  fastqc_report_basename)
         
-        try:
-            os.rename(full_path_zipped_fastqc_report, out_path)
-        except OSError:
-            raise StandardError("os.rename failed of %s to %s" % full_path_zipped_fastqc_report, out_path)
+            try:
+                os.rename(full_path_zipped_fastqc_report, out_path)
+            except OSError:
+                raise StandardError("os.rename failed of %s to %s" % full_path_zipped_fastqc_report, out_path)

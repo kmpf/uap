@@ -60,29 +60,29 @@ class FixCutadapt(AbstractStep):
             fifo_in_R2 = None
             fifo_out_R1 = pool.get_temporary_fifo('fifo_out_R1', 'output')
             fifo_out_R2 = None
-            if is_paired_end:
-                second_read_path = run.get_single_output_file_for_annotation(
-                    'second_read')
-                fifo_in_R2 = pool.get_temporary_fifo('fifo_in_R2', 'input')
-                fifo_out_R2 = pool.get_temporary_fifo('fifo_out_R2', 'output')
             
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.get_tool('cat4m'), run.get_input_files_for_output_file(first_read_path)]
+                cat4m = [self.get_tool('cat4m')]
+                cat4m.extend(
+                    run.get_input_files_for_output_file(first_read_path)
+                )
                 pigz = [self.get_tool('pigz'), '--decompress', '--processes', 
-                        '1', '--stdout']                
+                        '1', '--stdout']
                 pipeline.append(cat4m)
                 pipeline.append(pigz, stdout_path = fifo_in_R1)
                 
             if is_paired_end:    
+                second_read_path = run.get_single_output_file_for_annotation(
+                    'second_read')
+                fifo_in_R2 = pool.get_temporary_fifo('fifo_in_R2', 'input')
+                fifo_out_R2 = pool.get_temporary_fifo('fifo_out_R2', 'output')
                 with pool.Pipeline(pool) as pipeline:
-                    cat4m = [self.get_tool('cat4m'), 
-                             run.get_input_files_for_output_file(
-                                 second_read_path)]
+                    cat4m = [self.get_tool('cat4m')]
+                    cat4m.extend(
+                        run.get_input_files_for_output_file(second_read_path)
+                        )
                     pigz = [self.get_tool('pigz'), '--decompress', 
                             '--processes', '1', '--stdout']
-                    print(cat4m)
-                    print(pigz)
-                    print(fifo_in_R2)
                     pipeline.append(cat4m)
                     pipeline.append(pigz, stdout_path = fifo_in_R2)
         

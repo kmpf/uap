@@ -104,8 +104,8 @@ class Cutadapt(AbstractStep):
                         # add index to adapter sequence if necessary
                         if '((INDEX))' in adapter:
                             index = self.find_upstream_info_for_input_paths(
-                                found_files[run_id][read], 'index%s' 
-                                % read_types[read])
+                                found_files[run_id][read], 
+                                'index%s' % read_types[read])
                             adapter = adapter.replace('((INDEX))', index)
                         
                         # create reverse complement if we are asked for it
@@ -139,29 +139,35 @@ class Cutadapt(AbstractStep):
                     out_path = run.get_single_output_file_for_annotation(read)
 
                     # set up processes
+                    # cat all files
                     cat4m = [self.get_tool('cat4m')]
                     cat4m.extend(sorted(run.get_input_files_for_output_file(out_path)))
+                    pipeline.append(cat4m)
+                        
+                    # Decompress the input files
+                    pigz1 = [self.get_tool('pigz'), '--processes', '1', 
+                             '--decompress', '--stdout']
+                    pipeline.append(pigz1)
+                    
+                    # fix qnames if wanted
+                    fix_qnames = [self.get_tool('fix_qnames')]
+                    if self.get_option('fix_qnames') == True:
+                        pipeline.append(fix_qnames)
+
+                    # set option for adapter clipping
                     if self.is_option_set_in_config('adapter-type'):
                         adapterType = '-' + self.get_option('adapter-type')
                     else:
                         adapterType='-a'
-                        
-                    pigz1 = [self.get_tool('pigz'), '--processes', '1', 
-                             '--decompress', '--stdout']
-                    
-                    fix_qnames = [self.get_tool('fix_qnames')]
 
+                    # Clip adapters from piped data
                     cutadapt = [self.get_tool('cutadapt'), adapterType, 
                                 run.get_private_info('adapter-%s' % read), '-']
+                    pipeline.append(cutadapt, stderr_path = 
+                                    run.get_single_output_file_for_annotation(
+                                        'log_%s' % read))
                     
+                    # Compress output to file
                     pigz2 = [self.get_tool('pigz'), '--blocksize', '4096', 
                              '--processes', '1', '--stdout']
-
-                    # create the pipeline and run it
-                    pipeline.append(cat4m)
-                    pipeline.append(pigz1)
-                    if self.get_option('fix_qnames') == True:
-                        pipeline.append(fix_qnames)
-                    pipeline.append(cutadapt, stderr_path = 
-                        run.get_single_output_file_for_annotation('log'))
                     pipeline.append(pigz2, stdout_path = out_path)

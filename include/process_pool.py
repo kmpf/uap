@@ -384,8 +384,8 @@ class ProcessPool(object):
             'hints': hints
         }
         self.log("Launched %s as PID %d." % (' '.join(args), pid))
-        sys.stderr.write("Launched %s as PID %d.\n" % (' '.join(args), pid))
-        sys.stderr.flush()
+#        sys.stderr.write("Launched %s as PID %d.\n" % (' '.join(args), pid))
+#        sys.stderr.flush()
 
         pipe = None
         if keep_stdout_open:
