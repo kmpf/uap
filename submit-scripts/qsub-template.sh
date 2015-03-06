@@ -8,7 +8,6 @@
 #$ -M #{EMAIL}                # e-mail notification address
 #$ -l h_rt=96:00:00           # runtime of your job
 #$ -l h_vmem=8G               # memory per core for your job
-#$ -l m_core=#{CORES}         # use only nodes where all #{CORES} cores are available
 
 ## Execute command
 
