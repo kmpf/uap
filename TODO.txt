@@ -37,3 +37,34 @@ Tasks:
 Problems:
 - if different sources contain identically named samples they are probably gone
   overwrite there output files handled wrong
+  
+Sequencing Workflows
+====================
+
+Reference Genome
+----------------
+
+* Genome Resequencing
+** Variant Calling
+
+* Methylome
+** Specific alignment (Bisulfite converted bases)
+** Methylation calling
+
+* Transcriptome
+** De-novo transcript assembly
+** Counts per annotation
+** Differential expression
+
+* ChIP-seq
+** aggregate to peaks
+** peak calling (foreground vs background)
+
+Non-reference Genome
+--------------------
+
+* Genome
+** Genome Assembly
+
+* Transcriptome
+** Assemble Transcripts
