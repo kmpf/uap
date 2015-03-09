@@ -396,7 +396,6 @@ class Pipeline(object):
                     command_call : (' '.join(command)).strip(),
                     command_exit_code : proc.returncode
                 })
-                sys.stderr.write("Execute:\t%s\n" % ' '.join(command))
                 sys.stderr.write(error)
                 sys.stderr.flush()
             else:

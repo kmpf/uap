@@ -87,10 +87,10 @@ class Segemehl(AbstractStep):
     def execute(self, run_id, run):
         read_types = {'first_read': '-R1', 'second_read': '-R2'}
         is_paired_end = run.get_private_info('paired_end')
-        first_read_path = run.get_private_info('first_read')
+        first_read_path = run.get_private_info('first_read')[0]
         second_read_path = None
         if is_paired_end:
-            second_read_path = run.get_private_info('second_read')
+            second_read_path = run.get_private_info('second_read')[0]
         with process_pool.ProcessPool(self) as pool:
             fifo_path_genome = pool.get_temporary_fifo(
                 'segemehl-genome-fifo', 'input')

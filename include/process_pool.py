@@ -155,7 +155,7 @@ class ProcessPool(object):
         for argument in command:
             if not isinstance(argument, str):
                 raise  StandardError(
-                    "The command to be launched '%s' " % args +
+                    "The command to be launched '%s' " % command +
                     "contains non-string argument '%s'. " % argument + 
                     "Therefore the command will fail. Please " +
                     "fix this type issue.")
@@ -186,7 +186,6 @@ class ProcessPool(object):
 
             (output, error) = proc.communicate()
             exec output
-            sys.stderr.write("Execute:\t%s\n" % ' '.join(command))
             sys.stderr.write(error)
             sys.stderr.flush()
 
