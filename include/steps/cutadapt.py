@@ -50,6 +50,39 @@ class Cutadapt(AbstractStep):
             for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/%s' % read):
                 if input_paths != [None]:
                     paired_end_info[run_id] = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
+                    # make sure that adapter-R1/adapter-R2 or adapter-file are set
+                    # correctly according to paired_end info... this kind of mutual 
+                    # exclusive option checking is a bit tedious, so we do it here.
+                    
+                    if paired_end_info[run_id]:
+                        if ( not self.is_option_set_in_config('adapter-R2') and 
+                             not self.is_option_set_in_config('adapter-file') ):
+                            raise StandardError(
+                                "Option 'adapter-R2' or " +
+                                "'adapter-file' required because " +
+                                "sample %s is paired end!" % run_id)
+
+                    elif ( self.is_option_set_in_config('adapter-R2') and
+                           not self.is_option_set_in_config('adapter-file') ):
+                        raise StandardError(
+                            "Option 'adapter-R2' not allowed because " +
+                            "sample %s is not paired end!" % run_id)
+                        
+                    if ( self.is_option_set_in_config('adapter-file') and
+                         self.is_option_set_in_config('adapter-R1') ):
+                        raise StandardError(
+                            "Option 'adapter-R1' and 'adapter-file' " +
+                            "are both set but are mutually exclusive!" )
+
+                    if ( not self.is_option_set_in_config('adapter-file') and
+                         not self.is_option_set_in_config('adapter-R1') ):
+                        raise StandardError(
+                            "Option 'adapter-R1' or 'adapter-file' " +
+                            "required to call cutadapt for sample %s!" % 
+                            run_id)
+
+
+
                 # save information per file in found_files
                 if not run_id in found_files:
                     found_files[run_id] = dict()
@@ -64,30 +97,6 @@ class Cutadapt(AbstractStep):
                         raise StandardError("Option 'adapter-type' must be "
                             "either 'a','b', or 'g'!")
                 
-                # make sure that adapter-R1/adapter-R2 or adapter-file are set
-                # correctly according to paired_end info... this kind of mutual 
-                # exclusive option checking is a bit tedious, so we do it here.
-
-                if paired_end_info[run_id]:
-                    if ( not self.is_option_set_in_config('adapter-R2') and 
-                         not self.is_option_set_in_config('adapter-file') ):
-                        raise StandardError("Option 'adapter-R2' or " +
-                                            "'adapter-file' required because " +
-                                            "sample %s is paired end!" % run_id)
-                elif ( self.is_option_set_in_config('adapter-R2') and
-                       not self.is_option_set_in_config('adapter-file') ):
-                    raise StandardError("Option 'adapter-R2' not allowed because " +
-                                    "sample %s is not paired end!" % run_id)
-
-                if ( self.is_option_set_in_config('adapter-file') and
-                     self.is_option_set_in_config('adapter-R1') ):
-                    raise StandardError("Option 'adapter-R1' and 'adapter-file' " +
-                                    "are both set but are mutually exclusive!" )
-                if ( not self.is_option_set_in_config('adapter-file') and
-                     not self.is_option_set_in_config('adapter-R1') ):
-                    raise StandardError("Option 'adapter-R1' or 'adapter-file' " +
-                                        "required to call cutadapt for sample %s!" % 
-                                        run_id)
 
         # now declare two runs
         for run_id in found_files.keys():

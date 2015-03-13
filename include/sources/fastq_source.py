@@ -112,16 +112,16 @@ class FastqSource(AbstractSourceStep):
                         raise StandardError("[fastq_source]: %s is no file. "
                                             "Please provide correct path." 
                                             % path)
-                if not sample_id in found_files:
-                    found_files[sample_id] = dict()
-                # either finds a single match or throws an error
-                which_read = misc.assign_string(os.path.basename(path),
-                                                read_types.values())
-                # so this is save because which_read can only be a value from
-                # read_types
-                if not which_read in found_files[sample_id]:
-                    found_files[sample_id][which_read] = list()
-                found_files[sample_id][which_read].append(path)
+                    if not sample_id in found_files:
+                        found_files[sample_id] = dict()
+                        # either finds a single match or throws an error
+                        which_read = misc.assign_string(os.path.basename(path),
+                                                        read_types.values())
+                    # so this is save because which_read can only be a value 
+                    # from read_types
+                    if not which_read in found_files[sample_id]:
+                        found_files[sample_id][which_read] = list()
+                    found_files[sample_id][which_read].append(path)
 
         else:
             raise StandardError("[raw_file_source]: Either 'group' AND 'pattern'"

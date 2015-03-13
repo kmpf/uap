@@ -31,41 +31,45 @@ class Fastqc(AbstractStep):
         self.add_option('contaminent-file', str, optional =True)
         
     def declare_runs(self):
+        found_files = dict()
+        read_types = {'first_read': '_R1', 'second_read': '_R2'}
+        paired_end_info = dict()
         # fetch all incoming run IDs which produce reads...
-        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/first_read'):
-            with self.declare_run(run_id) as run:
-                #weired python way to get 'file' of 'file.bla.txt'
-                input_base = os.path.basename(input_paths[0]).split('.', 1)[0]
-                
-                # fastqc does not allow individual naming of files but 
-                # appends _fastqc to input file 
-                run.add_private_info('first_read_fastqc_default_name',
-                                     ''.join([input_base, '_fastqc']))
-                run.add_output_file("first_read_fastqc_report", 
-                                    "%s_R1-fastqc.zip" 
-                                    % run_id, input_paths)
-                run.add_output_file("first_read_log_stderr", 
-                                    "%s_R1-fastqc-log_stderr.txt" 
-                                    % run_id, input_paths)
+        for read in read_types.keys():
+            for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/%s' % read):
+                if not run_id in found_files:
+                    found_files[run_id] = dict()
 
-        for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/second_read'):
-            run = self.get_run(run_id)
-            if len(input_paths) == 1 and input_paths[0] == None:
-                run.add_empty_output_connection("second_read_fastqc_report")
-                run.add_empty_output_connection("second_read_log_stderr")
-            else:
-                # weired python way to get 'file' of 'file.bla.txt'
-                input_base = os.path.basename(input_paths[0]).split('.', 1)[0]
-            
-                # fastqc does not allow individual naming of files but 
-                # appends _fastqc to input file 
-                run.add_private_info('second_read_fastqc_default_name',
-                                     ''.join([input_base, '_fastqc']))
-                run.add_output_file("second_read_fastqc_report", 
-                                    "%s_R2-fastqc.zip" % run_id, input_paths)
-                run.add_output_file("second_read_log_stderr", 
-                                    "%s_R2-fastqc-log_stderr.txt" 
-                                    % run_id, input_paths)
+                if not read in found_files[run_id]:
+                    found_files[run_id][read] = list()
+                found_files[run_id][read].extend(input_paths)
+
+        for run_id in found_files.keys():
+            with self.declare_run(run_id) as run:
+                for read in found_files[run_id].keys():
+                    #weired python way to get 'file' of 'file.bla.txt'
+                    input_paths = found_files[run_id][read]
+                    if input_paths == [None]:
+                        run.add_empty_output_connection("%s_fastqc_report" % read)
+                        run.add_empty_output_connection("%s_log_stderr" % read)
+                    else:
+                        input_base = os.path.basename(
+                            input_paths[0]).split('.', 1)[0]
+                    
+                        # fastqc does not allow individual naming of files but 
+                        # appends _fastqc to input file 
+                        run.add_private_info(
+                            '%s_fastqc_default_name' % read,
+                            ''.join([input_base, '_fastqc']))
+                        run.add_output_file(
+                            "%s_fastqc_report" % read, 
+                            "%s%s-fastqc.zip" % (run_id, read_types[read]),
+                            input_paths)
+                        run.add_output_file(
+                            "%s_log_stderr" % read, 
+                            "%s%s-fastqc-log_stderr.txt" % 
+                            (run_id, read_types[read]),
+                            input_paths)
 
     def execute(self, run_id, run):
         for read in ['first_read', 'second_read']:
