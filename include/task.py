@@ -49,8 +49,9 @@ class Task(object):
         run_info = self.step.get_run_info()[self.run_id]
         for annotation, outfiles in run_info.get_output_files().items():
             for outpath, infiles in outfiles.items():
-                for path in infiles:
-                    result.add(path)
+                if infiles != None:
+                    for path in infiles:
+                        result.add(path)
         return list(result)
 
     def output_files(self):

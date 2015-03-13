@@ -357,12 +357,13 @@ class AbstractStep(object):
             return True
         
         def change_to_volatile_if_need_be(path, recurse = True):
-            if not AbstractStep.fsc.exists(path):
-                # the real output file does not exist
-                volatile_path = path + AbstractStep.VOLATILE_SUFFIX
-                if volatile_path_good(volatile_path, recurse):
-                    return volatile_path
-            return path
+            if path != None:
+                if not AbstractStep.fsc.exists(path):
+                    # the real output file does not exist
+                    volatile_path = path + AbstractStep.VOLATILE_SUFFIX
+                    if volatile_path_good(volatile_path, recurse):
+                        return volatile_path
+                return path
 
         def is_path_up_to_date(outpath, inpaths):
             '''
@@ -395,14 +396,15 @@ class AbstractStep(object):
             
         def up_to_dateness_level(path, level = 0):
             result = level
-            dep_paths = self._pipeline.file_dependencies[path]
-            if not is_path_up_to_date(path, dep_paths):
-                result = level + 1
-            for dep_path in dep_paths:
-                recursive_result = up_to_dateness_level(dep_path, level + 1)
-                if recursive_result > level + 1:
-                    result = max(result, recursive_result)
-            return result
+            if path != None:
+                dep_paths = self._pipeline.file_dependencies[path]
+                if not is_path_up_to_date(path, dep_paths):
+                    result = level + 1
+                for dep_path in dep_paths:
+                    recursive_result = up_to_dateness_level(dep_path, level + 1)
+                    if recursive_result > level + 1:
+                        result = max(result, recursive_result)
+                return result
 
         '''
         - finished: all output files exist AND up to date (recursively)
