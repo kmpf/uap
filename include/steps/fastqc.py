@@ -74,31 +74,30 @@ class Fastqc(AbstractStep):
     def execute(self, run_id, run):
         for read in ['first_read', 'second_read']:
             fastqc_out_dir = None
-            with process_pool.ProcessPool(self) as pool:
-                with pool.Pipeline(pool) as pipeline:
+            out_path = run.get_single_output_file_for_annotation(
+                '%s_fastqc_report' % read)
+            if out_path != None:
+                with process_pool.ProcessPool(self) as pool:
+#                    with pool.Pipeline(pool) as pipeline:
                     # Fastqc only allows to write to a directory
                     fastqc_out_dir =  self.get_output_directory_du_jour()
-
-                    out_path = run.get_single_output_file_for_annotation(
-                        '%s_fastqc_report' % read)
-
                     in_path  = run.get_input_files_for_output_file(out_path)
-
+                    
                     # set up processes
                     fastqc = [self.get_tool('fastqc'), 
                               '--noextract', '-o', fastqc_out_dir]
                     fastqc.extend(in_path)
-
-                # create the pipeline and run it
-                log_stderr = run.get_single_output_file_for_annotation(
-                    '%s_log_stderr' % read)
-                pipeline.append(fastqc, stderr_path = log_stderr)
+                    
+                    # create the pipeline and run it
+                    log_stderr = run.get_single_output_file_for_annotation(
+                        '%s_log_stderr' % read)
+                    pool.launch(fastqc, stderr_path = log_stderr)
                 
-            fastqc_default_name = run.get_private_info('%s_fastqc_default_name' % read)
-            fastqc_report_basename  = fastqc_default_name + '.zip'
-            full_path_zipped_fastqc_report = os.path.join(fastqc_out_dir,  fastqc_report_basename)
+                fastqc_default_name = run.get_private_info('%s_fastqc_default_name' % read)
+                fastqc_report_basename  = fastqc_default_name + '.zip'
+                full_path_zipped_fastqc_report = os.path.join(fastqc_out_dir,  fastqc_report_basename)
         
-            try:
-                os.rename(full_path_zipped_fastqc_report, out_path)
-            except OSError:
-                raise StandardError("os.rename failed of %s to %s" % full_path_zipped_fastqc_report, out_path)
+                try:
+                    os.rename(full_path_zipped_fastqc_report, out_path)
+                except OSError:
+                    raise StandardError("os.rename failed of %s to %s" % full_path_zipped_fastqc_report, out_path)

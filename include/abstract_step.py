@@ -511,11 +511,25 @@ class AbstractStep(object):
         for tag, tag_info in run.get_output_files().items():
             for output_path, input_paths in tag_info.items():
                 # add the real output path
-                self.known_paths[output_path] = {'type': 'output', 'designation': 'output', 'label': os.path.basename(output_path), 'type': 'step_file'}
-                # ...and also add the temporary output path
-                self.known_paths[os.path.join(temp_directory, os.path.basename(output_path))] = {'type': 'output', 'designation': 'output', 'label': "%s\\n(%s)" % (os.path.basename(output_path), tag), 'type': 'step_file', 'real_path': output_path}
-                for input_path in input_paths:
-                    self.known_paths[input_path] = {'type': 'input', 'designation': 'input', 'label': os.path.basename(input_path), 'type': 'step_file'}
+                if output_path != None and input_paths != None:
+                    self.known_paths[output_path] = {
+                        'type': 'output', 
+                        'designation': 'output', 
+                        'label': os.path.basename(output_path), 
+                        'type': 'step_file'}
+                    # ...and also add the temporary output path
+                    self.known_paths[os.path.join(temp_directory, os.path.basename(output_path))] = {
+                        'type': 'output', 
+                        'designation': 'output', 
+                        'label': "%s\\n(%s)" % (os.path.basename(output_path), tag), 
+                        'type': 'step_file', 
+                        'real_path': output_path}
+                    for input_path in input_paths:
+                        self.known_paths[input_path] = {
+                            'type': 'input', 
+                            'designation': 'input', 
+                            'label': os.path.basename(input_path), 
+                            'type': 'step_file'}
 
         # now write the run ping file
         executing_ping_info = dict()
@@ -585,17 +599,18 @@ class AbstractStep(object):
             
             for tag in run._output_files.keys():
                 for out_path in run._output_files[tag].keys():
-                    source_path = os.path.join(self._temp_directory, os.path.basename(out_path))
-                    destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
-                    # first, delete a possibly existing volatile placeholder file
-                    destination_path_volatile = destination_path + AbstractStep.VOLATILE_SUFFIX
-                    if os.path.exists(destination_path_volatile):
-                        os.unlink(destination_path_volatile)
-                    # TODO: if the destination path already exists, this will overwrite the file.
-                    if os.path.exists(source_path):
-                        os.rename(source_path, destination_path)
-                    else:
-                        caught_exception = (None, StandardError("The step failed to produce an output file it announced: %s." % os.path.basename(out_path)), None)
+                    if out_path != None:
+                        source_path = os.path.join(self._temp_directory, os.path.basename(out_path))
+                        destination_path = os.path.join(self.get_output_directory(), os.path.basename(out_path))
+                        # first, delete a possibly existing volatile placeholder file
+                        destination_path_volatile = destination_path + AbstractStep.VOLATILE_SUFFIX
+                        if os.path.exists(destination_path_volatile):
+                            os.unlink(destination_path_volatile)
+                        # TODO: if the destination path already exists, this will overwrite the file.
+                        if os.path.exists(source_path):
+                            os.rename(source_path, destination_path)
+                        else:
+                            caught_exception = (None, StandardError("The step failed to produce an output file it announced: %s." % os.path.basename(out_path)), None)
 
         for path, path_info in self.known_paths.items():
             if os.path.exists(path):
@@ -621,14 +636,15 @@ class AbstractStep(object):
             # create a symbolic link to the annotation for every output file
             for tag in run._output_files.keys():
                 for out_path in run._output_files[tag].keys():
-                    destination_path = os.path.join(self.get_output_directory(), '.' + os.path.basename(out_path) + '.annotation.yaml')
-                    # overwrite the symbolic link if it already exists
-                    if os.path.exists(destination_path):
-                        os.unlink(destination_path)
-                    oldwd = os.getcwd()
-                    os.chdir(os.path.dirname(destination_path))
-                    os.symlink(os.path.basename(annotation_path), os.path.basename(destination_path))
-                    os.chdir(oldwd)
+                    if out_path != None:
+                        destination_path = os.path.join(self.get_output_directory(), '.' + os.path.basename(out_path) + '.annotation.yaml')
+                        # overwrite the symbolic link if it already exists
+                        if os.path.exists(destination_path):
+                            os.unlink(destination_path)
+                        oldwd = os.getcwd()
+                        os.chdir(os.path.dirname(destination_path))
+                        os.symlink(os.path.basename(annotation_path), os.path.basename(destination_path))
+                        os.chdir(oldwd)
 
             # finally, remove the temporary directory if it's empty
             try:
