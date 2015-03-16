@@ -84,7 +84,7 @@ class Fastqc(AbstractStep):
                     in_path  = run.get_input_files_for_output_file(out_path)
                     
                     # set up processes
-                    fastqc = [self.get_tool('fastqc'), 
+                    fastqc = [self.get_tool('fastqc'),
                               '--noextract', '-o', fastqc_out_dir]
                     fastqc.extend(in_path)
                     

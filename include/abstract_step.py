@@ -1188,6 +1188,28 @@ class AbstractStep(object):
         if constraints is not None:
             self._connection_restrictions[connection] = constraints
         
+    def get_in_connections(self):
+        '''
+        Return all in-connections for this step
+        '''
+        connections = self._connections
+        in_connections = set()
+        for connection in connections:
+            if connection[0:3] == "in/":
+                in_connections.add(connection)
+        return in_connections
+
+    def get_out_connections(self):
+        '''
+        Return all out-connections for this step
+        '''
+        connections = self._connections
+        out_connections = set()
+        for connection in connections:
+            if connection[0:3] == "out/":
+                out_connections.add(connection)
+        return out_connections
+
     def require_tool(self, tool):
         '''
         Declare that this step requires an external tool. Query it later with 
