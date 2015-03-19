@@ -1,2 +1,2 @@
-Summary: Add 'max-cores' option to YAML
+Summary: Add 'max-cores' per pipeline option to YAML; 'cluster-submit-options' string per step
 
