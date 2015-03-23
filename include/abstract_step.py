@@ -237,20 +237,87 @@ class AbstractStep(object):
         return input_run_info
 
     def declare_runs(self):
-        """Abstract method this must be implemented by actual step.
+        # Was muss hier alles passieren damit es funktioniert?
+        # * es muessen alle runs definiert werden
+        # * pro run muessen alle public/private Infos gesetzt werden
+        # * es MUESSEN die Output Dateien den Connections zugeordnet werden
 
-        Raise NotImplementedError if subclass does not override this
-        method.
-        """
-        raise NotImplementedError()
+        # fetch all incoming run IDs which produce reads...
 
-    def execute(self, run_id, run):
-        """Starts the execution of a particular run.
+        in_connections = self.get_in_connections()
+        run_ids_connections_files = dict()
+        for in_connection in in_connections:
+            for run_id, input_paths in self.get_run_ids_and_input_files_for_connection(in_connection):
+                # das macht den schoenen Generator kaputt den Micha mal gebaut hat
+                if not run_id in run_ids_connections_files:
+                    run_ids_connections_files[run_id] = dict()
+                if not in_connection in run_ids_connections_files[run_id]:
+                    run_ids_connections_files[run_id][in_connection] = input_paths
         
-        Raise NotImplementedError if subclass does not override this
-        method.
-        """
-        raise NotImplementedError()
+        self.runs(run_ids_connections_files)
+#    def declare_runs(self):
+#        """Abstract method this must be implemented by actual step.
+#
+#        Raise NotImplementedError if subclass does not override this
+#        method.
+#        """
+#        raise NotImplementedError()
+#
+    def execute(self, run_id, run):
+        # Ich muss noch ne Loesung finden um hier beliebigen Python Code auszufuehren
+        # exec() oder eval()?
+        # get the step_info object back
+#        step = run.get_private_info('step')
+
+        # get the temporary output directory info
+#        temp_out_dir = self.get_output_directory_du_jour()
+#        placeholder = step_info.get_output_directory_du_jour()
+#        def fix_du_jour_issue(in_command):
+#            out_command = list()
+#            for _ in in_command:
+#                out_command.append(_.replace(placeholder, temp_out_dir))
+#            return out_command
+#
+        # get run_info objects
+        run_info = self.get_run(run_id)
+        
+        # for each exec_group in that run ...
+        for exec_group in run_info.get_exec_groups():
+            # ... create a process pool
+            with process_pool.ProcessPool(self) as pool:
+                for poc in exec_group.get_pipes_and_commands():
+                    # for each pipe or command (poc)
+                    # check if it is a pipeline ...
+                    if isinstance(poc, Pipeline_info):
+                        # ... create a pipeline ...
+                        with pool.Pipeline(pool) as pipeline:
+                            for command in poc.get_commands:
+#                                command.set_command(
+#                                    fix_du_jour_issue(command.get_command())
+#                                )
+                                pipeline.append(
+                                    command.get_command(),
+                                    stdout_path = command.get_stdout_path(),
+                                    stderr_path = command.get_stderr_path())
+                    elif isinstance(poc, CommandInfo):
+#                        poc.set_command( 
+#                            fix_du_jour_issue(poc.get_command())
+#                        )
+                        print(poc.get_command())
+                        pool.launch(
+                            poc.get_command(),
+                            stdout_path = poc.get_stdout_path(),
+                            stderr_path = poc.get_stderr_path())
+                    else:
+                        raise StandardError("[%s]" % self.__class__.__name__)
+
+#    def execute(self, run_id, run):
+#        """Starts the execution of a particular run.
+#        
+#        Raise NotImplementedError if subclass does not override this
+#        method.
+#        """
+#        raise NotImplementedError()
 
     def get_run_info(self):
         """Getter method for runs of this step.
