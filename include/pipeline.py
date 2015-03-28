@@ -295,26 +295,6 @@ class Pipeline(object):
         for step in self.steps.values():
             step.finalize()
 
-    def print_tasks(self):
-        '''
-        prints a summary of all tasks, indicating whether each task is
-          - ``[r]eady``
-          - ``[w]aiting``
-          - ``[q]ueued``
-          - ``[e]xecuting``
-          - ``[f]inished``
-        '''
-        count = {}
-        for task in self.all_tasks_topologically_sorted:
-            state = task.get_task_state()
-            if not state in count:
-                count[state] = 0
-            count[state] += 1
-            print("[%s] %s" % (task.get_task_state()[0].lower(), task))
-        print("tasks: %d total, %s" % (len(self.all_tasks_topologically_sorted),
-            ', '.join([str(count[_]) + ' ' 
-                       + _.lower() for _ in sorted(count.keys())])))
-        
     def print_source_runs(self):
         for step_name in self.topological_step_order:
             step = self.steps[step_name]
