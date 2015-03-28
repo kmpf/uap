@@ -3,9 +3,13 @@
 
 import sys
 import argparse
-import pipeline
+from contextlib import closing
+import pydoc
 import string
+from cStringIO  import StringIO
 import yaml
+
+import pipeline
 
 '''
 By default, this script displays information about all tasks of the pipeline
@@ -86,38 +90,54 @@ def main(args):
         - ``[e]xecuting``
         - ``[f]inished``
         '''
+        output = list()
         tasks_for_status = {}
         for task in p.all_tasks_topologically_sorted:
             state = task.get_task_state()
             if not state in tasks_for_status:
-                    tasks_for_status[state] = list()
+                tasks_for_status[state] = list()
             tasks_for_status[state].append(task)
             if not group_by_status:
-                print("[%s] %s" % (task.get_task_state()[0].lower(), task))
+                output.append(
+                    "[%s] %s" % (task.get_task_state()[0].lower(), task))
+                #print("[%s] %s" % (task.get_task_state()[0].lower(), task))
         if group_by_status:
             for status in p.states.order:
                 if not status in tasks_for_status:
                     continue
                 heading = "%s tasks" % string.capwords(status)
-                print(heading)
-                print('-' * len(heading))
+                output.append(heading)
+                output.append('-' * len(heading))
                 if args.summarize:
                     step_count = dict()
                     step_order = list()
                     for task in tasks_for_status[status]:
                         if not str(task.step) in step_count:
                             step_count[str(task.step)] = 0
-                            step_order.append(str(task.step))
+                            step_order.write(str(task.step))
                         step_count[str(task.step)] += 1
                     for step_name in step_order:
-                        print("[%s]%4d %s" % (status.lower()[0], step_count[step_name], step_name))
+                        output.append("[%s]%4d %s"
+                                     % (status.lower()[0],
+                                        step_count[step_name],
+                                        step_name)
+                                 )
                 else:
                     for task in tasks_for_status[status]:
-                        print("[%s] %s" % (task.get_task_state()[0].lower(), task))
-                print('')
-        print("tasks: %d total, %s" % (len(p.all_tasks_topologically_sorted), ', '.join(["%d %s" % (len(tasks_for_status[_]), _.lower()) for _ in p.states.order if _ in tasks_for_status])))
-            
-    # now check ping files and print some warnings and instructions if something's fishy
+                        output.append("[%s] %s"
+                                     % (
+                                         task.get_task_state()[0].lower(),
+                                         task))
+                    output.append('')
+            output.append("tasks: %d total, %s"
+                          % (len(p.all_tasks_topologically_sorted),
+                             ', '.join(["%d %s" % (
+                                 len(tasks_for_status[_]),
+                                 _.lower()) for _ in p.states.order \
+                                        if _ in tasks_for_status])))
+            pydoc.pager("\n".join(output))
+    # now check ping files and print some warnings and instructions if
+    # something's fishy
     p.check_ping_files(print_more_warnings = True if args.verbose > 0 else False)
     
     # Now check whether we can volatilize files, but don't do it.
