@@ -1,6 +1,8 @@
 """
 
 """
+import pipeline_info
+import exec_group
 
 class CommandInfo(object):
     def __init__(self, eop, command, stdout_path=None, stderr_path=None):
@@ -23,31 +25,34 @@ class CommandInfo(object):
     def replace_output_dir_du_jour(func):
         def inner(self, *args):
             run_info = None
-            if isinstance(self._eop, Pipeline_info):
+            if isinstance(self._eop, pipeline_info.PipelineInfo):
                 run_info = self._eop.get_exec_group().get_run_info()
-            elif isinstance(self._eop, Exec_group):
-                run_info = self._eop.get_run_info()
+            elif isinstance(self._eop, exec_group.ExecGroup):
+                run_info = self._eop.get_run()
             # Collect info to replace du_jour placeholder with temp_out_dir
             step = run_info.get_step()
             placeholder = step.get_output_directory_du_jour_placeholder()
-            temp_out_dir = step.get_abstract_step().get_output_directory_du_jour()
-
-            command = list()
-            ret_value = func(*args)
+            temp_out_dir = step.get_output_directory_du_jour()
+            
+            command = None
+            ret_value = func(self, *args)
             if isinstance(ret_value, list):
-                for string in list_of_strings:
+                command = list()
+                for string in ret_value:
                     if string != None and placeholder in string:
                         command.append(
                             string.replace(placeholder, temp_out_dir))
+                    else:
+                        command.append(string)
             elif isinstance(ret_value, str):
                 if ret_value != None and placeholder in ret_value:
-                        command.append(
-                            ret_value.replace(placeholder, temp_out_dir))
+                        command = ret_value.replace(placeholder, temp_out_dir)
+            elif ret_value == None:
+                command = None
             else:
-                raise StandardException("Function %s does not return list or "
+                raise StandardError("Function %s does not return list or "
                                         "string object" % 
                                         func.__class__.__name__)
-                
             return(command)
         return(inner)
 
@@ -62,9 +67,8 @@ class CommandInfo(object):
 
     @replace_output_dir_du_jour
     def get_stdout_path(self):
-        stdout_path = self._replace_output_dir_du_jour(self._stdout_path)
-        print(stdout_path)
-        return(stdout_path)
+#        stdout_path = self._replace_output_dir_du_jour(self._stdout_path)
+        return(self._stdout_path)
 
     def set_stderr_path(self, stderr_path):
         if stderr_path != None:
@@ -72,17 +76,14 @@ class CommandInfo(object):
 
     @replace_output_dir_du_jour
     def get_stderr_path(self):
-        stderr_path = self._replace_output_dir_du_jour(self._stderr_path)
-        print(stderr_path)
-        return(stderr_path)
+#        stderr_path = self._replace_output_dir_du_jour(self._stderr_path)
+        return(self._stderr_path)
 
     @replace_output_dir_du_jour
     def get_command(self):
 
-        command = list()
-        for _ in self._command:
-            _ = self._replace_output_dir_du_jour(_)
-            command.append(_)
-        print(command)
-        
-        return(command)
+#        command = list()
+#        for _ in self._command:
+#            _ = self._replace_output_dir_du_jour(_)
+#            command.append(_)
+        return(self._command)

@@ -8,6 +8,12 @@ class PipelineInfo(object):
         self._exec_group = exec_group
         self._commands = list()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        pass
+
     def new_command(self):
         command = Command_info(self)
         self._commands.append(command)

@@ -33,9 +33,12 @@ import fscache
 import psutil
 import yaml
 # 3. local application/library specific imports
+import command as command_info
 import misc
 import process_pool
+import pipeline_info
 import run as run_module
+
 
 class AbstractStep(object):
     
@@ -280,7 +283,7 @@ class AbstractStep(object):
 #
         # get run_info objects
         run_info = self.get_run(run_id)
-        
+        print("Run ID: %s" % run_id)
         # for each exec_group in that run ...
         for exec_group in run_info.get_exec_groups():
             # ... create a process pool
@@ -288,7 +291,7 @@ class AbstractStep(object):
                 for poc in exec_group.get_pipes_and_commands():
                     # for each pipe or command (poc)
                     # check if it is a pipeline ...
-                    if isinstance(poc, Pipeline_info):
+                    if isinstance(poc, pipeline_info.PipelineInfo):
                         # ... create a pipeline ...
                         with pool.Pipeline(pool) as pipeline:
                             for command in poc.get_commands:
@@ -299,17 +302,17 @@ class AbstractStep(object):
                                     command.get_command(),
                                     stdout_path = command.get_stdout_path(),
                                     stderr_path = command.get_stderr_path())
-                    elif isinstance(poc, CommandInfo):
+                    elif isinstance(poc, command_info.CommandInfo):
 #                        poc.set_command( 
 #                            fix_du_jour_issue(poc.get_command())
 #                        )
-                        print(poc.get_command())
                         pool.launch(
                             poc.get_command(),
                             stdout_path = poc.get_stdout_path(),
                             stderr_path = poc.get_stderr_path())
-                    else:
-                        raise StandardError("[%s]" % self.__class__.__name__)
+#                    else:
+#                        print(poc)
+#                        raise StandardError("Hab was das ich nicht kenne!")
 
 #    def execute(self, run_id, run):
 #        """Starts the execution of a particular run.
@@ -690,11 +693,12 @@ class AbstractStep(object):
                         'type': 'step_file', 
                         'real_path': output_path}
                     for input_path in input_paths:
-                        self.known_paths[input_path] = {
-                            'type': 'input', 
-                            'designation': 'input', 
-                            'label': os.path.basename(input_path), 
-                            'type': 'step_file'}
+                        if input_path != None:
+                            self.known_paths[input_path] = {
+                                'type': 'input', 
+                                'designation': 'input', 
+                                'label': os.path.basename(input_path), 
+                                'type': 'step_file'}
 
         # now write the run ping file
         executing_ping_info = dict()
