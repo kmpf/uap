@@ -358,7 +358,6 @@ class ProcessPool(object):
             args = new_args
             
         self.check_subprocess_command(args)
-        sys.stderr.write("Launch: %s %s\n" % (args, type(args)) )
         # launch the process and always pipe stdout and stderr because we
         # want to watch both streams, regardless of whether stdout should 
         # be passed on to another process
