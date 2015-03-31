@@ -258,14 +258,15 @@ class AbstractStep(object):
                     run_ids_connections_files[run_id][in_connection] = input_paths
         
         self.runs(run_ids_connections_files)
-#    def declare_runs(self):
-#        """Abstract method this must be implemented by actual step.
-#
-#        Raise NotImplementedError if subclass does not override this
-#        method.
-#        """
-#        raise NotImplementedError()
-#
+        
+    def runs(self):
+        """Abstract method this must be implemented by actual step.
+
+        Raise NotImplementedError if subclass does not override this
+        method.
+        """
+        raise NotImplementedError()
+        
     def execute(self, run_id, run):
         # Ich muss noch ne Loesung finden um hier beliebigen Python Code auszufuehren
         # exec() oder eval()?
@@ -295,24 +296,15 @@ class AbstractStep(object):
                         # ... create a pipeline ...
                         with pool.Pipeline(pool) as pipeline:
                             for command in poc.get_commands:
-#                                command.set_command(
-#                                    fix_du_jour_issue(command.get_command())
-#                                )
                                 pipeline.append(
                                     command.get_command(),
                                     stdout_path = command.get_stdout_path(),
                                     stderr_path = command.get_stderr_path())
                     elif isinstance(poc, command_info.CommandInfo):
-#                        poc.set_command( 
-#                            fix_du_jour_issue(poc.get_command())
-#                        )
                         pool.launch(
                             poc.get_command(),
                             stdout_path = poc.get_stdout_path(),
                             stderr_path = poc.get_stderr_path())
-#                    else:
-#                        print(poc)
-#                        raise StandardError("Hab was das ich nicht kenne!")
 
 #    def execute(self, run_id, run):
 #        """Starts the execution of a particular run.
