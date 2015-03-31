@@ -143,6 +143,11 @@ class Run(object):
             raise StandardError(
                 "You're trying to re-add an output file which has already "
                 "been declared: %s." % out_path)
+
+        if None in in_paths:
+            raise StandardError(
+                "There is a NoneType element in: %s" % in_paths)
+
         self._connections.append(tag)
         self._output_files_list.append(out_path)
         self._input_files.append(in_paths)
