@@ -66,16 +66,16 @@ class TopHat2(AbstractStep):
                 if input_paths != [None]:
                     paired_end_info[run_id] = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
 
-                # save information per file in found_files
-                if not run_id in found_files:
-                    found_files[run_id] = dict()
+                    # save information per file in found_files
+                    if not run_id in found_files:
+                        found_files[run_id] = dict()
 
-                if not read in found_files[run_id]:
-                    found_files[run_id][read] = list()
-                # Check if we get exactly one input file
-                if len(input_paths) != 1:
-                    raise StandardError("Expected one input file.")
-                found_files[run_id][read].extend(input_paths)
+                    if not read in found_files[run_id]:
+                        found_files[run_id][read] = list()
+                    # Check if we get exactly one input file
+                    if len(input_paths) != 1:
+                        raise StandardError("Expected one input file.")
+                    found_files[run_id][read].extend(input_paths)
 
 
         for run_id in found_files.keys():
