@@ -2,8 +2,8 @@
 # encoding: utf-8
 
 import sys
-import argparse
 from contextlib import closing
+import logging
 import pydoc
 import string
 from cStringIO  import StringIO
@@ -17,6 +17,8 @@ configured in 'config.yaml'. But the displayed information can be narrowed
 down via command line options.
 
 '''
+
+logger = logging.getLogger("uap_logger")
 
 def main(args):
     p = pipeline.Pipeline(arguments=args)

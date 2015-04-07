@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
 import sys
-import abstract_step
-import argparse
-import fscache
-import pipeline
 import datetime
 import copy
+import logging
 import os
 import re
 import subprocess
 import yaml
 
+import abstract_step
+import fscache
+import pipeline
 '''
 By default, this script submits all tasks to a compute cluster via a
 submit script. The list of tasks can be narrowed down by specifying a step name
@@ -35,38 +35,8 @@ This task wish list is now processed one by one (in topological order):
     (or whatever the argument is for the cluster used)
 '''
 
-#parser = argparse.ArgumentParser(
-#    description='This script submits all tasks configured in config.yaml to a ' +
-#                'Sun GridEngine or SLURM cluster. The list of tasks can be ' +
-#                'narrowed down by specifying a step name (in which case all ' +
-#                'runs of this steps will be considered) or individual tasks ' +
-#                '(step_name/run_id).',
-#    formatter_class=argparse.RawTextHelpFormatter)
-#
-#parser.add_argument("--even-if-dirty",
-#                    dest="even_if_dirty",
-#                    action="store_true",
-#                    default=False,
-#                    help="Must be set if the local git repository " +
-#                    "contains uncommitted changes. Otherwise the pipeline " +
-#                    "will not start.")
-#
-#parser.add_argument("--cluster",
-#                    dest="cluster",
-#                    type=str,
-#                    default="auto",
-#                    help="Specify the cluster type (sge, slurm), defaults to auto.")
-#
-#parser.add_argument("step_task",
-#                    nargs='*',
-#                    default=list(),
-#                    type=str,
-#                    help="Can take multiple step names as input. A step name " +
-#                    "is the name of any entry in the 'steps:' section " +
-#                    "as defined in 'config.yaml'. A list of all task IDs " +
-#                    "is returned by running './status.py'.")
-#
-#args = parser.parse_args()
+logger = logging.getLogger("uap_logger")
+
 
 def main(args):
     p = pipeline.Pipeline(arguments=args)
