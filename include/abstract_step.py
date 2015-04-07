@@ -1418,7 +1418,6 @@ class AbstractStep(object):
                 classes = [_ for _ in classes if _[1] != check_classes[k]]
             if len(classes) > 0:
                 if len(classes) != 1:
-                    print(classes)
                     raise StandardError(
                         "need exactly one subclass of %s in %s" % (c, key))
                 return classes[0][1]
