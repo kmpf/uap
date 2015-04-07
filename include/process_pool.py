@@ -10,6 +10,7 @@ import datetime
 import errno
 import fcntl
 import hashlib
+import logging
 import misc
 import os
 import psutil
@@ -20,6 +21,7 @@ import time
 import traceback
 import yaml
 
+logger = logging.getLogger("uap_logger")
 
 class TimeoutException(Exception):
     pass
@@ -111,7 +113,7 @@ class ProcessPool(object):
     def __init__(self, step):
         if ProcessPool.process_pool_is_dead:
             raise StandardError("We have encountered an error, stopping now...")
-        
+       
         # the current step this ProcessPool is used in (for temporary paths etc.)
         self.step = step
         
@@ -454,7 +456,7 @@ class ProcessPool(object):
             while True:
                 #sys.stderr.write("[%d] reading from fin\n" % os.getpid())
                 block = fin.read(ProcessPool.COPY_BLOCK_SIZE)
-                sys.stderr.write("%s\n" % block)
+                #sys.stderr.write("%s\n" % block)
                 #sys.stderr.write("[%d] actually read %d bytes from fin\n" % (os.getpid(), len(block)))
                 if len(block) == 0:
                     # fin reports EOF, let's call it a day
@@ -660,7 +662,7 @@ class ProcessPool(object):
                 pass
             else:
                 raise
-                            
+                
         if something_went_wrong:
             self.log("Pipeline crashed.")
             raise StandardError("Pipeline crashed.")        
@@ -816,4 +818,4 @@ class ProcessPool(object):
                 p.terminate()
             except psutil.NoSuchProcess:
                 pass
-        
+                
