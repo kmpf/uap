@@ -146,8 +146,14 @@ class Run(object):
 
         if None in in_paths:
             raise StandardError(
-                "There is a NoneType element in: %s" % in_paths)
+                "There is a NoneType element in input paths (%s) for output "
+                "file (%s)" % (in_paths, out_path))
 
+        if out_path == None:
+            raise StandardError(
+                "Trying to add NoneType element as output file for input paths "
+                ": %s" % in_paths)
+            
         self._connections.append(tag)
         self._output_files_list.append(out_path)
         self._input_files.append(in_paths)
