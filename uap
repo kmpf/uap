@@ -5,6 +5,7 @@ seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/python_env/bin/activate_this.py' % seq_pipeline_path
 execfile(activate_this_file, dict(__file__=activate_this_file))
 import argparse
+import logging
 import string
 import sys
 import yaml
@@ -302,42 +303,43 @@ def main():
     
     volatilize_parser.set_defaults(func=volatilize.main)
     
-    # create logger object
-    logger = self._configure_logger(args.verbose)
     # get arguments and call the appropriate function
     args = parser.parse_args()
+    # create logger object
+    logger = _configure_logger(args.verbose)
+    # call subcommand
     args.func(args)
-    
-    def _configure_logger(self, verbosity):
-        logger = logging.getLogger("uap_logger")
-        # create formatter
-        formatter = logging.Formatter(fmt='[%(levelname)s] %(funcName)s in '
-                          '%(filename)s at %(asctime)s: %(message)s ')
-        # create console handler and set level to debug
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
-        # add formatter to ch
-        ch.setFormatter(formatter)
-        # add ch to logger
-        logger.addHandler(ch)
 
-        # Instantiate logger
-        if verbosity == 0:
-            logger.setLevel(logging.ERROR)
-            print("Set log level to ERROR")
-        elif verbosity == 1:
-            logger.setLevel(logging.WARNING)
-            print("Set log level to WARNING")
-        elif verbosity == 2:
-            logger.setLevel(logging.INFO)
-            print("Set log level to INFO")
-        elif verbosity >= 3:
-            logger.setLevel(logging.DEBUG)
-            print("Set log level to DEBUG")
-        else:
-            logger.setLevel(logging.NOTSET)
-            print("Set log level to NOTSET")
-        return logger
+def _configure_logger(verbosity):
+    logger = logging.getLogger("uap_logger")
+    # create formatter
+    formatter = logging.Formatter(fmt='[%(levelname)s] %(funcName)s in '
+                                  '%(filename)s at %(asctime)s: %(message)s ')
+    # create console handler and set level to debug
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    # add formatter to ch
+    ch.setFormatter(formatter)
+    # add ch to logger
+    logger.addHandler(ch)
+    
+    # Instantiate logger
+    if verbosity == 0:
+        logger.setLevel(logging.ERROR)
+        print("Set log level to ERROR")
+    elif verbosity == 1:
+        logger.setLevel(logging.WARNING)
+        print("Set log level to WARNING")
+    elif verbosity == 2:
+        logger.setLevel(logging.INFO)
+        print("Set log level to INFO")
+    elif verbosity >= 3:
+        logger.setLevel(logging.DEBUG)
+        print("Set log level to DEBUG")
+    else:
+        logger.setLevel(logging.NOTSET)
+        print("Set log level to NOTSET")
+    return logger
 
 
 
