@@ -1,7 +1,10 @@
 import abstract_step
 import exec_group
+import logging
 import misc
 import os
+
+logger = logging.getLogger("uap_logger")
 
 class Run(object):
     '''
