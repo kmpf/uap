@@ -107,7 +107,7 @@ def main(args):
             email = p.config['email']
         submit_script = submit_script.replace("#{EMAIL}", email)
         config_file_path = args.config.name
-        command = ['seq-pipeline', config_file_path, 'run-locally']
+        command = ['uap', config_file_path, 'run-locally']
         if args.even_if_dirty:
             command.append('--even-if-dirty')
         command.append('"' + str(task) + '"')
