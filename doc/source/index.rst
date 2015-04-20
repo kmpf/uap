@@ -1,16 +1,17 @@
 ..
-  This is the documentation for rnaseq-pipeline. Please keep lines under
+  This is the documentation for uap. Please keep lines under
   80 characters if you can and start each sentence on a new line as it 
   decreases maintenance and makes diffs more readable.
   
-.. title:: rnaseq-pipeline
+.. title:: uap -- Universal Analysis Pipeline
 
 
 Introduction
 ============
 
-The **rnaseq-pipeline** package is a framework to configure, run, and control
-high-throughput sequencing analyses.
+The **uap** package is a framework to configure, run, and control
+large data multi-step analyses.
+Its main focus is on the analysis of high-throughput sequencing data.
 
 The aim of this data processing pipeline is to enable robust and straightforward
 bioinformatics data evaluation.
@@ -24,6 +25,11 @@ allows for a variety of other applications.
 .. toctree::
    :maxdepth: 2
 
+   installation
+   configuration
+   interaction
+   extension
+   how-to
    documentation
    steps
    api

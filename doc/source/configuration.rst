@@ -14,7 +14,7 @@ Configuration of **uap**
 **uap** is made to control the execution of data analyses which are defined
 in `YAML <http://www.yaml.org/>`_ files.
 Each file describes a complete analysis.
-Furtheron these files are called analysis file(s).
+Further on these files are called analysis file(s).
 
 The analysis files consist of four sections (let's just call them sections,
 although technically, they are keys):
@@ -55,14 +55,14 @@ changes of submitted jobs.
 
 .. code-block:: yaml
 
-    email: "your.name@ufz.de"
+    email: "your.name@mail.de"
 
 
 tools
 ~~~~~
 
 The ``tools`` block describes all programs needed during the execution of the
- pipeline.
+*uap**.
 
 .. code-block:: yaml
 
@@ -72,26 +72,28 @@ The ``tools`` block describes all programs needed during the execution of the
             path: cat 
             version: "--version"
         # you have to specify a path if the tool can not be found in $PATH
-        cutadapt:
-            path: /path/to/cutadapt
+        some-tool:
+            path: /path/to/some-tool
             version: "--version"
 
 steps
 ~~~~~
 
-The ``steps`` block is the core of the pipeline, because it defines the order in
-which the different steps of the pipeline are executed. Each step must have a
-unique name. Therefore you should give each step a descriptive name followed by
+The ``steps`` block is the core of the analysis file, because it defines the
+order in which the different steps of the analysis are executed.
+Each step must have a unique name.
+Therefore you should give each step a descriptive name followed by
 a blank and the step type enclosed in parentheses.
 
 There are two different types of steps:
 
-1. **source steps** are used to enter data into the pipeline, meaning they have no
+1. **source steps** are used to enter data into the analysis, meaning they have no
    predecessor step they depend on.
 2. **processing steps** depend upon one or more predecessor steps and create some 
    output that can be used by successor steps.
    
-All available steps are described in detail in the steps documentation: :doc:`steps`.
+All available steps are described in detail in the steps documentation: 
+:doc:`steps`.
 
 Example configurations for various source steps are shown below:
 
@@ -126,6 +128,9 @@ Example configurations for various source steps are shown below:
             sha1: 9b272fde8bca544e6cd8621ddeec55aa09cf7a05
 
 
+
+How-To Create Your First **uap** Analysis
+=========================================
 
 Next, edit ``config.sample.yaml`` and save it as ``config.yaml``. 
 Although writing the configuration may seem a bit complicated, the trouble 
