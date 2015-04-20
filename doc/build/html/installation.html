@@ -1,0 +1,260 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Installation &mdash; uap 0.1.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="uap 0.1.1 documentation" href="index.html"/>
+        <link rel="next" title="Configuration of uap" href="configuration.html"/>
+        <link rel="prev" title="Introduction" href="index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="index.html" class="fa fa-home"> uap</a>
+        
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#downloading-the-software">Downloading the software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#making-uap-globally-available">Making <strong>uap</strong> Globally Available</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration of <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#sections-of-config-yaml">Sections of config.yaml</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html#how-to-create-your-first-uap-analysis">How-To Create Your First <strong>uap</strong> Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#general-sequencing-analysis-steps">General sequencing analysis steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#rnaseq-analysis">RNAseq analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#chipseq-analysis">ChIPseq analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#prepare-ucsc-genome-browser-tracks">Prepare UCSC genome browser tracks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html#interacting-with-a-pipeline">Interacting with a pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html#post-mortem-pipeline-analysis">Post-mortem pipeline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html#extending-rnaseq-pipeline">Extending rnaseq-pipeline</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#best-practices">Best practices</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html#to-do-list">To-do list</a></li>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Configuration of <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#sections-of-config-yaml">Sections of config.yaml</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#general-sequencing-analysis-steps">General sequencing analysis steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#rnaseq-analysis">RNAseq analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#chipseq-analysis">ChIPseq analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#prepare-ucsc-genome-browser-tracks">Prepare UCSC genome browser tracks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html#interacting-with-a-pipeline">Interacting with a pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html#post-mortem-pipeline-analysis">Post-mortem pipeline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html#extending-rnaseq-pipeline">Extending rnaseq-pipeline</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#best-practices">Best practices</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html#to-do-list">To-do list</a></li>
+<li class="toctree-l1"><a class="reference internal" href="steps.html">Available steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="steps.html#source-steps">Source steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="steps.html#processing-steps">Processing steps</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">uap</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Installation</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/installation.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="downloading-the-software">
+<h2>Downloading the software<a class="headerlink" href="#downloading-the-software" title="Permalink to this headline">¶</a></h2>
+<p>The repository can be obtained like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ git clone git@github.com:kmpf/uap.git
+</pre></div>
+</div>
+<p>We&#8217;ll need <code class="docutils literal"><span class="pre">virtualenv</span></code>, so install it if you don&#8217;t have it already:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ sudo apt-get install python-virtualenv
+</pre></div>
+</div>
+<p>After cloning the repository, change into the created directory and run the
+bootstrapping script to create the required Python environment (which will be
+located in <code class="docutils literal"><span class="pre">./python_env/</span></code>):</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd uap
+$ ./bootstrap.sh
+</pre></div>
+</div>
+<p>There&#8217;s no harm in accidentally running this script multiple times.
+Also, it will compile <code class="docutils literal"><span class="pre">cat4m</span></code>, a tool which can be found at
+<code class="docutils literal"><span class="pre">./tools/cat4m</span></code> and which is able to read arbitrary input files in chunks
+of 4 MB and print them to stdout (we&#8217;ll need this often in the pipeline,
+as <code class="docutils literal"><span class="pre">cat</span></code> reads in system-default blocks of 32 kB which is ok for a normal
+system but leads to high I/O load on a cluster system).</p>
+</div>
+<div class="section" id="making-uap-globally-available">
+<h2>Making <strong>uap</strong> Globally Available<a class="headerlink" href="#making-uap-globally-available" title="Permalink to this headline">¶</a></h2>
+<p>You can use <strong>uap</strong> system-wide.
+On Unix-type operating systems it is advised to add the installation path to
+your <code class="docutils literal"><span class="pre">$PATH</span></code> variable.
+Therefore change into the <strong>uap</strong> directory and execute:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ pwd
+</pre></div>
+</div>
+<p>Copy the output and add a line to your <code class="docutils literal"><span class="pre">~/.bashrc</span></code> or <code class="docutils literal"><span class="pre">~/.bash_profile</span></code>
+like the following and replace <code class="docutils literal"><span class="pre">&lt;uap-path&gt;</span></code> with the copied output:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:&lt;uap-path&gt;
+</pre></div>
+</div>
+<p>Finally, make the changes known to your environment by sourcing the changed
+file:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ source ~/.bashrc
+$ source ~/.bash_profile
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="configuration.html" class="btn btn-neutral float-right" title="Configuration of uap">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Introduction"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Christoph Kämpf, Michael Specht.
+    </p>
+  </div>
+
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
