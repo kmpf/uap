@@ -1,4 +1,4 @@
-#!./python_env/bin/python
+#!/usr/bin/env python
 
 # Run this tool in two stages: 
 #
@@ -19,10 +19,13 @@ WRITE_PROC_FILES = False
 import sys
 import copy
 import glob
+import logging
 import subprocess
 import os
 import re
 import yaml
+
+logger = logging.getLogger("uap_logger")
 
 proc_files = {}
 

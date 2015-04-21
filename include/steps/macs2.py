@@ -64,44 +64,47 @@ class Macs2(AbstractStep):
 
             for control_id, treatment_list in control_samples.iteritems():
                 if run_id in treatment_list:
-                    new_run_id = "%s-%s" % (run_id, control_id)
+                    if control_id != 'None':
+                        run_id = "%s-%s" % (run_id, control_id)
 
-                    with self.declare_run(new_run_id) as run:
+                    with self.declare_run(run_id) as run:
 
                         # Files which are created by using --broad
                         if self.is_option_set_in_config('broad'):
                             run.add_output_file('peaks', '%s-macs2_broadPeaks.broadPeak'
-                                                % new_run_id, input_paths)
+                                                % run_id, input_paths)
                             run.add_output_file('peaks-xls', '%s-macs2-broadPeaks.xls' 
-                                                % new_run_id, input_paths)
+                                                % run_id, input_paths)
                             run.add_output_file('gapped-peaks', '%s-macs2_peaks.gappedPeak'
-                                                % new_run_id, input_paths)
+                                                % run_id, input_paths)
                         # Files which are created otherwise
                         if not self.is_option_set_in_config('broad'):
                             run.add_output_file('peaks', '%s-macs2-narrowPeaks.narrowPeak'
-                                                % new_run_id, input_paths)
+                                                % run_id, input_paths)
                             run.add_output_file('peaks-xls', '%s-macs2-narrowPeaks.xls' 
-                                                % new_run_id, input_paths)
+                                                % run_id, input_paths)
                             run.add_output_file('summits', '%s-macs2-summits.bed' 
-                                                % new_run_id, input_paths)
+                                                % run_id, input_paths)
 
                         run.add_output_file('model', '%s-macs2-model.r' 
-                                            % new_run_id, input_paths)
+                                            % run_id, input_paths)
                         run.add_output_file('log', '%s-macs2-log.txt'
-                                            % new_run_id, input_paths)
+                                            % run_id, input_paths)
 #                        run.add_output_file('negative-peaks', 
 #                                            '%s-macs2-negative-peaks.xls'
-#                                            % new_run_id, input_paths)
+#                                            % run_id, input_paths)
 
                         if not input_paths:
                             raise StandardError("No input files for run %s" 
                                                 % (run_id))
                         run.add_private_info('treatment_files', input_paths)
-                
-                        control_files =  self.get_input_files_for_run_id_and_connection(control_id, 'in/alignments')
 
+                        if control_id != 'None':
+                            control_files =  self.get_input_files_for_run_id_and_connection(control_id, 'in/alignments')
+                        else:
+                            control_files = None
                         run.add_private_info('control_files', control_files)
-               
+        
     
     def execute(self, run_id, run):
         # Get the name for a temporary directory
@@ -120,14 +123,17 @@ class Macs2(AbstractStep):
             
             # Fail if there is no treatment file
             if not run.has_private_info('treatment_files'):
-                raise StandardError("No treatment files for %s to analyse with macs2" % run_id)
+                raise StandardError(
+                    "No treatment files for %s to analyse with macs2" % run_id)
             macs2.extend( [" ".join(run.get_private_info('treatment_files'))] )
             
             # and if there is no control file
             if not run.has_private_info('control_files'):
-                raise StandardError("No control files for %s to analyse with macs2" % run_id)
-            macs2.extend(['--control', 
-                          " ".join(run.get_private_info('control_files')) ])
+                raise StandardError(
+                    "No control files for %s to analyse with macs2" % run_id)
+            if run.get_private_info('control_files') != None:
+                macs2.extend(['--control',
+                              " ".join(run.get_private_info('control_files'))])
             
             if self.is_option_set_in_config('broad'):
                 macs2.extend(['--broad'])

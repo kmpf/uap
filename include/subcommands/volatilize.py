@@ -1,40 +1,17 @@
-#!./python_env/bin/python
+#!/usr/bin/env python
 
 import sys
-import argparse
-import pipeline
+import logging
 import string
 import yaml
+
+import pipeline
 
 '''
 This script 
 '''
 
-#parser = argparse.ArgumentParser(
-#    description="This script .",
-#    formatter_class=argparse.RawTextHelpFormatter)
-#
-#parser.add_argument("--details",
-#                    dest="details",
-#                    action="store_true",
-#                    default=False,
-#                    help="Displays detailed information about ")
-#
-#parser.add_argument("--srsly",
-#                    dest="srsly",
-#                    action="store_true",
-#                    default=False,
-#                    help="")
-#
-#parser.add_argument("--even-if-dirty",
-#                    dest="even_if_dirty",
-#                    action="store_true",
-#                    default=False,
-#                    help="Must be set if the local git repository " +
-#                    "contains uncommited changes. Otherwise the pipeline " +
-#                    "will not start.")
-#
-#args = parser.parse_args()
+logger = logging.getLogger("uap_logger")
 
 def main():
     p = pipeline.Pipeline()
