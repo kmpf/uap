@@ -1,4 +1,5 @@
 import os
+import subprocess
 from distutils.core import setup
 
 # List of lists with tools to check for
