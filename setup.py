@@ -1,19 +1,22 @@
 import os
 from distutils.core import setup
+from __future__ import print_function
+
 
 # List of lists with tools to check for
-check_tools = [
-    ["virtualenv", "--version"],
-    ["gcc", "--version"],
-    ["git", "--version"]
-]
+check_tools = {
+    "virtualenv": ["virtualenv", "--version"],
+    "gcc": ["gcc", "--version"],
+    "git": ["git", "--version"]
+}
 
-for tool in check_tools:
+for tool in keys(check_tools):
     try:
-        subprocess.call(tool)
+        subprocess.call(check_tools[tool])
     except OSError as e:
         if e.errno == os.errno.ENOENT:
-            # handle file not found error.
+            print("%s is required but it's not installed." % tool,
+                  file=sys.stderr)
         else:
             # Something else went wrong while trying to run `wget`
             raise
