@@ -8,7 +8,7 @@ check_tools = {
     "git": ["git", "--version"]
 }
 
-for tool in keys(check_tools):
+for tool in check_tools.keys():
     try:
         subprocess.call(check_tools[tool])
     except OSError as e:
