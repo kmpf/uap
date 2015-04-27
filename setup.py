@@ -38,7 +38,7 @@ setup(
     name='uap',
     version='0.0.1',
     author='Christoph Kaempf',
-    author_email='christoph.kaempf@ufz.de'
+    author_email='christoph.kaempf@ufz.de',
     description='Universal Analysis Pipeline',
     # README.txt has to be in reStructuredText format
     long_description=open("README.txt").read(),
