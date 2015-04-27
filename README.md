@@ -1,2 +1,6 @@
-rnaseq-pipeline
-===============
+uap -- Universal Analysis Pipeline
+==================================
+
+Installation
+------------
+

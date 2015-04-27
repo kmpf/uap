@@ -40,7 +40,7 @@ setup(
     author_email='christoph.kaempf@ufz.de',
     description='Universal Analysis Pipeline',
     # README.txt has to be in reStructuredText format
-    long_description=open("README.txt").read(),
+    long_description=open("README.md").read(),
     platforms='',
     license='',
     url='https://github.com/kmpf/uap',
