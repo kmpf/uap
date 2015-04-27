@@ -14,18 +14,18 @@ import yaml
 Adjust sys.path so everything we need can be found
 '''
 
-if seq_pipeline_path not in sys.path:
-    sys.path.append(seq_pipeline_path)
-include_path = '%s/include' % seq_pipeline_path
+if uap_path not in sys.path:
+    sys.path.append(uap_path)
+include_path = '%s/include' % uap_path
 if include_path not in sys.path:
     sys.path.append(include_path)
-sources_path = '%s/include/sources' % seq_pipeline_path
+sources_path = '%s/include/sources' % uap_path
 if sources_path not in sys.path:
     sys.path.append(sources_path)
-steps_path = '%s/include/steps' % seq_pipeline_path
+steps_path = '%s/include/steps' % uap_path
 if steps_path not in sys.path:
     sys.path.append(steps_path)
-subcommand_path = '%s/include/subcommands' % seq_pipeline_path
+subcommand_path = '%s/include/subcommands' % uap_path
 if subcommand_path not in sys.path:
     sys.path.append(subcommand_path)
 
@@ -35,8 +35,8 @@ def main():
     '''
     Set environment variables for git, so it does use the correct repository
     '''
-    os.environ["GIT_DIR"] = "%s/.git" % seq_pipeline_path
-    os.environ["GIT_WORK_TREE"] = seq_pipeline_path
+    os.environ["GIT_DIR"] = "%s/.git" % uap_path
+    os.environ["GIT_WORK_TREE"] = uap_path
     
     '''
     This script allows access to all commands which are provided by the pipeline.
