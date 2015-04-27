@@ -1,7 +1,5 @@
 import os
 from distutils.core import setup
-from __future__ import print_function
-
 
 # List of lists with tools to check for
 check_tools = {
@@ -15,8 +13,8 @@ for tool in keys(check_tools):
         subprocess.call(check_tools[tool])
     except OSError as e:
         if e.errno == os.errno.ENOENT:
-            print("%s is required but it's not installed." % tool,
-                  file=sys.stderr)
+            sys.stderr.write("%s is required but it's not installed." % tool)
+            sys.stderr.flush()
         else:
             # Something else went wrong while trying to run `wget`
             raise
