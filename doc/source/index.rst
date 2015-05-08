@@ -3,7 +3,7 @@
   80 characters if you can and start each sentence on a new line as it 
   decreases maintenance and makes diffs more readable.
   
-.. title:: uap -- Universal Analysis Pipeline
+.. title:: **uap** -- Universal Analysis Pipeline
 
 
 Introduction
