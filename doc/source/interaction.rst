@@ -3,7 +3,7 @@
   you can and start each sentence on a new line as it decreases maintenance
   and makes diffs more readable.
 
-.. title:: Usage of **uap**
+.. title:: Command-Line Usage
 
 ..
   This document aims to describe how to interact with **uap** via the
