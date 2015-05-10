@@ -13,7 +13,7 @@ Command-Line Usage of **uap**
 =============================
 
 The **uap** software is meant to execute, monitor and analyse a data analysis
-which has been configured in a YAML file (see :doc:`configuration.rst`).
+which has been configured in a YAML file (see :doc:`configuration`).
 
 Once the analysis has been configured, one can use several **uap** subcommands
 which can be used to execute and monitor the pipeline. 
