@@ -9,24 +9,31 @@
   This document aims to describe how to interact with **uap** via the
   command-line.
 
+Command-Line Usage of **uap**
+=============================
 
-Interacting with a pipeline
-===========================
+The **uap** software is meant to execute, monitor and analyse a data analysis
+which has been configured in a YAML file (see :doc:`configuration.rst`).
 
-Once the project is set up, there are several scripts which can be used to 
-execute and monitor the pipeline. 
-All scripts have a couple of properties in common:
+Once the analysis has been configured, one can use several **uap** subcommands
+which can be used to execute and monitor the pipeline. 
+Everytime **uap** is started with any subcommand several things happen:
 
-* On startup, the configuration is read, tools are checked, input files are 
-  collected, and all tasks are calculated. 
-  If any of these steps fails, the script will print an error message with 
-  a backtrace and it will crash.
-  This may seem a bit harsh, but after all, it's better to fail early than
-  to fail late if failing is unavoidable.
-* For convenience, a symbolic link called ``out`` will be placed in the 
-  pipeline's directory which points to the output directory defined in the 
-  configuration file. 
-  If ``out`` already exists, it is left untouched.
+* The configuration file is read
+* The tools are checked
+* The input files are checked
+* All tasks are calculated. 
+ 
+If any of these steps fails, **uap** will print an error message with a
+backtrace and it will crash.
+This may seem a bit harsh, but after all, it's better to fail early than
+to fail late if failing is unavoidable.
+
+**uap** creates a symbolic link called ``<configuration-file>-out``, if it does
+not exist yet, which points to the output directory defined in the
+<configuration-file>.
+This symbolic link is located in the directory of the <configuration-file>.
+
 
 There are a couple of global command line parameters which are valid for all 
 scripts (well, actually, it's only one):
@@ -48,8 +55,8 @@ scripts (well, actually, it's only one):
 
 In the following, the scripts are described in detail.
 
-status.py
----------
+status
+------
 
 The status script lists all tasks resulting from the configured steps and 
 input samples. 
