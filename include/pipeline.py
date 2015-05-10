@@ -5,6 +5,7 @@ import datetime
 import fscache
 import glob
 import json
+import logging
 from operator import itemgetter
 import os
 import re
@@ -17,6 +18,9 @@ import abstract_step
 import misc
 import task as task_module
 from xml.dom import minidom
+
+
+logger = logging.getLogger("uap_logger")
 
 # an exception class for reporting configuration errors
 class ConfigurationException(Exception):
@@ -118,6 +122,7 @@ class Pipeline(object):
             # cluster type is not an applicable parameter here, and that's fine
             # (we're probably in run-locally.py)
             pass
+
         # the configuration as read from config.yaml
         self.config = dict()
 
@@ -195,7 +200,8 @@ class Pipeline(object):
         if not 'destination_path' in self.config:
             raise ConfigurationException("Missing key: destination_path")
         if not os.path.exists(self.config['destination_path']):
-            raise ConfigurationException("Destination path does not exist: " + self.config['destination_path'])
+            raise ConfigurationException("Destination path does not exist: " 
+                                         + self.config['destination_path'])
 
         if not os.path.exists("%s-out" % self.config['id']):
             os.symlink(self.config['destination_path'], '%s-out' % self.config['id'])
@@ -295,26 +301,6 @@ class Pipeline(object):
         for step in self.steps.values():
             step.finalize()
 
-    def print_tasks(self):
-        '''
-        prints a summary of all tasks, indicating whether each task is
-          - ``[r]eady``
-          - ``[w]aiting``
-          - ``[q]ueued``
-          - ``[e]xecuting``
-          - ``[f]inished``
-        '''
-        count = {}
-        for task in self.all_tasks_topologically_sorted:
-            state = task.get_task_state()
-            if not state in count:
-                count[state] = 0
-            count[state] += 1
-            print("[%s] %s" % (task.get_task_state()[0].lower(), task))
-        print("tasks: %d total, %s" % (len(self.all_tasks_topologically_sorted),
-            ', '.join([str(count[_]) + ' ' 
-                       + _.lower() for _ in sorted(count.keys())])))
-        
     def print_source_runs(self):
         for step_name in self.topological_step_order:
             step = self.steps[step_name]
@@ -513,7 +499,8 @@ class Pipeline(object):
             check_queue = False
             
         if print_more_warnings and not check_queue:
-            print("Attention, we cannot check stale queued ping files because this host does not have %s." % self.cc('stat'))
+            print("Attention, we cannot check stale queued ping files because "
+                  "this host does not have %s." % self.cc('stat'))
             
         running_jids = set()
         
@@ -536,9 +523,11 @@ class Pipeline(object):
                     if which == 'run':
                         info = yaml.load(open(path, 'r'))
                         start_time = info['start_time']
-                        last_activity = datetime.datetime.fromtimestamp(abstract_step.AbstractStep.fsc.getmtime(path))
+                        last_activity = datetime.datetime.fromtimestamp(
+                            abstract_step.AbstractStep.fsc.getmtime(path))
                         last_activity_difference = now - last_activity
-                        if last_activity_difference.total_seconds() > abstract_step.AbstractStep.PING_TIMEOUT:
+                        if last_activity_difference.total_seconds() > \
+                           abstract_step.AbstractStep.PING_TIMEOUT:
                             run_problems.append((task, path, last_activity_difference, last_activity - start_time))
                     if which == 'queued':
                         info = yaml.load(open(path, 'r'))
@@ -588,9 +577,12 @@ class Pipeline(object):
                 
         if show_hint:
             if print_more_warnings and not print_details:
-                print("Hint: Run ./fix-problems.py --details to see the details.")
+                print("Hint: Run 'uap <project-config>.yaml "
+                      "fix-problems --details' to see the details.")
             if not fix_problems:
-                print("Hint: Run ./fix-problems.py --srsly to fix these problems (that is, delete all problematic ping files).")
+                print("Hint: Run 'uap <project-config>.yaml "
+                      "fix-problems --srsly' to fix these problems (that is, "
+                      "delete all problematic ping files).")
 
     def check_volatile_files(self, details = False, srsly = False):
         collected_files = set()
@@ -603,7 +595,9 @@ class Pipeline(object):
             total_size = 0
             for path in collected_files:
                 total_size += os.path.getsize(path)
-            print("Hint: You could save %s of disk space by volatilizing %d output files." % (misc.bytes_to_str(total_size), len(collected_files)))
+            print("Hint: You could save %s of disk space by volatilizing %d "
+                  "output files." % (misc.bytes_to_str(total_size),
+                                     len(collected_files)))
             print("Call ./volatilize.py --srsly to purge the files.")
 
     def autodetect_cluster_type(self):
@@ -623,7 +617,8 @@ class Pipeline(object):
 
     def set_cluster_type(self, cluster_type):
         if not cluster_type in Pipeline.cluster_config:
-            print("Unknown cluster type: %s (choose one of %s)." % (cluster_type, ', '.join(Pipeline.self.cluster_config.keys())))
+            print("Unknown cluster type: %s (choose one of %s)." % (
+                cluster_type, ', '.join(Pipeline.self.cluster_config.keys())))
             exit(1)
         self.cluster_type = cluster_type
 

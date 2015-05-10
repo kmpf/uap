@@ -1,0 +1,347 @@
+#!/usr/bin/env python
+
+import os
+uap_path = os.path.dirname(os.path.realpath(__file__))
+activate_this_file = '%s/python_env/bin/activate_this.py' % uap_path
+execfile(activate_this_file, dict(__file__=activate_this_file))
+import argparse
+import logging
+import string
+import sys
+import yaml
+
+'''
+Adjust sys.path so everything we need can be found
+'''
+
+if uap_path not in sys.path:
+    sys.path.append(uap_path)
+include_path = '%s/include' % uap_path
+if include_path not in sys.path:
+    sys.path.append(include_path)
+sources_path = '%s/include/sources' % uap_path
+if sources_path not in sys.path:
+    sys.path.append(sources_path)
+steps_path = '%s/include/steps' % uap_path
+if steps_path not in sys.path:
+    sys.path.append(steps_path)
+subcommand_path = '%s/include/subcommands' % uap_path
+if subcommand_path not in sys.path:
+    sys.path.append(subcommand_path)
+
+from include.subcommands import *
+
+def main():
+    '''
+    Set environment variables for git, so it does use the correct repository
+    '''
+    os.environ["GIT_DIR"] = "%s/.git" % uap_path
+    os.environ["GIT_WORK_TREE"] = uap_path
+    
+    '''
+    This script allows access to all commands which are provided by the pipeline.
+    '''
+    
+    # Definition of common parser(s)
+    
+    common_parser = argparse.ArgumentParser(add_help=False)
+    
+    common_parser.add_argument(
+        "--even-if-dirty",
+        dest="even_if_dirty",
+        action="store_true",
+        default=False,
+        help="Must be set if the local git repository contains uncommited changes." +
+        "Otherwise the pipeline will not start.")
+    
+    # Definition of the final parser
+    
+    parser = argparse.ArgumentParser(
+        description="This script controls the 'seq-pipeline'.",
+        epilog="For further information visit ...\n" +
+        "For citation use ...",
+        formatter_class=argparse.RawTextHelpFormatter
+        )
+    
+    parser.add_argument(
+        "config",
+        help="Path to YAML file which holds the pipeline configuration. It has " +
+        "to follow the structure given in the documentation.",
+        metavar="<project-config>.yaml",
+        type=argparse.FileType('r'))
+    
+    parser.add_argument(
+        "-v", "--verbose",
+        dest="verbose",
+        action="count", 
+        default=0,
+        help="increase output verbosity")
+    
+    parser.add_argument(
+        "--version",
+        dest="version",
+        action="version",
+        version="%(prog)s 0.01 alpha")
+    
+    subparsers = parser.add_subparsers(
+        title="subcommands", 
+        description="These subcommands are understood by the seq-pipeline")
+    
+    '''
+    The argument parser for 'fix-problems.py' is created here."
+    '''
+    
+    fix_problems_parser = subparsers.add_parser(
+        "fix-problems",
+        help="Fixes problems the pipeline encountered.",
+        description="",
+        parents=[common_parser])
+    
+    fix_problems_parser.add_argument(
+        "--cluster",
+        dest="cluster",
+        type=str,
+        default="auto",
+        help="Specify the cluster type (sge, slurm), defaults to auto.")
+    
+    fix_problems_parser.add_argument(
+        "--details",
+        dest="details",
+        action="store_true",
+        default=False,
+        help="Displays detailed information about problems that " +
+        "occured during the execution of the pipeline.")
+    
+    fix_problems_parser.add_argument(
+        "--srsly",
+        dest="srsly",
+        action="store_true",
+        default=False,
+        help="Fixes the problems that the pipeline has encountered.")
+    
+    fix_problems_parser.set_defaults(func=fix_problems.main)
+    
+    '''
+    The argument parser for 'render.py' is created here."
+    '''
+    
+    render_parser = subparsers.add_parser(
+        "render",
+        help="Renders the dot-graphs created by the seq-pipeline",
+        description="render.py is called here.",
+        parents=[common_parser])
+    
+    render_parser.add_argument(
+        "--all",
+        dest="all",
+        action="store_true",
+        default=False,
+        help="Renders all ")
+    
+    render_parser.add_argument(
+        "-t","--task",
+        dest="task",
+        nargs='*',
+        default=list(),
+        type=str,
+        help="Displays only the named task IDs" +
+        "Can take multiple task ID(s) as input. A task ID " +
+        "looks like ths 'step_name/run_id'. A list of all " +
+        "task IDs is returned by running './status.py'.")
+    
+    render_parser.set_defaults(func=render.main)
+    
+    '''
+    The argument parser for 'status.py' is created here."
+    '''
+    
+    run_locally_parser = subparsers.add_parser(
+        "run-locally",
+        help="Executes the pipeline on the local machine",
+        description="This script starts the 'rnaseq-pipeline' on the local machine. "
+        "It can be used to start:\n"
+        " * all tasks of the pipeline as configured in 'config.yaml'\n"
+        " * all tasks defined by a specific step in 'config.yaml'\n"
+        " * one or more steps\n"
+        "To start the complete pipeline as configured in 'config.yaml' "
+        "execute:\n"
+        "$ ./run-locally.py\n"
+        "To start a specific step execute:\n"
+        "$ ./run-locally.py <step_name>\n"
+        "To start a specific task execute:\n"
+        "$ ./run-locally.py <step_name/run_id>\n"
+        "The step_name is the name of an entry in the 'steps:' section "
+        "as defined in 'config.yaml'. A specific task is defined via "
+        "its task ID 'step_name/run_id'. A list of all task IDs is " 
+        "returned by running './status.py'.",
+        parents=[common_parser])
+    
+    run_locally_parser.add_argument(
+        "step_task",
+        nargs='*',
+        default=list(),
+        type=str,
+        help="Can take multiple step names as input. A step name "
+        "is the name of any entry in the 'steps:' section "
+        "as defined in 'config.yaml'. A list of all task IDs "
+        "is returned by running './status.py'.")
+    
+    run_locally_parser.set_defaults(func=run_locally.main)
+    
+    '''
+    The argument parser for 'status.py' is created here."
+    '''
+    
+    status_parser = subparsers.add_parser(
+        "status",
+        help="Displays information about the status of the seq-pipeline",
+        description="This script displays by default information about all tasks "
+        "of the pipeline as configured in 'config.yaml'. But the "
+        "displayed information can be narrowed down via command "
+        "line options.\n"
+        "IMPORTANT: Hints given by this script are just valid if YOU "
+        "submitted the jobs to the cluster.",
+        parents=[common_parser])
+    
+    status_parser.add_argument(
+        "--cluster",
+        dest="cluster",
+        type=str,
+        default="auto",
+        help="Specify the cluster type (sge, slurm), defaults to auto.")
+    
+    status_parser.add_argument(
+        "--summarize",
+        dest="summarize",
+        action="store_true",
+        default=False,
+        help="Displays summarized information of the pipeline")
+    
+    status_parser.add_argument(
+        "--graph",
+        dest="graph",
+        action="store_true",
+        default=False,
+        help="Displays the dependency graph of the pipeline")
+    
+    status_parser.add_argument(
+        "--sources",
+        dest="sources",
+        action="store_true",
+        default=False,
+        help="Displays only information about the source runs.")
+    
+    status_parser.add_argument(
+        "-t","--task",
+        dest="task",
+        nargs='*',
+        default=list(),
+        type=str,
+        help="Displays only the named task IDs. " +
+        "Can take multiple task ID(s) as input. A task ID " +
+        "looks like ths 'step_name/run_id'. A list of all " +
+        "task IDs is returned by running './status.py'.")
+    
+    status_parser.set_defaults(func=status.main)
+    
+    '''
+    The argument parser for 'submit-to-cluster.py' is created here."
+    '''
+    
+    submit_to_cluster_parser = subparsers.add_parser(
+        "submit-to-cluster",
+        help="Submits the jobs created by the seq-pipeline to a cluster",
+        description='This script submits all tasks configured in config.yaml to a ' +
+        'Sun GridEngine or SLURM cluster. The list of tasks can be ' +
+        'narrowed down by specifying a step name (in which case all ' +
+        'runs of this steps will be considered) or individual tasks ' +
+        '(step_name/run_id).',
+        parents=[common_parser])
+    
+    submit_to_cluster_parser.add_argument(
+        "--cluster",
+        dest="cluster",
+        type=str,
+        default="auto",
+        help="Specify the cluster type (sge, slurm), defaults to auto.")
+    
+    submit_to_cluster_parser.add_argument(
+        "step_task",
+        nargs='*',
+        default=list(),
+        type=str,
+        help="Can take multiple step names as input. A step name " +
+        "is the name of any entry in the 'steps:' section " +
+        "as defined in 'config.yaml'. A list of all task IDs " +
+        "is returned by running './status.py'.")
+    
+    submit_to_cluster_parser.set_defaults(func=submit_to_cluster.main)
+    
+    '''
+    The argument parser for 'volatilize.py' is created here."
+    '''
+    
+    volatilize_parser = subparsers.add_parser(
+        "volatilize",
+        help="Saves disk space by volatilizing intermediate results",
+        description="This script does something, of course.",
+        parents=[common_parser])
+    
+    volatilize_parser.add_argument(
+        "--details",
+        dest="details",
+        action="store_true",
+        default=False,
+        help="Displays detailed information about ")
+    
+    volatilize_parser.add_argument(
+        "--srsly",
+        dest="srsly",
+        action="store_true",
+        default=False,
+        help="")
+    
+    volatilize_parser.set_defaults(func=volatilize.main)
+    
+    # get arguments and call the appropriate function
+    args = parser.parse_args()
+    # create logger object
+    logger = _configure_logger(args.verbose)
+    # call subcommand
+    args.func(args)
+
+def _configure_logger(verbosity):
+    logger = logging.getLogger("uap_logger")
+    # create formatter
+    formatter = logging.Formatter(fmt='[%(levelname)s] %(funcName)s in '
+                                  '%(filename)s at %(asctime)s: %(message)s ')
+    # create console handler and set level to debug
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    # add formatter to ch
+    ch.setFormatter(formatter)
+    # add ch to logger
+    logger.addHandler(ch)
+    
+    # Instantiate logger
+    if verbosity == 0:
+        logger.setLevel(logging.ERROR)
+        print("Set log level to ERROR")
+    elif verbosity == 1:
+        logger.setLevel(logging.WARNING)
+        print("Set log level to WARNING")
+    elif verbosity == 2:
+        logger.setLevel(logging.INFO)
+        print("Set log level to INFO")
+    elif verbosity >= 3:
+        logger.setLevel(logging.DEBUG)
+        print("Set log level to DEBUG")
+    else:
+        logger.setLevel(logging.NOTSET)
+        print("Set log level to NOTSET")
+    return logger
+
+
+
+if __name__ == '__main__':
+    main()

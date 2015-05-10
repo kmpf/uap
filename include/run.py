@@ -1,11 +1,15 @@
 import abstract_step
+import exec_group
+import logging
 import misc
 import os
 
+logger = logging.getLogger("uap_logger")
+
 class Run(object):
     '''
-    The Run class is a helper class which represents a run in a step. Declare runs
-    inside AbstractStep.declare_runs() via::
+    The Run class is a helper class which represents a run in a step. Declare
+    runs inside AbstractStep.declare_runs() via::
     
         with self.declare_run(run_id) as run:
             # declare output files, private and public info here
@@ -14,12 +18,23 @@ class Run(object):
     '''
     def __init__(self, step, run_id):
         if '/' in run_id:
-            raise StandardError("Error: A run ID must not contain a slash: %s." % run_id)
+            raise StandardError("Error: A run ID must not contain a slash: %s."
+                                % run_id)
         self._step = step
         self._run_id = run_id
         self._private_info = dict()
         self._public_info = dict()
         self._output_files = dict()
+
+        self._exec_groups = list()
+        self._public_info = dict()
+        self._in_out_connection = list()
+        self._connections = list()
+        self._output_files_list = list()
+        self._input_files = list()
+
+#        self._add_public_info_to_run_module()
+#        self._store_step_info_in_run_module()
 
     def __enter__(self):
         return self
@@ -27,14 +42,32 @@ class Run(object):
     def __exit__(self, type, value, traceback):
         pass
 
+    def new_exec_group(self):
+        eg = exec_group.ExecGroup(self)
+        self._exec_groups.append(eg)
+        return eg
+        
+    def get_exec_groups(self):
+        return self._exec_groups
+
+    def get_step(self):
+        return self._step
+
+    def set_run_id(self, run_id):
+        self._run_id = run_id
+        
+    def get_run_id(self):
+        return self._run_id
+
     def add_private_info(self, key, value):
         '''
-        Add private information to a run. Use this to store data which you will need 
-        when the run is executed. As opposed to public information, private information 
-        is not visible to subsequent steps.
+        Add private information to a run. Use this to store data which you will
+        need when the run is executed. As opposed to public information,
+        private information is not visible to subsequent steps.
         
         You can store paths to input files here, but not paths to output files as
-        their expected location is not defined until we're in *AbstractStep.execute*
+        their expected location is not defined until we're in
+        *AbstractStep.execute*
         (hint: they get written to a temporary directory inside *execute()*).
         '''
         if key in self._private_info and value != self._private_info[key]:
@@ -95,7 +128,8 @@ class Run(object):
         '''
         
         # make sure there's no slash in out_path unless it's a source step
-        if '/' in out_path and abstract_step.AbstractSourceStep not in self._step.__class__.__bases__:
+        if '/' in out_path and abstract_step.AbstractSourceStep \
+           not in self._step.__class__.__bases__:
             raise StandardError("There must be no slash (/) in any output "
                 "file declared by a step: %s." % out_path)
         # make sure tag was declared with an outgoing connection
@@ -113,7 +147,22 @@ class Run(object):
                 "You're trying to re-add an output file which has already "
                 "been declared: %s." % out_path)
 
+        if None in in_paths:
+            raise StandardError(
+                "There is a NoneType element in input paths (%s) for output "
+                "file (%s)" % (in_paths, out_path))
+
+        if out_path == None:
+            raise StandardError(
+                "Trying to add NoneType element as output file for input paths "
+                ": %s" % in_paths)
+            
+        self._connections.append(tag)
+        self._output_files_list.append(out_path)
+        self._input_files.append(in_paths)
         self._output_files[tag][out_path] = in_paths
+        return "%s/%s" % (self._step.get_output_directory_du_jour_placeholder(),
+                          out_path)
 
     def add_empty_output_connection(self, tag):
         '''
@@ -135,6 +184,9 @@ class Run(object):
                 % tag)
 
         self._output_files[tag][None] = None
+
+    def get_output_files_only(self):
+        return self._output_files
 
     def get_output_files(self):
         '''
@@ -158,6 +210,9 @@ class Run(object):
                 result[tag][full_path] = in_paths
         return result
 
+    def get_run_module(self):
+        return self._run_module
+
     def get_single_output_file_for_annotation(self, annotation):
         '''
         Retrieve exactly one output file of the given annotation, and crash
@@ -165,14 +220,16 @@ class Run(object):
         '''
         temp = self.get_output_files()
         if len(temp[annotation]) != 1:
-            raise StandardError("More than one output file declared for out/%s." % annotation)
+            raise StandardError("More than one output file declared for "
+                                "out/%s." % annotation)
         return temp[annotation].keys()[0]
 
     def get_output_files_for_annotation_and_tags(self, annotation, tags):
         '''
         Retrieve a set of output files of the given annotation, assigned to
-        the same number of specified tags. If you have two 'alignment' output files
-        and they are called *out-a.txt* and *out-b.txt*, you can use this function like this:
+        the same number of specified tags. If you have two 'alignment' output
+        files and they are called *out-a.txt* and *out-b.txt*, you can use this
+        function like this:
         
         - *tags*: ['a', 'b']
         - result: {'a': 'out-a.txt', 'b': 'out-b.txt'}
@@ -188,11 +245,16 @@ class Run(object):
         for tag in temp.keys():
             if out_path in temp[tag].keys():
                 return sorted(temp[tag][out_path])
-        raise StandardError("Sorry, your output '%s' file couldn't be found in the dictionary: %s." % (out_path, temp))
+        raise StandardError("Sorry, your output '%s' file couldn't be found in"
+                            "the dictionary: %s." % (out_path, temp))
 
+#    def get_complete_public_info(self):
+#        return self._public_info
+        
     def get_public_info(self, key):
         '''
-        Query public information which must have been previously stored via *add_public_info()*.
+        Query public information which must have been previously stored via "
+        "*add_public_info()*.
         '''
         return self._public_info[key]
 
@@ -204,7 +266,8 @@ class Run(object):
 
     def get_private_info(self, key):
         '''
-        Query private information which must have been previously stored via *add_private_info()*.
+        Query private information which must have been previously stored via "
+        "*add_private_info()*.
         '''
         return self._private_info[key]
 

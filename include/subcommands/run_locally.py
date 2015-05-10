@@ -1,58 +1,21 @@
-#!./python_env/bin/python
+#!/usr/bin/env python
 
 import sys
-import argparse
 import copy
-import misc
+import logging
 import os
-import pipeline
-import process_pool
 import signal
 import socket
 import yaml
 
-#parser = argparse.ArgumentParser(
-#    description="This script starts the 'rnaseq-pipeline' on the local machine. "
-#                "It can be used to start:\n"
-#                " * all tasks of the pipeline as configured in 'config.yaml'\n"
-#                " * all tasks defined by a specific step in 'config.yaml'\n"
-#                " * one or more steps\n"
-#                "To start the complete pipeline as configured in 'config.yaml' "
-#                "execute:\n"
-#                "$ ./run-locally.py\n"
-#                "To start a specific step execute:\n"
-#                "$ ./run-locally.py <step_name>\n"
-#                "To start a specific task execute:\n"
-#                "$ ./run-locally.py <step_name/run_id>\n"
-#                "The step_name is the name of an entry in the 'steps:' section "
-#                "as defined in 'config.yaml'. A specific task is defined via "
-#                "its task ID 'step_name/run_id'. A list of all task IDs is " 
-#                "returned by running './status.py'.",
-#    formatter_class=argparse.RawTextHelpFormatter)
-#
-#parser.add_argument("--even-if-dirty",
-#                    dest="even_if_dirty",
-#                    action="store_true",
-#                    default=False,
-#                    help="Must be set if the local git repository "
-#                    "contains uncommited changes. Otherwise the pipeline "
-#                    "will not start.")
-#
-#
-#parser.add_argument("step_task",
-#                    nargs='*',
-#                    default=list(),
-#                    type=str,
-#                    help="Can take multiple step names as input. A step name "
-#                    "is the name of any entry in the 'steps:' section "
-#                    "as defined in 'config.yaml'. A list of all task IDs "
-#                    "is returned by running './status.py'.")
-#
-#args = parser.parse_args()
+import misc
+import pipeline
+import process_pool
+
+logger = logging.getLogger("uap_logger")
 
 def main(args):
     p = pipeline.Pipeline(arguments=args)
-
     def handle_signal(signum, frame):
         print("Catching %s!" % process_pool.ProcessPool.SIGNAL_NAMES[signum])
         p.caught_signal = signum
@@ -61,7 +24,10 @@ def main(args):
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
 
-    task_list = copy.deepcopy(p.all_tasks_topologically_sorted)
+    #embed()
+    
+    #task_list = copy.deepcopy(p.all_tasks_topologically_sorted)
+    task_list = p.all_tasks_topologically_sorted
 
     if len(args.step_task) >= 1:
         # execute the specified tasks
