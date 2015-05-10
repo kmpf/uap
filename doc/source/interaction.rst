@@ -6,18 +6,31 @@
 .. title:: Command-Line Usage
 
 ..
-  This document aims to describe how to interact with **uap** via the
-  command-line.
+  This document aims to describe how to use **uap** via the command-line.
 
-Command-Line Usage of **uap**
-=============================
+Command-Line Usage
+==================
 
-The **uap** software is meant to execute, monitor and analyse a data analysis
+The **uap** software is meant to execute and monitor a data analysis
 which has been configured in a YAML file (see :doc:`configuration`).
+Starting **uap** requires the user to provide the path to a YAML configuration
+file as mandatory parameter::
+
+  $ uap <project-config>.yaml <subcommand> <options>
+
+
+*<project-config>.yaml*
+  Path to YAML file containing configuration of the data analysis
+
+*<subcommand>*
+  Any of the subcommands explained below (see :ref:`_subcommand-explanation`)
+
+*<options>*
+  Specific options for the used subcommand
 
 Once the analysis has been configured, one can use several **uap** subcommands
-which can be used to execute and monitor the pipeline. 
-Everytime **uap** is started with any subcommand several things happen:
+to interact with the pipeline. 
+Everytime **uap** is started (with a subcommand) several things happen:
 
 * The configuration file is read
 * The tools are checked
@@ -54,6 +67,10 @@ scripts (well, actually, it's only one):
         set.
 
 In the following, the scripts are described in detail.
+
+.. _subcommand-explanation
+Explanation of Subcommands
+**************************
 
 status
 ------
