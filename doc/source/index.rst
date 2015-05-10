@@ -30,7 +30,6 @@ allows for a variety of other applications.
    interaction
    extension
    how-to
-   documentation
    steps
    api
 

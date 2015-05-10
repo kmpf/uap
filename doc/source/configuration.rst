@@ -3,7 +3,7 @@
   80 characters if you can and start each sentence on a new line as it 
   decreases maintenance and makes diffs more readable.
 
-.. title:: Configuring **uap**
+.. title:: Configuration
 
 ..
   This document aims to describe how to configure **uap**.
