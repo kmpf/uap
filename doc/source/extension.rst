@@ -3,7 +3,7 @@
   you can and start each sentence on a new line as it decreases maintenance
   and makes diffs more readable.
 
-.. title:: Extension of **uap**
+.. title:: Extension of uap
 
 ..
   This document describes how **uap** can be extended with new analysis steps.
