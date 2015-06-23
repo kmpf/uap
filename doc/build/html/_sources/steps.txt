@@ -1,15 +1,16 @@
 Available steps
 ===============
 
+A detailed description of all availble steps follows.
+
 Source steps
 ------------
 
+
 .. index:: fastq_source
 
-fastq_source
+FASTQ_source
 ~~~~~~~~~~~~
-
-
 
 The FastqSource class acts as a source for FASTQ files. This source creates a
 run for every sample.

@@ -3,7 +3,7 @@
   you can and start each sentence on a new line as it decreases maintenance
   and makes diffs more readable.
 
-.. title:: How-To First Analysis
+.. title:: How-Tos
 
 ..
   This document describes how to set-up your first **uap** analysis.
