@@ -3,13 +3,13 @@
   80 characters if you can and start each sentence on a new line as it 
   decreases maintenance and makes diffs more readable.
 
-.. title:: Installation
+.. title:: Installation of uap
 
 ..
   This document aims to describe how to install **uap**.
 
-Installation
-============
+Installation of **uap**
+=======================
 
 
 Downloading the software

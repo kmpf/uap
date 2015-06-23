@@ -3,18 +3,19 @@
   you can and start each sentence on a new line as it decreases maintenance
   and makes diffs more readable.
 
-.. title:: Command-Line Usage
+.. title:: Command-Line Usage of uap
 
 ..
   This document aims to describe how to use **uap** via the command-line.
 
-Command-Line Usage
-==================
+Command-Line Usage of **uap**
+=============================
 
-The **uap** software is meant to execute and monitor a data analysis
-which has been configured in a YAML file (see :doc:`configuration`).
-Starting **uap** requires the user to provide the path to a YAML configuration
-file as mandatory parameter::
+The **uap** software is meant to execute and monitor a data analysis which has
+been configured in a YAML file (see :doc:`configuration`).
+To start **uap** for a specific analysis.
+The user needs to provide the path to a YAML configuration file as mandatory
+parameter::
 
   $ uap <project-config>.yaml <subcommand> <options>
 
@@ -23,17 +24,18 @@ file as mandatory parameter::
   Path to YAML file containing configuration of the data analysis
 
 *<subcommand>*
-  Any of the subcommands explained below (see :ref:`_subcommand-explanation`)
+  Any of the subcommands explained below (see `Explanation of Subcommands`_)
 
 *<options>*
   Specific options for the used subcommand
 
-Once the analysis has been configured, one can use several **uap** subcommands
+Once the analysis is configured, several **uap** subcommands can be used
 to interact with the pipeline. 
 Everytime **uap** is started (with a subcommand) several things happen:
 
 * The configuration file is read
-* The tools are checked
+* The tools given in the **Insert Link to Configuration:Tools Section**
+  section are checked
 * The input files are checked
 * All tasks are calculated. 
  
@@ -42,11 +44,11 @@ backtrace and it will crash.
 This may seem a bit harsh, but after all, it's better to fail early than
 to fail late if failing is unavoidable.
 
-**uap** creates a symbolic link called ``<configuration-file>-out``, if it does
-not exist yet, which points to the output directory defined in the
+**uap** creates a symbolic link, if it does not exist yet, called 
+``<configuration-file>-out``.
+It points to the output directory defined in the <configuration-file>.
+This symbolic link is located in the directory containing the
 <configuration-file>.
-This symbolic link is located in the directory of the <configuration-file>.
-
 
 There are a couple of global command line parameters which are valid for all 
 scripts (well, actually, it's only one):
@@ -66,17 +68,17 @@ scripts (well, actually, it's only one):
         That way, a pipeline can be tested very quickly with a small input data 
         set.
 
-In the following, the scripts are described in detail.
+The subcommands are described in detail below.
 
-.. _subcommand-explanation
+.. _ExplanationOfSubcommands:
 Explanation of Subcommands
 **************************
 
 status
 ------
 
-The status script lists all tasks resulting from the configured steps and 
-input samples. 
+The status subcommand lists all tasks resulting from the configured steps and 
+input samples.
 At any time, each task is in one of the following states:
 
 * **waiting** -- the task is waiting for input files to appear, or its input
@@ -91,7 +93,7 @@ At any time, each task is in one of the following states:
 
 Here is an example output::
 
-    $ ./status.py
+    $ uap <project-config>.yaml status
     Waiting tasks
     -------------
     [w] cufflinks/Sample_COPD_2023
@@ -110,7 +112,7 @@ Here is an example output::
     
 To get a more concise summary, specify ``--summarize``::
 
-    $ ./status.py --summarize
+    $ uap <project-config>.yaml status --summarize
     Waiting tasks
     -------------
     [w]   1 cufflinks
@@ -128,7 +130,7 @@ To get a more concise summary, specify ``--summarize``::
     
 ...or print a fancy ASCII art graph with ``--graph``::
 
-    $ ./status.py --graph
+    $ uap <project-config>.yaml status --graph
     samples (1 finished)
     └─cutadapt (2 finished)
       └─fix_cutadapt (1 finished)
@@ -157,7 +159,7 @@ To get a more concise summary, specify ``--summarize``::
 Detailed information about a specific task can be obtained by specifying the 
 task ID on the command line::
 
-    $ ./status.py cutadapt/Sample_COPD_2023-R1
+    $ uap <project-config>.yaml status cutadapt/Sample_COPD_2023-R1
     info:
       adapter: AGATCGGAAGAGCACACGTCTGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG
     read_number: R1
@@ -184,13 +186,13 @@ Because source steps produce no runs and therefore no tasks, they don't
 appear in the list produced by ``status.py``.
 To see their task IDs, specify ``--sources``::
 
-    $ ./status.py --sources
+    $ uap <project-config>.yaml status --sources
     samples/Sample_COPD_2023
     
 You can then specify the ID of a source task like the ID of any other task
 to see its details::
 
-    $ ./status.py samples/Sample_COPD_2023
+    $ uap <project-config>.yaml status samples/Sample_COPD_2023
     info:
       index: ACAGTG
       paired_end: true
@@ -205,17 +207,17 @@ to see its details::
 
 
 
-run-locally.py
---------------
+run-locally
+-----------
 
-The ``run-locally.py`` script runs all non-finished tasks (or a subset) 
+The ``run-locally`` subcommand runs all non-finished tasks (or a subset) 
 sequentially on the local machine. 
 Feel free to cancel this script at any time, it won't put your project in a 
 confused state.
-However, if the ``run-locally.py`` script receives a SIGKILL signal, the 
+However, if the ``run-locally`` subcommand receives a SIGKILL signal, the 
 currently executing job will continue to run and the corresponding task
-will be reported as ``executing`` by ``status.py`` for five more minutes
-(SIGTERM should be fine and exit gracefully but *doesn't just yet*).
+will be reported as ``executing`` by calling ``status`` subcommand for five more
+minutes (SIGTERM should be fine and exit gracefully but *doesn't just yet*).
 After that time, you will be warned that a job is marked as being currently
 run but no activity has been seen for a while, along with further 
 instructions about what to do in such a case (don't worry, it shouldn't 
@@ -226,6 +228,47 @@ line.
 To execute all tasks of a certain step, specify the step name on the command 
 line.
 
+This subcommand provides usage information::
+    
+    $ ./run-locally.py -h
+
+    usage: run-locally.py [-h] [--even-if-dirty] [-s [STEP [STEP ...]]]
+                          [-t [TASK [TASK ...]]]
+
+    This script starts the 'rnaseq-pipeline' on the local machine. It can be 
+    used to start:
+     * all tasks of the pipeline as configured in 'config.yaml'
+     * all tasks defined by a specific step in 'config.yaml'
+     * one or more steps
+
+    To start the complete pipeline as configured in 'config.yaml' execute:
+    $ ./run-locally.py
+
+    To start a specific step execute:
+    $ ./run-locally.py <step_name>
+
+    To start a specific task execute:
+    $ ./run-locally.py <step_name/run_id>
+
+    The step_name is the name of an entry in the 'steps:' section as defined in 
+    'config.yaml'. A specific task is defined via its task ID 'step_name/run_id'.
+    A list of all task IDs is returned by running './status.py'.
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      --even-if-dirty       Must be set if the local git repository contains 
+                            uncommited changes. Otherwise the pipeline will not 
+                            start.
+      -s [STEP [STEP ...]], --step [STEP [STEP ...]]
+                            Can take multiple step names as input. A step name 
+                            is the name of any entry in the 'steps:' section as 
+                            defined in 'config.yaml'
+      -t [TASK [TASK ...]], --task [TASK [TASK ...]]
+                            Can take multiple task ID(s) as input. A task ID 
+                            looks like ths 'step_name/run_id'. A list of all 
+                            task IDs is returned by running './status.py'.
+
+
 .. NOTE:: Why is it safe to cancel the pipeline? 
     The pipeline is written in a way which expects processes to fail or 
     cluster jobs to disappear without notice. 
@@ -235,16 +278,18 @@ line.
     moved to their real target directory, and it is not until the last file 
     rename operation has finished that a task is regarded as finished.
     
-submit-to-cluster.py
---------------------
+submit-to-cluster
+-----------------
 
-The ``submit-to-cluster.py`` script determines which tasks still have to be 
-carried out and submits the jobs to a GridEngine cluster by calling ``qsub``. 
-Dependencies are passed to ``qsub`` via the ``-hold_jid`` option, which means 
-that jobs that depend on other jobs won't get scheduled until their 
-dependencies have been satisfied. 
-The file ``qsub-template.sh`` is used to submit jobs, with ``#{ }`` fields 
-being substituted with appropriate values.
+The ``submit-to-cluster`` subcommand determines which tasks still have to be 
+carried out and which supported cluster engine is available.
+It then submits the jobs to the cluster if a cluster engine has been found. 
+Dependencies are passed to cluster engine in a way that jobs that depend on
+other jobs won't get scheduled until their dependencies have been satisfied. 
+The files ``qsub-template.sh`` and ``sbatch-template.sh`` are used to submit
+jobs, with ``#{ }`` fields being substituted with appropriate values.
+Each submitted job calls **uap** with the ``run-locally`` subcommand on the
+cluster nodes where the jobs are then run locally.
 
 The file ``quotas.yaml`` can be used to define different quotas for different 
 systems:
@@ -261,3 +306,43 @@ A quota of 5 means that no more than 5 jobs of one kind will be run in
 parallel.
 Different quotas can be defined for each step: because ``cutadapt`` is 
 highly I/O-efficient, it has a higher quota.
+
+This subcommand provides usage information::
+    
+    $ ./run-locally.py -h
+    usage: submit-to-cluster.py [-h] [--highmem] [--even-if-dirty]
+                                [-s [STEP [STEP ...]]] [-t [TASK [TASK ...]]]
+
+    This script submits all tasks configured in config.yaml to a Sun GridEngine 
+    cluster via qsub. The list of tasks can be narrowed down by specifying a 
+    step name (in which case all runs of this steps will be considered) or 
+    individual tasks (step_name/run_id).
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      --highmem             this flag must be set if the highmem node of the 
+                            cluster is being used.
+      --even-if-dirty       Must be set if the local git repository contains 
+                            uncommited changes. Otherwise the pipeline will not 
+                            start.
+      -s [STEP [STEP ...]], --step [STEP [STEP ...]]
+                            Can take multiple step names as input. A step name 
+                            is the name of any entry in the 'steps:' section as 
+                            defined in 'config.yaml'
+      -t [TASK [TASK ...]], --task [TASK [TASK ...]]
+                            Can take multiple task ID(s) as input. A task ID 
+                            looks like ths 'step_name/run_id'. A list of all 
+                            task IDs is returned by running './status.py'.
+fix-problems.py
+---------------
+
+
+
+render.py
+---------
+
+
+volatilize.py
+-------------
+
+
