@@ -3,20 +3,20 @@
   80 characters if you can and start each sentence on a new line as it 
   decreases maintenance and makes diffs more readable.
 
-.. title:: Configuration
+.. title:: Configuration of uap
 
 ..
   This document aims to describe how to configure **uap**.
 
-Configure a Analysis for **uap**
-================================
+Configuration of **uap**
+========================
 
 **uap** is made to control the execution of data analyses which are defined
 in `YAML <http://www.yaml.org/>`_ files.
 Each file describes a complete analysis.
 Further on these files are called analysis file(s).
 
-The analysis files consist of four sections (let's just call them sections,
+The configuration files consist of four sections (let's just call them sections,
 although technically, they are keys):
 
 * ``destination_path`` -- points to the directory where the result files,
@@ -32,11 +32,11 @@ although technically, they are keys):
 If you want to know more about the notation that is used in this file, have a
 closer look at the `YAML definition <http://www.yaml.org/>`_.
 
-Sections of config.yaml
-***********************
+Sections of a Configuration File
+********************************
 
-destination_path
-~~~~~~~~~~~~~~~~
+Destination_path Section
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 The value of ``destination_path`` is the directory where **uap** is going
 to store the created files. It is possible to use a different directory for
@@ -46,10 +46,10 @@ volatile files (see ).
 
     destination_path: "/path/to/dir"
 
-email
-~~~~~
+Email Section
+~~~~~~~~~~~~~
 
-The value of ``email`` is needed if the pipeline is executed on a cluster,
+The value of ``email`` is needed if the analysis is executed on a cluster,
 which can use it to inform the person who started **uap** about status
 changes of submitted jobs.
 
@@ -58,11 +58,95 @@ changes of submitted jobs.
     email: "your.name@mail.de"
 
 
-tools
-~~~~~
+Steps Section
+~~~~~~~~~~~~~
 
-The ``tools`` block describes all programs needed during the execution of the
-*uap**.
+The ``steps`` section is the core of the analysis file, because it defines when
+steps are executed and how they depend on each other.
+This section (technically it is a dictionary) contains a key for every step,
+therefore each step must have a unique name.
+There are two ways to name a step to allow multiple steps of the same type and
+still ensure unique naming:
+
+.. code-block:: yaml
+
+    steps:
+        # here, the step name is unchanged, it's a cutadapt step which is also
+        # called 'cutadapt'
+        cutadapt:
+            ... # options following
+            
+        # here, we also insert a cutadapt step, but we give it a different name:
+        # 'clip_adapters'
+        clip_adapters (cutadapt):
+            ... # options following
+            
+There are two different types of steps:
+
+**Source Steps**
+  They are used to provide files for the analysis. They have no dependencies
+  and are usually the first steps of an analysis.
+
+**Processing Steps**
+  They depend upon one or more predecessor steps. Dependencies are defined via
+  the ``_depends`` key which may either be ``null``, a step name, or a list of
+  step names.
+
+.. code-block:: yaml
+
+    steps:
+        # the source step which depends on nothing
+        fastq_source:
+            # ...
+            
+        # the first processing step, which depends on the source step
+        cutadapt:
+            _depends: fastq_source
+        
+        # the second processing step, which depends on the cutadapt step
+        fix_cutadapt:
+            _depends: cutadapt
+                
+If you want to cut off entire branches of the step graph, set the ``_BREAK`` 
+flag in a step definition, which will force the step to produce no runs
+(which will in turn give all following steps nothing to do, thereby 
+effectively disabling these steps):
+        
+
+.. code-block:: yaml
+
+    steps:
+        fastq_source:
+            # ...
+            
+        cutadapt:
+            _depends: fastq_source
+        
+        # this step and all following steps will not be executed
+        fix_cutadapt:
+            _depends: cutadapt
+            _BREAK: true
+
+   
+All available steps are described in detail in the steps documentation: 
+:doc:`steps`.
+
+.. _ToolsSection:
+Tools Section
+~~~~~~~~~~~~~
+
+The ``tools`` section must list all programs needed during the execution of an
+**uap** analysis.
+**uap** determines and records their versions for future reference.
+
+By default, version determination is simply attempted by calling the program
+without command-line arguments.
+
+If a certain argument is required, specify it in ``get_version``. 
+If a tool does not exit with exit code 0, find out which code it is by typing
+``echo $?`` into Bash and specify the exit code in ``exit_code``.
+
+
 
 .. code-block:: yaml
 
@@ -70,30 +154,15 @@ The ``tools`` block describes all programs needed during the execution of the
         # you don't have to specify a path if the tool can be found in $PATH
         cat:
             path: cat 
-            version: "--version"
+            get_version: "--version"
         # you have to specify a path if the tool can not be found in $PATH
         some-tool:
             path: /path/to/some-tool
-            version: "--version"
+            get_version: "--version"
 
-steps
-~~~~~
 
-The ``steps`` block is the core of the analysis file, because it defines the
-order in which the different steps of the analysis are executed.
-Each step must have a unique name.
-Therefore you should give each step a descriptive name followed by
-a blank and the step type enclosed in parentheses.
-
-There are two different types of steps:
-
-1. **source steps** are used to enter data into the analysis, meaning they have no
-   predecessor step they depend on.
-2. **processing steps** depend upon one or more predecessor steps and create some 
-   output that can be used by successor steps.
-   
-All available steps are described in detail in the steps documentation: 
-:doc:`steps`.
+Example Configurations
+**********************
 
 Example configurations for various source steps are shown below:
 

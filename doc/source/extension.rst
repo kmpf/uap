@@ -3,29 +3,30 @@
   you can and start each sentence on a new line as it decreases maintenance
   and makes diffs more readable.
 
-.. title:: Extension
+.. title:: Extension of **uap**
 
 ..
   This document describes how **uap** can be extended with new analysis steps.
 
 
-Extending **uap** Functionality
-===============================
+Extension of **uap**
+====================
 
 
-Implement your own steps
-------------------------
+Implement new steps
+-------------------
 
 The provided pipeline can be easily extended by implementing new steps and
-sources. Therefore one does need some basic python programming skills. To add a
-new processing step, a single Python file must be placed in ``include/step``
-which defines a class with a constructor and two functions. The constructor
-(``__init__``) checks for the availability of required tools and tells the
-pipeline which connections this step expects (``in/``) and which it provides
-(``out/``). The first of the functions  (``setup_runs``) is used for planning all
-jobs based on a list of input files or runs and possibly additional information
-from previous steps and the second function (``execute``) is used to execute a
-specific job. The basic scaffold is shown below.
+sources. Therefore basic python programming skills are necessary.
+To add a new processing step, a single Python file must be placed in
+``include/step`` which defines a class with a constructor and a single
+functions.
+The constructor (``__init__``) checks for the availability of required tools
+and tells the pipeline which connections this step expects (``in/``) and which
+it provides (``out/``).
+The single function  ``runs`` is used to plan all jobs based on a list of input
+files or runs and possibly additional information from previous steps.
+The basic scaffold is shown below.
 
 .. code-block:: python
 
@@ -132,13 +133,12 @@ Best practices
 There are a couple of things which should be kept in mind when implementing new 
 steps or modifying existing steps:
 
-* Make sure errors already show up in ``setup_runs`` instead of ``execute``.
-  Therefore look out for things that may fail in ``setup_runs``. Stick to *fail
-  early, fail often*. That way errors show up before submitting jobs to the
-  cluster and wasting precious cluster waiting time is avoided. 
-* Use the ``info`` entry in the returned ``output_run_info`` structure to pass
-  information gathered in ``setup_runs`` to ``execute``.
-* Likewise, make sure that the tools you'll need in ``execute`` are available.
+* Make sure errors already show up in ``runs``.
+  So, look out for things that may fail in ``runs``.
+  Stick to *fail early, fail often*.
+  That way errors show up before submitting jobs to the cluster and wasting 
+  precious cluster waiting time is avoided. 
+* Make sure that the tools you'll need in ``runs`` are available.
   Check for the availability of tools within the constructor ``__init__``.
 
 .. code-block:: python
@@ -161,4 +161,15 @@ steps or modifying existing steps:
 Add the new step to your configuration
 --------------------------------------
 
-To insert a new step in a pipeline it has to be added into the ``config.yaml``.
+To make a new step known to **uap**, it has to be copied into either of these
+folders:
+
+uap/include/sources/
+  for all source steps
+
+uap/include/steps/
+  for all processing steps
+
+If the Python step file exist at the correct location the step needs to be added
+to the YAML configuration file as described in :doc:`configuration`.
+
