@@ -1,0 +1,136 @@
+# This is the rnaseq-pipeline configuration file.
+
+# This is an example configuration for the analysis of ChIPseq data
+
+destination_path: data/out/RNAseq/
+
+constants:
+    - &genome /data/bioinf/Data/Indices/hg19/hg19.fa
+    - &segemehl_genome_index /data/bioinf/Data/Indices/hg19/hg19.idx
+    - &bowtie2_genome_index /data/bioinf/genomes/data/animalia/chordata/mammalia/rodentia/homo_sapiens/hg19/indices/hg19 
+
+steps:
+#    read_annotation (raw_file_source):
+#        path: data/ChIPseq/H3K4me3_GCCAAT_L001_001.bed
+#        sha1: 297ceb1895c75f1a793423a8b4a7a92f48241159
+
+    gencode (raw_url_source):
+        url: ftp://ftp.sanger.ac.uk/pub/gencode/release_15/gencode.v15.annotation.gtf.gz
+        sha1: 9b272fde8bca544e6cd8621ddeec55aa09cf7a05
+        
+    gencode_genes_only (grep):
+        _depends: gencode
+        pattern: "\tgene\t"
+
+
+    fastq_source:
+        pattern: data/RNAseq/*.fastq.gz
+        group: (rnaseq)-R[12].fastq.gz
+        indices: indices.rnaseq.csv
+        paired_end: yes
+
+    cutadapt:
+        _depends: fastq_source
+        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG
+        adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+        fix_qnames: false
+
+    fix_cutadapt:
+        _depends: cutadapt
+        _volatile: true
+
+    segemehl:
+        _depends: fix_cutadapt
+        genome: *genome
+        index: *segemehl_genome_index
+
+    s2c:
+        _depends: segemehl
+
+    fix_s2c:
+        _depends: s2c
+
+    count_genes (htseq_count):
+        _depends:
+            - fix_s2c
+            - gencode_genes_only
+        _connect:
+            in/features: raw
+        stranded: 'yes'
+        mode: intersection-strict
+        type: gene
+        idattr: gene_id
+
+
+#    call_peaks (macs14):
+#        _depends: read_annotation
+#        _connect: 
+#            in/annotation: raw
+
+#tools:
+#    macs14:
+#        path: ~/virt-python/bin/macs14
+#        get_version: '--version'
+
+tools:
+    cat4m:
+        path: ./tools/cat4m
+#    cufflinks:
+#        path: /home/spechtm/cufflinks/cufflinks-2.1.1.Linux_x86_64/cufflinks
+#        get_version: '--version'
+#        exit_code: 1
+    curl:
+        path: /usr/bin/curl
+        get_version: '--version'
+        exit_code: 2
+    cutadapt:
+        path: /home/kaempf/virt-python/bin/cutadapt
+        get_version: '--version'
+    fix_cutadapt:
+        path: ['./python_env/bin/python', './tools/fix_cutadapt.py']
+        get_version: ''
+        exit_code: 1
+    fix_qnames:
+        path: ['./python_env/bin/python', './tools/fix_qnames.py']
+    fix_s2c:
+        path: ['./python_env/bin/python', './tools/fix_s2c.py']
+        exit_code: 1
+    grep:
+        path: grep
+        get_version: '--version'
+    htseq-count:
+        path: /data/bioinf/projects/code/projects_misc/Ribolution/copd-retro/2013-01/tools/htseq-env/bin/htseq-count
+        get_version: ''
+        exit_code: 1
+    head:
+        path: head
+        get_version: '--version'
+    invertGood:
+        path: /data/bioinf/projects/code/projects_misc/Ribolution/copd-retro/2013-01/tools/invertSamStrand/invertGood
+    pigz:
+        path: pigz
+        get_version: '--version'
+    remove_reads_segemehl:
+        path: ['./python_env/bin/python', './tools/remove_reads_segemehl.py']
+        exit_code: 1
+    s2c:
+        path: ['./python_env/bin/python', './tools/s2c.py']
+        get_version: ''
+        exit_code: 2
+    samtools:
+        path: samtools
+        get_version: ''
+        exit_code: 1
+    sha1sum:
+        path: sha1sum
+        get_version: '--version'
+    segemehl:
+        path: '/data/bioinf/projects/code/projects_misc/Tools/SEGEMEHL/segemehl-04182013-mod-stdout/segemehl.x'
+        get_version: ''
+        exit_code: 255
+#    tophat2:
+#        path: /home/spechtm/tophat-2.0.8b.Linux_x86_64/tophat2
+#        get_version: '--version'
+#    bowtie2:
+#        path: bowtie2
+#        get_version: '--version'
