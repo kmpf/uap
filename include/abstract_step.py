@@ -16,6 +16,7 @@ import copy
 import datetime
 import inspect
 import json
+import logging
 import os
 import re
 import random
@@ -39,6 +40,7 @@ import process_pool
 import pipeline_info
 import run as run_module
 
+logger = logging.getLogger('uap_logger')
 
 class AbstractStep(object):
     
@@ -315,7 +317,8 @@ class AbstractStep(object):
 #        raise NotImplementedError()
 
     def get_run_info(self):
-        """Getter method for runs of this step.
+        """
+        Getter method for runs of this step.
 
         If there are no runs as this method is called, they are created here.
         """
@@ -339,14 +342,21 @@ class AbstractStep(object):
                         self._runs[run_id].get_output_files()[annotation].items():
                         # proceed if we have normal output_path/input_paths
                         if output_path != None and input_paths != None:
+                            # store file dependencies
                             self._pipeline.add_file_dependencies(
                                 output_path, input_paths)
+                            # create task ID
                             task_id = '%s/%s' % (str(self), run_id)
                             self._pipeline.add_task_for_output_file(
                                 output_path, task_id)
-                            for inpath in input_paths:
+                            # No input paths? Add empty string NOT None
+                            # as file name
+                            if len(input_paths) == 0:
                                 self._pipeline.add_task_for_input_file(
-                                    inpath, task_id)
+                                    "", task_id)
+                            for input_path in input_paths:
+                                self._pipeline.add_task_for_input_file(
+                                    input_path, task_id)
 
         # now that _runs exists, it remains constant, just return it
         return self._runs
@@ -1590,6 +1600,12 @@ class AbstractStep(object):
                 "Cannot query undefined option %s in step %s." % 
                 (key, __module__))
         return self._options[key]
+
+    def get_options(self):
+        '''
+        Returns a dictionary of all given options
+        '''
+        return self._options
 
     def is_option_set_in_config(self, key):
         """

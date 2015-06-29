@@ -53,7 +53,7 @@ class Fastqc(AbstractStep):
                     run.add_empty_output_connection("%s_log_stderr" % read)
                 else:
                     fastqc_exec_group = run.new_exec_group()
-                    fastqc = ['fastqc',
+                    fastqc = [self.get_tool('fastqc'),
                               '--noextract', '-o',
                               self.get_output_directory_du_jour_placeholder()]
                     fastqc.extend(input_paths)
@@ -69,9 +69,10 @@ class Fastqc(AbstractStep):
                     mv_exec_group = run.new_exec_group()
                     input_base = os.path.basename(
                         input_paths[0]).split('.', 1)[0]
-                    mv = ['mv',
-                          os.path.join(self.get_output_directory_du_jour_placeholder(),
-                                       ''.join([input_base, '_fastqc.zip'])),
+                    mv = [self.get_tool('mv'),
+                          os.path.join(
+                              self.get_output_directory_du_jour_placeholder(),
+                              ''.join([input_base, '_fastqc.zip'])),
                           run.add_output_file("%s_fastqc_report" % read,
                             "%s%s-fastqc.zip" % (run_id, read_types[read]),
                             input_paths)]

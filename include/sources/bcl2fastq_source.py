@@ -1,19 +1,24 @@
 import sys
-from abstract_step import *
+import logging
 import os
-import process_pool
 
-class Bcl2FastqSource(AbstractStep):
+from abstract_step import *
+
+logger = logging.getLogger("uap_logger")
+
+class Bcl2FastqSource(AbstractSourceStep):
 
     def __init__(self, pipeline):
         super(Bcl2FastqSource, self).__init__(pipeline)
 
         self.add_connection('out/configureBcl2Fastq_log_stderr')
         self.add_connection('out/make_log_stderr')
-        self.add_connection('out/flow_cell_path')
+        self.add_connection('out/unaligned_folder_path')
 
         self.require_tool('configureBclToFastq.pl')
         self.require_tool('make')
+        self.require_tool('mv')
+        self.require_tool('mkdir')
         
 #        self.add_option('paired_end', bool)
 #        self.add_option('first_read', str, default = "_R1",
@@ -64,15 +69,23 @@ class Bcl2FastqSource(AbstractStep):
         '''
         options = self.get_options()
         input_dir = self.get_option('input-dir')
-        output_dir = '%s/Unaligned' % input_dir
+        # Create path to Unaligned folder ...
+        output_dir = '%s%s' % (input_dir, 'Unaligned')
+        # ... or use the given path
         if 'output-dir' in options.keys():
-            output_dir = options[option]
+            output_dir = options['output-dir']
+
+        # Create placeholder for Unaligned folder
+        temp_output_dir = os.path.join(
+            self.get_output_directory_du_jour_placeholder(),
+            'Unaligned')
         # Define a new run
         run = self.new_run('read_demultiplexing')
         # Create new execution group for configureBclToFastq.pl
         bcl2Fastq_exec_group = run.new_exec_group()
-        # Assemble complete command
-        configureBcl2Fastq = ['configureBclToFastq.pl', '--input-dir',
+        # Assemble configureBclToFastq.pl command
+        configureBcl2Fastq = [self.get_tool('configureBclToFastq.pl'),
+                              '--input-dir',
                               '%s/Data/Intensities/BaseCalls/' % 
                               input_dir]
 
@@ -81,29 +94,48 @@ class Bcl2FastqSource(AbstractStep):
                           'use-bases-mask', 'no-eamss',
                           'with-failed-reads', 'intensities-dir',
                           'positions-dir', 'positions-format',
-                          'filter-dir', 'output-dir',
-                          'sample-sheet', 'mismatches',
+                          'filter-dir', 'sample-sheet', 'mismatches',
                           'fastq-cluster-count', 'ignore-missing-stats',
                           'ignore-missing-bcl', 'ignore-missing-control',
                           'tiles', 'flowcell-id'] :
                 configureBcl2Fastq.extend([ '--%s' % option, options[option] ])
-        # Create new command in execution group
+        configureBcl2Fastq.extend(
+                    ['--output-dir', temp_output_dir])
+        # Add command to execution group
         configureBcl2Fastq_command = bcl2Fastq_exec_group.new_command(
             configureBcl2Fastq,
             stderr_path = run.add_output_file(
                 "configureBcl2Fastq_log_stderr",
                 "bcl2fastq-log_stderr.txt", []) )
-        print(configureBcl2Fastq)
+        logger.debug(" ".join(configureBcl2Fastq))
         # Create new execution group for make
         make_exec_group = run.new_exec_group()
-        make = ['make', '-C', '%s' % output_dir]
-        make_command = make_exec_group.new_command(
+        # Assemble make command
+        make = [self.get_tool('make'), '-C', temp_output_dir]
+        # Add make command to execution group
+        make_exec_group.new_command(
             make,
             stderr_path = run.add_output_file(
                 "make_log_stderr",
                 "make-log_stderr.txt", []) )
-        print(make)
-        run.add_output_file("flow_cell_path",
+        logger.debug(" ".join(make))
+        logger.debug("Temporary output directory: %s" % temp_output_dir)
+        # Create new execution group to move Unaligned folder
+        mv_exec_group = run.new_exec_group()
+        # Assemble mkdir command, if output_dir does not exist
+        if not os.path.exists(output_dir):
+            mkdir = [self.get_tool('mkdir'), output_dir]
+            logger.debug(" ".join(mkdir))
+            # Add mkdir command to execution group
+            mv_exec_group.new_command(mkdir)
+        # Assemble mv command
+        mv = [self.get_tool('mv')]
+        mv.extend([temp_output_dir, output_dir])
+        logger.debug(" ".join(mv))
+        # Add mv command to execution group
+        mv_command = mv_exec_group.new_command(mv)
+        # Add output file
+        run.add_output_file("unaligned_folder_path",
                             output_dir, [])
 
 #        baseDir=/data/bioinf/Data/141121_SN928_0101_AC39TWACXX/
