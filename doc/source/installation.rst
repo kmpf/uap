@@ -17,7 +17,7 @@ Downloading the software
 
 The repository can be obtained like this::
 
-  $ git clone git@github.com:kmpf/uap.git
+  $ git clone https://github.com/kmpf/uap.git
     
 We'll need ``virtualenv``, so install it if you don't have it already::
 
