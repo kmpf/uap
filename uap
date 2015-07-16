@@ -314,7 +314,7 @@ def _configure_logger(verbosity):
     logger = logging.getLogger("uap_logger")
     # create formatter
     formatter = logging.Formatter(fmt='[%(levelname)s] %(funcName)s in '
-                                  '%(filename)s at %(asctime)s: %(message)s ')
+                                  '%(filename)s: %(message)s ')
     # create console handler and set level to debug
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
@@ -324,16 +324,16 @@ def _configure_logger(verbosity):
     logger.addHandler(ch)
     
     # Instantiate logger
+    # if verbosity == 0:
+        # logger.setLevel(logging.ERROR)
+        # print("Set log level to ERROR")
     if verbosity == 0:
-        logger.setLevel(logging.ERROR)
-        print("Set log level to ERROR")
-    elif verbosity == 1:
         logger.setLevel(logging.WARNING)
         print("Set log level to WARNING")
-    elif verbosity == 2:
+    elif verbosity == 1:
         logger.setLevel(logging.INFO)
         print("Set log level to INFO")
-    elif verbosity >= 3:
+    elif verbosity >= 2:
         logger.setLevel(logging.DEBUG)
         print("Set log level to DEBUG")
     else:
