@@ -179,12 +179,14 @@ class Pipeline(object):
                 task = task_module.Task(self, step, run_id, run_index)
                 # if any run of a step contains an exec_groups,
                 # the task (step/run) is added to the task list
-                for run in step.get_runs():
-                    run_has_exec_groups = False
-                    if len(run.get_exec_groups()) > 0:
-                        run_has_exec_groups = True
-                    if run_has_exec_groups:
-                        self.all_tasks_topologically_sorted.append(task)
+                run = step.get_run(run_id)
+                logger.debug("Run: %s" % run_id)
+                run_has_exec_groups = False
+                if len(run.get_exec_groups()) > 0:
+                    run_has_exec_groups = True
+                if run_has_exec_groups:
+                    logger.debug("Task: %s" % task)
+                    self.all_tasks_topologically_sorted.append(task)
                 # Fail if multiple tasks with the same name exist
                 if str(task) in self.task_for_task_id:
                     raise ConfigurationException("Duplicate task ID %s." % str(task))
