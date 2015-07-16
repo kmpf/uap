@@ -34,7 +34,7 @@ class Fastqc(AbstractStep):
         
         # require_tool evtl. in abstract_step verstecken
         self.require_tool('fastqc') 
-
+        self.require_tool('mv')
 
     def runs(self, run_ids_connections_files):
         '''
