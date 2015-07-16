@@ -29,7 +29,7 @@ class S2C(AbstractStep):
                 run.add_private_info('in-alignment', input_paths[0])
                 run.add_output_file('alignments', '%s-cufflinks-compatible-sorted.bam' % run_id, input_paths)
                 run.add_output_file('log', '%s-log.txt' % run_id, input_paths)
-
+                run.new_exec_group()
 #        for run_id, info in connection_info['in/alignments']['runs'].items():
 #            s2c_path = '%s-cufflinks-compatible-sorted.bam' % run_id
 #            log_path = '%s-log.txt' % run_id

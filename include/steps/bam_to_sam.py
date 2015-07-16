@@ -33,7 +33,7 @@ class BamToSam(AbstractStep):
                 basename = os.path.basename(input_paths[0]).split('.')[0]
                 run.add_output_file('alignments', basename + '.sam.gz', input_paths)
                 run.add_private_info('in-bam', input_paths[0])
-                
+                run.new_exec_group()
 
     def execute(self, run_id, run):
         bam_in_path = run.get_private_info('in-bam')

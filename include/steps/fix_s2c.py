@@ -27,6 +27,7 @@ class S2cFix(AbstractStep):
                     raise StandardError("Expected exactly one alignments file, but got this %s" % input_paths)
                 run.add_output_file('alignments', '%s-s2c-fixed.bam' % run_id, input_paths)
                 run.add_private_info('in-alignments', input_paths[0])
+                run.new_exec_group()
 
 #        for run_id, info in connection_info['in/alignments']['runs'].items():
 #            fix_path = 

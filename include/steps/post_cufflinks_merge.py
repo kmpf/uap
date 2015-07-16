@@ -30,6 +30,7 @@ class Post_Cufflinks_Merge(AbstractStep):
 
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/features'):
             with self.declare_run(run_id) as run:
+                run.new_exec_group()
                 run.add_private_info('in-features', input_paths[0])
                 run.add_output_file('features', '%s-novel.gtf' % run_id, input_paths)
                 run.add_output_file('log_stderr', '%s-log_stderr.txt' % run_id, input_paths)

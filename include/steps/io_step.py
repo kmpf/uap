@@ -33,6 +33,7 @@ class IOStep(abstract_step.AbstractStep):
                     annotation = self.get_annotation_for_input_file(in_path)
                     self.add_connection('out/%s' % annotation)
                     run.add_output_file(annotation, misc.append_suffix_to_path(os.path.basename(in_path), self._tool), [in_path])
+                    run.new_exec_group()
 
     
     def execute(self, run_id, run):

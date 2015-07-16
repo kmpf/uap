@@ -83,8 +83,12 @@ class Normalize_BigWig (AbstractStep):
                   
                   with self.declare_run (new_run_id) as run:
                       run.add_output_file('tracks', '%s-norm.bw'  % new_run_id, [path])
+                      run.new_exec_group()
           else:
-              run.add_output_file('tracks', '%s-norm.bw'  % run_id, input_paths)
+              with self.declare_run(run_id) as run:
+                  run.add_output_file('tracks', '%s-norm.bw'  %
+                                      run_id, input_paths)
+                  run.new_exec_group()
 
           #print new_run_id
           #print run.get_single_output_file_for_annotation ('tracks')

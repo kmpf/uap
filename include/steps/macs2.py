@@ -68,7 +68,7 @@ class Macs2(AbstractStep):
                         run_id = "%s-%s" % (run_id, control_id)
 
                     with self.declare_run(run_id) as run:
-
+                        run.new_exec_group()
                         # Files which are created by using --broad
                         if self.is_option_set_in_config('broad'):
                             run.add_output_file('peaks', '%s-macs2_broadPeaks.broadPeak'
