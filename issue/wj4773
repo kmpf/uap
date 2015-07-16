@@ -1,4 +1,0 @@
-Summary: Add run.new_exec_group() to all steps which generate tasks
-Priority: 5
-
-This is just a workaround. All steps need to be rewritten to use runs() only.
