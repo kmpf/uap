@@ -47,7 +47,7 @@ class Cuffmerge(AbstractStep):
             run.add_output_file('assemblies_txt', '%s-cuffmerge-assemblies.txt' % run_id, cufflinks_sample_gtf)
             run.add_output_file('log_stderr', '%s-cuffmerge-log_stderr.txt' % run_id, cufflinks_sample_gtf)
             run.add_private_info('cufflinks_sample_gtf', cufflinks_sample_gtf)
-            
+            run.new_exec_group()
 
             
               

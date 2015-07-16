@@ -45,6 +45,7 @@ class SamToBam(AbstractStep):
                 run.add_output_file('indices', basename + '.bam.bai', input_paths)
 
                 run.add_private_info('in-sam', input_paths[0])
+                run.new_exec_group()
 
     def execute(self, run_id, run):
         sam_path = run.get_private_info('in-sam')

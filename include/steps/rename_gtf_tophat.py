@@ -24,6 +24,7 @@ class Rename_GTF_Tophat(AbstractStep):
                     raise StandardError("Expected exactly one alignments file., but got this %s" % input_paths)
                 run.add_private_info('in-features', input_paths[0])
                 run.add_output_file('features_tophat', '%s-tophat.gtf' % run_id, input_paths)
+                run.new_exec_group()
                 
     def execute(self, run_id, run):
         with process_pool.ProcessPool(self) as pool:

@@ -80,6 +80,7 @@ class TopHat2(AbstractStep):
 
         for run_id in found_files.keys():
             with self.declare_run(run_id) as run:
+                run.new_exec_group()
                 run.add_private_info('paired_end', paired_end_info[run_id])
                 input_paths = list()
                 for read in found_files[run_id].keys():

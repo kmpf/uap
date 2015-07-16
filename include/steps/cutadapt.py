@@ -101,6 +101,7 @@ class Cutadapt(AbstractStep):
         # now declare two runs
         for run_id in found_files.keys():
             with self.declare_run(run_id) as run:
+                run.new_exec_group()
                 # add paired end information
                 run.add_private_info('paired_end', paired_end_info[run_id])
                 for read in found_files[run_id].keys():

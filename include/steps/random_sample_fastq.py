@@ -23,6 +23,7 @@ class RandomSampleFastq(AbstractStep):
 
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/reads'):
             with self.declare_run(run_id) as run:
+                run.new_exec_group()
                 is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
                 if is_paired_end:
                     run.add_output_file('reads', "%s-subsample-R1.fastq.gz" % run_id, input_paths)

@@ -50,6 +50,7 @@ class CuffLinks(AbstractStep):
                         run.add_private_info('mask_file', mask)
 
                 run.add_private_info('in-bam', input_paths)
+                run.new_exec_group()
                         
 
     def execute(self, run_id, run):

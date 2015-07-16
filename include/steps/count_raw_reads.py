@@ -69,6 +69,7 @@ class CountRawReads(AbstractStep):
             run.add_output_file('statistics', run_id + 
                                 '.raw_read_statistics.txt', read_files)
             run.add_private_info('sample_input_paths', sample_input_paths_dict)
+            run.new_exec_group()
 
     def execute(self, run_id, run):
         out_path = run.get_single_output_file_for_annotation('statistics')
