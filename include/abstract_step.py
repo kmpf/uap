@@ -337,9 +337,9 @@ class AbstractStep(object):
             
             # define file dependencies
             for run_id in self._runs.keys():
-                for annotation in self._runs[run_id].get_output_files().keys():
+                for annotation in self._runs[run_id].get_output_files_abspath().keys():
                     for output_path, input_paths in \
-                        self._runs[run_id].get_output_files()[annotation].items():
+                        self._runs[run_id].get_output_files_abspath()[annotation].items():
                         # proceed if we have normal output_path/input_paths
                         if output_path != None and input_paths != None:
                             # store file dependencies
@@ -591,7 +591,7 @@ class AbstractStep(object):
         
         run_info = self.get_run_info()
         max_level = 0
-        for tag, output_files in run_info[run_id].get_output_files().items():
+        for tag, output_files in run_info[run_id].get_output_files_abspath().items():
             # output_files can be None if the connection is empty
             for output_file, input_files in output_files.items():
                 if output_file != None and input_files != None:
@@ -675,7 +675,7 @@ class AbstractStep(object):
 
         # prepare self.known_paths
         self.known_paths = dict()
-        for tag, tag_info in run.get_output_files().items():
+        for tag, tag_info in run.get_output_files_abspath().items():
             for output_path, input_paths in tag_info.items():
                 # add the real output path
                 if output_path != None and input_paths != None:
@@ -773,15 +773,23 @@ class AbstractStep(object):
             # if we're here, we can assume the step has finished successfully
             # now rename the output files (move from temp directory to
             # destination directory)
-            
-            for tag in run._output_files.keys():
-                for out_path in run._output_files[tag].keys():
-                    if out_path != None:
+
+            # import pdb
+            # pdb.set_trace()
+
+            for tag in run.get_output_files().keys():
+                for out_file in run.get_output_files()[tag].keys():
+                    # don't try to rename files if they were not meant to exist
+                    # in our temporary directory
+                    # 1. out_file should not be None (empty output connection)
+                    # 2. out_file should not contain a '/' (file belongs to a
+                    #    source step)
+                    if out_file != None and not '/' in out_file:
                         source_path = os.path.join(self._temp_directory, 
-                                                   os.path.basename(out_path))
+                                                   os.path.basename(out_file))
                         destination_path = os.path.join(
                             self.get_output_directory(), 
-                            os.path.basename(out_path))
+                            os.path.basename(out_file))
                         # first, delete a possibly existing volatile placeholder
                         # file
                         destination_path_volatile = destination_path + \
@@ -796,9 +804,9 @@ class AbstractStep(object):
                             caught_exception = (
                                 None, 
                                 StandardError(
-                                    "The step failed to produce an output "
-                                    "file it announced: %s." % 
-                                    os.path.basename(out_path)), 
+                                    "The step failed to produce an announced "
+                                    "output file: %s." % 
+                                    os.path.basename(out_file)), 
                                 None)
 
         for path, path_info in self.known_paths.items():
@@ -882,7 +890,9 @@ class AbstractStep(object):
             if task_id in self._pipeline.input_files_for_task_id:
                 input_files = self._pipeline.input_files_for_task_id[task_id]
             candidate_tasks = set()
-            for inpath in input_files:
+            # Only source steps do have empty strings in the input files list
+            # so we can savely exclude them here
+            for inpath in [x for x in input_files if x != '']:
                 task_id = self._pipeline.task_id_for_output_file[inpath]
                 if task_id in self._pipeline.task_for_task_id:
                     task = self._pipeline.task_for_task_id[task_id]
@@ -912,6 +922,9 @@ class AbstractStep(object):
         """
         Return full path to a configured tool.
         """
+        if key not in self._tools:
+            raise StandardError("Tool %s unknown. Maybe you forgot to use "
+                                "self.require_tool('%s')" % (key, key))
         return self._tools[key]
     
     def get_module_unloads(self):
@@ -1671,7 +1684,7 @@ class AbstractStep(object):
                     result['counts']['total_steps'] += 1
                     for run_id, run_info in step_info.items():
                         result['counts']['total_runs'] += 1
-                        paths = run_info.get_output_files()[key.replace(
+                        paths = run_info.get_output_files_abspath()[key.replace(
                             'out/', '')].keys()
                         result['counts']['total_files'] += len(paths)
                         if not run_id in result['runs']:
@@ -1759,7 +1772,7 @@ class AbstractStep(object):
         for dep in self.dependencies:
             run_info = dep.get_run_info()
             for run_id, run in run_info.items():
-                for annotation, in_paths in run.get_output_files().items():
+                for annotation, in_paths in run.get_output_files_abspath().items():
                     for in_path in in_paths:
                         if path == in_path:
                             return annotation
