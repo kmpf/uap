@@ -16,14 +16,96 @@ Extension of **uap**
 Implement new steps
 -------------------
 
-The provided pipeline can be easily extended by implementing new steps and
-sources. Therefore basic python programming skills are necessary.
-To add a new processing step, a single Python file must be placed in
-``include/step`` which defines a class with a constructor and a single
+**uap** can be easily extended by implementing new source or processing steps.
+Therefore basic python programming skills are necessary.
+New steps are added to **uap** by placing a single Python file in:
+
+:``include/sources``:
+   for source steps,
+:``include/steps``:
+   for processing steps.
+
+Let's get through that file step by step.
+
+Step 1: Import Statements and Logger
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Please organize your imports in a similar fashion as shown below.
+Essential imports are ``import logging`` and ``from abstract_step import *``.
+The former is necessary for getting access to the application wide logger and
+the latter to inherit from.
+
+.. code-block:: python
+
+   # First import standard libraries
+   import logging
+
+   # Secondly import third party libraries
+   import yaml
+
+   # Thirdly import local application files
+   from abstract_step import * 
+
+   # Get application wide logger
+   logger = logging.getLogger("uap_logger")
+
+   ..
+
+Step 2: Class Definition and Constructor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each python file has to define a class with a constructor and a single
 functions.
+The new class needs to be derived from either ``AbstractStep`` or
+``AbstractSourceStep``.
 The constructor (``__init__``) checks for the availability of required tools
 and tells the pipeline which connections this step expects (``in/``) and which
 it provides (``out/``).
+
+Connections:
+  They are defined by the method ``add_connection('in/something')``.
+  Information is transferred from one step to another via these.
+  In-connections (``in/something``) are automatically connected with
+  out-connections (``out/something``) of the same name.
+  Use names describing the data itself **NOT** the data type.
+  For instance, use ``in/genome`` over ``in/fasta``.
+
+Tools:
+  Normally, steps use tools to perform there task.
+  Each tool that is going to be used by a step needs to be requested via the
+  method ``require_tool('tool_name')``.
+  When the step is executed  **uap** searches for ``tool_name`` in the tools
+  section of the configuration and uses information given there to verify the
+  tools accessibility.
+
+Options:
+  Steps can have any number of options.
+  Options are defined by the method ``add_option()``.
+  There are a bunch of parameters which can be set to specify the option.
+
+
+.. code-block:: python
+
+   ..
+   # Either inherit from AbstractSourceStep or AbstractStep
+   # class NameOfNewSourceStep(AbstractSourceStep):
+   class NameOfNewProcessingStep(AbstractStep):
+       # Overwrite constructor
+       def __init__(self, pipeline):
+           # Call super classes constructor
+           super(NameOfNewProcessingStep, self).__init__(pipeline)
+
+           # Define connections
+           self.add_connection('in/some_incoming_data')
+           self.add_connection('out/some_outgoing_data')
+
+           # Request tools
+           self.require_tool('cat')
+
+           # Add options
+           self.add_option('some_option', str, optional=False, 
+                           description='Mandatory option')
+
 The single function  ``runs`` is used to plan all jobs based on a list of input
 files or runs and possibly additional information from previous steps.
 The basic scaffold is shown below.
@@ -164,10 +246,10 @@ Add the new step to your configuration
 To make a new step known to **uap**, it has to be copied into either of these
 folders:
 
-uap/include/sources/
+``include/sources/``
   for all source steps
 
-uap/include/steps/
+``include/steps/``
   for all processing steps
 
 If the Python step file exist at the correct location the step needs to be added

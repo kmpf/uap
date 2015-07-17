@@ -146,8 +146,6 @@ If a certain argument is required, specify it in ``get_version``.
 If a tool does not exit with exit code 0, find out which code it is by typing
 ``echo $?`` into Bash and specify the exit code in ``exit_code``.
 
-
-
 .. code-block:: yaml
 
     tools:
@@ -159,6 +157,50 @@ If a tool does not exit with exit code 0, find out which code it is by typing
         some-tool:
             path: /path/to/some-tool
             get_version: "--version"
+
+If you are working on a cluster running SGE or SLURM you can also use their
+module system.
+You need to know what actually happens when you load or unload a module::
+
+  $ module load <module-name>
+  $ module unload <module-name>
+
+As far as I know is ``module`` neither a command nor an alias.
+It is a BASH function. So use ``declare -f`` to find out what it is actually
+doing::
+
+  $ declare -f module
+
+The output should look like this:
+
+.. code-block:: bash
+
+    module ()
+        {
+            eval `/usr/local/modules/3.2.10-1/Modules/$MODULE_VERSION/bin/modulecmd bash $*`
+        }
+
+Now you can use this newly gathered information to load a module before use
+and unload it afterwards.
+You only need to replace ``$MODULE_VERSION`` with the version you are currently using and ``bash`` with ``python``.
+A potential ``bedtools`` entry in the ``tools`` section, might look like this.
+
+.. code-block:: yaml
+
+    tools:
+        ....
+        bedtools:
+            module_load: '/usr/local/modules/3.2.10-1/Modules/3.2.10/bin/modulecmd python load bedtools/2.24.0-1'
+            module_unload: '/usr/local/modules/3.2.10-1/Modules/3.2.10/bin/modulecmd python unload bedtools/2.24.0-1'
+            path: 'bedtools'
+            get_version: '--version'
+            exit_code: 0
+
+
+.. NOTE:: Use ``python`` instead of ``bash`` for loading modules via **uap**.
+          Because the module is loaded from within a python environment and
+          not within a BASH shell.
+
 
 
 Example Configurations
