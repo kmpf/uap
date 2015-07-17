@@ -1,0 +1,4 @@
+Summary: Replace declare_runs()+execute() by runs()
+Priority: 8
+
+The goal here is to replace the duality of declare_runs() and execute() by a single runs()
