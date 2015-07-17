@@ -44,7 +44,7 @@ class MergeFastqFiles(AbstractStep):
                     cat = ['cat']
                     cat.extend(input_paths)
                     
-                    cat_command = cat_exec_group.new_command(
+                    cat_command = cat_exec_group.add_command(
                         cat,
                         stdout_path = run.add_output_file(
                             "%s" % read, 

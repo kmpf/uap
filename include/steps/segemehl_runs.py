@@ -78,7 +78,7 @@ class Segemehl(AbstractStep):
                     'segemehl-unmapped-fifo', 'output')
                 cat = [self.get_tool('cat'), self.get_option('genome'),
                        '-o', fifo_path_genome]
-                cat_command = exec_group.new_command(cat)
+                cat_command = exec_group.add_command(cat)
                 
                 with segemehl_exec_group.new_pipeline() as pipeline:
                     segemehl = [
@@ -97,7 +97,7 @@ class Segemehl(AbstractStep):
                         '-s', '-S',
                         '-D', '0',
                     ])
-                    segemehl_command = pipeline.new_command(
+                    segemehl_command = pipeline.add_command(
                         segemehl,
                         stderr_path = run.add_output_file(
                             'log', '%s-segemehl-log.txt' % run_id, input_paths)
@@ -109,7 +109,7 @@ class Segemehl(AbstractStep):
                         '--processes', '2', '-c'
                     ]
 
-                    pigz_command = pipeline.new_command(
+                    pigz_command = pipeline.add_command(
                         pigz,
                         stdout_path = run.add_output_file(
                             'alignments', '%s-segemehl-results.sam.gz' 

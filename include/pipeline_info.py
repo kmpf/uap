@@ -14,7 +14,7 @@ class PipelineInfo(object):
     def __exit__(self, type, value, traceback):
         pass
 
-    def new_command(self):
+    def add_command(self):
         command = Command_info(self)
         self._commands.append(command)
         return command
