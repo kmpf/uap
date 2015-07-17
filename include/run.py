@@ -128,8 +128,8 @@ class Run(object):
         '''
         
         # make sure there's no slash in out_path unless it's a source step
-        if '/' in out_path and abstract_step.AbstractSourceStep \
-           not in self._step.__class__.__bases__:
+        if '/' in out_path and not \
+           isinstance(self._step, abstract_step.AbstractSourceStep):
             raise StandardError("There must be no slash (/) in any output "
                 "file declared by a step: %s." % out_path)
         # make sure tag was declared with an outgoing connection
@@ -161,8 +161,8 @@ class Run(object):
         self._output_files_list.append(out_path)
         self._input_files.append(in_paths)
         self._output_files[tag][out_path] = in_paths
-        return "%s/%s" % (self._step.get_output_directory_du_jour_placeholder(),
-                          out_path)
+        return os.path.join(
+            self._step.get_output_directory_du_jour_placeholder(), out_path)
 
     def add_empty_output_connection(self, tag):
         '''
@@ -185,10 +185,10 @@ class Run(object):
 
         self._output_files[tag][None] = None
 
-    def get_output_files_only(self):
+    def get_output_files(self):
         return self._output_files
 
-    def get_output_files(self):
+    def get_output_files_abspath(self):
         '''
         Return a dictionary of all defined output files, grouped by connection 
         annotation::
@@ -197,6 +197,9 @@ class Run(object):
                out_path_1: [in_path_1, in_path_2, ...]
                out_path_2: ...
            annotation_2: ...
+
+        The ``out_path`` consists of the output directory du jour and the output
+        file name.
         '''
         result = dict()
         for tag in self._output_files:
@@ -218,7 +221,7 @@ class Run(object):
         Retrieve exactly one output file of the given annotation, and crash
         if there isn't exactly one.
         '''
-        temp = self.get_output_files()
+        temp = self.get_output_files_abspath()
         if len(temp[annotation]) != 1:
             raise StandardError("More than one output file declared for "
                                 "out/%s." % annotation)
@@ -234,7 +237,7 @@ class Run(object):
         - *tags*: ['a', 'b']
         - result: {'a': 'out-a.txt', 'b': 'out-b.txt'}
         '''
-        temp = self.get_output_files()
+        temp = self.get_output_files_abspath()
         return misc.assign_strings(temp[annotation].keys(), tags)
 
     def get_input_files_for_output_file(self, out_path):

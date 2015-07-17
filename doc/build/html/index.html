@@ -1,0 +1,393 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>uap – Universal Analysis Pipeline &mdash; uap 0.1.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="uap 0.1.1 documentation" href="#"/>
+        <link rel="next" title="Installation of uap" href="installation.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="#" class="fa fa-home"> uap</a>
+        
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation of <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#downloading-the-software">Downloading the software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#making-uap-globally-available">Making <strong>uap</strong> Globally Available</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration of <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#sections-of-a-configuration-file">Sections of a Configuration File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#example-configurations">Example Configurations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interaction.html">Command-Line Usage of <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interaction.html#explanation-of-subcommands">Explanation of Subcommands</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="extension.html">Extension of <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="extension.html#implement-new-steps">Implement new steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extension.html#add-the-new-step-to-your-configuration">Add the new step to your configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="how-to.html">How-To Create Your First <strong>uap</strong> Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#example-configurations">Example configurations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="steps.html">Available steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="steps.html#source-steps">Source steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="steps.html#processing-steps">Processing steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#pipeline-specific-modules">Pipeline-specific modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#miscellaneous-modules">Miscellaneous modules</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="#">uap</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="#">Docs</a> &raquo;</li>
+      
+    <li>uap &#8211; Universal Analysis Pipeline</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/index.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>uap</strong> package is a framework to configure, run, and control
+large data multi-step analyses.
+Its main focus is on the analysis of high-throughput sequencing data.</p>
+<p>The aim of this data processing pipeline is to enable robust and straightforward
+bioinformatics data evaluation.
+It is implemented in Python, runs under GNU/Linux and can be controlled from the
+command-line interface.
+Although the primary focus is the evaluation of sequencing data, its design
+allows for a variety of other applications.</p>
+<p><strong>Table of contents</strong></p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation of <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#downloading-the-software">Downloading the software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#making-uap-globally-available">Making <strong>uap</strong> Globally Available</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration of <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#sections-of-a-configuration-file">Sections of a Configuration File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#example-configurations">Example Configurations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interaction.html">Command-Line Usage of <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interaction.html#explanation-of-subcommands">Explanation of Subcommands</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="extension.html">Extension of <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="extension.html#implement-new-steps">Implement new steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extension.html#add-the-new-step-to-your-configuration">Add the new step to your configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="how-to.html">How-To Create Your First <strong>uap</strong> Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#example-configurations">Example configurations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="steps.html">Available steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="steps.html#source-steps">Source steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="steps.html#processing-steps">Processing steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#pipeline-specific-modules">Pipeline-specific modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#miscellaneous-modules">Miscellaneous modules</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="general-information">
+<h2>General Information<a class="headerlink" href="#general-information" title="Permalink to this headline">¶</a></h2>
+<p>This package <em>does not</em> provide a number of tools which are downloaded and
+installed system-wide to provide certain functioniality.
+The intention of this system is to provide a robust and traceable framework
+for data evaluation in scientific experiments which uses other tools and
+manages individual data processing steps and their inter-dependencies.</p>
+<p>The recommended workflow for running a data evaluation for an experiment is
+as follows:</p>
+<ol class="arabic simple">
+<li>Check-out the <strong>uap</strong> repository from <a class="reference external" href="https://github.com/kmpf/uap">GitHub</a>.</li>
+</ol>
+<p>2. Make <strong>uap</strong> globally available (as described )
+2. Setup the analysis by writing a configuration file.
+3. Add steps or other functionality as needed (optional).
+4. Start the execution of the analysis.
+5. Monitor the execution with the command-line tools.
+5. Share your added functionalities (if there are any) with the scientific</p>
+<blockquote>
+<div>community by merging them back into the main repository.</div></blockquote>
+<p>This leaves you with:</p>
+<ul class="simple">
+<li>Your original input files, which are, of course, left untouched.</li>
+<li>The experiment-specific configuration file.
+You should keep this configuration file for later reference and you could even
+make it publicly available along with your input files for anybody to re-run
+the entire data analysis or parts thereof.</li>
+<li>An output directory containing all output files and comprehensive
+annotations.
+These annotations include detailed information for every output file,
+including which steps have been executed and the Git SHA1 hash of
+the pipeline repository at the time the data processing took place.
+In many cases, these annotations also include information about all
+inter-process streams and output files, including SHA1 checksums, file
+sizes, and line counts.</li>
+</ul>
+</div>
+<div class="section" id="core-aspects">
+<h2>Core aspects<a class="headerlink" href="#core-aspects" title="Permalink to this headline">¶</a></h2>
+<p><strong>Robustness:</strong></p>
+<ul class="simple">
+<li>All steps write their output files to a temporary location.
+Only if a step has completed successfully, the output files are copied to
+the correct output directory.</li>
+<li>The output directory names are suffixed with a four-character hashtag
+which mirrors the options specified for the step.</li>
+<li>Processing can be aborted and continued from the command line at any time.
+This way, cluster failures are less critical because output files do not
+get compromised.</li>
+<li>Errors are caught as early as possible. Tools are checked for availability,
+and the entire processing pipeline is calculated in advance before
+jobs are being started or submitted to a cluster.</li>
+</ul>
+<p><strong>Traceability:</strong></p>
+<ul class="simple">
+<li>Comprehensive annotations are written to the output directories, allowing
+for later investigation about what exactly happened.</li>
+</ul>
+<p><strong>Simplicity:</strong></p>
+<ul class="simple">
+<li>The entire processing pipeline is described via a configuration file.
+Steps are defined in a directed acyclic graph (DAG).</li>
+<li>Interaction with the pipeline happens through a single command-line tool which
+can be used to execute and monitor the analysis.</li>
+</ul>
+</div>
+<div class="section" id="design">
+<h2>Design<a class="headerlink" href="#design" title="Permalink to this headline">¶</a></h2>
+<p><strong>uap</strong> is designed as a plugin architecture, where <strong>uap</strong> itself controls
+the ordered execution of the plugged in so called steps.
+Steps are organized in a dependency graph (a directed acyclic graph) &#8211; every
+step may have one or more parent steps, which may in turn have other parent
+steps, and so on.
+Steps without parents are usually sources which provide source files, for
+example FASTQ files with the raw sequences obtained from the sequencer,
+genome sequence databases or annotation tracks.</p>
+<p>Each step defines a number of runs and each run represents a piece of the
+entire data analysis, typically at the level of a single sample.
+A certain <em>run</em> of a certain <em>step</em> is called a <em>task</em>.
+While the steps only describe what needs to be done on a very abstract level,
+it is through the individual runs of each step that a <strong>uap</strong> wide list of
+actual tasks becomes available.
+Each run may provide a number of output files which depend on output files
+of one or several runs from parent steps.</p>
+<p>Source steps define a run for every input sample, and a subsequent step
+may:</p>
+<ul class="simple">
+<li>define the same number of runs,</li>
+<li>define more runs (for example when R1 and R2 reads in a paired-end RNASeq
+experiment should be treated separately),</li>
+<li>define fewer runs (usually towards the end of a pipeline, where results are
+summarized).</li>
+</ul>
+<div class="section" id="remarks">
+<h3>Remarks<a class="headerlink" href="#remarks" title="Permalink to this headline">¶</a></h3>
+<p>This documentation has been created using <a class="reference external" href="http://sphinx-doc.org/">Sphinx</a>
+and <a class="reference external" href="http://docutils.sourceforge.net/rst.html">reStructuredText</a>.</p>
+</div>
+</div>
+</div>
+<div class="section" id="annotations">
+<h1>Annotations<a class="headerlink" href="#annotations" title="Permalink to this headline">¶</a></h1>
+<p>Upon successful completion of a task, an extensive YAML-formatted annotation
+is placed next to the output files in a file called
+<code class="docutils literal"><span class="pre">.[task_id]-annotation.yaml</span></code>.
+Also, for every output file, a symbolic link to this file is created:
+<code class="docutils literal"><span class="pre">.[output_filename].annotation.yaml</span></code>.</p>
+<p>Finally, the annotation is rendered via GraphViz, if available.
+Rendering can also be done at a later time using annotations as input.
+The annotation can be used to determine at a later time what exactly happened.
+Also, annotations may help to identify bottlenecks.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="45%" />
+<col width="55%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="first reference internal image-reference" href="_images/cutadapt.png"><img alt="_images/cutadapt.png" src="_images/cutadapt.png" style="height: 500px;" /></a>
+<p class="last">Annotation graph of a <code class="docutils literal"><span class="pre">cutadapt</span></code>
+run. CPU and RAM usage for individual
+processes are shown, file sizes
+and line counts are shown for
+output files and inter-process
+streams.</p>
+</td>
+<td><a class="first reference internal image-reference" href="_images/cpu-starving.png"><img alt="_images/cpu-starving.png" src="_images/cpu-starving.png" style="height: 500px;" /></a>
+<p class="last">In this graph, it becomes evident that
+the <code class="docutils literal"><span class="pre">fix_cutadapt.py</span></code> process in the middle
+gets throttled by the following two <code class="docutils literal"><span class="pre">pigz</span></code>
+processes, which only run with one core
+each and therefore cannot compress the
+results fast enough.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation of uap">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Christoph Kämpf, Michael Specht.
+    </p>
+  </div>
+
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

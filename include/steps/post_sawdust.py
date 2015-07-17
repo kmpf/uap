@@ -26,6 +26,7 @@ class Post_Sawdust(AbstractStep):
 
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
             with self.declare_run(run_id) as run:
+                run.new_exec_group()
                 is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
                 if len(input_paths) != 1:
                     raise StandardError("Expected exactly one alignments file., but got this %s" % input_paths)

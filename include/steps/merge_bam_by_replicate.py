@@ -66,7 +66,7 @@ class Merge_Bam_By_Replicate (AbstractStep):
         
         for replicate_group in replicate_groups.keys():
             with self.declare_run (replicate_group) as run:
-
+                run.new_exec_group()
                 input_run_ids_for_replicate_group = list()
                 input_file_paths_for_replicate_g = list()
                 ## Find run_ids that match the replicate group members and the corresponding input files

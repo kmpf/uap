@@ -35,6 +35,7 @@ class Combine_Assemblies(AbstractStep):
             run.add_output_file('features', '%s.gtf' % run_id, [features_segemehl_path, features_tophat_path])
             run.add_output_file('log_stderr', '%s-log_stderr.txt' % run_id, [features_segemehl_path, features_tophat_path])
             run.add_output_file('log_stdout', '%s-log_stdout.txt' % run_id, [features_segemehl_path, features_tophat_path])
+            run.new_exec_group()
             
     def execute(self, run_id, run):
         

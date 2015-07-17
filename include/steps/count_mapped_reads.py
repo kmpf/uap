@@ -54,6 +54,7 @@ class CountMappedReads(AbstractStep):
             run.add_output_file('alignment-counts', 
                                 '%s_alignment_counts.txt' % run_id,
                                 alignment_files)
+            run.new_exec_group()
 
     def execute(self, run_id, run):
         # Get the names of the announced output files

@@ -60,6 +60,7 @@ class BamToBed(AbstractStep):
                 run.add_private_info('out-bed', bed_file)
 #                print('out-bed: %s' % bed_file)
                 run.add_private_info('in-bam', input_paths[0])
+                run.new_exec_group()
 #                print('in-bam: %s' % input_paths[0])
 #                exit(1)
                 

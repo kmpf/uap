@@ -42,7 +42,7 @@ class Macs14(AbstractStep):
 
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
             with self.declare_run(run_id) as run:
-
+                run.new_exec_group()
                 run.add_output_file('log', '%s-macs14-log.txt' % run_id, input_paths)
                 run.add_output_file('peaks', '%s-macs14-peaks.bed' % run_id, input_paths)
                 run.add_output_file('peaks', '%s-macs14-peaks.xls' % run_id, input_paths)

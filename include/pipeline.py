@@ -168,6 +168,11 @@ class Pipeline(object):
         This dict stores a set of output files for every task id in the pipeline.
         '''
 
+        self.config_file_name = args.config.name
+        '''
+        This stores the name of the configuration file of the current analysis
+        '''
+
         self.read_config(args.config)
 
         # collect all tasks
@@ -177,9 +182,17 @@ class Pipeline(object):
             step = self.steps[step_name]
             for run_index, run_id in enumerate(misc.natsorted(step.get_run_ids())):
                 task = task_module.Task(self, step, run_id, run_index)
-                if not abstract_step.AbstractSourceStep in step.__class__.__bases__:
-                    # this is a source step, so don't add it to the list of to-do tasks
+                # if any run of a step contains an exec_groups,
+                # the task (step/run) is added to the task list
+                run = step.get_run(run_id)
+                logger.debug("Run: %s" % run_id)
+                run_has_exec_groups = False
+                if len(run.get_exec_groups()) > 0:
+                    run_has_exec_groups = True
+                if run_has_exec_groups:
+                    logger.debug("Task: %s" % task)
                     self.all_tasks_topologically_sorted.append(task)
+                # Fail if multiple tasks with the same name exist
                 if str(task) in self.task_for_task_id:
                     raise ConfigurationException("Duplicate task ID %s." % str(task))
                 self.task_for_task_id[str(task)] = task
@@ -291,7 +304,8 @@ class Pipeline(object):
                 if is_ready:
                     next_steps.append(step_name)
             if len(next_steps) == 0:
-                raise ConfigurationException("There is a cycle in the step dependencies.")
+                raise ConfigurationException(
+                    "There is a cycle in the step dependencies.")
             for step_name in misc.natsorted(next_steps):
                 self.topological_step_order.append(step_name)
                 assigned_steps.add(step_name)
@@ -304,7 +318,7 @@ class Pipeline(object):
     def print_source_runs(self):
         for step_name in self.topological_step_order:
             step = self.steps[step_name]
-            if abstract_step.AbstractSourceStep in step.__class__.__bases__:
+            if isinstance(step, abstract_step.AbstractSourceStep):
                 for run_id in misc.natsorted(step.get_run_ids()):
                     print("%s/%s" % (step, run_id))
 
@@ -352,12 +366,10 @@ class Pipeline(object):
                             tool_check_info):
         if info_command.__class__ == str:
             info_command = [info_command]
-            
         for command in info_command:
             if type(command) is str:
                 command = command.split()
             self.check_command(command)
-            
             try:
                 proc = subprocess.Popen(
                     command,
@@ -390,7 +402,8 @@ class Pipeline(object):
                     command_exit_code : proc.returncode,
                     command_response : (output + error)
                 })
-            return tool_check_info
+
+        return tool_check_info
 
     def check_tools(self):
         '''
@@ -577,12 +590,12 @@ class Pipeline(object):
                 
         if show_hint:
             if print_more_warnings and not print_details:
-                print("Hint: Run 'uap <project-config>.yaml "
-                      "fix-problems --details' to see the details.")
+                print("Hint: Run 'uap %s fix-problems --details' to see the "
+                      "details."  % self.config_file_name)
             if not fix_problems:
-                print("Hint: Run 'uap <project-config>.yaml "
-                      "fix-problems --srsly' to fix these problems (that is, "
-                      "delete all problematic ping files).")
+                print("Hint: Run 'uap %s fix-problems --srsly' to fix these "
+                      "problems (that is, delete all problematic ping files)."
+                      % self.config_file_name)
 
     def check_volatile_files(self, details = False, srsly = False):
         collected_files = set()

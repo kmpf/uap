@@ -35,9 +35,10 @@ class BedgraphToBigwig(AbstractStep):
                     else:
                         raise StandardError("%s file suffix is not '%s'. Please provide a BEDGRAPH file" % (input_file, suffix))
                 run.add_private_info('output_files', bigwig_files)
+                run.new_exec_group()
                     
     def execute(self, run_id, run):
-        output_files = run.get_output_files()
+        output_files = run.get_output_files_abspath()
         for bigwig_file, input_files in output_files['tracks'].items():
             with process_pool.ProcessPool(self) as pool:
                 with pool.Pipeline(pool) as pipeline:

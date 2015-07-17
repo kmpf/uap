@@ -38,6 +38,7 @@ class BamToBed(AbstractStep):
                 run.add_output_file('alignments', bed_file, input_paths)
                 run.add_private_info('out-bed', bed_file)
                 run.add_private_info('in-bam', input_paths[0])
+                run.new_exec_group()
                 
     def execute(self, run_id, run):
         is_paired_end = run.get_private_info('paired_end')

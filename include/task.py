@@ -47,7 +47,7 @@ class Task(object):
         '''
         result = set()
         run_info = self.step.get_run_info()[self.run_id]
-        for annotation, outfiles in run_info.get_output_files().items():
+        for annotation, outfiles in run_info.get_output_files_abspath().items():
             for outpath, infiles in outfiles.items():
                 if infiles != None:
                     for path in infiles:
@@ -60,7 +60,7 @@ class Task(object):
         '''
         result = []
         run_info = self.step.get_run_info()[self.run_id]
-        for annotation, outfiles in run_info.get_output_files().items():
+        for annotation, outfiles in run_info.get_output_files_abspath().items():
             for path in outfiles.keys():
                 result.append(path)
         return result

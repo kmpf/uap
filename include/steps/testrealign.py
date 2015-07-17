@@ -59,7 +59,7 @@ class TestRealign(AbstractStep):
                 run.add_output_file('splicesites', '%s-segemehl-splicesites.bed' % run_id,input_paths)
                 run.add_output_file('transrealigned', '%s-segemehl-transrealigned.bed' % run_id,input_paths)
                 run.add_output_file("log_stderr", "%s-segemehl-log_stderr.txt" % run_id, input_paths)
-                
+                run.new_exec_group()
 
 
 

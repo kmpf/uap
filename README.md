@@ -1,2 +1,0 @@
-rnaseq-pipeline
-===============

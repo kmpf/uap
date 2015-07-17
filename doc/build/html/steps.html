@@ -1,0 +1,888 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Available steps &mdash; uap 0.1.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="uap 0.1.1 documentation" href="index.html"/>
+        <link rel="next" title="API documentation" href="api.html"/>
+        <link rel="prev" title="How-To Create Your First uap Analysis" href="how-to.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="index.html" class="fa fa-home"> uap</a>
+        
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation of <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#downloading-the-software">Downloading the software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#making-uap-globally-available">Making <strong>uap</strong> Globally Available</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration of <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#sections-of-a-configuration-file">Sections of a Configuration File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#example-configurations">Example Configurations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interaction.html">Command-Line Usage of <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interaction.html#explanation-of-subcommands">Explanation of Subcommands</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="extension.html">Extension of <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="extension.html#implement-new-steps">Implement new steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extension.html#add-the-new-step-to-your-configuration">Add the new step to your configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="how-to.html">How-To Create Your First <strong>uap</strong> Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#example-configurations">Example configurations</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Available steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#source-steps">Source steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#processing-steps">Processing steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#pipeline-specific-modules">Pipeline-specific modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#miscellaneous-modules">Miscellaneous modules</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">uap</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Available steps</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/steps.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="available-steps">
+<h1>Available steps<a class="headerlink" href="#available-steps" title="Permalink to this headline">¶</a></h1>
+<p>A detailed description of all availble steps follows.</p>
+<div class="section" id="source-steps">
+<h2>Source steps<a class="headerlink" href="#source-steps" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="fastq-source">
+<span id="index-0"></span><h3>FASTQ_source<a class="headerlink" href="#fastq-source" title="Permalink to this headline">¶</a></h3>
+<p>The FastqSource class acts as a source for FASTQ files. This source creates a
+run for every sample.</p>
+<p>Specify a file name pattern in <em>pattern</em> and define how sample names should
+be determined from file names by specifyign a regular expression in <em>group</em>.</p>
+<p>Sample index barcodes may specified by providing a filename to a CSV file
+containing the columns <em>Sample_ID</em> and <em>Index</em> or directly by defining a
+dictionary which maps indices to sample names.</p>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>first_read</strong> (str, required) &#8211; Part of the file name that marks all files containing sequencing data of the first read. Example: &#8216;R1.fastq&#8217; or &#8216;_1.fastq&#8217;</li>
+<li><strong>group</strong> (str, optional) &#8211; A regular expression which is applied to found files, and which is used to determine the sample name from the file name. For example, <code class="docutils literal"><span class="pre">(Sample_\d+)_R[12].fastq.gz</span></code>, when applied to a file called <code class="docutils literal"><span class="pre">Sample_1_R1.fastq.gz</span></code>, would result in a sample name of <code class="docutils literal"><span class="pre">Sample_1</span></code>. You can specify multiple capture groups in the regular expression.</li>
+<li><strong>indices</strong> (str/dict, optional) &#8211; path to a CSV file or a dictionary of sample_id: barcode entries.</li>
+<li><strong>paired_end</strong> (bool, required) &#8211; Specify whether the samples are paired end or not.</li>
+<li><strong>pattern</strong> (str, optional) &#8211; A file name pattern, for example <code class="docutils literal"><span class="pre">/home/test/fastq/Sample_*.fastq.gz</span></code>.</li>
+<li><strong>sample_id_prefix</strong> (str, optional) &#8211; This optional prefix is prepended to every sample name.</li>
+<li><strong>sample_to_files_map</strong> (dict/str, optional) &#8211; A listing of sample names and their associated files. This must be provided as a YAML dictionary.</li>
+<li><strong>second_read</strong> (str, required) &#8211; Part of the file name that marks all files containing sequencing data of the second read. Example: &#8216;R2.fastq&#8217; or &#8216;_2.fastq&#8217;</li>
+</ul>
+</dd>
+</dl>
+<p>This step provides input files which already exists and therefore creates no tasks in the pipeline.</p>
+</div>
+<div class="section" id="raw-file-source">
+<span id="index-1"></span><h3>raw_file_source<a class="headerlink" href="#raw-file-source" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>group</strong> (str, optional) &#8211; A regular expression which is applied to found files, and which is used to determine the sample name from the file name. For example, <cite>(Sample_d+)_R[12].fastq.gz`</cite>, when applied to a file called <code class="docutils literal"><span class="pre">Sample_1_R1.fastq.gz</span></code>, would result in a sample name of <code class="docutils literal"><span class="pre">Sample_1</span></code>. You can specify multiple capture groups in the regular expression.</li>
+<li><strong>pattern</strong> (str, optional) &#8211; A file name pattern, for example <code class="docutils literal"><span class="pre">/home/test/fastq/Sample_*.fastq.gz</span></code>.</li>
+<li><strong>sample_id_prefix</strong> (str, optional)</li>
+<li><strong>sample_to_files_map</strong> (dict/str, optional) &#8211; A listing of sample names and their associated files. This must be provided as a YAML dictionary.</li>
+</ul>
+</dd>
+</dl>
+<p>This step provides input files which already exists and therefore creates no tasks in the pipeline.</p>
+</div>
+<div class="section" id="raw-file-sources">
+<span id="index-2"></span><h3>raw_file_sources<a class="headerlink" href="#raw-file-sources" title="Permalink to this headline">¶</a></h3>
+<p>The RawFileSources class acts as a tyemporary fix to get files into the pipeline.
+This source creates a    run for every sample.</p>
+<p>Specify a file name pattern in <em>pattern</em> and define how sample names should be
+determined from file names by specifyign a regular expression in <em>group</em>.</p>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>group</strong> (str, required) &#8211; A regular expression which is applied to found files, and which is used to determine the sample name from the file name. For example, <code class="docutils literal"><span class="pre">(Sample_\d+)_R[12].fastq.gz</span></code>, when applied to a file called <code class="docutils literal"><span class="pre">Sample_1_R1.fastq.gz</span></code>, would result in a sample name of <code class="docutils literal"><span class="pre">Sample_1</span></code>. You can specify multiple capture groups in the regular expression.</li>
+<li><strong>paired_end</strong> (bool, required) &#8211; Specify whether the samples are paired end or not.</li>
+<li><strong>pattern</strong> (str, required) &#8211; A file name pattern, for example <code class="docutils literal"><span class="pre">/home/test/fastq/Sample_*.fastq.gz</span></code>.</li>
+<li><strong>sample_id_prefix</strong> (str, optional) &#8211; This optional prefix is prepended to every sample name.</li>
+</ul>
+</dd>
+</dl>
+<p>This step provides input files which already exists and therefore creates no tasks in the pipeline.</p>
+</div>
+<div class="section" id="raw-url-source">
+<span id="index-3"></span><h3>raw_url_source<a class="headerlink" href="#raw-url-source" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>sha1</strong> (str, optional) &#8211; expected SHA1 checksum of downloaded file</li>
+<li><strong>url</strong> (str, required) &#8211; file URL</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> curl, sha1sum</p>
+<p><strong>CPU Cores:</strong> 1</p>
+</div>
+<div class="section" id="run-folder-source">
+<span id="index-4"></span><h3>run_folder_source<a class="headerlink" href="#run-folder-source" title="Permalink to this headline">¶</a></h3>
+<p>This source looks for fastq.gz files in
+<code class="docutils literal"><span class="pre">[path]/Unaligned/Project_*/Sample_*</span></code> and pulls additional information
+from CSV sample sheets it finds. It also makes sure that index information
+for all samples is coherent and unambiguous.</p>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>first_read</strong> (str, required) &#8211; Part of the file name that marks all files containing sequencing data of the first read. Example: &#8216;_R1.fastq&#8217; or &#8216;_1.fastq&#8217;</li>
+<li><strong>paired_end</strong> (bool, required)</li>
+<li><strong>path</strong> (str, required)</li>
+<li><strong>second_read</strong> (str, required) &#8211; Part of the file name that marks all files containing sequencing data of the second read. Example: &#8216;R2.fastq&#8217; or &#8216;_2.fastq&#8217;</li>
+</ul>
+</dd>
+</dl>
+<p>This step provides input files which already exists and therefore creates no tasks in the pipeline.</p>
+</div>
+</div>
+<div class="section" id="processing-steps">
+<h2>Processing steps<a class="headerlink" href="#processing-steps" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="bam-to-bed">
+<span id="index-5"></span><h3>bam_to_bed<a class="headerlink" href="#bam-to-bed" title="Permalink to this headline">¶</a></h3>
+<p>This step converts BAM files into BED files. It executes different command line
+pipelines for single-end and paired-end data.</p>
+<p>Single-end read data is converted via:</p>
+<p>cat4m &lt;bam-file&gt; | bedtools bamtobed -i stdin | sort -k1,1 -k2,2n &gt; &lt;bed-file&gt;</p>
+<p>Paired-end read data is converted via:</p>
+<p>cat4m &lt;bam-file&gt; | samtools view -bf 0x2 - | bedtools bamtobed -i stdin |
+mate_pair_strand_switch | sort -k1,1 -k2,2n &gt; &lt;bed-file&gt;</p>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>tmp_dir</strong> (str, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> bedtools, cat4m, mate_pair_strand_switch, samtools, sort</p>
+<p><strong>CPU Cores:</strong> 4</p>
+</div>
+<div class="section" id="bam-to-bed12">
+<span id="index-6"></span><h3>bam_to_bed12<a class="headerlink" href="#bam-to-bed12" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<p><strong>Options:</strong></p>
+<p><strong>Required tools:</strong> bedtools, cat4m, mate_pair_strand_switch, samtools, sort</p>
+<p><strong>CPU Cores:</strong> 4</p>
+</div>
+<div class="section" id="bam-to-sam">
+<span id="index-7"></span><h3>bam_to_sam<a class="headerlink" href="#bam-to-sam" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>genome</strong> (str, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, pigz, samtools</p>
+<p><strong>CPU Cores:</strong> 4</p>
+</div>
+<div class="section" id="bed-to-bedgraph">
+<span id="index-8"></span><h3>bed_to_bedgraph<a class="headerlink" href="#bed-to-bedgraph" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>genome</strong> (str, required)</li>
+<li><strong>strand-specific</strong> (bool, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> bedtools, cat4m</p>
+<p><strong>CPU Cores:</strong> 4</p>
+</div>
+<div class="section" id="bedgraph-to-bigwig">
+<span id="index-9"></span><h3>bedgraph_to_bigwig<a class="headerlink" href="#bedgraph-to-bigwig" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>genome</strong> (str, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> bedGraphToBigWig</p>
+<p><strong>CPU Cores:</strong> 4</p>
+</div>
+<div class="section" id="combine-assemblies">
+<span id="index-10"></span><h3>combine_assemblies<a class="headerlink" href="#combine-assemblies" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>mode</strong> (str, required)<ul>
+<li>possible values:<ul>
+<li>no_transcript_overlap</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>path_rscript</strong> (str, required)</li>
+<li><strong>run_id</strong> (str, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> Rscript</p>
+<p><strong>CPU Cores:</strong> 1</p>
+</div>
+<div class="section" id="count-mapped-reads">
+<span id="index-11"></span><h3>count_mapped_reads<a class="headerlink" href="#count-mapped-reads" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>exclude_MAPQ_smaller_than</strong> (int, required)</li>
+<li><strong>set_FLAG_bits</strong> (list, required)</li>
+<li><strong>unset_FLAG_bits</strong> (list, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, pigz, samtools</p>
+<p><strong>CPU Cores:</strong> 4</p>
+</div>
+<div class="section" id="count-raw-reads">
+<span id="index-12"></span><h3>count_raw_reads<a class="headerlink" href="#count-raw-reads" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<p><strong>Options:</strong></p>
+<p><strong>Required tools:</strong> cat, pigz, wc</p>
+<p><strong>CPU Cores:</strong> 4</p>
+</div>
+<div class="section" id="count-raw-reads-crashing">
+<span id="index-13"></span><h3>count_raw_reads_crashing<a class="headerlink" href="#count-raw-reads-crashing" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<p><strong>Options:</strong></p>
+<p><strong>Required tools:</strong> echo, pigz, wc</p>
+<p><strong>CPU Cores:</strong> 4</p>
+</div>
+<div class="section" id="cufflinks">
+<span id="index-14"></span><h3>cufflinks<a class="headerlink" href="#cufflinks" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>library_type</strong> (str, required)</li>
+<li><strong>use_mask</strong> (str, optional)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, cufflinks, pigz</p>
+<p><strong>CPU Cores:</strong> 6</p>
+</div>
+<div class="section" id="cuffmerge">
+<span id="index-15"></span><h3>cuffmerge<a class="headerlink" href="#cuffmerge" title="Permalink to this headline">¶</a></h3>
+<p>Cuffmerge is included in the cufflinks package.
+<a class="reference external" href="http://cufflinks.cbcb.umd.edu/manual.html">http://cufflinks.cbcb.umd.edu/manual.html</a></p>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>genome</strong> (str, required)</li>
+<li><strong>reference</strong> (str, required)</li>
+<li><strong>run_id</strong> (str, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, cuffmerge, pigz</p>
+<p><strong>CPU Cores:</strong> 6</p>
+</div>
+<div class="section" id="cutadapt">
+<span id="index-16"></span><h3>cutadapt<a class="headerlink" href="#cutadapt" title="Permalink to this headline">¶</a></h3>
+<p>The cutadapt step can be used to clip adapter sequences from RNASeq reads.</p>
+<p>Any adapter may contain <code class="docutils literal"><span class="pre">((INDEX))</span></code> which will be replaced with every
+sample&#8217;s index. The resulting adapter is checked for sanity and an
+exception is thrown if the adapter looks non-legit.</p>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>adapter-R1</strong> (str, optional)</li>
+<li><strong>adapter-R2</strong> (str, optional)</li>
+<li><strong>adapter-file</strong> (str, optional)</li>
+<li><strong>adapter-type</strong> (str, optional)</li>
+<li><strong>fix_qnames</strong> (bool, required)</li>
+<li><strong>minimal-length</strong> (int, optional)</li>
+<li><strong>use_reverse_complement</strong> (bool, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, cutadapt, fix_qnames, pigz</p>
+<p><strong>CPU Cores:</strong> 3</p>
+</div>
+<div class="section" id="fastqc">
+<span id="index-17"></span><h3>fastqc<a class="headerlink" href="#fastqc" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line">The fastqc step  is a wrapper for the fastqc tool.</div>
+<div class="line">It generates some quality metrics for fastq files.</div>
+<div class="line"><a class="reference external" href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/">http://www.bioinformatics.babraham.ac.uk/projects/fastqc/</a></div>
+<div class="line">For this specific instance only the zip archive is preserved</div>
+</div>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>contaminent-file</strong> (str, optional)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> fastqc</p>
+<p><strong>CPU Cores:</strong> 1</p>
+</div>
+<div class="section" id="fastqc-decorator-test">
+<span id="index-18"></span><h3>fastqc_decorator_test<a class="headerlink" href="#fastqc-decorator-test" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line">The fastqc step  is a wrapper for the fastqc tool.</div>
+<div class="line">It generates some quality metrics for fastq files.</div>
+<div class="line"><a class="reference external" href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/">http://www.bioinformatics.babraham.ac.uk/projects/fastqc/</a></div>
+<div class="line">For this specific instance only the zip archive is preserved</div>
+</div>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>contaminent-file</strong> (str, optional)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> fastqc</p>
+<p><strong>CPU Cores:</strong> 1</p>
+</div>
+<div class="section" id="fix-cutadapt">
+<span id="index-19"></span><h3>fix_cutadapt<a class="headerlink" href="#fix-cutadapt" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<p><strong>Options:</strong></p>
+<p><strong>Required tools:</strong> cat4m, fix_cutadapt, pigz</p>
+<p><strong>CPU Cores:</strong> 6</p>
+</div>
+<div class="section" id="fix-s2c">
+<span id="index-20"></span><h3>fix_s2c<a class="headerlink" href="#fix-s2c" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<p><strong>Options:</strong></p>
+<p><strong>Required tools:</strong> cat4m, fix_s2c, pigz, samtools</p>
+<p><strong>CPU Cores:</strong> 6</p>
+</div>
+<div class="section" id="grep">
+<span id="index-21"></span><h3>grep<a class="headerlink" href="#grep" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>pattern</strong> (str, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, grep, pigz</p>
+<p><strong>CPU Cores:</strong> 4</p>
+</div>
+<div class="section" id="head">
+<span id="index-22"></span><h3>head<a class="headerlink" href="#head" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>lines</strong> (int, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, head, pigz</p>
+<p><strong>CPU Cores:</strong> 4</p>
+</div>
+<div class="section" id="htseq-count">
+<span id="index-23"></span><h3>htseq_count<a class="headerlink" href="#htseq-count" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>idattr</strong> (str, required)</li>
+<li><strong>mode</strong> (str, required)</li>
+<li><strong>stranded</strong> (str, required)</li>
+<li><strong>type</strong> (str, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, grep, htseq-count, pigz, samtools</p>
+<p><strong>CPU Cores:</strong> 2</p>
+</div>
+<div class="section" id="macs14">
+<span id="index-24"></span><h3>macs14<a class="headerlink" href="#macs14" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>control</strong> (list, required)</li>
+<li><strong>format</strong> (str, required)<ul>
+<li>possible values:<ul>
+<li>BAM</li>
+<li>BOWTIE</li>
+<li>ELAND</li>
+<li>ELANDEXPORT</li>
+<li>ELANDMULTI</li>
+<li>ELANDMULTIPET</li>
+<li>SAM</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>genome_size</strong> (str, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, macs14, pigz</p>
+<p><strong>CPU Cores:</strong> 4</p>
+</div>
+<div class="section" id="macs2">
+<span id="index-25"></span><h3>macs2<a class="headerlink" href="#macs2" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>broad</strong> (bool, optional)</li>
+<li><strong>broad-cutoff</strong> (float, optional)</li>
+<li><strong>call-summits</strong> (bool, optional)</li>
+<li><strong>control</strong> (dict, required)</li>
+<li><strong>down-sample</strong> (bool, optional)</li>
+<li><strong>format</strong> (str, required)<ul>
+<li>possible values:<ul>
+<li>BAM</li>
+<li>BAMPE</li>
+<li>BED</li>
+<li>BOWTIE</li>
+<li>ELAND</li>
+<li>ELANDEXPORT</li>
+<li>ELANDMULTI</li>
+<li>ELANDMULTIPET</li>
+<li>SAM</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>genome_size</strong> (str, required)</li>
+<li><strong>keep-duplicates</strong> (bool, optional)</li>
+<li><strong>large-local</strong> (str, optional)</li>
+<li><strong>pvalue-cutoff</strong> (float, optional)</li>
+<li><strong>qvalue-cutoff</strong> (float, optional)</li>
+<li><strong>read-length</strong> (int, optional)</li>
+<li><strong>shift</strong> (int, optional)</li>
+<li><strong>small-local</strong> (str, optional)</li>
+<li><strong>store-bedgraph</strong> (bool, optional)</li>
+<li><strong>to-large</strong> (bool, optional)</li>
+<li><strong>verbose</strong> (int, optional)<ul>
+<li>possible values:<ul>
+<li>0</li>
+<li>1</li>
+<li>2</li>
+<li>3</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, macs2, pigz</p>
+<p><strong>CPU Cores:</strong> 4</p>
+</div>
+<div class="section" id="merge-bam-by-replicate">
+<span id="index-26"></span><h3>merge_bam_by_replicate<a class="headerlink" href="#merge-bam-by-replicate" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>replicate_groups</strong> (dict, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> bamtools, cat4m, samtools</p>
+<p><strong>CPU Cores:</strong> 1</p>
+</div>
+<div class="section" id="merge-gencode-novel-workaround">
+<span id="index-27"></span><h3>merge_gencode_novel_workaround<a class="headerlink" href="#merge-gencode-novel-workaround" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>reference</strong> (str, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, sort</p>
+<p><strong>CPU Cores:</strong> 1</p>
+</div>
+<div class="section" id="normalize-bigwig">
+<span id="index-28"></span><h3>normalize_bigwig<a class="headerlink" href="#normalize-bigwig" title="Permalink to this headline">¶</a></h3>
+<p>Normalize_wig from the RSeQC package normalizes wig files based on wigsum.</p>
+<p>From the RSeqQC package documentation (ver 3.2.9):
+Therefore, only normalized to &#8220;total read count&#8221; is problematic if read length is different between samples.
+Here we normalize every bigwig file into the same wigsum. wigsum is the summary of signal value across the genome. for example, wigsum = 100,000,000 equals to
+the coverage achieved by 1 million 100nt long reads or 2 million 50nt long reads.</p>
+<p>Options:
+&#8211;version       show program version number and exit
+-h, &#8211;help      show this help message and exit
+-i BIGWIG_FILE, &#8211;bwfile=BIGWIG_FILE
+Input BigWig file. [required]
+-o OUTPUT_WIG, &#8211;output=OUTPUT_WIG
+Output wig file. [required]
+-s CHROMSIZE, &#8211;chromSize=CHROMSIZE
+Chromosome size file. Tab or space separated text file with 2 columns: first column is chromosome name, second column is size of the chromosome. [required]
+-t TOTAL_WIGSUM, &#8211;wigsum=TOTAL_WIGSUM
+Specified wigsum. 100000000 equals to coverage of 1 million 100nt reads. default=100000000 [optional]
+-r REFGENE_BED, &#8211;refgene=REFGENE_BED
+Reference gene model in bed format. [optional]
+-c CHUNK_SIZE, &#8211;chunk=CHUNK_SIZE
+Chromosome chunk size. Each chomosome will be cut into samll chunks of this size. Decrease chunk size will save more RAM. default=100000 (bp) [optional]</p>
+<p>All options are available through this interface.
+The chromsizes file can be obtain using UCSC tool fetchChromSizes.
+-i and -o do not apply as they are set by the pipeline automatically</p>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>c</strong> (int, optional)</li>
+<li><strong>r</strong> (str, optional)</li>
+<li><strong>s</strong> (str, required)</li>
+<li><strong>t</strong> (int, optional)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> normalize_bigwig, wigToBigWig</p>
+<p><strong>CPU Cores:</strong> 1</p>
+</div>
+<div class="section" id="post-cufflinks-merge">
+<span id="index-29"></span><h3>post_cufflinks_merge<a class="headerlink" href="#post-cufflinks-merge" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>class_list</strong> (str, optional)</li>
+<li><strong>filter_by_class</strong> (bool, required)</li>
+<li><strong>filter_by_class_and_gene_name</strong> (bool, required)</li>
+<li><strong>remove_by_gene_name</strong> (bool, required)</li>
+<li><strong>remove_gencode</strong> (bool, required)</li>
+<li><strong>remove_unstranded</strong> (bool, required)</li>
+<li><strong>string</strong> (str, optional)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, post_cufflinks_merge</p>
+<p><strong>CPU Cores:</strong> 2</p>
+</div>
+<div class="section" id="post-sawdust">
+<span id="index-30"></span><h3>post_sawdust<a class="headerlink" href="#post-sawdust" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>library_type</strong> (str, required)<ul>
+<li>possible values:<ul>
+<li>fr-firststrand</li>
+<li>fr-secondstrand</li>
+<li>fr-unstranded</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>seq_type</strong> (str, required)<ul>
+<li>possible values:<ul>
+<li>DNA</li>
+<li>RNA</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, post_sawdust, samtools</p>
+<p><strong>CPU Cores:</strong> 6</p>
+</div>
+<div class="section" id="random-sample-fastq">
+<span id="index-31"></span><h3>random_sample_fastq<a class="headerlink" href="#random-sample-fastq" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>sample_size</strong> (int, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> pigz, random_sample_fastq</p>
+<p><strong>CPU Cores:</strong> 3</p>
+</div>
+<div class="section" id="remove-duplicate-reads">
+<span id="index-32"></span><h3>remove_duplicate_reads<a class="headerlink" href="#remove-duplicate-reads" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<p><strong>Options:</strong></p>
+<p><strong>Required tools:</strong> MarkDuplicates, cat4m</p>
+<p><strong>CPU Cores:</strong> 12</p>
+</div>
+<div class="section" id="rename-gtf-segemehl">
+<span id="index-33"></span><h3>rename_gtf_segemehl<a class="headerlink" href="#rename-gtf-segemehl" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<p><strong>Options:</strong></p>
+<p><strong>Required tools:</strong> cat4m</p>
+<p><strong>CPU Cores:</strong> 1</p>
+</div>
+<div class="section" id="rename-gtf-tophat">
+<span id="index-34"></span><h3>rename_gtf_tophat<a class="headerlink" href="#rename-gtf-tophat" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<p><strong>Options:</strong></p>
+<p><strong>Required tools:</strong> cat4m</p>
+<p><strong>CPU Cores:</strong> 1</p>
+</div>
+<div class="section" id="s2c">
+<span id="index-35"></span><h3>s2c<a class="headerlink" href="#s2c" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<p><strong>Options:</strong></p>
+<p><strong>Required tools:</strong> cat4m, pigz, s2c, samtools</p>
+<p><strong>CPU Cores:</strong> 6</p>
+</div>
+<div class="section" id="sam-to-bam">
+<span id="index-36"></span><h3>sam_to_bam<a class="headerlink" href="#sam-to-bam" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>genome</strong> (str, required)</li>
+<li><strong>sort_by_name</strong> (bool, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, pigz, samtools</p>
+<p><strong>CPU Cores:</strong> 4</p>
+</div>
+<div class="section" id="segemehl">
+<span id="index-37"></span><h3>segemehl<a class="headerlink" href="#segemehl" title="Permalink to this headline">¶</a></h3>
+<p>segemehl is a software to map short sequencer reads to reference genomes.
+Unlike other methods, segemehl is able to detect not only mismatches but
+also insertions and deletions. Furthermore, segemehl is not limited to a
+specific read length and is able to mapprimer- or polyadenylation
+contaminated reads correctly.</p>
+<p>This step creates at first two FIFOs. The first through which segemehl gets
+its genome data and the second to which it writes unmapped reads:</p>
+<p>mkfifo genome_fifo unmapped_fifo
+cat4m &lt;genome-fasta&gt; -o genome_fifo</p>
+<p>The executed segemehl command is this:</p>
+<p>segemehl -d genome_fifo -i &lt;genome-index-file&gt; -q &lt;read1-fastq&gt; [-p &lt;read2-fastq&gt;] -u unmapped_fifo -H 1 -t 11 -s -S -D 0 -o /dev/stdout |  pigz &#8211;blocksize 4096 &#8211;processes 2 -c</p>
+<p>The unmapped reads are saved via these commands:</p>
+<p>cat4m unmapped_fifo | pigz &#8211;blocksize 4096 &#8211;processes 2 -c &gt; &lt;unmapped-fastq&gt;</p>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>genome</strong> (str, required)</li>
+<li><strong>index</strong> (str, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, pigz, segemehl</p>
+<p><strong>CPU Cores:</strong> 12</p>
+</div>
+<div class="section" id="testrealign">
+<span id="index-38"></span><h3>testrealign<a class="headerlink" href="#testrealign" title="Permalink to this headline">¶</a></h3>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>genome</strong> (str, required)</li>
+<li><strong>maxdist</strong> (int, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> cat4m, pigz, samtools, testrealign</p>
+<p><strong>CPU Cores:</strong> 12</p>
+</div>
+<div class="section" id="tophat2">
+<span id="index-39"></span><h3>tophat2<a class="headerlink" href="#tophat2" title="Permalink to this headline">¶</a></h3>
+<p>TopHat is a fast splice junction mapper for RNA-Seq reads.
+It aligns RNA-Seq reads to mammalian-sized
+genomes using the ultra high-throughput short read aligner Bowtie
+, and then analyzes the mapping results to identify splice junctions between exons.</p>
+<p><a class="reference external" href="http://tophat.cbcb.umd.edu/">http://tophat.cbcb.umd.edu/</a></p>
+<p>typical command line:</p>
+<p>tophat [options]* &lt;index_base&gt; &lt;reads1_1[,...,readsN_1]&gt; [reads1_2,...readsN_2]</p>
+<p><strong>Connections:</strong></p>
+<dl class="docutils">
+<dt><strong>Options:</strong></dt>
+<dd><ul class="first last simple">
+<li><strong>index</strong> (str, required)</li>
+<li><strong>library_type</strong> (str, required)<ul>
+<li>possible values:<ul>
+<li>fr-firststrand</li>
+<li>fr-secondstrand</li>
+<li>fr-unstranded</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>swap_reads</strong> (bool, required)</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Required tools:</strong> bowtie2, cat4m, pigz, tophat2</p>
+<p><strong>CPU Cores:</strong> 6</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="api.html" class="btn btn-neutral float-right" title="API documentation">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="how-to.html" class="btn btn-neutral" title="How-To Create Your First uap Analysis"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Christoph Kämpf, Michael Specht.
+    </p>
+  </div>
+
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

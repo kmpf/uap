@@ -33,11 +33,12 @@ class IOStep(abstract_step.AbstractStep):
                     annotation = self.get_annotation_for_input_file(in_path)
                     self.add_connection('out/%s' % annotation)
                     run.add_output_file(annotation, misc.append_suffix_to_path(os.path.basename(in_path), self._tool), [in_path])
+                    run.new_exec_group()
 
     
     def execute(self, run_id, run):
         # process one file at a time
-        for tag, output_file_info in run.get_output_files().items():
+        for tag, output_file_info in run.get_output_files_abspath().items():
             for output_path, input_paths in output_file_info.items():
                 with process_pool.ProcessPool(self) as pool:
                     with pool.Pipeline(pool) as pipeline:

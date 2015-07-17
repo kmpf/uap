@@ -43,7 +43,7 @@ class HtSeqCount(AbstractStep):
                 run.add_private_info('features_path', features_path)
 
                 run.add_output_file('counts', '%s-counts.txt' % run_id, [alignments_path, features_path])
-
+                run.new_exec_group()
 #        features_path = connection_info['in/features']['runs'].values()[0].values()[0][0]
 #        for run_id, info in connection_info['in/alignments']['runs'].items():
 #            counts_path = '%s-counts.txt' % run_id
