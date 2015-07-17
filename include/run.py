@@ -185,6 +185,11 @@ class Run(object):
 
         self._output_files[tag][None] = None
 
+    def is_empty_input_connection(self, tag):
+        if self._input_files[tag][None] is None:
+            return True
+        return False
+
     def get_output_files(self):
         return self._output_files
 
