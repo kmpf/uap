@@ -240,7 +240,8 @@ steps or modifying existing steps:
 * **NEVER**  remove files! If files need to be removed report the issue and 
   exit **uap**. Only the user should delete files.
 * Always use ``os.path.join(...)`` when you handle paths.
-* 
+* Use bash commands like ``mkfifo`` over python library equivalents like
+  ``os.mkfifo()``
 
 
 Add the new step to your configuration
