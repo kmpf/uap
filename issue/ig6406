@@ -1,0 +1,3 @@
+Summary: Replace os.mkfifo with mkfifo calls
+Priority: 4
+
