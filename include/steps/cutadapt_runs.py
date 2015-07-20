@@ -53,106 +53,125 @@ class Cutadapt(AbstractStep):
 
 
         read_types = {'first_read': 'R1', 'second_read': 'R2'}
+        paired_end_info = dict()
         for run_id in run_ids_connections_files.keys():
-            run = self.new_run(run_id)
-            for read in read_types:                
-                connection = 'in/%s' % read
-                input_paths = run_ids_connections_files[run_id][connection]
-                if run.input_connection_is_empty(connection):
-                    run.add_empty_output_connection("%s" % read)
-                    run.add_empty_output_connection("log_%s" % read)
-                else:
-                    # make sure that adapter-R1/adapter-R2 or adapter-file are
-                    # correctly set 
-                    # this kind of mutual exclusive option checking is a bit 
-                    # tedious, so we do it here.
-                    if read is 'second_read':
-                        if ( not self.is_option_set_in_config('adapter-R2') and 
-                             not self.is_option_set_in_config('adapter-file') ):
+            with self.new_run(run_id) as run:
+                for read in read_types:                
+                    connection = 'in/%s' % read
+                    input_paths = run_ids_connections_files[run_id][connection]
+                    if input_paths == [None]:
+                        run.add_empty_output_connection("%s" % read)
+                        run.add_empty_output_connection("log_%s" % read)
+                    else:
+                        paired_end_info[run_id] = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
+                        # make sure that adapter-R1/adapter-R2 or adapter-file are
+                        # correctly set 
+                        # this kind of mutual exclusive option checking is a bit 
+                        # tedious, so we do it here.
+                        if paired_end_info[run_id]:
+                            if ( not self.is_option_set_in_config('adapter-R2') and 
+                                 not self.is_option_set_in_config('adapter-file') ):
+                                raise StandardError(
+                                    "Option 'adapter-R2' or " +
+                                    "'adapter-file' required because " +
+                                    "sample %s is paired end!" % run_id)
+                        elif ( self.is_option_set_in_config('adapter-R2') and
+                               not self.is_option_set_in_config('adapter-file') ):
                             raise StandardError(
-                                "Option 'adapter-R2' or " +
-                                "'adapter-file' required because " +
-                                "sample %s is paired end!" % run_id)
-                    elif ( self.is_option_set_in_config('adapter-R2') and
-                           not self.is_option_set_in_config('adapter-file') ):
-                        raise StandardError(
-                            "Option 'adapter-R2' not allowed because " +
-                            "sample %s is not paired end!" % run_id)
-                        
-                    if ( self.is_option_set_in_config('adapter-file') and
-                         self.is_option_set_in_config('adapter-R1') ):
-                        raise StandardError(
-                            "Option 'adapter-R1' and 'adapter-file' " +
-                            "are both set but are mutually exclusive!" )
-
-                    if ( not self.is_option_set_in_config('adapter-file') and
-                         not self.is_option_set_in_config('adapter-R1') ):
-                        raise StandardError(
-                            "Option 'adapter-R1' or 'adapter-file' " +
-                            "required to call cutadapt for sample %s!" % 
-                            run_id)
-
-                    # Create cutadapt execution group
-                    cutadapt_exec_group = run.new_exec_group()
-                    # Create a pipe inside the execution group
-                    cutadapt_pipe = cutadapt_exec_group.add_pipeline()
-                    # 1. cat all input files into ...
-                    cat = [self.get_tool('cat')]
-                    cat.extend(sorted(input_paths))
-                    cat_cmd = cutadapt_pipe.add_command(cat)
-                    # 2. ... pigz for decompression ...
-                    pigz1 = [self.get_tool('pigz'),  '--processes', '1', 
-                             '--decompress', '--stdout']
-                    pigz1_cmd = cutadapt_pipe.add_command(pigz1)
-                    
-                    # fix qnames if wanted
-                    if self.get_option('fix_qnames') == True:
-                        fix_qnames = [self.get_tool('fix_qnames')]
-                        fix_qnames_cmd = cutadapt_pipe.add_command(fix_qnames)
-
-                    # Let's get the correct adapter sequences or fasta file 
-                    adapter = None
-                    if self.is_option_set_in_config('adapter-%s' \
-                                                    % read_types[read]):
-                        # add adapter information, insert correct index first if
-                        # necessary
-                        adapter = self.get_option(
-                            'adapter-%s' % read_types[read])
-                        
-                        # add index to adapter sequence if necessary
-                        if '((INDEX))' in adapter:
-                            index = self.find_upstream_info_for_input_paths(
-                                input_paths, 
-                                'index_%s' % read_types[read])
-                            adapter = adapter.replace('((INDEX))', index)
-                        
-                        # create reverse complement if we are asked for it
-                        if self.get_option('use_reverse_complement'):
-                            complements = string.maketrans('acgtACGT', 'tgcaTGCA')
-                            adapter = adapter.translate(complements)[::-1]
+                                "Option 'adapter-R2' not allowed because " +
+                                "sample %s is not paired end!" % run_id)
                             
-                        # make sure the adapter is looking good
-                        if re.search('^[ACGT]+$', adapter) == None:
-                            raise StandardError("Unable to come up with a "+
-                                                "legit-looking adapter: " + 
-                                                adapter)
-                    elif self.is_option_set_in_config('adapter-file'):
-                        adapter = "file:" + self.get_option('adapter-file')
+                        if ( self.is_option_set_in_config('adapter-file') and
+                             self.is_option_set_in_config('adapter-R1') ):
+                            raise StandardError(
+                                "Option 'adapter-R1' and 'adapter-file' " +
+                                "are both set but are mutually exclusive!" )
+    
+                        if ( not self.is_option_set_in_config('adapter-file') and
+                             not self.is_option_set_in_config('adapter-R1') ):
+                            raise StandardError(
+                                "Option 'adapter-R1' or 'adapter-file' " +
+                                "required to call cutadapt for sample %s!" % 
+                                run_id)
+    
+                        # Create cutadapt execution group
+                        cutadapt_exec_group = run.new_exec_group()
+                        # Create a pipe inside the execution group
+                        cutadapt_pipe = cutadapt_exec_group.add_pipeline()
+                        # 1. cat all input files into ...
+                        cat = [self.get_tool('cat')]
+                        cat.extend(sorted(input_paths))
+                        cat_cmd = cutadapt_pipe.add_command(cat)
+
+                        # 2. Check if we need to add a pigz step ...
+                        gzipped_files = list()
+                        all_files_gzipped = bool
+                        for _ in input_paths:
+                            if len( self.which_extensions_match_file_path(_, ("gz", "gzip")) ) > 0:
+                                gzipped_files.append(_)
+                        if len(gzipped_files) == 0:
+                            all_files_gzipped = False
+                        elif len(input_paths) == len(gzipped_files):
+                            all_files_gzipped = True
+                        elif len(input_paths) != len(gzipped_files):
+                            raise StandardError("Found gzipped and non-gzipped "
+                                                "input files: %s. This should "
+                                                "never happen." % input_paths)
                         
-                    
-                    # Clip adapters from piped data
-                    cutadapt = [self.get_tool('cutadapt'), 
-                                self.get_option('adapter-type'), 
-                                adapter, '-']
-                    cutadapt_pipe.add_commend(
-                        cutadapt, 
-                        stderr_path = run.add_output_file(
-                            'log_%s' % read,
-                            '%s-cutadapt-%s-log.txt'
-                            % (run_id, read_types[read]),
-                            input_paths)
-                    pigz2 = [self.get_tool('pigz'), '--blocksize', '4096', 
-                             '--processes', '1', '--stdout']
+                        # ... if yes do so
+                        if all_files_gzipped:
+                            pigz1 = [self.get_tool('pigz'),  '--processes', '1', 
+                                     '--decompress', '--stdout']
+                            pigz1_cmd = cutadapt_pipe.add_command(pigz1)
+                        
+                        # fix qnames if user wishes to
+                        if self.get_option('fix_qnames') == True:
+                            fix_qnames = [self.get_tool('fix_qnames')]
+                            fix_qnames_cmd = cutadapt_pipe.add_command(fix_qnames)
+    
+                        # Let's get the correct adapter sequences or fasta file 
+                        adapter = None
+                        if self.is_option_set_in_config('adapter-%s' \
+                                                        % read_types[read]):
+                            # add adapter information, insert correct index first if
+                            # necessary
+                            adapter = self.get_option(
+                                'adapter-%s' % read_types[read])
+                            
+                            # add index to adapter sequence if necessary
+                            if '((INDEX))' in adapter:
+                                index = self.find_upstream_info_for_input_paths(
+                                    input_paths, 
+                                    'index-%s' % read_types[read])
+                                adapter = adapter.replace('((INDEX))', index)
+                            
+                            # create reverse complement if we are asked for it
+                            if self.get_option('use_reverse_complement'):
+                                complements = string.maketrans('acgtACGT', 'tgcaTGCA')
+                                adapter = adapter.translate(complements)[::-1]
+                                
+                            # make sure the adapter is looking good
+                            if re.search('^[ACGT]+$', adapter) == None:
+                                raise StandardError("Unable to come up with a "+
+                                                    "legit-looking adapter: " + 
+                                                    adapter)
+                        elif self.is_option_set_in_config('adapter-file'):
+                            adapter = "file:" + self.get_option('adapter-file')
+                            
+                        
+                        # Clip adapters from piped data
+                        cutadapt = [self.get_tool('cutadapt'), 
+                                    self.get_option('adapter-type'), 
+                                    adapter, '-']
+                        cutadapt_pipe.add_command(
+                            cutadapt, 
+                            stderr_path = run.add_output_file(
+                                'log_%s' % read,
+                                '%s-cutadapt-%s-log.txt'
+                                % (run_id, read_types[read]),
+                                input_paths))
+                        pigz2 = [self.get_tool('pigz'), '--blocksize', '4096', 
+                                 '--processes', '1', '--stdout']
                         cutadapt_pipe.add_command(
                             pigz2,
                             stdout_path = run.add_output_file(
@@ -160,7 +179,7 @@ class Cutadapt(AbstractStep):
                                 "%s-cutadapt%s.fastq.gz"
                                 % (run_id, read_types[read]), 
                                 input_paths))
-
+    
                     
 
 #    def declare_runs(self):
