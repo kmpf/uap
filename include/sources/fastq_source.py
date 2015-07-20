@@ -105,18 +105,18 @@ class FastqSource(AbstractSourceStep):
                 found_files[sample_id][which_read].append(path)
 
         elif self.is_option_set_in_config('sample_to_files_map'):
-            for sample, paths in self.get_option('sample_to_files_map').items():
-                sample_id = sample
+            for sample_id, paths in self.get_option('sample_to_files_map').items():
                 for path in paths:
                     if not os.path.isfile(path):
                         raise StandardError("[fastq_source]: %s is no file. "
                                             "Please provide correct path." 
                                             % path)
+
                     if not sample_id in found_files:
                         found_files[sample_id] = dict()
                         # either finds a single match or throws an error
-                        which_read = misc.assign_string(os.path.basename(path),
-                                                        read_types.values())
+                    which_read = misc.assign_string(os.path.basename(path),
+                                                    read_types.values())
                     # so this is save because which_read can only be a value 
                     # from read_types
                     if not which_read in found_files[sample_id]:
