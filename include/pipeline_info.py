@@ -1,7 +1,7 @@
 """
 
 """
-
+import command as command_info
 
 class PipelineInfo(object):
     def __init__(self, exec_group):
@@ -14,8 +14,11 @@ class PipelineInfo(object):
     def __exit__(self, type, value, traceback):
         pass
 
-    def add_command(self):
-        command = Command_info(self)
+    def add_command(self, command, stdout_path=None, stderr_path=None):
+        command = command_info.CommandInfo(
+            self, command,  stdout_path = stdout_path, 
+            stderr_path = stderr_path
+        )
         self._commands.append(command)
         return command
         
