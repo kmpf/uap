@@ -83,19 +83,19 @@ class Cutadapt(AbstractStep):
 
 
 
-                # save information per file in found_files
-                if not run_id in found_files:
-                    found_files[run_id] = dict()
-
-                if not read in found_files[run_id]:
-                    found_files[run_id][read] = list()
-                found_files[run_id][read].extend(input_paths)
-
-                ## Make sure the adapter type is one of a, b or g 
-                if self.is_option_set_in_config('adapter-type'):
-                    if not (self.get_option('adapter-type') in set(['a','b','g'])):
-                        raise StandardError("Option 'adapter-type' must be "
-                            "either 'a','b', or 'g'!")
+                    # save information per file in found_files
+                    if not run_id in found_files:
+                        found_files[run_id] = dict()
+    
+                    if not read in found_files[run_id]:
+                        found_files[run_id][read] = list()
+                    found_files[run_id][read].extend(input_paths)
+    
+                    ## Make sure the adapter type is one of a, b or g 
+                    if self.is_option_set_in_config('adapter-type'):
+                        if not (self.get_option('adapter-type') in set(['a','b','g'])):
+                            raise StandardError("Option 'adapter-type' must be "
+                                "either 'a','b', or 'g'!")
                 
 
         # now declare two runs
