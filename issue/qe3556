@@ -1,5 +1,0 @@
-Summary: Implement support for SLURM
-Categories: yq8646-features
-
-Right now, only SGE is supported. Make that a SGE + SLURM!
-Here's a cheat sheet: http://slurm.schedmd.com/rosetta.pdf
