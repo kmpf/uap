@@ -43,7 +43,7 @@ class Bcl2FastqSource(AbstractSourceStep):
         self.add_option('filter-dir', str, optional=True)
         self.add_option('sample-sheet', str, optional=True)
         self.add_option('mismatches', int, optional=True)
-        self.add_option('fastq-cluster-count', str, optional=True)
+        self.add_option('fastq-cluster-count', int, optional=True)
         self.add_option('ignore-missing-stats', str, optional=True)
         self.add_option('ignore-missing-bcl', str, optional=True)
         self.add_option('ignore-missing-control', str, optional=True)
