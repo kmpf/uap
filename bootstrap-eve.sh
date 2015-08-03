@@ -27,7 +27,7 @@ export LDFLAGS_BAK=$LDFLAGS && export CPPFLAGS_BAK=$CPPFLAGS
 unset LDFLAGS && unset CPPFLAGS
 ./python_env/bin/pip install numpy
 export LDFLAGS=$LDFLAGS_BAK && export CPPFLAGS=$CPPFLAGS_BAK
-unset $LDFLAGS_BAK && unset $CPPFLAGS_BAK
+unset LDFLAGS_BAK && unset CPPFLAGS_BAK
 
 gcc -o tools/cat4m tools/cat4m.c
 git submodule update --init --recursive
