@@ -2,7 +2,6 @@ import sys
 from abstract_step import *
 import pipeline
 import re
-import process_pool
 import yaml
 
 class Cutadapt(AbstractStep):
