@@ -90,7 +90,7 @@ class Bcl2FastqSource(AbstractSourceStep):
         configureBcl2Fastq.extend(
                     ['--output-dir', temp_output_dir])
         # Add command to execution group
-        configureBcl2Fastq_command = bcl2Fastq_exec_group.new_command(
+        configureBcl2Fastq_command = bcl2Fastq_exec_group.add_command(
             configureBcl2Fastq,
             stderr_path = run.add_output_file(
                 "configureBcl2Fastq_log_stderr",
@@ -101,7 +101,7 @@ class Bcl2FastqSource(AbstractSourceStep):
         # Assemble make command
         make = [self.get_tool('make'), '-C', temp_output_dir]
         # Add make command to execution group
-        make_exec_group.new_command(
+        make_exec_group.add_command(
             make,
             stderr_path = run.add_output_file(
                 "make_log_stderr",
@@ -116,13 +116,13 @@ class Bcl2FastqSource(AbstractSourceStep):
             mkdir = [self.get_tool('mkdir'), '-p', output_unaligned_dir]
             logger.debug(" ".join(mkdir))
             # Add mkdir command to execution group
-            mv_exec_group.new_command(mkdir)
+            mv_exec_group.add_command(mkdir)
             # Assemble mv command
             mv = [self.get_tool('mv')]
             mv.extend([temp_output_dir, output_dir])
             logger.debug(" ".join(mv))
             # Add mv command to execution group
-            mv_command = mv_exec_group.new_command(mv)
+            mv_command = mv_exec_group.add_command(mv)
             run.add_public_info("bcl2fastq-output-folder", output_unaligned_dir)
         else:
             logger.warning("Directory: %s already exists!" % output_unaligned_dir)
