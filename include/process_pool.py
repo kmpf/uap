@@ -697,12 +697,12 @@ class ProcessPool(object):
                 for pid in pid_list:
                     proc = procs[pid]
                     try:
-                        cpu_percent = proc.get_cpu_percent(interval = None)
+                        cpu_percent = proc.cpu_percent(interval = None)
                         # add values for all children
                         if pid != super_pid:
                             for p in proc.get_children(recursive = True):
                                 try:
-                                    cpu_percent = p.get_cpu_percent(interval = None)
+                                    cpu_percent = p.cpu_percent(interval = None)
                                     called_cpu_stat_for_childpid.add(p.pid)
                                 except psutil.NoSuchProcess:
                                     pass
@@ -721,7 +721,7 @@ class ProcessPool(object):
                         proc = procs[pid]
                         try:
                             data = dict()
-                            data['cpu_percent'] = proc.get_cpu_percent(interval = None)
+                            data['cpu_percent'] = proc.cpu_percent(interval = None)
                             data['memory_percent'] = proc.get_memory_percent()
                             memory_info = proc.get_memory_info()
                             data['rss'] = memory_info.rss
@@ -731,7 +731,7 @@ class ProcessPool(object):
                             if pid != super_pid:
                                 for p in proc.get_children(recursive = True):
                                     try:
-                                        v = p.get_cpu_percent(interval = None)
+                                        v = p.cpu_percent(interval = None)
                                         if p.pid in called_cpu_stat_for_childpid:
                                             data['cpu_percent'] += v
                                         called_cpu_stat_for_childpid.add(p.pid)
