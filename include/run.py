@@ -3,18 +3,20 @@ import exec_group
 import logging
 import misc
 import os
-
+import yaml
 logger = logging.getLogger("uap_logger")
 
 class Run(object):
     '''
     The Run class is a helper class which represents a run in a step. Declare
-    runs inside AbstractStep.declare_runs() via::
+    runs inside AbstractStep.runs() via::
     
-        with self.declare_run(run_id) as run:
+        with self.new_run(run_id) as run:
             # declare output files, private and public info here
             
     After that, use the available methods to configure the run.
+    The run has typically no information about input connections only about
+    input files.
     '''
     def __init__(self, step, run_id):
         if '/' in run_id:
@@ -33,8 +35,6 @@ class Run(object):
         self._output_files_list = list()
         self._input_files = list()
 
-#        self._add_public_info_to_run_module()
-#        self._store_step_info_in_run_module()
 
     def __enter__(self):
         return self

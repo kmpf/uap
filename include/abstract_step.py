@@ -223,7 +223,8 @@ class AbstractStep(object):
                                 % (filepath, type(filepath)) )
         for ext in extensions:
             if type(ext) is not str:
-                raise StandardError("File extension must be ")
+                raise StandardError("Found non-string file extension: %s "
+                                    % ext)
             else:
                 extension_list.append(ext)
         
@@ -297,7 +298,7 @@ class AbstractStep(object):
                     if isinstance(poc, pipeline_info.PipelineInfo):
                         # ... create a pipeline ...
                         with pool.Pipeline(pool) as pipeline:
-                            for command in poc.get_commands:
+                            for command in poc.get_commands():
                                 pipeline.append(
                                     command.get_command(),
                                     stdout_path = command.get_stdout_path(),

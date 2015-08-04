@@ -58,7 +58,7 @@ class Fastqc(AbstractStep):
                               self.get_output_directory_du_jour_placeholder()]
                     fastqc.extend(input_paths)
                     
-                    fastqc_command = fastqc_exec_group.new_command(
+                    fastqc_command = fastqc_exec_group.add_command(
                         fastqc,
                         stderr_path = run.add_output_file(
                             "%s_log_stderr" % read, 
@@ -76,4 +76,4 @@ class Fastqc(AbstractStep):
                           run.add_output_file("%s_fastqc_report" % read,
                             "%s%s-fastqc.zip" % (run_id, read_types[read]),
                             input_paths)]
-                    mv_command = mv_exec_group.new_command(mv)
+                    mv_command = mv_exec_group.add_command(mv)

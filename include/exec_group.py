@@ -21,12 +21,12 @@ class ExecGroup(object):
     def __exit__(self, type, value, traceback):
         pass
         
-    def new_pipeline(self):
+    def add_pipeline(self):
         pipeline = pipeline_info.PipelineInfo(self)
         self._pipes_and_commands.append(pipeline)
         return pipeline
 
-    def new_command(self, command, stdout_path=None, stderr_path=None):
+    def add_command(self, command, stdout_path=None, stderr_path=None):
         command = command_info.CommandInfo(self, command, 
                                            stdout_path = stdout_path, 
                                            stderr_path = stderr_path

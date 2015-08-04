@@ -155,7 +155,8 @@ class Pipeline(object):
 
         self.task_ids_for_input_file = dict()
         '''
-        This dict stores a set of task IDs for every input file used in the pipeline.
+        This dict stores a set of task IDs for every input file used in the
+        pipeline.
         '''
 
         self.input_files_for_task_id = dict()
@@ -180,12 +181,13 @@ class Pipeline(object):
         self.all_tasks_topologically_sorted = []
         for step_name in self.topological_step_order:
             step = self.steps[step_name]
+            logger.debug("Collect now all tasks for step: %s" % step)
             for run_index, run_id in enumerate(misc.natsorted(step.get_run_ids())):
                 task = task_module.Task(self, step, run_id, run_index)
                 # if any run of a step contains an exec_groups,
                 # the task (step/run) is added to the task list
                 run = step.get_run(run_id)
-                logger.debug("Run: %s" % run_id)
+                logger.debug("Step: %s, Run: %s" % (step, run_id))
                 run_has_exec_groups = False
                 if len(run.get_exec_groups()) > 0:
                     run_has_exec_groups = True

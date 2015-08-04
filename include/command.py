@@ -26,7 +26,7 @@ class CommandInfo(object):
         def inner(self, *args):
             run_info = None
             if isinstance(self._eop, pipeline_info.PipelineInfo):
-                run_info = self._eop.get_exec_group().get_run_info()
+                run_info = self._eop.get_exec_group().get_run()
             elif isinstance(self._eop, exec_group.ExecGroup):
                 run_info = self._eop.get_run()
             # Collect info to replace du_jour placeholder with temp_out_dir
