@@ -63,6 +63,39 @@ class Run(object):
     def get_run_id(self):
         return self._run_id
 
+    def replace_output_dir_du_jour(func):
+        def inner(self, *args):
+            # Collect info to replace du_jour placeholder with temp_out_dir
+            step = self.get_step()
+            placeholder = step.get_output_directory_du_jour_placeholder()
+            temp_out_dir = step.get_output_directory_du_jour()
+            
+            value = None
+            ret_value = func(self, *args)
+            if isinstance(ret_value, list):
+                value = list()
+                for string in ret_value:
+                    if string != None and placeholder in string:
+                        value.append(
+                            string.replace(placeholder, temp_out_dir))
+                    else:
+                        value.append(string)
+            elif isinstance(ret_value, str):
+                if ret_value != None and placeholder in ret_value:
+                    value = ret_value.replace(placeholder, temp_out_dir)
+            elif ret_value == None:
+                value = None
+            else:
+                raise StandardError("Function %s does not return list or "
+                                    "string object" % 
+                                    func.__class__.__name__)
+            return(value)
+        return(inner)
+
+    @replace_output_dir_du_jour
+    def get_temp_paths(self):
+        return self._temp_paths
+
     def add_private_info(self, key, value):
         '''
         Add private information to a run. Use this to store data which you will
@@ -183,7 +216,7 @@ class Run(object):
 
         temp_placeholder = os.path.join(
             self._step.get_output_directory_du_jour_placeholder(), temp_name)
-        # self._temp_paths.append(temp_placeholder)
+        self._temp_paths.append(temp_placeholder)
         return temp_placeholder
 
 

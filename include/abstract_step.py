@@ -273,49 +273,39 @@ class AbstractStep(object):
     def execute(self, run_id, run):
         # Ich muss noch ne Loesung finden um hier beliebigen Python Code auszufuehren
         # exec() oder eval()?
-        # get the step_info object back
-#        step = run.get_private_info('step')
 
-        # get the temporary output directory info
-#        temp_out_dir = self.get_output_directory_du_jour()
-#        placeholder = step_info.get_output_directory_du_jour()
-#        def fix_du_jour_issue(in_command):
-#            out_command = list()
-#            for _ in in_command:
-#                out_command.append(_.replace(placeholder, temp_out_dir))
-#            return out_command
-#
         # get run_info objects
-        run_info = self.get_run(run_id)
-        print("Run ID: %s" % run_id)
-        # for each exec_group in that run ...
-        for exec_group in run_info.get_exec_groups():
-            # ... create a process pool
-            with process_pool.ProcessPool(self) as pool:
-                for poc in exec_group.get_pipes_and_commands():
-                    # for each pipe or command (poc)
-                    # check if it is a pipeline ...
-                    if isinstance(poc, pipeline_info.PipelineInfo):
-                        # ... create a pipeline ...
-                        with pool.Pipeline(pool) as pipeline:
-                            for command in poc.get_commands():
-                                pipeline.append(
-                                    command.get_command(),
-                                    stdout_path = command.get_stdout_path(),
-                                    stderr_path = command.get_stderr_path())
-                    elif isinstance(poc, command_info.CommandInfo):
-                        pool.launch(
-                            poc.get_command(),
-                            stdout_path = poc.get_stdout_path(),
-                            stderr_path = poc.get_stderr_path())
+        with self.get_run(run_id) as run:
+            print("Run ID: %s" % run_id)
+            # for each exec_group in that run ...
+            for exec_group in run.get_exec_groups():
+                # ... create a process pool
+                with process_pool.ProcessPool(self) as pool:
+                    # Clean up (use last ProcessPool for that)
+                    if exec_group == run.get_exec_groups()[-1]:
+                        # 1. Temporary files
+                        for temp_path in run.get_temp_paths():
+                            # * temp_path will be unlinked in pool.__exit__
+                            logger.info("Announced path: %s" % temp_path)
+                            pool.announce_temporary_path(temp_path)
 
-#    def execute(self, run_id, run):
-#        """Starts the execution of a particular run.
-#        
-#        Raise NotImplementedError if subclass does not override this
-#        method.
-#        """
-#        raise NotImplementedError()
+
+                    for poc in exec_group.get_pipes_and_commands():
+                        # for each pipe or command (poc)
+                        # check if it is a pipeline ...
+                        if isinstance(poc, pipeline_info.PipelineInfo):
+                            # ... create a pipeline ...
+                            with pool.Pipeline(pool) as pipeline:
+                                for command in poc.get_commands():
+                                    pipeline.append(
+                                        command.get_command(),
+                                        stdout_path = command.get_stdout_path(),
+                                        stderr_path = command.get_stderr_path())
+                        elif isinstance(poc, command_info.CommandInfo):
+                            pool.launch(
+                                poc.get_command(),
+                                stdout_path = poc.get_stdout_path(),
+                                stderr_path = poc.get_stderr_path())
 
     def get_run_info(self):
         """
@@ -1054,7 +1044,7 @@ class AbstractStep(object):
         """
         Returns a temporary path with the prefix specified. 
         The returned path will be in the temporary directory of the step 
-        and will not exist yet.
+        and will not exist yet. Don't use this method from within steps.
         """
         if not self._temp_directory:
             raise StandardError("Temporary directory not set, you cannot call "

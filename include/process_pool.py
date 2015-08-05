@@ -256,6 +256,9 @@ class ProcessPool(object):
         
         ProcessPool.current_instance = None
         
+    def announce_temporary_path(self, temp_path):
+        self.temp_paths.append(temp_path)
+
     def get_temporary_path(self, prefix, designation = None):
         path = self.step.get_temporary_path(prefix, designation)
         self.temp_paths.append(path)
