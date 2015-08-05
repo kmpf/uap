@@ -1,0 +1,4 @@
+Summary: Add add_temporary_file() method to run.py
+Priority: 5
+
+This method should mark files as temporary. These files are removed after the step has finished.
