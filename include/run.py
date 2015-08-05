@@ -3,6 +3,7 @@ import exec_group
 import logging
 import misc
 import os
+import tempfile
 import yaml
 logger = logging.getLogger("uap_logger")
 
@@ -34,7 +35,10 @@ class Run(object):
         self._connections = list()
         self._output_files_list = list()
         self._input_files = list()
-
+        self._temp_paths = list()
+        '''
+        Entries can be either files or paths
+        '''
 
     def __enter__(self):
         return self
@@ -163,6 +167,25 @@ class Run(object):
         self._output_files[tag][out_path] = in_paths
         return os.path.join(
             self._step.get_output_directory_du_jour_placeholder(), out_path)
+
+    def add_temporary_file(self, prefix = '', designation = None):
+        '''
+        Here the name of a temporary file is created (using tempfile library).
+        Name and output directory placeholder are concatenated. The concatenated
+        string is returned and stored in a list.
+        '''
+        
+        temp_name = str
+        with tempfile.NamedTemporaryFile(suffix = '', prefix = prefix) as f:
+            temp_name = os.path.basename(f.name)
+
+        logger.info("Temporary name: %s" % temp_name)    
+
+        temp_placeholder = os.path.join(
+            self._step.get_output_directory_du_jour_placeholder(), temp_name)
+        # self._temp_paths.append(temp_placeholder)
+        return temp_placeholder
+
 
     def add_empty_output_connection(self, tag):
         '''

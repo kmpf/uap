@@ -10,6 +10,10 @@ constants:
     - &bowtie2_genome_index /data/bioinf/genomes/data/animalia/chordata/mammalia/rodentia/homo_sapiens/hg19/indices/hg19 
 
 steps:
+    ##################
+    ## Source steps ##
+    ##################
+
 #    read_annotation (raw_file_source):
 #        path: data/ChIPseq/H3K4me3_GCCAAT_L001_001.bed
 #        sha1: 297ceb1895c75f1a793423a8b4a7a92f48241159
@@ -32,6 +36,14 @@ steps:
 #        group: (H3K4me3)_GCCAAT_L001_R[12]_001.fastq.gz
 #        indices: indices.chipseqcsv
 #        paired_end: yes
+
+
+    ######################
+    ## Processing steps ##
+    ######################
+
+    merge_fastq_files:
+        _depends: fc
 
     cutadapt:
         _depends: fc
@@ -107,8 +119,18 @@ tools:
     # Unix Tools #
     ##############
 
+    cat:
+        path: cat
+        get_version: '--version'
+        exit_code: 0
+
     curl:
         path: curl
+        get_version: '--version'
+        exit_code: 0
+
+    dd:
+        path: dd
         get_version: '--version'
         exit_code: 0
 

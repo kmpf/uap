@@ -67,7 +67,6 @@ class CommandInfo(object):
 
     @replace_output_dir_du_jour
     def get_stdout_path(self):
-#        stdout_path = self._replace_output_dir_du_jour(self._stdout_path)
         return(self._stdout_path)
 
     def set_stderr_path(self, stderr_path):
@@ -76,14 +75,8 @@ class CommandInfo(object):
 
     @replace_output_dir_du_jour
     def get_stderr_path(self):
-#        stderr_path = self._replace_output_dir_du_jour(self._stderr_path)
         return(self._stderr_path)
 
     @replace_output_dir_du_jour
     def get_command(self):
-
-#        command = list()
-#        for _ in self._command:
-#            _ = self._replace_output_dir_du_jour(_)
-#            command.append(_)
         return(self._command)
