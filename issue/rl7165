@@ -8,7 +8,13 @@ Already replaced:
 ** bcl2fastq_source.py
 
 * Steps:
+** cutadapt_runs.py
+** fastqc_runs.py
+** merge_fastq_files.py
 
+Ongoing Process:
+* Steps:
+** segemehl_runs.py
 
 Still to replace:
 * Sources:
@@ -34,16 +40,14 @@ Still to replace:
 ** cuffmerge.py
 ** cuffmerge_without_reference.py
 ** cutadapt.py
-** cutadapt_runs.py
 ** fastqc.py
-** fastqc_runs.py
 ** fix_cutadapt.py
 ** fix_s2c.py
 ** grep.py
 ** head.py
 ** htseq_count.py
 ** io_step.py
-** macs14.py
+** macs14.py (might be replacable by single MACS step)
 ** macs2.py
 ** merge_bam_by_replicate.py
 ** merge_fastq_files.py
@@ -61,6 +65,5 @@ Still to replace:
 ** sam_to_bam.py
 ** samtools_stats.py
 ** segemehl.py
-** segemehl_runs.py
 ** testrealign.py
 ** tophat2.py
