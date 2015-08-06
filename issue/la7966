@@ -1,4 +1,0 @@
-Summary: Make development of new steps more easy
-Categories: bw9609-to-implement, ea5946-steps
-
-* I would try to use decorators to modify/read out/add information to the implemented steps method
