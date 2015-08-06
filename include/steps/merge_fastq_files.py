@@ -18,6 +18,7 @@ class MergeFastqFiles(AbstractStep):
         
         self.require_tool('cat')
         self.require_tool('dd')
+        self.require_tool('mkfifo')
         self.require_tool('pigz')
 
     def runs(self, run_ids_connections_files):
@@ -42,43 +43,57 @@ class MergeFastqFiles(AbstractStep):
                         #input_files_by_suffix[s] = [x for x in input_paths
                         #                             if x.endswith(s)]
 
-                        temp_files = list()
+                        temp_fifos = list()
+                        exec_group = run.new_exec_group()
                         for input_path in input_paths:
                             # Gzipped files are unpacked first
                             # !!! Might be worth a try to use fifos instead of
                             #     temp files!!!
                             if input_path.endswith('fastq.gz'):
-                                unzip_pipe = run.new_exec_group().add_pipeline()
-                                temp_file = run.add_temporary_file(
-                                    '%s' % os.path.basename(input_path) )
-                                logger.info("Temp file: %s" % temp_file)
-                                temp_files.append(temp_file)
-                                # 1. command: Read file in 4MB chunks
-                                dd1 = [self.get_tool('dd'),
-                                      'ibs=4M',
-                                      'if=%s' % input_path]
-                                # 2. command: Uncompress file to STDOUT
-                                pigz = [self.get_tool('pigz'),
-                                        '--decompress',
-                                        '--stdout']
-                                # 3. Write file in 4MB chunks
-                                dd2 = [self.get_tool('dd'),
-                                       'obs=4M',
-                                       'of=%s' % temp_file]
+                                # 1. Create temporary fifo
+                                temp_fifo = run.add_temporary_file(
+                                    "fifo-%s" %
+                                    os.path.basename(input_path) )
+                                temp_fifos.append(temp_fifo)
+                                mkfifo = [self.get_tool('mkfifo'), temp_fifo]
+                                exec_group.add_command(mkfifo)
+                                # 2. Uncompress file to fifo
+                                with exec_group.add_pipeline() as unzip_pipe:
+                                    # 2.1 command: Read file in 4MB chunks
+                                    dd_in = [self.get_tool('dd'),
+                                           'ibs=4M',
+                                           'if=%s' % input_path]
+                                    # 2.2 command: Uncompress file to fifo
+                                    pigz = [self.get_tool('pigz'),
+                                            '--decompress',
+                                            '--stdout']
+                                    # 2.3 Write file in 4MB chunks
+                                    dd_out = [self.get_tool('dd'),
+                                              'obs=4M',
+                                              'of=%s' % temp_fifo]
                                 
-                                unzip_pipe.add_command(dd1)
-                                unzip_pipe.add_command(pigz)
-                                unzip_pipe.add_command(dd2)
+                                    unzip_pipe.add_command(dd_in)
+                                    unzip_pipe.add_command(pigz)
+                                    unzip_pipe.add_command(dd_out)
 
-
-                        cat_exec_group = run.new_exec_group()
-                        cat = ['cat']
-                        cat.extend(temp_files)
-                    
-                        cat_command = cat_exec_group.add_command(
-                            cat,
+                        # 3. Read data from fifos
+                        with exec_group.add_pipeline() as pigz_pipe:
+                            # 3.1 command: Read from ALL fifos
+                            cat = [self.get_tool('cat')]
+                            cat.extend(temp_fifos)
+                            # 3.2 Gzip output file
+                            pigz = [self.get_tool('pigz'),
+                                    '--stdout']
+                            # 3.3 command: Write to output file in 4MB chunks
                             stdout_path = run.add_output_file(
                                 "%s" % read,
-                                "%s%s.fastq" %
+                                "%s%s.fastq.gz" %
                                 (run_id, read_types[read]),
-                                input_paths))
+                                input_paths)
+                            dd = [self.get_tool('dd'),
+                                  'obs=4M',
+                                  'of=%s' % stdout_path]
+                            
+                            pigz_pipe.add_command(cat)
+                            pigz_pipe.add_command(pigz)
+                            pigz_pipe.add_command(dd)

@@ -143,6 +143,11 @@ tools:
         path: grep
         get_version: '--version'
 
+    mkfifo:
+        path: mkfifo
+        get_version: '--version'
+        exit_code: 0
+
     sort:
         path: 'sort'
         get_version: '--version'
