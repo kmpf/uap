@@ -18,7 +18,7 @@ class S2C(AbstractStep):
         self.require_tool('s2c')
         self.require_tool('samtools')
         self.require_tool('pigz')
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         
     def declare_runs(self):
 
@@ -57,13 +57,13 @@ class S2C(AbstractStep):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
                 alignments_path = run.get_private_info('in-alignment')
-                cat4m = [self.get_tool('cat4m'), alignments_path]
+                cat = [self.get_tool('cat'), alignments_path]
                 pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']
                 s2c = [self.get_tool('s2c'), '-s', '/dev/stdin', '-o', self._temp_directory]
                 samtools = [self.get_tool('samtools'), 'view', '-Sb', '-']
                 samtools_sort = [self.get_tool('samtools'), 'sort', '-', run.get_single_output_file_for_annotation('alignments')[:-4]]
                 
-                pipeline.append(cat4m)
+                pipeline.append(cat)
                 pipeline.append(pigz)
                 pipeline.append(s2c, stderr_path = run.get_single_output_file_for_annotation('log'))
                 pipeline.append(samtools)

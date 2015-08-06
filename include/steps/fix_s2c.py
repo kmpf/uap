@@ -16,7 +16,7 @@ class S2cFix(AbstractStep):
         
         self.require_tool('fix_s2c')
         self.require_tool('pigz')
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         self.require_tool('samtools')
 
     def declare_runs(self):
@@ -51,14 +51,14 @@ class S2cFix(AbstractStep):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
                 in_alignment = run.get_private_info('in-alignments')
-                cat4m = [self.get_tool('cat4m'), in_alignment]
+                cat = [self.get_tool('cat'), in_alignment]
                 samtools = [self.get_tool('samtools'), 'view', '-h', '-']
                 fix_s2c = [self.get_tool('fix_s2c'), ]
                 samtools_2 = [self.get_tool('samtools'), 'view', '-Shb', '-']
                 samtools_sort = [self.get_tool('samtools'), 'sort','-n', '-', run.get_single_output_file_for_annotation('alignments')[:-4]]
 
                 
-                pipeline.append(cat4m)
+                pipeline.append(cat)
                 pipeline.append(samtools)
                 pipeline.append(fix_s2c)
                 pipeline.append(samtools_2)

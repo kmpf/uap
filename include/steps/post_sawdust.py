@@ -20,7 +20,7 @@ class Post_Sawdust(AbstractStep):
 
         self.require_tool('post_sawdust')
         self.require_tool('samtools')
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         
     def declare_runs(self):
 
@@ -45,7 +45,7 @@ class Post_Sawdust(AbstractStep):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
                 alignments_path = run.get_private_info('in-alignment')
-                cat4m = [self.get_tool('cat4m'), alignments_path]
+                cat = [self.get_tool('cat'), alignments_path]
                 samtools_front = [self.get_tool('samtools'), 'view', '-h', '-'] 
                 post_sawdust = [self.get_tool('post_sawdust'),
                                 '--library-type', self.get_option('library_type'),
@@ -53,7 +53,7 @@ class Post_Sawdust(AbstractStep):
                                 '--read-type',run.get_private_info('read_type')]
                 samtools = [self.get_tool('samtools'), 'view', '-Shbo',   run.get_single_output_file_for_annotation('alignments'), '-']
 
-                pipeline.append(cat4m)
+                pipeline.append(cat)
                 pipeline.append(samtools_front)
                 pipeline.append(post_sawdust, stderr_path = run.get_single_output_file_for_annotation('log_stderr'))
                 pipeline.append(samtools)

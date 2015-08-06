@@ -14,7 +14,7 @@ class CountMappedReads(AbstractStep):
         self.add_connection('in/alignments')
         self.add_connection('out/alignment-counts')
         
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         self.require_tool('samtools')
         self.require_tool('pigz')
 
@@ -87,7 +87,7 @@ class CountMappedReads(AbstractStep):
                 
                 with process_pool.ProcessPool(self) as pool:
                     with pool.Pipeline(pool) as pipeline:
-                        cat4m = [self.get_tool('cat4m'), input_path]
+                        cat = [self.get_tool('cat'), input_path]
                         samtools = [self.get_tool('samtools'), 'view', '-c',
                                     '-f', unset_bits[i],
                                     '-F', set_bits[i],
@@ -95,7 +95,7 @@ class CountMappedReads(AbstractStep):
                                         'exclude_MAPQ_smaller_than')),
                                     '-', '-o', '-']
                         
-                        pipeline.append(cat4m)
+                        pipeline.append(cat)
                         pipeline.append(samtools, stdout_path = out_file)
                         
                 counts = int()

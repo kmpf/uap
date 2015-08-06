@@ -15,7 +15,7 @@ class SamToBam(AbstractStep):
         self.add_connection('out/alignments')
         self.add_connection('out/indices')
         
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         self.require_tool('samtools')
         self.require_tool('pigz')
 
@@ -60,11 +60,11 @@ class SamToBam(AbstractStep):
         if sam_path[-7:] == '.sam.gz':
             with process_pool.ProcessPool(self) as pool:
                 with pool.Pipeline(pool) as pipeline:
-                    cat4m = [self.get_tool('cat4m'), sam_path]
+                    cat = [self.get_tool('cat'), sam_path]
                     pigz1 = [self.get_tool('pigz'), '--processes', '2', '-d', '-c']
                     samtools = [self.get_tool('samtools'), 'view', '-Sbt', self.get_option('genome'), '-']
                     
-                    pipeline.append(cat4m)
+                    pipeline.append(cat)
                     pipeline.append(pigz1)
                     pipeline.append(samtools, stdout_path = unsorted_bam_path)
         else:
@@ -75,13 +75,13 @@ class SamToBam(AbstractStep):
 
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.get_tool('cat4m'), use_unsorted_bam_input]
+                cat = [self.get_tool('cat'), use_unsorted_bam_input]
                 samtools = [self.get_tool('samtools'), 'sort']
                 if self.get_option('sort_by_name'):
                     samtools.append('-n')
                 samtools.extend(['-', sorted_bam_path[:-4]])
                 
-                pipeline.append(cat4m)
+                pipeline.append(cat)
                 pipeline.append(samtools, hints = {'writes': [sorted_bam_path]})
 
         # samtools index

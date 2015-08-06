@@ -38,7 +38,7 @@ class TopHat2(AbstractStep):
         self.add_connection('out/prep_reads')
         self.add_connection('out/align_summary')
 
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         self.require_tool('pigz')
         self.require_tool('bowtie2')
         self.require_tool('tophat2')

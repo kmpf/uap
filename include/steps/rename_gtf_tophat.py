@@ -15,7 +15,7 @@ class Rename_GTF_Tophat(AbstractStep):
         self.add_connection('in/features')
         self.add_connection('out/features_tophat')
         
-        self.require_tool('cat4m')
+        self.require_tool('cat')
 
     def declare_runs(self):
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/features'):
@@ -30,6 +30,6 @@ class Rename_GTF_Tophat(AbstractStep):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
                 features_path = run.get_private_info('in-features')
-                cat4m = [self.get_tool('cat4m'), features_path]
+                cat = [self.get_tool('cat'), features_path]
                                
-                pipeline.append(cat4m, stdout_path = run.get_single_output_file_for_annotation('features_tophat'))
+                pipeline.append(cat, stdout_path = run.get_single_output_file_for_annotation('features_tophat'))

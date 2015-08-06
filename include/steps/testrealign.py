@@ -22,7 +22,7 @@ class TestRealign(AbstractStep):
         self.require_tool('testrealign')
         self.require_tool('samtools')
         self.require_tool('pigz')
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         
         
 
@@ -69,7 +69,7 @@ class TestRealign(AbstractStep):
             fifo_path_genome = pool.get_temporary_fifo('genome-fifo', 'input')
 
             
-            pool.launch([self.get_tool('cat4m'), self.get_option('genome'), '-o', fifo_path_genome])
+            pool.launch([self.get_tool('cat'), self.get_option('genome'), '-o', fifo_path_genome])
             
             with pool.Pipeline(pool) as pipeline:
                 in_alignment = run.get_private_info('in-alignment')                 

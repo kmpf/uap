@@ -17,7 +17,7 @@ class RemoveDuplicates(AbstractStep):
         self.add_connection('out/alignments')
         self.add_connection('out/metrics')
         
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         self.require_tool('MarkDuplicates')
 
 #        self.add_option('index', str)
@@ -43,7 +43,7 @@ class RemoveDuplicates(AbstractStep):
         with process_pool.ProcessPool(self) as pool:
             alignment_path = run.get_private_info('in-alignment')
             with pool.Pipeline(pool) as pipeline:
-#                cat4m_input = [self.get_tool('cat4m'), alignment_path]
+#                cat_input = [self.get_tool('cat'), alignment_path]
                 mark_duplicates = [
                     self.get_tool('MarkDuplicates'),
                     'INPUT=%s' % alignment_path,
@@ -52,17 +52,17 @@ class RemoveDuplicates(AbstractStep):
                     'REMOVE_DUPLICATES=true'                
                     ]
                                                   
-#                cat4m_output = [self.get_tool('cat4m'), '-']
-#                print(cat4m_input)
+#                cat_output = [self.get_tool('cat'), '-']
+#                print(cat_input)
 #                print(mark_duplicates)
-#                print(cat4m_output)
+#                print(cat_output)
 
-#                pipeline.append(cat4m_input)
+#                pipeline.append(cat_input)
                 pipeline.append(mark_duplicates, 
                                 hints={'writes': 
                                        [run.get_single_output_file_for_annotation('metrics'),
                                         run.get_single_output_file_for_annotation('alignments')]
                                        })
-#                pipeline.append(cat4m_output, 
+#                pipeline.append(cat_output, 
 #                                stdout_path = )
 

@@ -28,7 +28,6 @@ class Macs2(AbstractStep):
 
 
         self.require_tool('macs2')
-        self.require_tool('cat4m')
         self.require_tool('pigz')
 
 #        self.add_option('treatment', str, list) # bekommen wir ja immer

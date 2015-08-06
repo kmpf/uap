@@ -21,7 +21,7 @@ class RSeQC(AbstractStep):
 #	self.add_connection('out/junction_saturation')
 #	self.add_connection('out/RPKM_saturation')
                 
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         self.require_tool('bam_stat.py')
 #	self.require_tool('junction_annotation.py')
 	self.require_tool('infer_experiment.py')

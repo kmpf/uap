@@ -23,7 +23,6 @@ class CuffmergeWithoutReference(AbstractStep):
         self.add_connection('out/log_stderr')
         self.add_connection('out/run_log')
 
-        self.require_tool('cat4m')
         self.require_tool('pigz')
         self.require_tool('cuffmerge')
 

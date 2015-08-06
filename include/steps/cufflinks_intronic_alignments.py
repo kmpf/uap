@@ -23,7 +23,6 @@ class CuffLinks(AbstractStep):
         self.add_connection('out/isoforms_fpkm')
         self.add_connection('out/log_stderr')
         
-        self.require_tool('cat4m')
         self.require_tool('pigz')
         self.require_tool('cufflinks')
 

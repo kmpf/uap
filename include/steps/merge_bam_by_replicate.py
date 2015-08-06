@@ -20,7 +20,7 @@ class Merge_Bam_By_Replicate (AbstractStep):
 
         self.require_tool('bamtools')
         self.require_tool('samtools')
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         ## ? also sort  pigz and the like ??
 
 
@@ -99,7 +99,7 @@ class Merge_Bam_By_Replicate (AbstractStep):
                 sorted_bai_path = run.get_single_output_file_for_annotation('indices')
                 unsorted_bam_path = self.get_temporary_path('merge_bam_unsorted', 'output')
 
-                ## Merge bam files using bamtools merge - maybe replace by more performant solutin using cat4m
+                ## Merge bam files using bamtools merge - maybe replace by more performant solutin using cat
                 bamtools =[self.get_tool('bamtools'), 'merge']
                 bamtools.extend (['-forceCompression'])
                 ## Append the input files, which are all input file linked to the output file
@@ -114,11 +114,11 @@ class Merge_Bam_By_Replicate (AbstractStep):
         ## Sort the bam file by chromosome
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.get_tool('cat4m'), unsorted_bam_path]
+                cat = [self.get_tool('cat'), unsorted_bam_path]
                 samtools = [self.get_tool('samtools'), 'sort']
                 samtools.extend(['-', sorted_bam_path[:-4]])
                 
-                pipeline.append(cat4m)
+                pipeline.append(cat)
                 pipeline.append(samtools, hints = {'writes': [sorted_bam_path]})
 
         # samtools index

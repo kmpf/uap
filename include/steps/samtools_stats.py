@@ -16,7 +16,7 @@ class SamtoolsStats(AbstractStep):
         self.add_connection('in/alignments')
         self.add_connection('out/stats')
                 
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         self.require_tool('samtools')
         self.require_tool('pigz')
         
@@ -38,9 +38,9 @@ class SamtoolsStats(AbstractStep):
 
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.get_tool('cat4m'), bam_in_path]
+                cat = [self.get_tool('cat'), bam_in_path]
                 samtools = [self.get_tool('samtools'), 'stats']
 
-                pipeline.append(cat4m)
+                pipeline.append(cat)
                 pipeline.append(samtools, stdout_path = sam_out_path)
 

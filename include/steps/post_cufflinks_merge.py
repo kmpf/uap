@@ -24,7 +24,7 @@ class Post_Cufflinks_Merge(AbstractStep):
         self.add_option('filter_by_class_and_gene_name', bool, default=False)
 
         self.require_tool('post_cufflinks_merge')
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         
     def declare_runs(self):
 
@@ -41,7 +41,7 @@ class Post_Cufflinks_Merge(AbstractStep):
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
                 features_path = run.get_private_info('in-features')
-                cat4m = [self.get_tool('cat4m'), features_path]
+                cat = [self.get_tool('cat'), features_path]
 
                 post_cufflinks_merge = [self.get_tool('post_cufflinks_merge')]
 
@@ -61,7 +61,7 @@ class Post_Cufflinks_Merge(AbstractStep):
                 if self.get_option('class_list'):
                     post_cufflinks_merge.extend(['--class-list', self.get_option('class_list')])
 
-                pipeline.append(cat4m)
+                pipeline.append(cat)
                 pipeline.append(post_cufflinks_merge, stdout_path = run.get_single_output_file_for_annotation('features'),
                                 stderr_path = run.get_single_output_file_for_annotation('log_stderr'))
                 

@@ -15,7 +15,7 @@ class BamToBed(AbstractStep):
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
         
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         self.require_tool('samtools')
         self.require_tool('bedtools')
         self.require_tool('mate_pair_strand_switch')
@@ -46,13 +46,13 @@ class BamToBed(AbstractStep):
         bed_file = run.get_private_info('out-bed')
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.get_tool('cat4m'), bam_path]
+                cat = [self.get_tool('cat'), bam_path]
                 samtools = [self.get_tool('samtools'), 'view', '-bf', '0x2', '-']
                 bedtools = [self.get_tool('bedtools'), 'bamtobed', '-bed12', '-i', 'stdin', ]
                 strand_switch = [self.get_tool('mate_pair_strand_switch')]
                 sort = [self.get_tool('sort'), '-k1,1', '-k2,2n', '-T', self.get_output_directory_du_jour()]
                 
-                pipeline.append(cat4m)
+                pipeline.append(cat)
                 if is_paired_end:
                     pipeline.append(samtools)
                 pipeline.append(bedtools)

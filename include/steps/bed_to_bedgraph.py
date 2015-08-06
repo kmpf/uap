@@ -15,7 +15,7 @@ class BedToBedgraph(AbstractStep):
         self.add_connection('in/alignments')
         self.add_connection('out/tracks')
         
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         self.require_tool('bedtools')
 
         self.add_option('genome', str, optional=False)
@@ -80,7 +80,7 @@ class BedToBedgraph(AbstractStep):
         for track_path, trackopts in track_info.items():
             with process_pool.ProcessPool(self) as pool:
                 with pool.Pipeline(pool) as pipeline:
-                    cat4m_in = [self.get_tool('cat4m'), bed_path]
+                    cat_in = [self.get_tool('cat'), bed_path]
                     bedtools = [self.get_tool('bedtools'), 'genomecov',
                                 '-trackline',
                                 '-trackopts', trackopts,
@@ -103,6 +103,6 @@ class BedToBedgraph(AbstractStep):
                     else:
                         out_path = run.get_single_output_file_for_annotation('tracks')
 
-                    pipeline.append(cat4m_in)
+                    pipeline.append(cat_in)
                     pipeline.append(bedtools, stdout_path = out_path)
 

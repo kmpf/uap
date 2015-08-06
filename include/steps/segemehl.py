@@ -17,7 +17,7 @@ class Segemehl(AbstractStep):
     its genome data and the second to which it writes unmapped reads::
 
        mkfifo genome_fifo unmapped_fifo
-       cat4m <genome-fasta> -o genome_fifo
+       cat <genome-fasta> -o genome_fifo
 
     The executed segemehl command is this::
 
@@ -25,7 +25,7 @@ class Segemehl(AbstractStep):
 
     The unmapped reads are saved via these commands::
 
-        cat4m unmapped_fifo | pigz --blocksize 4096 --processes 2 -c > <unmapped-fastq>
+        cat unmapped_fifo | pigz --blocksize 4096 --processes 2 -c > <unmapped-fastq>
 
     '''
 
@@ -40,7 +40,7 @@ class Segemehl(AbstractStep):
         self.add_connection('out/unmapped')
         self.add_connection('out/log')
         
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         self.require_tool('pigz')
         self.require_tool('segemehl')
 
@@ -98,7 +98,7 @@ class Segemehl(AbstractStep):
             fifo_path_unmapped = pool.get_temporary_fifo(
                 'segemehl-unmapped-fifo', 'output')
             
-            pool.launch([self.get_tool('cat4m'), self.get_option('genome'), 
+            pool.launch([self.get_tool('cat'), self.get_option('genome'), 
                          '-o', fifo_path_genome])
             
             with pool.Pipeline(pool) as pipeline:
@@ -144,7 +144,7 @@ class Segemehl(AbstractStep):
                     '--processes', '2', '-c'
                 ]
                 
-                pipeline.append([self.get_tool('cat4m'), fifo_path_unmapped])
+                pipeline.append([self.get_tool('cat'), fifo_path_unmapped])
                 pipeline.append(
                     pigz, 
                     stdout_path = run.get_single_output_file_for_annotation(

@@ -290,9 +290,9 @@ class Cutadapt(AbstractStep):
 #
 #                    # set up processes
 #                    # cat all files
-#                    cat4m = [self.get_tool('cat4m')]
-#                    cat4m.extend(sorted(run.get_input_files_for_output_file(out_path)))
-#                    pipeline.append(cat4m)
+#                    cat = [self.get_tool('cat')]
+#                    cat.extend(sorted(run.get_input_files_for_output_file(out_path)))
+#                    pipeline.append(cat)
 #                        
 #                    # Decompress the input files
 #                    pigz1 = [self.get_tool('pigz'), '--processes', '1', 

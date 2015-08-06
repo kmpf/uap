@@ -21,7 +21,7 @@ class  Merge_Gencode_Novel_Workaround(AbstractStep):
 #        self.add_option('remove_unstranded', bool, default=False)
 
  
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         self.require_tool('sort')
         
     def declare_runs(self):
@@ -49,11 +49,11 @@ class  Merge_Gencode_Novel_Workaround(AbstractStep):
 
 #                features_path.append( str(self.get_option('reference')))
                 ref =self.get_option('reference')
-                cat4m = [self.get_tool('cat4m'), features_path[0], ref ]
+                cat = [self.get_tool('cat'), features_path[0], ref ]
 
 #                sort  = [self.get_tool('sort'),  '-k 1,1 -k 4g,4 -k 5g,5']
                 sort  = [self.get_tool('sort'),  '-k','1,1','-k', '4g,4', '-k', '5g,5']
-                pipeline.append(cat4m)
+                pipeline.append(cat)
                 pipeline.append(sort, stdout_path = run.get_single_output_file_for_annotation('features'),
                                 stderr_path = run.get_single_output_file_for_annotation('log_stderr'))
 

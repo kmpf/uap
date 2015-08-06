@@ -16,7 +16,7 @@ class HtSeqCount(AbstractStep):
         self.add_connection('in/features', constraints = {'total_files': 1} )
         self.add_connection('out/counts')
         
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         self.require_tool('pigz')
         self.require_tool('htseq-count')
         self.require_tool('grep')
@@ -72,7 +72,7 @@ class HtSeqCount(AbstractStep):
                 alignments_path = run.get_private_info('alignments_path')
                 features_path = run.get_private_info('features_path')
 
-                cat4m = [self.get_tool('cat4m'), alignments_path]
+                cat = [self.get_tool('cat'), alignments_path]
                 pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']
 #                grep = [self.get_tool('grep'), '-v', "\t\\*\t"]
                 samtools = [self.get_tool('samtools'), 'view', '-h', '-']
@@ -81,7 +81,7 @@ class HtSeqCount(AbstractStep):
                     htseq_count.extend(['--%s' % key, self.get_option(key)])
                 htseq_count.extend(['-', features_path])
         
-                pipeline.append(cat4m)
+                pipeline.append(cat)
                 
                 if alignments_path[-7:] == '.sam.gz':
                     pipeline.append(pigz)

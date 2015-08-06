@@ -21,7 +21,6 @@ class Macs14(AbstractStep):
         self.add_connection('out/negative-peaks')
  
         self.require_tool('macs14')
-        self.require_tool('cat4m')
         self.require_tool('pigz')
 
         self.add_option('control', list , default=list())

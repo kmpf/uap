@@ -15,7 +15,7 @@ class BamToSam(AbstractStep):
         self.add_connection('out/alignments')
         
         
-        self.require_tool('cat4m')
+        self.require_tool('cat')
         self.require_tool('samtools')
         self.require_tool('pigz')
 
@@ -42,11 +42,11 @@ class BamToSam(AbstractStep):
 
         with process_pool.ProcessPool(self) as pool:
             with pool.Pipeline(pool) as pipeline:
-                cat4m = [self.get_tool('cat4m'), bam_in_path]
+                cat = [self.get_tool('cat'), bam_in_path]
                 samtools = [self.get_tool('samtools'), 'view', '-h', '-']
                 pigz2 = [self.get_tool('pigz'), '--blocksize', '4096', '--processes', '2', '-c']
 
-                pipeline.append(cat4m)
+                pipeline.append(cat)
                 pipeline.append(samtools)
                 pipeline.append(pigz2, stdout_path = sam_out_path)
 
