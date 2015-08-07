@@ -54,7 +54,7 @@ class Cutadapt(AbstractStep):
         read_types = {'first_read': 'R1', 'second_read': 'R2'}
         paired_end_info = dict()
         for run_id in run_ids_connections_files.keys():
-            with self.new_run(run_id) as run:
+            with self.declare_run(run_id) as run:
                 for read in read_types:                
                     connection = 'in/%s' % read
                     input_paths = run_ids_connections_files[run_id][connection]

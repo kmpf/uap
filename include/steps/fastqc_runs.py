@@ -44,36 +44,38 @@ class Fastqc(AbstractStep):
         '''
         read_types = {'first_read': '_R1', 'second_read': '_R2'}
         for run_id in run_ids_connections_files.keys():
-            run = self.new_run(run_id)
-            for read in read_types:
-                connection = 'in/%s' % read
-                input_paths = run_ids_connections_files[run_id][connection]
-                if input_paths == [None]:
-                    run.add_empty_output_connection("%s_fastqc_report" % read)
-                    run.add_empty_output_connection("%s_log_stderr" % read)
-                else:
-                    fastqc_exec_group = run.new_exec_group()
-                    fastqc = [self.get_tool('fastqc'),
-                              '--noextract', '-o',
-                              self.get_output_directory_du_jour_placeholder()]
-                    fastqc.extend(input_paths)
+            with self.declare_run(run_id) as run:
+                for read in read_types:
+                    connection = 'in/%s' % read
+                    input_paths = run_ids_connections_files[run_id][connection]
+                    if input_paths == [None]:
+                        run.add_empty_output_connection("%s_fastqc_report" %
+                                                        read)
+                        run.add_empty_output_connection("%s_log_stderr" % read)
+                    else:
+                        fastqc_exec_group = run.new_exec_group()
+                        fastqc = [self.get_tool('fastqc'),
+                                  '--noextract', '-o',
+                                  self.get_output_directory_du_jour_placeholder()]
+                        fastqc.extend(input_paths)
+                        
+                        fastqc_command = fastqc_exec_group.add_command(
+                            fastqc,
+                            stderr_path = run.add_output_file(
+                                "%s_log_stderr" % read, 
+                                "%s%s-fastqc-log_stderr.txt" % 
+                                (run_id, read_types[read]),
+                                input_paths))
                     
-                    fastqc_command = fastqc_exec_group.add_command(
-                        fastqc,
-                        stderr_path = run.add_output_file(
-                            "%s_log_stderr" % read, 
-                            "%s%s-fastqc-log_stderr.txt" % 
-                            (run_id, read_types[read]),
-                            input_paths))
-                    
-                    mv_exec_group = run.new_exec_group()
-                    input_base = os.path.basename(
-                        input_paths[0]).split('.', 1)[0]
-                    mv = [self.get_tool('mv'),
-                          os.path.join(
-                              self.get_output_directory_du_jour_placeholder(),
-                              ''.join([input_base, '_fastqc.zip'])),
-                          run.add_output_file("%s_fastqc_report" % read,
-                            "%s%s-fastqc.zip" % (run_id, read_types[read]),
-                            input_paths)]
-                    mv_command = mv_exec_group.add_command(mv)
+                        mv_exec_group = run.new_exec_group()
+                        input_base = os.path.basename(
+                            input_paths[0]).split('.', 1)[0]
+                        mv = [self.get_tool('mv'),
+                              os.path.join(
+                                  self.get_output_directory_du_jour_placeholder(),
+                                  ''.join([input_base, '_fastqc.zip'])),
+                              run.add_output_file("%s_fastqc_report" % read,
+                                                  "%s%s-fastqc.zip" %
+                                                  (run_id, read_types[read]),
+                                                  input_paths)]
+                        mv_command = mv_exec_group.add_command(mv)
