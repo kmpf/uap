@@ -14,10 +14,10 @@ import run as run_module
 
 class Fastqc(AbstractStep):
     '''
-    | The fastqc step  is a wrapper for the fastqc tool. 
-    | It generates some quality metrics for fastq files.
-    | http://www.bioinformatics.babraham.ac.uk/projects/fastqc/ 
-    | For this specific instance only the zip archive is preserved
+    The fastqc step  is a wrapper for the fastqc tool. 
+    It generates some quality metrics for fastq files.
+    http://www.bioinformatics.babraham.ac.uk/projects/fastqc/ 
+    For this specific instance only the zip archive is preserved
     '''
     
     def __init__(self, pipeline):
