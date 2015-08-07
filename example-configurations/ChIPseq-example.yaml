@@ -45,15 +45,18 @@ steps:
     merge_fastq_files:
         _depends: fc
 
-    cutadapt:
-        _depends: fc
-        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
-        adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
-        fix_qnames: false
+    fastqc_runs:
+        _depends: merge_fastq_files
 
-    fix_cutadapt:
-        _depends: cutadapt
-        _volatile: true
+#    cutadapt:
+#        _depends: fc
+#        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+#        adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+#        fix_qnames: false
+
+#    fix_cutadapt:
+#        _depends: cutadapt
+#        _volatile: true
 
 #    segemehl:
 #        _depends: fix_cutadapt
@@ -67,6 +70,11 @@ tools:
 
     cutadapt:
         path: cutadapt
+        get_version: '--version'
+        exit_code: 0
+
+    fastqc:
+        path: fastqc
         get_version: '--version'
         exit_code: 0
 
@@ -145,6 +153,11 @@ tools:
 
     mkfifo:
         path: mkfifo
+        get_version: '--version'
+        exit_code: 0
+
+    mv:
+        path: mv
         get_version: '--version'
         exit_code: 0
 
