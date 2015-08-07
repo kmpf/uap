@@ -27,7 +27,6 @@ steps:
 #        pattern: "\tgene\t"
 
     fc (run_folder_source):
-        #path: ../data/test/IlluminaRunFolder
         path: ../data/test/IlluminaRunFolder
         paired_end: yes
 
