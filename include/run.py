@@ -184,6 +184,9 @@ class Run(object):
                 "You're trying to re-add an output file which has already "
                 "been declared: %s." % out_path)
 
+        if not isinstance(in_paths, list):
+            raise StandardError("Input paths (%s) is not a list." % in_paths)
+
         if None in in_paths:
             raise StandardError(
                 "There is a NoneType element in input paths (%s) for output "

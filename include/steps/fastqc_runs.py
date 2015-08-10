@@ -58,11 +58,8 @@ class Fastqc(AbstractStep):
                     else:
                         for input_path in input_paths:
                             # Get base name of input file
-                            logger.info(input_path)
                             input_base = os.path.basename(input_path)\
                                                 .split('.', 1)[0]
-                            logger.info(input_base)
-
                             # Create temporary output directory
                             temp_dir = run.add_temporary_directory(
                                 "%s" % input_base )
@@ -75,7 +72,6 @@ class Fastqc(AbstractStep):
                                       '--noextract', '-o',
                                       temp_dir]
                             fastqc.append(input_path)
-                            logger.info(input_path)
                             fastqc_command = fastqc_exec_group.add_command(
                                 fastqc,
                                 stderr_path = run.add_output_file(
