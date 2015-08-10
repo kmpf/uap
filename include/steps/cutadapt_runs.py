@@ -211,6 +211,5 @@ class Cutadapt(AbstractStep):
                             cutadapt_pipe.add_command(cutadapt,
                                                       stderr_path =\
                                                       cutadapt_log_file)
-
                             cutadapt_pipe.add_command(pigz)
                             cutadapt_pipe.add_command(dd)
