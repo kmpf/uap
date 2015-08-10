@@ -44,14 +44,14 @@ steps:
     merge_fastq_files:
         _depends: fc
 
-    fastqc_runs:
+    fastqc (fastqc_runs):
         _depends: merge_fastq_files
 
-#    cutadapt:
-#        _depends: fc
-#        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
-#        adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
-#        fix_qnames: false
+    cutadapt (cutadapt_runs):
+        _depends: fc
+        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+        adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+        fix_qnames: false
 
 #    fix_cutadapt:
 #        _depends: cutadapt

@@ -26,9 +26,11 @@ class Cutadapt(AbstractStep):
         self.add_connection('out/log_second_read')
         
         self.require_tool('cat')
-        self.require_tool('pigz')
         self.require_tool('cutadapt')
+        self.require_tool('dd')
         self.require_tool('fix_qnames')
+        self.require_tool('mkfifo')
+        self.require_tool('pigz')
 
         # Options for cutadapt
         self.add_option('adapter-type', str, optional=True, default='-a')
@@ -192,7 +194,7 @@ class Cutadapt(AbstractStep):
                             # 3.5 command: Write to output file in 4MB chunks
                             clipped_fastq_file = run.add_output_file(
                                 "%s" % read,
-                                "%s%s.fastq.gz" %
+                                "%s_%s.fastq.gz" %
                                 (run_id, read_types[read]),
                                 input_paths)
 
@@ -206,4 +208,4 @@ class Cutadapt(AbstractStep):
                                                       cutadapt_log_file)
 
                             cutadapt_pipe.add_command(pigz)
-                            cutadpat_pipe.add_command(dd)
+                            cutadapt_pipe.add_command(dd)
