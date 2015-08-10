@@ -150,6 +150,11 @@ tools:
         path: grep
         get_version: '--version'
 
+    mkdir:
+        path: mkdir
+        get_version: '--version'
+        exit_code: 0
+
     mkfifo:
         path: mkfifo
         get_version: '--version'

@@ -219,6 +219,13 @@ class Run(object):
         self._temp_paths.append(temp_placeholder)
         return temp_placeholder
 
+    def add_temporary_directory(self, prefix = '', designation = None):
+        '''
+        Convenience method for creation of temporary directories.
+        Basically, just calls self.add_temporary_file().
+        '''
+        return self.add_temporary_file(prefix = prefix,
+                                       designation = designation)
 
     def add_empty_output_connection(self, tag):
         '''

@@ -1,4 +1,5 @@
 import sys
+import logging
 import re
 import shutil
 import yaml
@@ -10,7 +11,8 @@ import command
 import pipeline
 import process_pool
 import run as run_module
-        
+
+logger = logging.getLogger('uap_logger')
 
 class Fastqc(AbstractStep):
     '''
@@ -33,7 +35,8 @@ class Fastqc(AbstractStep):
         self.add_connection('out/second_read_log_stderr')
         
         # require_tool evtl. in abstract_step verstecken
-        self.require_tool('fastqc') 
+        self.require_tool('fastqc')
+        self.require_tool('mkdir')
         self.require_tool('mv')
 
     def runs(self, run_ids_connections_files):
@@ -53,29 +56,42 @@ class Fastqc(AbstractStep):
                                                         read)
                         run.add_empty_output_connection("%s_log_stderr" % read)
                     else:
-                        fastqc_exec_group = run.new_exec_group()
-                        fastqc = [self.get_tool('fastqc'),
-                                  '--noextract', '-o',
-                                  self.get_output_directory_du_jour_placeholder()]
-                        fastqc.extend(input_paths)
-                        
-                        fastqc_command = fastqc_exec_group.add_command(
-                            fastqc,
-                            stderr_path = run.add_output_file(
-                                "%s_log_stderr" % read, 
-                                "%s%s-fastqc-log_stderr.txt" % 
-                                (run_id, read_types[read]),
-                                input_paths))
-                    
-                        mv_exec_group = run.new_exec_group()
-                        input_base = os.path.basename(
-                            input_paths[0]).split('.', 1)[0]
-                        mv = [self.get_tool('mv'),
-                              os.path.join(
-                                  self.get_output_directory_du_jour_placeholder(),
-                                  ''.join([input_base, '_fastqc.zip'])),
-                              run.add_output_file("%s_fastqc_report" % read,
-                                                  "%s%s-fastqc.zip" %
-                                                  (run_id, read_types[read]),
-                                                  input_paths)]
-                        mv_command = mv_exec_group.add_command(mv)
+                        for input_path in input_paths:
+                            # Get base name of input file
+                            logger.info(input_path)
+                            input_base = os.path.basename(input_path)\
+                                                .split('.', 1)[0]
+                            logger.info(input_base)
+
+                            # Create temporary output directory
+                            temp_dir = run.add_temporary_directory(
+                                "%s" % input_base )
+                            mkdir_exec_group = run.new_exec_group()
+                            mkdir = [self.get_tool('mkdir'), temp_dir]
+                            mkdir_exec_group.add_command(mkdir)
+                            # 1. Run fastqc for input file
+                            fastqc_exec_group = run.new_exec_group()
+                            fastqc = [self.get_tool('fastqc'),
+                                      '--noextract', '-o',
+                                      temp_dir]
+                            fastqc.extend(input_path)
+                            logger.info(input_path)
+                            fastqc_command = fastqc_exec_group.add_command(
+                                fastqc,
+                                stderr_path = run.add_output_file(
+                                    "%s_log_stderr" % read,
+                                    "%s%s-fastqc-log_stderr.txt" %
+                                    (run_id, read_types[read]),
+                                    [input_path]) )
+                            # 2. Move fastqc results to final destination
+                            mv_exec_group = run.new_exec_group()
+                            mv = [self.get_tool('mv'),
+                                  os.path.join( temp_dir,
+                                                ''.join([input_base,
+                                                         '_fastqc.zip'])),
+                                  run.add_output_file(
+                                      "%s_fastqc_report" % read,
+                                      "%s%s-fastqc.zip" %
+                                      (run_id, read_types[read]),
+                                      [input_path])]
+                            mv_command = mv_exec_group.add_command(mv)
