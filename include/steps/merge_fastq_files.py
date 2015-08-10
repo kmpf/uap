@@ -78,7 +78,11 @@ class MergeFastqFiles(AbstractStep):
                                          'if=%s' % input_path,
                                          'of=%s' % temp_fifo]
                                 exec_group.add_command(dd_in)
-
+                            else:
+                                raise StandardError("File %s does not end with "
+                                                    "any expected suffix ("
+                                                    "fastq.gz or fastq). Please "
+                                                    "fix that issue.")
                         # 3. Read data from fifos
                         with exec_group.add_pipeline() as pigz_pipe:
                             # 3.1 command: Read from ALL fifos
