@@ -125,14 +125,25 @@ class AbstractStep(object):
     def _reset(self):
         self.known_paths = dict()
         self._pipeline_log = dict()
-
-    def new_run(self, run_name):
-        run = run_module.Run(self, run_name)
-        self._runs[run_name] = run
+    def declare_run(self, run_id):
+        """
+        Declare a run. Use it like this::
+        
+            with self.declare_run(run_id) as run:
+                # add output files and information to the run here
+        """
+        if run_id in self._runs:
+            raise StandardError(
+                "Cannot declare the same run ID twice: %s." % run_id)
+        run = run_module.Run(self, run_id)
+        self._runs[run_id] = run
         return run
 
-    def get_run(self, run_name):
-        return self._runs[run_name]
+    def get_run(self, run_id):
+        if run_id in self._runs:
+            return self._runs[run_id]
+        else:
+            return None
 
     def get_runs(self):
         for run in self._runs:
@@ -1769,26 +1780,6 @@ class AbstractStep(object):
                             return annotation
         raise StandardError(
             "Unable to determine annotation type for input file %s." % path)
-
-    def declare_run(self, run_id):
-        """
-        Declare a run. Use it like this::
-        
-            with self.declare_run(run_id) as run:
-                # add output files and information to the run here
-        """
-        if run_id in self._runs:
-            raise StandardError(
-                "Cannot declare the same run ID twice: %s." % run_id)
-        run = run_module.Run(self, run_id)
-        self._runs[run_id] = run
-        return run
-
-    def get_run(self, run_id):
-        if run_id in self._runs:
-            return self._runs[run_id]
-        else:
-            return None
 
     
 class AbstractSourceStep(AbstractStep):
