@@ -74,7 +74,7 @@ class Fastqc(AbstractStep):
                             fastqc = [self.get_tool('fastqc'),
                                       '--noextract', '-o',
                                       temp_dir]
-                            fastqc.extend(input_path)
+                            fastqc.append(input_path)
                             logger.info(input_path)
                             fastqc_command = fastqc_exec_group.add_command(
                                 fastqc,
