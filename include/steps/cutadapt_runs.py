@@ -122,7 +122,7 @@ class Cutadapt(AbstractStep):
                                               'of=%s' % temp_fifo]
 
                                     pigz_pipe.add_command(dd_in)
-                                    pigz_pipe.add_command(dd_pigz)
+                                    pigz_pipe.add_command(pigz)
                                     pigz_pipe.add_command(dd_out)
 
                             elif input_path.endswith('fastq'):
