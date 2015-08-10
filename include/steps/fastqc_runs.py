@@ -30,8 +30,10 @@ class Fastqc(AbstractStep):
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/first_read_fastqc_report')
+        self.add_connection('out/first_read_fastqc_report_webpage')
         self.add_connection('out/first_read_log_stderr')
         self.add_connection('out/second_read_fastqc_report')
+        self.add_connection('out/second_read_fastqc_report_webpage')
         self.add_connection('out/second_read_log_stderr')
         
         # require_tool evtl. in abstract_step verstecken
@@ -81,7 +83,7 @@ class Fastqc(AbstractStep):
                                     [input_path]) )
                             # 2. Move fastqc results to final destination
                             mv_exec_group = run.new_exec_group()
-                            mv = [self.get_tool('mv'),
+                            mv1 = [self.get_tool('mv'),
                                   os.path.join( temp_dir,
                                                 ''.join([input_base,
                                                          '_fastqc.zip'])),
@@ -90,4 +92,15 @@ class Fastqc(AbstractStep):
                                       "%s%s-fastqc.zip" %
                                       (run_id, read_types[read]),
                                       [input_path])]
-                            mv_command = mv_exec_group.add_command(mv)
+                            mv2 = [self.get_tool('mv'),
+                                  os.path.join( temp_dir,
+                                                ''.join([input_base,
+                                                         '_fastqc.html'])),
+                                  run.add_output_file(
+                                      "%s_fastqc_report_webpage" % read,
+                                      "%s%s-fastqc.html" %
+                                      (run_id, read_types[read]),
+                                      [input_path])]
+
+                            mv_exec_group.add_command(mv1)
+                            mv_exec_group.add_command(mv2)
