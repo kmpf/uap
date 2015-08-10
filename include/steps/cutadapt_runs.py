@@ -120,6 +120,11 @@ class Cutadapt(AbstractStep):
                                     dd_out = [self.get_tool('dd'),
                                               'obs=4M',
                                               'of=%s' % temp_fifo]
+
+                                    pigz_pipe.add_command(dd_in)
+                                    pigz_pipe.add_command(dd_pigz)
+                                    pigz_pipe.add_command(dd_out)
+
                             elif input_path.endswith('fastq'):
                                 # 2.1 command: Read file in 4MB chunks and
                                 #              write to fifo in 4MB chunks
