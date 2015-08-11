@@ -35,7 +35,7 @@ logger = logging.getLogger('uap_logger')
 class FastxQualityStats(AbstractStep):
 
     def __init__(self, pipeline):
-        super(CountRawReads, self).__init__(pipeline)
+        super(FastxQualityStats, self).__init__(pipeline)
         
         self.set_cores(4)
         

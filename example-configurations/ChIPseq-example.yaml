@@ -47,6 +47,9 @@ steps:
     fastqc (fastqc_runs):
         _depends: merge_fastq_files
 
+    fastx_quality_stats:
+        _depends: merge_fastq_files
+
     cutadapt (cutadapt_runs):
         _depends: fc
         adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
@@ -73,6 +76,11 @@ tools:
         exit_code: 0
 
     fastqc:
+        path: fastqc
+        get_version: '--version'
+        exit_code: 0
+
+    fastx_quality_stats:
         path: fastqc
         get_version: '--version'
         exit_code: 0
@@ -107,8 +115,8 @@ tools:
     # Internal Tools #
     ##################
 
-    cat4m:
-        path: ./../tools/cat4m
+#    cat4m:
+#        path: ./../tools/cat4m
 
     fix_cutadapt:
         path: ['./../python_env/bin/python', './../tools/fix_cutadapt.py']

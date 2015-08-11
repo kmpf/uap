@@ -261,9 +261,6 @@ class ProcessPool(object):
                 try:
                     os.unlink(_)
                 except OSError as e:
-                    logger.error("errno: %s" % e.errno)
-                    logger.error("strerror: %s" % e.strerror)
-                    logger.error("filename: %s" % e.filename)
                     pass
         
         ProcessPool.current_instance = None
