@@ -11,6 +11,7 @@ Already replaced:
 ** cutadapt_runs.py
 ** fastqc_runs.py
 ** merge_fastq_files.py
+** fix_cutadapt_runs.py
 
 Ongoing Process:
 * Steps:
@@ -41,7 +42,6 @@ Still to replace:
 ** cuffmerge_without_reference.py
 ** cutadapt.py
 ** fastqc.py
-** fix_cutadapt.py
 ** fix_s2c.py
 ** grep.py
 ** head.py
