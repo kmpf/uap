@@ -249,17 +249,17 @@ class ProcessPool(object):
 
         # remove all temporary files we know of
         for _ in self.temp_paths:
-            if os.path.isfile(_):
+            if os.path.isdir(_):
                 try:
-                    os.unlink(_)
+                    os.rmdir(_)
                 except OSError as e:
                     logger.error("errno: %s" % e.errno)
                     logger.error("strerror: %s" % e.strerror)
                     logger.error("filename: %s" % e.filename)
                     pass
-            elif os.path.isdir(_):
+            else:
                 try:
-                    os.rmdir(_)
+                    os.unlink(_)
                 except OSError as e:
                     logger.error("errno: %s" % e.errno)
                     logger.error("strerror: %s" % e.strerror)
