@@ -16,7 +16,7 @@ class Cutadapt(AbstractStep):
     def __init__(self, pipeline):
         super(Cutadapt, self).__init__(pipeline)
         
-        self.set_cores(3)
+        self.set_cores(4)
         
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
