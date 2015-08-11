@@ -184,6 +184,9 @@ class Run(object):
                 "You're trying to re-add an output file which has already "
                 "been declared: %s." % out_path)
 
+        if not isinstance(in_paths, list):
+            raise StandardError("Input paths (%s) is not a list." % in_paths)
+
         if None in in_paths:
             raise StandardError(
                 "There is a NoneType element in input paths (%s) for output "
@@ -219,6 +222,13 @@ class Run(object):
         self._temp_paths.append(temp_placeholder)
         return temp_placeholder
 
+    def add_temporary_directory(self, prefix = '', designation = None):
+        '''
+        Convenience method for creation of temporary directories.
+        Basically, just calls self.add_temporary_file().
+        '''
+        return self.add_temporary_file(prefix = prefix,
+                                       designation = designation)
 
     def add_empty_output_connection(self, tag):
         '''

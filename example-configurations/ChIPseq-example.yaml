@@ -27,7 +27,6 @@ steps:
 #        pattern: "\tgene\t"
 
     fc (run_folder_source):
-        #path: ../data/test/IlluminaRunFolder
         path: ../data/test/IlluminaRunFolder
         paired_end: yes
 
@@ -45,17 +44,17 @@ steps:
     merge_fastq_files:
         _depends: fc
 
-    fastqc_runs:
+    fastqc (fastqc_runs):
         _depends: merge_fastq_files
 
-#    cutadapt:
-#        _depends: fc
-#        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
-#        adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
-#        fix_qnames: false
+    cutadapt (cutadapt_runs):
+        _depends: fc
+        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+        adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+        fix_qnames: false
 
-#    fix_cutadapt:
-#        _depends: cutadapt
+    fix_cutadapt_runs:
+        _depends: cutadapt
 #        _volatile: true
 
 #    segemehl:
@@ -150,6 +149,11 @@ tools:
     grep:
         path: grep
         get_version: '--version'
+
+    mkdir:
+        path: mkdir
+        get_version: '--version'
+        exit_code: 0
 
     mkfifo:
         path: mkfifo
