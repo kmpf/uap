@@ -81,9 +81,9 @@ tools:
         exit_code: 0
 
     fastx_quality_stats:
-        path: fastqc
-        get_version: '--version'
-        exit_code: 0
+        path: fastx_quality_stats
+        get_version: '-h'
+        exit_code: 1
 
 #    segemehl:
 #        path: segemehl.x
