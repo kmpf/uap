@@ -15,12 +15,15 @@ class CommandInfo(object):
         self._output_files_per_connection = dict()
 
         for _ in command:
-            if not isinstance(_, str):
-                raise StandardError("Non-string element %s in command %s" 
+            if _ == command[0]:
+                self._tool = _
+                if isinstance(command[0], list):
+                    self._tool = _[-1]
+                pass
+            elif not isinstance(_, str):
+                raise StandardError("Non-string element %s in command %s"
                                     % (_, command))
             self._command.append(_)
-        # get tool needed
-        self._tool = command[0]
 
     def replace_output_dir_du_jour(func):
         def inner(self, *args):

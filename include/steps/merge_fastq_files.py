@@ -56,8 +56,8 @@ class MergeFastqFiles(AbstractStep):
                                 with exec_group.add_pipeline() as unzip_pipe:
                                     # 2.1 command: Read file in 4MB chunks
                                     dd_in = [self.get_tool('dd'),
-                                           'ibs=4M',
-                                           'if=%s' % input_path]
+                                             'ibs=4M',
+                                             'if=%s' % input_path]
                                     # 2.2 command: Uncompress file to fifo
                                     pigz = [self.get_tool('pigz'),
                                             '--decompress',
@@ -82,7 +82,8 @@ class MergeFastqFiles(AbstractStep):
                                 raise StandardError("File %s does not end with "
                                                     "any expected suffix ("
                                                     "fastq.gz or fastq). Please "
-                                                    "fix that issue.")
+                                                    "fix that issue." %
+                                                    input_path)
                         # 3. Read data from fifos
                         with exec_group.add_pipeline() as pigz_pipe:
                             # 3.1 command: Read from ALL fifos

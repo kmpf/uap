@@ -53,8 +53,8 @@ steps:
         adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
         fix_qnames: false
 
-#    fix_cutadapt:
-#        _depends: cutadapt
+    fix_cutadapt_runs:
+        _depends: cutadapt
 #        _volatile: true
 
 #    segemehl:
