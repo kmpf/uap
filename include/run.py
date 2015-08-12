@@ -1,5 +1,6 @@
 import abstract_step
 import exec_group
+import glob
 import logging
 import misc
 import os
@@ -290,26 +291,29 @@ class Run(object):
                 if directory != None and out_path != None:
                     # Is full_path a file?
                     full_path = os.path.join(directory, out_path)
-                    if os.path.isfile(full_path):
-                        # Add the file to results
-                        result[tag][full_path] = in_paths
-                    # Is full_path a directory?
-                    elif os.path.isdir(full_path):
-                        # Get all files in there
-                        for (dirpath, dirnames, filenames) in os.walk(full_path):
-                            for name in filenames:
-                                result[tag][os.path.join(dirpath, name)] \
-                                    = in_paths
-                    # Is full_path a glob pattern?
-                    elif len(glob.glob(full_path)) != 0:
-                        # Empty result lists are not added
-                        for rel_path in glob.glob(full_path):
-                            result[tag][os.path.abspath(rel_path)] = in_paths
-                    else:
-                        raise StandardError("Path %s is neither a file nor a "
-                                           "directory nor a glob pattern.")
+#                    if os.path.exists(full_path):
+#                        if os.path.isfile(full_path):
+#                            # Add the file to results
+#                            result[tag][full_path] = in_paths
+#                            # Is full_path a directory?
+#                        elif os.path.isdir(full_path):
+#                            # Get all files in there
+#                            for (dirpath, dirnames, filenames) in os.walk(full_path):
+#                                for name in filenames:
+#                                    result[tag][os.path.join(dirpath, name)] \
+#                                        = in_paths
+#                    # Is full_path a glob pattern?
+#                    elif len(glob.glob(full_path)) != 0:
+#                        # Empty result lists are not added
+#                        for rel_path in glob.glob(full_path):
+#                            result[tag][os.path.abspath(rel_path)] = in_paths
+#                    else:
+#                        raise StandardError("Path %s is neither a file nor a "
+#                                            "directory nor a glob pattern."
+#                                            % full_path)
                 else:
-                    result[tag][out_path] = in_paths
+                    full_path = out_path
+                result[tag][full_path] = in_paths
 
         return result
 
