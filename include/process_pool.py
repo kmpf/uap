@@ -247,7 +247,7 @@ class ProcessPool(object):
             for module_unload in module_unloads:
                 self.load_unload_module(module_unload)
 
-        # remove all temporary files we know of
+        # remove all temporary files or directories we know of
         for _ in self.temp_paths:
             if os.path.isdir(_):
                 try:

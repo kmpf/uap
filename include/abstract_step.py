@@ -1731,6 +1731,9 @@ class AbstractStep(object):
             input_files = sorted(input_files)
             yield run_id, input_files
 
+    def get_run_ids_and_input_run_infos(self, in_key):
+        pass
+
     def get_input_files_for_run_id_and_connection(self, run_id, in_key):
         """
         Returns a list of all input files given a run_id and a connection
