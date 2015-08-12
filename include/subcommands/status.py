@@ -116,7 +116,7 @@ def main(args):
                     for task in tasks_for_status[status]:
                         if not str(task.step) in step_count:
                             step_count[str(task.step)] = 0
-                            step_order.write(str(task.step))
+                            step_order.append(str(task.step))
                         step_count[str(task.step)] += 1
                     for step_name in step_order:
                         output.append("[%s]%4d %s"
