@@ -204,20 +204,6 @@ class Run(object):
         return os.path.join(
             self._step.get_output_directory_du_jour_placeholder(), out_path)
 
-    def add_output_directory(self, tag, out_path, in_paths):
-        '''
-        Convenience method to add directories as output path.
-        The magic happens in self.get_output_files_abspath().
-        '''
-        return self.add_output_file(tag, out_path, in_paths)
-        
-    def add_output_glob(self, tag, out_path, in_paths):
-        '''
-        Convenience method to add glob_pattern as output path.
-        The magic happens in self.get_output_files_abspath().
-        '''
-        return self.add_output_file(tag, out_path, in_paths)
-
     def add_temporary_file(self, prefix = '', designation = None):
         '''
         Here the name of a temporary file is created (using tempfile library).
@@ -288,28 +274,10 @@ class Run(object):
             for out_path, in_paths in self._output_files[tag].items():
                 directory = self._step.get_output_directory_du_jour()
                 if directory != None and out_path != None:
-                    # Is full_path a file?
                     full_path = os.path.join(directory, out_path)
-                    if os.path.isfile(full_path):
-                        # Add the file to results
-                        result[tag][full_path] = in_paths
-                    # Is full_path a directory?
-                    elif os.path.isdir(full_path):
-                        # Get all files in there
-                        for (dirpath, dirnames, filenames) in os.walk(full_path):
-                            for name in filenames:
-                                result[tag][os.path.join(dirpath, name)] \
-                                    = in_paths
-                    # Is full_path a glob pattern?
-                    elif len(glob.glob(full_path)) != 0:
-                        # Empty result lists are not added
-                        for rel_path in glob.glob(full_path):
-                            result[tag][os.path.abspath(rel_path)] = in_paths
-                    else:
-                        raise StandardError("Path %s is neither a file nor a "
-                                           "directory nor a glob pattern.")
                 else:
-                    result[tag][out_path] = in_paths
+                    full_path = out_path
+                result[tag][full_path] = in_paths
 
         return result
 
