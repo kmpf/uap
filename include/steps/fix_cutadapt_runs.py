@@ -122,7 +122,7 @@ class FixCutadapt(AbstractStep):
                         "%s" % read,
                         "%s%s.fastq.gz" %
                         (run_id, read_types["first_read"]),
-                        input_paths)
+                        run_ids_connections_files[run_id]["in/first_read"])
                     dd = [self.get_tool('dd'),
                           'obs=4M',
                           'of=%s' % fr_stdout_path]
@@ -148,7 +148,7 @@ class FixCutadapt(AbstractStep):
                             "%s" % read,
                             "%s%s.fastq.gz" %
                             (run_id, read_types["second_read"]),
-                            input_paths)
+                            run_ids_connections_files[run_id]["in/second_read"])
                         dd = [self.get_tool('dd'),
                               'obs=4M',
                               'of=%s' % sr_stdout_path]
