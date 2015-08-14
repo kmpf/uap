@@ -87,19 +87,11 @@ class Bcl2FastqSource(AbstractSourceStep):
                            self.is_option_set_in_config(option)]
             for option in set_options:
                 configureBcl2Fastq.extend([ '--%s' % option, 
-<<<<<<< Updated upstream
                                             str(self.get_option(option)) ])
-            configureBcl2Fastq.extend(
-                    ['--output-dir', temp_output_dir])
-            # Add command to execution group
-            configureBcl2Fastq_command = bcl2Fastq_exec_group.add_command(
-=======
-                                        str(self.get_option(option)) ])
             configureBcl2Fastq.extend(
                 ['--output-dir', temp_output_dir])
             # Add command to execution group
-            configureBcl2Fastq_command = bcl2Fastq_exec_group.new_command(
->>>>>>> Stashed changes
+            configureBcl2Fastq_command = bcl2Fastq_exec_group.add_command(
                 configureBcl2Fastq,
                 stderr_path = run.add_output_file(
                     "configureBcl2Fastq_log_stderr",
@@ -110,11 +102,7 @@ class Bcl2FastqSource(AbstractSourceStep):
             # Assemble make command
             make = [self.get_tool('make'), '-C', temp_output_dir]
             # Add make command to execution group
-<<<<<<< Updated upstream
-            make_exec_group.add_command(
-=======
             make_exec_group.new_command(
->>>>>>> Stashed changes
                 make,
                 stderr_path = run.add_output_file(
                     "make_log_stderr",
@@ -129,21 +117,15 @@ class Bcl2FastqSource(AbstractSourceStep):
                 mkdir = [self.get_tool('mkdir'), '-p', output_unaligned_dir]
                 logger.debug(" ".join(mkdir))
                 # Add mkdir command to execution group
-<<<<<<< Updated upstream
+
                 mv_exec_group.add_command(mkdir)
-=======
-                mv_exec_group.new_command(mkdir)
->>>>>>> Stashed changes
                 # Assemble mv command
                 mv = [self.get_tool('mv')]
                 mv.extend([temp_output_dir, output_dir])
                 logger.debug(" ".join(mv))
                 # Add mv command to execution group
-<<<<<<< Updated upstream
+
                 mv_command = mv_exec_group.add_command(mv)
-=======
-                mv_command = mv_exec_group.new_command(mv)
->>>>>>> Stashed changes
                 run.add_public_info("bcl2fastq-output-folder",
                                     output_unaligned_dir)
             else:
@@ -151,11 +133,7 @@ class Bcl2FastqSource(AbstractSourceStep):
                                output_unaligned_dir)
                 logger.warning("If you WANT to restart the analysis either "
                                "remove the directory or choose a new output "
-<<<<<<< Updated upstream
                                "directory. ")
-=======
-                               "directory.")
->>>>>>> Stashed changes
                 logger.warning("If you DON'T want to restart the analysis "
                                "everything is fine.")
 

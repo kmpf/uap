@@ -1,6 +1,6 @@
 # This is the rnaseq-pipeline configuration file.
 # 
-destination_path: "data/test/out"
+destination_path: example-out/Index-genomes/
 
 constants:
     - &genome /data/bioinf/Data/Indices/hg19/hg19.fa
@@ -10,9 +10,9 @@ constants:
 
 
 steps:
-    fc1 (run_folder_source):
+    M.genitalium_genome_url (raw_url_source):
+        url: ftp://ftp.ncbi.nih.gov/genomes/genbank/bacteria/Mycoplasma_genitalium/latest_assembly_versions/GCA_000027325.1_ASM2732v1
         path: data/test/IlluminaRunFolder/
-        paired_end: yes
 
     # FASTQC: Generates a quality control reports of FASTQ files
     fastqc:
