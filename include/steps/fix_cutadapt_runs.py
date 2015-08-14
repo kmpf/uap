@@ -119,7 +119,7 @@ class FixCutadapt(AbstractStep):
                             '--stdout']
                     # 4.3 command: Write to output file in 4MB chunks
                     fr_stdout_path = run.add_output_file(
-                        "%s" % read,
+                        "first_read",
                         "%s%s.fastq.gz" %
                         (run_id, read_types["first_read"]),
                         run_ids_connections_files[run_id]["in/first_read"])
@@ -145,7 +145,7 @@ class FixCutadapt(AbstractStep):
                                 '--stdout']
                         # 4.3 command: Write to output file in 4MB chunks
                         sr_stdout_path = run.add_output_file(
-                            "%s" % read,
+                            "second_read",
                             "%s%s.fastq.gz" %
                             (run_id, read_types["second_read"]),
                             run_ids_connections_files[run_id]["in/second_read"])

@@ -56,9 +56,22 @@ steps:
         adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
         fix_qnames: false
 
+    cutadapt_fastqc (fastqc_runs):
+        _depends: cutadapt
+
+    cutadapt_fastx_quality_stats (fastx_quality_stats):
+        _depends: cutadapt
+
     fix_cutadapt_runs:
         _depends: cutadapt
 #        _volatile: true
+
+    fix_cutadapt_fastqc (fastqc_runs):
+        _depends: fix_cutadapt_runs
+
+    fix_cutadapt_fastx_quality_stats (fastx_quality_stats):
+        _depends: fix_cutadapt_runs
+
 
 #    segemehl:
 #        _depends: fix_cutadapt

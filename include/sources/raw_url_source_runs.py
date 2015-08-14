@@ -48,7 +48,7 @@ class RawUrlSource(AbstractStep):
                         stdout_path = run.add_temporary_file())
 
                     # Separate script needs to be developed to do the SHA1/MD5
-                    # checking!!!
+                    # checking!!n!
             
         if self.is_option_set_in_config('sha1'):
             with open(download_sha1_path, 'r') as f:
