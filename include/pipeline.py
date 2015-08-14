@@ -591,7 +591,7 @@ class Pipeline(object):
                 os.unlink(path)
                 
         if show_hint:
-            if print_more_warnings and not print_details:
+            if print_more_warnings and not print_details or not fix_problems:
                 print("Hint: Run 'uap %s fix-problems --details' to see the "
                       "details."  % self.config_file_name)
             if not fix_problems:
