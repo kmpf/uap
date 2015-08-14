@@ -41,6 +41,7 @@ class TopHat2(AbstractStep):
         self.require_tool('cat')
         self.require_tool('pigz')
         self.require_tool('bowtie2')
+        self.require_tool('mkfifo')
         self.require_tool('tophat2')
 
 #        self.add_option('genome', str)
@@ -151,41 +152,52 @@ class TopHat2(AbstractStep):
                     tophat2_files = {
                         'accepted_hits.bam' : run.add_output_file(
                             'alignments', 
-                            '%s-tophat2-accepted.bam' % run_id,input_paths),
+                            '%s-tophat2-accepted.bam' % run_id,
+                            input_paths),
                         'unmapped.bam' : run.add_output_file(
                             'unmapped', 
-                            '%s-tophat2-unmapped.bam' % run_id, input_paths),
+                            '%s-tophat2-unmapped.bam' % run_id,
+                            input_paths),
                         'insertions.bed' : run.add_output_file(
                             'insertions', 
-                            '%s-tophat2-insertions.bed' % run_id, input_paths),
+                            '%s-tophat2-insertions.bed' % run_id,
+                            input_paths),
                         'deletions.bed' : run.add_output_file(
                             'deletions', 
-                            '%s-tophat2-deletions.bed' % run_id, input_paths),
+                            '%s-tophat2-deletions.bed' % run_id,
+                            input_paths),
                         'junctions.bed' : run.add_output_file(
                             'junctions', 
-                            '%s-tophat2-junctions.bed' % run_id, input_paths),
+                            '%s-tophat2-junctions.bed' % run_id,
+                            input_paths),
                         'prep_reads.info' : run.add_output_file(
                             'prep_reads', 
-                            '%s-tophat2-prep_reads.info' % run_id, input_paths),
+                            '%s-tophat2-prep_reads.info' % run_id,
+                            input_paths),
                         'align_summary.txt' : run.add_output_file(
                             'align_summary', 
-                            '%s-tophat2-align_summary.txt' % run_id, input_paths)
+                            '%s-tophat2-align_summary.txt' % run_id,
+                            input_paths)
                     }
 
                 # Move files from tophat2 temporary output directory to final
                 # destination
-                with run.new_exec_group() as mv_exec_group:
+                with run.new_exec_group() as clean_up_exec_group:
                     for generic_file, final_path in tophat2_files:
                         mv = [self.get_tool('mv'),
                               os.path.join(temp_out_dir, generic_file),
                               final_path
                           ]
-                        mv_exec_group.add_command(mv)
+                        clean_up_exec_group.add_command(mv)
 
 
-                    mv_logs = [self.get_tool('mv'),
-                               os.path.join(temp_out_dir, 'logs')
-                               run.add_output_directory(
-                                   'misc_logs', 'logs', input_paths)
-                           ]
-                    mv_exec_group.add_command(mv_logs)
+                    cat_logs = [self.get_tool('cat'),
+                               os.path.join(temp_out_dir, '*')
+                    ]
+                    clean_up_exec_group.add_command(
+                        cat_logs,
+                        stdout_path = run.add_output_file(
+                            'misc_logs',
+                            '%s-tophat2-misc_logs.txt' % run_id,
+                            input_paths)
+                    )
