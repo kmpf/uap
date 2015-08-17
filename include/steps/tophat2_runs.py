@@ -186,7 +186,7 @@ class TopHat2(AbstractStep):
                 # Move files from tophat2 temporary output directory to final
                 # destination
                 with run.new_exec_group() as clean_up_exec_group:
-                    for generic_file, final_path in tophat2_files:
+                    for generic_file, final_path in tophat2_files.items():
                         mv = [self.get_tool('mv'),
                               os.path.join(temp_out_dir, generic_file),
                               final_path
