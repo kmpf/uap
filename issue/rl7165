@@ -6,6 +6,7 @@ The goal here is to replace the duality of declare_runs() and execute() by a sin
 Already replaced:
 * Sources:
 ** bcl2fastq_source.py
+** raw_url_source_runs.py
 
 * Steps:
 ** cutadapt_runs.py
@@ -22,7 +23,6 @@ Still to replace:
 ** fastq_source.py
 ** raw_file_source.py
 ** raw_file_sources.py (is this still necessary)
-** raw_url_source.py
 ** run_folder_source.py
 
 * Steps:
