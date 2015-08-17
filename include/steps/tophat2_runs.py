@@ -42,6 +42,7 @@ class TopHat2(AbstractStep):
         self.require_tool('dd')
         self.require_tool('mkdir')
         self.require_tool('mkfifo')
+        self.require_tool('mv')
         self.require_tool('pigz')
 #        self.require_tool('bowtie2')
         self.require_tool('tophat2')
