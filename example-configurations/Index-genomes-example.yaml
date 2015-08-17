@@ -10,13 +10,15 @@ constants:
 
 
 steps:
-    M.genitalium_genome_url (raw_url_source):
-        url: ftp://ftp.ncbi.nih.gov/genomes/genbank/bacteria/Mycoplasma_genitalium/latest_assembly_versions/GCA_000027325.1_ASM2732v1
-        path: data/test/IlluminaRunFolder/
+    M_genitalium_genome_url (raw_url_source_runs):
+        url: ftp://ftp.ncbi.nih.gov/genomes/genbank/bacteria/Mycoplasma_genitalium/latest_assembly_versions/GCA_000027325.1_ASM2732v1/GCA_000027325.1_ASM2732v1_genomic.fna.gz
+        hashing-algorithm: md5
+        filename: 'Mycoplasma_genitalium.ASM2732v1.fna.gz'
+        secure-hash: a3e6e5655e4996dc2d49f876be9d1c27
 
     # FASTQC: Generates a quality control reports of FASTQ files
-    fastqc:
-        _depends: fc1
+#    fastqc:
+#        _depends: fc1
 
     # Cutadapt: Removes adapter sequences from raw reads
 #    cutadapt:
@@ -77,40 +79,30 @@ tools:
 
     # URL: https://github.com/arq5x/bedtools2
     bedtools:
-        module_load: 'modulecmd python load bedtools/2.22.0-1'
-        module_unload: 'modulecmd python unload bedtools/2.22.0-1'
         path: 'bedtools'
         get_version: '--version'
         exit_code: 0
 
     # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
     bowtie2:
-        module_load: 'modulecmd python load bowtie2/2.2.3-1-CentOS6'
-        module_unload: 'modulecmd python unload bowtie2/2.2.3-1-CentOS6'
         path: 'bowtie2'
         get_version: '--version'
         exit_code: 0
 
     # URL: http://cufflinks.cbcb.umd.edu/
 #    cufflinks:
-#        module_load: 'modulecmd python load cufflinks/2.2.1-1_CentOS6'
-#        module_unload: 'modulecmd python unload cufflinks/2.2.1-1_CentOS6'
 #        path: 'cufflinks'
 #        get_version: '--version'
 #        exit_code: 1
 
     # URL: https://github.com/marcelm/cutadapt
     cutadapt:
-        module_load: 'modulecmd python load cutadapt/1.5_CentOS6'
-        module_unload: 'modulecmd python unload cutadapt/1.5_CentOS6'
         path: 'cutadapt'
         get_version: '--version'
         exit_code: 0
 
     # URL: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
     fastqc:
-        module_load: 'modulecmd python load fastqc/0.11.2-1'
-        module_unload: 'modulecmd python unload fastqc/0.11.2-1'
         path: 'fastqc'
         get_version: '--version'
         exit_code: 0
@@ -118,63 +110,47 @@ tools:
     # URL: https://github.com/taoliu/MACS/
     # Installation via 'pip install MACS2'
     macs2:
-        module_load: 'modulecmd python load MACS/2.1.0_CentOS6'
-        module_unload: 'modulecmd python unload MACS/2.1.0_CentOS6'
         path: 'macs2'
         get_version: '--version'
         exit_code: 0
 
     # URL: http://broadinstitute.github.io/picard/
-    MarkDuplicates:
-        module_load: 'modulecmd python load picard-tools/1.125-1_CentOS6'
-        module_unload: 'modulecmd python unload picard-tools/1.125-1_CentOS6'
-        path: 'MarkDuplicates'
-        get_version: '--version'
-        exit_code: 1
+#    MarkDuplicates:
+#        path: 'MarkDuplicates'
+#        get_version: '--version'
+#        exit_code: 1
 
     # URL: http://zlib.net/pigz/
     pigz: 
-        module_load: 'modulecmd python load pigz/2.3.1-1'
-        module_unload: 'modulecmd python unload pigz/2.3.1-1'
         path: 'pigz'
         get_version: '--version'
         exit_code: 0
 
     # URL: http://smithlabresearch.org/software/preseq/
     preseq:
-        module_load: 'modulecmd python load preseq/1.0.2_CentOS6'
-        module_unload: 'modulecmd python unload preseq/1.0.2_CentOS6'
         path: 'preseq'
         get_version: ''
         exit_code: 0
     
     # URL: http://www.htslib.org/
     samtools:
-        module_load: 'modulecmd python load samtools/1.1-1_CentOS6'
-        module_unload: 'modulecmd python unload samtools/1.1-1_CentOS6'
         path: 'samtools'
         get_version: ''
         exit_code: 1
 
     # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
     segemehl:
-        module_load: 'modulecmd python load segemehl/0.1.9-1_CentOS6'
-        module_unload: 'modulecmd python unload segemehl/0.1.9-1_CentOS6'
-        path: 'segemehl'
+        path: 'segemehl.x'
         get_version: ''
         exit_code: 255
 
     # URL: http://ccb.jhu.edu/software/tophat/index.shtml
     tophat2:
-        module_load: 'modulecmd python load tophat/2.0.13-1'
-        module_unload: 'modulecmd python unload tophat/2.0.13-1'
         path: 'tophat2'
         get_version: '--version'
         exit_code: 0
 
     bedGraphToBigWig:
-        module_load: 'modulecmd python load ucsc-tools/2014-12-09'
-        module_unload: 'modulecmd python unload ucsc-tools/2014-12-09'
         path: 'bedGraphToBigWig'
         get_version: ''
         exit_code: 255
@@ -183,61 +159,97 @@ tools:
     # Internal Tools #
     ##################
 
-    cat4m:
-        path: './tools/cat4m'
-
-    fix_cutadapt:
-        module_load: 'modulecmd python load python/2/7.6-2-virtual'
-        module_unload: 'modulecmd python unload python/2/7.6-2-virtual'
-        path: './tools/fix_cutadapt.py'
+    compare_secure_hashes:
+        path: '../tools/compare_secure_hashes.py'
         get_version: '--version'
         exit_code: 0
 
-    fix_s2c:
-        module_load: 'modulecmd python load python/2/7.6-2-virtual'
-        module_unload: 'modulecmd python unload python/2/7.6-2-virtual'
-        path: ['./python_env/bin/python', './tools/fix_s2c.py']
-        exit_code: 1
-
-    fix_qnames:
-        module_load: 'modulecmd python load python/2/7.6-2-virtual'
-        module_unload: 'modulecmd python unload python/2/7.6-2-virtual'
-        path: ['./python_env/bin/python', './tools/fix_qnames.py']
-        exit_code: 0
-
-    mate_pair_strand_switch:
-        module_load: 'modulecmd python load python/2/7.6-2-virtual'
-        module_unload: 'modulecmd python unload python/2/7.6-2-virtual'
-        path: ['./python_env/bin/python', './tools/mate_pair_strand_switch.py']
-        get_version: '--version' 
-        exit_code: 0
-
-    remove_reads_segemehl:
-        module_load: 'modulecmd python load python/2/7.6-2-virtual'
-        module_unload: 'modulecmd python unload python/2/7.6-2-virtual'
-        path: ['./python_env/bin/python', './tools/remove_reads_segemehl.py']
-        exit_code: 1
-
-    s2c:
-        module_load: 'modulecmd python load python/2/7.6-2-virtual'
-        module_unload: 'modulecmd python unload python/2/7.6-2-virtual'
-        path: ['./python_env/bin/python', './tools/s2c.py']
-        get_version: ''
-        exit_code: 2
+#    fix_cutadapt:
+#        path: '../tools/fix_cutadapt.py'
+#        get_version: '--version'
+#        exit_code: 0
+#
+#    fix_s2c:
+#        path: ['./python_env/bin/python', './tools/fix_s2c.py']
+#        exit_code: 1
+#
+#    fix_qnames:
+#        path: ['./python_env/bin/python', './tools/fix_qnames.py']
+#        exit_code: 0
+#
+#    mate_pair_strand_switch:
+#        path: ['./python_env/bin/python', './tools/mate_pair_strand_switch.py']
+#        get_version: '--version' 
+#        exit_code: 0
+#
+#    remove_reads_segemehl:
+#        path: ['./python_env/bin/python', './tools/remove_reads_segemehl.py']
+#        exit_code: 1
+#
+#    s2c:
+#        path: ['./python_env/bin/python', './tools/s2c.py']
+#        get_version: ''
+#        exit_code: 2
 
     ##############
     # Unix Tools #
     ##############
 
-    wc:
-        path: 'wc'
+    cat:
+        path: cat
         get_version: '--version'
+        exit_code: 0
+
+    curl:
+        path: curl
+        get_version: '--version'
+        exit_code: 0
+
+    dd:
+        path: dd
+        get_version: '--version'
+        exit_code: 0
 
     head:
-        path: 'head'
+        path: head
         get_version: '--version'
+        exit_code: 0
+
+    grep:
+        path: grep
+        get_version: '--version'
+
+    md5sum:
+        path: 'md5sum'
+        get_version: '--version'
+        exit_code: 0
+
+    mkdir:
+        path: mkdir
+        get_version: '--version'
+        exit_code: 0
+
+    mkfifo:
+        path: mkfifo
+        get_version: '--version'
+        exit_code: 0
+
+    mv:
+        path: mv
+        get_version: '--version'
+        exit_code: 0
 
     sort:
         path: 'sort'
         get_version: '--version'
         exit_code: 0
+
+    sha1sum:
+        path: sha1sum
+        get_version: '--version'
+        exit_code: 0
+
+    wc:
+        path: 'wc'
+        get_version: '--version'
+
