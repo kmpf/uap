@@ -128,7 +128,8 @@ class TopHat2(AbstractStep):
                         self.get_tool('tophat2'),
                         '--library-type', self.get_option('library_type'),
                         '--output-dir', temp_out_dir,
-                        '-p', cores, self.get_option('index'), 
+                        '-p', str(self.get_cores()),
+                        self.get_option('index'), 
                         ','.join(fr_temp_fifos)
                     ]
                     
