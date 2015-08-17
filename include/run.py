@@ -164,12 +164,13 @@ class Run(object):
                       *AbstractStep.run_ids_and_input_files_for_connection*
                       and related functions.
         '''
-        
+        head, tail = os.path.split(out_path)
+
         # make sure there's no slash in out_path unless it's a source step
-        if '/' in out_path and not \
+        if head != "" and not \
            isinstance(self._step, abstract_step.AbstractSourceStep):
-            raise StandardError("There must be no slash (/) in any output "
-                "file declared by a step: %s." % out_path)
+            raise StandardError("The declared output file path contains "
+                                "directory separator: %s." % out_path)
         # make sure tag was declared with an outgoing connection
         if 'out/' + tag not in self._step._connections:
             raise StandardError("Invalid output_file tag '%s' in %s. "
@@ -202,8 +203,11 @@ class Run(object):
         self._output_files_list.append(out_path)
         self._input_files.append(in_paths)
         self._output_files[tag][out_path] = in_paths
-        return os.path.join(
-            self._step.get_output_directory_du_jour_placeholder(), out_path)
+        if head == "":
+            return os.path.join(
+                self._step.get_output_directory_du_jour_placeholder(), out_path)
+        else:
+            return os.path.abspath(out_path)
 
     def add_temporary_file(self, prefix = '', designation = None):
         '''

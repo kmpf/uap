@@ -120,8 +120,7 @@ class Bcl2FastqSource(AbstractSourceStep):
 
                 mv_exec_group.add_command(mkdir)
                 # Assemble mv command
-                mv = [self.get_tool('mv')]
-                mv.extend([temp_output_dir, output_dir])
+                mv = [self.get_tool('mv', temp_output_dir, output_dir])
                 logger.debug(" ".join(mv))
                 # Add mv command to execution group
 
