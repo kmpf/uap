@@ -134,7 +134,7 @@ class TopHat2(AbstractStep):
                     ]
                     
                     if is_paired_end:
-                        tophat2.append(','.join(sr_temp_fifo))
+                        tophat2.append(','.join(sr_temp_fifos))
 
                     exec_group.add_command(
                         tophat2,
