@@ -120,14 +120,14 @@ class TopHat2(AbstractStep):
                     # 2. Create temporary directory for tophat2 output
                     temp_out_dir = run.add_temporary_directory(
                         "tophat-%s" % run_id)
-                    mkdir = [self.get_tool('mkdir'), temp_fifo]
+                    mkdir = [self.get_tool('mkdir'), temp_out_dir]
                     exec_group.add_command(mkdir)
 
                     # 3. Map reads using tophat2
                     tophat2 = [
                         self.get_tool('tophat2'),
                         '--library-type', self.get_option('library_type'),
-                        '--output-dir', tophat2_out_dir,
+                        '--output-dir', temp_out_dir,
                         '-p', cores, self.get_option('index'), 
                         ','.join(fr_temp_fifos)
                     ]
