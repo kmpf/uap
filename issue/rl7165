@@ -40,8 +40,6 @@ Still to replace:
 ** cufflinks.py
 ** cuffmerge.py
 ** cuffmerge_without_reference.py
-** cutadapt.py
-** fastqc.py
 ** fix_s2c.py
 ** grep.py
 ** head.py
