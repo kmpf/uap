@@ -50,6 +50,7 @@ class RawUrlSource(AbstractSourceStep):
                     raise StandardError(
                         "Path %s already exists but is not a directory" % path)
             else:
+                # Create the directory
                 with run.new_exec_group() as mkdir_exec_group:
                     mkdir = [self.get_tool('mkdir'), '-p', path]
                     mkdir_exec_group.add_command(mkdir)
