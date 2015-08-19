@@ -6,7 +6,7 @@ from contextlib import closing
 import logging
 import pydoc
 import string
-from cStringIO  import StringIO
+from io import StringIO
 import yaml
 
 import pipeline
@@ -33,7 +33,7 @@ def main(args):
         for task_id in args.task:
             parts = task_id.split('/')
             if len(parts) != 2:
-                raise StandardError("Invalid task ID %s." % task_id)
+                raise Exception("Invalid task ID %s." % task_id)
             step_name = parts[0]
             run_id = parts[1]
             report = p.steps[step_name].get_run_info()[run_id].as_dict()
