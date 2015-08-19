@@ -1,8 +1,9 @@
 import sys
-from abstract_step import *
-import process_pool
+
 import yaml
 
+from ..abstract_step import *
+from .. import process_pool
 
 class CountMappedReads(AbstractStep):
 

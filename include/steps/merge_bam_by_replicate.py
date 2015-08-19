@@ -1,8 +1,8 @@
 import sys
-from abstract_step import *
-import process_pool
 import yaml
-##import pprint
+
+from ..abstract_step import *
+from .. import process_pool
 
 class Merge_Bam_By_Replicate (AbstractStep):
 

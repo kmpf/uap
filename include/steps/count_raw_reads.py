@@ -1,7 +1,8 @@
 import sys
-from abstract_step import *
-import process_pool
 import yaml
+
+from ..abstract_step import *
+from .. import process_pool
 
 # Taken from:
 # http://stackoverflow.com/questions/2023608/check-what-files-are-open-in-python

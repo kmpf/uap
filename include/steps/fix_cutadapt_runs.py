@@ -1,6 +1,7 @@
 import sys
+
 from ..abstract_step import *
-from .. import process_pool
+#from .. import process_pool
 
 class FixCutadapt(AbstractStep):
     '''

@@ -1,7 +1,8 @@
 import sys
-from abstract_step import *
-import process_pool
-import yaml
+
+from ..abstract_step import *
+from .. import process_pool
+from .. import yaml
 
 class S2cFix(AbstractStep):
 

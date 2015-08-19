@@ -1,11 +1,11 @@
 import sys
-from abstract_step import *
 import glob
-import misc
-import process_pool
 import yaml
 import hashlib
 
+from ..abstract_step import *
+from .. import misc
+from .. import process_pool
 
 class Cuffmerge(AbstractStep):
     '''

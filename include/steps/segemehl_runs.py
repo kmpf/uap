@@ -1,9 +1,9 @@
 import sys
 import yaml
 
-from abstract_step import *
-import misc
-import process_pool
+from ..abstract_step import *
+from .. import misc
+from .. import process_pool
 
 class Segemehl(AbstractStep):
     '''

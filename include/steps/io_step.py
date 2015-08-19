@@ -2,13 +2,13 @@ import sys
 import copy
 import os
 
-from .. import abstract_step 
+from ..abstract_step import AbstractStep
 from .. import misc
 from .. import pipeline
 from .. import process_pool
 
 
-class IOStep(abstract_step.AbstractStep):
+class IOStep(AbstractStep):
     
     def __init__(self, pipeline, tool):
         super(IOStep, self).__init__(pipeline)

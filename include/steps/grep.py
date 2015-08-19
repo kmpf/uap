@@ -1,7 +1,7 @@
 import sys
-from abstract_step import *
-import pipeline
-import io_step
+from ..abstract_step import *
+from .. import pipeline
+from . import io_step
 
 class Grep(io_step.IOStep):
     

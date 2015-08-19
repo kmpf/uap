@@ -1,9 +1,8 @@
-#from __future__ import print_function
 import sys
-from abstract_step import *
-import process_pool
 import yaml
 
+from ..abstract_step import *
+from .. import process_pool
 
 ### TODO
 ### Each run_id is associated with two wig files plus and minus

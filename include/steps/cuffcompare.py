@@ -1,9 +1,10 @@
 import sys
-from abstract_step import *
-import pipeline
 import re
-import process_pool
 import yaml
+
+from ..abstract_step import *
+from .. import pipeline
+from .. import process_pool
 
 class Cuffcompare(AbstractStep):
     

@@ -1,11 +1,12 @@
 import sys
-from abstract_step import *
-import pipeline
 import re
-import process_pool
 import shutil
 import yaml
 from yaml import dump 
+
+from ..abstract_step import *
+from .. import pipeline
+from .. import process_pool
 
 class Fastqc(AbstractStep):
     '''
