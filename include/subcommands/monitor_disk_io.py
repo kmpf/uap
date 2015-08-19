@@ -67,7 +67,7 @@ def handle_line(pid, line):
         args = str(m.group(2)).strip()
         retval = str(m.group(3))
         if command == 'clone':
-            for _ in path_for_pid_and_fd[pid].keys():
+            for _ in list(path_for_pid_and_fd[pid].keys()):
                 if not retval in path_for_pid_and_fd:
                     path_for_pid_and_fd[retval] = {}
                 path_for_pid_and_fd[retval][_] = copy.copy(path_for_pid_and_fd[pid][_])
@@ -173,7 +173,7 @@ for line in strace_out:
             line_buffer[pid] = line
             handle_line(pid, line_buffer[pid])
 
-for path in stats.keys():
+for path in list(stats.keys()):
     cancel = False
     for _ in ['python_env', '/proc', '/etc', '/usr', '.git', '.so', '.py', '.pyc', 'stdin', 'stdout', 'stderr', '/dev']:
         if _ in path:
@@ -186,12 +186,12 @@ for path in stats.keys():
         printed_mode = False
         hist = {}
         mod_size = {}
-        for _, count in stats[path][mode].items():
+        for _, count in list(stats[path][mode].items()):
             cat = size_to_cat(_)
             if not cat in mod_size:
                 mod_size[cat] = 0
             mod_size[cat] += count
-        for key in sorted(mod_size.keys(), reverse=True):
+        for key in sorted(list(mod_size.keys()), reverse=True):
             size = key[1]
             #if key[0] == 0:
                 #continue
@@ -212,5 +212,5 @@ for path in stats.keys():
             printed_path = True
         print("LSEEKS:   " + str(stats[path]['lseek']) + 'x')
 
-for pid, f in proc_files.items():
+for pid, f in list(proc_files.items()):
     f.close()
