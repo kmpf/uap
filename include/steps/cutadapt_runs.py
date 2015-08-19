@@ -1,8 +1,9 @@
 import sys
-from abstract_step import *
-import pipeline
 import re
 import yaml
+
+from ..abstract_step import *
+from .. import pipeline
 
 class Cutadapt(AbstractStep):
     '''

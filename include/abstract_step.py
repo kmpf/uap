@@ -14,6 +14,7 @@ sys.path.insert(0, './include/steps')
 sys.path.insert(0, './include/sources')
 import copy
 import datetime
+import importlib
 import inspect
 import json
 import logging
@@ -1432,13 +1433,22 @@ class AbstractStep(object):
         # a circular reference, because AbstractStep is imported at the beginning
         # of io_step. There's probably a better solution, but I think it doesn't
         # hurt, either. Here goes the awkward line:
-        import io_step
-        
-        check_classes = [AbstractSourceStep, AbstractStep, io_step.IOStep]
+        from .steps.io_step import IOStep
+
+        import_object = None
+        for subdir in ['sources', 'steps']:
+            path = os.path.dirname(os.path.realpath(__file__))
+            py_file = os.path.join(path, subdir, key + '.py')
+            if os.path.isfile(py_file):
+                import_object = importlib.import_module(
+                    '.%s.%s' % (subdir, key), 'include')
+                supercls = inspect.getmembers(import_object, inspect.isclass)
+
+        check_classes = [AbstractSourceStep, AbstractStep, IOStep]
         for index, c in enumerate(check_classes):
-            classes = [_ for _ in inspect.getmembers(__import__(key), 
+            classes = [_ for _ in inspect.getmembers(import_object, 
                                                      inspect.isclass) \
-                       if c in _[1].__bases__]
+                       if c in _[1].__bases__ ]
             for k in range(index):
                 classes = [_ for _ in classes if _[1] != check_classes[k]]
             if len(classes) > 0:

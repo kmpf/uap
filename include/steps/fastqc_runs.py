@@ -6,11 +6,11 @@ import yaml
 from yaml import dump 
 from functools import wraps
 
-from abstract_step import *
-import command
-import pipeline
-import process_pool
-import run as run_module
+from ..abstract_step import *
+from .. import command
+from .. import pipeline
+from .. import process_pool
+from .. import run as run_module
 
 logger = logging.getLogger('uap_logger')
 

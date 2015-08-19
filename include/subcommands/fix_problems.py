@@ -5,7 +5,7 @@ import logging
 import string
 import yaml
 
-import pipeline
+from .. import pipeline
 '''
 This script checks if anything went wrong with some tasks of the pipeline. It can  
 display more information if the '--details' is given and it can solve the problem

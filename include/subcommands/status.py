@@ -9,7 +9,7 @@ import string
 from io import StringIO
 import yaml
 
-import pipeline
+from .. import pipeline
 
 '''
 By default, this script displays information about all tasks of the pipeline

@@ -5,7 +5,7 @@ import logging
 import string
 import yaml
 
-import pipeline
+from .. import pipeline
 
 '''
 This script 

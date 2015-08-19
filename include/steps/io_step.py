@@ -1,10 +1,11 @@
 import sys
-import abstract_step 
 import copy
-import misc
 import os
-import pipeline
-import process_pool
+
+from .. import abstract_step 
+from .. import misc
+from .. import pipeline
+from .. import process_pool
 
 
 class IOStep(abstract_step.AbstractStep):

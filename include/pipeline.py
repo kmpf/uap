@@ -2,21 +2,21 @@ import base64
 import copy
 import csv
 import datetime
-import fscache
 import glob
 import json
 import logging
 from operator import itemgetter
 import os
 import re
-import StringIO
+import io
 import subprocess
 import sys
 import yaml
 
-import abstract_step
-import misc
-import task as task_module
+from . import abstract_step
+from . import fscache
+from . import misc
+from . import task as task_module
 from xml.dom import minidom
 
 
@@ -90,7 +90,7 @@ class Pipeline(object):
         try:
             self.git_hash_tag = subprocess.check_output(command).strip()
         except:
-            raise StandardError("Execution of %s failed." % " ".join(command))
+            raise Exception("Execution of %s failed." % " ".join(command))
 
         # check if we got passed an 'arguments' parameter
         # this parameter should contain a argparse.Namespace object
@@ -110,7 +110,7 @@ class Pipeline(object):
                 try:
                     self.git_dirty_diff = subprocess.check_output(command)
                 except:
-                    raise StandardError("Execution of %s failed." % 
+                    raise Exception("Execution of %s failed." % 
                                         " ".join(command))
         try:
             # set cluster type
@@ -232,7 +232,7 @@ class Pipeline(object):
         re_complex_key = re.compile('^([a-zA-Z0-9_]+)\s+\(([a-zA-Z0-9_]+)\)$')
 
         # step one: instantiate all steps
-        for step_key, step_description in self.config['steps'].items():
+        for step_key, step_description in list(self.config['steps'].items()):
             
             # the step keys in the configuration may be either:
             # - MODULE_NAME 
@@ -262,7 +262,7 @@ class Pipeline(object):
             self.steps[step_name] = step
             
         # step two: set dependencies
-        for step_name, step in self.steps.items():
+        for step_name, step in list(self.steps.items()):
             if not step.needs_parents:
                 if '_depends' in step._options:
                     raise ConfigurationException("%s must not have dependencies "
@@ -314,7 +314,7 @@ class Pipeline(object):
                 unassigned_steps.remove(step_name)
                 
         # step four: finalize step
-        for step in self.steps.values():
+        for step in list(self.steps.values()):
             step.finalize()
 
     def print_source_runs(self):
@@ -326,7 +326,7 @@ class Pipeline(object):
 
     def add_file_dependencies(self, output_path, input_paths):
         if output_path in self.file_dependencies:
-            raise StandardError("Different steps/runs/tags want to create "
+            raise Exception("Different steps/runs/tags want to create "
                                 "the same output file: %s." % output_path)
         self.file_dependencies[output_path] = set(input_paths)
         
@@ -337,7 +337,7 @@ class Pipeline(object):
         
     def add_task_for_output_file(self, output_path, task_id):
         if output_path in self.task_id_for_output_file:
-            raise StandardError("More than one step is trying to create the "
+            raise Exception("More than one step is trying to create the "
                 "same output file: %s." % output_path)
         self.task_id_for_output_file[output_path] = task_id
         
@@ -357,7 +357,7 @@ class Pipeline(object):
     def check_command(self, command):
         for argument in command:
             if not isinstance(argument, str):
-                raise StandardError(
+                raise Exception(
                     "The command to be launched '%s' " % command +
                     "contains non-string argument '%s'. " % argument + 
                     "Therefore the command will fail. Please " +
@@ -391,7 +391,7 @@ class Pipeline(object):
             command_response = '%s-respone' % info_key        
             (output, error) = proc.communicate()
             if info_key in ['module_load', 'module_unload']:
-                exec output
+                exec(output)
                 tool_check_info.update({
                     command_call : (' '.join(command)).strip(),
                     command_exit_code : proc.returncode
@@ -414,7 +414,7 @@ class Pipeline(object):
         '''
         if not 'tools' in self.config:
             return
-        for tool_id, info in self.config['tools'].items():
+        for tool_id, info in list(self.config['tools'].items()):
             tool_check_info = dict()
 
             # Load module(s) and execute command if configured
@@ -633,7 +633,7 @@ class Pipeline(object):
     def set_cluster_type(self, cluster_type):
         if not cluster_type in Pipeline.cluster_config:
             print("Unknown cluster type: %s (choose one of %s)." % (
-                cluster_type, ', '.join(Pipeline.self.cluster_config.keys())))
+                cluster_type, ', '.join(list(Pipeline.self.cluster_config.keys()))))
             exit(1)
         self.cluster_type = cluster_type
 

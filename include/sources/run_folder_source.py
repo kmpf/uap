@@ -6,8 +6,8 @@ import string
 import os
 import yaml
 
-from abstract_step import *
-import pipeline
+from ..abstract_step import *
+from .. import pipeline
 
 logger = logging.getLogger("uap_logger")
 

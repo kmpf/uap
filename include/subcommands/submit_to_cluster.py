@@ -9,9 +9,9 @@ import re
 import subprocess
 import yaml
 
-import abstract_step
-import fscache
-import pipeline
+from .. import abstract_step
+from .. import fscache
+from .. import pipeline
 '''
 By default, this script submits all tasks to a compute cluster via a
 submit script. The list of tasks can be narrowed down by specifying a step name

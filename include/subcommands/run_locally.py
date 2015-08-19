@@ -8,9 +8,9 @@ import signal
 import socket
 import yaml
 
-import misc
-import pipeline
-import process_pool
+from .. import misc
+from .. import pipeline
+from .. import process_pool
 
 logger = logging.getLogger("uap_logger")
 

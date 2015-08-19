@@ -1,4 +1,4 @@
-from abstract_step import *
+from ..abstract_step import *
 
 
 class MergeFastqFiles(AbstractStep):

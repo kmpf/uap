@@ -7,8 +7,8 @@ import os
 import subprocess
 import yaml
 
-import abstract_step
-import pipeline
+from .. import abstract_step
+from .. import pipeline
 '''
 This script uses graphviz to produce graphs that display information about the 
 tasks processed by the pipeline. 
