@@ -50,7 +50,7 @@ def main(args):
         if basic_task_state == p.states.READY:
             task.run()
         else:
-            raise StandardError("Unexpected basic task state for %s: %s" % (task, basic_task_state))
+            raise Exception("Unexpected basic task state for %s: %s" % (task, basic_task_state))
 
 if __name__ == '__main__':
     try:
