@@ -196,7 +196,7 @@ class TopHat2(AbstractStep):
 
 
                     cat_logs = [self.get_tool('cat'),
-                               os.path.join(temp_out_dir, '*')
+                               os.path.join(temp_out_dir, 'logs', '*')
                     ]
                     clean_up_exec_group.add_command(
                         cat_logs,
