@@ -75,13 +75,13 @@ def main(args):
     if os.path.exists("quotas.yaml"):
         all_quotas = yaml.load(open("quotas.yaml", 'r'))
         hostname = subprocess.check_output(['hostname']).strip()
-        for key in all_quotas.keys():
+        for key in list(all_quotas.keys()):
             if re.match(key, hostname):
                 print("Applying quotas for " + hostname + ".")
                 quotas = all_quotas[key]
 
     if not 'default' in quotas:
-        raise StandardError("No default quota defined for this host.")
+        raise Exception("No default quota defined for this host.")
 
     quota_jids = {}
     quota_offset = {}
@@ -148,7 +148,7 @@ def main(args):
                 process = subprocess.Popen(submit_script_args, bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
             except OSError as e:
                 if e.errno == os.errno.ENOENT:
-                    raise StandardError("Unable to launch %s. Maybe " +
+                    raise Exception("Unable to launch %s. Maybe " +
                                         "you are not executing this script on " +
                                         "the cluster" % p.cc('submit'))
                 else:
@@ -162,7 +162,7 @@ def main(args):
 
 
             if job_id == None or len(job_id) == 0:
-                raise StandardError("Error: We couldn't parse a job_id from this:\n" + response)
+                raise Exception("Error: We couldn't parse a job_id from this:\n" + response)
             
             queued_ping_info = dict()
             queued_ping_info['step'] = str(task.step)
