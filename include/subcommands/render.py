@@ -103,7 +103,7 @@ def main(args):
     f.write("    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", nodesep = 0.2, ranksep = 0.3];\n")
     f.write("    node [fontname = Helvetica, fontsize = 12, shape = rect];\n")
     f.write("    edge [fontname = Helvetica, fontsize = 12];\n")
-    for step_name, step in p.steps.items():
+    for step_name, step in list(p.steps.items()):
         total_runs = len(step.get_run_ids())
         finished_runs = 0
         for _ in step.get_run_ids():
@@ -133,7 +133,7 @@ def main(args):
         f.write("  graph[style=dashed];\n")
         f.write("}\n")
             
-    for step_name, step in p.steps.items():
+    for step_name, step in list(p.steps.items()):
         for other_step in step.dependencies:
             #f.write("    %s -> %s;\n" % (other_step.get_step_name(), step_name))
             
@@ -155,7 +155,7 @@ def main(args):
                             else:
                                 out_key = 'out/' + declaration
                         else:
-                            raise StandardError("Invalid _connect value: %s" % yaml.dump(declaration))
+                            raise Exception("Invalid _connect value: %s" % yaml.dump(declaration))
                         
                 for real_outkey in other_step._connections:
                     if real_outkey[0:4] != 'out/':
