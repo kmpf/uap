@@ -1,7 +1,8 @@
 import sys
-from abstract_step import *
 import os
 import glob
+
+from ..abstract_step import *
 
 class RawFileSource(AbstractSourceStep):
 

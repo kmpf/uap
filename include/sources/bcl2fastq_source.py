@@ -2,7 +2,7 @@ import sys
 import logging
 import os
 
-from abstract_step import *
+from ..abstract_step import *
 
 logger = logging.getLogger("uap_logger")
 

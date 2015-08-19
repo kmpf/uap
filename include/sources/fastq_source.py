@@ -1,11 +1,12 @@
 import sys
-from abstract_step import *
 import copy
 import csv
 import glob
 import os
 import re
 import yaml
+
+from ..abstract_step import *
 
 class FastqSource(AbstractSourceStep):
     
