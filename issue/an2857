@@ -1,3 +1,5 @@
 Summary: Make uap python3 compatible
 Priority: 5
 
+Can not test the python3 version, because 'pyvenv' is broken under Ubuntu 14.04.
+Let's come back to this issue later.
