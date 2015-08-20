@@ -28,10 +28,10 @@ class RemoveDuplicates(AbstractStep):
             with self.declare_run(run_id) as run:
                 run.new_exec_group()
                 if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file.")
+                    raise Exception("Expected exactly one alignments file.")
                 basename_parts = os.path.basename(input_paths[0]).split('.')
                 if all(suffix not in ['sam', 'bam'] for suffix in basename_parts):
-                    raise StandardError("The file %s seems not to be a SAM or BAM "
+                    raise Exception("The file %s seems not to be a SAM or BAM "
                                         "file. At least the suffix is wrong." % input_paths[0])
 
                 run.add_private_info('in-alignment', input_paths[0])

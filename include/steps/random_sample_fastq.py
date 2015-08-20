@@ -30,12 +30,12 @@ class RandomSampleFastq(AbstractStep):
                     run.add_output_file('reads', "%s-subsample-R1.fastq.gz" % run_id, input_paths)
                     run.add_output_file('reads', "%s-subsample-R2.fastq.gz" % run_id, input_paths)
                 else:
-                    raise StandardError("At the moment, random_sample_fastq only supports paired end in this step config")
+                    raise Exception("At the moment, random_sample_fastq only supports paired end in this step config")
             
 
                 # in-R1, in-R2, out-R1, out-R2
                 if not len(input_paths) == 2:
-                    raise StandardError("At the moment, exactly two input files are required.")
+                    raise Exception("At the moment, exactly two input files are required.")
 
                 input_files = misc.assign_strings(input_paths, ['R1', 'R2'])
                 run.add_private_info('in-R1', input_files['R1'])

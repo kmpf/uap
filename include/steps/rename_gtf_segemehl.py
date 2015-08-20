@@ -21,7 +21,7 @@ class Rename_GTF_Segemehl(AbstractStep):
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/features'):
             with self.declare_run(run_id) as run:
                 if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file., but got this %s" % input_paths)
+                    raise Exception("Expected exactly one alignments file., but got this %s" % input_paths)
                 run.add_private_info('in-features', input_paths[0])
                 run.add_output_file('features_segemehl', '%s-segemehl.gtf' % run_id, input_paths)
                 run.new_exec_group()
