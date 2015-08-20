@@ -62,7 +62,7 @@ class Macs2(AbstractStep):
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection(
                 'in/alignments'):
 
-            for control_id, treatment_list in control_samples.iteritems():
+            for control_id, treatment_list in control_samples.items():
                 if run_id in treatment_list:
                     if control_id != 'None':
                         run_id = "%s-%s" % (run_id, control_id)
@@ -95,7 +95,7 @@ class Macs2(AbstractStep):
 #                                            % run_id, input_paths)
 
                         if not input_paths:
-                            raise StandardError("No input files for run %s" 
+                            raise Exception("No input files for run %s" 
                                                 % (run_id))
                         run.add_private_info('treatment_files', input_paths)
 
@@ -123,13 +123,13 @@ class Macs2(AbstractStep):
             
             # Fail if there is no treatment file
             if not run.has_private_info('treatment_files'):
-                raise StandardError(
+                raise Exception(
                     "No treatment files for %s to analyse with macs2" % run_id)
             macs2.extend( [" ".join(run.get_private_info('treatment_files'))] )
             
             # and if there is no control file
             if not run.has_private_info('control_files'):
-                raise StandardError(
+                raise Exception(
                     "No control files for %s to analyse with macs2" % run_id)
             if run.get_private_info('control_files') != None:
                 macs2.extend(['--control',
@@ -166,12 +166,12 @@ class Macs2(AbstractStep):
                  'summits': os.path.join(macs_out_directory, '%s_summits.bed' % run_id)}
              )
             
-        for key, temp_file in output_files.iteritems():
+        for key, temp_file in output_files.items():
             try:
                 os.rename( temp_file, 
                            run.get_single_output_file_for_annotation(key))
             except OSError:
-                raise StandardError('No file: %s' % temp_file)
+                raise Exception('No file: %s' % temp_file)
                 
         try:
             os.rmdir(macs_out_directory)

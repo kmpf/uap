@@ -52,7 +52,7 @@ class Macs14(AbstractStep):
                                     % run_id, input_paths)
 
                 if not input_paths:
-                    raise StandardError("No input files for run %s" % (run_id))
+                    raise Exception("No input files for run %s" % (run_id))
                 run.add_private_info('treatment_files', input_paths)
 
                 if run_id in control_samples:
@@ -74,7 +74,7 @@ class Macs14(AbstractStep):
         with process_pool.ProcessPool(self) as pool:
             macs14 = [self.get_tool('macs14'), '--treatment']
             if not run.has_private_info('treatment_files'):
-                raise StandardError("No treatment files for %s to analyse with macs14" % run_id)
+                raise Exception("No treatment files for %s to analyse with macs14" % run_id)
             macs14.extend( [" ".join(run.get_private_info('treatment_files'))] )
             # if we do have control data use it
             if run.has_private_info('control_files'):
@@ -98,19 +98,19 @@ class Macs14(AbstractStep):
             os.rename(os.path.join(macs_out_directory, '%s_peaks.bed' % run_id), 
                       peaks_files['bed'])
         except OSError:
-            raise StandardError('No file: %s' % os.path.join(macs_out_directory, 
+            raise Exception('No file: %s' % os.path.join(macs_out_directory, 
                                                              '%s_peaks.bed' % run_id))
         try:
             os.rename(os.path.join(macs_out_directory, '%s_peaks.xls' % run_id), 
                       peaks_files['xls'])
         except OSError:
-            raise StandardError('No file: %s' % os.path.join(macs_out_directory, 
+            raise Exception('No file: %s' % os.path.join(macs_out_directory, 
                                                              '%s_peaks.xls' % run_id))
         try:
             os.rename(os.path.join(macs_out_directory, '%s_summits.bed' % run_id), 
                       run.get_single_output_file_for_annotation('summits'))
         except OSError:
-            raise StandardError('No file: %s' % os.path.join(macs_out_directory, 
+            raise Exception('No file: %s' % os.path.join(macs_out_directory, 
                                                              '%s_summits.bed' % run_id))
         try:
             os.rename(os.path.join(macs_out_directory, '%s_model.r' % run_id), 
@@ -123,5 +123,5 @@ class Macs14(AbstractStep):
             os.rename(os.path.join(macs_out_directory, '%s_negative_peaks.xls' % run_id), 
                       run.get_single_output_file_for_annotation('negative-peaks'))
         except OSError:
-            raise StandardError('No file: %s' % os.path.join(macs_out_directory, 
+            raise Exception('No file: %s' % os.path.join(macs_out_directory, 
                                                              '%s_negative_peaks.xls' % run_id))

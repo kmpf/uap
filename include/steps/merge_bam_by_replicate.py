@@ -3,6 +3,7 @@ import yaml
 
 from ..abstract_step import *
 from .. import process_pool
+from functools import reduce
 
 class Merge_Bam_By_Replicate (AbstractStep):
 
@@ -39,17 +40,17 @@ class Merge_Bam_By_Replicate (AbstractStep):
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection ('in/alignments'):
             #print run_id
             ## check whether run_id is matched only once by replicate group members
-            match_list=map(lambda a: a in run_id, reduce(lambda x, y: x+y,replicate_groups.values())) ##reduce used to  flatten the list of lists
+            match_list=[a in run_id for a in reduce(lambda x, y: x+y,list(replicate_groups.values()))] ##reduce used to  flatten the list of lists
             if (match_list.count(True) > 1):
                 pp.pprint(match_list)
-                raise StandardError("Ambiguous replicate group members: run_id matched more than once %s: %s" % (run_id, self))
+                raise Exception("Ambiguous replicate group members: run_id matched more than once %s: %s" % (run_id, self))
 
             
 
             ## repeat for paths
-            match_list=map(lambda a: a in input_paths, reduce(lambda x, y: x+y,replicate_groups.values()))
+            match_list=[a in input_paths for a in reduce(lambda x, y: x+y,list(replicate_groups.values()))]
             if (match_list.count(True) > 1):
-                raise StandardError("Ambiguous replicate group members: input_paths matched more than once %s: %s" % (run_id, self))
+                raise Exception("Ambiguous replicate group members: input_paths matched more than once %s: %s" % (run_id, self))
 
 
         ## Setup runs only for the replicate groups instead of all input files
@@ -61,10 +62,10 @@ class Merge_Bam_By_Replicate (AbstractStep):
         #print result['runs']['T-Cell_BC-16_24h-R1'].values()
         #print result['runs'].items()
 
-        run_ids=result['runs'].keys()
+        run_ids=list(result['runs'].keys())
         #print run_ids
         
-        for replicate_group in replicate_groups.keys():
+        for replicate_group in list(replicate_groups.keys()):
             with self.declare_run (replicate_group) as run:
                 run.new_exec_group()
                 input_run_ids_for_replicate_group = list()
@@ -74,7 +75,7 @@ class Merge_Bam_By_Replicate (AbstractStep):
                     for g in replicate_groups[replicate_group]:
                         if (g in r):
                             input_run_ids_for_replicate_group.append(r)
-                            input_file_paths_for_replicate_g.append (reduce(lambda x, y: x+y, result['runs'][r].values() ))
+                            input_file_paths_for_replicate_g.append (reduce(lambda x, y: x+y, list(result['runs'][r].values()) ))
                             
                             
                             ## Flatten list again - not clear to me why necessary repeatedly
