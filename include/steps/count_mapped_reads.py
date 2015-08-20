@@ -30,7 +30,7 @@ class CountMappedReads(AbstractStep):
         unset_bits = self.get_option('unset_FLAG_bits')
         
         if len(set_bits) != len(unset_bits):
-            raise StandardError("set_FLAG_bits has %s elements but "
+            raise Exception("set_FLAG_bits has %s elements but "
                                 "unset_FLAG_bits has %s elements. Both "
                                 "options need to have same length.")
         
@@ -41,7 +41,7 @@ class CountMappedReads(AbstractStep):
         for run_id, alignment_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
             # Only one BAM/SAM file expected as input file
             if len(alignment_paths) != 1:
-                raise StandardError("Expected exactly one file with mapped reads.")
+                raise Exception("Expected exactly one file with mapped reads.")
                 
             sample_alignment_paths_dict[run_id] = alignment_paths[0]
             alignment_files.extend(alignment_paths)
@@ -80,7 +80,7 @@ class CountMappedReads(AbstractStep):
             header = ["SAMPLE","FLAGS_SET", "FLAGS_UNSET", "COUNTS"]
             alignment_counts.write( ",".join(header) + "\n")
         
-        for sample, input_path in sample_alignment_paths_dict.iteritems():
+        for sample, input_path in sample_alignment_paths_dict.items():
             for i in range(len(self.get_option('set_FLAG_bits'))):
                 out_file = os.path.join(
                     temp_mapped_dir, "%s-f_%s_-F_%s.txt" % 
