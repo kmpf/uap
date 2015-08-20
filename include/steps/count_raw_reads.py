@@ -57,7 +57,7 @@ class CountRawReads(AbstractStep):
                 ext_matches =  self.which_extensions_match_file_path(
                     _, ("fastq", "gz", "gzip"))
                 if len(ext_matches) == 0:
-                    raise StandardError(
+                    raise Exception(
                         "File %s has none of these extensions %s. "
                         "Can't handle it."
                         % (_, ", ".join()) )
@@ -86,7 +86,7 @@ class CountRawReads(AbstractStep):
             header = ["SAMPLE_NAME", "RAW_READS"]
             statistics_file.write( ",".join(header) + "\n" )
         
-            for sample, input_paths in sample_input_paths_dict.iteritems():
+            for sample, input_paths in sample_input_paths_dict.items():
                 temp_count_file = os.path.join(
                     temp_count_dir, "%s.counts" % sample)
 
