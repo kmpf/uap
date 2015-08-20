@@ -83,7 +83,7 @@ class FastqSource(AbstractSourceStep):
             for path in glob.glob(os.path.abspath(self.get_option('pattern'))):
                 match = regex.match(os.path.basename(path))
                 if match == None:
-                    raise StandardError("Couldn't match regex /%s/ to file %s."
+                    raise Exception("Couldn't match regex /%s/ to file %s."
                         % (self.get_option('group'), os.path.basename(path)))
             
                 # Construct sample_id
@@ -98,7 +98,7 @@ class FastqSource(AbstractSourceStep):
                     found_files[sample_id] = dict()
                 # either finds a single match or throws an error
                 which_read = misc.assign_string(os.path.basename(path),
-                                                read_types.values())
+                                                list(read_types.values()))
                 # so this is save because which_read can only be a value from
                 # read_types
                 if not which_read in found_files[sample_id]:
@@ -106,10 +106,10 @@ class FastqSource(AbstractSourceStep):
                 found_files[sample_id][which_read].append(path)
 
         elif self.is_option_set_in_config('sample_to_files_map'):
-            for sample_id, paths in self.get_option('sample_to_files_map').items():
+            for sample_id, paths in list(self.get_option('sample_to_files_map').items()):
                 for path in paths:
                     if not os.path.isfile(path):
-                        raise StandardError("[fastq_source]: %s is no file. "
+                        raise Exception("[fastq_source]: %s is no file. "
                                             "Please provide correct path." 
                                             % path)
 
@@ -117,7 +117,7 @@ class FastqSource(AbstractSourceStep):
                         found_files[sample_id] = dict()
                         # either finds a single match or throws an error
                     which_read = misc.assign_string(os.path.basename(path),
-                                                    read_types.values())
+                                                    list(read_types.values()))
                     # so this is save because which_read can only be a value 
                     # from read_types
                     if not which_read in found_files[sample_id]:
@@ -125,16 +125,16 @@ class FastqSource(AbstractSourceStep):
                     found_files[sample_id][which_read].append(path)
 
         else:
-            raise StandardError("[raw_file_source]: Either 'group' AND 'pattern'"
+            raise Exception("[raw_file_source]: Either 'group' AND 'pattern'"
                                 " OR 'sample_to_files_map' options have to be "
                                 "set. ")
 
         # declare a run for every sample
-        for run_id in found_files.keys():
+        for run_id in list(found_files.keys()):
             with self.declare_run(run_id) as run:
                 run.add_public_info("paired_end", self.get_option("paired_end"))
                 for read in ['first_read', 'second_read']:
-                    if read in read_types.keys():
+                    if read in list(read_types.keys()):
                         for path in found_files[run_id][read_types[read]]:
                             run.add_output_file(read, path, [])
                     # always set the out connection even for zero files
@@ -143,7 +143,7 @@ class FastqSource(AbstractSourceStep):
 
                 # save public information
                 if self.get_option("paired_end") and not self.is_option_set_in_config("second_read"):
-                    raise StandardError("Required option 'second_read' needs to "
+                    raise Exception("Required option 'second_read' needs to "
                         "be set because 'paired_end: %s' " 
                         % self.get_option("paired_end"))
                 if self.is_option_set_in_config("first_read"):
@@ -170,11 +170,11 @@ class FastqSource(AbstractSourceStep):
                             elif len(index) == 1:
                                 run.add_public_info('index-R1', index[0])
                             else:
-                                raise StandardError("Index %s is not a valid index in %s" 
+                                raise Exception("Index %s is not a valid index in %s" 
                                                     % index.join('-'), indices_path)
             else:
                 # indices are defined in the configuration
-                for sample_id, index in self.get_option('indices').items():
+                for sample_id, index in list(self.get_option('indices').items()):
                     run = self.get_run(sample_id)
                     if run != None:
                         idx = index.split('-')
@@ -185,6 +185,6 @@ class FastqSource(AbstractSourceStep):
                             elif len(idx) == 1:
                                 run.add_public_info('index-R1', idx[0])
                             else:
-                                raise StandardError("Index %s is not a valid index in %s" 
+                                raise Exception("Index %s is not a valid index in %s" 
                                                     % idx.join('-'), indices_path)
 
