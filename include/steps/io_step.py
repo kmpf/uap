@@ -39,8 +39,8 @@ class IOStep(AbstractStep):
     
     def execute(self, run_id, run):
         # process one file at a time
-        for tag, output_file_info in run.get_output_files_abspath().items():
-            for output_path, input_paths in output_file_info.items():
+        for tag, output_file_info in list(run.get_output_files_abspath().items()):
+            for output_path, input_paths in list(output_file_info.items()):
                 with process_pool.ProcessPool(self) as pool:
                     with pool.Pipeline(pool) as pipeline:
                         cat = [self.get_tool('cat'), input_paths[0]]
