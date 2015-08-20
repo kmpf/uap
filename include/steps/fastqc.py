@@ -36,7 +36,7 @@ class Fastqc(AbstractStep):
         read_types = {'first_read': '_R1', 'second_read': '_R2'}
         paired_end_info = dict()
         # fetch all incoming run IDs which produce reads...
-        for read in read_types.keys():
+        for read in list(read_types.keys()):
             for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/%s' % read):
                 if not run_id in found_files:
                     found_files[run_id] = dict()
@@ -45,9 +45,9 @@ class Fastqc(AbstractStep):
                     found_files[run_id][read] = list()
                 found_files[run_id][read].extend(input_paths)
 
-        for run_id in found_files.keys():
+        for run_id in list(found_files.keys()):
             with self.declare_run(run_id) as run:
-                for read in found_files[run_id].keys():
+                for read in list(found_files[run_id].keys()):
                     #weired python way to get 'file' of 'file.bla.txt'
                     input_paths = found_files[run_id][read]
                     if input_paths == [None]:
@@ -101,4 +101,4 @@ class Fastqc(AbstractStep):
                 try:
                     os.rename(full_path_zipped_fastqc_report, out_path)
                 except OSError:
-                    raise StandardError("os.rename failed of %s to %s" % full_path_zipped_fastqc_report, out_path)
+                    raise Exception("os.rename failed of %s to %s" % full_path_zipped_fastqc_report, out_path)
