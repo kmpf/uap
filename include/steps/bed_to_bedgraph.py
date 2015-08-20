@@ -27,9 +27,9 @@ class BedToBedgraph(AbstractStep):
             with self.declare_run(run_id) as run:
                 run.new_exec_group()
                 if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignment file.")
+                    raise Exception("Expected exactly one alignment file.")
                 if  input_paths[0][-4:] != '.bed':
-                    raise StandardError("%s file suffix is not '.bed'. " % input_paths[0] +
+                    raise Exception("%s file suffix is not '.bed'. " % input_paths[0] +
                                         "Please provide a BED file")
 
                 run.add_private_info('in-bed', input_paths[0])
@@ -66,18 +66,18 @@ class BedToBedgraph(AbstractStep):
                 for strand in ['plus', 'minus']:
                     track_info[files[strand]] = bg_trackopts[strand]
             else:
-                raise StandardError("Expected two output files and track infos, " +
+                raise Exception("Expected two output files and track infos, " +
                                     "but instead got this output files %s and track " +
                                     "infos %s" % (bg_files, bg_trackopts))
         else:
             if len(bg_files) == 1 and len(bg_trackopts) == 1:
                 track_info[bg_files[0]] = bg_trackopts[0]
             else:
-                raise StandardError("Expected two output files and track infos, " +
+                raise Exception("Expected two output files and track infos, " +
                                     "but instead got this output files %s and track " +
                                     "infos %s" % (bg_files, bg_trackopts))
 
-        for track_path, trackopts in track_info.items():
+        for track_path, trackopts in list(track_info.items()):
             with process_pool.ProcessPool(self) as pool:
                 with pool.Pipeline(pool) as pipeline:
                     cat_in = [self.get_tool('cat'), bed_path]
