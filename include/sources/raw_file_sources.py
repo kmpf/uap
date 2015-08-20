@@ -50,7 +50,7 @@ class RawFileSources(AbstractSourceStep):
         for path in glob.glob(os.path.abspath(self.get_option('pattern'))):
             match = regex.match(os.path.basename(path))
             if match == None:
-                raise StandardError("Couldn't match regex /%s/ to file %s." % (self.get_option('group'), os.path.basename(path)))
+                raise Exception("Couldn't match regex /%s/ to file %s." % (self.get_option('group'), os.path.basename(path)))
             
             sample_id_parts = []
             if self.is_option_set_in_config('sample_id_prefix'):
@@ -63,7 +63,7 @@ class RawFileSources(AbstractSourceStep):
             found_files[sample_id].append(path)
 
         # declare a run for every sample
-        for run_id, paths in found_files.items():
+        for run_id, paths in list(found_files.items()):
             with self.declare_run(run_id) as run:
                 run.add_public_info("paired_end", self.get_option("paired_end"))
                 for path in paths:
