@@ -25,7 +25,7 @@ class FixCutadapt(AbstractStep):
         read_types = {'first_read': '-R1', 'second_read': '-R2'}
         paired_end_info = dict()
 
-        for read in read_types.keys():
+        for read in list(read_types.keys()):
             for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/%s' % read):
                 if input_paths != [None]:
                     paired_end_info[run_id] = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
@@ -38,14 +38,14 @@ class FixCutadapt(AbstractStep):
                     found_files[run_id][read] = list()
                 # Check if we get exactly one input file
                 if len(input_paths) != 1:
-                    raise StandardError("Expected one input file.")
+                    raise Exception("Expected one input file.")
                 found_files[run_id][read].extend(input_paths)
 
-        for run_id in found_files.keys():
+        for run_id in list(found_files.keys()):
             with self.declare_run(run_id) as run:
                 run.new_exec_group()
                 run.add_private_info('paired_end', paired_end_info[run_id])
-                for read in found_files[run_id].keys():
+                for read in list(found_files[run_id].keys()):
                     run.add_output_file(read, 
                         "%s-fixed%s.fastq.gz" % (run_id, read_types[read]), 
                         found_files[run_id][read])
