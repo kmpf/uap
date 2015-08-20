@@ -1,6 +1,6 @@
 import sys
 import os
-import urlparse
+import urllib.parse
 
 from ..abstract_step import *
 from .. import process_pool
@@ -35,7 +35,7 @@ class RawUrlSource(AbstractSourceStep):
     def runs(self, run_ids_connections_files):
         # Get file name of downloaded file
         filename = os.path.basename(
-            urlparse.urlparse(self.get_option('url')).path)
+            urllib.parse.urlparse(self.get_option('url')).path)
         if self.is_option_set_in_config('filename'):
             filename = self.get_option('filename')
         # Get directory to move downloaded file to
@@ -48,7 +48,7 @@ class RawUrlSource(AbstractSourceStep):
             if os.path.exists(path):
                 # Fail if it is not a directory
                 if not os.path.isdir(path):
-                    raise StandardError(
+                    raise Exception(
                         "Path %s already exists but is not a directory" % path)
             else:
                 # Create the directory

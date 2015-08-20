@@ -1,6 +1,6 @@
 import sys
 import os
-import urlparse
+import urllib.parse
 
 from ..abstract_step import *
 from .. import process_pool
@@ -17,7 +17,7 @@ class RawUrlSource(AbstractStep):
         self.add_option('sha1', str, optional=True, description="expected SHA1 checksum of downloaded file")
         
     def declare_runs(self):
-        path = os.path.basename(urlparse.urlparse(self.get_option('url')).path)
+        path = os.path.basename(urllib.parse.urlparse(self.get_option('url')).path)
         with self.declare_run('download') as run:
             run.add_output_file('raw', path, [])
 
@@ -41,7 +41,7 @@ class RawUrlSource(AbstractStep):
                 if line[0] != self.get_option('sha1'):
                     # rename the output file, so the run won't be completed successfully
                     os.rename(path, path + '.mismatching.sha1')
-                    raise StandardError("Error: SHA1 mismatch.")
+                    raise Exception("Error: SHA1 mismatch.")
 
         # remove the temporary file so that the temp directory can be deleted
         os.unlink(download_sha1_path)
