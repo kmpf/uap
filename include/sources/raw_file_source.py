@@ -45,7 +45,7 @@ class RawFileSource(AbstractSourceStep):
             for path in glob.glob(os.path.abspath(self.get_option('pattern'))):
                 match = regex.match(os.path.basename(path))
                 if match == None:
-                    raise StandardError("Couldn't match regex /%s/ to file %s."
+                    raise Exception("Couldn't match regex /%s/ to file %s."
                         % (self.get_option('group'), os.path.basename(path)))
             
                 sample_id_parts = []
@@ -62,7 +62,7 @@ class RawFileSource(AbstractSourceStep):
             for run_id, paths in self.get_option('sample_to_file'):
                 for path in paths:
                     if not os.path.isfile(path):
-                        raise StandardError("[raw_file_source]: %s is no file. "
+                        raise Exception("[raw_file_source]: %s is no file. "
                                             "Please provide correct path." 
                                             % path)
                 if not run_id in found_files:
@@ -70,12 +70,12 @@ class RawFileSource(AbstractSourceStep):
                 found_files[run_id] = paths
 
         else:
-            raise StandardError("[raw_file_source]: Either 'group' AND 'pattern'"
+            raise Exception("[raw_file_source]: Either 'group' AND 'pattern'"
                                 " OR 'sample_to_files_map' options have to be "
                                 "set. ")
 
         # declare a run for every sample
-        for run_id, paths in found_files.items():
+        for run_id, paths in list(found_files.items()):
             with self.declare_run(run_id) as run:
                 for path in paths:
                     run.add_output_file("raw", path, [])
