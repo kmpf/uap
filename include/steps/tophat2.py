@@ -55,13 +55,13 @@ class TopHat2(AbstractStep):
     def declare_runs(self):
         ### make sure files are available
         if not os.path.exists(self.get_option('index') + '.1.bt2'):
-            raise StandardError("Could not find index file: %s.*" % self.get_option('index'))
+            raise Exception("Could not find index file: %s.*" % self.get_option('index'))
 
         found_files = dict()
         read_types = {'first_read': '-R1', 'second_read': '-R2'}
         paired_end_info = dict()
 
-        for read in read_types.keys():
+        for read in list(read_types.keys()):
             for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/%s' % read):
                 if input_paths != [None]:
                     paired_end_info[run_id] = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
@@ -74,16 +74,16 @@ class TopHat2(AbstractStep):
                         found_files[run_id][read] = list()
                     # Check if we get exactly one input file
                     if len(input_paths) != 1:
-                        raise StandardError("Expected one input file.")
+                        raise Exception("Expected one input file.")
                     found_files[run_id][read].extend(input_paths)
 
 
-        for run_id in found_files.keys():
+        for run_id in list(found_files.keys()):
             with self.declare_run(run_id) as run:
                 run.new_exec_group()
                 run.add_private_info('paired_end', paired_end_info[run_id])
                 input_paths = list()
-                for read in found_files[run_id].keys():
+                for read in list(found_files[run_id].keys()):
                     run.add_private_info(read, found_files[run_id][read])
                     input_paths.extend(found_files[run_id][read])
 
@@ -152,7 +152,7 @@ class TopHat2(AbstractStep):
             try:
                 os.rename(os.path.join(tophat2_out_path, i), run.get_single_output_file_for_annotation(target_name))
             except OSError:
-                raise StandardError( '\n\t Something went wrong while renaming tophat2 output files: \
+                raise Exception( '\n\t Something went wrong while renaming tophat2 output files: \
                                       \n\t old_dir       : {0} \
                                       \n\t old_basename  : {1} \
                                       \n\t key_for_target: {2} \

@@ -28,7 +28,7 @@ class SamToBam(AbstractStep):
             with self.declare_run(run_id) as run:
 
                 if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file.")
+                    raise Exception("Expected exactly one alignments file.")
                 
                 basename = os.path.basename(input_paths[0]).split('.')
 
@@ -39,7 +39,7 @@ class SamToBam(AbstractStep):
                     bam_index  = basename.index('bam')
                     basename = basename[:bam_index]
                 else:
-                    raise StandardError("File %s is neither a BAM nor SAM file" % (input_paths[0]))
+                    raise Exception("File %s is neither a BAM nor SAM file" % (input_paths[0]))
                 basename = '.'.join(basename)
                 run.add_output_file('alignments', basename + '.bam', input_paths)
                 run.add_output_file('indices', basename + '.bam.bai', input_paths)

@@ -60,12 +60,12 @@ class TopHat2(AbstractStep):
 
         # Check if option values are valid
         if not os.path.exists(self.get_option('index') + '.1.bt2'):
-            raise StandardError("Could not find index file: %s.*" %
+            raise Exception("Could not find index file: %s.*" %
                                 self.get_option('index') )
 
 
         read_types = {'first_read': '_R1', 'second_read': '_R2'}
-        for run_id in run_ids_connections_files.keys():
+        for run_id in list(run_ids_connections_files.keys()):
             with self.declare_run(run_id) as run:
                 # Get list of files for first/second read
                 fr_input = run_ids_connections_files[run_id]['in/first_read']
@@ -187,7 +187,7 @@ class TopHat2(AbstractStep):
                 # Move files from tophat2 temporary output directory to final
                 # destination
                 with run.new_exec_group() as clean_up_exec_group:
-                    for generic_file, final_path in tophat2_files.items():
+                    for generic_file, final_path in list(tophat2_files.items()):
                         mv = [self.get_tool('mv'),
                               os.path.join(temp_out_dir, generic_file),
                               final_path

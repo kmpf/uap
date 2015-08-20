@@ -25,7 +25,7 @@ class S2C(AbstractStep):
         for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/alignments'):
             with self.declare_run(run_id) as run:
                 if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file., but got this %s" % input_paths)
+                    raise Exception("Expected exactly one alignments file., but got this %s" % input_paths)
                 run.add_private_info('in-alignment', input_paths[0])
                 run.add_output_file('alignments', '%s-cufflinks-compatible-sorted.bam' % run_id, input_paths)
                 run.add_output_file('log', '%s-log.txt' % run_id, input_paths)

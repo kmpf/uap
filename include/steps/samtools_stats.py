@@ -27,7 +27,7 @@ class SamtoolsStats(AbstractStep):
             with self.declare_run(run_id) as run:
 
                 if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignment file.")
+                    raise Exception("Expected exactly one alignment file.")
 
                 basename = os.path.basename(input_paths[0]).split('.')[0]
                 run.add_output_file('stats', basename + '.bam.stats', input_paths)
