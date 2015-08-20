@@ -51,33 +51,33 @@ class RunFolderSource(AbstractSourceStep):
         path = self.get_option('path')
         path = os.path.abspath(path)
         if not os.path.exists(path):
-            raise StandardError("Source path does not exist: " + path)
+            raise Exception("Source path does not exist: " + path)
 
         # find all samples
         for sample_path in glob.glob(os.path.join(path, 'Unaligned', 'Project_*', 'Sample_*')):
             sample_name = os.path.basename(sample_path).replace('Sample_', '')
             if sample_name in found_samples:
-                raise StandardError("Duplicate sample: " + sample_name)
+                raise Exception("Duplicate sample: " + sample_name)
             
             if not sample_name in found_samples:
                 found_samples[sample_name] = dict()
 
             for path in sorted(glob.glob(os.path.join(sample_path, '*.fastq.gz'))):
                 which_read = misc.assign_string(os.path.basename(path),
-                                                read_types.values())
+                                                list(read_types.values()))
 
                 if not which_read in found_samples[sample_name]:
                     found_samples[sample_name][which_read] = list()
                 found_samples[sample_name][which_read].append(path)
 
         # create a run for each sample in found_samples and store data therein
-        for run_id in found_samples.keys():
+        for run_id in list(found_samples.keys()):
             with self.declare_run(run_id) as run:
                 run.add_public_info('paired_end', self.get_option('paired_end'))
                 
                 sample_path = None
                 for read in ['first_read', 'second_read']:
-                    if read in read_types.keys():
+                    if read in list(read_types.keys()):
                         for path in found_samples[run_id][read_types[read]]:
                             run.add_output_file(read, path, [])
                             sample_path = os.path.dirname(path)
@@ -94,8 +94,8 @@ class RunFolderSource(AbstractSourceStep):
                 # get and set indices
                 for row in reader:
                     sample_id = row['SampleID']
-                    if not sample_id in found_samples.keys():
-                        raise StandardError("Found sample %s in %s, but it "
+                    if not sample_id in list(found_samples.keys()):
+                        raise Exception("Found sample %s in %s, but it "
                                             "shouldn't be here." 
                                             % sample_id, sample_sheet_path)
 
@@ -109,7 +109,7 @@ class RunFolderSource(AbstractSourceStep):
                             stored_index = (run.get_public_info('index-R1') + '-' 
                                             + run.get_public_info('index-R2'))
                             if index.join('-') != stored_index:
-                                raise StandardError("Inconsistent index defined "
+                                raise Exception("Inconsistent index defined "
                                     "in %s for sample %s" % (sample_sheet_path,
                                                              sample_id))
 
@@ -117,12 +117,12 @@ class RunFolderSource(AbstractSourceStep):
                         if not run.has_public_info('index-R1'):
                             run.add_public_info('index-R1', index[0])
                         elif index[0] != run.get_public_info('index-R1'):
-                            raise StandardError("Inconsistent index defined in "
+                            raise Exception("Inconsistent index defined in "
                                 "%s for sample %s" % (sample_sheet_path, 
                                                       sample_id))
 
                     else:
-                        raise StandardError("Unknown index definition %s found "
+                        raise Exception("Unknown index definition %s found "
                             "in %s" % (index.join('-'), sample_sheet_path))
 
                 csv_file.close()
