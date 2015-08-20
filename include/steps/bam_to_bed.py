@@ -44,14 +44,14 @@ class BamToBed(AbstractStep):
                 run.add_private_info('paired_end', is_paired_end)
                 tmp_dir = self.get_option('tmp_dir')
                 if not os.path.exists(tmp_dir):
-                    raise StandardError("The directory %s does not exist. Please "
+                    raise Exception("The directory %s does not exist. Please "
                                         "check your config.yaml" % tmp_dir)
                 run.add_private_info('tmp_dir', tmp_dir)
                 if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignment file. Got %s"
+                    raise Exception("Expected exactly one alignment file. Got %s"
                                         % input_paths)
                 if  input_paths[0][-4:] != '.bam':
-                    raise StandardError("%s file suffix is not '.bam'. "
+                    raise Exception("%s file suffix is not '.bam'. "
                                         "Please provide a BAM file" % input_paths[0])
                 
                 bed_file = os.path.basename(input_paths[0])[:-4] + '.bed'

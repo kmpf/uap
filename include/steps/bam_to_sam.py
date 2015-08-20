@@ -28,7 +28,7 @@ class BamToSam(AbstractStep):
             with self.declare_run(run_id) as run:
 
                 if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file.")
+                    raise Exception("Expected exactly one alignments file.")
 
                 basename = os.path.basename(input_paths[0]).split('.')[0]
                 run.add_output_file('alignments', basename + '.sam.gz', input_paths)
