@@ -50,13 +50,13 @@ class Cutadapt(AbstractStep):
         ## Make sure the adapter type is one of -a, -b or -g 
         if self.is_option_set_in_config('adapter-type'):
             if not self.get_option('adapter-type') in set(['-a','-b','-g']):
-                raise StandardError("Option 'adapter-type' must be "
+                raise Exception("Option 'adapter-type' must be "
                                     "either '-a', '-b', or '-g'!")
 
 
         read_types = {'first_read': 'R1', 'second_read': 'R2'}
         paired_end_info = dict()
-        for run_id in run_ids_connections_files.keys():
+        for run_id in list(run_ids_connections_files.keys()):
             with self.declare_run(run_id) as run:
                 for read in read_types:                
                     connection = 'in/%s' % read
@@ -73,25 +73,25 @@ class Cutadapt(AbstractStep):
                         if paired_end_info[run_id]:
                             if ( not self.is_option_set_in_config('adapter-R2') and 
                                  not self.is_option_set_in_config('adapter-file') ):
-                                raise StandardError(
+                                raise Exception(
                                     "Option 'adapter-R2' or " +
                                     "'adapter-file' required because " +
                                     "sample %s is paired end!" % run_id)
                         elif ( self.is_option_set_in_config('adapter-R2') and
                                not self.is_option_set_in_config('adapter-file') ):
-                            raise StandardError(
+                            raise Exception(
                                 "Option 'adapter-R2' not allowed because " +
                                 "sample %s is not paired end!" % run_id)
                             
                         if ( self.is_option_set_in_config('adapter-file') and
                              self.is_option_set_in_config('adapter-R1') ):
-                            raise StandardError(
+                            raise Exception(
                                 "Option 'adapter-R1' and 'adapter-file' " +
                                 "are both set but are mutually exclusive!" )
     
                         if ( not self.is_option_set_in_config('adapter-file') and
                              not self.is_option_set_in_config('adapter-R1') ):
-                            raise StandardError(
+                            raise Exception(
                                 "Option 'adapter-R1' or 'adapter-file' " +
                                 "required to call cutadapt for sample %s!" % 
                                 run_id)
@@ -135,7 +135,7 @@ class Cutadapt(AbstractStep):
                                          'of=%s' % temp_fifo]
                                 exec_group.add_command(dd_in)
                             else:
-                                raise StandardError("File %s does not end with "
+                                raise Exception("File %s does not end with "
                                                     "any expected suffix ("
                                                     "fastq.gz or fastq). Please "
                                                     "fix that issue.")
@@ -176,7 +176,7 @@ class Cutadapt(AbstractStep):
                                 
                                 # make sure the adapter is looking good
                                 if re.search('^[ACGT]+$', adapter) == None:
-                                    raise StandardError("Unable to come up with "
+                                    raise Exception("Unable to come up with "
                                                         "a legit-looking adapter:"
                                                         "%s" % adapter)
                             # Or do we have a adapter sequence fasta file?
