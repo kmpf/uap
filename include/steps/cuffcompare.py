@@ -30,7 +30,7 @@ class Cuffcompare(AbstractStep):
             with self.declare_run(run_id) as run:
 
                 if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one feature file.")
+                    raise Exception("Expected exactly one feature file.")
 
                 run.add_output_file('features', '%s.combined.gtf' %run_id, input_paths)
                 run.add_output_file('loci', '%s.loci' % run_id, input_paths)
@@ -39,7 +39,7 @@ class Cuffcompare(AbstractStep):
                 run.add_output_file('log_stderr', '%s-cuffcompare-log_stderr.txt' % run_id, input_paths)
 
                 if not input_paths:
-                    raise StandardError("No input files for run %s" % (run_id))
+                    raise Exception("No input files for run %s" % (run_id))
                 run.add_private_info('in-features', input_paths[0])
 
     def execute(self, run_id, run):
@@ -70,26 +70,26 @@ class Cuffcompare(AbstractStep):
             os.rename(os.path.join(cuffcompare_out_directory, '%s.combined.gtf' % run_id), 
                       run.get_single_output_file_for_annotation('features'))
         except OSError:
-            raise StandardError('No file: %s' % os.path.join(cuffcompare_out_directory, 
+            raise Exception('No file: %s' % os.path.join(cuffcompare_out_directory, 
                                                              '%s.combined.gtf' % run_id))
 
         try:
             os.rename(os.path.join(cuffcompare_out_directory, '%s.loci' % run_id), 
                       run.get_single_output_file_for_annotation('loci'))
         except OSError:
-            raise StandardError('No file: %s' % os.path.join(cuffcompare_out_directory, 
+            raise Exception('No file: %s' % os.path.join(cuffcompare_out_directory, 
                                                              '%s.loci' % run_id))
 
         try:
             os.rename(os.path.join(cuffcompare_out_directory, '%s.stats' % run_id), 
                       run.get_single_output_file_for_annotation('stats'))
         except OSError:
-            raise StandardError('No file: %s' % os.path.join(cuffcompare_out_directory, 
+            raise Exception('No file: %s' % os.path.join(cuffcompare_out_directory, 
                                                              '%s.stats' % run_id))
 
         try:
             os.rename(os.path.join(cuffcompare_out_directory, '%s.tracking' % run_id), 
                       run.get_single_output_file_for_annotation('tracking'))
         except OSError:
-            raise StandardError('No file: %s' % os.path.join(cuffcompare_out_directory, 
+            raise Exception('No file: %s' % os.path.join(cuffcompare_out_directory, 
                                                              '%s.tracking' % run_id))
