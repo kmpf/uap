@@ -38,13 +38,13 @@ class CuffLinks(AbstractStep):
                 
                 run.add_private_info 
                 if not input_paths:
-                    raise StandardError("No input files for run %s" % (run_id))             
+                    raise Exception("No input files for run %s" % (run_id))             
 
 
                 if self.is_option_set_in_config('use_mask'):
                     mask = self.get_option('use_mask')
                     if not os.path.exists(mask):
-                        raise StandardError('Maskfile not found %s' % mask )
+                        raise Exception('Maskfile not found %s' % mask )
                     else:
                         run.add_private_info('mask_file', mask)
 
@@ -78,11 +78,11 @@ class CuffLinks(AbstractStep):
                 cufflinks.extend(run.get_private_info('in-bam'))            
 
 
-                print cufflinks
+                print(cufflinks)
 
 
                 log_stderr = run.get_single_output_file_for_annotation('log_stderr')
-                print log_stderr
+                print(log_stderr)
           
             
                 add_hints = {'writes': [
