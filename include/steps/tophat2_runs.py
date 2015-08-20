@@ -45,6 +45,7 @@ class TopHat2(AbstractStep):
         self.require_tool('mv')
         self.require_tool('pigz')
 #        self.require_tool('bowtie2')
+        self.require_tool('tar')
         self.require_tool('tophat2')
 
 #        self.add_option('genome', str)
@@ -195,13 +196,11 @@ class TopHat2(AbstractStep):
                         clean_up_exec_group.add_command(mv)
 
 
-                    cat_logs = [self.get_tool('cat'),
-                               os.path.join(temp_out_dir, 'logs', '*')
-                    ]
-                    clean_up_exec_group.add_command(
-                        cat_logs,
-                        stdout_path = run.add_output_file(
-                            'misc_logs',
-                            '%s-tophat2-misc_logs.txt' % run_id,
-                            input_paths)
-                    )
+                    tar_logs = [self.get_tool('tar'),
+                                run.add_output_file(
+                                    'misc_logs',
+                                    '%s-tophat2-misc_logs.tar.gz' % run_id,
+                                    input_paths)
+                                os.path.join(temp_out_dir, 'logs')
+                            ]
+                    clean_up_exec_group.add_command(tar_logs )
