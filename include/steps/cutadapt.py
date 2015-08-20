@@ -47,7 +47,7 @@ class Cutadapt(AbstractStep):
         read_types = {'first_read': '-R1', 'second_read': '-R2'}
         paired_end_info = dict()
         # fetch all incoming run IDs which produce reads...
-        for read in read_types.keys():
+        for read in list(read_types.keys()):
             for run_id, input_paths in self.get_run_ids_and_input_files_for_connection('in/%s' % read):
                 if input_paths != [None]:
                     paired_end_info[run_id] = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
@@ -58,26 +58,26 @@ class Cutadapt(AbstractStep):
                     if paired_end_info[run_id]:
                         if ( not self.is_option_set_in_config('adapter-R2') and 
                              not self.is_option_set_in_config('adapter-file') ):
-                            raise StandardError(
+                            raise Exception(
                                 "Option 'adapter-R2' or " +
                                 "'adapter-file' required because " +
                                 "sample %s is paired end!" % run_id)
 
                     elif ( self.is_option_set_in_config('adapter-R2') and
                            not self.is_option_set_in_config('adapter-file') ):
-                        raise StandardError(
+                        raise Exception(
                             "Option 'adapter-R2' not allowed because " +
                             "sample %s is not paired end!" % run_id)
                         
                     if ( self.is_option_set_in_config('adapter-file') and
                          self.is_option_set_in_config('adapter-R1') ):
-                        raise StandardError(
+                        raise Exception(
                             "Option 'adapter-R1' and 'adapter-file' " +
                             "are both set but are mutually exclusive!" )
 
                     if ( not self.is_option_set_in_config('adapter-file') and
                          not self.is_option_set_in_config('adapter-R1') ):
-                        raise StandardError(
+                        raise Exception(
                             "Option 'adapter-R1' or 'adapter-file' " +
                             "required to call cutadapt for sample %s!" % 
                             run_id)
@@ -95,17 +95,17 @@ class Cutadapt(AbstractStep):
                     ## Make sure the adapter type is one of a, b or g 
                     if self.is_option_set_in_config('adapter-type'):
                         if not (self.get_option('adapter-type') in set(['a','b','g'])):
-                            raise StandardError("Option 'adapter-type' must be "
+                            raise Exception("Option 'adapter-type' must be "
                                 "either 'a','b', or 'g'!")
                 
 
         # now declare two runs
-        for run_id in found_files.keys():
+        for run_id in list(found_files.keys()):
             with self.declare_run(run_id) as run:
                 run.new_exec_group()
                 # add paired end information
                 run.add_private_info('paired_end', paired_end_info[run_id])
-                for read in found_files[run_id].keys():
+                for read in list(found_files[run_id].keys()):
                     # find correct adapter information and add info to run
                     if self.is_option_set_in_config('adapter%s' % read_types[read]):
                         # add adapter information, insert correct index first if 
@@ -126,7 +126,7 @@ class Cutadapt(AbstractStep):
                             
                         # make sure the adapter is looking good
                         if re.search('^[ACGT]+$', adapter) == None:
-                            raise StandardError("Unable to come up with a "+
+                            raise Exception("Unable to come up with a "+
                                                 "legit-looking adapter: " + 
                                                 adapter)
                         run.add_private_info('adapter-%s' % read, adapter)
@@ -144,7 +144,7 @@ class Cutadapt(AbstractStep):
 
     def execute(self, run_id, run):
         read_types = {'first_read': '-R1', 'second_read': '-R2'}
-        for read in read_types.keys():
+        for read in list(read_types.keys()):
             with process_pool.ProcessPool(self) as pool:
                 with pool.Pipeline(pool) as pipeline:
                     out_path = run.get_single_output_file_for_annotation(read)
