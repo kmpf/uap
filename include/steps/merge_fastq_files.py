@@ -28,7 +28,7 @@ class MergeFastqFiles(AbstractStep):
         provided to this method.
         '''
         read_types = {'first_read': '_R1', 'second_read': '_R2'}
-        for run_id in run_ids_connections_files.keys():
+        for run_id in list(run_ids_connections_files.keys()):
             with self.declare_run(run_id) as run:
                 for read in read_types:
                     connection = 'in/%s' % read
@@ -79,7 +79,7 @@ class MergeFastqFiles(AbstractStep):
                                          'of=%s' % temp_fifo]
                                 exec_group.add_command(dd_in)
                             else:
-                                raise StandardError("File %s does not end with "
+                                raise Exception("File %s does not end with "
                                                     "any expected suffix ("
                                                     "fastq.gz or fastq). Please "
                                                     "fix that issue." %

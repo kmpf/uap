@@ -29,7 +29,7 @@ class Post_Sawdust(AbstractStep):
                 run.new_exec_group()
                 is_paired_end = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
                 if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file., but got this %s" % input_paths)
+                    raise Exception("Expected exactly one alignments file., but got this %s" % input_paths)
                 run.add_private_info('in-alignment', input_paths[0])
                 run.add_output_file('alignments', '%s-fixed.bam' % run_id, input_paths)
                 run.add_output_file('log_stderr', '%s-log_stderr.txt' % run_id, input_paths)

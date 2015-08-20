@@ -60,13 +60,13 @@ class Normalize_BigWig (AbstractStep):
       ## check availability of chromsizes files
       chromSizes = self.get_option ('s')
       if not os.path.exists(chromSizes):
-        raise StandardError ('Cannot find chromSizesFile %s' % chromSizes)
+        raise Exception ('Cannot find chromSizesFile %s' % chromSizes)
     
       ## if r is set, check file availability of r
       if self.is_option_set_in_config('r'):
           refBed=self.get_option('r')
           if not os.path.exists(refBed):
-              raise StandardError ('Cannot find reference bed file  %s' % refBed)
+              raise Exception ('Cannot find reference bed file  %s' % refBed)
           
       for run_id, input_paths in self.get_run_ids_and_input_files_for_connection ('in/tracks'):
           ## Check whether we have one ot more bigwig files for a run_id,
