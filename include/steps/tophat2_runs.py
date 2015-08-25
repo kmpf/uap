@@ -87,38 +87,38 @@ class TopHat2(AbstractStep):
 
                 # Tophat is run in this exec group
                 with run.new_exec_group() as exec_group:
-                    # Lists of fifos
-                    fr_temp_fifos = list()
-                    sr_temp_fifos = list()
-                    # 1. Create temporary fifos and dd files for first read
-                    for input_path in fr_input:
-                        temp_fifo = run.add_temporary_file(
-                            'in-fifo-%s' %
-                            os.path.basename(input_path) )
-                        mkfifo = [self.get_tool('mkfifo'), temp_fifo]
-                        fr_temp_fifos.append(temp_fifo)
-                        exec_group.add_command(mkfifo)
-                        dd = [self.get_tool('dd'),
-                                 'bs=4M',
-                                 'if=%s' % input_path,
-                                 'of=%s' % temp_fifo]
-                        exec_group.add_command(dd)
-                    # And if we handle paired end data 
-                    if is_paired_end:
-                        # 2. Create temporary fifos and dd files for second read
-                        for input_path in sr_input:
-                            temp_fifo = run.add_temporary_file(
-                                'in-fifo-%s' %
-                                os.path.basename(input_path) )
-                            mkfifo = [self.get_tool('mkfifo'), temp_fifo]
-                            sr_temp_fifos.append(temp_fifo)
-                            exec_group.add_command(mkfifo)
-                            dd = [self.get_tool('dd'),
-                                  'bs=4M',
-                                  'if=%s' % input_path,
-                                  'of=%s' % temp_fifo]
-                            exec_group.add_command(dd)
-
+#                    # Lists of fifos
+#                    fr_temp_fifos = list()
+#                    sr_temp_fifos = list()
+#                    # 1. Create temporary fifos and dd files for first read
+#                    for input_path in fr_input:
+#                        temp_fifo = run.add_temporary_file(
+#                            'in-fifo-%s' %
+#                            os.path.basename(input_path) )
+#                        mkfifo = [self.get_tool('mkfifo'), temp_fifo]
+#                        fr_temp_fifos.append(temp_fifo)
+#                        exec_group.add_command(mkfifo)
+#                        dd = [self.get_tool('dd'),
+#                                 'bs=4M',
+#                                 'if=%s' % input_path,
+#                                 'of=%s' % temp_fifo]
+#                        exec_group.add_command(dd)
+#                    # And if we handle paired end data 
+#                    if is_paired_end:
+#                        # 2. Create temporary fifos and dd files for second read
+#                        for input_path in sr_input:
+#                            temp_fifo = run.add_temporary_file(
+#                                'in-fifo-%s' %
+#                                os.path.basename(input_path) )
+#                            mkfifo = [self.get_tool('mkfifo'), temp_fifo]
+#                            sr_temp_fifos.append(temp_fifo)
+#                            exec_group.add_command(mkfifo)
+#                            dd = [self.get_tool('dd'),
+#                                  'bs=4M',
+#                                  'if=%s' % input_path,
+#                                  'of=%s' % temp_fifo]
+#                            exec_group.add_command(dd)
+#
                     # 2. Create temporary directory for tophat2 output
                     temp_out_dir = run.add_temporary_directory(
                         "tophat-%s" % run_id)
@@ -132,11 +132,11 @@ class TopHat2(AbstractStep):
                         '--output-dir', temp_out_dir,
                         '-p', str(self.get_cores()),
                         self.get_option('index'), 
-                        ','.join(fr_temp_fifos)
+                        ','.join(fr_input)
                     ]
                     
                     if is_paired_end:
-                        tophat2.append(','.join(sr_temp_fifos))
+                        tophat2.append(','.join(sr_input))
 
                     exec_group.add_command(
                         tophat2,
@@ -197,6 +197,7 @@ class TopHat2(AbstractStep):
 
 
                     tar_logs = [self.get_tool('tar'),
+                                '-czf',
                                 run.add_output_file(
                                     'misc_logs',
                                     '%s-tophat2-misc_logs.tar.gz' % run_id,
