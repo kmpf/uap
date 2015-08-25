@@ -84,6 +84,7 @@ class Bowtie2Build(AbstractStep):
                                 if input_path.endswith(_)]) >= 0:
                             is_fasta_gz = True
 
+                        # Temporary file is always in FASTA format
                         temp_file = run.add_temporary_file(
                             prefix = "fifo-%s" %
                             os.path.splitext(os.path.basename(input_path))[0],
@@ -97,7 +98,7 @@ class Bowtie2Build(AbstractStep):
                                 dd_in = [self.get_tool('dd'),
                                          'ibs=4M',
                                          'if=%s' % input_path]
-                                # 2.2 command: Uncompress file to fifo
+                                # 2.2 command: Uncompress data
                                 pigz = [self.get_tool('pigz'),
                                         '--decompress',
                                         '--stdout']
