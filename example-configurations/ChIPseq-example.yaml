@@ -7,7 +7,7 @@ destination_path: example-out/ChIPseq/
 constants:
     - &genome /data/bioinf/Data/Indices/hg19/hg19.fa
     - &segemehl_genome_index /data/bioinf/Data/Indices/hg19/hg19.idx
-    - &bowtie2_genome_index /data/bioinf/genomes/data/animalia/chordata/mammalia/rodentia/homo_sapiens/hg19/indices/hg19 
+    - &bowtie2_genome_index genomes/bacteria/Mycoplasma_genitalium/bowtie2_index-dd59/Mycoplasma_genitalium_index
 
 steps:
     ##################
@@ -72,6 +72,10 @@ steps:
     fix_cutadapt_fastx_quality_stats (fastx_quality_stats):
         _depends: fix_cutadapt_runs
 
+    tophat2_runs:
+        _depends: fix_cutadapt_runs
+        library_type: 'fr-unstranded'
+        index: *bowtie2_genome_index
 
 #    segemehl:
 #        _depends: fix_cutadapt
@@ -97,6 +101,11 @@ tools:
         path: fastx_quality_stats
         get_version: '-h'
         exit_code: 1
+
+    tophat2:
+        path: tophat2
+        get_version: '--version'
+        exit_code: 0
 
 #    segemehl:
 #        path: segemehl.x
@@ -193,6 +202,11 @@ tools:
 
     sha1sum:
         path: sha1sum
+        get_version: '--version'
+        exit_code: 0
+
+    tar:
+        path: tar
         get_version: '--version'
         exit_code: 0
 

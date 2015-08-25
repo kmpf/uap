@@ -1,12 +1,9 @@
 # This is the rnaseq-pipeline configuration file.
 # 
-destination_path: example-out/Index-genomes/
+destination_path: genomes/bacteria/Mycoplasma_genitalium/
 
 constants:
-    - &genome /data/bioinf/Data/Indices/hg19/hg19.fa
-    - &genome_index /data/bioinf/Data/Indices/hg19/hg19.fa.fai
-    - &segemehl_genome_index /data/bioinf/Data/Indices/hg19/hg19.idx
-    - &bowtie2_genome_index /data/bioinf/genomes/data/animalia/chordata/mammalia/rodentia/homo_sapiens/hg19/indices/hg19 
+    #- &bowtie2_genome_index /data/bioinf/genomes/data/animalia/chordata/mammalia/rodentia/homo_sapiens/hg19/indices/hg19 
 
 
 steps:
@@ -16,6 +13,12 @@ steps:
         path: genomes/bacteria/Mycoplasma_genitalium/
         secure-hash: a3e6e5655e4996dc2d49f876be9d1c27
         url: ftp://ftp.ncbi.nih.gov/genomes/genbank/bacteria/Mycoplasma_genitalium/latest_assembly_versions/GCA_000027325.1_ASM2732v1/GCA_000027325.1_ASM2732v1_genomic.fna.gz
+
+    bowtie2_index (bowtie2_build):
+        _depends: M_genitalium_genome_url
+        _connect: 
+            in/reference_sequence: M_genitalium_genome_url/raw
+        index-basename: Mycoplasma_genitalium_index
 
     # FASTQC: Generates a quality control reports of FASTQ files
 #    fastqc:
@@ -87,6 +90,12 @@ tools:
     # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
     bowtie2:
         path: 'bowtie2'
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
+    bowtie2-build:
+        path: 'bowtie2-build'
         get_version: '--version'
         exit_code: 0
 
