@@ -68,8 +68,18 @@ class Pipeline(object):
             'set_job_name': '-N',
             'set_stderr': '-e',
             'set_stdout': '-o',
+            'parse_job_id': 'Your job (\d+)'},
+
+        'uge':
+           {'submit': 'qsub',
+            'stat': 'qstat',
+            'template': pipeline_path + '/../submit-scripts/qsub-template.sh',
+            'hold_jid': '-hold_jid',
+            'set_job_name': '-N',
+            'set_stderr': '-e',
+            'set_stdout': '-o',
             'parse_job_id': 'Your job (\d+)'}
-    }
+}
     '''
     Cluster-related configuration for every cluster system supported.
     '''
@@ -627,7 +637,13 @@ class Pipeline(object):
                 return "sge"
         except OSError:
             pass
-            
+
+        try:
+            if ( subprocess.check_output(["qstat", "-help"] )[:4] == "UGE "):
+                return "uge"
+        except OSError:
+            pass
+
         return None
 
     def set_cluster_type(self, cluster_type):

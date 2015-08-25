@@ -197,10 +197,11 @@ class TopHat2(AbstractStep):
 
 
                     tar_logs = [self.get_tool('tar'),
+                                '-czf',
                                 run.add_output_file(
                                     'misc_logs',
                                     '%s-tophat2-misc_logs.tar.gz' % run_id,
-                                    input_paths)
+                                    input_paths),
                                 os.path.join(temp_out_dir, 'logs')
                             ]
                     clean_up_exec_group.add_command(tar_logs )
