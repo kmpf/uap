@@ -1,5 +1,0 @@
-Summary: Implement fastx_quality_stats step
-Categories: bw9609-to-implement, ea5946-steps
-Priority: 5
-
-$ unpigz -c <name>.fastq.gz | fastx_qulaity_stats -Q33 <-- should do the trick
