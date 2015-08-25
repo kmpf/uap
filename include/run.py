@@ -203,13 +203,13 @@ class Run(object):
         self._output_files_list.append(out_path)
         self._input_files.append(in_paths)
         self._output_files[tag][out_path] = in_paths
-        if head == "":
-            return os.path.join(
+        return_value = os.path.join(
                 self._step.get_output_directory_du_jour_placeholder(), out_path)
-        else:
-            return os.path.abspath(out_path)
+        if head != "":
+            return_value = os.path.abspath(out_path)
+        return return_value
 
-    def add_temporary_file(self, prefix = '', designation = None):
+    def add_temporary_file(self, prefix = '', suffix = '', designation = None):
         '''
         Here the name of a temporary file is created (using tempfile library).
         Name and output directory placeholder are concatenated. The concatenated
@@ -217,7 +217,7 @@ class Run(object):
         '''
         
         temp_name = str
-        with tempfile.NamedTemporaryFile(suffix = '', prefix = prefix) as f:
+        with tempfile.NamedTemporaryFile(suffix = suffix, prefix = prefix) as f:
             temp_name = os.path.basename(f.name)
 
         logger.info("Temporary name: %s" % temp_name)    
@@ -278,7 +278,8 @@ class Run(object):
             result[tag] = dict()
             for out_path, in_paths in self._output_files[tag].items():
                 directory = self._step.get_output_directory_du_jour()
-                if directory != None and out_path != None:
+                head, tail = os.path.split(out_path)
+                if directory != None and out_path != None and head == "":
                     full_path = os.path.join(directory, out_path)
                 else:
                     full_path = out_path
