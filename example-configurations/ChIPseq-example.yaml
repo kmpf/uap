@@ -72,9 +72,13 @@ steps:
     fix_cutadapt_fastx_quality_stats (fastx_quality_stats):
         _depends: fix_cutadapt_runs
 
-    tophat2_runs:
+#    tophat2_runs:
+#        _depends: fix_cutadapt_runs
+#        library_type: 'fr-unstranded'
+#        index: *bowtie2_genome_index
+
+    bowtie2:
         _depends: fix_cutadapt_runs
-        library_type: 'fr-unstranded'
         index: *bowtie2_genome_index
 
 #    segemehl:
@@ -86,6 +90,11 @@ tools:
     ##################
     # External Tools #
     ##################
+
+    bowtie2:
+        path: bowtie2
+        get_version: '--version'
+        exit_code: 0
 
     cutadapt:
         path: cutadapt
