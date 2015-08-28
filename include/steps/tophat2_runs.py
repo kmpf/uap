@@ -197,6 +197,7 @@ class TopHat2(AbstractStep):
 
 
                     tar_logs = [self.get_tool('tar'),
+                                '--remove-files',
                                 '-czf',
                                 run.add_output_file(
                                     'misc_logs',
