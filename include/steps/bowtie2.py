@@ -6,7 +6,7 @@ from abstract_step import AbstractStep
 #import yaml
 
 
-class MapReadsWithBowtie2(AbstractStep):
+class Bowtie2(AbstractStep):
     '''
     Bowtie2 is an ultrafast and memory-efficient tool for aligning sequencing
     reads to long reference sequences. It is particularly good at aligning reads
@@ -31,14 +31,11 @@ class MapReadsWithBowtie2(AbstractStep):
         self.add_connection('in/second_read')
         self.add_connection('out/alignments')
 
-        self.require_tool('cat')
+
         self.require_tool('dd')
-        self.require_tool('mkdir')
         self.require_tool('mkfifo')
-        self.require_tool('mv')
         self.require_tool('pigz')
         self.require_tool('bowtie2')
-        self.require_tool('tar')
 
         self.add_option('index', str)
 
@@ -137,7 +134,10 @@ class MapReadsWithBowtie2(AbstractStep):
                             bowtie2.extend(['-U', fr_temp_fifos])
 
                         bowtie2_pipe.add_command(bowtie2)
-
+                        # Compress bowtie2 output
+                        pigz = [self.get_tool('pigz'),
+                                '--stdout']
+                        bowtie2_pipe.add_command(pigz)
                         # Write bowtie2 output to file
                         dd = [
                             self.get_tool('dd'),
@@ -145,7 +145,7 @@ class MapReadsWithBowtie2(AbstractStep):
                             'of=%s' %
                             run.add_output_file(
                                 'alignments',
-                                '%s-bowtie2-results.sam' % run_id,
+                                '%s-bowtie2-results.sam.gz' % run_id,
                                 input_paths
                             )
                         ]
