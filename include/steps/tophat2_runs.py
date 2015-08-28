@@ -78,9 +78,9 @@ class TopHat2(AbstractStep):
 #                                        (fr_input, run_id) )
 
                 input_paths = [ y for x in [fr_input, sr_input] \
-                               for y in x if y !=None ]                    
+                               for y in x if y != None ]
 
-                # Do we have paired end data and is it exactly one ?
+                # Do we have paired end data?
                 is_paired_end = True
                 if sr_input == [None]:
                     is_paired_end = False

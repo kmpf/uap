@@ -55,6 +55,56 @@ class Segemehl(AbstractStep):
         read_types = {'first_read': '_R1', 'second_read': '_R2'}
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
+                # Get list of files for first/second read
+                fr_input = run_ids_connections_files[run_id]['in/first_read']
+                sr_input = run_ids_connections_files[run_id]['in/second_read']
+
+                input_paths = [ y for x in [fr_input, sr_input] \
+                               for y in x if y != None ]
+
+                # Do we have paired end data?
+                is_paired_end = True
+                if sr_input == [None]:
+                    is_paired_end = False
+
+                # Segemehl is run in this exec group
+                # Can segemehl handle multiple input files/fifos?
+                with run.new_exec_group() as exec_group:
+                    # Lists of fifos
+#                    fr_temp_fifos = list()
+#                    sr_temp_fifos = list()
+#                    # 1. Create temporary fifos and dd files for first read
+#                    for input_path in fr_input:
+#                        temp_fifo = run.add_temporary_file(
+#                            'in-fifo-%s' %
+#                            os.path.basename(input_path) )
+#                        mkfifo = [self.get_tool('mkfifo'), temp_fifo]
+#                        fr_temp_fifos.append(temp_fifo)
+#                        exec_group.add_command(mkfifo)
+#                        dd = [self.get_tool('dd'),
+#                                 'bs=4M',
+#                                 'if=%s' % input_path,
+#                                 'of=%s' % temp_fifo]
+#                        exec_group.add_command(dd)
+#                    # And if we handle paired end data 
+#                    if is_paired_end:
+#                        # 2. Create temporary fifos and dd files for second read
+#                        for input_path in sr_input:
+#                            temp_fifo = run.add_temporary_file(
+#                                'in-fifo-%s' %
+#                                os.path.basename(input_path) )
+#                            mkfifo = [self.get_tool('mkfifo'), temp_fifo]
+#                            sr_temp_fifos.append(temp_fifo)
+#                            exec_group.add_command(mkfifo)
+#                            dd = [self.get_tool('dd'),
+#                                  'bs=4M',
+#                                  'if=%s' % input_path,
+#                                  'of=%s' % temp_fifo]
+#                            exec_group.add_command(dd)
+#
+
+
+
                 first_read_file = 
                 if len(run_ids_connections_files[run_id]['in/first_read']) == 1:
                     first_read_file = run_ids_connections_files[run_id]\
