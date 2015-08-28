@@ -50,7 +50,6 @@ Still to replace:
 ** macs14.py (might be replacable by single MACS step)
 ** macs2.py
 ** merge_bam_by_replicate.py
-** merge_fastq_files.py
 ** merge_gencode_novel_workaround.py
 ** normalize_bigwig.py
 ** post_cufflinks_merge.py
