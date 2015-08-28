@@ -13,6 +13,8 @@ Already replaced:
 ** fastqc_runs.py
 ** merge_fastq_files.py
 ** fix_cutadapt_runs.py
+** tophat2_runs.py
+** bowtie2.py
 
 Ongoing Process:
 * Steps:
@@ -64,4 +66,3 @@ Still to replace:
 ** samtools_stats.py
 ** segemehl.py
 ** testrealign.py
-** tophat2.py
