@@ -1,0 +1,4 @@
+Summary: Implement 'report' subcommand
+Priority: 5
+
+Steps that generate report data should also implement a make_report() function that generates report graphs.
