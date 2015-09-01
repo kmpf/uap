@@ -72,6 +72,7 @@ class Task(object):
         task_state = self.get_task_state()
         if task_state != self.pipeline.states.FINISHED:
             print("Skipping task: %s its not finished yet." % self)
+            return
         self.step.generate_report(self.run_id)
         
 

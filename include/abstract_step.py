@@ -273,8 +273,9 @@ class AbstractStep(object):
         
         self.runs(run_ids_connections_files)
         
-    def runs(self):
-        """Abstract method this must be implemented by actual step.
+    def runs(self, run_ids_connections_files):
+        """
+        Abstract method this must be implemented by actual step.
 
         Raise NotImplementedError if subclass does not override this
         method.
@@ -905,7 +906,39 @@ class AbstractStep(object):
                 task.volatilize_if_possible(srsly = True)
                                 
             self._reset()
-    
+
+    def reports(self, run_id, out_connection_output_files):
+        '''
+        Abstract method this must be implemented by actual step.
+
+        Raise NotImplementedError if subclass does not override this
+        method.
+        '''
+        raise NotImplementedError()
+
+
+    def generate_report(self, run_id):
+        '''
+        Gathers the output files for each outgoing connection and calls
+        self.reports() to do the job of creating a report.
+        '''
+
+        run = self._runs[run_id]
+        out_connection_output_files = dict()
+        for out_connection in run.get_out_connections():
+            out_connection_output_files[out_connection] = run.\
+                get_output_files_abspath_for_out_connection(out_connection)
+            
+        try:
+            self.reports(run_id, out_connection_output_files)
+        except NotImplementedError as e:
+            logger.info('Step %s is not capable to generate reports' %
+                        (self._step_name))
+        except Exception as e:
+            logger.error('Unexpected error while trying to generate report for '
+                         'task %s/%s: %s' % (self._step_name, run_id,
+                                             e))
+
     def get_pre_commands(self):
         """
         Return dictionary with commands to execute before starting any other

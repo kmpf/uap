@@ -1,11 +1,14 @@
-import abstract_step
-import exec_group
 import glob
 import logging
-import misc
 import os
 import tempfile
+
 import yaml
+
+import abstract_step
+import exec_group
+import misc
+
 logger = logging.getLogger("uap_logger")
 
 class Run(object):
@@ -29,12 +32,20 @@ class Run(object):
         self._private_info = dict()
         self._public_info = dict()
         self._output_files = dict()
+        '''
+        Dictionary containing the output files for each outgoing connection and
+        their corresponding input files::
+
+           annotation_1:
+               out_path_1: [in_path_1, in_path_2, ...]
+               out_path_2: ...
+           annotation_2: ...
+
+        '''
 
         self._exec_groups = list()
         self._public_info = dict()
-        self._in_out_connection = list()
-        self._connections = list()
-        self._output_files_list = list()
+        self._out_connections = list()
         self._input_files = list()
         self._temp_paths = list()
         '''
@@ -63,6 +74,9 @@ class Run(object):
         
     def get_run_id(self):
         return self._run_id
+
+    def get_out_connections(self):
+        return self._out_connections
 
     def replace_output_dir_du_jour(func):
         def inner(self, *args):
@@ -199,8 +213,7 @@ class Run(object):
                 "Trying to add NoneType element as output file for input paths "
                 ": %s" % in_paths)
             
-        self._connections.append(tag)
-        self._output_files_list.append(out_path)
+        self._out_connections.append(tag)
         self._input_files.append(in_paths)
         self._output_files[tag][out_path] = in_paths
         return_value = os.path.join(
@@ -238,7 +251,8 @@ class Run(object):
 
     def add_empty_output_connection(self, tag):
         '''
-        
+        An empty output connection has 'None' as output file and 'None' as input
+        file.
         '''
         # make sure tag was declared with an outgoing connection
         if 'out/' + tag not in self._step._connections:
@@ -259,6 +273,9 @@ class Run(object):
 
     def get_output_files(self):
         return self._output_files
+
+    def get_output_files_abspath_for_out_connection(self, out_connection):
+        return list( self.get_output_files_abspath()[out_connection].keys() )
 
     def get_output_files_abspath(self):
         '''

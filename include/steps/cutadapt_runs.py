@@ -1,8 +1,7 @@
-import sys
-from abstract_step import *
-import pipeline
+import os
 import re
-import yaml
+
+from abstract_step import AbstractStep
 
 class Cutadapt(AbstractStep):
     '''
@@ -213,3 +212,62 @@ class Cutadapt(AbstractStep):
                                                       cutadapt_log_file)
                             cutadapt_pipe.add_command(pigz)
                             cutadapt_pipe.add_command(dd)
+
+    def reports(self, run_id, out_connection_output_files):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        import csv
+
+        table_header = ['length\tcount\texpect\tmax.err\terror counts']
+
+        logs = ['log_first_read', 'log_second_read']
+        for log in [x for x in logs if out_connection_output_files[x] != [None] ]:
+            for log_file in out_connection_output_files[log]:
+                base, ext = os.path.splitext( os.path.basename(log_file) )
+                tables = dict()
+                found_table = 0
+                record = False
+                with open(log_file, 'r') as f:
+                    for line in f:
+                        line = line.rstrip()
+                        if line in table_header:
+                            found_table += 1
+                            tables[found_table] = list()
+                            record = True
+                        if record and line == '':
+                            record = False
+                        if record:
+                            tables[found_table].append(line)
+
+                # Plot a graph for every table found
+                for table_nr in tables:
+                    data = {
+                        'length': list(),
+                        'count': list(),
+                        'expect': list(),
+                        'max_error': list(),
+                        'error_counts': list()
+                    }
+                    reader = csv.DictReader(tables[table_nr], delimiter='\t')
+                    for row in reader:
+                        data['length'].append( row['length'] )
+                        data['count'].append( row['count'] )
+                        data['expect'].append( row['expect'] )
+                        data['max_error'].append( row['max.err'] )
+                        data['error_counts'].append( row['error counts'] )
+
+                    print(data)
+                    plt.plot(
+                        data['length'],
+                        data['count'],
+                        'ro',
+                        data['length'],
+                        data['expect'],
+                        'b--')
+
+                    plt.axis([0, float(data['length'][-1]) + 1,
+                              0, float(data['expect'][0]) + 10000 ])
+                    plt.yscale('log')
+                    print('Trying to save report to %s.png' % base)
+                    plt.savefig('%s-%s.png' % (base, table_nr))
+                    plt.close()
