@@ -265,13 +265,14 @@ class Cutadapt(AbstractStep):
                         data['expect'],
                         'b--')
 
-                    plt.axis([0, float(data['length'][-1]) + 1,
-                              0, float(data['expect'][0]) + 10000 ])
+                    plt.xlim(0, float(data['length'][-1]) + 1)
+                    plt.ylim(0.01, float(max(data['expect'][0], data['count'])) + 100 )
                     plt.yscale('log')
                     print('Trying to save report to %s.png' % base)
                     plt.savefig('%s-%s.png' % (base, table_nr))
                     plt.close()
 
     def complete_report(self):
-        # Übersichtsplot
+        # Uebersichtsplot
         # Datenmatrtix plus Bewertung raus schreiben
+        pass
