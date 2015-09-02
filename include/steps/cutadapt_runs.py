@@ -271,3 +271,7 @@ class Cutadapt(AbstractStep):
                     print('Trying to save report to %s.png' % base)
                     plt.savefig('%s-%s.png' % (base, table_nr))
                     plt.close()
+
+    def complete_report(self):
+        # Übersichtsplot
+        # Datenmatrtix plus Bewertung raus schreiben
