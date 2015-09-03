@@ -38,7 +38,7 @@ class Task(object):
         '''
         Returns the run object for this task.
         '''
-        return self.step.get_run_info()[self.run_id]
+        return self.step.get_run(self.run_id)
 
     def get_task_state_basic(self):
         '''
@@ -81,7 +81,7 @@ class Task(object):
         Return a list of input files required by this task.
         '''
         result = set()
-        run_info = self.step.get_run_info()[self.run_id]
+        run_info = self.step.get_run(self.run_id)
         for annotation, outfiles in run_info.get_output_files_abspath().items():
             for outpath, infiles in outfiles.items():
                 if infiles != None:
@@ -94,7 +94,7 @@ class Task(object):
         Return a list of output files produced by this task.
         '''
         result = []
-        run_info = self.step.get_run_info()[self.run_id]
+        run_info = self.step.get_run(self.run_id)
         for annotation, outfiles in run_info.get_output_files_abspath().items():
             for path in outfiles.keys():
                 result.append(path)
