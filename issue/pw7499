@@ -1,4 +1,8 @@
 Summary: Implement 'report' subcommand
 Priority: 5
 
-Steps that generate report data should also implement a make_report() function that generates report graphs.
+Steps that generate report data should also implement a report() function that generates report graphs.
+Further thoughts about this are:
+* write complete data as ggplot2 friendly easy to import text file
+* register the created files to the runs like run.add_report_file()
+* maybe generate reports for all runs of a step (visualisation might be cumbersome)
