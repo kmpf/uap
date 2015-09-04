@@ -150,15 +150,37 @@ def main():
         "task IDs is returned by running './status.py'.")
     
     render_parser.set_defaults(func=render.main)
+
+    '''
+    The argument parser for 'report.py' is created here."
+    '''
+    
+    report_parser = subparsers.add_parser(
+        "report",
+        help="Generates reports of steps which can do so.",
+        description="",
+        parents=[common_parser])
+    
+    report_parser.add_argument(
+        "step_task",
+        nargs='*',
+        default=list(),
+        type=str,
+        help="Can take multiple step names as input. A step name "
+        "is the name of any entry in the 'steps:' section "
+        "as defined in 'config.yaml'. A list of all task IDs "
+        "is returned by running './status.py'.")
+    
+    report_parser.set_defaults(func=report.main)
     
     '''
-    The argument parser for 'status.py' is created here."
+    The argument parser for 'run-locally.py' is created here."
     '''
     
     run_locally_parser = subparsers.add_parser(
         "run-locally",
         help="Executes the pipeline on the local machine",
-        description="This script starts the 'rnaseq-pipeline' on the local machine. "
+        description="This command  starts 'uap' on the local machine. "
         "It can be used to start:\n"
         " * all tasks of the pipeline as configured in 'config.yaml'\n"
         " * all tasks defined by a specific step in 'config.yaml'\n"

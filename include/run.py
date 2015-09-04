@@ -1,11 +1,16 @@
-import abstract_step
-import exec_group
 import glob
 import logging
-import misc
 import os
+import random
+import string
 import tempfile
+
 import yaml
+
+import abstract_step
+import exec_group
+import misc
+
 logger = logging.getLogger("uap_logger")
 
 class Run(object):
@@ -29,16 +34,28 @@ class Run(object):
         self._private_info = dict()
         self._public_info = dict()
         self._output_files = dict()
+        '''
+        Dictionary containing the output files for each outgoing connection and
+        their corresponding input files::
+
+           annotation_1:
+               out_path_1: [in_path_1, in_path_2, ...]
+               out_path_2: ...
+           annotation_2: ...
+
+        '''
 
         self._exec_groups = list()
         self._public_info = dict()
-        self._in_out_connection = list()
-        self._connections = list()
-        self._output_files_list = list()
+        self._out_connections = list()
         self._input_files = list()
         self._temp_paths = list()
         '''
-        Entries can be either files or paths
+        List of temporary paths which can be either files or paths
+        '''
+        self._temp_directory = None
+        '''
+        Contains path to currently used temporary directory if set.
         '''
 
     def __enter__(self):
@@ -64,12 +81,15 @@ class Run(object):
     def get_run_id(self):
         return self._run_id
 
+    def get_out_connections(self):
+        return self._out_connections
+
     def replace_output_dir_du_jour(func):
         def inner(self, *args):
             # Collect info to replace du_jour placeholder with temp_out_dir
             step = self.get_step()
             placeholder = step.get_output_directory_du_jour_placeholder()
-            temp_out_dir = step.get_output_directory_du_jour()
+            temp_out_dir = step.get_output_directory_du_jour(self.get_run_id())
             
             value = None
             ret_value = func(self, *args)
@@ -95,7 +115,212 @@ class Run(object):
 
     @replace_output_dir_du_jour
     def get_temp_paths(self):
+        '''
+        Returns a list of all temporary paths which belong to this run.
+        '''
         return self._temp_paths
+
+    @replace_output_dir_du_jour
+    def get_temp_output_directory(self):
+        '''
+        Returns the temporary output directory of a step.
+        '''
+        if self._temp_directory == None:
+            while True:
+                token = ''.join(random.choice(
+                    string.ascii_lowercase + string.digits) for x in range(8))
+                path = os.path.join(
+                    self._pipeline.config['destination_path'],
+                    'temp', 'temp-%s-%s-%s' % (str(self), run_id, token))
+                if not os.path.exists(path):
+                    self._temp_directory = path
+        return self._temp_directory
+
+    def get_basic_state(self):
+        '''
+        Determines basic run state of a run.
+
+        Determine the basic run state of a run, which is, at any time, one of
+        **waiting**, **ready**, or **finished**.
+        
+        These states are determined from the current configuration and the
+        timestamps of result files present in the file system. In addition to
+        these three basic states, there are two additional states which are
+        less reliable (see *get_run_state()*).
+        '''
+
+        def volatile_path_good(volatile_path, recurse = True):
+            '''
+            This function receives a volatile path and tries to load the
+            placeholder YAML data structure. It then checks all downstream
+            paths, which may in turn be volatile placeholder files.
+            '''
+            
+            # reconstruct original path from volatile placeholder path
+            path = volatile_path[:-len(AbstractStep.VOLATILE_SUFFIX)]
+            
+            if AbstractStep.fsc.exists(path):
+                # the original file still exists, ignore volatile placeholder
+                return False
+            
+            if not path in self.get_step().get_pipeline()\
+                                          .task_id_for_output_file:
+                # there is no task which creates the output file
+                return False
+            
+            task_id = self.get_step().get_pipeline().task_id_for_output_file[path]
+            
+            task = self.get_step().get_pipeline().task_for_task_id[task_id]
+#            if not task.step.options['_volatile']:
+            if not task.step._options['_volatile']:
+                # the task is not declared volatile
+                return False
+            
+            if not AbstractStep.fsc.exists(volatile_path):
+                # the volatile placeholder does not exist
+                return False
+            
+            if not recurse:
+                return True
+            
+            try:
+                # try to parse the YAML contents
+                info = AbstractStep.fsc.load_yaml_from_file(volatile_path)
+            except yaml.scanner.ScannerError:
+                # error scanning YAML
+                return False
+            
+            # now check whether all downstream files are in place and up-to-date
+            # also check whether all downstream files as defined in
+            # file_dependencies_reverse are covered
+
+            uncovered_files = set()
+            if path in self.get_step().get_pipeline().file_dependencies_reverse:
+                uncovered_files = self.get_step().get_pipeline()\
+                                                 .file_dependencies_reverse[path]
+                
+            for downstream_path, downstream_info in info['downstream'].items():
+                if downstream_path in self.get_step().get_pipeline()\
+                                                     .task_id_for_output_file:
+                    # only check this downstream file if there's a task which 
+                    # creates it, otherwise, it may be a file which is no more
+                    # used
+                    pv_downstream_path = change_to_volatile_if_need_be(
+                        downstream_path, recurse = False)
+                    if not AbstractStep.fsc.exists(pv_downstream_path):
+                        return False
+                    if not AbstractStep.fsc.getmtime(pv_downstream_path) >= \
+                       info['self']['mtime']:
+                        return False
+                    if downstream_path in uncovered_files:
+                        uncovered_files.remove(downstream_path)
+                
+            if len(uncovered_files) > 0:
+                # there are still files defined which are not covered by the
+                # placeholder
+                return False
+                
+            return True
+        
+        def change_to_volatile_if_need_be(path, recurse = True):
+            '''
+            Changes the file path to volatile path if necessary.
+            '''
+            if path != None:
+                if not AbstractStep.fsc.exists(path):
+                    # the real output file does not exist
+                    volatile_path = path + AbstractStep.VOLATILE_SUFFIX
+                    if volatile_path_good(volatile_path, recurse):
+                        return volatile_path
+                return path
+
+        def is_path_up_to_date(outpath, inpaths):
+            '''
+            First, replace paths with volatile paths if the step is marked
+            as volatile and the real path is missing.
+            But, only consider volatile placeholders if all child tasks
+            are finished. That means if a child of a volatile
+            step needs to be run because it has been added or an existing step
+            has been modified, the volatile placeholders are ignored, thus
+            turning the task from 'finished' to 'ready' or 'waiting'
+            Hint: The pv_ prefix is for 'possibly volatile'
+            '''
+            pv_outpath = outpath
+            pv_inpaths = list()
+            
+            if outpath in self.get_step().get_pipeline().task_id_for_output_file:
+                pv_outpath = change_to_volatile_if_need_be(outpath)
+                
+            for inpath in inpaths:
+                pv_inpaths.append(change_to_volatile_if_need_be(inpath))
+                
+            if not AbstractStep.fsc.exists(pv_outpath):
+                return False
+            for pv_inpath in pv_inpaths:
+                if not AbstractStep.fsc.exists(pv_inpath):
+                    return False
+                if AbstractStep.fsc.getmtime(pv_inpath) > \
+                   AbstractStep.fsc.getmtime(pv_outpath):
+                    return False
+            return True
+            
+        def up_to_dateness_level(path, level = 0):
+            result = level
+            if path != None:
+                dep_paths = self.get_step().get_pipeline().file_dependencies[path]
+                if not is_path_up_to_date(path, dep_paths):
+                    result = level + 1
+                for dep_path in dep_paths:
+                    recursive_result = up_to_dateness_level(dep_path, level + 1)
+                    if recursive_result > level + 1:
+                        result = max(result, recursive_result)
+                return result
+
+        '''
+        - finished: all output files exist AND up to date (recursively)
+        - ready: NOT all output files exist AND all input files exist AND up to
+                 date (recursively)
+        - waiting: otherwise
+        - if it's ready, it might be executing or queued -> check execute and
+          queue ping
+        - if it's waiting, it might be queued -> check queue ping
+        
+        the ping works like this (this example is for execute, same goes for 
+        queued):
+          - there's a ping file for every task ( = step + run)
+          - it contains information about when, how, where the job was started
+            etc.
+          - its timestamp gets renewed every 30 seconds (touch)
+          - as soon as the job has finished, the execute ping file is removed,
+            this should also work if the job crashes (however, it cannot work
+            if the controlling script receives SIGKILL
+          - if its timestamp is no more than 5 minutes old, it is regarded as
+            currently executing
+          - otherwise, a warning is printed because the ping file is probably 
+            stale (no automatic cleanup is performed, manual intervention is
+            necessary)
+          - warning: this requires all involved systems or the file system to
+            be time-synchronized
+        '''
+        
+        run_info = self.get_runs()
+        max_level = 0
+        for tag, output_files in self.get_output_files_abspath()\
+                                                 .items():
+            # output_files can be None if the connection is empty
+            for output_file, input_files in output_files.items():
+                if output_file != None and input_files != None:
+                    max_level = max(
+                        max_level, up_to_dateness_level(output_file))
+
+        if max_level == 0:
+            return self.get_step().get_pipeline().states.FINISHED
+        elif max_level == 1:
+            return self.get_step().get_pipeline().states.READY
+        else:
+            return self.get_step().get_pipeline().states.WAITING
+
+
 
     def add_private_info(self, key, value):
         '''
@@ -199,8 +424,7 @@ class Run(object):
                 "Trying to add NoneType element as output file for input paths "
                 ": %s" % in_paths)
             
-        self._connections.append(tag)
-        self._output_files_list.append(out_path)
+        self._out_connections.append(tag)
         self._input_files.append(in_paths)
         self._output_files[tag][out_path] = in_paths
         return_value = os.path.join(
@@ -238,7 +462,8 @@ class Run(object):
 
     def add_empty_output_connection(self, tag):
         '''
-        
+        An empty output connection has 'None' as output file and 'None' as input
+        file.
         '''
         # make sure tag was declared with an outgoing connection
         if 'out/' + tag not in self._step._connections:
@@ -260,6 +485,9 @@ class Run(object):
     def get_output_files(self):
         return self._output_files
 
+    def get_output_files_abspath_for_out_connection(self, out_connection):
+        return list( self.get_output_files_abspath()[out_connection].keys() )
+
     def get_output_files_abspath(self):
         '''
         Return a dictionary of all defined output files, grouped by connection 
@@ -277,7 +505,8 @@ class Run(object):
         for tag in self._output_files:
             result[tag] = dict()
             for out_path, in_paths in self._output_files[tag].items():
-                directory = self._step.get_output_directory_du_jour()
+                directory = self.get_step().get_output_directory_du_jour(
+                    self.get_run_id())
                 head, tail = os.path.split(out_path)
                 if directory != None and out_path != None and head == "":
                     full_path = os.path.join(directory, out_path)

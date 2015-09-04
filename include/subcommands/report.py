@@ -24,9 +24,7 @@ def main(args):
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
 
-    #embed()
     
-    #task_list = copy.deepcopy(p.all_tasks_topologically_sorted)
     task_list = p.all_tasks_topologically_sorted
 
     if len(args.step_task) >= 1:
@@ -41,22 +39,14 @@ def main(args):
                     if str(task)[0:len(task_id)] == task_id:
                         task_list.append(task)
             
-    # execute all tasks
+    # try to generate reports for all tasks
     for task in task_list:
         basic_task_state = task.get_task_state_basic()
         if basic_task_state == p.states.FINISHED:
-            sys.stderr.write("Skipping %s because it's already finished.\n" %
-                             task)
-            continue
-        if basic_task_state == p.states.READY:
-            task.run()
+            try:
+                task.generate_report()
+            except:
+                logger.info("Task %s did not produce")
         else:
-            raise StandardError("Unexpected basic task state for %s: %s" %
-                                (task, basic_task_state))
-
-if __name__ == '__main__':
-    try:
-        main()
-    finally:
-        # make sure all child processes get terminated
-        process_pool.ProcessPool.kill_all_child_processes()
+            sys.stderr.write("Skipping %s because it's not finished yet.\n" %
+                             task)
