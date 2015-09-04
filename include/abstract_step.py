@@ -273,7 +273,7 @@ class AbstractStep(object):
         
         self.runs(run_ids_connections_files)
         
-    def runs(self):
+    def runs(self, run_ids_connections_files):
         """Abstract method this must be implemented by actual step.
 
         Raise NotImplementedError if subclass does not override this
