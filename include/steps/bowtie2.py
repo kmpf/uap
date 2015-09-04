@@ -24,7 +24,7 @@ class Bowtie2(AbstractStep):
     '''
     
     def __init__(self, pipeline):
-        super(MapReadsWithBowtie2, self).__init__(pipeline)
+        super(Bowtie2, self).__init__(pipeline)
         self.set_cores(6)
 
         self.add_connection('in/first_read')
