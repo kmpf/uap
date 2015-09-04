@@ -4,7 +4,10 @@ import glob
 import logging
 import string
 import os
-from abstract_step import AbstractSourceStep
+import yaml
+
+from abstract_step import *
+import pipeline
 
 logger = logging.getLogger("uap_logger")
 
@@ -34,7 +37,7 @@ class RunFolderSource(AbstractSourceStep):
                 "files containing sequencing data of the second read. "
                 "Example: 'R2.fastq' or '_2.fastq'")
         
-    def runs(self):
+    def declare_runs(self):
 
         found_samples = dict()
         read_types = dict()
@@ -51,8 +54,7 @@ class RunFolderSource(AbstractSourceStep):
             raise StandardError("Source path does not exist: " + path)
 
         # find all samples
-        for sample_path in glob.glob(os.path.join(
-                path, 'Unaligned', 'Project_*', 'Sample_*')):
+        for sample_path in glob.glob(os.path.join(path, 'Unaligned', 'Project_*', 'Sample_*')):
             sample_name = os.path.basename(sample_path).replace('Sample_', '')
             if sample_name in found_samples:
                 raise StandardError("Duplicate sample: " + sample_name)
@@ -100,8 +102,7 @@ class RunFolderSource(AbstractSourceStep):
                     index = row['Index'].split('-')
 
                     if len(index) == 2:
-                        if not run.has_public_info('index-R1') and \
-                           not run.has_public_info('index-R2'):
+                        if not run.has_public_info('index-R1') and not run.has_public_info('index-R2'):
                             run.add_public_info('index-R1', index[0])
                             run.add_public_info('index-R2', index[1])
                         else: 
