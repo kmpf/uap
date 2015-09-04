@@ -16,6 +16,30 @@ class Task(object):
     def __str__(self):
         return '%s/%s' % (self.step.get_step_name(), self.run_id)
 
+    def get_pipeline(self):
+        '''
+        Returns the pipeline this task belongs to. 
+        '''
+        return self.pipeline
+
+    def get_step(self):
+        '''
+        Returns the step of this task.
+        '''
+        return self.step
+
+    def get_run_id(self):
+        '''
+        Returns the run_id of this task.
+        '''
+        return self.run_id
+
+    def get_run(self):
+        '''
+        Returns the run object for this task.
+        '''
+        return self.step.get_run(self.run_id)
+
     def get_task_state_basic(self):
         '''
         Proxy method for step.get_run_state().
@@ -30,8 +54,8 @@ class Task(object):
 
     def run(self):
         '''
-        Run the task. Skip if it's already finished, otherwise raise 
-        StandardError if it's not ready.
+        Run the task. Skip if it's already finished. Raise Exception
+        if it's not ready.
         '''
         task_state = self.get_task_state()
         if task_state == self.pipeline.states.FINISHED:
@@ -41,12 +65,23 @@ class Task(object):
             raise StandardError("%s cannot be run yet." % self)
         self.step.run(self.run_id)
 
+    def generate_report(self):
+        '''
+        Generate the report for the task. Skip this if task is not finished yet.
+        '''
+        task_state = self.get_task_state()
+        if task_state != self.pipeline.states.FINISHED:
+            print("Skipping task: %s its not finished yet." % self)
+            return
+        self.step.generate_report(self.run_id)
+        
+
     def input_files(self):
         '''
         Return a list of input files required by this task.
         '''
         result = set()
-        run_info = self.step.get_run_info()[self.run_id]
+        run_info = self.step.get_run(self.run_id)
         for annotation, outfiles in run_info.get_output_files_abspath().items():
             for outpath, infiles in outfiles.items():
                 if infiles != None:
@@ -59,7 +94,7 @@ class Task(object):
         Return a list of output files produced by this task.
         '''
         result = []
-        run_info = self.step.get_run_info()[self.run_id]
+        run_info = self.step.get_run(self.run_id)
         for annotation, outfiles in run_info.get_output_files_abspath().items():
             for path in outfiles.keys():
                 result.append(path)
@@ -71,7 +106,8 @@ class Task(object):
         '''
         result = set()
         for path in self.input_files():
-            result.add(self.pipeline.task_for_task_id[self.pipeline.task_id_for_output_file[path]])
+            result.add(self.pipeline.task_for_task_id\
+                       [self.pipeline.task_id_for_output_file[path]])
 
         return list(result)
     
@@ -90,19 +126,25 @@ class Task(object):
                         # don't check whether the output file B exists,
                         # it might also be volatile, rather check whether the
                         # task which creates B is finished
-                        path_b_task = self.pipeline.task_for_task_id[self.pipeline.task_id_for_output_file[path_b]]
-                        if path_b_task.get_task_state() != self.pipeline.states.FINISHED:
+                        path_b_task = self.pipeline.task_for_task_id\
+                                      [self.pipeline.task_id_for_output_file\
+                                       [path_b]]
+                        if path_b_task.get_task_state() != \
+                           self.pipeline.states.FINISHED:
                             path_a_can_be_removed = False
                             break
                     
                 if path_a_can_be_removed:
                     result.add(path_a)
                     if srsly:
-                        print("Now volatilizing %s: %s" % (str(self), os.path.basename(path_a)))
+                        print("Now volatilizing %s: %s" %
+                              (str(self), os.path.basename(path_a)))
                         info = dict()
                         info['self'] = dict()
-                        info['self']['size'] = abstract_step.AbstractStep.fsc.getsize(path_a)
-                        info['self']['mtime'] = abstract_step.AbstractStep.fsc.getmtime(path_a)
+                        info['self']['size'] = abstract_step.AbstractStep.fsc.\
+                                               getsize(path_a)
+                        info['self']['mtime'] = abstract_step.AbstractStep.fsc.\
+                                                getmtime(path_a)
                         info['downstream'] = dict()
                         for path_b in path_a_dependent_files:
                             info['downstream'][path_b] = dict()

@@ -36,7 +36,7 @@ def main(args):
                 raise StandardError("Invalid task ID %s." % task_id)
             step_name = parts[0]
             run_id = parts[1]
-            report = p.steps[step_name].get_run_info()[run_id].as_dict()
+            report = p.steps[step_name].get_run(run_id).as_dict()
             report['state'] = p.steps[step_name].get_run_state(run_id)
             print(yaml.dump(report, default_flow_style = False))
         
