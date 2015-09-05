@@ -178,6 +178,12 @@ class AbstractStep(object):
         '''
         self._step_name = step_name
 
+    def get_step_name(self):
+        '''
+        Return the steps name
+        '''
+        return self._step_name
+
     def set_options(self, options):
         '''
         Checks and stores step options.
@@ -309,7 +315,7 @@ class AbstractStep(object):
             # for each exec_group in that run ...
             for exec_group in run.get_exec_groups():
                 # ... create a process pool
-                with process_pool.ProcessPool(self) as pool:
+                with process_pool.ProcessPool(run) as pool:
                     # Clean up (use last ProcessPool for that)
                     if exec_group == run.get_exec_groups()[-1]:
                         # 1. Temporary files
@@ -1125,35 +1131,6 @@ class AbstractStep(object):
             pass
         
         return annotation_path, annotation_yaml
-    
-#    def get_temporary_path(self, prefix = '', designation = None):
-#        """
-#        Returns a temporary path with the prefix specified. 
-#        The returned path will be in the temporary directory of the step 
-#        and will not exist yet. Don't use this method from within steps.
-#        """
-#        if not self._temp_directory:
-#            raise StandardError("Temporary directory not set, you cannot call "
-#                                "get_temporary_path from setup_runs.")
-#
-#        _, _path = tempfile.mkstemp('', prefix, self._temp_directory)
-#        os.close(_)
-#        os.unlink(_path)
-#        
-#        self.known_paths[_path] = {'label': prefix,
-#                                   'designation': designation,
-#                                   'type': 'file'}
-#
-#        return _path        
-
-    def get_temporary_fifo(self, prefix = '', designation = None):
-        """
-        Create a temporary FIFO and return its path.
-        """
-        path = self.get_temporary_path(prefix, designation)
-        os.mkfifo(path)
-        self.known_paths[path]['type'] = 'fifo'
-        return path
 
     def __str__(self):
         return self._step_name
