@@ -539,25 +539,26 @@ class Pipeline(object):
                     pass
         
         now = datetime.datetime.now()
-        for which in ['run', 'queued']:
-            if not check_queue and which == 'queued':
-                continue
-            for task in self.all_tasks_topologically_sorted:
-                path = task.step._get_ping_path_for_run_id(task.run_id, which)
-                if os.path.exists(path):
-                    if which == 'run':
-                        info = yaml.load(open(path, 'r'))
-                        start_time = info['start_time']
-                        last_activity = datetime.datetime.fromtimestamp(
-                            abstract_step.AbstractStep.fsc.getmtime(path))
-                        last_activity_difference = now - last_activity
-                        if last_activity_difference.total_seconds() > \
-                           abstract_step.AbstractStep.PING_TIMEOUT:
-                            run_problems.append((task, path, last_activity_difference, last_activity - start_time))
-                    if which == 'queued':
-                        info = yaml.load(open(path, 'r'))
-                        if not str(info['job_id']) in running_jids:
-                            queue_problems.append((task, path, info['submit_time']))
+        for task in self.all_tasks_topologically_sorted:
+            exec_ping_file = task.get_run().get_executing_ping_file()
+            queued_ping_file = task.get_run().get_queued_ping_file()
+            if os.path.exists(exec_ping_file):
+                info = yaml.load(open(exec_ping_file, 'r'))
+                start_time = info['start_time']
+                last_activity = datetime.datetime.fromtimestamp(
+                    abstract_step.AbstractStep.fsc.getmtime(exec_ping_file))
+                last_activity_difference = now - last_activity
+                if last_activity_difference.total_seconds() > \
+                   abstract_step.AbstractStep.PING_TIMEOUT:
+                    run_problems.append((task, exec_ping_file,
+                                         last_activity_difference,
+                                         last_activity - start_time))
+
+            if os.path.exists(queued_ping_file) and check_queue:
+                info = yaml.load(open(queued_ping_file, 'r'))
+                if not str(info['job_id']) in running_jids:
+                    queue_problems.append((task, queued_ping_file,
+                                           info['submit_time']))
            
         show_hint = False
         

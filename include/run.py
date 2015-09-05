@@ -30,9 +30,16 @@ class Run(object):
             raise StandardError("Error: A run ID must not contain a slash: %s."
                                 % run_id)
         self._step = step
+        '''
+        Step this run belongs to.
+        '''
         self._run_id = run_id
+        '''
+        Identifier of this run.
+        '''
         self._private_info = dict()
         self._public_info = dict()
+        self._input_files = list()
         self._output_files = dict()
         '''
         Dictionary containing the output files for each outgoing connection and
@@ -44,11 +51,12 @@ class Run(object):
            annotation_2: ...
 
         '''
-
+        self._ping_files = {
+            'run': None,
+            'queued': None
+        }
         self._exec_groups = list()
-        self._public_info = dict()
         self._out_connections = list()
-        self._input_files = list()
         self._temp_paths = list()
         '''
         List of temporary paths which can be either files or paths
@@ -84,6 +92,20 @@ class Run(object):
 
     def get_out_connections(self):
         return self._out_connections
+
+    def _get_ping_file(self, key):
+        if self._ping_files[key] == None:
+            self._ping_files[key] = os.path.join(
+                self.get_step().get_output_directory(),
+                '.%s-%s-ping.yaml' % (self.get_run_id(), key)
+            )
+        return self._ping_files[key]
+
+    def get_executing_ping_file(self):
+        return self._get_ping_file('run')
+
+    def get_queued_ping_file(self):
+        return self._get_ping_file('queued')
 
     def replace_output_dir_du_jour(func):
         def inner(self, *args, **kwargs):
@@ -124,7 +146,6 @@ class Run(object):
         '''
         return self._temp_paths
 
-#    @replace_output_dir_du_jour
     def get_temp_output_directory(self):
         '''
         Returns the temporary output directory of a run.
