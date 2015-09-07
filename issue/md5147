@@ -1,0 +1,5 @@
+Summary: Repair render subcommand
+Priority: 5
+
+uap <config> render <- should create graphs for every single task
+uap <config> render --files <- should create the file graph of the complete analysis
