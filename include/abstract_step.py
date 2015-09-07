@@ -178,6 +178,12 @@ class AbstractStep(object):
         '''
         self._step_name = step_name
 
+    def get_step_name(self):
+        '''
+        Return the steps name
+        '''
+        return self._step_name
+
     def set_options(self, options):
         '''
         Checks and stores step options.
@@ -309,15 +315,10 @@ class AbstractStep(object):
             # for each exec_group in that run ...
             for exec_group in run.get_exec_groups():
                 # ... create a process pool
-                with process_pool.ProcessPool(self) as pool:
+                with process_pool.ProcessPool(run) as pool:
                     # Clean up (use last ProcessPool for that)
                     if exec_group == run.get_exec_groups()[-1]:
-                        # 1. Temporary files
-                        for temp_path in run.get_temp_paths():
-                            # * temp_path will be unlinked in pool.__exit__
-                            logger.info("Announced path: %s" % temp_path)
-                            pool.announce_temporary_path(temp_path)
-
+                        pool.clean_up_temp_paths()
 
                     for poc in exec_group.get_pipes_and_commands():
                         # for each pipe or command (poc)
@@ -525,7 +526,8 @@ class AbstractStep(object):
 
             uncovered_files = set()
             if path in self.get_pipeline().file_dependencies_reverse:
-                uncovered_files = self.get_pipeline().file_dependencies_reverse[path]
+                uncovered_files = self.get_pipeline().\
+                                  file_dependencies_reverse[path]
                 
             for downstream_path, downstream_info in info['downstream'].items():
                 if downstream_path in self.get_pipeline().task_id_for_output_file:
@@ -667,22 +669,20 @@ class AbstractStep(object):
         temporarily wrong due to the possiblity of having out-of-date ping files 
         lying around.
         '''
+        run = self.get_run(run_id)
         run_state = self.get_run_state_basic(run_id)
         if run_state == self.get_pipeline().states.READY:
-            if AbstractStep.fsc.exists(
-                    self.get_executing_ping_path_for_run_id(run_id)):
+            if AbstractStep.fsc.exists( run.get_executing_ping_file() ):
                 # here, we just check whether the executing ping file exists,
                 # it doesn't matter whether it's been stale for a year
                 # (the user will get notified that there are stale ping files
                 # and can fix it with ./fix-problems.py, it's probably better
                 # to fix this explicitly
                 return self.get_pipeline().states.EXECUTING
-            if AbstractStep.fsc.exists(
-                    self.get_queued_ping_path_for_run_id(run_id)):
+            if AbstractStep.fsc.exists( run.get_queued_ping_file() ):
                 return self.get_pipeline().states.QUEUED
         elif run_state == self.get_pipeline().states.WAITING:
-            if AbstractStep.fsc.exists(
-                    self.get_queued_ping_path_for_run_id(run_id)):
+            if AbstractStep.fsc.exists( run.get_queued_ping_file() ):
                 return self.get_pipeline().states.QUEUED
         return run_state
         
@@ -695,20 +695,20 @@ class AbstractStep(object):
         '''
 
         # this is the run we'll execute now
-        run = self._runs[run_id]
+        run = self.get_run(run_id)
 
         # create the output directory if it doesn't exist yet
         if not os.path.isdir(self.get_output_directory()):
             os.makedirs(self.get_output_directory())
     
         # now write the run ping file
-        executing_ping_path = self.get_executing_ping_path_for_run_id(run_id)
+        executing_ping_path = run.get_executing_ping_file()
         
         if os.path.exists(executing_ping_path):
             raise StandardError("%s/%s seems to be already running, "
                                 "exiting..." % (self, run_id))
         
-        queued_ping_path = self.get_queued_ping_path_for_run_id(run_id)
+        queued_ping_path = run.get_queued_ping_file()
         
         # create a temporary directory for the output files
         temp_directory = run.get_temp_output_directory()
@@ -1125,35 +1125,6 @@ class AbstractStep(object):
             pass
         
         return annotation_path, annotation_yaml
-    
-#    def get_temporary_path(self, prefix = '', designation = None):
-#        """
-#        Returns a temporary path with the prefix specified. 
-#        The returned path will be in the temporary directory of the step 
-#        and will not exist yet. Don't use this method from within steps.
-#        """
-#        if not self._temp_directory:
-#            raise StandardError("Temporary directory not set, you cannot call "
-#                                "get_temporary_path from setup_runs.")
-#
-#        _, _path = tempfile.mkstemp('', prefix, self._temp_directory)
-#        os.close(_)
-#        os.unlink(_path)
-#        
-#        self.known_paths[_path] = {'label': prefix,
-#                                   'designation': designation,
-#                                   'type': 'file'}
-#
-#        return _path        
-
-    def get_temporary_fifo(self, prefix = '', designation = None):
-        """
-        Create a temporary FIFO and return its path.
-        """
-        path = self.get_temporary_path(prefix, designation)
-        os.mkfifo(path)
-        self.known_paths[path]['type'] = 'fifo'
-        return path
 
     def __str__(self):
         return self._step_name
@@ -1636,16 +1607,6 @@ class AbstractStep(object):
 
         self._defined_options[key] = info
         
-    def _get_ping_path_for_run_id(self, run_id, key):
-        return os.path.join(self.get_output_directory(), '.%s-%s-ping.yaml' % 
-                            (run_id, key))
-    
-    def get_executing_ping_path_for_run_id(self, run_id):
-        return self._get_ping_path_for_run_id(run_id, 'run')
-        
-    def get_queued_ping_path_for_run_id(self, run_id):
-        return self._get_ping_path_for_run_id(run_id, 'queued')
-
     def find_upstream_info_for_input_paths_as_set(self, input_paths,
                                                   key, expected = 1):
         task_ids = set()

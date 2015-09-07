@@ -30,9 +30,16 @@ class Run(object):
             raise StandardError("Error: A run ID must not contain a slash: %s."
                                 % run_id)
         self._step = step
+        '''
+        Step this run belongs to.
+        '''
         self._run_id = run_id
+        '''
+        Identifier of this run.
+        '''
         self._private_info = dict()
         self._public_info = dict()
+        self._input_files = list()
         self._output_files = dict()
         '''
         Dictionary containing the output files for each outgoing connection and
@@ -44,11 +51,12 @@ class Run(object):
            annotation_2: ...
 
         '''
-
+        self._ping_files = {
+            'run': None,
+            'queued': None
+        }
         self._exec_groups = list()
-        self._public_info = dict()
         self._out_connections = list()
-        self._input_files = list()
         self._temp_paths = list()
         '''
         List of temporary paths which can be either files or paths
@@ -57,6 +65,7 @@ class Run(object):
         '''
         Contains path to currently used temporary directory if set.
         '''
+        self._known_paths = dict()
 
     def __enter__(self):
         return self
@@ -84,16 +93,33 @@ class Run(object):
     def get_out_connections(self):
         return self._out_connections
 
+    def _get_ping_file(self, key):
+        if self._ping_files[key] == None:
+            self._ping_files[key] = os.path.join(
+                self.get_step().get_output_directory(),
+                '.%s-%s-ping.yaml' % (self.get_run_id(), key)
+            )
+        return self._ping_files[key]
+
+    def get_executing_ping_file(self):
+        return self._get_ping_file('run')
+
+    def get_queued_ping_file(self):
+        return self._get_ping_file('queued')
+
     def replace_output_dir_du_jour(func):
-        def inner(self, *args):
+        def inner(self, *args, **kwargs):
             # Collect info to replace du_jour placeholder with temp_out_dir
             step = self.get_step()
             placeholder = step.get_output_directory_du_jour_placeholder()
             temp_out_dir = step.get_output_directory_du_jour(self.get_run_id())
             
             value = None
-            ret_value = func(self, *args)
-            if isinstance(ret_value, list):
+            ret_value = func(self, *args, **kwargs)
+            # If currently calling AbstractStep.runs() do nothing
+            if temp_out_dir == None:
+                value = ret_value
+            elif isinstance(ret_value, list):
                 value = list()
                 for string in ret_value:
                     if string != None and placeholder in string:
@@ -120,20 +146,23 @@ class Run(object):
         '''
         return self._temp_paths
 
-    @replace_output_dir_du_jour
     def get_temp_output_directory(self):
         '''
-        Returns the temporary output directory of a step.
+        Returns the temporary output directory of a run.
         '''
         if self._temp_directory == None:
             while True:
                 token = ''.join(random.choice(
                     string.ascii_lowercase + string.digits) for x in range(8))
                 path = os.path.join(
-                    self._pipeline.config['destination_path'],
-                    'temp', 'temp-%s-%s-%s' % (str(self), run_id, token))
+                    self.get_step().get_pipeline().config['destination_path'],
+                    'temp',
+                    'temp-%s-%s-%s' % (self.get_step().get_step_name(),
+                                       self.get_run_id(), token))
                 if not os.path.exists(path):
                     self._temp_directory = path
+                    return self._temp_directory
+        
         return self._temp_directory
 
     def get_basic_state(self):
@@ -433,11 +462,13 @@ class Run(object):
             return_value = os.path.abspath(out_path)
         return return_value
 
+    @replace_output_dir_du_jour
     def add_temporary_file(self, prefix = '', suffix = '', designation = None):
         '''
-        Here the name of a temporary file is created (using tempfile library).
+        Returns the name of a temporary file (created tempfile library).
         Name and output directory placeholder are concatenated. The concatenated
-        string is returned and stored in a list.
+        string is returned and stored in a list. The placeholder is immediately
+        properly adjusted by @replace_output_dir_du_jour.
         '''
         
         temp_name = str
@@ -448,6 +479,12 @@ class Run(object):
 
         temp_placeholder = os.path.join(
             self._step.get_output_directory_du_jour_placeholder(), temp_name)
+
+        # TODO: Rethink the concept of _known_path/_temp_paths
+        self._known_paths[temp_placeholder] = {'label': prefix,
+                                               'designation': designation,
+                                               'type': 'file'}
+
         self._temp_paths.append(temp_placeholder)
         return temp_placeholder
 
@@ -459,6 +496,23 @@ class Run(object):
         '''
         return self.add_temporary_file(prefix = prefix,
                                        designation = designation)
+
+    def remove_temporary_paths(self):
+        for _ in self.get_temp_paths():
+            if os.path.isdir(_):
+                try:
+                    os.rmdir(_)
+                except OSError as e:
+                    logger.error("errno: %s" % e.errno)
+                    logger.error("strerror: %s" % e.strerror)
+                    logger.error("filename: %s" % e.filename)
+                    pass
+            else:
+                try:
+                    os.unlink(_)
+                except OSError as e:
+                    pass
+
 
     def add_empty_output_connection(self, tag):
         '''
@@ -515,9 +569,6 @@ class Run(object):
                 result[tag][full_path] = in_paths
 
         return result
-
-    def get_run_module(self):
-        return self._run_module
 
     def get_single_output_file_for_annotation(self, annotation):
         '''

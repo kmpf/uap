@@ -13,7 +13,6 @@ class ExecGroup(object):
     def __init__(self, run):
         self._run = run
         self._pipes_and_commands = list()
-        self._fifos = dict()
 
     def __enter__(self):        
         return self
@@ -39,12 +38,3 @@ class ExecGroup(object):
 
     def get_run(self):
         return self._run
-
-    def new_temporary_fifo(self, prefix, designation = None):
-        placeholder = "<temp-fifo-%s-%s>" % (prefix, designation)
-        self._fifos[placeholder] = {'prefix' : prefix,
-                                    'designation': designation}
-        return placeholder
-
-    def get_temporary_fifo(self, placeholder):
-        return self._fifos[placeholder]
