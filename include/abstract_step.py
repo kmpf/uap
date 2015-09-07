@@ -318,12 +318,7 @@ class AbstractStep(object):
                 with process_pool.ProcessPool(run) as pool:
                     # Clean up (use last ProcessPool for that)
                     if exec_group == run.get_exec_groups()[-1]:
-                        # 1. Temporary files
-                        for temp_path in run.get_temp_paths():
-                            # * temp_path will be unlinked in pool.__exit__
-                            logger.info("Announced path: %s" % temp_path)
-                            pool.announce_temporary_path(temp_path)
-
+                        pool.clean_up_temp_paths()
 
                     for poc in exec_group.get_pipes_and_commands():
                         # for each pipe or command (poc)

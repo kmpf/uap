@@ -155,6 +155,11 @@ class ProcessPool(object):
         
         self.copy_processes_for_pid = dict()
 
+        self.clean_up = False
+
+    def clean_up_temp_paths(self):
+        self.clean_up = True
+
     def get_run(self):
         return self._run
 
@@ -253,25 +258,10 @@ class ProcessPool(object):
                 self.load_unload_module(module_unload)
 
         # remove all temporary files or directories we know of
-        for _ in self.temp_paths:
-            if os.path.isdir(_):
-                try:
-                    os.rmdir(_)
-                except OSError as e:
-                    logger.error("errno: %s" % e.errno)
-                    logger.error("strerror: %s" % e.strerror)
-                    logger.error("filename: %s" % e.filename)
-                    pass
-            else:
-                try:
-                    os.unlink(_)
-                except OSError as e:
-                    pass
+        if self.clean_up_temp_paths:
+            self.get_run().remove_temporary_paths()
         
         ProcessPool.current_instance = None
-
-    def announce_temporary_path(self, temp_path):
-        self.temp_paths.append(temp_path)        
     
     def launch(self, args, stdout_path = None, stderr_path = None, hints = {}):
         '''
@@ -538,7 +528,8 @@ class ProcessPool(object):
         '''
         Wait for all processes to exit.
         '''
-        self.log("Now launching process watcher and waiting for all child processes to exit.")
+        self.log("Now launching process watcher and waiting for all child "
+                 "processes to exit.")
         watcher_report_path = self.get_run()\
                                   .add_temporary_file('watcher-report')
         watcher_pid = self._launch_process_watcher(watcher_report_path)
@@ -556,12 +547,12 @@ class ProcessPool(object):
                 if pid == watcher_pid:
                     ProcessPool.process_watcher_pid = None
                     try:
-                        f = open(watcher_report_path)
-                        self.process_watcher_report = yaml.load(f)
-                        f.close()
+                        with open(watcher_report_path) as f:
+                            self.process_watcher_report = yaml.load(f)
                         os.unlink(watcher_report_path)
                     except:
-                        print("Warning: Couldn't load watcher report from %s." % watcher_report_path)
+                        print("Warning: Couldn't load watcher report from %s." %
+                              watcher_report_path)
                         pass
                     # the process watcher has terminated, which is cool, I guess
                     # (if it's the last child process, anyway)
@@ -572,8 +563,8 @@ class ProcessPool(object):
                     self.running_procs.remove(pid)
                 except:
                     if pid != os.getpid():
-                        #raise StandardError("Caught a process which we didn't know: %d." % pid)
-                        sys.stderr.write("Note: Caught a process which we didn't know: %d.\n" % pid)
+                        sys.stderr.write("Note: Caught a process which we "
+                                         "didn't know: %d.\n" % pid)
 
                 if pid in self.proc_details:
                     self.proc_details[pid]['end_time'] = datetime.datetime.now()
@@ -584,10 +575,12 @@ class ProcessPool(object):
                 if signal_number > 0:
                     what_happened = "has received signal %d" % signal_number
                     if signal_number in ProcessPool.SIGNAL_NAMES:
-                        what_happened = "has received %s (signal number %d)" % (ProcessPool.SIGNAL_NAMES[signal_number], signal_number)
+                        what_happened = ("has received %s (signal number %d)" %
+                        (ProcessPool.SIGNAL_NAMES[signal_number], signal_number))
                         
                 if pid in self.proc_details:
-                    self.log("%s (PID %d) %s." % (self.proc_details[pid]['name'], pid, what_happened))
+                    self.log("%s (PID %d) %s." % (self.proc_details[pid]['name'],
+                                                  pid, what_happened))
                 else:
                     self.log("PID %d %s." % (pid, what_happened))
 
@@ -598,7 +591,7 @@ class ProcessPool(object):
                         self.proc_details[pid]['signal'] = signal_number
                         if signal_number in ProcessPool.SIGNAL_NAMES:
                             self.proc_details[pid]['signal_name'] = ProcessPool.SIGNAL_NAMES[signal_number]
-                            
+
                     # now kill it's preceding process, if this is from a pipeline
                     if 'use_stdin_of' in self.proc_details[pid]:
                         pidlist = list()
@@ -606,13 +599,15 @@ class ProcessPool(object):
                         pidlist.append(self.copy_processes_for_pid[self.proc_details[pid]['use_stdin_of']][1])
                         pidlist.append(self.proc_details[pid]['use_stdin_of'])
                         for kpid in pidlist:
-                            self.log("Now killing %d, the predecessor of %d." % (kpid, pid))
+                            self.log("Now killing %d, the predecessor of %d." %
+                                     (kpid, pid))
                             self.ok_to_fail.add(kpid)
                             try:
                                 os.kill(kpid, signal.SIGPIPE)
                             except OSError, e:
                                 if e.errno == errno.ESRCH:
-                                    self.log("Couldn't kill %d: no such process." % kpid)
+                                    self.log("Couldn't kill %d: no such "
+                                             "process." % kpid)
                                     pass
                                 else:
                                     raise

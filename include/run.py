@@ -497,6 +497,23 @@ class Run(object):
         return self.add_temporary_file(prefix = prefix,
                                        designation = designation)
 
+    def remove_temporary_paths(self):
+        for _ in self.get_temp_paths():
+            if os.path.isdir(_):
+                try:
+                    os.rmdir(_)
+                except OSError as e:
+                    logger.error("errno: %s" % e.errno)
+                    logger.error("strerror: %s" % e.strerror)
+                    logger.error("filename: %s" % e.filename)
+                    pass
+            else:
+                try:
+                    os.unlink(_)
+                except OSError as e:
+                    pass
+
+
     def add_empty_output_connection(self, tag):
         '''
         An empty output connection has 'None' as output file and 'None' as input
