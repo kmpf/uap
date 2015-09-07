@@ -1,5 +1,0 @@
-Summary: Replace os.mkfifo with mkfifo calls
-Priority: 4
-
-Methods like get_temporary_fifo() call in the end os.mkfifo.
-The usage of get_temporary_fifo() should be replaced with usage of mkfifo.
