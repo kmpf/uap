@@ -141,7 +141,7 @@ class AbstractStep(object):
             raise StandardError(
                 "Cannot declare the same run ID twice: %s." % run_id)
         run = run_module.Run(self, run_id)
-        self._runs[run_id] = run
+        self.get_run(run_id) = run
         return run
 
     def get_run(self, run_id):
@@ -358,9 +358,9 @@ class AbstractStep(object):
             
             # define file dependencies
             for run_id in self._runs.keys():
-                for annotation in self._runs[run_id].get_output_files_abspath().keys():
+                for annotation in self.get_run(run_id).get_output_files_abspath().keys():
                     for output_path, input_paths in \
-                        self._runs[run_id].get_output_files_abspath()[annotation].items():
+                        self.get_run(run_id).get_output_files_abspath()[annotation].items():
                         # proceed if we have normal output_path/input_paths
                         if output_path != None and input_paths != None:
                             # store file dependencies
@@ -381,12 +381,6 @@ class AbstractStep(object):
 
         # now that _runs exists, it remains constant, just return it
         return self._runs
-
-    def get_run(self, run_id):
-        '''
-        Returns the run object with run_id
-        '''
-        return self._runs[run_id]
 
     def get_run_ids(self):
         '''
@@ -857,7 +851,7 @@ class AbstractStep(object):
             if os.path.exists(path):
                 self.known_paths[path]['size'] = os.path.getsize(path)
                 
-        annotation_path, annotation_str = self.write_annotation(
+        annotation_path, annotation_str = run.write_annotation_file(
             run_id, 
             self.get_output_directory() \
             if ((self.get_pipeline().caught_signal is None) and \
@@ -964,7 +958,7 @@ class AbstractStep(object):
         self.reports() to do the job of creating a report.
         '''
 
-        run = self._runs[run_id]
+        run = self.get_run(run_id)
         out_connection_output_files = dict()
         for out_connection in run.get_out_connections():
             out_connection_output_files[out_connection] = run.\
@@ -1054,77 +1048,6 @@ class AbstractStep(object):
                     else:
                         self._pipeline_log[k].update(log[k])
     
-    def write_annotation(self, run_id, path):
-        """
-        Write the YAML annotation after a successful or failed run and try to
-        render the process graph (but swallow any errors resulting from that --
-        after all, it's not *that* important to get the rendered graph, and it 
-        still can be created later from the YAML annotation).
-        """
-        
-        # now write the annotation
-        log = {}
-        log['pid'] = os.getpid()
-        log['step'] = {}
-        log['step']['options'] = self._options
-        log['step']['name'] = self.get_step_name()
-        log['step']['known_paths'] = self.known_paths
-        log['step']['cores'] = self._cores
-        log['run'] = {}
-        log['run']['run_info'] = self.get_run(run_id).as_dict()
-        log['run']['run_id'] = run_id
-        log['run']['temp_directory'] = self.get_run(run_id)\
-                                           .get_temp_output_directory()
-        log['config'] = self.get_pipeline().config
-        log['git_hash_tag'] = self.get_pipeline().git_hash_tag
-        log['tool_versions'] = {}
-        for tool in self._tools.keys():
-            log['tool_versions'][tool] = self.get_pipeline().tool_versions[tool]
-        log['pipeline_log'] = self._pipeline_log
-        log['start_time'] = self.start_time
-        log['end_time'] = self.end_time
-        if self.get_pipeline().git_dirty_diff:
-            log['git_dirty_diff'] = self.get_pipeline().git_dirty_diff
-        if self.get_pipeline().caught_signal is not None:
-            log['signal'] = self.get_pipeline().caught_signal
-
-        annotation_yaml = yaml.dump(log, default_flow_style = False)
-        annotation_path = os.path.join(
-            path, ".%s-annotation-%s.yaml" % 
-            (run_id, misc.str_to_sha1_b62(annotation_yaml)[:6]))
-        
-        # overwrite the annotation if it already exists
-        with open(annotation_path, 'w') as f:
-            f.write(annotation_yaml)
-            
-        try:
-            gv = self.render_pipeline([log])
-            dot = subprocess.Popen(['dot', '-Tsvg'], stdin = subprocess.PIPE,
-                                   stdout = subprocess.PIPE)
-            dot.stdin.write(gv)
-            dot.stdin.close()
-            svg = dot.stdout.read()
-            with open(annotation_path + '.svg', 'w') as f:
-                f.write(svg)
-                
-            dot = subprocess.Popen(['dot', '-Tpng'], stdin = subprocess.PIPE,
-                                   stdout = subprocess.PIPE)
-            dot.stdin.write(gv)
-            dot.stdin.close()
-            png = dot.stdout.read()
-            with open(annotation_path + '.png', 'w') as f:
-                f.write(png)
-        except:
-            # rendering the pipeline graph is not _that_ important, after all
-            # we can still try to render it later from the annotation file
-            print("There was an error rendering the annotation.")
-            print("Here is the information but we'll keep calm and carry on:")
-            print(sys.exc_info())
-            import traceback
-            traceback.print_tb(sys.exc_info()[2])
-            pass
-        
-        return annotation_path, annotation_yaml
 
     def __str__(self):
         return self._step_name
