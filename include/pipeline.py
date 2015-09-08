@@ -68,8 +68,18 @@ class Pipeline(object):
             'set_job_name': '-N',
             'set_stderr': '-e',
             'set_stdout': '-o',
+            'parse_job_id': 'Your job (\d+)'},
+
+        'uge':
+           {'submit': 'qsub',
+            'stat': 'qstat',
+            'template': pipeline_path + '/../submit-scripts/qsub-template.sh',
+            'hold_jid': '-hold_jid',
+            'set_job_name': '-N',
+            'set_stderr': '-e',
+            'set_stdout': '-o',
             'parse_job_id': 'Your job (\d+)'}
-    }
+}
     '''
     Cluster-related configuration for every cluster system supported.
     '''
@@ -84,6 +94,15 @@ class Pipeline(object):
         The cluster type to be used (must be one of the keys specified in
         cluster_config).
         '''
+
+        # Check the availability of git
+        command = ['git', '--version']
+        try:
+            subprocess.check_call(command)
+        except subprocess.CalledProcessError as e:
+            raise StandardError("Execution of %s failed. Git seems to be "
+                                "unavailable." % " ".join(command))
+
 
         # now determine the Git hash of the repository
         command = ['git', 'describe', '--all', '--dirty', '--long']
@@ -123,14 +142,21 @@ class Pipeline(object):
             # (we're probably in run-locally.py)
             pass
 
-        # the configuration as read from config.yaml
         self.config = dict()
+        '''
+        Dictionary representation of configuration YAML file.
+        '''
 
-        # dict of steps, steps are objects with inter-dependencies
         self.steps = dict()
-        
-        # topological order of step names
+        '''
+        This dict stores step objects by their name. Each step knows his
+        dependencies.
+        '''
+
         self.topological_step_order = list()
+        '''
+        List with topologically ordered steps. 
+        '''
         
         self.file_dependencies = dict()
         '''
@@ -155,7 +181,8 @@ class Pipeline(object):
 
         self.task_ids_for_input_file = dict()
         '''
-        This dict stores a set of task IDs for every input file used in the pipeline.
+        This dict stores a set of task IDs for every input file used in the
+        pipeline.
         '''
 
         self.input_files_for_task_id = dict()
@@ -168,24 +195,53 @@ class Pipeline(object):
         This dict stores a set of output files for every task id in the pipeline.
         '''
 
+        self.task_for_task_id = dict()
+        '''
+        This dict stores task objects by task IDs.
+        '''
+
+        self.all_tasks_topologically_sorted = list()
+        '''
+        List of all tasks in topological order. 
+        '''
+
+        self.config_file_name = args.config.name
+        '''
+        This stores the name of the configuration file of the current analysis
+        '''
+
         self.read_config(args.config)
 
         # collect all tasks
-        self.task_for_task_id = {}
-        self.all_tasks_topologically_sorted = []
         for step_name in self.topological_step_order:
             step = self.steps[step_name]
+            logger.debug("Collect now all tasks for step: %s" % step)
             for run_index, run_id in enumerate(misc.natsorted(step.get_run_ids())):
                 task = task_module.Task(self, step, run_id, run_index)
-                if not abstract_step.AbstractSourceStep in step.__class__.__bases__:
-                    # this is a source step, so don't add it to the list of to-do tasks
+                # if any run of a step contains an exec_groups,
+                # the task (step/run) is added to the task list
+                run = step.get_run(run_id)
+                logger.debug("Step: %s, Run: %s" % (step, run_id))
+                run_has_exec_groups = False
+                if len(run.get_exec_groups()) > 0:
+                    run_has_exec_groups = True
+                if run_has_exec_groups:
+                    logger.debug("Task: %s" % task)
                     self.all_tasks_topologically_sorted.append(task)
+                # Fail if multiple tasks with the same name exist
                 if str(task) in self.task_for_task_id:
                     raise ConfigurationException("Duplicate task ID %s." % str(task))
                 self.task_for_task_id[str(task)] = task
 
         self.tool_versions = {}
         self.check_tools()
+
+
+    def get_steps(self):
+        return self.steps
+
+    def get_step(self, step_name):
+        return self.steps[step_name]
 
     # read configuration and make sure it's good
     def read_config(self, config_file):
@@ -291,7 +347,8 @@ class Pipeline(object):
                 if is_ready:
                     next_steps.append(step_name)
             if len(next_steps) == 0:
-                raise ConfigurationException("There is a cycle in the step dependencies.")
+                raise ConfigurationException(
+                    "There is a cycle in the step dependencies.")
             for step_name in misc.natsorted(next_steps):
                 self.topological_step_order.append(step_name)
                 assigned_steps.add(step_name)
@@ -304,7 +361,7 @@ class Pipeline(object):
     def print_source_runs(self):
         for step_name in self.topological_step_order:
             step = self.steps[step_name]
-            if abstract_step.AbstractSourceStep in step.__class__.__bases__:
+            if isinstance(step, abstract_step.AbstractSourceStep):
                 for run_id in misc.natsorted(step.get_run_ids()):
                     print("%s/%s" % (step, run_id))
 
@@ -352,12 +409,10 @@ class Pipeline(object):
                             tool_check_info):
         if info_command.__class__ == str:
             info_command = [info_command]
-            
         for command in info_command:
             if type(command) is str:
                 command = command.split()
             self.check_command(command)
-            
             try:
                 proc = subprocess.Popen(
                     command,
@@ -390,7 +445,8 @@ class Pipeline(object):
                     command_exit_code : proc.returncode,
                     command_response : (output + error)
                 })
-            return tool_check_info
+
+        return tool_check_info
 
     def check_tools(self):
         '''
@@ -482,7 +538,8 @@ class Pipeline(object):
                 # are no reason to crash the entire thing
                 pass
 
-    def check_ping_files(self, print_more_warnings = False, print_details = False, fix_problems = False):
+    def check_ping_files(self, print_more_warnings = False,
+                         print_details = False, fix_problems = False):
         run_problems = list()
         queue_problems = list()
         check_queue = True
@@ -490,12 +547,9 @@ class Pipeline(object):
         try:
             stat_output = subprocess.check_output([self.cc('stat')], 
                                                   stderr = subprocess.STDOUT)
-        except KeyError:
-            check_queue = False
-        except OSError:
-            check_queue = False
-        except subprocess.CalledProcessError:
-            # we don't have a stat tool here, don't check the queue
+        except (KeyError, OSError, subprocess.CalledProcessError):
+            # we don't have a stat tool here, if subprocess.CalledProcessError
+            # is raised
             check_queue = False
             
         if print_more_warnings and not check_queue:
@@ -514,25 +568,26 @@ class Pipeline(object):
                     pass
         
         now = datetime.datetime.now()
-        for which in ['run', 'queued']:
-            if not check_queue and which == 'queued':
-                continue
-            for task in self.all_tasks_topologically_sorted:
-                path = task.step._get_ping_path_for_run_id(task.run_id, which)
-                if os.path.exists(path):
-                    if which == 'run':
-                        info = yaml.load(open(path, 'r'))
-                        start_time = info['start_time']
-                        last_activity = datetime.datetime.fromtimestamp(
-                            abstract_step.AbstractStep.fsc.getmtime(path))
-                        last_activity_difference = now - last_activity
-                        if last_activity_difference.total_seconds() > \
-                           abstract_step.AbstractStep.PING_TIMEOUT:
-                            run_problems.append((task, path, last_activity_difference, last_activity - start_time))
-                    if which == 'queued':
-                        info = yaml.load(open(path, 'r'))
-                        if not str(info['job_id']) in running_jids:
-                            queue_problems.append((task, path, info['submit_time']))
+        for task in self.all_tasks_topologically_sorted:
+            exec_ping_file = task.get_run().get_executing_ping_file()
+            queued_ping_file = task.get_run().get_queued_ping_file()
+            if os.path.exists(exec_ping_file):
+                info = yaml.load(open(exec_ping_file, 'r'))
+                start_time = info['start_time']
+                last_activity = datetime.datetime.fromtimestamp(
+                    abstract_step.AbstractStep.fsc.getmtime(exec_ping_file))
+                last_activity_difference = now - last_activity
+                if last_activity_difference.total_seconds() > \
+                   abstract_step.AbstractStep.PING_TIMEOUT:
+                    run_problems.append((task, exec_ping_file,
+                                         last_activity_difference,
+                                         last_activity - start_time))
+
+            if os.path.exists(queued_ping_file) and check_queue:
+                info = yaml.load(open(queued_ping_file, 'r'))
+                if not str(info['job_id']) in running_jids:
+                    queue_problems.append((task, queued_ping_file,
+                                           info['submit_time']))
            
         show_hint = False
         
@@ -576,13 +631,13 @@ class Pipeline(object):
                 os.unlink(path)
                 
         if show_hint:
-            if print_more_warnings and not print_details:
-                print("Hint: Run 'uap <project-config>.yaml "
-                      "fix-problems --details' to see the details.")
+            if print_more_warnings and not print_details or not fix_problems:
+                print("Hint: Run 'uap %s fix-problems --details' to see the "
+                      "details."  % self.config_file_name)
             if not fix_problems:
-                print("Hint: Run 'uap <project-config>.yaml "
-                      "fix-problems --srsly' to fix these problems (that is, "
-                      "delete all problematic ping files).")
+                print("Hint: Run 'uap %s fix-problems --srsly' to fix these "
+                      "problems (that is, delete all problematic ping files)."
+                      % self.config_file_name)
 
     def check_volatile_files(self, details = False, srsly = False):
         collected_files = set()
@@ -612,8 +667,17 @@ class Pipeline(object):
                 return "sge"
         except OSError:
             pass
-            
+
+        try:
+            if ( subprocess.check_output(["qstat", "-help"] )[:4] == "UGE "):
+                return "uge"
+        except OSError:
+            pass
+
         return None
+
+    def get_cluster_type(self):
+        return self.cluster_type
 
     def set_cluster_type(self, cluster_type):
         if not cluster_type in Pipeline.cluster_config:
@@ -623,13 +687,15 @@ class Pipeline(object):
         self.cluster_type = cluster_type
 
     '''
-    Shorthand to retrieve a cluster-type-dependent command or filename (cc == cluster command).
+    Shorthand to retrieve a cluster-type-dependent command or filename
+    (cc == cluster command).
     '''
     def cc(self, key):
         return Pipeline.cluster_config[self.cluster_type][key]
 
     '''
-    Shorthand to retrieve a cluster-type-dependent command line part (this is a list)
+    Shorthand to retrieve a cluster-type-dependent command line part (this is a
+    list)
     '''
     def ccla(self, key, value):
         result = Pipeline.cluster_config[self.cluster_type][key]

@@ -1,0 +1,265 @@
+# This is the rnaseq-pipeline configuration file.
+# 
+destination_path: genomes/bacteria/Mycoplasma_genitalium/
+
+constants:
+    #- &bowtie2_genome_index /data/bioinf/genomes/data/animalia/chordata/mammalia/rodentia/homo_sapiens/hg19/indices/hg19 
+
+
+steps:
+    M_genitalium_genome_url (raw_url_source_runs):
+        hashing-algorithm: md5
+        filename: 'Mycoplasma_genitalium.ASM2732v1.fna.gz'
+        path: genomes/bacteria/Mycoplasma_genitalium/
+        secure-hash: a3e6e5655e4996dc2d49f876be9d1c27
+        url: ftp://ftp.ncbi.nih.gov/genomes/genbank/bacteria/Mycoplasma_genitalium/latest_assembly_versions/GCA_000027325.1_ASM2732v1/GCA_000027325.1_ASM2732v1_genomic.fna.gz
+
+    bowtie2_index (bowtie2_build):
+        _depends: M_genitalium_genome_url
+        _connect: 
+            in/reference_sequence: M_genitalium_genome_url/raw
+        index-basename: Mycoplasma_genitalium_index
+
+    # FASTQC: Generates a quality control reports of FASTQ files
+#    fastqc:
+#        _depends: fc1
+
+    # Cutadapt: Removes adapter sequences from raw reads
+#    cutadapt:
+#        _depends: fc1
+#        # adapter-R1: CAAGCAGAAGACGGCATACGAGAT
+#        # adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+#        adapter-type: 'g'
+#        ## Reading adapters from FASTA file introduced with v1.5
+#        adapter-file: './data/adapter_sequences/truseq_adapter_v1_v2_LT_ChIP_revcmp.fasta'
+#        fix_qnames: false
+
+#    count_fastq (count_raw_reads_crashing):
+#        _depends: fc1   
+
+#    fix_cutadapt:
+#        _depends: cutadapt
+
+    ## Map reads onto genome ##
+#    segemehl:
+#        _depends: fix_cutadapt
+#        genome: *genome
+#        index: *segemehl_genome_index
+
+#    tophat2:
+#        _depends: cutadapt
+#        library_type: 'fr-unstranded'
+#        index: *bowtie2_genome_index
+
+#    count_tophat2 (count_mapped_reads):
+#        _depends: tophat2
+
+#        _depends: cutadapt
+#        library_type: 'fr-unstranded'
+#        index: *bowtie2_genome_index
+
+#    count_tophat2 (count_mapped_reads):
+#        _depends: tophat2
+
+#    s2c:
+#        _depends: segemehl
+
+#    fix_s2c:
+#        _depends: s2c
+
+#    sam_to_bam:
+#        _depends: fix_s2c
+#        sort_by_name: no
+#        genome: *genome
+
+#    remove_duplicate_reads:
+#        # depending on sam_to_bam saves us a sort step
+#        _depends: sam_to_bam
+
+tools:
+    ##################
+    # External Tools #
+    ##################
+
+    # URL: https://github.com/arq5x/bedtools2
+    bedtools:
+        path: 'bedtools'
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
+    bowtie2:
+        path: 'bowtie2'
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
+    bowtie2-build:
+        path: 'bowtie2-build'
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://cufflinks.cbcb.umd.edu/
+#    cufflinks:
+#        path: 'cufflinks'
+#        get_version: '--version'
+#        exit_code: 1
+
+    # URL: https://github.com/marcelm/cutadapt
+    cutadapt:
+        path: 'cutadapt'
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+    fastqc:
+        path: 'fastqc'
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: https://github.com/taoliu/MACS/
+    # Installation via 'pip install MACS2'
+    macs2:
+        path: 'macs2'
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://broadinstitute.github.io/picard/
+#    MarkDuplicates:
+#        path: 'MarkDuplicates'
+#        get_version: '--version'
+#        exit_code: 1
+
+    # URL: http://zlib.net/pigz/
+    pigz: 
+        path: 'pigz'
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://smithlabresearch.org/software/preseq/
+    preseq:
+        path: 'preseq'
+        get_version: ''
+        exit_code: 0
+    
+    # URL: http://www.htslib.org/
+    samtools:
+        path: 'samtools'
+        get_version: ''
+        exit_code: 1
+
+    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
+    segemehl:
+        path: 'segemehl.x'
+        get_version: ''
+        exit_code: 255
+
+    # URL: http://ccb.jhu.edu/software/tophat/index.shtml
+    tophat2:
+        path: 'tophat2'
+        get_version: '--version'
+        exit_code: 0
+
+    bedGraphToBigWig:
+        path: 'bedGraphToBigWig'
+        get_version: ''
+        exit_code: 255
+
+    ##################
+    # Internal Tools #
+    ##################
+
+    compare_secure_hashes:
+        path: '../tools/compare_secure_hashes.py'
+        get_version: '--version'
+        exit_code: 0
+
+#    fix_cutadapt:
+#        path: '../tools/fix_cutadapt.py'
+#        get_version: '--version'
+#        exit_code: 0
+#
+#    fix_s2c:
+#        path: ['./python_env/bin/python', './tools/fix_s2c.py']
+#        exit_code: 1
+#
+#    fix_qnames:
+#        path: ['./python_env/bin/python', './tools/fix_qnames.py']
+#        exit_code: 0
+#
+#    mate_pair_strand_switch:
+#        path: ['./python_env/bin/python', './tools/mate_pair_strand_switch.py']
+#        get_version: '--version' 
+#        exit_code: 0
+#
+#    remove_reads_segemehl:
+#        path: ['./python_env/bin/python', './tools/remove_reads_segemehl.py']
+#        exit_code: 1
+#
+#    s2c:
+#        path: ['./python_env/bin/python', './tools/s2c.py']
+#        get_version: ''
+#        exit_code: 2
+
+    ##############
+    # Unix Tools #
+    ##############
+
+    cat:
+        path: cat
+        get_version: '--version'
+        exit_code: 0
+
+    curl:
+        path: curl
+        get_version: '--version'
+        exit_code: 0
+
+    dd:
+        path: dd
+        get_version: '--version'
+        exit_code: 0
+
+    head:
+        path: head
+        get_version: '--version'
+        exit_code: 0
+
+    grep:
+        path: grep
+        get_version: '--version'
+
+    md5sum:
+        path: 'md5sum'
+        get_version: '--version'
+        exit_code: 0
+
+    mkdir:
+        path: mkdir
+        get_version: '--version'
+        exit_code: 0
+
+    mkfifo:
+        path: mkfifo
+        get_version: '--version'
+        exit_code: 0
+
+    mv:
+        path: mv
+        get_version: '--version'
+        exit_code: 0
+
+    sort:
+        path: 'sort'
+        get_version: '--version'
+        exit_code: 0
+
+    sha1sum:
+        path: sha1sum
+        get_version: '--version'
+        exit_code: 0
+
+    wc:
+        path: 'wc'
+        get_version: '--version'
+

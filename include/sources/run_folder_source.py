@@ -1,11 +1,15 @@
 import sys
-from abstract_step import *
 import csv
 import glob
+import logging
 import string
 import os
-import pipeline
 import yaml
+
+from abstract_step import *
+import pipeline
+
+logger = logging.getLogger("uap_logger")
 
 class RunFolderSource(AbstractSourceStep):
     '''

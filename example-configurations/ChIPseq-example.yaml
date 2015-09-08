@@ -1,0 +1,225 @@
+# This is the rnaseq-pipeline configuration file.
+
+# This is an example configuration for the analysis of ChIPseq data
+
+destination_path: example-out/ChIPseq/
+
+constants:
+    - &genome /data/bioinf/Data/Indices/hg19/hg19.fa
+    - &segemehl_genome_index /data/bioinf/Data/Indices/hg19/hg19.idx
+    - &bowtie2_genome_index genomes/bacteria/Mycoplasma_genitalium/bowtie2_index-dd59/Mycoplasma_genitalium_index
+
+steps:
+    ##################
+    ## Source steps ##
+    ##################
+
+#    read_annotation (raw_file_source):
+#        path: data/ChIPseq/H3K4me3_GCCAAT_L001_001.bed
+#        sha1: 297ceb1895c75f1a793423a8b4a7a92f48241159
+
+#    gencode (raw_url_source):
+#        url: ftp://ftp.sanger.ac.uk/pub/gencode/release_15/gencode.v15.annotation.gtf.gz
+#        sha1: 9b272fde8bca544e6cd8621ddeec55aa09cf7a05
+#        
+#    gencode_genes_only (grep):
+#        _depends: gencode
+#        pattern: "\tgene\t"
+
+    fc (run_folder_source):
+        path: ../data/test/IlluminaRunFolder
+        paired_end: yes
+
+#    fastq_source:
+#        pattern: data/ChIPseq/*.fastq.gz
+#        group: (H3K4me3)_GCCAAT_L001_R[12]_001.fastq.gz
+#        indices: indices.chipseqcsv
+#        paired_end: yes
+
+
+    ######################
+    ## Processing steps ##
+    ######################
+
+    merge_fastq_files:
+        _depends: fc
+
+    fastqc (fastqc_runs):
+        _depends: merge_fastq_files
+
+    fastx_quality_stats:
+        _depends: merge_fastq_files
+
+    cutadapt (cutadapt_runs):
+        _depends: fc
+        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+        adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+        fix_qnames: false
+
+    cutadapt_fastqc (fastqc_runs):
+        _depends: cutadapt
+
+    cutadapt_fastx_quality_stats (fastx_quality_stats):
+        _depends: cutadapt
+
+    fix_cutadapt_runs:
+        _depends: cutadapt
+#        _volatile: true
+
+    fix_cutadapt_fastqc (fastqc_runs):
+        _depends: fix_cutadapt_runs
+
+    fix_cutadapt_fastx_quality_stats (fastx_quality_stats):
+        _depends: fix_cutadapt_runs
+
+#    tophat2_runs:
+#        _depends: fix_cutadapt_runs
+#        library_type: 'fr-unstranded'
+#        index: *bowtie2_genome_index
+
+    bowtie2:
+        _depends: fix_cutadapt_runs
+        index: *bowtie2_genome_index
+
+#    segemehl:
+#        _depends: fix_cutadapt
+#        genome: *genome
+#        index: *segemehl_genome_index
+
+tools:
+    ##################
+    # External Tools #
+    ##################
+
+    bowtie2:
+        path: bowtie2
+        get_version: '--version'
+        exit_code: 0
+
+    cutadapt:
+        path: cutadapt
+        get_version: '--version'
+        exit_code: 0
+
+    fastqc:
+        path: fastqc
+        get_version: '--version'
+        exit_code: 0
+
+    fastx_quality_stats:
+        path: fastx_quality_stats
+        get_version: '-h'
+        exit_code: 1
+
+    tophat2:
+        path: tophat2
+        get_version: '--version'
+        exit_code: 0
+
+#    segemehl:
+#        path: segemehl.x
+#        get_version: ''
+#        exit_code: 255
+
+#    cufflinks:
+#        path: /home/spechtm/cufflinks/cufflinks-2.1.1.Linux_x86_64/cufflinks
+#        get_version: '--version'
+#        exit_code: 1
+
+#    htseq-count:
+#        path: htseq-count
+#        get_version: ''
+#        exit_code: 1
+
+    # URL: http://zlib.net/pigz/
+    pigz:
+        path: pigz
+        get_version: '--version'
+        exit_code: 0
+
+    samtools:
+        path: samtools
+        get_version: '--version'
+        exit_code: 0
+
+    ##################
+    # Internal Tools #
+    ##################
+
+#    cat4m:
+#        path: ./../tools/cat4m
+
+    fix_cutadapt:
+        path: ['./../python_env/bin/python', './../tools/fix_cutadapt.py']
+        get_version: ''
+        exit_code: 2
+
+    fix_qnames:
+        path: ['./../python_env/bin/python', './../tools/fix_qnames.py']
+
+    remove_reads_segemehl:
+        path: ['./../python_env/bin/python', './../tools/remove_reads_segemehl.py']
+        exit_code: 1
+
+    ##############
+    # Unix Tools #
+    ##############
+
+    cat:
+        path: cat
+        get_version: '--version'
+        exit_code: 0
+
+    curl:
+        path: curl
+        get_version: '--version'
+        exit_code: 0
+
+    dd:
+        path: dd
+        get_version: '--version'
+        exit_code: 0
+
+    head:
+        path: head
+        get_version: '--version'
+        exit_code: 0
+
+    grep:
+        path: grep
+        get_version: '--version'
+
+    mkdir:
+        path: mkdir
+        get_version: '--version'
+        exit_code: 0
+
+    mkfifo:
+        path: mkfifo
+        get_version: '--version'
+        exit_code: 0
+
+    mv:
+        path: mv
+        get_version: '--version'
+        exit_code: 0
+
+    sort:
+        path: 'sort'
+        get_version: '--version'
+        exit_code: 0
+
+    sha1sum:
+        path: sha1sum
+        get_version: '--version'
+        exit_code: 0
+
+    tar:
+        path: tar
+        get_version: '--version'
+        exit_code: 0
+
+    wc:
+        path: 'wc'
+        get_version: '--version'
+

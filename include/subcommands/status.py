@@ -36,7 +36,7 @@ def main(args):
                 raise StandardError("Invalid task ID %s." % task_id)
             step_name = parts[0]
             run_id = parts[1]
-            report = p.steps[step_name].get_run_info()[run_id].as_dict()
+            report = p.steps[step_name].get_run(run_id).as_dict()
             report['state'] = p.steps[step_name].get_run_state(run_id)
             print(yaml.dump(report, default_flow_style = False))
         
@@ -116,7 +116,7 @@ def main(args):
                     for task in tasks_for_status[status]:
                         if not str(task.step) in step_count:
                             step_count[str(task.step)] = 0
-                            step_order.write(str(task.step))
+                            step_order.append(str(task.step))
                         step_count[str(task.step)] += 1
                     for step_name in step_order:
                         output.append("[%s]%4d %s"

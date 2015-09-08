@@ -17,7 +17,7 @@ class Segemehl(AbstractStep):
     its genome data and the second to which it writes unmapped reads::
 
        mkfifo genome_fifo unmapped_fifo
-       cat4m <genome-fasta> -o genome_fifo
+       cat <genome-fasta> -o genome_fifo
 
     The executed segemehl command is this::
 
@@ -27,7 +27,7 @@ class Segemehl(AbstractStep):
 
     The unmapped reads are saved via these commands::
 
-        cat4m unmapped_fifo | pigz --blocksize 4096 --processes 2 -c > 
+        cat unmapped_fifo | pigz --blocksize 4096 --processes 2 -c > 
         <unmapped-fastq>
 
     '''
@@ -54,77 +54,127 @@ class Segemehl(AbstractStep):
     def runs(self, run_ids_connections_files):
         read_types = {'first_read': '_R1', 'second_read': '_R2'}
         for run_id in run_ids_connections_files.keys():
-            run = self.new_run(run_id)
-            first_read_file = 
-            if len(run_ids_connections_files[run_id]['in/first_read']) == 1:
-                first_read_file = run_ids_connections_files[run_id]\
-                                  ['in/first_read']
-            else:
-                raise StandardError("Expected one input file.")
+            with self.declare_run(run_id) as run:
+                # Get list of files for first/second read
+                fr_input = run_ids_connections_files[run_id]['in/first_read']
+                sr_input = run_ids_connections_files[run_id]['in/second_read']
 
-            if len(run_ids_connections_files[run_id]['in/second_read']) == 1 \
-               and run_ids_connections_files[run_id]['in/second_read']) == None:
-                second_read_files = run_ids_connections_files[run_id]\
-                                    ['in/second_read']
-            elif run_ids_connections_files[run_id]['in/second_read']) == None:
-                second_read_files = None
-            else:
-                raise StandardError("Expected one input file.")
+                input_paths = [ y for x in [fr_input, sr_input] \
+                               for y in x if y != None ]
 
-            with run.new_exec_group() as exec_group:
-                fifo_path_genome = pool.get_temporary_fifo(
-                    'segemehl-genome-fifo', 'input')
-                fifo_path_unmapped = pool.get_temporary_fifo(
-                    'segemehl-unmapped-fifo', 'output')
-                cat = [self.get_tool('cat'), self.get_option('genome'),
-                       '-o', fifo_path_genome]
-                cat_command = exec_group.new_command(cat)
+                # Do we have paired end data?
+                is_paired_end = True
+                if sr_input == [None]:
+                    is_paired_end = False
+
+                # Segemehl is run in this exec group
+                # Can segemehl handle multiple input files/fifos?
+                with run.new_exec_group() as exec_group:
+                    # Lists of fifos
+#                    fr_temp_fifos = list()
+#                    sr_temp_fifos = list()
+#                    # 1. Create temporary fifos and dd files for first read
+#                    for input_path in fr_input:
+#                        temp_fifo = run.add_temporary_file(
+#                            'in-fifo-%s' %
+#                            os.path.basename(input_path) )
+#                        mkfifo = [self.get_tool('mkfifo'), temp_fifo]
+#                        fr_temp_fifos.append(temp_fifo)
+#                        exec_group.add_command(mkfifo)
+#                        dd = [self.get_tool('dd'),
+#                                 'bs=4M',
+#                                 'if=%s' % input_path,
+#                                 'of=%s' % temp_fifo]
+#                        exec_group.add_command(dd)
+#                    # And if we handle paired end data 
+#                    if is_paired_end:
+#                        # 2. Create temporary fifos and dd files for second read
+#                        for input_path in sr_input:
+#                            temp_fifo = run.add_temporary_file(
+#                                'in-fifo-%s' %
+#                                os.path.basename(input_path) )
+#                            mkfifo = [self.get_tool('mkfifo'), temp_fifo]
+#                            sr_temp_fifos.append(temp_fifo)
+#                            exec_group.add_command(mkfifo)
+#                            dd = [self.get_tool('dd'),
+#                                  'bs=4M',
+#                                  'if=%s' % input_path,
+#                                  'of=%s' % temp_fifo]
+#                            exec_group.add_command(dd)
+#
+
+
+
+                first_read_file = 
+                if len(run_ids_connections_files[run_id]['in/first_read']) == 1:
+                    first_read_file = run_ids_connections_files[run_id]\
+                                      ['in/first_read']
+                else:
+                    raise StandardError("Expected one input file.")
+
+                if len(run_ids_connections_files[run_id]['in/second_read']) == 1 \
+                   and run_ids_connections_files[run_id]['in/second_read']) == None:
+                    second_read_files = run_ids_connections_files[run_id]\
+                                        ['in/second_read']
+                elif run_ids_connections_files[run_id]['in/second_read']) == None:
+                    second_read_files = None
+                else:
+                    raise StandardError("Expected one input file.")
+
+                with run.new_exec_group() as exec_group:
+                    fifo_path_genome = pool.get_temporary_fifo(
+                        'segemehl-genome-fifo', 'input')
+                    fifo_path_unmapped = pool.get_temporary_fifo(
+                        'segemehl-unmapped-fifo', 'output')
+                    cat = [self.get_tool('cat'), self.get_option('genome'),
+                           '-o', fifo_path_genome]
+                    cat_command = exec_group.add_command(cat)
                 
-                with segemehl_exec_group.new_pipeline() as pipeline:
-                    segemehl = [
-                        self.get_tool('segemehl'),
-                        '-d', fifo_path_genome,
-                        '-i', self.get_option('index'),
-                        '-q', first_read_path
-                    ]
-                    if second_read_files:
-                        segemehl.extend(['-p', second_read_path])
+                    with segemehl_exec_group.new_pipeline() as pipeline:
+                        segemehl = [
+                            self.get_tool('segemehl'),
+                            '-d', fifo_path_genome,
+                            '-i', self.get_option('index'),
+                            '-q', first_read_path
+                        ]
+                        if second_read_files:
+                            segemehl.extend(['-p', second_read_path])
 
-                    segemehl.extend([
-                        '-u', fifo_path_unmapped,
-                        '-H', '1',
-                        '-t', cores,
-                        '-s', '-S',
-                        '-D', '0',
-                    ])
-                    segemehl_command = pipeline.new_command(
-                        segemehl,
-                        stderr_path = run.add_output_file(
-                            'log', '%s-segemehl-log.txt' % run_id, input_paths)
+                        segemehl.extend([
+                            '-u', fifo_path_unmapped,
+                            '-H', '1',
+                            '-t', cores,
+                            '-s', '-S',
+                            '-D', '0',
+                        ])
+                        segemehl_command = pipeline.add_command(
+                            segemehl,
+                            stderr_path = run.add_output_file(
+                                'log', '%s-segemehl-log.txt' % run_id, input_paths)
+                        )
+
+                        pigz = [
+                            self.get_tool('pigz'), 
+                            '--blocksize', '4096', 
+                            '--processes', '2', '-c'
+                        ]
+
+                        pigz_command = pipeline.add_command(
+                            pigz,
+                            stdout_path = run.add_output_file(
+                                'alignments', '%s-segemehl-results.sam.gz' 
+                                % run_id, input_paths)
+                        )
+
+
+                    run.add_output_file('unmapped', '%s-segemehl-unmapped.fastq.gz'
+                                        % run_id, input_paths)
+
+                    run.get_single_output_file_for_annotation(
+                        'log')
                     )
 
-                    pigz = [
-                        self.get_tool('pigz'), 
-                        '--blocksize', '4096', 
-                        '--processes', '2', '-c'
-                    ]
-
-                    pigz_command = pipeline.new_command(
-                        pigz,
-                        stdout_path = run.add_output_file(
-                            'alignments', '%s-segemehl-results.sam.gz' 
-                            % run_id, input_paths)
                     )
-
-
-                run.add_output_file('unmapped', '%s-segemehl-unmapped.fastq.gz'
-                                    % run_id, input_paths)
-
-run.get_single_output_file_for_annotation(
-                            'log')
-                    )
-
-                )
                 pipeline.append(
                     pigz, 
                     stdout_path = run.get_single_output_file_for_annotation(
@@ -133,7 +183,7 @@ run.get_single_output_file_for_annotation(
 
                     
                     
-#            pool.launch([self.get_tool('cat4m'), self.get_option('genome'), 
+#            pool.launch([self.get_tool('cat'), self.get_option('genome'), 
 #                         '-o', fifo_path_genome])
             
 #            with pool.Pipeline(pool) as pipeline:
@@ -179,7 +229,7 @@ run.get_single_output_file_for_annotation(
                     '--processes', '2', '-c'
                 ]
                 
-                pipeline.append([self.get_tool('cat4m'), fifo_path_unmapped])
+                pipeline.append([self.get_tool('cat'), fifo_path_unmapped])
                 pipeline.append(
                     pigz, 
                     stdout_path = run.get_single_output_file_for_annotation(
@@ -241,7 +291,7 @@ run.get_single_output_file_for_annotation(
             fifo_path_unmapped = pool.get_temporary_fifo(
                 'segemehl-unmapped-fifo', 'output')
             
-            pool.launch([self.get_tool('cat4m'), self.get_option('genome'), 
+            pool.launch([self.get_tool('cat'), self.get_option('genome'), 
                          '-o', fifo_path_genome])
             
             with pool.Pipeline(pool) as pipeline:
@@ -287,7 +337,7 @@ run.get_single_output_file_for_annotation(
                     '--processes', '2', '-c'
                 ]
                 
-                pipeline.append([self.get_tool('cat4m'), fifo_path_unmapped])
+                pipeline.append([self.get_tool('cat'), fifo_path_unmapped])
                 pipeline.append(
                     pigz, 
                     stdout_path = run.get_single_output_file_for_annotation(

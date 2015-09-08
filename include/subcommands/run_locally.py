@@ -45,12 +45,14 @@ def main(args):
     for task in task_list:
         basic_task_state = task.get_task_state_basic()
         if basic_task_state == p.states.FINISHED:
-            sys.stderr.write("Skipping %s because it's already finished.\n" % task)
+            sys.stderr.write("Skipping %s because it's already finished.\n" %
+                             task)
             continue
         if basic_task_state == p.states.READY:
             task.run()
         else:
-            raise StandardError("Unexpected basic task state for %s: %s" % (task, basic_task_state))
+            raise StandardError("Unexpected basic task state for %s: %s" %
+                                (task, basic_task_state))
 
 if __name__ == '__main__':
     try:

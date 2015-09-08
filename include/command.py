@@ -15,24 +15,27 @@ class CommandInfo(object):
         self._output_files_per_connection = dict()
 
         for _ in command:
-            if not isinstance(_, str):
-                raise StandardError("Non-string element %s in command %s" 
+            if _ == command[0]:
+                self._tool = _
+                if isinstance(command[0], list):
+                    self._tool = _[-1]
+                pass
+            elif not isinstance(_, str):
+                raise StandardError("Non-string element %s in command %s"
                                     % (_, command))
             self._command.append(_)
-        # get tool needed
-        self._tool = command[0]
 
     def replace_output_dir_du_jour(func):
         def inner(self, *args):
             run_info = None
             if isinstance(self._eop, pipeline_info.PipelineInfo):
-                run_info = self._eop.get_exec_group().get_run_info()
+                run_info = self._eop.get_exec_group().get_run()
             elif isinstance(self._eop, exec_group.ExecGroup):
                 run_info = self._eop.get_run()
             # Collect info to replace du_jour placeholder with temp_out_dir
             step = run_info.get_step()
             placeholder = step.get_output_directory_du_jour_placeholder()
-            temp_out_dir = step.get_output_directory_du_jour()
+            temp_out_dir = step.get_output_directory_du_jour(run_info.get_run_id())
             
             command = None
             ret_value = func(self, *args)
@@ -67,7 +70,6 @@ class CommandInfo(object):
 
     @replace_output_dir_du_jour
     def get_stdout_path(self):
-#        stdout_path = self._replace_output_dir_du_jour(self._stdout_path)
         return(self._stdout_path)
 
     def set_stderr_path(self, stderr_path):
@@ -76,14 +78,8 @@ class CommandInfo(object):
 
     @replace_output_dir_du_jour
     def get_stderr_path(self):
-#        stderr_path = self._replace_output_dir_du_jour(self._stderr_path)
         return(self._stderr_path)
 
     @replace_output_dir_du_jour
     def get_command(self):
-
-#        command = list()
-#        for _ in self._command:
-#            _ = self._replace_output_dir_du_jour(_)
-#            command.append(_)
         return(self._command)
