@@ -641,3 +641,48 @@ class Run(object):
         result['public_info'] = self._public_info
         result['run_id'] = self._run_id
         return result
+
+    def write_annotation_file(self, path):
+        '''
+        Write the YAML annotation after a successful or failed run and try to
+        render the process graph (but swallow any errors resulting from that --
+        after all, it's not *that* important to get the rendered graph, and it 
+        still can be created later from the YAML annotation).
+        '''
+        
+        # now write the annotation
+        log = {}
+        log['pid'] = os.getpid()
+        log['step'] = {}
+        log['step']['options'] = self._options
+        log['step']['name'] = self.get_step().get_step_name()
+        log['step']['known_paths'] = self.get_step().known_paths
+        log['step']['cores'] = self.get_step()._cores
+        log['run'] = {}
+        log['run']['run_info'] = self.as_dict()
+        log['run']['run_id'] = self.get_run_id()
+        log['run']['temp_directory'] = self.get_temp_output_directory()
+        log['config'] = self.get_step().get_pipeline().config
+        log['git_hash_tag'] = self.get_step().get_pipeline().git_hash_tag
+        log['tool_versions'] = {}
+        for tool in self.get_step()._tools.keys():
+            log['tool_versions'][tool] = self.get_step().get_pipeline()\
+                                                        .tool_versions[tool]
+        log['pipeline_log'] = self.get_step()._pipeline_log
+        log['start_time'] = self.get_step().start_time
+        log['end_time'] = self.get_step().end_time
+        if self.get_step().get_pipeline().git_dirty_diff:
+            log['git_dirty_diff'] = self.get_step().get_pipeline().git_dirty_diff
+        if self.get_step().get_pipeline().caught_signal is not None:
+            log['signal'] = self.get_step().get_pipeline().caught_signal
+
+        annotation_yaml = yaml.dump(log, default_flow_style = False)
+        annotation_path = os.path.join(
+            path, ".%s-annotation-%s.yaml" % 
+            (self.get_run_id, misc.str_to_sha1_b62(annotation_yaml)[:6]))
+
+        # overwrite the annotation if it already exists
+        with open(annotation_path, 'w') as f:
+            f.write(annotation_yaml)
+            
+        return annotation_path, annotation_yaml
