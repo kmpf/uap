@@ -141,9 +141,12 @@ class AbstractStep(object):
             raise StandardError(
                 "Cannot declare the same run ID twice: %s." % run_id)
         run = run_module.Run(self, run_id)
-        self.get_run(run_id) = run
+        self.add_run(run)
         return run
 
+    def add_run(self, run):
+        self._runs[run.get_run_id()] = run
+    
     def get_run(self, run_id):
         '''
         Returns a single run object for run_id or None.

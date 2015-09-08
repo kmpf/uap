@@ -56,12 +56,14 @@ class Bcl2FastqSource(AbstractSourceStep):
         
         '''
         input_dir = self.get_option('input-dir')
-        # Create path to Unaligned folder ...
-        output_dir = os.path.join(input_dir)
+        # Get path to output folder ...
+        output_dir = os.path.abspath(input_dir)
         # ... or use the given path
         if self.is_option_set_in_config('output-dir'):
-            output_dir = self.get_option('output-dir')
+            output_dir = os.path.abspath(self.get_option('output-dir'))
 
+        # Get path to Unaligned folder
+        output_unaligned_dir = os.path.join(output_dir, 'Unaligned')
         # Create placeholder for Unaligned folder
         temp_output_dir = os.path.join(
             self.get_output_directory_du_jour_placeholder(),
@@ -69,70 +71,70 @@ class Bcl2FastqSource(AbstractSourceStep):
 
         # Declare a new run
         with self.declare_run('read_demultiplexing') as run:
-            # Create new execution group for configureBclToFastq.pl
-            bcl2Fastq_exec_group = run.new_exec_group()
-            # Assemble configureBclToFastq.pl command
-            configureBcl2Fastq = [self.get_tool('configureBclToFastq.pl'),
-                                  '--input-dir',
-                                  os.path.join(input_dir, 'Data', 'Intensities', 
-                                               'BaseCalls')]
-
-            options = ['adapter-sequence', 'adapter-stringency', 'use-bases-mask',
-                       'no-eamss', 'with-failed-reads', 'intensities-dir',
-                       'positions-dir', 'positions-format', 'filter-dir',
-                       'sample-sheet', 'mismatches', 'fastq-cluster-count',
-                       'ignore-missing-stats', 'ignore-missing-bcl', 
-                       'ignore-missing-control', 'tiles', 'flowcell-id']
-            set_options = [option for option in options if \
-                           self.is_option_set_in_config(option)]
-            for option in set_options:
-                configureBcl2Fastq.extend([ '--%s' % option, 
-                                            str(self.get_option(option)) ])
-            configureBcl2Fastq.extend(
-                ['--output-dir', temp_output_dir])
-            # Add command to execution group
-            configureBcl2Fastq_command = bcl2Fastq_exec_group.add_command(
-                configureBcl2Fastq,
-                stderr_path = run.add_output_file(
-                    "configureBcl2Fastq_log_stderr",
-                    "bcl2fastq-log_stderr.txt", []) )
-            logger.debug(" ".join(configureBcl2Fastq))
-            # Create new execution group for make
-            make_exec_group = run.new_exec_group()
-            # Assemble make command
-            make = [self.get_tool('make'), '-C', temp_output_dir]
-            # Add make command to execution group
-            make_exec_group.new_command(
-                make,
-                stderr_path = run.add_output_file(
-                    "make_log_stderr",
-                    "make-log_stderr.txt", []) )
-            logger.debug(" ".join(make))
-            logger.debug("Temporary output directory: %s" % temp_output_dir)
-            # Create new execution group to move Unaligned folder
-            mv_exec_group = run.new_exec_group()
-            # Assemble mkdir command, if output_dir does not exist
-            output_unaligned_dir = os.path.join(output_dir, 'Unaligned')
             if not os.path.exists(output_unaligned_dir):
-                mkdir = [self.get_tool('mkdir'), '-p', output_unaligned_dir]
-                logger.debug(" ".join(mkdir))
-                # Add mkdir command to execution group
+                # Create new execution group for configureBclToFastq.pl
+                with run.new_exec_group() as bcl2Fastq_exec_group:
+                    # Assemble configureBclToFastq.pl command
+                    configureBcl2Fastq = [
+                        self.get_tool('configureBclToFastq.pl'),
+                        '--input-dir',
+                        os.path.join(input_dir, 'Data', 'Intensities',
+                                     'BaseCalls')
+                    ]
+                
+                    options = ['adapter-sequence', 'adapter-stringency',
+                               'use-bases-mask', 'no-eamss',
+                               'with-failed-reads', 'intensities-dir',
+                               'positions-dir', 'positions-format',
+                               'filter-dir', 'sample-sheet', 'mismatches',
+                               'fastq-cluster-count', 'ignore-missing-stats',
+                               'ignore-missing-bcl', 'ignore-missing-control',
+                               'tiles', 'flowcell-id']
+                    set_options = [option for option in options if \
+                                   self.is_option_set_in_config(option)]
+                    for option in set_options:
+                        configureBcl2Fastq.extend([ '--%s' % option, 
+                                                    str(self.get_option(option))
+                                                ])
+                    configureBcl2Fastq.extend(
+                        ['--output-dir', temp_output_dir])
 
-                mv_exec_group.add_command(mkdir)
-                # Assemble mv command
-                mv = [self.get_tool('mv'), temp_output_dir, output_dir]
-                logger.debug(" ".join(mv))
-                # Add mv command to execution group
+                    # Add command to execution group
+                    configureBcl2Fastq_command = bcl2Fastq_exec_group.add_command(
+                        configureBcl2Fastq,
+                        stderr_path = run.add_output_file(
+                            "configureBcl2Fastq_log_stderr",
+                            "bcl2fastq-log_stderr.txt", []) )
+                    logger.debug(" ".join(configureBcl2Fastq))
+                    # Create new execution group for make
+                    make_exec_group = run.new_exec_group()
+                    # Assemble make command
+                    make = [self.get_tool('make'), '-C', temp_output_dir]
+                    # Add make command to execution group
+                    make_exec_group.add_command(
+                        make,
+                        stderr_path = run.add_output_file(
+                            "make_log_stderr",
+                            "make-log_stderr.txt", []) )
+                    logger.debug(" ".join(make))
+                    logger.debug("Temporary output directory: %s" %
+                                 temp_output_dir)
+                    # Create new execution group to move Unaligned folder
+                    with run.new_exec_group() as mv_exec_group:
+                        # Assemble mkdir command, if output_dir does not exist
 
-                mv_command = mv_exec_group.add_command(mv)
-                run.add_public_info("bcl2fastq-output-folder",
-                                    output_unaligned_dir)
-            else:
-                logger.warning("Directory: %s already exists!" %
-                               output_unaligned_dir)
-                logger.warning("If you WANT to restart the analysis either "
-                               "remove the directory or choose a new output "
-                               "directory. ")
-                logger.warning("If you DON'T want to restart the analysis "
-                               "everything is fine.")
+                        mkdir = [self.get_tool('mkdir'), '-p',
+                                 output_unaligned_dir]
+                        logger.debug(" ".join(mkdir))
+                        # Add mkdir command to execution group
 
+                        mv_exec_group.add_command(mkdir)
+                        # Assemble mv command
+                        mv = [self.get_tool('mv'), temp_output_dir, output_dir]
+                        logger.debug(" ".join(mv))
+                        # Add mv command to execution group
+
+                        mv_command = mv_exec_group.add_command(mv)
+                        run.add_public_info("bcl2fastq-output-folder",
+                                            output_unaligned_dir)
+                        

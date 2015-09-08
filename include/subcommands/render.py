@@ -80,11 +80,11 @@ def main(args):
                             "unavailable." % " ".join(dot_version))
 
     if args.files:
-
+        logger.info("Going to plot the graph containing all files of the analysis")
     elif args.pipeline:
-
+        logger.info("Create a graph showing the DAG of the analysis")
     else:
-
+        logger.info("Create graphs for all annotation files I can get my hands on.")
         task_list = p.all_tasks_topologically_sorted
         
         if len(args.step_task) >= 1:
