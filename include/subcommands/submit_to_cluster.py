@@ -169,7 +169,7 @@ def main(args):
             queued_ping_info['run_id'] = task.run_id
             queued_ping_info['job_id'] = job_id
             queued_ping_info['submit_time'] = datetime.datetime.now()
-            with open(task.step.get_queued_ping_path_for_run_id(task.run_id), 'w') as f:
+            with open(task.get_step().get_run(task.run_id).get_queued_ping_file(), 'w') as f:
                 f.write(yaml.dump(queued_ping_info, default_flow_style = False))
 
             quota_jids[step_name][quota_offset[step_name]] = job_id
