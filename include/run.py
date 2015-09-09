@@ -654,7 +654,7 @@ class Run(object):
         log = {}
         log['pid'] = os.getpid()
         log['step'] = {}
-        log['step']['options'] = self._options
+        log['step']['options'] = self.get_step().get_options()
         log['step']['name'] = self.get_step().get_step_name()
         log['step']['known_paths'] = self.get_step().known_paths
         log['step']['cores'] = self.get_step()._cores

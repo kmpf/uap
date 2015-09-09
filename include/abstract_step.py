@@ -235,6 +235,9 @@ class AbstractStep(object):
                 
         if not '_volatile' in self._options:
             self._options['_volatile'] = False
+
+    def get_options(self):
+        return self._options
             
     def add_dependency(self, parent):
         '''
