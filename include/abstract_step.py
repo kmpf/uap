@@ -324,6 +324,7 @@ class AbstractStep(object):
                 with process_pool.ProcessPool(run) as pool:
                     # Clean up (use last ProcessPool for that)
                     if exec_group == run.get_exec_groups()[-1]:
+                        logger.info("Telling pipeline to clean up!")
                         pool.clean_up_temp_paths()
 
                     for poc in exec_group.get_pipes_and_commands():
@@ -839,6 +840,7 @@ class AbstractStep(object):
                         destination_path_volatile = destination_path + \
                                                     AbstractStep.VOLATILE_SUFFIX
                         if os.path.exists(destination_path_volatile):
+                            logger.info("Now deleting: %s" % destination_path_volatile)
                             os.unlink(destination_path_volatile)
                         # TODO: if the destination path already exists, this 
                         # will overwrite the file.
@@ -891,6 +893,7 @@ class AbstractStep(object):
                             '.annotation.yaml')
                         # overwrite the symbolic link if it already exists
                         if os.path.exists(destination_path):
+                            logger.info("Now deleting: %s" % destination_path)
                             os.unlink(destination_path)
                         oldwd = os.getcwd()
                         os.chdir(os.path.dirname(destination_path))

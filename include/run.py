@@ -509,6 +509,7 @@ class Run(object):
                     pass
             else:
                 try:
+                    logger.info("Now deleting: %s" % _)
                     os.unlink(_)
                 except OSError as e:
                     pass

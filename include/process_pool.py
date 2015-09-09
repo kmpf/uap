@@ -258,7 +258,7 @@ class ProcessPool(object):
                 self.load_unload_module(module_unload)
 
         # remove all temporary files or directories we know of
-        if self.clean_up_temp_paths:
+        if self.clean_up:
             self.get_run().remove_temporary_paths()
         
         ProcessPool.current_instance = None
@@ -549,6 +549,7 @@ class ProcessPool(object):
                     try:
                         with open(watcher_report_path) as f:
                             self.process_watcher_report = yaml.load(f)
+                        logger.info("Now deleting: %s" % watcher_report_path)
                         os.unlink(watcher_report_path)
                     except:
                         print("Warning: Couldn't load watcher report from %s." %
@@ -618,6 +619,7 @@ class ProcessPool(object):
                             f = open(report_path, 'r')
                             report = yaml.load(f)
                             f.close()
+                            logger.info("Now deleting: %s" % report_path)
                             os.unlink(report_path)
                             if report is not None:
                                 self.proc_details[pid].update(report)
@@ -654,6 +656,7 @@ class ProcessPool(object):
                 f = open(watcher_report_path)
                 self.process_watcher_report = yaml.load(f)
                 f.close()
+                logger.info("Now deleting: %s" % watcher_report_path)
                 os.unlink(watcher_report_path)
             except:
                 print("Warning: Couldn't load watcher report from %s." % watcher_report_path)
