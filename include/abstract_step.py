@@ -855,7 +855,6 @@ class AbstractStep(object):
                 self.known_paths[path]['size'] = os.path.getsize(path)
                 
         annotation_path, annotation_str = run.write_annotation_file(
-            run_id, 
             self.get_output_directory() \
             if ((self.get_pipeline().caught_signal is None) and \
                 (caught_exception is None)) \
