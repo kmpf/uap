@@ -81,5 +81,6 @@ class RawUrlSource(AbstractSourceStep):
                     temp_filename = os.path.splitext(temp_filename)[0]
                     mv_exec_group.add_command(pigz)
 
-                mv = [self.get_tool('mv'), temp_filename, out_file]
+                mv = [self.get_tool('mv'), '--no-clobber', temp_filename,
+                      out_file]
                 mv_exec_group.add_command(mv)
