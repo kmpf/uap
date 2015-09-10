@@ -51,8 +51,11 @@ class MergeFastqFiles(AbstractStep):
                             mkfifo = [self.get_tool('mkfifo'), temp_fifo]
                             exec_group.add_command(mkfifo)
 
+                            is_gzipped = True if os.path.splitext(input_path)[1] in\
+                                         ['.gz', '.gzip'] else False
+
                             # 2. Output files to fifo
-                            if input_path.endswith('fastq.gz'):
+                            if is_gzipped:
                                 with exec_group.add_pipeline() as unzip_pipe:
                                     # 2.1 command: Read file in 4MB chunks
                                     dd_in = [self.get_tool('dd'),
@@ -70,7 +73,8 @@ class MergeFastqFiles(AbstractStep):
                                     unzip_pipe.add_command(dd_in)
                                     unzip_pipe.add_command(pigz)
                                     unzip_pipe.add_command(dd_out)
-                            elif input_path.endswith('fastq'):
+                            elif os.path.splitext(input_path)[1] in\
+                                 ['.fastq', '.fq']:
                                 # 2.1 command: Read file in 4MB chunks and
                                 #              write to fifo in 4MB chunks
                                 dd_in = [self.get_tool('dd'),
