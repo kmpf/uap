@@ -56,8 +56,6 @@ class Run(object):
             'queued': None
         }
         self._exec_groups = list()
-        self._in_connections = dict()
-        self._out_connections = list()
         self._temp_paths = list()
         '''
         List of temporary paths which can be either files or paths
@@ -92,10 +90,8 @@ class Run(object):
     def get_run_id(self):
         return self._run_id
 
-    def get_in_connection(self):
-        return self._in_connections
-
     def get_out_connections(self):
+        print(self._output_files)
         return self._output_files.keys()
 
     def _get_ping_file(self, key):
@@ -437,10 +433,12 @@ class Run(object):
                 "to the constructor of %s."
                 % (tag, str(self._step), tag, self._step.__module__))
 
-        if tag not in self.get_out_connections():
-            self.add_out_connection(tag)
+        out_connection = 'out/' + tag
 
-        if out_path in self.get_output_files_for_out_connection(tag):
+        if out_connection not in self.get_out_connections():
+            self.add_out_connection(out_connection)
+
+        if out_path in self.get_output_files_for_out_connection(out_connection):
             raise StandardError(
                 "You're trying to re-add an output file which has already "
                 "been declared: %s." % out_path)
@@ -458,9 +456,8 @@ class Run(object):
                 "Trying to add NoneType element as output file for input paths "
                 ": %s" % in_paths)
             
-        self._out_connections.append(tag)
         self._input_files.append(in_paths)
-        self._output_files[tag][out_path] = in_paths
+        self._output_files[out_connection][out_path] = in_paths
         return_value = os.path.join(
                 self._step.get_output_directory_du_jour_placeholder(), out_path)
         if head != "":

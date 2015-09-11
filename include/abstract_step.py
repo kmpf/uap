@@ -1654,7 +1654,6 @@ class AbstractStep(object):
                     in_connection = parent_out_connection.replace('out/', 'in/')
                     this_parent_out_connection = '%s/%s' % (
                         parent.get_step_name(), parent_out_connection[4:])
-                    
                     # Do we need to connect certain outputs to certain inputs?
                     if '_connect' in self._options:
                         for _con_in in list( self._options['_connect'].keys() ):
