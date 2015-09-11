@@ -214,7 +214,7 @@ class Pipeline(object):
 
         # collect all tasks
         for step_name in self.topological_step_order:
-            step = self.steps[step_name]
+            step = self.get_step(step_name)
             logger.debug("Collect now all tasks for step: %s" % step)
             for run_index, run_id in enumerate(misc.natsorted(step.get_run_ids())):
                 task = task_module.Task(self, step, run_id, run_index)
