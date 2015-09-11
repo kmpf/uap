@@ -91,7 +91,6 @@ class Run(object):
         return self._run_id
 
     def get_out_connections(self):
-        print(self._output_files)
         return self._output_files.keys()
 
     def _get_ping_file(self, key):
