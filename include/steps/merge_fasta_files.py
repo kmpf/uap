@@ -98,9 +98,9 @@ class MergeFastqFiles(AbstractStep):
                         if self.get_option('output-fasta-basename'):
                             basename = "%s-%s" % (
                                 self.get_option('output-fasta-basename'), run_id)
-                        out_file = "%s.fasta.gz" % basename
+                        out_file = "%s.fasta" % basename
                         if self.get_option('compress-output'):
-                            out_file = "%s.fasta" % basename
+                            out_file = "%s.fasta.gz" % basename
                             pigz = [self.get_tool('pigz'),
                                     '--stdout']
                             pigz_pipe.add_command(pigz)
