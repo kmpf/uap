@@ -56,6 +56,7 @@ class Run(object):
             'queued': None
         }
         self._exec_groups = list()
+        self._in_connections = dict()
         self._out_connections = list()
         self._temp_paths = list()
         '''
@@ -81,6 +82,7 @@ class Run(object):
     def get_exec_groups(self):
         return self._exec_groups
 
+
     def get_step(self):
         return self._step
 
@@ -90,8 +92,11 @@ class Run(object):
     def get_run_id(self):
         return self._run_id
 
+    def get_in_connection(self):
+        return self._in_connections
+
     def get_out_connections(self):
-        return self._out_connections
+        return self._output_files.keys()
 
     def _get_ping_file(self, key):
         if self._ping_files[key] == None:
@@ -432,10 +437,10 @@ class Run(object):
                 "to the constructor of %s."
                 % (tag, str(self._step), tag, self._step.__module__))
 
-        if tag not in self._output_files:
-            self._output_files[tag] = dict()
+        if tag not in self.get_out_connections():
+            self.add_out_connection(tag)
 
-        if out_path in self._output_files[tag]:
+        if out_path in self.get_output_files_for_out_connection(tag):
             raise StandardError(
                 "You're trying to re-add an output file which has already "
                 "been declared: %s." % out_path)
@@ -537,11 +542,30 @@ class Run(object):
 
         self._output_files[tag][None] = None
 
-    def get_output_files(self):
-        return self._output_files
+    def add_out_connection(self, out_connection):
+        self._output_files[out_connection] = dict()
+
+    def get_input_files_for_output_file(self, output_file):
+        for connection in self.get_out_connections():
+            if output_file in \
+               self.get_output_files_for_out_connection(connection):
+                return self._output_files[connection][output_file]
+
+    def get_input_files_for_output_file_abspath(self, output_file):
+        for connection in self.get_out_connections():
+            if abspath_output_file in \
+               self.get_output_files_abspath_for_out_connection(connection):
+                return self.get_output_files_abspath()[connection]\
+                    [abspath_output_file]
+
+    def get_output_files_for_out_connection(self, out_connection):
+        return list( self._output_files[out_connection].keys() )
 
     def get_output_files_abspath_for_out_connection(self, out_connection):
         return list( self.get_output_files_abspath()[out_connection].keys() )
+
+    def get_output_files(self):
+        return self._output_files
 
     def get_output_files_abspath(self):
         '''
@@ -557,9 +581,9 @@ class Run(object):
         file name.
         '''
         result = dict()
-        for tag in self._output_files:
-            result[tag] = dict()
-            for out_path, in_paths in self._output_files[tag].items():
+        for connection in self._output_files:
+            result[connection] = dict()
+            for out_path, in_paths in self._output_files[connection].items():
                 directory = self.get_step().get_output_directory_du_jour(
                     self.get_run_id())
                 head, tail = os.path.split(out_path)
@@ -567,7 +591,7 @@ class Run(object):
                     full_path = os.path.join(directory, out_path)
                 else:
                     full_path = out_path
-                result[tag][full_path] = in_paths
+                result[connection][full_path] = in_paths
 
         return result
 
