@@ -29,7 +29,12 @@ class MergeFastqFiles(AbstractStep):
         provided to this method.
         '''
         for run_id in run_ids_connections_files.keys():
-            with self.declare_run(run_id) as run:
+            fasta_basename = run_id
+            if self.get_option('output-fasta-basename'):
+                fasta_basename = "%s-%s" % (
+                    self.get_option('output-fasta-basename'), run_id)
+
+            with self.declare_run(fasta_basename) as run:
                 input_paths = run_ids_connections_files[run_id]['in/sequence']
 
                 if input_paths == [None]:
@@ -94,13 +99,9 @@ class MergeFastqFiles(AbstractStep):
                         pigz_pipe.add_command(cat)
 
                         # 3.2 Gzip output file
-                        basename = run_id
-                        if self.get_option('output-fasta-basename'):
-                            basename = "%s-%s" % (
-                                self.get_option('output-fasta-basename'), run_id)
-                        out_file = "%s.fasta" % basename
+                        out_file = "%s.fasta" % fasta_basename
                         if self.get_option('compress-output'):
-                            out_file = "%s.fasta.gz" % basename
+                            out_file = "%s.fasta.gz" % fasta_basename
                             pigz = [self.get_tool('pigz'),
                                     '--stdout']
                             pigz_pipe.add_command(pigz)

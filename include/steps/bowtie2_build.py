@@ -59,10 +59,11 @@ class Bowtie2Build(AbstractStep):
             if not isinstance(self.get_option(option), bool):
                 option_list.append(str(self.get_option(option)))
 
-        # Get the basename
-        index_basename = self.get_option('index-basename')
-
         for run_id in run_ids_connections_files.keys():
+            # Get the basename
+            index_basename = "%s-%s" % (self.get_option('index-basename'),
+                                        run_id)
+
             with self.declare_run(index_basename) as run:
                 with run.new_exec_group() as exec_group:
                     input_paths = run_ids_connections_files[run_id]\
@@ -74,7 +75,8 @@ class Bowtie2Build(AbstractStep):
                         # Is input gzipped fasta?
                         is_fasta_gz = False
                         is_fasta = False
-                        if len([_ for _ in ['fa.gz', 'fasta.gz', 'fna.gz', 'mfa.gz']\
+                        if len([_ for _ in ['fa.gz', 'fasta.gz', 'fna.gz',
+                                            'mfa.gz']\
                                 if input_path.endswith(_)]) > 0:
                             is_fasta_gz = True
                         elif len([_ for _ in ['fa', 'fasta', 'fna', 'mfa'] \
