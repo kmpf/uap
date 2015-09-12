@@ -1,4 +1,4 @@
-# This is the rnaseq-pipeline configuration file.
+# This is the uap configuration file.
 # 
 destination_path: genomes/bacteria/Mycoplasma_genitalium/
 

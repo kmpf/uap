@@ -169,7 +169,7 @@ def main(args):
             queued_ping_info['run_id'] = task.run_id
             queued_ping_info['job_id'] = job_id
             queued_ping_info['submit_time'] = datetime.datetime.now()
-            with open(task.step.get_queued_ping_path_for_run_id(task.run_id), 'w') as f:
+            with open(task.get_step().get_run(task.run_id).get_queued_ping_file(), 'w') as f:
                 f.write(yaml.dump(queued_ping_info, default_flow_style = False))
 
             quota_jids[step_name][quota_offset[step_name]] = job_id
@@ -196,7 +196,7 @@ def main(args):
                 if parent_state in [p.states.EXECUTING, p.states.QUEUED]:
                     # determine job_id from YAML queued ping file
                     parent_job_id = None
-                    parent_queued_ping_path = parent_task.step.get_queued_ping_path_for_run_id(parent_task.run_id)
+                    parent_queued_ping_path = parent_task.get_step().get_run(parent_task.run_id).get_queued_ping_file()
                     try:
                         parent_info = yaml.load(open(parent_queued_ping_path))
                         parent_job_ids.append(parent_info['job_id'])

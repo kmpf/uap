@@ -37,9 +37,9 @@ def restore_sigpipe_handler():
     
 class ProcessPool(object):
     '''
-    The process pool provides an environment for launching and monitoring processes.
-    You can launch any number of unrelated processes plus any number of pipelines in
-    which several processes are chained together.
+    The process pool provides an environment for launching and monitoring
+    processes. You can launch any number of unrelated processes plus any number
+    of pipelines in which several processes are chained together.
     
     Use it like this::
     
@@ -49,20 +49,20 @@ class ProcessPool(object):
     When the scope opened by the *with* statement is left, all processes are
     launched and being watched. The process pool then waits until all processes
     have finished. You cannot launch a process pool within another process pool,
-    but you can launch multiple pipeline and independent processes within a single
-    process pool. Also, you can launch several process pools sequentially.
+    but you can launch multiple pipeline and independent processes within a
+    single process pool. Also, you can launch several process pools sequentially.
     '''
 
     TAIL_LENGTH = 1024
     '''
-    Size of the tail which gets recorded from both *stdout* and *stderr* streams of 
-    every process launched with this class, in bytes.
+    Size of the tail which gets recorded from both *stdout* and *stderr* streams
+    of every process launched with this class, in bytes.
     '''
     
     COPY_BLOCK_SIZE = 4194304
     '''
-    When *stdout* or *stderr* streams should be written to output files, this is the
-    buffer size which is used for writing.
+    When *stdout* or *stderr* streams should be written to output files, this is
+    the buffer size which is used for writing.
     '''
     
     SIGTERM_TIMEOUT = 10
@@ -75,7 +75,8 @@ class ProcessPool(object):
     current_instance = None
     process_pool_is_dead = False
 
-    # signal names for numbers... kudos to http://stackoverflow.com/questions/2549939/get-signal-names-from-numbers-in-python
+    # signal names for numbers... kudos to
+    # http://stackoverflow.com/questions/2549939/get-signal-names-from-numbers-in-python
     SIGNAL_NAMES = dict((getattr(signal, n), n) for n in dir(signal) if n.startswith('SIG') and '_' not in n )
 
     class Pipeline(object):
@@ -110,12 +111,13 @@ class ProcessPool(object):
             }
             self.append_calls.append(call)
             
-    def __init__(self, step):
+    def __init__(self, run):
         if ProcessPool.process_pool_is_dead:
             raise StandardError("We have encountered an error, stopping now...")
        
-        # the current step this ProcessPool is used in (for temporary paths etc.)
-        self.step = step
+        # the run for which this ProcessPool computes stuff
+        # (for temporary paths etc.)
+        self._run = run
         
         # log entries
         self.log_entries = []
@@ -152,6 +154,14 @@ class ProcessPool(object):
         self.ok_to_fail = set()
         
         self.copy_processes_for_pid = dict()
+
+        self.clean_up = False
+
+    def clean_up_temp_paths(self):
+        self.clean_up = True
+
+    def get_run(self):
+        return self._run
 
     def check_subprocess_command(self, command):
         for argument in command:
@@ -209,7 +219,7 @@ class ProcessPool(object):
         ProcessPool.current_instance = self
         
         # First we have to add the pre_command commands for execution
-        pre_commands = self.step.get_pre_commands().values()
+        pre_commands = self.get_run().get_step().get_pre_commands().values()
         if len(pre_commands) > 0:
             self.launch_pre_post_command(pre_commands)
                 
@@ -217,12 +227,12 @@ class ProcessPool(object):
         
     def __exit__(self, type, value, traceback):
         # Lastly we have to add the post_command commands for execution
-        post_commands = self.step.get_post_commands().values()
+        post_commands = self.get_run().get_step().get_post_commands().values()
         if len(post_commands) > 0:
             self.launch_pre_post_command(post_commands)
 
         # before everything is launched load the necessary modules
-        module_loads = self.step.get_module_loads().values()
+        module_loads = self.get_run().get_step().get_module_loads().values()
         if len(module_loads) > 0:
             for module_load in module_loads:
                 self.load_unload_module(module_load)
@@ -235,48 +245,23 @@ class ProcessPool(object):
             self._wait()
         except:
             # pass log to step even if there was a problem
-            self.step.append_pipeline_log(self.get_log())
+            self.get_run().get_step().append_pipeline_log(self.get_log())
             raise
         
         # if there was no exception, still pass log to step
-        self.step.append_pipeline_log(self.get_log())
+        self.get_run().get_step().append_pipeline_log(self.get_log())
 
         # after finishing gracefully unload modules
-        module_unloads = self.step.get_module_unloads().values()
+        module_unloads = self.get_run().get_step().get_module_unloads().values()
         if len(module_unloads) > 0:
             for module_unload in module_unloads:
                 self.load_unload_module(module_unload)
 
         # remove all temporary files or directories we know of
-        for _ in self.temp_paths:
-            if os.path.isdir(_):
-                try:
-                    os.rmdir(_)
-                except OSError as e:
-                    logger.error("errno: %s" % e.errno)
-                    logger.error("strerror: %s" % e.strerror)
-                    logger.error("filename: %s" % e.filename)
-                    pass
-            else:
-                try:
-                    os.unlink(_)
-                except OSError as e:
-                    pass
+        if self.clean_up:
+            self.get_run().remove_temporary_paths()
         
         ProcessPool.current_instance = None
-        
-    def announce_temporary_path(self, temp_path):
-        self.temp_paths.append(temp_path)
-
-    def get_temporary_path(self, prefix, designation = None):
-        path = self.step.get_temporary_path(prefix, designation)
-        self.temp_paths.append(path)
-        return path
-        
-    def get_temporary_fifo(self, prefix, designation = None):
-        path = self.step.get_temporary_fifo(prefix, designation)
-        self.temp_paths.append(path)
-        return path
     
     def launch(self, args, stdout_path = None, stderr_path = None, hints = {}):
         '''
@@ -406,7 +391,7 @@ class ProcessPool(object):
         self.copy_processes_for_pid[pid] = list()
         
         for which in ['stdout', 'stderr']:
-            report_path = self.get_temporary_path("%s-report" % which)
+            report_path = self.get_run().add_temporary_file("%s-report" % which)
             sink_path = stdout_path if which == 'stdout' else stderr_path
             listener_pid = self._do_launch_copy_process(
                 proc.stdout if which == 'stdout' else proc.stderr,
@@ -543,8 +528,10 @@ class ProcessPool(object):
         '''
         Wait for all processes to exit.
         '''
-        self.log("Now launching process watcher and waiting for all child processes to exit.")
-        watcher_report_path = self.step.get_temporary_path('watcher-report')
+        self.log("Now launching process watcher and waiting for all child "
+                 "processes to exit.")
+        watcher_report_path = self.get_run()\
+                                  .add_temporary_file('watcher-report')
         watcher_pid = self._launch_process_watcher(watcher_report_path)
         ProcessPool.process_watcher_pid = watcher_pid
         something_went_wrong = False
@@ -560,12 +547,13 @@ class ProcessPool(object):
                 if pid == watcher_pid:
                     ProcessPool.process_watcher_pid = None
                     try:
-                        f = open(watcher_report_path)
-                        self.process_watcher_report = yaml.load(f)
-                        f.close()
+                        with open(watcher_report_path) as f:
+                            self.process_watcher_report = yaml.load(f)
+                        logger.info("Now deleting: %s" % watcher_report_path)
                         os.unlink(watcher_report_path)
                     except:
-                        print("Warning: Couldn't load watcher report from %s." % watcher_report_path)
+                        print("Warning: Couldn't load watcher report from %s." %
+                              watcher_report_path)
                         pass
                     # the process watcher has terminated, which is cool, I guess
                     # (if it's the last child process, anyway)
@@ -576,8 +564,8 @@ class ProcessPool(object):
                     self.running_procs.remove(pid)
                 except:
                     if pid != os.getpid():
-                        #raise StandardError("Caught a process which we didn't know: %d." % pid)
-                        sys.stderr.write("Note: Caught a process which we didn't know: %d.\n" % pid)
+                        sys.stderr.write("Note: Caught a process which we "
+                                         "didn't know: %d.\n" % pid)
 
                 if pid in self.proc_details:
                     self.proc_details[pid]['end_time'] = datetime.datetime.now()
@@ -588,10 +576,12 @@ class ProcessPool(object):
                 if signal_number > 0:
                     what_happened = "has received signal %d" % signal_number
                     if signal_number in ProcessPool.SIGNAL_NAMES:
-                        what_happened = "has received %s (signal number %d)" % (ProcessPool.SIGNAL_NAMES[signal_number], signal_number)
+                        what_happened = ("has received %s (signal number %d)" %
+                        (ProcessPool.SIGNAL_NAMES[signal_number], signal_number))
                         
                 if pid in self.proc_details:
-                    self.log("%s (PID %d) %s." % (self.proc_details[pid]['name'], pid, what_happened))
+                    self.log("%s (PID %d) %s." % (self.proc_details[pid]['name'],
+                                                  pid, what_happened))
                 else:
                     self.log("PID %d %s." % (pid, what_happened))
 
@@ -602,7 +592,7 @@ class ProcessPool(object):
                         self.proc_details[pid]['signal'] = signal_number
                         if signal_number in ProcessPool.SIGNAL_NAMES:
                             self.proc_details[pid]['signal_name'] = ProcessPool.SIGNAL_NAMES[signal_number]
-                            
+
                     # now kill it's preceding process, if this is from a pipeline
                     if 'use_stdin_of' in self.proc_details[pid]:
                         pidlist = list()
@@ -610,13 +600,15 @@ class ProcessPool(object):
                         pidlist.append(self.copy_processes_for_pid[self.proc_details[pid]['use_stdin_of']][1])
                         pidlist.append(self.proc_details[pid]['use_stdin_of'])
                         for kpid in pidlist:
-                            self.log("Now killing %d, the predecessor of %d." % (kpid, pid))
+                            self.log("Now killing %d, the predecessor of %d." %
+                                     (kpid, pid))
                             self.ok_to_fail.add(kpid)
                             try:
                                 os.kill(kpid, signal.SIGPIPE)
                             except OSError, e:
                                 if e.errno == errno.ESRCH:
-                                    self.log("Couldn't kill %d: no such process." % kpid)
+                                    self.log("Couldn't kill %d: no such "
+                                             "process." % kpid)
                                     pass
                                 else:
                                     raise
@@ -627,6 +619,7 @@ class ProcessPool(object):
                             f = open(report_path, 'r')
                             report = yaml.load(f)
                             f.close()
+                            logger.info("Now deleting: %s" % report_path)
                             os.unlink(report_path)
                             if report is not None:
                                 self.proc_details[pid].update(report)
@@ -663,6 +656,7 @@ class ProcessPool(object):
                 f = open(watcher_report_path)
                 self.process_watcher_report = yaml.load(f)
                 f.close()
+                logger.info("Now deleting: %s" % watcher_report_path)
                 os.unlink(watcher_report_path)
             except:
                 print("Warning: Couldn't load watcher report from %s." % watcher_report_path)

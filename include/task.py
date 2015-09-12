@@ -28,12 +28,6 @@ class Task(object):
         '''
         return self.step
 
-    def get_run_id(self):
-        '''
-        Returns the run_id of this task.
-        '''
-        return self.run_id
-
     def get_run(self):
         '''
         Returns the run object for this task.

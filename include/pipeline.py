@@ -95,6 +95,17 @@ class Pipeline(object):
         cluster_config).
         '''
 
+        # Check the availability of git
+        command = ['git', '--version']
+        try:
+            with open(os.devnull, 'w') as devnull:
+                subprocess.check_call(command, stdout = devnull)
+
+        except subprocess.CalledProcessError as e:
+            raise StandardError("Execution of %s failed. Git seems to be "
+                                "unavailable." % " ".join(command))
+
+
         # now determine the Git hash of the repository
         command = ['git', 'describe', '--all', '--dirty', '--long']
         try:
@@ -133,14 +144,21 @@ class Pipeline(object):
             # (we're probably in run-locally.py)
             pass
 
-        # the configuration as read from config.yaml
         self.config = dict()
+        '''
+        Dictionary representation of configuration YAML file.
+        '''
 
-        # dict of steps, steps are objects with inter-dependencies
         self.steps = dict()
-        
-        # topological order of step names
+        '''
+        This dict stores step objects by their name. Each step knows his
+        dependencies.
+        '''
+
         self.topological_step_order = list()
+        '''
+        List with topologically ordered steps. 
+        '''
         
         self.file_dependencies = dict()
         '''
@@ -179,6 +197,16 @@ class Pipeline(object):
         This dict stores a set of output files for every task id in the pipeline.
         '''
 
+        self.task_for_task_id = dict()
+        '''
+        This dict stores task objects by task IDs.
+        '''
+
+        self.all_tasks_topologically_sorted = list()
+        '''
+        List of all tasks in topological order. 
+        '''
+
         self.config_file_name = args.config.name
         '''
         This stores the name of the configuration file of the current analysis
@@ -187,10 +215,8 @@ class Pipeline(object):
         self.read_config(args.config)
 
         # collect all tasks
-        self.task_for_task_id = {}
-        self.all_tasks_topologically_sorted = []
         for step_name in self.topological_step_order:
-            step = self.steps[step_name]
+            step = self.get_step(step_name)
             logger.debug("Collect now all tasks for step: %s" % step)
             for run_index, run_id in enumerate(misc.natsorted(step.get_run_ids())):
                 task = task_module.Task(self, step, run_id, run_index)
@@ -211,6 +237,13 @@ class Pipeline(object):
 
         self.tool_versions = {}
         self.check_tools()
+
+
+    def get_steps(self):
+        return self.steps
+
+    def get_step(self, step_name):
+        return self.steps[step_name]
 
     # read configuration and make sure it's good
     def read_config(self, config_file):
@@ -507,7 +540,8 @@ class Pipeline(object):
                 # are no reason to crash the entire thing
                 pass
 
-    def check_ping_files(self, print_more_warnings = False, print_details = False, fix_problems = False):
+    def check_ping_files(self, print_more_warnings = False,
+                         print_details = False, fix_problems = False):
         run_problems = list()
         queue_problems = list()
         check_queue = True
@@ -515,12 +549,9 @@ class Pipeline(object):
         try:
             stat_output = subprocess.check_output([self.cc('stat')], 
                                                   stderr = subprocess.STDOUT)
-        except KeyError:
-            check_queue = False
-        except OSError:
-            check_queue = False
-        except subprocess.CalledProcessError:
-            # we don't have a stat tool here, don't check the queue
+        except (KeyError, OSError, subprocess.CalledProcessError):
+            # we don't have a stat tool here, if subprocess.CalledProcessError
+            # is raised
             check_queue = False
             
         if print_more_warnings and not check_queue:
@@ -539,25 +570,26 @@ class Pipeline(object):
                     pass
         
         now = datetime.datetime.now()
-        for which in ['run', 'queued']:
-            if not check_queue and which == 'queued':
-                continue
-            for task in self.all_tasks_topologically_sorted:
-                path = task.step._get_ping_path_for_run_id(task.run_id, which)
-                if os.path.exists(path):
-                    if which == 'run':
-                        info = yaml.load(open(path, 'r'))
-                        start_time = info['start_time']
-                        last_activity = datetime.datetime.fromtimestamp(
-                            abstract_step.AbstractStep.fsc.getmtime(path))
-                        last_activity_difference = now - last_activity
-                        if last_activity_difference.total_seconds() > \
-                           abstract_step.AbstractStep.PING_TIMEOUT:
-                            run_problems.append((task, path, last_activity_difference, last_activity - start_time))
-                    if which == 'queued':
-                        info = yaml.load(open(path, 'r'))
-                        if not str(info['job_id']) in running_jids:
-                            queue_problems.append((task, path, info['submit_time']))
+        for task in self.all_tasks_topologically_sorted:
+            exec_ping_file = task.get_run().get_executing_ping_file()
+            queued_ping_file = task.get_run().get_queued_ping_file()
+            if os.path.exists(exec_ping_file):
+                info = yaml.load(open(exec_ping_file, 'r'))
+                start_time = info['start_time']
+                last_activity = datetime.datetime.fromtimestamp(
+                    abstract_step.AbstractStep.fsc.getmtime(exec_ping_file))
+                last_activity_difference = now - last_activity
+                if last_activity_difference.total_seconds() > \
+                   abstract_step.AbstractStep.PING_TIMEOUT:
+                    run_problems.append((task, exec_ping_file,
+                                         last_activity_difference,
+                                         last_activity - start_time))
+
+            if os.path.exists(queued_ping_file) and check_queue:
+                info = yaml.load(open(queued_ping_file, 'r'))
+                if not str(info['job_id']) in running_jids:
+                    queue_problems.append((task, queued_ping_file,
+                                           info['submit_time']))
            
         show_hint = False
         
@@ -646,6 +678,9 @@ class Pipeline(object):
 
         return None
 
+    def get_cluster_type(self):
+        return self.cluster_type
+
     def set_cluster_type(self, cluster_type):
         if not cluster_type in Pipeline.cluster_config:
             print("Unknown cluster type: %s (choose one of %s)." % (
@@ -654,13 +689,15 @@ class Pipeline(object):
         self.cluster_type = cluster_type
 
     '''
-    Shorthand to retrieve a cluster-type-dependent command or filename (cc == cluster command).
+    Shorthand to retrieve a cluster-type-dependent command or filename
+    (cc == cluster command).
     '''
     def cc(self, key):
         return Pipeline.cluster_config[self.cluster_type][key]
 
     '''
-    Shorthand to retrieve a cluster-type-dependent command line part (this is a list)
+    Shorthand to retrieve a cluster-type-dependent command line part (this is a
+    list)
     '''
     def ccla(self, key, value):
         result = Pipeline.cluster_config[self.cluster_type][key]
