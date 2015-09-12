@@ -131,7 +131,8 @@ def bytes_to_str(num):
 
 def duration_to_str(duration, long = False):
     '''
-    Minor adjustment for Python's duration to string conversion, removed microsecond accuracy and replaces 'days' with 'd'
+    Minor adjustment for Python's duration to string conversion, removed
+    microsecond accuracy and replaces 'days' with 'd'
     '''
     value = str(duration)
     if not long:

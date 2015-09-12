@@ -132,11 +132,18 @@ def main():
         parents=[common_parser])
     
     render_parser.add_argument(
-        "--all",
-        dest="all",
+        "--files",
+        dest="files",
         action="store_true",
         default=False,
-        help="Renders all ")
+        help="Renders a graph showing all files of the analysis.")
+    
+    render_parser.add_argument(
+        "--steps",
+        dest="steps",
+        action="store_true",
+        default=False,
+        help="Renders a graph showing all steps of the analysis.")
     
     render_parser.add_argument(
         "-t","--task",
@@ -351,16 +358,16 @@ def _configure_logger(verbosity):
         # print("Set log level to ERROR")
     if verbosity == 0:
         logger.setLevel(logging.WARNING)
-        print("Set log level to WARNING")
+        print("[uap] Set log level to WARNING")
     elif verbosity == 1:
         logger.setLevel(logging.INFO)
-        print("Set log level to INFO")
+        print("[uap] Set log level to INFO")
     elif verbosity >= 2:
         logger.setLevel(logging.DEBUG)
-        print("Set log level to DEBUG")
+        print("[uap] Set log level to DEBUG")
     else:
         logger.setLevel(logging.NOTSET)
-        print("Set log level to NOTSET")
+        print("[uap] Set log level to NOTSET")
     return logger
 
 

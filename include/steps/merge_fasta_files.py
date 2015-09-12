@@ -20,6 +20,7 @@ class MergeFastqFiles(AbstractStep):
         self.require_tool('pigz')
 
         self.add_option('compress-output', bool, optional = True, default = True)
+        self.add_option('output-fasta-basename', str, optional = True, default = "")
 
     def runs(self, run_ids_connections_files):
         '''
@@ -28,7 +29,12 @@ class MergeFastqFiles(AbstractStep):
         provided to this method.
         '''
         for run_id in run_ids_connections_files.keys():
-            with self.declare_run(run_id) as run:
+            fasta_basename = run_id
+            if self.get_option('output-fasta-basename'):
+                fasta_basename = "%s-%s" % (
+                    self.get_option('output-fasta-basename'), run_id)
+
+            with self.declare_run(fasta_basename) as run:
                 input_paths = run_ids_connections_files[run_id]['in/sequence']
 
                 if input_paths == [None]:
@@ -93,7 +99,9 @@ class MergeFastqFiles(AbstractStep):
                         pigz_pipe.add_command(cat)
 
                         # 3.2 Gzip output file
+                        out_file = "%s.fasta" % fasta_basename
                         if self.get_option('compress-output'):
+                            out_file = "%s.fasta.gz" % fasta_basename
                             pigz = [self.get_tool('pigz'),
                                     '--stdout']
                             pigz_pipe.add_command(pigz)
@@ -101,7 +109,7 @@ class MergeFastqFiles(AbstractStep):
                         # 3.3 command: Write to output file in 4MB chunks
                         stdout_path = run.add_output_file(
                             "sequence",
-                            "%s.fasta.gz" % run_id,
+                            out_file,
                             input_paths)
                         dd = [self.get_tool('dd'),
                               'obs=4M',

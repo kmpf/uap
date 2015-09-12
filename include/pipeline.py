@@ -98,7 +98,9 @@ class Pipeline(object):
         # Check the availability of git
         command = ['git', '--version']
         try:
-            subprocess.check_call(command)
+            with open(os.devnull, 'w') as devnull:
+                subprocess.check_call(command, stdout = devnull)
+
         except subprocess.CalledProcessError as e:
             raise StandardError("Execution of %s failed. Git seems to be "
                                 "unavailable." % " ".join(command))
@@ -214,7 +216,7 @@ class Pipeline(object):
 
         # collect all tasks
         for step_name in self.topological_step_order:
-            step = self.steps[step_name]
+            step = self.get_step(step_name)
             logger.debug("Collect now all tasks for step: %s" % step)
             for run_index, run_id in enumerate(misc.natsorted(step.get_run_ids())):
                 task = task_module.Task(self, step, run_id, run_index)
