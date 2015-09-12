@@ -2,9 +2,14 @@
 # encoding: utf-8
 
 import sys
+import copy
 import logging
 import os
+import re
+import socket
+import StringIO
 import subprocess
+import textwrap
 import yaml
 
 import abstract_step
@@ -74,16 +79,35 @@ def main(args):
     # Test if dot is available
     dot_version = ['dot', '-V']
     try:
-        subprocess.check_call(dot_version)
+        with open(os.devnull, 'w') as devnull:
+            subprocess.check_call(dot_version, stdout = devnull)
     except subprocess.CalledProcessError as e:
         raise StandardError("Execution of %s failed. GraphViz seems to be "
                             "unavailable." % " ".join(dot_version))
 
     if args.files:
         logger.info("Going to plot the graph containing all files of the analysis")
-    elif args.pipeline:
+    elif args.steps:
         logger.info("Create a graph showing the DAG of the analysis")
     else:
+        # Just find every thing that looks like an annotation file and generate
+        # the plots for it.
+        directory = os.path.abspath(p.config['destination_path'])
+        if not os.path.isdir(directory):
+            raise StandardError("%s is not a directory." % directory)
+
+        annotation_files = list()
+        for root, dirs, files in os.walk(directory):
+            anno_file_regex = re.compile('^\..*-annotation-.{6}\.yaml$')
+            for f in files:
+                if re.search(anno_file_regex, f):
+                    annotation_files.append(os.path.join(root, f))
+
+        for annotation_file in annotation_files:
+            render_single_annotation(annotation_file)
+        print(annotation_files)
+        
+        sys.exit(1)
         logger.info("Create graphs for all annotation files I can get my hands on.")
         task_list = p.all_tasks_topologically_sorted
         
@@ -214,14 +238,20 @@ def main(args):
         f.write(dot.stdout.read())
 
 def render_single_annotation(annotation_path):
+    svg_file = annotation_path.replace('.yaml', '.svg')
+    png_file = annotation_path.replace('.yaml', '.png')
+
+    log = dict()
+    with open(annotation_path, 'r') as f:
+        log = yaml.load(f)
     try:
-        gv = self.render_pipeline([log])
+        gv = render_pipeline([log])
         dot = subprocess.Popen(['dot', '-Tsvg'], stdin = subprocess.PIPE,
                                stdout = subprocess.PIPE)
         dot.stdin.write(gv)
         dot.stdin.close()
         svg = dot.stdout.read()
-        with open(annotation_path + '.svg', 'w') as f:
+        with open(svg_file, 'w') as f:
             f.write(svg)
             
         dot = subprocess.Popen(['dot', '-Tpng'], stdin = subprocess.PIPE,
@@ -229,7 +259,7 @@ def render_single_annotation(annotation_path):
         dot.stdin.write(gv)
         dot.stdin.close()
         png = dot.stdout.read()
-        with open(annotation_path + '.png', 'w') as f:
+        with open(png_file, 'w') as f:
             f.write(png)
     except:
         # rendering the pipeline graph is not _that_ important, after all
@@ -242,7 +272,7 @@ def render_single_annotation(annotation_path):
         pass
 
 
-def render_pipeline( logs):
+def render_pipeline(logs):
     hash = {'nodes': {}, 'edges': {}, 'clusters': {}, 'graph_labels': {}}
     for log in logs:
         temp = render_pipeline_hash(log)
@@ -291,7 +321,7 @@ def render_pipeline( logs):
     return result
         
 
-def render_pipeline_hash( log):
+def render_pipeline_hash(log):
         
     def pid_hash(pid, suffix = ''):
         hashtag = "%s/%s/%d/%s" % (log['step']['name'], 
@@ -541,23 +571,22 @@ def render_pipeline_hash( log):
     start_time = log['start_time']
     end_time = log['end_time']
     duration = end_time - start_time
-        
-    hash['graph_labels'][task_name] = "Task: %s\\lHost: %s\\lDuration: "
-    "%s\\l" % (task_name, 
-               socket.gethostname(),
-               misc.duration_to_str(duration, long = True))
+
+    text = "Task: %s\\lHost: %s\\lDuration: %s\\l" % (
+        task_name, socket.gethostname(),
+        misc.duration_to_str(duration, long = True)
+    )
+    hash['graph_labels'][task_name] = text
     if 'max' in log['pipeline_log']['process_watcher']:
-        hash['graph_labels'][task_name] += "CPU: %1.1f%%, %d "
-        "CORES_Requested , RAM: %s (%1.1f%%)\\l" % (
-            log['pipeline_log']['process_watcher']['max']['sum']\
-            ['cpu_percent'],
+        text = "CPU: %1.1f%%, %d CORES_Requested , RAM: %s (%1.1f%%)\\l" % (
+            log['pipeline_log']['process_watcher']['max']['sum']['cpu_percent'],
             log['step']['cores'],
             misc.bytes_to_str(log['pipeline_log']['process_watcher']['max']\
                               ['sum']['rss']), 
-            log['pipeline_log']['process_watcher']['max']['sum']\
-            ['memory_percent'])
+            log['pipeline_log']['process_watcher']['max']['sum']['memory_percent'])
+        hash['graph_labels'][task_name] += text
     if 'signal' in log:
-        hash['graph_labels'][task_name] += "Caught signal: %s\\l" % \
-                                           process_pool.ProcessPool.SIGNAL_NAMES[log['signal']]
+        hash['graph_labels'][task_name] += "Caught signal: %s\\l" % (
+            process_pool.ProcessPool.SIGNAL_NAMES[log['signal']])
     hash['graph_labels'][task_name] += "\\l"
     return hash

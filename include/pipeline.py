@@ -98,7 +98,9 @@ class Pipeline(object):
         # Check the availability of git
         command = ['git', '--version']
         try:
-            subprocess.check_call(command)
+            with open(os.devnull, 'w') as devnull:
+                subprocess.check_call(command, stdout = devnull)
+
         except subprocess.CalledProcessError as e:
             raise StandardError("Execution of %s failed. Git seems to be "
                                 "unavailable." % " ".join(command))
