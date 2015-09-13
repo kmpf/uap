@@ -434,6 +434,9 @@ class Pipeline(object):
             command_response = '%s-respone' % info_key        
             (output, error) = proc.communicate()
             if info_key in ['module_load', 'module_unload']:
+                logger.info("Try '%s' for '%s': %s" % (
+                    info_key, tool_id, " ".join(command))
+                )
                 exec output
                 tool_check_info.update({
                     command_call : (' '.join(command)).strip(),
