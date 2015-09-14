@@ -93,6 +93,9 @@ class Run(object):
     def get_out_connections(self):
         return self._output_files.keys()
 
+    def get_out_connection(self, connection):
+        return self._output_files[connection]
+    
     def _get_ping_file(self, key):
         if self._ping_files[key] == None:
             self._ping_files[key] = os.path.join(
@@ -432,10 +435,10 @@ class Run(object):
                 "to the constructor of %s."
                 % (tag, str(self._step), tag, self._step.__module__))
 
-        out_connection = 'out/' + tag
-
-        if out_connection not in self.get_out_connections():
-            self.add_out_connection(out_connection)
+        try:
+            out_connection = self.get_out_connection(tag)
+        except KeyError:
+            out_connection = self.add_out_connection(tag)
 
         if out_path in self.get_output_files_for_out_connection(out_connection):
             raise StandardError(
@@ -528,18 +531,22 @@ class Run(object):
                 "to the constructor of %s."
                 % (tag, str(self._step), tag, self._step.__module__))
 
-        if tag not in self._output_files:
-            self._output_files[tag] = dict()
+        try:
+            out_connection = self.get_out_connection(tag)
+        except KeyError:
+            out_connection = self.add_out_connection(tag)
 
-        if None in self._output_files[tag]:
+        if None in self._output_files[out_connection]:
             raise StandardError(
                 "You're trying to re-declare %s as an empty output connection "
-                % tag)
+                % out_connection)
 
-        self._output_files[tag][None] = None
+        self._output_files[out_connection][None] = None
 
     def add_out_connection(self, out_connection):
+        out_connection = 'out/' + out_connection
         self._output_files[out_connection] = dict()
+        return out_connection
 
     def get_input_files_for_output_file(self, output_file):
         for connection in self.get_out_connections():
@@ -577,16 +584,19 @@ class Run(object):
         file name.
         '''
         result = dict()
-        for connection in self._output_files:
+        for connection in self._output_files.keys():
             result[connection] = dict()
             for out_path, in_paths in self._output_files[connection].items():
                 directory = self.get_step().get_output_directory_du_jour(
                     self.get_run_id())
-                head, tail = os.path.split(out_path)
-                if directory != None and out_path != None and head == "":
-                    full_path = os.path.join(directory, out_path)
-                else:
-                    full_path = out_path
+
+                full_path = out_path
+                try:
+                    head, tail = os.path.split(out_path)
+                    if directory != None and out_path != None and head == "":
+                        full_path = os.path.join(directory, out_path)
+                except AttributeError:
+                    pass
                 result[connection][full_path] = in_paths
 
         return result

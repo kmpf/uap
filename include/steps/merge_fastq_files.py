@@ -21,6 +21,9 @@ class MergeFastqFiles(AbstractStep):
         self.require_tool('mkfifo')
         self.require_tool('pigz')
 
+        self.add_option('compress-output', bool, optional = True,
+                        default = True)
+
     def runs(self, run_ids_connections_files):
         '''
         self.runs() should be a replacement for declare_runs() and execute_runs()
@@ -51,8 +54,8 @@ class MergeFastqFiles(AbstractStep):
                             mkfifo = [self.get_tool('mkfifo'), temp_fifo]
                             exec_group.add_command(mkfifo)
 
-                            is_gzipped = True if os.path.splitext(input_path)[1] in\
-                                         ['.gz', '.gzip'] else False
+                            is_gzipped = True if os.path.splitext(input_path)[1]\
+                                         in ['.gz', '.gzip'] else False
 
                             # 2. Output files to fifo
                             if is_gzipped:
@@ -93,9 +96,14 @@ class MergeFastqFiles(AbstractStep):
                             # 3.1 command: Read from ALL fifos
                             cat = [self.get_tool('cat')]
                             cat.extend(temp_fifos)
+                            pigz_pipe.add_command(cat)
+
                             # 3.2 Gzip output file
-                            pigz = [self.get_tool('pigz'),
-                                    '--stdout']
+                            if self.get_option('compress-output'):
+                                pigz = [self.get_tool('pigz'),
+                                        '--stdout']
+                                pigz_pipe.add_command(pigz)
+
                             # 3.3 command: Write to output file in 4MB chunks
                             stdout_path = run.add_output_file(
                                 "%s" % read,
@@ -105,7 +113,4 @@ class MergeFastqFiles(AbstractStep):
                             dd = [self.get_tool('dd'),
                                   'obs=4M',
                                   'of=%s' % stdout_path]
-                            
-                            pigz_pipe.add_command(cat)
-                            pigz_pipe.add_command(pigz)
                             pigz_pipe.add_command(dd)
