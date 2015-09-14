@@ -60,11 +60,12 @@ class Fastqc(AbstractStep):
                     else:
                         for input_path in input_paths:
                             # Get base name of input file
-                            input_base = os.path.basename(input_path)\
-                                                .split('.', 1)[0]
+                            root, ext = os.path.splitext(os.path.basename(
+                                input_path))
+
                             # Create temporary output directory
                             temp_dir = run.add_temporary_directory(
-                                "%s" % input_base )
+                                "%s" % root )
                             mkdir_exec_group = run.new_exec_group()
                             mkdir = [self.get_tool('mkdir'), temp_dir]
                             mkdir_exec_group.add_command(mkdir)
@@ -85,7 +86,7 @@ class Fastqc(AbstractStep):
                             mv_exec_group = run.new_exec_group()
                             mv1 = [self.get_tool('mv'),
                                   os.path.join( temp_dir,
-                                                ''.join([input_base,
+                                                ''.join([root,
                                                          '_fastqc.zip'])),
                                   run.add_output_file(
                                       "%s_fastqc_report" % read,
@@ -94,7 +95,7 @@ class Fastqc(AbstractStep):
                                       [input_path])]
                             mv2 = [self.get_tool('mv'),
                                   os.path.join( temp_dir,
-                                                ''.join([input_base,
+                                                ''.join([root,
                                                          '_fastqc.html'])),
                                   run.add_output_file(
                                       "%s_fastqc_report_webpage" % read,
