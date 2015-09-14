@@ -21,8 +21,8 @@ class MergeFastqFiles(AbstractStep):
         self.require_tool('mkfifo')
         self.require_tool('pigz')
 
-        self.add_option('compress-output', bool, optional = True,
-                        default = True)
+        #self.add_option('compress-output', bool, optional = True,
+        #                default = True)
 
     def runs(self, run_ids_connections_files):
         '''
@@ -99,10 +99,10 @@ class MergeFastqFiles(AbstractStep):
                             pigz_pipe.add_command(cat)
 
                             # 3.2 Gzip output file
-                            if self.get_option('compress-output'):
-                                pigz = [self.get_tool('pigz'),
-                                        '--stdout']
-                                pigz_pipe.add_command(pigz)
+                            #if self.get_option('compress-output'):
+                            pigz = [self.get_tool('pigz'),
+                                    '--stdout']
+                            pigz_pipe.add_command(pigz)
 
                             # 3.3 command: Write to output file in 4MB chunks
                             stdout_path = run.add_output_file(
