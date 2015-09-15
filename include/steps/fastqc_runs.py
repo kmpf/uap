@@ -62,6 +62,12 @@ class Fastqc(AbstractStep):
                             # Get base name of input file
                             root, ext = os.path.splitext(os.path.basename(
                                 input_path))
+                            if os.path.basename(input_path).endswith(
+                                    ('.fq.gz', '.fq.gzip', '.fastq.gz',
+                                     '.fastq.gzip')):
+                                parts = os.path.basename(input_path).split('.')
+                                root = '.'.join(parts[:-2])
+                                ext = '.'.join(parts[-2:])
 
                             # Create temporary output directory
                             temp_dir = run.add_temporary_directory(
