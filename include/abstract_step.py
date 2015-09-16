@@ -1011,6 +1011,21 @@ class AbstractStep(object):
                          'task %s/%s: %s' % (self._step_name, run_id,
                                              e))
 
+    def generate_one_report(self):
+        '''
+        Gathers the output files for each outgoing connection and calls
+        self.reports() to do the job of creating a report.
+        '''
+
+        try:
+            self.reports( self.get_run_ids_out_connections_output_files() )
+        except NotImplementedError as e:
+            logger.info('Step %s is not capable to generate reports' %
+                        (self._step_name))
+        except Exception as e:
+            logger.error('Unexpected error while trying to generate report for '
+                         'step %s: %s' % (self.get_step_name(), e))
+
     def get_pre_commands(self):
         """
         Return dictionary with commands to execute before starting any other
@@ -1613,6 +1628,31 @@ class AbstractStep(object):
         result = self.find_upstream_info_for_input_paths_as_set(
             input_paths, key, expected = 1)
         return list(result)[0]
+
+    def get_run_ids_out_connections_output_files(self):
+        '''
+        Return a dictionary with all run IDs of the current step, their
+        out connections, and the files that belong to them::
+        
+           run_id_1:
+               in_connection_1: [input_path_1, input_path_2, ...]
+               in_connection_2: ...
+           run_id_2: ...
+
+        Format of ``in_connection``: ``in/<connection>``. Input paths are
+        absolute.        
+        '''
+        run_ids_connections_files = dict()
+        
+        for run in self.get_runs():
+            run_id = run.get_run_id()
+            run_ids_connections_files[run_id] = dict()
+            for out_connection in run.get_out_connections():
+                run_ids_connections_files[run_id][out_connection] = run\
+                    .get_output_files_for_out_connection(out_connection)
+
+        return run_ids_connections_files
+                                                                    
 
     def get_run_ids_in_connections_input_files(self):
         '''

@@ -214,6 +214,9 @@ class Cutadapt(AbstractStep):
                             cutadapt_pipe.add_command(dd)
 
     def reports(self, run_id, out_connection_output_files):
+
+        # Imports are done here to prevent them from causing errors while
+        # analysis is done
         import matplotlib.pyplot as plt
         import numpy as np
         import csv

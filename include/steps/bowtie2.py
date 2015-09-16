@@ -124,6 +124,7 @@ class Bowtie2(AbstractStep):
                         # Assemble bowtie2 command
                         bowtie2 = [
                             self.get_tool('bowtie2'),
+                            '-p', '3',
                             '-x', self.get_option('index')
                         ]
                         if is_paired_end:
