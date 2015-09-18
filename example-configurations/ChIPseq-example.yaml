@@ -86,6 +86,11 @@ steps:
 #        genome: *genome
 #        index: *segemehl_genome_index
 
+    bowtie_rmdup (picard_markduplicates):
+        _depends: bowtie2
+        
+
+
 tools:
     ##################
     # External Tools #
@@ -130,6 +135,11 @@ tools:
 #        path: htseq-count
 #        get_version: ''
 #        exit_code: 1
+
+    picard-tools:
+        path: picard-tools
+        get_version: '--version'
+        exit_code: 0
 
     # URL: http://zlib.net/pigz/
     pigz:
