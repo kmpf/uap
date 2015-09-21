@@ -62,7 +62,7 @@ class PicardMarkDuplicates(AbstractStep):
                             "metrics", '%s-rm-dup-metrics.txt' % run_id,
                             input_paths)
                         mark_duplicates = [
-                            self.get_tool('picard-tools'), 'MarkDuplicates'
+                            self.get_tool('picard-tools'), 'MarkDuplicates',
                             'INPUT=%s' % input_paths[0],
                             'OUTPUT=%s' % alignments,
                             'METRICS_FILE=%s' % metrics,
