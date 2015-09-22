@@ -20,6 +20,16 @@ steps:
             in/reference_sequence: M_genitalium_genome_url/raw
         index-basename: Mycoplasma_genitalium_index
 
+    M_genitalium_uncompress (merge_fasta_files):
+        _depends: M_genitalium_genome_url
+        _connect:
+            in/sequence: M_genitalium_genome_url/raw
+        compress-output: no
+        output-fasta-basename: M_genitalium_genome
+
+    samtools_faidx:
+        _depends: M_genitalium_uncompress
+
     # FASTQC: Generates a quality control reports of FASTQ files
 #    fastqc:
 #        _depends: fc1
