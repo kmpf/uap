@@ -13,7 +13,6 @@ class SamToSortedBam(AbstractStep):
         
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
-        self.add_connection('out/indices')
         
         self.require_tool('dd')
         self.require_tool('samtools')
@@ -28,9 +27,9 @@ class SamToSortedBam(AbstractStep):
         for run_id in run_ids_connections_files.keys():
 
             with self.declare_run(run_id) as run:
-
+                input_paths = run_ids_connections_files[run_id]["in/alignments"]
                 if input_paths == [None]:
-                    run.add_empty_output_connection("sequence")
+                    run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
                     raise StandardError("Expected exactly one alignments file.")
                 else:
@@ -43,7 +42,7 @@ class SamToSortedBam(AbstractStep):
                             # 1 command: Read file in 4MB chunks
                             dd_in = [self.get_tool('dd'),
                                      'ibs=4M',
-                                     'if=%s' % input_path[0]]
+                                     'if=%s' % input_paths[0]]
                             pipe.add_command(dd_in)
 
                             if is_gzipped:
@@ -68,7 +67,7 @@ class SamToSortedBam(AbstractStep):
                                 self.get_tool('samtools'), 'sort',
                                 '-O', 'bam'
                             ]
-                            if self.get_option('sort_by_name'):
+                            if self.get_option('sort-by-name'):
                                 samtools.append('-n')
                             samtools_sort.extend(
                                 ['-T', run_id, 

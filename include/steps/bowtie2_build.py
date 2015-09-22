@@ -83,8 +83,6 @@ class Bowtie2Build(AbstractStep):
                                   if input_path.endswith(_)]) > 0:
                             is_fasta = True
 
-                        print("Is fasta.gz? %s" % is_fasta_gz)
-                        print("Is fasta? %s" % is_fasta)
                         # Temporary file is always in FASTA format
                         temp_file = run.add_temporary_file(
                             prefix = "fifo-%s" %
@@ -113,14 +111,6 @@ class Bowtie2Build(AbstractStep):
                                 unzip_pipe.add_command(dd_out)
                         elif is_fasta:
                             temp_files.append(input_path)
-#                        elif input_path.endswith('fastq'):
-#                            # 2.1 command: Read file in 4MB chunks and
-#                            #              write to fifo in 4MB chunks
-#                            dd_in = [self.get_tool('dd'),
-#                                     'bs=4M',
-#                                     'if=%s' % input_path,
-#                                     'of=%s' % temp_fifo]
-#                            exec_group.add_command(dd_in)
                         else:
                             raise StandardError("File %s does not end with "
                                                 "any expected suffix ("
