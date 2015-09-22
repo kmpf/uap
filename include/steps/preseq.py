@@ -1,15 +1,12 @@
 import sys
-from abstract_step import *
-import process_pool
-import yaml
+from abstract_step import AbstractStep
 
-
-class SamToSortedBam(AbstractStep):
+class Preseq(AbstractStep):
 
     def __init__(self, pipeline):
-        super(SamToSortedBam, self).__init__(pipeline)
+        super(Preseq, self).__init__(pipeline)
         
-        self.set_cores(12)
+        self.set_cores(4)
         
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
