@@ -50,14 +50,19 @@ class PreseqComplexityCurve(AbstractStep):
 
             with self.declare_run(run_id) as run:
                 input_paths = run_ids_connections_files[run_id]["in/alignments"]
+                is_bam = True if os.path.splitext(input_paths[0])[1]\
+                                 in ['.bam'] else False
+                is_bed = True if os.path.splitext(input_paths[0])[1]\
+                                 in ['.bed'] else False
+
                 if input_paths == [None]:
                     run.add_empty_output_connection("complexity_curve")
                 elif len(input_paths) != 1:
                     raise StandardError("Expected exactly one alignments file.")
+                elif not is_bam and not is_bed:
+                    raise StandardError("Input file %s is niether BAM nor BED." %
+                                        input_paths[0])[1])
                 else:
-                    is_gzipped = True if os.path.splitext(input_paths[0])[1]\
-                                 in ['.gz', '.gzip'] else False
-
                     with run.new_exec_group() as cc_group:
                         c_curve_out = run.add_output_file(
                             'complexity_curve',
@@ -66,5 +71,7 @@ class PreseqComplexityCurve(AbstractStep):
                         )
                         c_curve = [self.get_tool('preseq'), 'c_curve']
                         c_curve.extend(option_list)
+                        if is_bam:
+                            c_curve.append('-bam')
                         c_curve.extend(['-o', c_curve_out, input_paths[0]])
                         cc_group.add_command(c_curve)

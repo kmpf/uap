@@ -64,14 +64,19 @@ class PreseqFutureYield(AbstractStep):
 
             with self.declare_run(run_id) as run:
                 input_paths = run_ids_connections_files[run_id]["in/alignments"]
+                is_bam = True if os.path.splitext(input_paths[0])[1]\
+                                 in ['.bam'] else False
+                is_bed = True if os.path.splitext(input_paths[0])[1]\
+                                 in ['.bed'] else False
+
                 if input_paths == [None]:
                     run.add_empty_output_connection("future_yield")
                 elif len(input_paths) != 1:
                     raise StandardError("Expected exactly one alignments file.")
+                elif not is_bam and not is_bed:
+                    raise StandardError("Input file %s is niether BAM nor BED." %
+                                        input_paths[0])[1])
                 else:
-                    is_gzipped = True if os.path.splitext(input_paths[0])[1]\
-                                 in ['.gz', '.gzip'] else False
-
                     with run.new_exec_group() as lc_group:
                         lc_extrap_out = run.add_output_file(
                             'future_yield',
@@ -80,6 +85,8 @@ class PreseqFutureYield(AbstractStep):
                         )
                         lc_extrap = [self.get_tool('preseq'), 'lc_extrap']
                         lc_extrap.extend(option_list)
+                        if is_bam:
+                            c_curve.append('-bam')
                         lc_extrap.extend(['-o', lc_extrap_out, input_paths[0]])
                         lc_group.add_command(lc_extrap_out)
 
