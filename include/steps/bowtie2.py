@@ -132,7 +132,7 @@ class Bowtie2(AbstractStep):
                                 '-1', ','.join(fr_temp_fifos),
                                 '-2', ','.join(sr_temp_fifos)])
                         else:
-                            bowtie2.extend(['-U', fr_temp_fifos])
+                            bowtie2.extend(['-U', ','.join(fr_temp_fifos)])
 
                         bowtie2_pipe.add_command(bowtie2)
                         # Compress bowtie2 output
