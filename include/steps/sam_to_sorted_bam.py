@@ -9,7 +9,7 @@ class SamToSortedBam(AbstractStep):
     def __init__(self, pipeline):
         super(SamToSortedBam, self).__init__(pipeline)
         
-        self.set_cores(12)
+        self.set_cores(8)
         
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
@@ -58,7 +58,7 @@ class SamToSortedBam(AbstractStep):
                                 self.get_tool('samtools'), 'view',
                                 '-S', '-b', '-t',
                                 self.get_option('genome-faidx'), '-',
-                                '-@', '2'
+                                '-@', '1'
                             ]
                             pipe.add_command(samtools_view)
 
