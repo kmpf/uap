@@ -20,7 +20,9 @@ class SamToSortedBam(AbstractStep):
 
         self.add_option('sort-by-name', bool, default = False)
         self.add_option('genome-faidx', str, optional = False)
-
+        self.add_option('temp-sort-directory', str, optional = False,
+                        description = 'Intermediate sort files are stored into'
+                        'this directory.')
 
     def runs(self, run_ids_connections_files):
         
@@ -70,7 +72,8 @@ class SamToSortedBam(AbstractStep):
                             if self.get_option('sort-by-name'):
                                 samtools.append('-n')
                             samtools_sort.extend(
-                                ['-T', run_id, 
+                                ['-T', os.apth.join(
+                                    self.get_option('temp-sort-directory'), run_id), 
                                  '-',
                                  '-@', '6']
                             )
