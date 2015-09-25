@@ -1,10 +1,6 @@
 import os
 from abstract_step import AbstractStep
-#import glob
-#import misc
-#import process_pool
-#import yaml
-
+import pipes
 
 class Bowtie2(AbstractStep):
     '''
@@ -77,7 +73,7 @@ class Bowtie2(AbstractStep):
                             os.path.basename(input_path) )
                         mkfifo = [self.get_tool('mkfifo'), temp_fifo]
                         exec_group.add_command(mkfifo)
-                        temp_fifos.append(temp_fifo)
+                        temp_fifos.append(pipes.quote(temp_fifo))
                         # Is input gzipped fasta?
                         is_fastq_gz = False
                         if len([_ for _ in ['fq.gz', 'fastq.gz']\
