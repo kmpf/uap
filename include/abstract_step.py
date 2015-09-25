@@ -1017,8 +1017,14 @@ class AbstractStep(object):
         self.reports() to do the job of creating a report.
         '''
 
+        run_ids_connections_output_files = self\
+            .get_run_ids_out_connections_output_files()
+        for run_id in run_ids_connections_output_files:
+            for con, files in run_ids_connections_output_files[run_id].items():
+                files = [f for f in files if os.path.isfile(f)]
+                run_ids_connections_output_files[run_id][con] = files
         try:
-            self.reports( self.get_run_ids_out_connections_output_files() )
+            self.reports( run_ids_connections_output_files )
         except NotImplementedError as e:
             logger.info('Step %s is not capable to generate reports' %
                         (self._step_name))

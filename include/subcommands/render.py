@@ -89,6 +89,7 @@ def main(args):
         logger.info("Going to plot the graph containing all files of the analysis")
     elif args.steps:
         logger.info("Create a graph showing the DAG of the analysis")
+        render_graph_for_all_steps(p)
     else:
         # Just find every thing that looks like an annotation file and generate
         # the plots for it.
@@ -105,32 +106,8 @@ def main(args):
 
         for annotation_file in annotation_files:
             render_single_annotation(annotation_file)
-        print(annotation_files)
         
         sys.exit(1)
-        logger.info("Create graphs for all annotation files I can get my hands on.")
-        task_list = p.all_tasks_topologically_sorted
-        
-        if len(args.step_task) >= 1:
-            # execute the specified tasks
-            task_list = list()
-            for task_id in args.step_task:
-                if '/' in task_id:
-                    task = p.task_for_task_id[task_id]
-                    task_list.append(task)
-                else:
-                    for task in p.all_tasks_topologically_sorted:
-                        if str(task)[0:len(task_id)] == task_id:
-                            task_list.append(task)
-
-        for task in task_list:
-            basic_task_state = task.get_task_state_basic()
-            if basic_task_state == p.states.FINISHED:
-                # getting the name of the annotation file outside of a executing
-                # run is quite difficult, because the filename contains a hash
-                # of the annotation files content. Bäh!
-                task.get_run
-
 #    if args.all or args.task:
 #        logs = []
 #        if args.all:
@@ -159,17 +136,27 @@ def main(args):
 
 
 
-    dot = subprocess.Popen(['dot', '-Tsvg'], stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+
+
+def render_graph_for_all_steps(p):
+    configuration_path = p.get_config_filepath()
+    svg_file = configuration_path.replace('.yaml', '.svg')
+    png_file = configuration_path.replace('.yaml', '.png')
+
+    dot = subprocess.Popen(['dot', '-Tsvg'],
+                           stdin = subprocess.PIPE,
+                           stdout = subprocess.PIPE)
     
     f = dot.stdin
     
     f.write("digraph {\n")
     f.write("  rankdir = TB;\n")
     f.write("  splines = true;\n")
-    f.write("    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", nodesep = 0.2, ranksep = 0.3];\n")
+    f.write("    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", "
+            "nodesep = 0.2, ranksep = 0.3];\n")
     f.write("    node [fontname = Helvetica, fontsize = 12, shape = rect];\n")
     f.write("    edge [fontname = Helvetica, fontsize = 12];\n")
-    for step_name, step in p.steps.items():
+    for step_name, step in p.get_steps().items():
         total_runs = len(step.get_run_ids())
         finished_runs = 0
         for _ in step.get_run_ids():
@@ -181,16 +168,24 @@ def main(args):
         label = step_name
         if step_name != step.__module__:
             label = "%s\\n(%s)" % (step_name, step.__module__)
-        f.write("    %s [label=\"%s\", style = filled, fillcolor = \"#fce94f\"];\n" % (step_name, label))
-        color = gradient(float(finished_runs) / total_runs if total_runs > 0 else 0.0, GRADIENTS['traffic_lights'])
+        f.write("    %s [label=\"%s\", style = filled, fillcolor = \"#fce94f\"];\n"
+                % (step_name, label))
+        color = gradient(float(finished_runs) / total_runs \
+                         if total_runs > 0 else 0.0, GRADIENTS['traffic_lights'])
         color = mix(color, '#ffffff', 0.5)
-        f.write("    %s_progress [label=\"%1.0f%%\", style = filled, fillcolor = \"%s\" height = 0.3];\n" % (step_name, float(finished_runs) * 100.0 / total_runs if total_runs > 0 else 0.0, color))
-        f.write("    %s -> %s_progress [arrowsize = 0];\n" % (step_name, step_name))
+        f.write("    %s_progress [label=\"%1.0f%%\", style = filled, "
+                "fillcolor = \"%s\" height = 0.3];\n"
+                % (step_name,
+                   float(finished_runs) * 100.0 / total_runs \
+                   if total_runs > 0 else 0.0, color))
+        f.write("    %s -> %s_progress [arrowsize = 0];\n"
+                % (step_name, step_name))
         f.write("    {rank=same; %s %s_progress}\n" % (step_name, step_name))
         
         for c in step._connections:
             connection_key = escape(('%s/%s' % (step_name, c)).replace('/', '__'))
-            f.write("    %s [label=\"%s\", shape = ellipse, fontsize = 10];\n" % (connection_key, c))
+            f.write("    %s [label=\"%s\", shape = ellipse, fontsize = 10];\n"
+                    % (connection_key, c))
             if c[0:3] == 'in/':
                 f.write("    %s -> %s;\n" % (connection_key, step_name))
             else:
@@ -209,7 +204,7 @@ def main(args):
                 
                 out_key = in_key.replace('in/', 'out/')
                 allowed_steps = None
-                if '_connect' in step.options:
+                if '_connect' in step.get_options():
                     if in_key in step.options['_connect']:
                         declaration = step.options['_connect'][in_key]
                         if declaration.__class__ == str:
@@ -221,21 +216,34 @@ def main(args):
                             else:
                                 out_key = 'out/' + declaration
                         else:
-                            raise StandardError("Invalid _connect value: %s" % yaml.dump(declaration))
+                            raise StandardError("Invalid _connect value: %s"
+                                                % yaml.dump(declaration))
                         
                 for real_outkey in other_step._connections:
                     if real_outkey[0:4] != 'out/':
                         continue
                     if out_key == real_outkey:
-                        connection_key = escape(('%s/%s' % (step_name, in_key)).replace('/', '__'))
-                        other_connection_key = escape(('%s/%s' % (other_step.get_step_name(), out_key)).replace('/', '__'))
-                        f.write("    %s -> %s;\n" % (other_connection_key, connection_key))
+                        connection_key = escape(
+                            ('%s/%s' % (step_name, in_key)).replace('/', '__')
+                        )
+                        other_connection_key = escape(
+                            ('%s/%s' % (other_step.get_step_name(),
+                                        out_key)).replace('/', '__')
+                        )
+                        f.write("    %s -> %s;\n"
+                                % (other_connection_key, connection_key))
     f.write("}\n")
     
     dot.stdin.close()
+
+    svg = dot.stdout.read()
+    with open(svg_file, 'w') as f:
+        f.write(svg)
+
+
+    #print(yaml.dump(pipeline.get_steps()))
+
     
-    with open('steps.svg', 'w') as f:
-        f.write(dot.stdout.read())
 
 def render_single_annotation(annotation_path):
     svg_file = annotation_path.replace('.yaml', '.svg')
