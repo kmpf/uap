@@ -89,6 +89,9 @@ def main(args):
         logger.info("Going to plot the graph containing all files of the analysis")
     elif args.steps:
         logger.info("Create a graph showing the DAG of the analysis")
+
+        render_graph_for_all_steps(p, args)
+
     else:
         # Just find every thing that looks like an annotation file and generate
         # the plots for it.
@@ -107,59 +110,21 @@ def main(args):
             render_single_annotation(annotation_file)
         print(annotation_files)
         
-        sys.exit(1)
-        logger.info("Create graphs for all annotation files I can get my hands on.")
-        task_list = p.all_tasks_topologically_sorted
-        
-        if len(args.step_task) >= 1:
-            # execute the specified tasks
-            task_list = list()
-            for task_id in args.step_task:
-                if '/' in task_id:
-                    task = p.task_for_task_id[task_id]
-                    task_list.append(task)
-                else:
-                    for task in p.all_tasks_topologically_sorted:
-                        if str(task)[0:len(task_id)] == task_id:
-                            task_list.append(task)
-
-        for task in task_list:
-            basic_task_state = task.get_task_state_basic()
-            if basic_task_state == p.states.FINISHED:
-                # getting the name of the annotation file outside of a executing
-                # run is quite difficult, because the filename contains a hash
-                # of the annotation files content. Bäh!
-                task.get_run
-
-#    if args.all or args.task:
-#        logs = []
-#        if args.all:
-#            for task in p.task_for_task_id.values():
-#                annotation_path = os.path.join(task.step.get_output_directory(), '.%s-annotation.yaml' % task.run_id)
-#                if os.path.exists(annotation_path):
-#                    log = yaml.load(open(annotation_path))
-#                    logs.append(log)
-#        else:
-#            for task_id in args.task:
-#                task = p.task_for_task_id[task_id]
-#                annotation_path = os.path.join(task.step.get_output_directory(), '.%s-annotation.yaml' % task.run_id)
-#                if os.path.exists(annotation_path):
-#                    log = yaml.load(open(annotation_path))
-#                    logs.append(log)
-#                else:
-#                    print("Unable to find annotation at %s." % annotation_path)
-#        gv = abstract_step.AbstractStep.render_pipeline(logs)
-#        with open('out.gv', 'w') as f:
-#            f.write(gv)
-#            
-#        exit(0)
-#    
 
 
+def render_graph_for_all_steps(p, args):
+    configuration_path = p.get_config_filepath()
+    if args.simple:
+        svg_file = configuration_path.replace('.yaml', '.simple.svg')
+        png_file = configuration_path.replace('.yaml', '.simple.png')        
+    else:
+        svg_file = configuration_path.replace('.yaml', '.svg')
+        png_file = configuration_path.replace('.yaml', '.png')
 
+    dot = subprocess.Popen(['dot', '-Tsvg'],
+                           stdin = subprocess.PIPE,
+                           stdout = subprocess.PIPE)
 
-
-    dot = subprocess.Popen(['dot', '-Tsvg'], stdin = subprocess.PIPE, stdout = subprocess.PIPE)
     
     f = dot.stdin
     
@@ -184,52 +149,69 @@ def main(args):
         f.write("    %s [label=\"%s\", style = filled, fillcolor = \"#fce94f\"];\n" % (step_name, label))
         color = gradient(float(finished_runs) / total_runs if total_runs > 0 else 0.0, GRADIENTS['traffic_lights'])
         color = mix(color, '#ffffff', 0.5)
-        f.write("    %s_progress [label=\"%1.0f%%\", style = filled, fillcolor = \"%s\" height = 0.3];\n" % (step_name, float(finished_runs) * 100.0 / total_runs if total_runs > 0 else 0.0, color))
-        f.write("    %s -> %s_progress [arrowsize = 0];\n" % (step_name, step_name))
+        f.write("    %s_progress [label=\"%s/%s\", style = filled, "
+                "fillcolor = \"%s\" height = 0.3];\n"
+                % (step_name, finished_runs, total_runs, color))
+        f.write("    %s -> %s_progress [arrowsize = 0];\n"
+                % (step_name, step_name))
         f.write("    {rank=same; %s %s_progress}\n" % (step_name, step_name))
-        
-        for c in step._connections:
-            connection_key = escape(('%s/%s' % (step_name, c)).replace('/', '__'))
-            f.write("    %s [label=\"%s\", shape = ellipse, fontsize = 10];\n" % (connection_key, c))
-            if c[0:3] == 'in/':
-                f.write("    %s -> %s;\n" % (connection_key, step_name))
-            else:
-                f.write("    %s -> %s;\n" % (step_name, connection_key))
+
+        if not args.simple:
+            for c in step._connections:
+                connection_key = escape(('%s/%s'
+                                         % (step_name, c)).replace('/', '__'))
+                f.write("    %s [label=\"%s\", shape = ellipse, fontsize = 10];\n"
+                        % (connection_key, c))
+                if c[0:3] == 'in/':
+                    f.write("    %s -> %s;\n" % (connection_key, step_name))
+                else:
+                    f.write("    %s -> %s;\n" % (step_name, connection_key))
                 
         f.write("  graph[style=dashed];\n")
         f.write("}\n")
             
     for step_name, step in p.steps.items():
         for other_step in step.dependencies:
-            #f.write("    %s -> %s;\n" % (other_step.get_step_name(), step_name))
+            if args.simple:
+                f.write("    %s -> %s;\n"
+                        % (other_step.get_step_name(), step_name))
+            else:
             
-            for in_key in step._connections:
-                if in_key[0:3] != 'in/':
-                    continue
-                
-                out_key = in_key.replace('in/', 'out/')
-                allowed_steps = None
-                if '_connect' in step.options:
-                    if in_key in step.options['_connect']:
-                        declaration = step.options['_connect'][in_key]
-                        if declaration.__class__ == str:
-                            if '/' in declaration:
-                                parts = declaration.split('/')
-                                allowed_steps = set()
-                                allowed_steps.add(parts[0])
-                                out_key = 'out/' + parts[1]
-                            else:
-                                out_key = 'out/' + declaration
-                        else:
-                            raise StandardError("Invalid _connect value: %s" % yaml.dump(declaration))
-                        
-                for real_outkey in other_step._connections:
-                    if real_outkey[0:4] != 'out/':
+                for in_key in step._connections:
+                    if in_key[0:3] != 'in/':
                         continue
-                    if out_key == real_outkey:
-                        connection_key = escape(('%s/%s' % (step_name, in_key)).replace('/', '__'))
-                        other_connection_key = escape(('%s/%s' % (other_step.get_step_name(), out_key)).replace('/', '__'))
-                        f.write("    %s -> %s;\n" % (other_connection_key, connection_key))
+                
+                    out_key = in_key.replace('in/', 'out/')
+                    allowed_steps = None
+                    if '_connect' in step.get_options():
+                        if in_key in step.options['_connect']:
+                            declaration = step.options['_connect'][in_key]
+                            if declaration.__class__ == str:
+                                if '/' in declaration:
+                                    parts = declaration.split('/')
+                                    allowed_steps = set()
+                                    allowed_steps.add(parts[0])
+                                    out_key = 'out/' + parts[1]
+                                else:
+                                    out_key = 'out/' + declaration
+                            else:
+                                raise StandardError("Invalid _connect value: %s"
+                                                    % yaml.dump(declaration))
+                        
+                    for real_outkey in other_step._connections:
+                        if real_outkey[0:4] != 'out/':
+                            continue
+                        if out_key == real_outkey:
+                            connection_key = escape(
+                                ('%s/%s' % (step_name, in_key)).replace('/', '__')
+                            )
+                            other_connection_key = escape(
+                                ('%s/%s' % (other_step.get_step_name(),
+                                            out_key)).replace('/', '__')
+                            )
+                            f.write("    %s -> %s;\n"
+                                    % (other_connection_key, connection_key))
+
     f.write("}\n")
     
     dot.stdin.close()

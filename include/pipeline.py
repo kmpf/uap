@@ -144,6 +144,11 @@ class Pipeline(object):
             # (we're probably in run-locally.py)
             pass
 
+        self._config_filepath = args.config.name
+        '''
+        Name of the YAML configuration file
+        '''
+
         self.config = dict()
         '''
         Dictionary representation of configuration YAML file.
@@ -238,6 +243,8 @@ class Pipeline(object):
         self.tool_versions = {}
         self.check_tools()
 
+    def get_config_filepath(self):
+        return self._config_filepath
 
     def get_steps(self):
         return self.steps

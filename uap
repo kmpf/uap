@@ -144,7 +144,14 @@ def main():
         action="store_true",
         default=False,
         help="Renders a graph showing all steps of the analysis.")
-    
+
+    render_parser.add_argument(
+        "--simple",
+        dest = "simple",
+        action = "store_true",
+        default = False,
+        help = "Rendered graphs are simplified.")
+
     render_parser.add_argument(
         "-t","--task",
         dest="task",

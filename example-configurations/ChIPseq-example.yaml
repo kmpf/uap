@@ -51,7 +51,7 @@ steps:
         _depends: merge_fastq_files
 
     cutadapt (cutadapt_runs):
-        _depends: fc
+        _depends: merge_fastq_files
         adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
         adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
         fix_qnames: false
