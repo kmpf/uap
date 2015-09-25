@@ -1,10 +1,6 @@
 import os
 from abstract_step import AbstractStep
-#import glob
-#import misc
-#import process_pool
-#import yaml
-
+import pipes
 
 class Bowtie2(AbstractStep):
     '''
@@ -77,7 +73,7 @@ class Bowtie2(AbstractStep):
                             os.path.basename(input_path) )
                         mkfifo = [self.get_tool('mkfifo'), temp_fifo]
                         exec_group.add_command(mkfifo)
-                        temp_fifos.append(temp_fifo)
+                        temp_fifos.append(pipes.quote(temp_fifo))
                         # Is input gzipped fasta?
                         is_fastq_gz = False
                         if len([_ for _ in ['fq.gz', 'fastq.gz']\
@@ -124,6 +120,7 @@ class Bowtie2(AbstractStep):
                         # Assemble bowtie2 command
                         bowtie2 = [
                             self.get_tool('bowtie2'),
+                            '-p', '3',
                             '-x', self.get_option('index')
                         ]
                         if is_paired_end:
@@ -131,7 +128,7 @@ class Bowtie2(AbstractStep):
                                 '-1', ','.join(fr_temp_fifos),
                                 '-2', ','.join(sr_temp_fifos)])
                         else:
-                            bowtie2.extend(['-U', fr_temp_fifos])
+                            bowtie2.extend(['-U', ','.join(fr_temp_fifos)])
 
                         bowtie2_pipe.add_command(bowtie2)
                         # Compress bowtie2 output

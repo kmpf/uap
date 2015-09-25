@@ -1,13 +1,13 @@
 from abstract_step import *
 
 
-class MergeFastqFiles(AbstractStep):
+class MergeFastaFiles(AbstractStep):
     '''
-    Merge all .fastq(.gz) files of a sample.
+    Merge all .fasta(.gz) files of a sample.
     '''
     
     def __init__(self, pipeline):
-        super(MergeFastqFiles, self).__init__(pipeline)
+        super(MergeFastaFiles, self).__init__(pipeline)
         
         self.set_cores(12) # muss auch in den Decorator
         
@@ -54,8 +54,8 @@ class MergeFastqFiles(AbstractStep):
                         mkfifo = [self.get_tool('mkfifo'), temp_fifo]
                         exec_group.add_command(mkfifo)
 
-                        is_gzipped = True if os.path.splitext(input_path)[1] in\
-                                     ['.gz', '.gzip'] else False
+                        is_gzipped = True if os.path.splitext(input_path)[1]\
+                                     in ['.gz', '.gzip'] else False
 
                         # 2. Output files to fifo
                         if is_gzipped:
@@ -64,18 +64,20 @@ class MergeFastqFiles(AbstractStep):
                                 dd_in = [self.get_tool('dd'),
                                          'ibs=4M',
                                          'if=%s' % input_path]
+                                unzip_pipe.add_command(dd_in)
+
                                 # 2.2 command: Uncompress file to fifo
                                 pigz = [self.get_tool('pigz'),
                                         '--decompress',
                                         '--stdout']
+                                unzip_pipe.add_command(pigz)
+
                                 # 2.3 Write file in 4MB chunks to fifo
                                 dd_out = [self.get_tool('dd'),
                                           'obs=4M',
                                           'of=%s' % temp_fifo]
-                                
-                                unzip_pipe.add_command(dd_in)
-                                unzip_pipe.add_command(pigz)
                                 unzip_pipe.add_command(dd_out)
+                        
                         elif os.path.splitext(input_path)[1] in\
                              ['.fastq', '.fq', '.fasta', '.fa', '.fna']:
                             # 2.1 command: Read file in 4MB chunks and

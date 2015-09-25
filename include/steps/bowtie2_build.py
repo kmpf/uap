@@ -29,13 +29,8 @@ class Bowtie2Build(AbstractStep):
         self.add_connection('out/bowtie_index')
 
         self.require_tool('dd')
-#        self.require_tool('mkdir')
-#        self.require_tool('mkfifo')
-#        self.require_tool('mv')
         self.require_tool('pigz')
         self.require_tool('bowtie2-build')
-#        self.require_tool('tar')
-
 
         self.add_option('index-basename', str, optional = False)
         self.add_option('large-index', bool, optional = True)
@@ -45,8 +40,6 @@ class Bowtie2Build(AbstractStep):
         self.add_option('bmaxdivn', int, optional = True)
         self.add_option('dcv', int, optional = True)
         self.add_option('nodc', bool, optional = True)
-        #self.add_option('noref', bool, optional = True)
-        #self.add_option('justref', bool, optional = True)
         self.add_option('offrate', int, optional = True)
         self.add_option('ftabchars', int, optional = True)
         self.add_option('seed', int, optional = True)
@@ -86,13 +79,15 @@ class Bowtie2Build(AbstractStep):
                                             'mfa.gz']\
                                 if input_path.endswith(_)]) > 0:
                             is_fasta_gz = True
+                        elif len([_ for _ in ['fa', 'fasta', 'fna', 'mfa'] \
+                                  if input_path.endswith(_)]) > 0:
+                            is_fasta = True
 
                         # Temporary file is always in FASTA format
                         temp_file = run.add_temporary_file(
                             prefix = "fifo-%s" %
                             os.path.splitext(os.path.basename(input_path))[0],
                             suffix = ".fa")
-                        temp_files.append(temp_file)
 
                         # 2. Output files to fifo
                         if is_fasta_gz:
@@ -109,21 +104,14 @@ class Bowtie2Build(AbstractStep):
                                 dd_out = [self.get_tool('dd'),
                                           'obs=4M',
                                           'of=%s' % temp_file]
+                                temp_files.append(temp_file)
                                 
                                 unzip_pipe.add_command(dd_in)
                                 unzip_pipe.add_command(pigz)
                                 unzip_pipe.add_command(dd_out)
-                        else:
+                        elif is_fasta:
                             temp_files.append(input_path)
-#                        elif input_path.endswith('fastq'):
-#                            # 2.1 command: Read file in 4MB chunks and
-#                            #              write to fifo in 4MB chunks
-#                            dd_in = [self.get_tool('dd'),
-#                                     'bs=4M',
-#                                     'if=%s' % input_path,
-#                                     'of=%s' % temp_fifo]
-#                            exec_group.add_command(dd_in)
-#                        else:
+                        else:
                             raise StandardError("File %s does not end with "
                                                 "any expected suffix ("
                                                 "fastq.gz or fastq). Please "

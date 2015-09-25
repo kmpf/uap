@@ -56,7 +56,6 @@ class Run(object):
             'queued': None
         }
         self._exec_groups = list()
-        self._out_connections = list()
         self._temp_paths = list()
         '''
         List of temporary paths which can be either files or paths
@@ -81,6 +80,7 @@ class Run(object):
     def get_exec_groups(self):
         return self._exec_groups
 
+
     def get_step(self):
         return self._step
 
@@ -91,8 +91,11 @@ class Run(object):
         return self._run_id
 
     def get_out_connections(self):
-        return self._out_connections
+        return self._output_files.keys()
 
+    def get_out_connection(self, connection):
+        return self._output_files[connection]
+    
     def _get_ping_file(self, key):
         if self._ping_files[key] == None:
             self._ping_files[key] = os.path.join(
@@ -432,10 +435,12 @@ class Run(object):
                 "to the constructor of %s."
                 % (tag, str(self._step), tag, self._step.__module__))
 
-        if tag not in self._output_files:
-            self._output_files[tag] = dict()
+        try:
+            out_connection = self.get_out_connection(tag)
+        except KeyError:
+            out_connection = self.add_out_connection(tag)
 
-        if out_path in self._output_files[tag]:
+        if out_path in self.get_output_files_for_out_connection(out_connection):
             raise StandardError(
                 "You're trying to re-add an output file which has already "
                 "been declared: %s." % out_path)
@@ -453,9 +458,8 @@ class Run(object):
                 "Trying to add NoneType element as output file for input paths "
                 ": %s" % in_paths)
             
-        self._out_connections.append(tag)
         self._input_files.append(in_paths)
-        self._output_files[tag][out_path] = in_paths
+        self._output_files[out_connection][out_path] = in_paths
         return_value = os.path.join(
                 self._step.get_output_directory_du_jour_placeholder(), out_path)
         if head != "":
@@ -527,21 +531,44 @@ class Run(object):
                 "to the constructor of %s."
                 % (tag, str(self._step), tag, self._step.__module__))
 
-        if tag not in self._output_files:
-            self._output_files[tag] = dict()
+        try:
+            out_connection = self.get_out_connection(tag)
+        except KeyError:
+            out_connection = self.add_out_connection(tag)
 
-        if None in self._output_files[tag]:
+        if None in self._output_files[out_connection]:
             raise StandardError(
                 "You're trying to re-declare %s as an empty output connection "
-                % tag)
+                % out_connection)
 
-        self._output_files[tag][None] = None
+        self._output_files[out_connection][None] = None
 
-    def get_output_files(self):
-        return self._output_files
+    def add_out_connection(self, out_connection):
+        out_connection = 'out/' + out_connection
+        self._output_files[out_connection] = dict()
+        return out_connection
+
+    def get_input_files_for_output_file(self, output_file):
+        for connection in self.get_out_connections():
+            if output_file in \
+               self.get_output_files_for_out_connection(connection):
+                return self._output_files[connection][output_file]
+
+    def get_input_files_for_output_file_abspath(self, output_file):
+        for connection in self.get_out_connections():
+            if abspath_output_file in \
+               self.get_output_files_abspath_for_out_connection(connection):
+                return self.get_output_files_abspath()[connection]\
+                    [abspath_output_file]
+
+    def get_output_files_for_out_connection(self, out_connection):
+        return list( self._output_files[out_connection].keys() )
 
     def get_output_files_abspath_for_out_connection(self, out_connection):
         return list( self.get_output_files_abspath()[out_connection].keys() )
+
+    def get_output_files(self):
+        return self._output_files
 
     def get_output_files_abspath(self):
         '''
@@ -557,17 +584,20 @@ class Run(object):
         file name.
         '''
         result = dict()
-        for tag in self._output_files:
-            result[tag] = dict()
-            for out_path, in_paths in self._output_files[tag].items():
+        for connection in self._output_files.keys():
+            result[connection] = dict()
+            for out_path, in_paths in self._output_files[connection].items():
                 directory = self.get_step().get_output_directory_du_jour(
                     self.get_run_id())
-                head, tail = os.path.split(out_path)
-                if directory != None and out_path != None and head == "":
-                    full_path = os.path.join(directory, out_path)
-                else:
-                    full_path = out_path
-                result[tag][full_path] = in_paths
+
+                full_path = out_path
+                try:
+                    head, tail = os.path.split(out_path)
+                    if directory != None and out_path != None and head == "":
+                        full_path = os.path.join(directory, out_path)
+                except AttributeError:
+                    pass
+                result[connection][full_path] = in_paths
 
         return result
 

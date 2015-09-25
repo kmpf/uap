@@ -16,7 +16,7 @@ if [[ -n "$missing" ]]; then
 fi
 
 virtualenv python_env
-./python_env/bin/pip install pyyaml psutil biopython
+./python_env/bin/pip install pyyaml psutil biopython 
 ./python_env/bin/easy_install -f http://biopython.org/DIST/ biopython
 
 # Installation of NumPy on EVE #
@@ -29,7 +29,8 @@ unset LDFLAGS && unset CPPFLAGS
 export LDFLAGS=$LDFLAGS_BAK && export CPPFLAGS=$CPPFLAGS_BAK
 unset LDFLAGS_BAK && unset CPPFLAGS_BAK
 
-gcc -o tools/cat4m tools/cat4m.c
+module load freetype/2.5.5-1
+./python_env/bin/pip install matplotlib
+
 git submodule update --init --recursive
-cd tools/pigz4m; make; cd ../..
 

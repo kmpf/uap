@@ -108,7 +108,6 @@ def main(args):
 
         for annotation_file in annotation_files:
             render_single_annotation(annotation_file)
-        print(annotation_files)
         
 
 
@@ -124,17 +123,17 @@ def render_graph_for_all_steps(p, args):
     dot = subprocess.Popen(['dot', '-Tsvg'],
                            stdin = subprocess.PIPE,
                            stdout = subprocess.PIPE)
-
     
     f = dot.stdin
     
     f.write("digraph {\n")
     f.write("  rankdir = TB;\n")
     f.write("  splines = true;\n")
-    f.write("    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", nodesep = 0.2, ranksep = 0.3];\n")
+    f.write("    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", "
+            "nodesep = 0.2, ranksep = 0.3];\n")
     f.write("    node [fontname = Helvetica, fontsize = 12, shape = rect];\n")
     f.write("    edge [fontname = Helvetica, fontsize = 12];\n")
-    for step_name, step in p.steps.items():
+    for step_name, step in p.get_steps().items():
         total_runs = len(step.get_run_ids())
         finished_runs = 0
         for _ in step.get_run_ids():
@@ -146,8 +145,10 @@ def render_graph_for_all_steps(p, args):
         label = step_name
         if step_name != step.__module__:
             label = "%s\\n(%s)" % (step_name, step.__module__)
-        f.write("    %s [label=\"%s\", style = filled, fillcolor = \"#fce94f\"];\n" % (step_name, label))
-        color = gradient(float(finished_runs) / total_runs if total_runs > 0 else 0.0, GRADIENTS['traffic_lights'])
+        f.write("    %s [label=\"%s\", style = filled, fillcolor = \"#fce94f\"];\n"
+                % (step_name, label))
+        color = gradient(float(finished_runs) / total_runs \
+                         if total_runs > 0 else 0.0, GRADIENTS['traffic_lights'])
         color = mix(color, '#ffffff', 0.5)
         f.write("    %s_progress [label=\"%s/%s\", style = filled, "
                 "fillcolor = \"%s\" height = 0.3];\n"
@@ -215,9 +216,15 @@ def render_graph_for_all_steps(p, args):
     f.write("}\n")
     
     dot.stdin.close()
+
+    svg = dot.stdout.read()
+    with open(svg_file, 'w') as f:
+        f.write(svg)
+
+
+    #print(yaml.dump(pipeline.get_steps()))
+
     
-    with open('steps.svg', 'w') as f:
-        f.write(dot.stdout.read())
 
 def render_single_annotation(annotation_path):
     svg_file = annotation_path.replace('.yaml', '.svg')
