@@ -72,7 +72,7 @@ class SamToSortedBam(AbstractStep):
                             if self.get_option('sort-by-name'):
                                 samtools.append('-n')
                             samtools_sort.extend(
-                                ['-T', os.apth.join(
+                                ['-T', os.path.join(
                                     self.get_option('temp-sort-directory'), run_id), 
                                  '-',
                                  '-@', '6']
