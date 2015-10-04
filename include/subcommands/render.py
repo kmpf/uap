@@ -93,7 +93,7 @@ def main(args):
         render_graph_for_all_steps(p, args)
 
     else:
-        # Just find every thing that looks like an annotation file and generate
+        # Just find everything that looks like an annotation file and generate
         # the plots for it.
         directory = os.path.abspath(p.config['destination_path'])
         if not os.path.isdir(directory):
