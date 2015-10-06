@@ -1,4 +1,5 @@
 import sys
+import os
 from abstract_step import AbstractStep
 
 class TopHat2(AbstractStep):
