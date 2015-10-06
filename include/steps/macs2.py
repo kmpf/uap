@@ -20,10 +20,12 @@ class Macs2(AbstractStep):
         # Broad peak information
         self.add_connection('out/broadpeaks')
         self.add_connection('out/broadpeaks-xls')
-        self.add_connection('out/gapped-peaks')
+        self.add_connection('out/gappedpeaks')
 
         self.require_tool('macs2')
         self.require_tool('pigz')
+        self.require_tool('mkdir')
+        self.require_tool('mv')
 
         #self.add_option('treatment', str, list) # bekommen wir ja immer
         # Options for MACS2 callpeak subcommand
@@ -150,7 +152,7 @@ class Macs2(AbstractStep):
                         # ... or we compute broad peaks.
                         run.add_empty_output_connection("narrowpeaks")
                         run.add_empty_output_connection("narrowpeaks-xls")
-                        run.add_empty_output_connection("gapped-peaks")
+                        run.add_empty_output_connection("gappedpeaks")
                         # Files which are created by using --broad
                         result_files.append(
                             run.add_output_file(
@@ -168,7 +170,7 @@ class Macs2(AbstractStep):
                         )
                         result_files.append(
                             run.add_output_file(
-                                'gapped-peaks',
+                                'gappedpeaks',
                                 '%s-macs2_peaks.gappedPeak' % run_id,
                                 input_paths
                             )
