@@ -70,6 +70,7 @@ class Macs2(AbstractStep):
             if not isinstance(self.get_option(option), bool):
                 option_list.append(str(self.get_option(option)))
 
+        control_samples = self.get_option('control')
         for control_id, treatment_list in control_samples.iteritems():
             # Check for existence of control files
             control_files = list()
