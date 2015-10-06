@@ -1,10 +1,5 @@
 import sys
-from abstract_step import *
-import glob
-import misc
-import process_pool
-import yaml
-
+from abstract_step import AbstractStep
 
 class TopHat2(AbstractStep):
     '''
@@ -198,11 +193,12 @@ class TopHat2(AbstractStep):
 
                     tar_logs = [self.get_tool('tar'),
                                 '--remove-files',
+                                '-C', temp_out_dir,
                                 '-czf',
                                 run.add_output_file(
                                     'misc_logs',
                                     '%s-tophat2-misc_logs.tar.gz' % run_id,
                                     input_paths),
-                                os.path.join(temp_out_dir, 'logs')
+                                'logs'
                             ]
                     clean_up_exec_group.add_command(tar_logs )
