@@ -99,8 +99,8 @@ class Macs2(AbstractStep):
 
                 # Assemble rund ID
                 run_id = "%s%s" % (tr, control_id)
+
                 # Create list of input files
-                print(treatments)
                 input_paths = [f for l in [treatments[tr], control_files]\
                                for f in l]
 
