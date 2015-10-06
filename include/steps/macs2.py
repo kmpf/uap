@@ -86,8 +86,8 @@ class Macs2(AbstractStep):
                 control_id = ""
 
             # Check for existence of treatment files
-            treatments = dict()
             for tr in treatment_list:
+                treatments = dict()
                 try:
                     treatments.update( tr = run_ids_connections_files[tr]\
                                        ['in/alignments'])
@@ -97,6 +97,7 @@ class Macs2(AbstractStep):
                 # Assemble rund ID
                 run_id = "%s%s" % (tr, control_id)
                 # Create list of input files
+                print(treatments)
                 input_paths = [f for l in [treatments[tr], control_files]\
                                for f in l]
 
