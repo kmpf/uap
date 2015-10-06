@@ -148,7 +148,7 @@ class Macs2(AbstractStep):
                         run.add_empty_output_connection("narrowpeaks-xls")
                         run.add_empty_output_connection("gappedpeaks")
                         # Files which are created by using --broad
-                        broad_peaks = "%s_peaks.broadPeak" % run_id
+                        broad_peak = "%s_peaks.broadPeak" % run_id
                         result_files[broad_peak] = run.add_output_file(
                             'broadpeaks',
                             '%s-macs2_broadPeaks.broadPeak' % run_id,
