@@ -106,21 +106,17 @@ class Macs2(AbstractStep):
 
                 with self.declare_run(run_id) as run:
                     # Create empty output connections depending on ...
-                    result_files = list()
-                    result_files.append(
-                        run.add_output_file(
-                            'model',
-                            '%s-macs2-model.r' % run_id,
-                            input_paths
-                        )
+                    result_files = dict()
+                    result_files["%s_model.r" % run_id] = run.add_output_file(
+                        'model',
+                        '%s-macs2-model.r' % run_id,
+                        input_paths
                     )
-                    result_files.append(
-                        run.add_output_file(
-                            'log',
-                            '%s-macs2-log.txt' % run_id,
-                            input_paths
-                        )
-                    )
+                    #result_files["%s" % run_id] = run.add_output_file(
+                        #'log',
+                        #'%s-macs2-log.txt' % run_id,
+                        #input_paths
+                    #)
 
                     if not self.is_option_set_in_config('broad'):
                         # ... if we compute narrow peaks ...
@@ -128,26 +124,23 @@ class Macs2(AbstractStep):
                         run.add_empty_output_connection("broadpeaks-xls")
                         run.add_empty_output_connection("summits")
                         # Result files for narrow peaks
-                        result_files.append(
-                            run.add_output_file(
-                                'narrowpeaks',
-                                '%s-macs2-narrowPeaks.narrowPeak' % run_id,
-                                input_paths
-                            )
+                        narrow_peak = "%s_peaks.narrowPeak" % run_id
+                        result_files[narrow_peak] = run.add_output_file(
+                            'narrowpeaks',
+                            '%s-macs2-narrowPeaks.narrowPeak' % run_id,
+                            input_paths
                         )
-                        result_files.append(
-                            run.add_output_file(
-                                'narrowpeaks-xls',
-                                '%s-macs2-narrowPeaks.xls' % run_id,
-                                input_paths
-                            )
+                        narrow_peak_xls = "%s_peaks.xls" % run_id
+                        result_files[narrow_peak_xls] = run.add_output_file(
+                            'narrowpeaks-xls',
+                            '%s-macs2-narrowPeaks.xls' % run_id,
+                            input_paths
                         )
-                        result_files.append(
-                            run.add_output_file(
-                                'summits',
-                                '%s-macs2-summits.bed' % run_id,
-                                input_paths
-                            )
+                        summits = "%s_summits.bed" % run_id
+                        result_files[summits] = run.add_output_file(
+                            'summits',
+                            '%s-macs2-summits.bed' % run_id,
+                            input_paths
                         )
                     else:
                         # ... or we compute broad peaks.
@@ -155,26 +148,23 @@ class Macs2(AbstractStep):
                         run.add_empty_output_connection("narrowpeaks-xls")
                         run.add_empty_output_connection("gappedpeaks")
                         # Files which are created by using --broad
-                        result_files.append(
-                            run.add_output_file(
-                                'broadpeaks',
-                                '%s-macs2_broadPeaks.broadPeak' % run_id,
-                                input_paths
-                            )
+                        broad_peaks = "%s_peaks.broadPeak" % run_id
+                        result_files[broad_peak] = run.add_output_file(
+                            'broadpeaks',
+                            '%s-macs2_broadPeaks.broadPeak' % run_id,
+                            input_paths
                         )
-                        result_files.append(
-                            run.add_output_file(
-                                'broadpeaks-xls',
-                                '%s-macs2-broadPeaks.xls' % run_id,
-                                input_paths
-                            )
+                        broad_peak_xls = "%s_peaks.xls" % run_id
+                        result_files[broad_peak_xls] = run.add_output_file(
+                            'broadpeaks-xls',
+                            '%s-macs2-broadPeaks.xls' % run_id,
+                            input_paths
                         )
-                        result_files.append(
-                            run.add_output_file(
-                                'gappedpeaks',
-                                '%s-macs2_peaks.gappedPeak' % run_id,
-                                input_paths
-                            )
+                        gapped_peak = "%s_peaks.gappedPeak" % run_id
+                        result_files[gapped_peak] = run.add_output_file(
+                            'gappedpeaks',
+                            '%s-macs2_peaks.gappedPeak' % run_id,
+                            input_paths
                         )
 
                     # Let's compile our commands
@@ -201,10 +191,9 @@ class Macs2(AbstractStep):
                         macs2_exec_group.add_command(macs2)
 
                     with run.new_exec_group() as mv_exec_group:
-                        for f in result_files:
+                        for orig, dest_path in result_files.iteritems():
                             # 3. Move file from temp directory to expected
                             #    position
-                            basename = os.path.basename(f)
-                            tmp_path = os.path.join(temp_dir, basename)
-                            mv = [self.get_tool('mv'), tmp_path, f]
+                            orig_path = os.path.join(temp_dir, orig)
+                            mv = [self.get_tool('mv'), orig_path, dest]
                             mv_exec_group.add_command(mv)
