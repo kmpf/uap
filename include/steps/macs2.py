@@ -195,5 +195,5 @@ class Macs2(AbstractStep):
                             # 3. Move file from temp directory to expected
                             #    position
                             orig_path = os.path.join(temp_dir, orig)
-                            mv = [self.get_tool('mv'), orig_path, dest]
+                            mv = [self.get_tool('mv'), orig_path, dest_path]
                             mv_exec_group.add_command(mv)
