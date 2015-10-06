@@ -89,8 +89,8 @@ class Macs2(AbstractStep):
             for tr in treatment_list:
                 treatments = dict()
                 try:
-                    treatments.update( tr = run_ids_connections_files[tr]\
-                                       ['in/alignments'])
+                    treatments[tr] = run_ids_connections_files[tr]\
+                                     ['in/alignments']
                 except KeyError:
                     raise StandardError("No treatment for ID '%s' found." % tr)
 
