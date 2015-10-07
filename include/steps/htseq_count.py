@@ -63,7 +63,7 @@ class HtSeqCount(AbstractStep):
                                     % features_path)
 
             # Is the alignment gzipped?
-            root, ext = os.path.splitext(alignmnets[0])
+            root, ext = os.path.splitext(alignments[0])
             is_gzipped = True if ext in ['.gz', '.gzip'] else False
             # Is the alignment in SAM or BAM format?
             if is_gzipped:
