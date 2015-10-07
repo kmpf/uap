@@ -74,33 +74,33 @@ class HtSeqCount(AbstractStep):
                 raise StandardError("Alignment file '%s' is neither SAM nor BAM "
                                     "format" % alignments[0])
 
-            with run.new_exec_group() as exec_group:
+            with self.declare_run(run_id) as run:
+                with run.new_exec_group() as exec_group:
+                    with exec_group.add_pipeline() as pipe:
+                        # 1. Read alignment file in 4MB chunks
+                        dd_in = [self.get_tool('dd'),
+                                 'ibs=4M',
+                                 'if=%s' % alignments_path]
+                        pipe.add_command(dd_in)
+                        
+                        if is_gzipped:
+                            # 2. Uncompress file to STDOUT
+                            pigz = [self.get_tool('pigz'),
+                                    '--decompress',
+                                    '--processes', '1',
+                                    '--stdout']
+                            pipe.add_command(pigz)
 
-                with exec_group.add_pipeline() as pipe:
-                    # 1. Read alignment file in 4MB chunks
-                    dd_in = [self.get_tool('dd'),
-                             'ibs=4M',
-                             'if=%s' % alignments_path]
-                    pipe.add_command(dd_in)
-
-                    if is_gzipped:
-                        # 2. Uncompress file to STDOUT
-                        pigz = [self.get_tool('pigz'),
-                                '--decompress',
-                                '--processes', '1',
-                                '--stdout']
-                        pipe.add_command(pigz)
-
-                    # 3. Start 
-                    htseq_count = [self.get_tool('htseq-count'),
-                                   '--format=%s' % bam_or_sam[0]]
-                    htseq_count.extend(option_list)
-                    htseq_count.extend(['-', features_path])
-                    pipe.add_command(
-                        htseq_count,
-                        stdout_path = run.add_output_file(
-                            'counts',
-                            '%s-htseq_counts.txt' % run_id,
-                            [alignments_path, features_path]
+                        # 3. Start 
+                        htseq_count = [self.get_tool('htseq-count'),
+                                       '--format=%s' % bam_or_sam[0]]
+                        htseq_count.extend(option_list)
+                        htseq_count.extend(['-', features_path])
+                        pipe.add_command(
+                            htseq_count,
+                            stdout_path = run.add_output_file(
+                                'counts',
+                                '%s-htseq_counts.txt' % run_id,
+                                [alignments_path, features_path]
+                            )
                         )
-                    )
