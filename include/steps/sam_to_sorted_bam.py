@@ -1,8 +1,6 @@
 import sys
-from abstract_step import *
-import process_pool
-import yaml
-
+import os
+from abstract_step import AbstractStep
 
 class SamToSortedBam(AbstractStep):
 
@@ -41,7 +39,7 @@ class SamToSortedBam(AbstractStep):
                     with run.new_exec_group() as exec_group:
 
                         with exec_group.add_pipeline() as pipe:
-                            # 1 command: Read file in 4MB chunks
+                            # 1. command: Read file in 4MB chunks
                             dd_in = [self.get_tool('dd'),
                                      'ibs=4M',
                                      'if=%s' % input_paths[0]]
@@ -90,68 +88,3 @@ class SamToSortedBam(AbstractStep):
                             )
 
 
-#                            # 4 command: Index sorted BAM
-#                            samtools_index = 
-#            pool.launch([self.get_tool('samtools'), 'index', sorted_bam_path, '/dev/stdout'],
-#                stdout_path = sorted_bai_path, hints = {'reads': [sorted_bam_path]})
-#
-#
-#                basename = os.path.basename(input_paths[0]).split('.')
-#
-#                if 'sam' in basename:
-#                    sam_index = basename.index('sam')
-#                    basename = basename[:sam_index]
-#                elif 'bam' in basename:
-#                    bam_index  = basename.index('bam')
-#                    basename = basename[:bam_index]
-#                else:
-#                    raise StandardError("File %s is neither a BAM nor SAM file" % (input_paths[0]))
-#                basename = '.'.join(basename)
-#                run.add_output_file('alignments', basename + '.bam', input_paths)
-#                run.add_output_file('indices', basename + '.bam.bai', input_paths)
-#
-#                run.add_private_info('in-sam', input_paths[0])
-#                run.new_exec_group()
-#
-#    def execute(self, run_id, run):
-#        sam_path = run.get_private_info('in-sam')
-#        sorted_bam_path = run.get_single_output_file_for_annotation('alignments')
-#        sorted_bai_path = run.get_single_output_file_for_annotation('indices')
-#        unsorted_bam_path = self.get_temporary_path('sam_to_bam_unsorted', 'output')
-#        
-#        use_unsorted_bam_input = unsorted_bam_path
-#        
-#        # samtools view
-#
-#        if sam_path[-7:] == '.sam.gz':
-#            with process_pool.ProcessPool(self) as pool:
-#                with pool.Pipeline(pool) as pipeline:
-#                    cat = [self.get_tool('cat'), sam_path]
-#                    pigz1 = [self.get_tool('pigz'), '--processes', '2', '-d', '-c']
-#                    
-#                    
-#                    pipeline.append(cat)
-#                    pipeline.append(pigz1)
-#                    pipeline.append(samtools, stdout_path = unsorted_bam_path)
-#        else:
-#            # it must be a BAM file already
-#            use_unsorted_bam_input = sam_path
-#            
-#        # samtools sort
-#
-#        with process_pool.ProcessPool(self) as pool:
-#            with pool.Pipeline(pool) as pipeline:
-#                cat = [self.get_tool('cat'), use_unsorted_bam_input]
-#                samtools = [self.get_tool('samtools'), 'sort']
-#                if self.get_option('sort_by_name'):
-#                    samtools.append('-n')
-#                samtools.extend(['-', sorted_bam_path[:-4]])
-#                
-#                pipeline.append(cat)
-#                pipeline.append(samtools, hints = {'writes': [sorted_bam_path]})
-#
-#        # samtools index
-#        
-#        with process_pool.ProcessPool(self) as pool:
-#            pool.launch([self.get_tool('samtools'), 'index', sorted_bam_path, '/dev/stdout'],
-#                stdout_path = sorted_bai_path, hints = {'reads': [sorted_bam_path]})
