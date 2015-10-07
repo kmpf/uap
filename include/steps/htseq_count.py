@@ -95,8 +95,10 @@ class HtSeqCount(AbstractStep):
                             pipe.add_command(pigz)
 
                         # 3. Start 
-                        htseq_count = [self.get_tool('htseq-count'),
-                                       '--format=%s' % bam_or_sam[0]]
+                        htseq_count = [
+                            self.get_tool('htseq-count'),
+                            '--format=%s' % bam_or_sam[0].lstrip('.')
+                        ]
                         htseq_count.extend(option_list)
                         htseq_count.extend(['-', features_path])
                         pipe.add_command(
