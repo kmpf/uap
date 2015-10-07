@@ -49,9 +49,11 @@ class HtSeqCount(AbstractStep):
         for run_id in run_ids_connections_files.keys():
             # Check input files
             alignments = run_ids_connections_files[run_id]['in/alignments']
+            input_paths = alignments
             features_path = str
             try:
                 features_path = run_ids_connections_files[run_id]['in/features'][0]
+                input_paths.extend(features_path)
             except KeyError:
                 if self.is_option_set_in_config('feature-file'):
                     features_path = self.get_option('feature-file')
@@ -102,6 +104,6 @@ class HtSeqCount(AbstractStep):
                             stdout_path = run.add_output_file(
                                 'counts',
                                 '%s-htseq_counts.txt' % run_id,
-                                [alignments_path, features_path]
+                                input_paths
                             )
                         )
