@@ -69,7 +69,8 @@ class HtSeqCount(AbstractStep):
             if is_gzipped:
                 root, ext = os.path.splitext(root)
             bam_or_sam = [bos for bos in ['bam', 'sam'] if bos == ext]
-            if len(bam_or_sam) != 1 and bam_or_sam[0] not in ['bam', 'sam']:
+            if len(bam_or_sam) != 1:
+                print(bam_or_sam)
                 raise StandardError("Alignment file '%s' is neither SAM nor BAM "
                                     "format" % alignments[0])
 
