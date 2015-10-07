@@ -73,6 +73,7 @@ class HtSeqCount(AbstractStep):
                 print(bam_or_sam)
                 raise StandardError("Alignment file '%s' is neither SAM nor BAM "
                                     "format" % alignments[0])
+            alignments_path = alignments[0]
 
             with self.declare_run(run_id) as run:
                 with run.new_exec_group() as exec_group:
