@@ -73,7 +73,7 @@ class HtSeqCount(AbstractStep):
                 root, ext = os.path.splitext(root)
             is_bam = True if ext in ['.bam'] else False
             is_sam = True if ext in ['.sam'] else False
-            if not (is_bam != is_sam):
+            if not (bool(is_bam) ^ bool(is_sam)):
                 raise StandardError("Alignment file '%s' is neither SAM nor BAM "
                                     "format" % alignments[0])
             alignments_path = alignments[0]
