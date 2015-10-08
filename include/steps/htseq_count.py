@@ -16,6 +16,7 @@ class HtSeqCount(AbstractStep):
         self.require_tool('dd')
         self.require_tool('pigz')
         self.require_tool('htseq-count')
+        self.require_tool('samtools')
 
         # Path to external feature file if necessary
         self.add_option('feature-file', str, optional = True)
@@ -70,9 +71,9 @@ class HtSeqCount(AbstractStep):
             # Is the alignment in SAM or BAM format?
             if is_gzipped:
                 root, ext = os.path.splitext(root)
-            bam_or_sam = [bos for bos in ['.bam', '.sam'] if bos == ext]
-            if len(bam_or_sam) != 1:
-                print(bam_or_sam)
+            is_bam = True if ext in ['.bam'] else False
+            is_sam = True if ext in ['.sam'] else False
+            if not (is_bam != is_sam):
                 raise StandardError("Alignment file '%s' is neither SAM nor BAM "
                                     "format" % alignments[0])
             alignments_path = alignments[0]
@@ -93,11 +94,15 @@ class HtSeqCount(AbstractStep):
                                     '--processes', '1',
                                     '--stdout']
                             pipe.add_command(pigz)
-
-                        # 3. Start 
+                        # 3. Use samtools to generate SAM output
+                        if is_bam:
+                            samtools = [self.get_tool('samtools'), 'view',
+                                        '-h', '-']
+                            pipe.add_command(samtools)
+                        # 4. Count reads with htseq-count
                         htseq_count = [
                             self.get_tool('htseq-count'),
-                            '--format=%s' % bam_or_sam[0].lstrip('.')
+                            '--format=sam'
                         ]
                         htseq_count.extend(option_list)
                         htseq_count.extend(['-', features_path])
