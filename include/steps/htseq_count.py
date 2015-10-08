@@ -21,7 +21,7 @@ class HtSeqCount(AbstractStep):
         self.add_option('feature-file', str, optional = True)
         # Options for htseq-count
         self.add_option('order', str, choices = ['name', 'pos'],
-                        optional = True)
+                        default = 'pos', optional = True)
         self.add_option('stranded', str, choices = ['yes', 'no', 'reverse'],
                         optional=False)
         self.add_option('a', int, optional = True)
