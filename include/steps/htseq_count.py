@@ -101,8 +101,8 @@ class HtSeqCount(AbstractStep):
                             pipe.add_command(samtools)
                         # 4. Count reads with htseq-count
                         htseq_count = [
-                            self.get_tool('htseq-count'),
-                            '--format=sam'
+                            self.get_tool('htseq-count')
+                            #'--format=sam'
                         ]
                         htseq_count.extend(option_list)
                         htseq_count.extend(['-', features_path])

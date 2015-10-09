@@ -42,7 +42,8 @@ class PreseqComplexityCurve(AbstractStep):
 
         option_list = list()
         for option in set_options:
-            option_list.append('-%s' % option)
+            if self.get_option(option) != False:
+                option_list.append('-%s' % option)
             if not isinstance(self.get_option(option), bool):
                 option_list.append(str(self.get_option(option)))
 
@@ -61,7 +62,7 @@ class PreseqComplexityCurve(AbstractStep):
                     raise StandardError("Expected exactly one alignments file.")
                 elif not is_bam and not is_bed:
                     raise StandardError("Input file %s is niether BAM nor BED." %
-                                        input_paths[0])[1])
+                                        input_paths[0])
                 else:
                     with run.new_exec_group() as cc_group:
                         c_curve_out = run.add_output_file(
