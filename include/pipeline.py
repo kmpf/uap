@@ -126,6 +126,7 @@ class Pipeline(object):
                 print("If this is not a production environment, you can skip " +
                       "this test by specifying --even-if-dirty on the command " +
                       "line.")
+                print(self.git_hash_tag)
                 exit(1)
                 command = ['git', 'diff']
                 try:
