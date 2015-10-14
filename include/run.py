@@ -2,6 +2,7 @@ import glob
 import logging
 import os
 import random
+import stat
 import string
 import tempfile
 
@@ -469,7 +470,7 @@ class Run(object):
     @replace_output_dir_du_jour
     def add_temporary_file(self, prefix = '', suffix = '', designation = None):
         '''
-        Returns the name of a temporary file (created tempfile library).
+        Returns the name of a temporary file (created by tempfile library).
         Name and output directory placeholder are concatenated. The concatenated
         string is returned and stored in a list. The placeholder is immediately
         properly adjusted by @replace_output_dir_du_jour.
@@ -484,26 +485,54 @@ class Run(object):
         temp_placeholder = os.path.join(
             self._step.get_output_directory_du_jour_placeholder(), temp_name)
 
-        # TODO: Rethink the concept of _known_path/_temp_paths
+        # _known_paths dict is logged
         self._known_paths[temp_placeholder] = {'label': prefix,
                                                'designation': designation,
-                                               'type': 'file'}
-
+                                               'type': ''}
+        # _temp_paths list contains all temporary files which are going to be
+        # deleted
         self._temp_paths.append(temp_placeholder)
         return temp_placeholder
 
-    def add_temporary_directory(self, prefix = '', designation = None):
+    def add_temporary_directory(self, prefix = '', suffix = '',
+                                designation = None ):
         '''
         Convenience method for creation of temporary directories.
         Basically, just calls self.add_temporary_file().
         The magic happens in ProcessPool.__exit__()
         '''
-        return self.add_temporary_file(prefix = prefix,
+        return self.add_temporary_file(prefix = prefix, suffix = suffix,
                                        designation = designation)
 
     def remove_temporary_paths(self):
+        '''
+        Everything stored in self._temp_paths is examined and deleted if
+        possible. Also, self._known_paths 'type' info is updated here.
+        NOTE: Included additional stat checks to detect FIFOs as well as other
+        special files.
+        '''
         for _ in self.get_temp_paths():
-            if os.path.isdir(_):
+            # Check file type
+            pathmode = os.stat(_).st_mode
+            isdir = False if stat.S_ISDIR(pathmode) == 0 else True
+            ischaracter = False if stat.S_ISCHR(pathmode) == 0 else True
+            isblock = False if stat.S_ISBLK(pathmode) == 0 else True
+            isfile = False if stat.S_ISREG(pathmode) == 0 else True
+            isfifo = False if stat.S_ISFIFO(pathmode) == 0 else True
+            islink = False if stat.S_ISLNK(pathmode) == 0 else True
+            issock = False if stat.S_ISSOCK(pathmode) == 0 else True
+            # Update 'type' value
+            if _ in self.get_step().known_paths.keys():
+                if isfile:
+                    logger.debug("Set %s 'type' info to 'file'" % _)
+                    self.get_step().known_paths[_]['type'] = 'file'
+                elif isdir:
+                    logger.debug("Set %s 'type' info to 'directory'" % _)
+                    self.get_step().known_paths[_]['type'] = 'directory'
+                elif isfifo:
+                    logger.debug("Set %s 'type' info to 'fifo'" % _)
+                    self.get_step().known_paths[_]['type'] = 'fifo'
+            if os.path.isdir(_) and isdir:
                 try:
                     os.rmdir(_)
                 except OSError as e:
@@ -517,7 +546,6 @@ class Run(object):
                     os.unlink(_)
                 except OSError as e:
                     pass
-
 
     def add_empty_output_connection(self, tag):
         '''
@@ -675,10 +703,8 @@ class Run(object):
 
     def write_annotation_file(self, path):
         '''
-        Write the YAML annotation after a successful or failed run and try to
-        render the process graph (but swallow any errors resulting from that --
-        after all, it's not *that* important to get the rendered graph, and it 
-        still can be created later from the YAML annotation).
+        Write the YAML annotation after a successful or failed run. The
+        annotation can later be used to render the process graph.
         '''
         
         # now write the annotation
