@@ -81,7 +81,6 @@ class Run(object):
     def get_exec_groups(self):
         return self._exec_groups
 
-
     def get_step(self):
         return self._step
 
@@ -134,6 +133,12 @@ class Run(object):
             elif isinstance(ret_value, str):
                 if ret_value != None and placeholder in ret_value:
                     value = ret_value.replace(placeholder, temp_out_dir)
+            elif isinstance(ret_value, dict):
+                for key in ret_value.keys():
+                    if key != None and placeholder in key:
+                        new_key = key.replace(placeholder, temp_out_dir)
+                        ret_value[new_key] = ret_value.pop(key)
+                value = ret_value
             elif ret_value == None:
                 value = None
             else:
@@ -142,6 +147,13 @@ class Run(object):
                                     func.__class__.__name__)
             return(value)
         return(inner)
+
+    @replace_output_dir_du_jour
+    def get_known_paths(self):
+        return self._known_paths
+
+    def add_known_paths(self, known_paths_dict):
+        self._known_paths.update(known_paths_dict)
 
     @replace_output_dir_du_jour
     def get_temp_paths(self):
@@ -486,9 +498,11 @@ class Run(object):
             self._step.get_output_directory_du_jour_placeholder(), temp_name)
 
         # _known_paths dict is logged
-        self._known_paths[temp_placeholder] = {'label': prefix,
-                                               'designation': designation,
-                                               'type': ''}
+        known_paths = dict()
+        known_paths[temp_placeholder] = {'label': prefix,
+                                         'designation': designation,
+                                         'type': ''}
+        self.add_known_paths(known_paths)
         # _temp_paths list contains all temporary files which are going to be
         # deleted
         self._temp_paths.append(temp_placeholder)
@@ -522,18 +536,20 @@ class Run(object):
             islink = False if stat.S_ISLNK(pathmode) == 0 else True
             issock = False if stat.S_ISSOCK(pathmode) == 0 else True
             # Update 'type' value
-            if _ in self.get_step().known_paths.keys():
+            if _ in self.get_known_paths().keys():
+                print(_)
                 if isfile:
                     logger.debug("Set %s 'type' info to 'file'" % _)
-                    self.get_step().known_paths[_]['type'] = 'file'
+                    self.get_known_paths()[_]['type'] = 'file'
                 elif isdir:
                     logger.debug("Set %s 'type' info to 'directory'" % _)
-                    self.get_step().known_paths[_]['type'] = 'directory'
+                    self.get_known_paths()[_]['type'] = 'directory'
                 elif isfifo:
                     logger.debug("Set %s 'type' info to 'fifo'" % _)
-                    self.get_step().known_paths[_]['type'] = 'fifo'
+                    self.get_known_paths()[_]['type'] = 'fifo'
             if os.path.isdir(_) and isdir:
                 try:
+                    logger.info("Now deleting directory: %s" % _)
                     os.rmdir(_)
                 except OSError as e:
                     logger.error("errno: %s" % e.errno)
@@ -713,7 +729,7 @@ class Run(object):
         log['step'] = {}
         log['step']['options'] = self.get_step().get_options()
         log['step']['name'] = self.get_step().get_step_name()
-        log['step']['known_paths'] = self.get_step().known_paths
+        log['step']['known_paths'] = self.get_known_paths()
         log['step']['cores'] = self.get_step()._cores
         log['run'] = {}
         log['run']['run_info'] = self.as_dict()
