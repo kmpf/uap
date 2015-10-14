@@ -3,6 +3,7 @@
 
 import sys
 import copy
+import glob
 import logging
 import os
 import re
@@ -87,10 +88,34 @@ def main(args):
 
     if args.files:
         logger.info("Going to plot the graph containing all files of the analysis")
+        raise StandardError("Sorry, feature not implemented yet!")
     elif args.steps:
         logger.info("Create a graph showing the DAG of the analysis")
 
         render_graph_for_all_steps(p, args)
+
+    elif args.step_task:
+        if len(args.step_task) >= 1:
+            # Compile a list of all tasks
+            task_list = list()
+            for task_id in args.step_task:
+                if '/' in task_id:
+                    task = p.task_for_task_id[task_id]
+                    task_list.append(task)
+                else:
+                    for task in p.all_tasks_topologically_sorted:
+                        if str(task)[0:len(task_id)] == task_id:
+                            task_list.append(task)
+
+            for task in task_list:
+                outdir = task.get_step().get_output_directory()
+                anno_files = glob.glob(os.path.join(
+                    outdir, ".%s*.annotation.yaml" % task.get_run().get_run_id()
+                ))
+
+                for f in anno_files:
+                    logger.info("Going to plot the graph for task: %s" % task)
+                    render_single_annotation(f)
 
     else:
         # Just find everything that looks like an annotation file and generate
@@ -251,10 +276,6 @@ def render_single_annotation(annotation_path):
         with open(png_file, 'w') as f:
             f.write(png)
     except:
-        # rendering the pipeline graph is not _that_ important, after all
-        # we can still try to render it later from the annotation file
-        print("There was an error rendering the annotation.")
-        print("Here is the information but we'll keep calm and carry on:")
         print(sys.exc_info())
         import traceback
         traceback.print_tb(sys.exc_info()[2])
@@ -309,7 +330,6 @@ def render_pipeline(logs):
     f.close()
     return result
         
-
 def render_pipeline_hash(log):
         
     def pid_hash(pid, suffix = ''):
@@ -387,39 +407,42 @@ def render_pipeline_hash(log):
                 break_on_hyphens = False)
             label = "%s" % ("\\n".join(tw.wrap(' '.join(stripped_args))))
         if 'args' in proc_info:
-            cat4m_seen_minus_o = False
+            output_fifo = False
             for arg in proc_info['args']:
                 fifo_type = None
                 if name == 'cat4m' and arg == '-o':
-                    cat4m_seen_minus_o = True
-                if arg in log['step']['known_paths']:
-                    add_file_node(arg)
-                    if name == 'cat4m':
-                        if cat4m_seen_minus_o:
-                            fifo_type = 'output'
+                    output_fifo = True
+                elif name == 'dd' and arg.startswith('of='):
+                    output_fifo = True
+                for known_path in log['step']['known_paths'].keys():
+                    if known_path in arg:
+                        add_file_node(known_path)
+                        if name in ['cat4m', 'dd']:
+                            if output_fifo:
+                                fifo_type = 'output'
+                            else:
+                                fifo_type = 'input'
                         else:
-                            fifo_type = 'input'
-                    else:
-                        # we can't know whether the fifo is for input or
-                        # output, first look at the hints, then use the
-                        # designation (if any was given)
-                        if 'reads' in proc_info['hints'] and \
-                           arg in proc_info['hints']['reads']:
-                            fifo_type = 'input'
-                        if 'writes' in proc_info['hints'] and \
-                           arg in proc_info['hints']['writes']:
-                            fifo_type = 'output'
-                        if fifo_type is None:
-                            fifo_type = log['step']['known_paths'][arg]\
-                                        ['designation']
-                    if fifo_type == 'input':
-                        # add edge from file to proc
-                        hash['edges'][(file_hash(arg), pid_hash(pid))] \
-                            = dict()
-                    elif fifo_type == 'output':
-                        # add edge from proc to file
-                        hash['edges'][(pid_hash(pid), file_hash(arg))] \
-                            = dict()
+                            # we can't know whether the fifo is for input or
+                            # output, first look at the hints, then use the
+                            # designation (if any was given)
+                            if 'reads' in proc_info['hints'] and \
+                               arg in proc_info['hints']['reads']:
+                                fifo_type = 'input'
+                                if 'writes' in proc_info['hints'] and \
+                                   arg in proc_info['hints']['writes']:
+                                    fifo_type = 'output'
+                            if fifo_type is None:
+                                fifo_type = log['step']['known_paths'][arg]\
+                                            ['designation']
+                        if fifo_type == 'input':
+                            # add edge from file to proc
+                            hash['edges'][(file_hash(arg), pid_hash(pid))] \
+                                = dict()
+                        elif fifo_type == 'output':
+                            # add edge from proc to file
+                            hash['edges'][(pid_hash(pid), file_hash(arg))] \
+                                = dict()
         if 'writes' in proc_info['hints']:
             for path in proc_info['hints']['writes']:
                 hash['edges'][(pid_hash(pid), file_hash(path))] = dict()
