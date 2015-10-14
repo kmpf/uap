@@ -24,8 +24,6 @@ def main(args):
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
 
-    #embed()
-    
     #task_list = copy.deepcopy(p.all_tasks_topologically_sorted)
     task_list = p.all_tasks_topologically_sorted
 
