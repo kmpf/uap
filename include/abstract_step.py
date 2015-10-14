@@ -100,9 +100,7 @@ class AbstractStep(object):
         self._defined_options = dict()
         
         self.needs_parents = False
-        
-        self.known_paths = dict()
-        
+
         self.children_step_names = set()
         
         self.finalized = False
@@ -124,7 +122,6 @@ class AbstractStep(object):
         self.finalized = True
         
     def _reset(self):
-        self.known_paths = dict()
         self._pipeline_log = dict()
 
     def get_pipeline(self):
@@ -744,19 +741,19 @@ class AbstractStep(object):
         temp_directory = run.get_temp_output_directory()
         os.makedirs(temp_directory)
 
-        # prepare self.known_paths
-        self.known_paths = dict()
+        # prepare known_paths
+        known_paths = dict()
         for tag, tag_info in run.get_output_files_abspath().items():
             for output_path, input_paths in tag_info.items():
                 # add the real output path
                 if output_path != None and input_paths != None:
-                    self.known_paths[output_path] = {
+                    known_paths[output_path] = {
                         'type': 'output', 
                         'designation': 'output', 
                         'label': os.path.basename(output_path), 
                         'type': 'step_file'}
                     # ...and also add the temporary output path
-                    self.known_paths[
+                    known_paths[
                         os.path.join(temp_directory, os.path.basename(
                             output_path))] = {
                         'type': 'output', 
@@ -767,7 +764,7 @@ class AbstractStep(object):
                         'real_path': output_path}
                     for input_path in input_paths:
                         if input_path != None:
-                            self.known_paths[input_path] = {
+                            known_paths[input_path] = {
                                 'type': 'input', 
                                 'designation': 'input', 
                                 'label': os.path.basename(input_path), 
@@ -877,12 +874,12 @@ class AbstractStep(object):
                         if os.path.exists(source_path):
                             os.rename(source_path, destination_path)
                             for path in [source_path, destination_path]:
-                                if path in self.known_paths.keys():
-                                    if self.knonw_paths[path]['type'] != \
+                                if path in known_paths.keys():
+                                    if known_paths[path]['type'] != \
                                        'step_file':
                                         logger.debug("Set %s 'type' info to "
                                                      "'step_file'" % path)
-                                        self.knonw_paths[path]['type'] = 'step_file'
+                                        known_paths[path]['type'] = 'step_file'
                         else:
                             caught_exception = (
                                 None, 
@@ -892,10 +889,11 @@ class AbstractStep(object):
                                     os.path.basename(out_file)), 
                                 None)
 
-        for path, path_info in self.known_paths.items():
+        for path, path_info in known_paths.items():
             if os.path.exists(path):
-                self.known_paths[path]['size'] = os.path.getsize(path)
+                known_paths[path]['size'] = os.path.getsize(path)
                 
+        run.add_known_paths(known_paths)
         annotation_path, annotation_str = run.write_annotation_file(
             self.get_output_directory() \
             if ((self.get_pipeline().caught_signal is None) and \
