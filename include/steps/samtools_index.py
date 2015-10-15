@@ -6,7 +6,7 @@ import yaml
 class SamtoolsIndex(AbstractStep):
 
     def __init__(self, pipeline):
-        super(SamToBam, self).__init__(pipeline)
+        super(SamtoolsIndex, self).__init__(pipeline)
         
         self.set_cores(4)
         
@@ -42,11 +42,15 @@ class SamtoolsIndex(AbstractStep):
                 # Everything seems fine, lets start
                 else:
                     input_bam = input_paths[0]
+                    base = os.path.basename(input_bam)
                     # At first create the index and a symlink to original BAM
                     with run.new_exec_group() as index_exgr:
                         # 1. command: Create symbolic link to original bam file
                         # (use absolute path)
                         ln = [self.get_tool('ln'), '-s', input_bam]
+                        bam_link = run.add_output_file('alignments', base, input_paths)
+                        ln.append(bam_link)
+                            
                         index_exgr.add_command(ln)
                         # 2. command: Index bam file
                         samtools_index = [self.get_tool('samtools'), 'index']
@@ -54,28 +58,28 @@ class SamtoolsIndex(AbstractStep):
                             samtools_index.append('-b')
                             run.add_output_file(
                                 'indices',
-                                '%s.bai' % os.path.basename(input_bam),
+                                '%s.bai' % base,
                                 input_paths
                             )
                         elif self.get_option('index_tpye') == 'csi':
                             samtools_index.append('-c')
                             run.add_output_file(
                                 'indices',
-                                '%s.csi' % os.path.basename(input_bam),
+                                '%s.csi' % base,
                                 input_paths
                             )
-                        samtools_index.append(input_bam)
+                        samtools_index.append(bam_link)
                         index_exgr.add_command(samtools_index)
                     # Calculate samtools idxstats
                     with run.new_exec_group() as idxstats_exgr:
                         samtools_idxstats = [
                             self.get_tool('samtools'), 'idxstats']
-                        samtools_idxstats.extend(input_bam)
+                        samtools_idxstats.append(bam_link)
                         idxstats_exgr.add_command(
                             samtools_idxstats,
                             stdout_path = run.add_output_file(
                                 'index_stats',
-                                '%s_idxstats.txt' % os.path.basename(input_bam),
+                                '%s_idxstats.txt' % base,
                                 input_paths
                             )
                         )
