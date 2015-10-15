@@ -78,4 +78,4 @@ class SamtoolsIndex(AbstractStep):
                                 '%s_idxstats.txt' % os.path.basename(input_bam),
                                 input_paths
                             )
-
+                        )
