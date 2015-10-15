@@ -1,7 +1,6 @@
 import sys
-from abstract_step import *
+from abstract_step import AbstractSourceStep
 import os
-import process_pool
 import urlparse
 
 logger = logging.getLogger("uap_logger")
