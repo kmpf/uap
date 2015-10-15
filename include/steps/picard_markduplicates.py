@@ -49,7 +49,7 @@ class PicardMarkDuplicates(AbstractStep):
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
                     raise StandardError("Expected exactly one alignments file.")
-                elif os.path.splitext(input_paths[0])[1] in ['sam', 'bam']:
+                elif os.path.splitext(input_paths[0])[1] not in ['.sam', '.bam']:
                     raise StandardError(
                         "The file %s seems not to be a SAM or BAM file. At "
                         "least the suffix is wrong." % input_paths[0]
