@@ -53,7 +53,7 @@ class SamToSortedBam(AbstractStep):
                                         '--stdout']
                                 pipe.add_command(pigz)
 
-                            # 2 command: Convert sam to bam
+                            # 2. command: Convert sam to bam
                             samtools_view = [
                                 self.get_tool('samtools'), 'view',
                                 '-S', '-b', '-t',
@@ -62,7 +62,7 @@ class SamToSortedBam(AbstractStep):
                             ]
                             pipe.add_command(samtools_view)
 
-                            # 3 command: Sort BAM input
+                            # 3. command: Sort BAM input
                             samtools_sort = [
                                 self.get_tool('samtools'), 'sort',
                                 '-O', 'bam'
@@ -77,14 +77,12 @@ class SamToSortedBam(AbstractStep):
                             )
                             pipe.add_command(samtools_sort)
 
-                            # 4 command:
+                            # 4. command:
                             dd_out = [self.get_tool('dd'), 'obs=4M']
                             pipe.add_command(
                                 dd_out,
                                 stdout_path = run.add_output_file(
                                     'alignments',
-                                    run_id + '.sorted.bam',
+                                    '%s.sorted.bam' % run_id,
                                     input_paths)
                             )
-
-
