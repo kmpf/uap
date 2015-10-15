@@ -9,8 +9,12 @@ class HtSeqCount(AbstractStep):
         
         self.set_cores(2)
         
-        self.add_connection('in/alignments', constraints = {'min_files_per_run': 1, 'max_files_per_run': 1})
-        self.add_connection('in/features', constraints = {'total_files': 1} )
+        self.add_connection(
+            'in/alignments', constraints = {'min_files_per_run': 1,
+                                            'max_files_per_run': 1}
+        )
+        self.add_connection(
+            'in/features', constraints = {'total_files': 1} )
         self.add_connection('out/counts')
         
         self.require_tool('dd')
@@ -22,7 +26,7 @@ class HtSeqCount(AbstractStep):
         self.add_option('feature-file', str, optional = True)
         # Options for htseq-count
         self.add_option('order', str, choices = ['name', 'pos'],
-                        default = 'pos', optional = True)
+                        optional = False)
         self.add_option('stranded', str, choices = ['yes', 'no', 'reverse'],
                         optional=False)
         self.add_option('a', int, optional = True)
