@@ -1,4 +1,5 @@
 import sys
+import os
 from abstract_step import AbstractStep
 
 class PreseqFutureYield(AbstractStep):
@@ -56,7 +57,9 @@ class PreseqFutureYield(AbstractStep):
 
         option_list = list()
         for option in set_options:
-            option_list.append('-%s' % option)
+
+            if self.get_option(option):
+                option_list.append('-%s' % option)
             if not isinstance(self.get_option(option), bool):
                 option_list.append(str(self.get_option(option)))
 
@@ -75,7 +78,7 @@ class PreseqFutureYield(AbstractStep):
                     raise StandardError("Expected exactly one alignments file.")
                 elif not is_bam and not is_bed:
                     raise StandardError("Input file %s is niether BAM nor BED." %
-                                        input_paths[0])[1])
+                                        input_paths[0])
                 else:
                     with run.new_exec_group() as lc_group:
                         lc_extrap_out = run.add_output_file(
@@ -86,7 +89,7 @@ class PreseqFutureYield(AbstractStep):
                         lc_extrap = [self.get_tool('preseq'), 'lc_extrap']
                         lc_extrap.extend(option_list)
                         if is_bam:
-                            c_curve.append('-bam')
+                            lc_extrap.append('-bam')
                         lc_extrap.extend(['-o', lc_extrap_out, input_paths[0]])
-                        lc_group.add_command(lc_extrap_out)
+                        lc_group.add_command(lc_extrap)
 
