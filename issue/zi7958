@@ -1,0 +1,4 @@
+Summary: Create a tool class to replace self.get_tool('name') calls
+Priority: 5
+
+This class should hold more information about the tool. Especially, the version of that tool, to allow version specific steps.
