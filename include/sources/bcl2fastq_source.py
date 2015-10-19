@@ -89,7 +89,8 @@ class Bcl2FastqSource(AbstractSourceStep):
                        self.is_option_set_in_config(option)]
         option_list = list()
         for option in set_options:
-            option_list.append('--%s' % option)
+            if self.get_option(option):
+                option_list.append('--%s' % option)
             if not isinstance(self.get_option(option), bool):
                 option_list.append(str(self.get_option(option)))
 
