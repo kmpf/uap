@@ -499,9 +499,11 @@ class Run(object):
 
         # _known_paths dict is logged
         known_paths = dict()
-        known_paths[temp_placeholder] = {'label': prefix,
-                                         'designation': designation,
-                                         'type': ''}
+        known_paths[temp_placeholder] = {
+            'label': os.path.basename(temp_placeholder),
+            'designation': designation,
+            'type': ''
+        }
         self.add_known_paths(known_paths)
         # _temp_paths list contains all temporary files which are going to be
         # deleted
