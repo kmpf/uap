@@ -1,0 +1,3 @@
+Summary: Create section 'base_config' inside YAML config to hold destination_path, e_mail etc.
+Priority: 5
+
