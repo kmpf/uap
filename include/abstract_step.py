@@ -1202,7 +1202,7 @@ class AbstractStep(object):
         connections = self._connections
         out_connections = set()
         for connection in connections:
-            if connection[0:3] == "out/":
+            if connection[0:4] == "out/":
                 out_connections.add(connection)
         return out_connections
 
