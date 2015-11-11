@@ -42,6 +42,8 @@ class Run(object):
         self._public_info = dict()
         self._input_files = list()
         self._output_files = dict()
+        for out_connection in self._step.get_out_connections():
+            self.add_out_connection(out_connection)
         '''
         Dictionary containing the output files for each outgoing connection and
         their corresponding input files::
@@ -94,7 +96,13 @@ class Run(object):
         return self._output_files.keys()
 
     def get_out_connection(self, connection):
-        return self._output_files[connection]
+        if not connection.startswith("out/"):
+            connection = 'out/' + connection
+        if connection in self.get_out_connections():
+            return connection
+        else:
+            raise StandardError("Connection %s not declared for step %s" %
+                                (connection, self.get_step()))
     
     def _get_ping_file(self, key):
         if self._ping_files[key] == None:
@@ -448,10 +456,7 @@ class Run(object):
                 "to the constructor of %s."
                 % (tag, str(self._step), tag, self._step.__module__))
 
-        try:
-            out_connection = self.get_out_connection(tag)
-        except KeyError:
-            out_connection = self.add_out_connection(tag)
+        out_connection = self.get_out_connection(tag)
 
         if out_path in self.get_output_files_for_out_connection(out_connection):
             raise StandardError(
@@ -499,9 +504,11 @@ class Run(object):
 
         # _known_paths dict is logged
         known_paths = dict()
-        known_paths[temp_placeholder] = {'label': prefix,
-                                         'designation': designation,
-                                         'type': ''}
+        known_paths[temp_placeholder] = {
+            'label': os.path.basename(temp_placeholder),
+            'designation': designation,
+            'type': ''
+        }
         self.add_known_paths(known_paths)
         # _temp_paths list contains all temporary files which are going to be
         # deleted
@@ -537,7 +544,6 @@ class Run(object):
             issock = False if stat.S_ISSOCK(pathmode) == 0 else True
             # Update 'type' value
             if _ in self.get_known_paths().keys():
-                print(_)
                 if isfile:
                     logger.debug("Set %s 'type' info to 'file'" % _)
                     self.get_known_paths()[_]['type'] = 'file'
@@ -588,7 +594,8 @@ class Run(object):
         self._output_files[out_connection][None] = None
 
     def add_out_connection(self, out_connection):
-        out_connection = 'out/' + out_connection
+        if not out_connection.startswith("out/"):
+            out_connection = 'out/' + out_connection
         self._output_files[out_connection] = dict()
         return out_connection
 

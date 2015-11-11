@@ -312,7 +312,37 @@ def main():
         "is returned by running './status.py'.")
     
     submit_to_cluster_parser.set_defaults(func=submit_to_cluster.main)
+
+    '''
+    The argument parser for 'task-info.py' is created here."
+    '''
     
+    task_info_parser = subparsers.add_parser(
+        "task-info",
+        help="Displays information about certain source or processing tasks.",
+        description="",
+        parents=[common_parser])
+    
+    task_info_parser.add_argument(
+         "--sources",
+        dest="sources",
+        action="store_true",
+        default=False,
+        help="Displays only information about the source runs.")
+    
+    task_info_parser.add_argument(
+        "-t","--task",
+        dest="task",
+        nargs='*',
+        default=list(),
+        type=str,
+        help="Displays only the named task IDs. " +
+        "Can take multiple task ID(s) as input. A task ID " +
+        "looks like ths 'step_name/run_id'. A list of all " +
+        "task IDs is returned by running './status.py'.")
+
+    task_info_parser.set_defaults(func=task_info.main)
+        
     '''
     The argument parser for 'volatilize.py' is created here."
     '''

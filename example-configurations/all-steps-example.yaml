@@ -2,14 +2,13 @@
 
 # This is an example configuration for the analysis of ChIPseq data
 
-destination_path: example-out/ChIPseq/
+destination_path: example-out/all-steps/
 
 constants:
     - &genome /data/bioinf/Data/Indices/hg19/hg19.fa
     - &segemehl_genome_index /data/bioinf/Data/Indices/hg19/hg19.idx
     - &bowtie2_genome_index genomes/bacteria/Mycoplasma_genitalium/bowtie2_index-dd59/Mycoplasma_genitalium_index
     - &genome_faidx genomes/bacteria/Mycoplasma_genitalium/samtools_faidx-bf21/M_genitalium_genome-download.fasta.fai
-
 steps:
     ##################
     ## Source steps ##
@@ -45,33 +44,20 @@ steps:
     merge_fastq_files:
         _depends: fc
 
-    fastqc (fastqc_runs):
+    fastqc_runs:
         _depends: merge_fastq_files
 
     fastx_quality_stats:
         _depends: merge_fastq_files
 
-    cutadapt (cutadapt_runs):
+    cutadapt_runs:
         _depends: merge_fastq_files
         adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
         adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
         fix_qnames: false
 
-    cutadapt_fastqc (fastqc_runs):
-        _depends: cutadapt
-
-    cutadapt_fastx_quality_stats (fastx_quality_stats):
-        _depends: cutadapt
-
     fix_cutadapt_runs:
-        _depends: cutadapt
-#        _volatile: true
-
-    fix_cutadapt_fastqc (fastqc_runs):
-        _depends: fix_cutadapt_runs
-
-    fix_cutadapt_fastx_quality_stats (fastx_quality_stats):
-        _depends: fix_cutadapt_runs
+        _depends: cutadapt_runs
 
 #    tophat2_runs:
 #        _depends: fix_cutadapt_runs
@@ -82,17 +68,18 @@ steps:
         _depends: fix_cutadapt_runs
         index: *bowtie2_genome_index
 
-#    segemehl:
-#        _depends: fix_cutadapt
-#        genome: *genome
-#        index: *segemehl_genome_index
-
     sort_bowtie2 (sam_to_sorted_bam):
         _depends: bowtie2
         genome-faidx: *genome_faidx
         temp-sort-directory: /tmp/
 
-    bowtie_rmdup (picard_markduplicates):
+
+#    segemehl:
+#        _depends: fix_cutadapt
+#        genome: *genome
+#        index: *segemehl_genome_index
+
+    picard_markduplicates:
         _depends: sort_bowtie2
         
 
