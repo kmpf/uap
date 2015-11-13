@@ -1,3 +1,4 @@
-Summary: Implement BAM to BEDgraph step using 'genomecov -bg'
+Summary: Implement step to convert BAM to genome browser tracks
 Categories: bw9609-to-implement, ea5946-steps
+Priority: 5
 
