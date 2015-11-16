@@ -28,12 +28,11 @@ class Macs2(AbstractStep):
         self.require_tool('mkdir')
         self.require_tool('mv')
 
-        #self.add_option('treatment', str, list) # bekommen wir ja immer
         # Options for MACS2 callpeak subcommand
         ## Input file arguments:
         self.add_option('control', dict, optional=False)
         self.add_option('format', str, default='AUTO',
-                        choices=['ELAND', 'ELANDMULTI', 'ELANDMULTIPET', 
+                        choices=['AUTO', 'ELAND', 'ELANDMULTI', 'ELANDMULTIPET',
                                  'ELANDEXPORT', 'BED', 'SAM', 'BAM', 'BAMPE', 
                                  'BOWTIE'])
         self.add_option('gsize', str, default='2.7e9')
