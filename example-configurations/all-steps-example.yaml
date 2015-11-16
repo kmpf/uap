@@ -102,9 +102,9 @@ steps:
     ## Source steps ##
     ##################
 
-    raw_file_source:
-        path: example-data/test.fastq
-        sha1: b57b3a0d25f8e8ed3d11200427a643cd2081a2e0
+#    raw_file_source:
+#        path: example-data/test.fastq
+#        sha1: b57b3a0d25f8e8ed3d11200427a643cd2081a2e0
 
 #    fastq_source:
 #        pattern: example-data/Project_A/Sample_Replicate1_CellType1_Condition1/*.fastq.gz
@@ -113,7 +113,7 @@ steps:
 #        paired_end: yes
 
     fc (run_folder_source):
-        path: example-data/test/IlluminaRunFolder
+        path: example-data/IlluminaRunFolder
         paired_end: yes
 
 
