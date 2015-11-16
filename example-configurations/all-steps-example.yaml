@@ -49,11 +49,17 @@ steps:
 
     fastx_quality_stats:
         _depends: merge_fastq_files
+        new_output_format: yes
+        quality: 33
 
-    cutadapt_runs:
+    cutadapt:
         _depends: merge_fastq_files
+        adapter-type: -a
         adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
         adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+        # adapter-file: /path/to/adapter.file
+        use_reverse_complement: no
+        minimal-length: 10
         fix_qnames: false
 
     fix_cutadapt_runs:
