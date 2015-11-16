@@ -1,8 +1,8 @@
 destination_path: example-out/all-steps/
 
 constants:
-    - &genome /data/bioinf/Data/Indices/hg19/hg19.fa
-    - &segemehl_genome_index /data/bioinf/Data/Indices/hg19/hg19.idx
+    - &genome genomes/bacteria/Mycoplasma_genitalium/M_genitalium_uncompress-281d
+    - &segemehl_genome_index 
     - &bowtie2_genome_index genomes/bacteria/Mycoplasma_genitalium/bowtie2_index-dd59/Mycoplasma_genitalium_index
     - &genome_faidx genomes/bacteria/Mycoplasma_genitalium/samtools_faidx-bf21/M_genitalium_genome-download.fasta.fai
     - control: &bg_vs_ab
@@ -102,27 +102,20 @@ steps:
     ## Source steps ##
     ##################
 
-#    read_annotation (raw_file_source):
-#        path: data/ChIPseq/H3K4me3_GCCAAT_L001_001.bed
-#        sha1: 297ceb1895c75f1a793423a8b4a7a92f48241159
-
-#    gencode (raw_url_source):
-#        url: ftp://ftp.sanger.ac.uk/pub/gencode/release_15/gencode.v15.annotation.gtf.gz
-#        sha1: 9b272fde8bca544e6cd8621ddeec55aa09cf7a05
-#        
-#    gencode_genes_only (grep):
-#        _depends: gencode
-#        pattern: "\tgene\t"
-
-    fc (run_folder_source):
-        path: ../data/test/IlluminaRunFolder
-        paired_end: yes
+    raw_file_source:
+        path: example-data/test.fastq
+        sha1: b57b3a0d25f8e8ed3d11200427a643cd2081a2e0
 
 #    fastq_source:
-#        pattern: data/ChIPseq/*.fastq.gz
+#        pattern: example-data/Project_A/Sample_Replicate1_CellType1_Condition1/*.fastq.gz
 #        group: (H3K4me3)_GCCAAT_L001_R[12]_001.fastq.gz
 #        indices: indices.chipseqcsv
 #        paired_end: yes
+
+    fc (run_folder_source):
+        path: example-data/test/IlluminaRunFolder
+        paired_end: yes
+
 
 
     ######################
@@ -255,10 +248,10 @@ tools:
 #        get_version: ''
 #        exit_code: 255
 
-#    cufflinks:
-#        path: /home/spechtm/cufflinks/cufflinks-2.1.1.Linux_x86_64/cufflinks
-#        get_version: '--version'
-#        exit_code: 1
+    cufflinks:
+        path: cufflinks
+        get_version: '--version'
+        exit_code: 1
 
 #    htseq-count:
 #        path: htseq-count
