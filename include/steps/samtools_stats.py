@@ -1,7 +1,5 @@
 import sys
 from abstract_step import *
-import process_pool
-import yaml
 
 class SamtoolsStats(AbstractStep):
     '''

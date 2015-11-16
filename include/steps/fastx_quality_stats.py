@@ -1,7 +1,5 @@
 import sys
 from abstract_step import *
-import process_pool
-import yaml
 
 logger = logging.getLogger('uap_logger')
 
@@ -36,7 +34,7 @@ class FastxQualityStats(AbstractStep):
         option_list = list()
         for option in [o for o in options.keys() \
                        if self.is_option_set_in_config(o)]:
-            options_list.append(options[option])
+            option_list.append(options[option])
             if not isinstance(self.get_option(option), bool):
                 option_list.append(str(self.get_option(option)))
 
