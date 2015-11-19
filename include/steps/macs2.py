@@ -51,7 +51,7 @@ class Macs2(AbstractStep):
         self.add_option('down-sample', bool, optional=True)
         self.add_option('slocal', str, optional=True)
         self.add_option('llocal', str, optional=True)
-        self.add_option('broad', bool, optional=True)
+        self.add_option('broad', bool, default = False, optional=True)
         # use "broad-cutoff" only in conjuction with "broad"
         self.add_option('broad-cutoff', float, optional=True)
         self.add_option('call-summits', bool, optional=True)
@@ -68,10 +68,12 @@ class Macs2(AbstractStep):
 
         option_list = list()
         for option in set_options:
-            if self.get_option(option):
-                option_list.append('--%s' % option)
-            if not isinstance(self.get_option(option), bool):
-                option_list.append(str(self.get_option(option)))
+            if isinstance(self.get_option(option), bool):
+                if self.get_option(option):
+                    option_list.append('--%s' % option)
+            else:
+                option_list.append( '--%s' % option )
+                option_list.append( str(self.get_option(option)) )
 
         control_samples = self.get_option('control')
         for control_id, treatment_list in control_samples.iteritems():
@@ -118,7 +120,7 @@ class Macs2(AbstractStep):
                         #input_paths
                     #)
 
-                    if not self.is_option_set_in_config('broad'):
+                    if not self.get_option('broad'):
                         # ... if we compute narrow peaks ...
                         run.add_empty_output_connection("broadpeaks")
                         run.add_empty_output_connection("broadpeaks-xls")
@@ -175,8 +177,8 @@ class Macs2(AbstractStep):
                         mkdir = [self.get_tool('mkdir'), temp_dir]
                         macs2_exec_group.add_command(mkdir)
                         # 2. MACS2 command
-                        macs2 = [self.get_tool('macs2'), 'callpeak',
-                                 '--treatment']
+                        macs2 = [self.get_tool('macs2'), 'callpeak']
+                        macs2.append('--treatment')
                         macs2.extend(treatments[tr])
                         ## Append control information 
                         if control_files:
