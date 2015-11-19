@@ -146,10 +146,10 @@ steps:
     fix_cutadapt:
         _depends: cutadapt
 
-    tophat2:
-        _depends: fix_cutadapt
-        index: *bowtie2_genome_index
-        library_type: fr-unstranded # or fr-firststrand, fr-secondstrand
+    # tophat2:
+        # _depends: fix_cutadapt
+        # index: *bowtie2_genome_index
+        # library_type: fr-unstranded # or fr-firststrand, fr-secondstrand
 
     bowtie2:
         _depends: fix_cutadapt
@@ -166,15 +166,16 @@ steps:
         genome-faidx: *genome_faidx
         temp-sort-directory: /tmp/
 
-    preseq_complexity_curve:
-        _depends: sort_bowtie2
-        pe: yes
-        seg_len: 500
+    # Too few reads for preseq
+    # preseq_complexity_curve:
+        # _depends: sort_bowtie2
+        # pe: yes
+        # seg_len: 500
 
-    preseq_future_yield:
-        _depends: sort_bowtie2
-        pe: yes
-        extrap: 100000000
+    # preseq_future_yield:
+        # _depends: sort_bowtie2
+        # pe: yes
+        # extrap: 100000000
 
     picard_markduplicates:
         _depends: sort_bowtie2
@@ -199,9 +200,9 @@ steps:
         format: AUTO
         gsize: '2.7e9'
         # keep-dup: 0
-        # buffer-size: 
+        # buffer-size:
         verbose: 0
-        # read-length: 
+        # read-length:
         # shift:
         # qvalue: 
         # pvalue:
@@ -218,10 +219,41 @@ steps:
         broad: yes
         control: *bg_vs_ab
 
+    bam_to_genome_browser:
+        _depends: samtools_index
+        output-format: bigWig
+        chromosome-sizes: example-data/mycoGeni.chrom.sizes
+        # bedtools-bamtobed-tag: 
+        # bedtools-bamtobed-color: 
+        bedtools-genomecov-report-zero-coverage: no
+        # bedtools-genomecov-max: 
+        bedtools-genomecov-split: yes
+        # bedtools-genomecov-strand: '+' # '-'
+        # bedtools-genomecov-scale: 0.5
+        # bedtools-genomecov-5: yes # no
+        # bedtools-genomecov-3: yes # no
+        # trackline: not implemented yet
+        # trackopts: not implemented yet
+
 tools:
     ##################
     # External Tools #
     ##################
+
+    bedGraphToBigWig:
+        path: bedGraphToBigWig
+        get_version: ''
+        exit_code: 255
+
+    bedtools:
+        path: bedtools
+        get_version: '--version'
+        exit_code: 0
+
+    bedToBigBed:
+        path: bedToBigBed
+        get_version: ''
+        exit_code: 255
 
     bowtie2:
         path: bowtie2
