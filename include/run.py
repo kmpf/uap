@@ -1,4 +1,6 @@
+import sys
 import glob
+import json
 import logging
 import os
 import random
@@ -8,8 +10,10 @@ import tempfile
 
 import yaml
 
-import abstract_step
+import abstract_step as abst
+import command as command_info
 import exec_group
+import pipeline_info
 import misc
 
 logger = logging.getLogger("uap_logger")
@@ -107,7 +111,7 @@ class Run(object):
     def _get_ping_file(self, key):
         if self._ping_files[key] == None:
             self._ping_files[key] = os.path.join(
-                self.get_step().get_output_directory(),
+                self.get_output_directory(),
                 '.%s-%s-ping.yaml' % (self.get_run_id(), key)
             )
         return self._ping_files[key]
@@ -122,8 +126,8 @@ class Run(object):
         def inner(self, *args, **kwargs):
             # Collect info to replace du_jour placeholder with temp_out_dir
             step = self.get_step()
-            placeholder = step.get_output_directory_du_jour_placeholder()
-            temp_out_dir = step.get_output_directory_du_jour(self.get_run_id())
+            placeholder = self.get_output_directory_du_jour_placeholder()
+            temp_out_dir = self.get_output_directory_du_jour()
             
             value = None
             ret_value = func(self, *args, **kwargs)
@@ -170,6 +174,35 @@ class Run(object):
         '''
         return self._temp_paths
 
+    def get_output_directory_du_jour_placeholder(self):
+        '''
+        Returns a placeholder for the temporary output directory, which
+        needs to be replaced by the actual temp directory inside the
+        abstract_step.execute() method
+        '''
+        return("<%s-output-directory-du-jour>" %  
+               str(self.get_step().__class__.__name__))
+
+    def get_output_directory_du_jour(self):
+        '''
+        Returns the state-dependent output directory of the step.
+
+
+        Returns this steps output directory according to its current
+        state:
+            - if we are currently calling a step's declare_runs()
+              method, this will return None
+            - if we are currently calling a step's execute() method,
+              this will return the temporary directory
+            - otherwise, it will return the real output directory
+        '''
+        if self.get_step()._state == abst.AbstractStep.states.DEFAULT:
+            return self.get_output_directory()
+        elif self.get_step()._state == abst.AbstractStep.states.EXECUTING:
+            return self.get_temp_output_directory()
+        else:
+            return None
+
     def get_temp_output_directory(self):
         '''
         Returns the temporary output directory of a run.
@@ -188,6 +221,53 @@ class Run(object):
                     return self._temp_directory
         
         return self._temp_directory
+
+    def get_execution_hashtag(self):
+        '''
+        Creates a hash tag based on the commands to be executed.
+
+        This causes runs to be marked for rerunning if the commands to be
+        executed change.
+        '''
+
+        # Store step state
+        previous_state = self.get_step()._state
+        # Set step state to DECLARING to avoid circular dependencies
+        self.get_step()._state = abst.AbstractStep.states.DECLARING
+
+        cmd_by_eg = dict()
+        eg_count = 0
+        for exec_group in self.get_exec_groups():
+            eg_count += 1
+            cmd_by_eg[eg_count] = dict()
+            for poc in exec_group.get_pipes_and_commands():
+                pipe_count, cmd_count = (0, 0)
+                # for each pipe or command (poc)
+                # check if it is a pipeline ...
+                if isinstance(poc, pipeline_info.PipelineInfo):
+                    pipe_count += 1
+                    cmd_by_eg[eg_count]['Pipe %s' % pipe_count] = list()
+                    for command in poc.get_commands():
+                        cmd_by_eg[eg_count]['Pipe %s' % pipe_count].append(
+                            command.get_command())
+                # ... or a command
+                elif isinstance(poc, command_info.CommandInfo):
+                    cmd_count += 1
+                    cmd_by_eg[eg_count]['Cmd %s' % cmd_count] = poc.get_command()
+
+        # Set step state back to original state
+        self.get_step()._state = previous_state
+        return misc.str_to_sha1(json.dumps(cmd_by_eg, sort_keys = True))[0:4]
+
+    def get_output_directory(self):
+        '''
+        Returns the final output directory.
+        '''
+        return os.path.join(
+            self.get_step().get_pipeline().config['destination_path'], 
+            self.get_step().get_step_name(),
+            '%s-%s' % (self.get_run_id(), self.get_execution_hashtag())
+        )
 
     def get_basic_state(self):
         '''
@@ -446,7 +526,7 @@ class Run(object):
 
         # make sure there's no slash in out_path unless it's a source step
         if head != "" and not \
-           isinstance(self._step, abstract_step.AbstractSourceStep):
+           isinstance(self._step, abst.AbstractSourceStep):
             raise StandardError("The declared output file path contains "
                                 "directory separator: %s." % out_path)
         # make sure tag was declared with an outgoing connection
@@ -479,7 +559,7 @@ class Run(object):
         self._input_files.append(in_paths)
         self._output_files[out_connection][out_path] = in_paths
         return_value = os.path.join(
-                self._step.get_output_directory_du_jour_placeholder(), out_path)
+                self.get_output_directory_du_jour_placeholder(), out_path)
         if head != "":
             return_value = os.path.abspath(out_path)
         return return_value
@@ -500,7 +580,7 @@ class Run(object):
         logger.info("Temporary name: %s" % temp_name)    
 
         temp_placeholder = os.path.join(
-            self._step.get_output_directory_du_jour_placeholder(), temp_name)
+            self.get_output_directory_du_jour_placeholder(), temp_name)
 
         # _known_paths dict is logged
         known_paths = dict()
@@ -638,9 +718,7 @@ class Run(object):
         for connection in self._output_files.keys():
             result[connection] = dict()
             for out_path, in_paths in self._output_files[connection].items():
-                directory = self.get_step().get_output_directory_du_jour(
-                    self.get_run_id())
-
+                directory = self.get_output_directory_du_jour()
                 full_path = out_path
                 try:
                     head, tail = os.path.split(out_path)
@@ -687,9 +765,6 @@ class Run(object):
         raise StandardError("Sorry, your output '%s' file couldn't be found in"
                             "the dictionary: %s." % (out_path, temp))
 
-#    def get_complete_public_info(self):
-#        return self._public_info
-        
     def get_public_info(self, key):
         '''
         Query public information which must have been previously stored via "
