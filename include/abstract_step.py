@@ -160,15 +160,6 @@ class AbstractStep(object):
         for run in self._runs:
             yield self._runs[run]
 
-    def get_output_directory_du_jour_placeholder(self):
-        '''
-        Returns a placeholder for the temporary output directory, which
-        needs to be replaced by the actual temp directory inside the
-        execute() method
-        '''
-        return("<%s-output-directory-du-jour>" %  
-               str(self.__class__.__name__))
-
     def set_step_name(self, step_name):
         '''
         Change the step name.
@@ -336,9 +327,6 @@ class AbstractStep(object):
         raise NotImplementedError()
         
     def execute(self, run_id, run):
-        # Ich muss noch ne Loesung finden um hier beliebigen Python Code auszufuehren
-        # exec() oder eval()?
-
         # get run_info objects
         with self.get_run(run_id) as run:
             print("Run ID: %s" % run_id)
@@ -451,48 +439,6 @@ class AbstractStep(object):
         Returns the original step name (== module name).
         '''
         return self.__module__
-
-    def get_output_directory(self):
-        '''
-        Returns the final output directory path.
-        '''
-        return os.path.join(self.get_pipeline().config['destination_path'], 
-            '%s-%s' % (self.get_step_name(), self.get_options_hashtag()))
-
-    def get_output_directory_du_jour(self, run_id):
-        '''
-        Returns the state-dependent output directory of the step.
-
-
-        Returns this steps output directory according to its current
-        state:
-            - if we are currently calling a step's declare_runs()
-              method, this will return None
-            - if we are currently calling a step's execute() method,
-              this will return the temporary directory
-            - otherwise, it will return the real output directory
-        '''
-        if self._state == AbstractStep.states.DEFAULT:
-            return self.get_output_directory()
-        elif self._state == AbstractSourceStep.states.EXECUTING:
-            return self.get_run(run_id).get_temp_output_directory()
-        else:
-            return None
-
-    def get_temp_output_directory(self, run_id):
-        '''
-        Returns the temporary output directory of a step.
-        '''
-        if self._temp_directory == None:
-            while True:
-                token = ''.join(random.choice(
-                    string.ascii_lowercase + string.digits) for x in range(8))
-                path = os.path.join(
-                    self.get_pipeline().config['destination_path'],
-                    'temp', 'temp-%s-%s-%s' % (str(self), run_id, token))
-                if not os.path.exists(path):
-                    self._temp_directory = path
-        return self._temp_directory
 
     def get_run_state_basic(self, run_id):
         '''
@@ -725,8 +671,8 @@ class AbstractStep(object):
         run = self.get_run(run_id)
 
         # create the output directory if it doesn't exist yet
-        if not os.path.isdir(self.get_output_directory()):
-            os.makedirs(self.get_output_directory())
+        if not os.path.isdir(run.get_output_directory()):
+            os.makedirs(run.get_output_directory())
     
         # now write the run ping file
         executing_ping_path = run.get_executing_ping_file()
@@ -859,7 +805,7 @@ class AbstractStep(object):
                             os.path.basename(out_file)
                         )
                         destination_path = os.path.join(
-                            self.get_output_directory(), 
+                            run.get_output_directory(), 
                             os.path.basename(out_file))
                         # first, delete a possibly existing volatile placeholder
                         # file
@@ -895,7 +841,7 @@ class AbstractStep(object):
                 
         run.add_known_paths(known_paths)
         annotation_path, annotation_str = run.write_annotation_file(
-            self.get_output_directory() \
+            run.get_output_directory() \
             if ((self.get_pipeline().caught_signal is None) and \
                 (caught_exception is None)) \
             else run.get_temp_output_directory())
@@ -923,7 +869,7 @@ class AbstractStep(object):
                 for out_path in run._output_files[tag].keys():
                     if out_path != None:
                         destination_path = os.path.join(
-                            self.get_output_directory(), 
+                            run.get_output_directory(), 
                             '.' + os.path.basename(out_path) + 
                             '.annotation.yaml')
                         # overwrite the symbolic link if it already exists
