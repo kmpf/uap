@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime
 import glob
 import json
 import logging
@@ -209,13 +210,12 @@ class Run(object):
         '''
         if self._temp_directory == None:
             while True:
-                token = ''.join(random.choice(
-                    string.ascii_lowercase + string.digits) for x in range(8))
+                current_time = datetime.now().strftime('%y%m%d-%H%M%S-%f')
                 path = os.path.join(
                     self.get_step().get_pipeline().config['destination_path'],
                     'temp',
                     'temp-%s-%s-%s' % (self.get_step().get_step_name(),
-                                       self.get_run_id(), token))
+                                       self.get_run_id(), current_time))
                 if not os.path.exists(path):
                     self._temp_directory = path
                     return self._temp_directory
