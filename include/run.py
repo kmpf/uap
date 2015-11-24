@@ -240,8 +240,8 @@ class Run(object):
         for exec_group in self.get_exec_groups():
             eg_count += 1
             cmd_by_eg[eg_count] = dict()
+            pipe_count, cmd_count = (0, 0)
             for poc in exec_group.get_pipes_and_commands():
-                pipe_count, cmd_count = (0, 0)
                 # for each pipe or command (poc)
                 # check if it is a pipeline ...
                 if isinstance(poc, pipeline_info.PipelineInfo):
@@ -257,7 +257,7 @@ class Run(object):
 
         # Set step state back to original state
         self.get_step()._state = previous_state
-        return misc.str_to_sha1(json.dumps(cmd_by_eg, sort_keys = True))[0:4]
+        return misc.str_to_sha1(json.dumps(cmd_by_eg))[0:4]
 
     def get_output_directory(self):
         '''
@@ -572,12 +572,12 @@ class Run(object):
         string is returned and stored in a list. The placeholder is immediately
         properly adjusted by @replace_output_dir_du_jour.
         '''
-        
-        temp_name = str
-        with tempfile.NamedTemporaryFile(suffix = suffix, prefix = prefix) as f:
-            temp_name = os.path.basename(f.name)
+        count = len(self._temp_paths)
 
-        logger.info("Temporary name: %s" % temp_name)    
+        hashtag = misc.str_to_sha1('%s.%s.%s' % (prefix, count, suffix))[0:4]
+        temp_name = prefix + hashtag + suffix
+
+        logger.info("Temporary name: %s" % temp_name)
 
         temp_placeholder = os.path.join(
             self.get_output_directory_du_jour_placeholder(), temp_name)
