@@ -119,7 +119,6 @@ class Bowtie2Build(AbstractStep):
                                                 "fix that issue." %
                                                 input_path)
 
-#                with run.new_exec_group() as build_exec_group:
                     bowtie_build = [self.get_tool('bowtie2-build')]
                     # Add options
                     bowtie_build.extend(option_list)
@@ -127,7 +126,7 @@ class Bowtie2Build(AbstractStep):
                     bowtie_build.append(','.join(temp_files))
                     # Add basename
                     bowtie_build.append(os.path.join(
-                        self.get_output_directory_du_jour_placeholder(),
+                        run.get_output_directory_du_jour_placeholder(),
                         index_basename) )
 
                     exec_group.add_command(bowtie_build)
