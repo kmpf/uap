@@ -37,13 +37,17 @@ def main(args):
             run = p.steps[step_name].get_run(run_id)
             report = run.as_dict()
             report['state'] = p.steps[step_name].get_run_state(run_id)
+            shebang = "#!/usr/bin/env bash"
+            print(shebang + "\n")
             report_header = "%s/%s -- Report" % (step_name, run_id)
-            print(report_header)
-            print("=" * len(report_header) + "\n")
-            print(yaml.dump(report, default_flow_style = False))
+            print("# " + report_header)
+            print("# " + "=" * len(report_header) + "\n#")
+            dump = yaml.dump(report, default_flow_style = False)
+            for line in dump.split('\n'):
+                print("# " + line)
             exec_header = "%s/%s -- Commands" % (step_name, run_id)
-            print(exec_header)
-            print("=" * len(exec_header) + "\n")
+            print("# " + exec_header)
+            print("# " + "=" * len(exec_header) + "\n")
             eg_count = 1
             for exec_group in run.get_exec_groups():
                 goc_header = "%d. Group of Commands" % eg_count
@@ -56,8 +60,8 @@ def main(args):
                     
                     if isinstance(poc, pipeline_info.PipelineInfo):
                         pipe_header = goc_header + " -- %d. Pipeline" % pipe_count
-                        print(pipe_header)
-                        print("-" * len(pipe_header) + "\n")
+                        print("# " + pipe_header)
+                        print("# " + "-" * len(pipe_header) + "\n")
                         # ... create a pipeline ...
                         pipe = list()
                         for command in poc.get_commands():
@@ -66,7 +70,7 @@ def main(args):
                         pipe_count += 1
                     elif isinstance(poc, command_info.CommandInfo):
                         cmd_header = goc_header + " -- %d. Command" % cmd_count
-                        print(cmd_header)
-                        print("-" * len(cmd_header) + "\n")
+                        print("# " + cmd_header)
+                        print("# " + "-" * len(cmd_header) + "\n")
                         print(" ".join(poc.get_command()) + "\n")
                         cmd_count
