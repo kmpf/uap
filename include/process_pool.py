@@ -420,7 +420,6 @@ class ProcessPool(object):
                 try:
                     # write report
                     with open(report_path, 'w') as freport:
-                        #sys.stderr.write("[%d] writing report...\n" % os.getpid())
                         report = dict()
                         report['sha1'] = checksum.hexdigest()
                         report['tail'] = tail
@@ -451,13 +450,9 @@ class ProcessPool(object):
             newline_count = 0
             
             while True:
-                #sys.stderr.write("[%d] reading from fin\n" % os.getpid())
                 block = fin.read(ProcessPool.COPY_BLOCK_SIZE)
-                #sys.stderr.write("%s\n" % block)
-                #sys.stderr.write("[%d] actually read %d bytes from fin\n" % (os.getpid(), len(block)))
                 if len(block) == 0:
                     # fin reports EOF, let's call it a day
-                    #sys.stderr.write("[%d] fin is at EOF\n" % os.getpid())
                     break
                     
                 # update checksum
@@ -478,34 +473,22 @@ class ProcessPool(object):
                 
                 # write block to output file
                 if fdout is not None:
-                    #sys.stderr.write("[%d] writing %d bytes to fdout\n" % (os.getpid(), len(block)))
                     bytes_written = os.write(fdout, block)
-                    #sys.stderr.write("[%d] actually wrote %d bytes to fdout\n" % (os.getpid(), bytes_written))
                     if bytes_written != len(block):
-                        #sys.stderr.write("Could not write to fdout.\n")
                         os._exit(1)
                     
                 # write block to pipe
                 if pipe is not None:
-                    #sys.stderr.write("[%d] writing %d bytes to pipe[1]\n" % (os.getpid(), len(block)))
                     bytes_written = os.write(pipe[1], block)
-                    #sys.stderr.write("[%d] actually wrote %d bytes to pipe[1]\n" % (os.getpid(), bytes_written))
                     if bytes_written != len(block):
-                        #sys.stderr.write("Could not write to pipe.\n")
                         os._exit(2)
                     
             # we're finished, close everything
-            #sys.stderr.write("[%d] closing fin...\n" % os.getpid())
             fin.close()
-            #sys.stderr.write("[%d] done closing fin...\n" % os.getpid())
             if fdout is not None:
-                #sys.stderr.write("[%d] closing fdout...\n" % os.getpid())
                 os.close(fdout)
-                #sys.stderr.write("[%d] done closing fdout...\n" % os.getpid())
             if pipe is not None:
-                #sys.stderr.write("[%d] closing pipe[1]...\n" % os.getpid())
                 os.close(pipe[1])
-                #sys.stderr.write("[%d] done closing pipe[1]...\n" % os.getpid())
 
             write_report_and_exit()
                 
@@ -614,9 +597,9 @@ class ProcessPool(object):
                     if pid in self.copy_process_reports:
                         report_path = self.copy_process_reports[pid]
                         if os.path.exists(report_path):
-                            f = open(report_path, 'r')
-                            report = yaml.load(f)
-                            f.close()
+                            with open(report_path, 'r') as f:
+                                report = yaml.load(f)
+
                             if report is not None:
                                 self.proc_details[pid].update(report)
                 
