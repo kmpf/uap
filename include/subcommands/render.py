@@ -108,7 +108,7 @@ def main(args):
                             task_list.append(task)
 
             for task in task_list:
-                outdir = task.get_step().get_output_directory()
+                outdir = task.get_run().get_output_directory()
                 anno_files = glob.glob(os.path.join(
                     outdir, ".%s*.annotation.yaml" % task.get_run().get_run_id()
                 ))
