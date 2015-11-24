@@ -67,10 +67,6 @@ class Bcl2FastqSource(AbstractSourceStep):
 
         # Get path to Unaligned folder
         output_unaligned_dir = os.path.join(output_dir, 'Unaligned')
-        # Create placeholder for Unaligned folder
-        temp_output_dir = os.path.join(
-            self.get_output_directory_du_jour_placeholder(),
-            'Unaligned')
 
         # Check existence of Sample Sheet
         sample_sheet = os.path.abspath(self.get_option('sample-sheet'))
@@ -99,6 +95,11 @@ class Bcl2FastqSource(AbstractSourceStep):
             if not os.path.exists(output_unaligned_dir):
                 # Create new execution group for configureBclToFastq.pl
                 with run.new_exec_group() as bcl2Fastq_exec_group:
+                    # Create placeholder for Unaligned folder
+                    temp_output_dir = os.path.join(
+                        run.get_output_directory_du_jour_placeholder(),
+                        'Unaligned')
+
                     # Assemble configureBclToFastq.pl command
                     configureBcl2Fastq = [
                         self.get_tool('configureBclToFastq.pl'),
