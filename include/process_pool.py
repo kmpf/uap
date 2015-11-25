@@ -548,7 +548,7 @@ class ProcessPool(object):
                     # remove pid from self.running_procs
                     self.running_procs.remove(pid)
                 except KeyError as e:
-                    print("Key error(%s): %s" % (e.errno, e.strerror))
+                    print("Key error(%s): %s" % (e.args, e.message))
                     if pid != os.getpid():
                         sys.stderr.write("Note: Caught a process which we "
                                          "didn't know: %d.\n" % pid)
@@ -613,7 +613,7 @@ class ProcessPool(object):
                                 self.proc_details[pid].update(report)
                 
             except TimeoutException as e:
-                print("TimeoutException (%s): %s" % (e.errno, e.strerror))
+                print("TimeoutException (%s): %s" % (e.args, e.message))
                 self.log("Timeout, killing all child processes now.")
                 ProcessPool.kill_all_child_processes()
             except OSError as e:
