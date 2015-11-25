@@ -257,7 +257,7 @@ class Run(object):
 
         # Set step state back to original state
         self.get_step()._state = previous_state
-        return misc.str_to_sha1(json.dumps(cmd_by_eg))[0:4]
+        return misc.str_to_sha1(json.dumps(cmd_by_eg))[0:8]
 
     def get_output_directory(self):
         '''
