@@ -574,7 +574,7 @@ class Run(object):
         '''
         count = len(self._temp_paths)
 
-        hashtag = misc.str_to_sha1('%s.%s.%s' % (prefix, count, suffix))[0:4]
+        hashtag = misc.str_to_sha1('%s.%s.%s' % (prefix, count, suffix))
         temp_name = prefix + hashtag + suffix
 
         logger.info("Temporary name: %s" % temp_name)
