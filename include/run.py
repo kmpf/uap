@@ -793,6 +793,7 @@ class Run(object):
 
     def as_dict(self):
         result = dict()
+        result['output_directory'] = self.get_output_directory()
         result['output_files'] = self._output_files
         result['private_info'] = self._private_info
         result['public_info'] = self._public_info

@@ -27,7 +27,8 @@ class TimeoutException(Exception):
     pass
 
 def timeout_handler(signum, frame):
-    time.sleep(3600)
+    time.sleep(60)
+#    time.sleep(3600)
     raise TimeoutException()
 
 def restore_sigpipe_handler():
@@ -215,7 +216,8 @@ class ProcessPool(object):
 
     def __enter__(self):
         if ProcessPool.current_instance is not None:
-            raise StandardError("Sorry, only one instance of ProcessPool allowed at a time.")
+            raise StandardError("Sorry, only one instance of ProcessPool "
+                                "allowed at a time.")
         ProcessPool.current_instance = self
         
         # First we have to add the pre_command commands for execution
@@ -426,7 +428,8 @@ class ProcessPool(object):
                         report['length'] = length
                         report['lines'] = newline_count
                         freport.write(yaml.dump(report))
-                except:
+                except IOError as e:
+                    print("I/O error(%s): %s" % (e.errno, e.strerror))
                     pass
                 
                 os._exit(0)
@@ -530,9 +533,10 @@ class ProcessPool(object):
                 if pid == watcher_pid:
                     ProcessPool.process_watcher_pid = None
                     try:
-                        with open(watcher_report_path) as f:
+                        with open(watcher_report_path, 'r') as f:
                             self.process_watcher_report = yaml.load(f)
-                    except:
+                    except IOError as e:
+                        print("I/O error(%s): %s" % (e.errno, e.strerror))
                         print("Warning: Couldn't load watcher report from %s." %
                               watcher_report_path)
                         pass
@@ -543,7 +547,8 @@ class ProcessPool(object):
                 try:
                     # remove pid from self.running_procs
                     self.running_procs.remove(pid)
-                except:
+                except KeyError as e:
+                    print("Key error(%s): %s" % (e.errno, e.strerror))
                     if pid != os.getpid():
                         sys.stderr.write("Note: Caught a process which we "
                                          "didn't know: %d.\n" % pid)
@@ -577,8 +582,12 @@ class ProcessPool(object):
                     # now kill it's preceding process, if this is from a pipeline
                     if 'use_stdin_of' in self.proc_details[pid]:
                         pidlist = list()
-                        pidlist.append(self.copy_processes_for_pid[self.proc_details[pid]['use_stdin_of']][0])
-                        pidlist.append(self.copy_processes_for_pid[self.proc_details[pid]['use_stdin_of']][1])
+                        pidlist.append(self.copy_processes_for_pid\
+                                       [self.proc_details[pid]['use_stdin_of']]\
+                                       [0])
+                        pidlist.append(self.copy_processes_for_pid\
+                                       [self.proc_details[pid]['use_stdin_of']]\
+                                       [1])
                         pidlist.append(self.proc_details[pid]['use_stdin_of'])
                         for kpid in pidlist:
                             self.log("Now killing %d, the predecessor of %d." %
@@ -586,7 +595,7 @@ class ProcessPool(object):
                             self.ok_to_fail.add(kpid)
                             try:
                                 os.kill(kpid, signal.SIGPIPE)
-                            except OSError, e:
+                            except OSError as e:
                                 if e.errno == errno.ESRCH:
                                     self.log("Couldn't kill %d: no such "
                                              "process." % kpid)
@@ -603,15 +612,18 @@ class ProcessPool(object):
                             if report is not None:
                                 self.proc_details[pid].update(report)
                 
-            except TimeoutException:
+            except TimeoutException as e:
+                print("TimeoutException (%s): %s" % (e.errno, e.strerror))
                 self.log("Timeout, killing all child processes now.")
                 ProcessPool.kill_all_child_processes()
-            except OSError, e:
+            except OSError as e:
                 if e.errno == errno.ECHILD:
                     # no more children running, we are done
-                    sys.stderr.write("ProcessPool: There are no child processes left, exiting.\n")
+                    sys.stderr.write("ProcessPool: There are no child "
+                                     "processes left, exiting.\n")
                     signal.alarm(0)
-                    self.log("Cancelling timeout (if there was one), all child processes have exited.")
+                    self.log("Cancelling timeout (if there was one), all "
+                             "child processes have exited.")
                     break
                 elif e.errno == errno.EINTR:
                     # a system call was interrupted, pfft.
@@ -621,24 +633,26 @@ class ProcessPool(object):
             else:
                 if exit_code_with_signal != 0:
                     if not pid in self.ok_to_fail:
-                        # Oops, something went wrong. See what happens and terminate
-                        # all child processes in a few seconds.
+                        # Oops, something went wrong. See what happens and
+                        # terminate all child processes in a few seconds.
                         something_went_wrong = True
                         signal.signal(signal.SIGALRM, timeout_handler)
-                        self.log("Terminating all children in %d seconds..." % ProcessPool.SIGTERM_TIMEOUT)
+                        self.log("Terminating all children in %d seconds..." %
+                                 ProcessPool.SIGTERM_TIMEOUT)
                         signal.alarm(ProcessPool.SIGTERM_TIMEOUT)
                         
         # now wait for the watcher process, if it still exists
         try:
             os.waitpid(watcher_pid, 0)
             try:
-                f = open(watcher_report_path)
-                self.process_watcher_report = yaml.load(f)
-                f.close()
-            except:
-                print("Warning: Couldn't load watcher report from %s." % watcher_report_path)
+                with open(watcher_report_path, 'r') as f:
+                    self.process_watcher_report = yaml.load(f)
+            except IOError as e:
+                print("I/O error(%s): %s" % (e.errno, e.strerror))
+                print("Warning: Couldn't load watcher report from %s." %
+                      watcher_report_path)
                 pass
-        except OSError, e:
+        except OSError as e:
             if e.errno == errno.ESRCH:
                 pass
             elif e.errno == errno.ECHILD:
@@ -774,8 +788,8 @@ class ProcessPool(object):
     @classmethod
     def kill(cls):
         '''
-        Kills all user-launched processes. After that, the remaining process will end 
-        and a report will be written.
+        Kills all user-launched processes. After that, the remaining process
+        will end and a report will be written.
         '''
         ProcessPool.process_pool_is_dead = True
         
@@ -786,6 +800,7 @@ class ProcessPool(object):
                 try:
                     os.kill(pid, signal.SIGTERM)
                 except:
+                    print(sys.exc_info())
                     pass
 
     @classmethod
