@@ -27,8 +27,7 @@ class TimeoutException(Exception):
     pass
 
 def timeout_handler(signum, frame):
-    time.sleep(60)
-#    time.sleep(3600)
+    time.sleep(3600)
     raise TimeoutException()
 
 def restore_sigpipe_handler():
