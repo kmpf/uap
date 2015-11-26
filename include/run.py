@@ -257,7 +257,7 @@ class Run(object):
 
         # Set step state back to original state
         self.get_step()._state = previous_state
-        return misc.str_to_sha1(json.dumps(cmd_by_eg))[0:8]
+        return misc.str_to_sha1(json.dumps(cmd_by_eg))[0:4]
 
     def get_output_directory(self):
         '''
@@ -587,7 +587,7 @@ class Run(object):
                 count += 1
         
 
-        print("Temporary file (#%s): %s" %
+        logger.info("Temporary file (#%s): %s" %
               (len(self._temp_paths) + 1, temp_name) )
 
         # _known_paths dict is logged
