@@ -573,14 +573,22 @@ class Run(object):
         properly adjusted by @replace_output_dir_du_jour.
         '''
         count = len(self._temp_paths)
+        temp_placeholder = str()
 
-        hashtag = misc.str_to_sha1('%s.%s.%s' % (prefix, count, suffix))
-        temp_name = prefix + hashtag + suffix
+        while True:
+            hashtag = misc.str_to_sha1('%s.%s.%s' % (prefix, count, suffix))
+            temp_name = prefix + hashtag + suffix
+            temp_placeholder = os.path.join(
+                self.get_output_directory_du_jour_placeholder(), temp_name)
 
-        logger.info("Temporary name: %s" % temp_name)
+            if not temp_placeholder in self._temp_paths:
+                break
+            else:
+                count += 1
+        
 
-        temp_placeholder = os.path.join(
-            self.get_output_directory_du_jour_placeholder(), temp_name)
+        print("Temporary file (#%s): %s" %
+              (len(self._temp_paths) + 1, temp_name) )
 
         # _known_paths dict is logged
         known_paths = dict()
