@@ -47,6 +47,7 @@ def main(args):
                              task)
             continue
         if basic_task_state == p.states.READY:
+            print(task)
             task.run()
         else:
             raise StandardError("Unexpected basic task state for %s: %s" %

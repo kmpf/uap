@@ -37,7 +37,6 @@ This task wish list is now processed one by one (in topological order):
 
 logger = logging.getLogger("uap_logger")
 
-
 def main(args):
     p = pipeline.Pipeline(arguments=args)
         
@@ -224,6 +223,3 @@ def main(args):
                         "submitted." % (task, parent_task, parent_state.lower()))
             if not skip_this:
                 submit_task(task, parent_job_ids)
-
-#if __name__ == '__main__':
-#    main()

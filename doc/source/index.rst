@@ -130,6 +130,7 @@ may:
 * define fewer runs (usually towards the end of a pipeline, where results are
   summarized).
 
+
 =======
 Remarks
 =======
@@ -171,4 +172,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
