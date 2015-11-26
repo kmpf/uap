@@ -779,7 +779,8 @@ class ProcessPool(object):
                         delay = 10
                     time.sleep(delay)
             except:
-                print(sys.exc_info())
+                print("PID (%s) Process Watcher Exception: %s" %
+                      (os.get_pid(), sys.exc_info()))
             finally:
                 os._exit(0)
         else:
@@ -800,7 +801,7 @@ class ProcessPool(object):
                 try:
                     os.kill(pid, signal.SIGTERM)
                 except:
-                    print(sys.exc_info())
+                    print("PID (%s) Kill Exception: %s" % (pid, sys.exc_info()))
                     pass
 
     @classmethod
