@@ -257,7 +257,7 @@ class Run(object):
 
         # Set step state back to original state
         self.get_step()._state = previous_state
-        return misc.str_to_sha1(json.dumps(cmd_by_eg))[0:8]
+        return misc.str_to_sha1_b62(json.dumps(cmd_by_eg))[0:8]
 
     def get_output_directory(self):
         '''
@@ -576,7 +576,7 @@ class Run(object):
         temp_placeholder = str()
 
         while True:
-            hashtag = misc.str_to_sha1('%s.%s.%s' % (prefix, count, suffix))
+            hashtag = misc.str_to_sha1_b62('%s.%s.%s' % (prefix, count, suffix))
             temp_name = prefix + hashtag + suffix
             temp_placeholder = os.path.join(
                 self.get_output_directory_du_jour_placeholder(), temp_name)
