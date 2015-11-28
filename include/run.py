@@ -704,7 +704,9 @@ class Run(object):
         return list( self._output_files[out_connection].keys() )
 
     def get_output_files_abspath_for_out_connection(self, out_connection):
-        return list( self.get_output_files_abspath()[out_connection].keys() )
+        return sorted(
+            list( self.get_output_files_abspath()[out_connection].keys() )
+        )
 
     def get_output_files(self):
         return self._output_files
