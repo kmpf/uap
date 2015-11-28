@@ -423,12 +423,14 @@ class ProcessPool(object):
                     with open(report_path, 'w') as freport:
                         report = dict()
                         report['sha1'] = checksum.hexdigest()
-                        report['tail'] = tail
+                        #report['tail'] = tail
                         report['length'] = length
                         report['lines'] = newline_count
+                        print(report)
                         freport.write(yaml.dump(report))
-                except IOError as e:
-                    print("I/O error(%s): %s" % (e.errno, e.strerror))
+                except (IOError, LookupError) as e:
+                    print("I/O error(%s): %s" %
+                          (type(e).__name__, e.strerror))
                     pass
                 
                 os._exit(0)
@@ -799,8 +801,9 @@ class ProcessPool(object):
             for pid in ProcessPool.current_instance.copy_processes_for_pid.keys():
                 try:
                     os.kill(pid, signal.SIGTERM)
-                except:
-                    print("PID (%s) Kill Exception: %s" % (pid, sys.exc_info()))
+                except Exception as e:
+                    print("PID (%s) throw %s: %s" %
+                          (pid, type(e).__name__, e.message))
                     pass
 
     @classmethod
