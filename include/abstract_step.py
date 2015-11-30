@@ -734,8 +734,7 @@ class AbstractStep(object):
         try:
             self.execute(run_id, run)
         except Exception as e:
-            print("Exception (%s): %s" % (e.args, e.message))
-            print(traceback.format_exc())
+            print("%s: %s" % (type(e).__name__, sys.exc_info()))
             # Oh my. We have a situation. This is awkward. Tell the process
             # pool to wrap up. This way, we can try to get process stats before
             # shutting everything down.

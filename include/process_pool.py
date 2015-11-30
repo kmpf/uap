@@ -427,8 +427,8 @@ class ProcessPool(object):
                         report['length'] = length
                         report['lines'] = newline_count
                         freport.write(yaml.dump(report))
-                except IOError as e:
-                    print("I/O error(%s): %s" % (e.errno, e.strerror))
+                except (IOError, LookupError) as e:
+                    print("Exception (%s): %s" % (type(e).__name__, sys.exc_info() ))
                     pass
                 
                 os._exit(0)
@@ -799,8 +799,9 @@ class ProcessPool(object):
             for pid in ProcessPool.current_instance.copy_processes_for_pid.keys():
                 try:
                     os.kill(pid, signal.SIGTERM)
-                except:
-                    print("PID (%s) Kill Exception: %s" % (pid, sys.exc_info()))
+                except Exception as e:
+                    print("PID (%s) throw %s: %s" %
+                          (pid, type(e).__name__, sys.exc_info()))
                     pass
 
     @classmethod
