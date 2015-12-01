@@ -429,6 +429,7 @@ class ProcessPool(object):
                         freport.write(yaml.dump(report))
                 except (IOError, LookupError) as e:
                     print("Exception (%s): %s" % (type(e).__name__, sys.exc_info() ))
+                    print(traceback.format_exc())
                     pass
                 
                 os._exit(0)
@@ -535,7 +536,8 @@ class ProcessPool(object):
                         with open(watcher_report_path, 'r') as f:
                             self.process_watcher_report = yaml.load(f)
                     except IOError as e:
-                        print("I/O error(%s): %s" % (e.errno, e.strerror))
+                        print("%s (%s): %s" %
+                              (type(e).__name__, e.errno, e.strerror))
                         print("Warning: Couldn't load watcher report from %s." %
                               watcher_report_path)
                         pass
@@ -647,7 +649,7 @@ class ProcessPool(object):
                 with open(watcher_report_path, 'r') as f:
                     self.process_watcher_report = yaml.load(f)
             except IOError as e:
-                print("I/O error(%s): %s" % (e.errno, e.strerror))
+                print("%s (%s): %s" % (type(e).__name__, e.errno, e.strerror))
                 print("Warning: Couldn't load watcher report from %s." %
                       watcher_report_path)
                 pass
@@ -800,8 +802,9 @@ class ProcessPool(object):
                 try:
                     os.kill(pid, signal.SIGTERM)
                 except Exception as e:
-                    print("PID (%s) throw %s: %s" %
+                    print("PID (%s) threw %s: %s" %
                           (pid, type(e).__name__, sys.exc_info()))
+                    print(traceback.format_exc())
                     pass
 
     @classmethod
