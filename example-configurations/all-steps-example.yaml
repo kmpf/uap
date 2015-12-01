@@ -125,7 +125,7 @@ steps:
     merge_fastq_files:
         _depends: fc
 
-    fastqc_runs:
+    fastqc:
         _depends: merge_fastq_files
 
     fastx_quality_stats:
