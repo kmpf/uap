@@ -1,5 +1,6 @@
 import sys
 from abstract_step import AbstractSourceStep
+import logging
 import os
 import urlparse
 
