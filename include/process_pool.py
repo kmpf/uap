@@ -428,8 +428,9 @@ class ProcessPool(object):
                         report['lines'] = newline_count
                         freport.write(yaml.dump(report))
                 except (IOError, LookupError) as e:
-                    print("Exception (%s): %s" % (type(e).__name__, sys.exc_info() ))
-                    print(traceback.format_exc())
+                    sys.stderr.write("Exception (%s): %s" % (type(e).__name__, sys.exc_info() ))
+                    sys.stderr.write(traceback.format_exc())
+                    sys.stderr.flush()
                     pass
                 
                 os._exit(0)
@@ -536,10 +537,11 @@ class ProcessPool(object):
                         with open(watcher_report_path, 'r') as f:
                             self.process_watcher_report = yaml.load(f)
                     except IOError as e:
-                        print("%s (%s): %s" %
+                        sys.stderr.write("%s (%s): %s" %
                               (type(e).__name__, e.errno, e.strerror))
-                        print("Warning: Couldn't load watcher report from %s." %
+                        sys.stderr.write("Warning: Couldn't load watcher report from %s." %
                               watcher_report_path)
+                        sys.stderr.flush()
                         pass
                     # the process watcher has terminated, which is cool, I guess
                     # (if it's the last child process, anyway)
@@ -549,11 +551,12 @@ class ProcessPool(object):
                     # remove pid from self.running_procs
                     self.running_procs.remove(pid)
                 except KeyError as e:
-                    print("Key error(%s): %s" % (e.args, e.message))
+                    sys.stderr.write("Key error(%s): %s" % (e.args, e.message))
+                    sys.stderr.flush()
                     if pid != os.getpid():
                         sys.stderr.write("Note: Caught a process which we "
                                          "didn't know: %d.\n" % pid)
-
+                        sys.stderr.flush()
                 if pid in self.proc_details:
                     self.proc_details[pid]['end_time'] = datetime.datetime.now()
                 
@@ -614,7 +617,8 @@ class ProcessPool(object):
                                 self.proc_details[pid].update(report)
                 
             except TimeoutException as e:
-                print("TimeoutException (%s): %s" % (e.args, e.message))
+                sys.stderr.write("TimeoutException (%s): %s" % (e.args, e.message))
+                sys.stderr.flush()
                 self.log("Timeout, killing all child processes now.")
                 ProcessPool.kill_all_child_processes()
             except OSError as e:
@@ -622,6 +626,7 @@ class ProcessPool(object):
                     # no more children running, we are done
                     sys.stderr.write("ProcessPool: There are no child "
                                      "processes left, exiting.\n")
+                    sys.stderr.flush()
                     signal.alarm(0)
                     self.log("Cancelling timeout (if there was one), all "
                              "child processes have exited.")
@@ -649,9 +654,10 @@ class ProcessPool(object):
                 with open(watcher_report_path, 'r') as f:
                     self.process_watcher_report = yaml.load(f)
             except IOError as e:
-                print("%s (%s): %s" % (type(e).__name__, e.errno, e.strerror))
-                print("Warning: Couldn't load watcher report from %s." %
+                sys.stderr.write("%s (%s): %s" % (type(e).__name__, e.errno, e.strerror))
+                sys.stderr.write("Warning: Couldn't load watcher report from %s." %
                       watcher_report_path)
+                sys.stderr.flush()
                 pass
         except OSError as e:
             if e.errno == errno.ESRCH:
@@ -780,8 +786,9 @@ class ProcessPool(object):
                         delay = 10
                     time.sleep(delay)
             except:
-                print("PID (%s) Process Watcher Exception: %s" %
+                sys.stderr.write("PID (%s) Process Watcher Exception: %s" %
                       (os.get_pid(), sys.exc_info()))
+                sys.stderr.flush()
             finally:
                 os._exit(0)
         else:
@@ -802,9 +809,10 @@ class ProcessPool(object):
                 try:
                     os.kill(pid, signal.SIGTERM)
                 except Exception as e:
-                    print("PID (%s) threw %s: %s" %
+                    sys.stderr.write("PID (%s) threw %s: %s" %
                           (pid, type(e).__name__, sys.exc_info()))
-                    print(traceback.format_exc())
+                    sys.stderr.write(traceback.format_exc())
+                    sys.stderr.flush()
                     pass
 
     @classmethod
