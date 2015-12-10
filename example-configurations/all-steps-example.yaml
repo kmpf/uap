@@ -1,0 +1,410 @@
+destination_path: example-out/all-steps/
+
+constants:
+    - &genome genomes/bacteria/Mycoplasma_genitalium/M_genitalium_uncompress-281d
+    - &segemehl_genome_index 
+    - &bowtie2_genome_index genomes/bacteria/Mycoplasma_genitalium/bowtie2_index-dd59/Mycoplasma_genitalium_index
+    - &genome_faidx genomes/bacteria/Mycoplasma_genitalium/samtools_faidx-bf21/M_genitalium_genome-download.fasta.fai
+    - control: &bg_vs_ab
+            Replicate1_CellType1_Condition2:
+               - 'Replicate1_CellType1_Condition3'
+               - 'Replicate1_CellType1_Condition4'
+               - 'Replicate1_CellType1_Condition5'
+               - 'Replicate1_CellType1_Condition6'
+               - 'Replicate1_CellType1_Condition7'
+               - 'Replicate1_CellType1_Condition1'
+            Replicate1_CellType1_Condition1:
+               - 'Replicate1_CellType1_Condition3'
+               - 'Replicate1_CellType1_Condition4'
+               - 'Replicate1_CellType1_Condition5'
+               - 'Replicate1_CellType1_Condition6'
+               - 'Replicate1_CellType1_Condition7'
+               - 'Replicate1_CellType1_Condition2'
+            Replicate2_CellType1_Condition2:
+               - 'Replicate2_CellType1_Condition3'
+               - 'Replicate2_CellType1_Condition4'
+               - 'Replicate2_CellType1_Condition5'
+               - 'Replicate2_CellType1_Condition6'
+               - 'Replicate2_CellType1_Condition7'
+               - 'Replicate2_CellType1_Condition1'
+            Replicate2_CellType1_Condition1:
+               - 'Replicate2_CellType1_Condition3'
+               - 'Replicate2_CellType1_Condition4'
+               - 'Replicate2_CellType1_Condition5'
+               - 'Replicate2_CellType1_Condition6'
+               - 'Replicate2_CellType1_Condition7'
+               - 'Replicate2_CellType1_Condition2'
+            Replicate3_CellType1_Condition2:
+               - 'Replicate3_CellType1_Condition3'
+               - 'Replicate3_CellType1_Condition4'
+               - 'Replicate3_CellType1_Condition5'
+               - 'Replicate3_CellType1_Condition6'
+               - 'Replicate3_CellType1_Condition7'
+               - 'Replicate3_CellType1_Condition1'
+            Replicate3_CellType1_Condition1:
+               - 'Replicate3_CellType1_Condition3'
+               - 'Replicate3_CellType1_Condition4'
+               - 'Replicate3_CellType1_Condition5'
+               - 'Replicate3_CellType1_Condition6'
+               - 'Replicate3_CellType1_Condition7'
+               - 'Replicate3_CellType1_Condition2'
+            Replicate1_CellType2_Condition2:
+               - 'Replicate1_CellType2_Condition3'
+               - 'Replicate1_CellType2_Condition4'
+               - 'Replicate1_CellType2_Condition5'
+               - 'Replicate1_CellType2_Condition6'
+               - 'Replicate1_CellType2_Condition7'
+               - 'Replicate1_CellType2_Condition1'
+            Replicate1_CellType2_Condition1:
+               - 'Replicate1_CellType2_Condition3'
+               - 'Replicate1_CellType2_Condition4'
+               - 'Replicate1_CellType2_Condition5'
+               - 'Replicate1_CellType2_Condition6'
+               - 'Replicate1_CellType2_Condition7'
+               - 'Replicate1_CellType2_Condition2'
+            Replicate2_CellType2_Condition2:
+               - 'Replicate2_CellType2_Condition3'
+               - 'Replicate2_CellType2_Condition4'
+               - 'Replicate2_CellType2_Condition5'
+               - 'Replicate2_CellType2_Condition6'
+               - 'Replicate2_CellType2_Condition7'
+               - 'Replicate2_CellType2_Condition1'
+            Replicate2_CellType2_Condition1:
+               - 'Replicate2_CellType2_Condition3'
+               - 'Replicate2_CellType2_Condition4'
+               - 'Replicate2_CellType2_Condition5'
+               - 'Replicate2_CellType2_Condition6'
+               - 'Replicate2_CellType2_Condition7'
+               - 'Replicate2_CellType2_Condition2'
+            Replicate3_CellType2_Condition2:
+               - 'Replicate3_CellType2_Condition3'
+               - 'Replicate3_CellType2_Condition4'
+               - 'Replicate3_CellType2_Condition5'
+               - 'Replicate3_CellType2_Condition6'
+               - 'Replicate3_CellType2_Condition7'
+               - 'Replicate3_CellType2_Condition1'
+            Replicate3_CellType2_Condition2:
+               - 'Replicate3_CellType2_Condition3'
+               - 'Replicate3_CellType2_Condition4'
+               - 'Replicate3_CellType2_Condition5'
+               - 'Replicate3_CellType2_Condition6'
+               - 'Replicate3_CellType2_Condition7'
+               - 'Replicate3_CellType2_Condition1'
+            Replicate3_CellType2_Condition1:
+               - 'Replicate3_CellType2_Condition3'
+               - 'Replicate3_CellType2_Condition4'
+               - 'Replicate3_CellType2_Condition5'
+               - 'Replicate3_CellType2_Condition6'
+               - 'Replicate3_CellType2_Condition7'
+               - 'Replicate3_CellType2_Condition2'
+steps:
+    ##################
+    ## Source steps ##
+    ##################
+
+#    raw_file_source:
+#        path: example-data/test.fastq
+#        sha1: b57b3a0d25f8e8ed3d11200427a643cd2081a2e0
+
+#    fastq_source:
+#        pattern: example-data/Project_A/Sample_Replicate1_CellType1_Condition1/*.fastq.gz
+#        group: (H3K4me3)_GCCAAT_L001_R[12]_001.fastq.gz
+#        indices: indices.chipseqcsv
+#        paired_end: yes
+
+    fc (run_folder_source):
+        path: example-data/IlluminaRunFolder
+        paired_end: yes
+
+
+
+    ######################
+    ## Processing steps ##
+    ######################
+
+    merge_fastq_files:
+        _depends: fc
+
+    fastqc:
+        _depends: merge_fastq_files
+
+    fastx_quality_stats:
+        _depends: merge_fastq_files
+        new_output_format: yes
+        quality: 33
+
+    cutadapt:
+        _depends: merge_fastq_files
+        adapter-type: -a
+        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+        adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+        # adapter-file: /path/to/adapter.file
+        use_reverse_complement: no
+        minimal-length: 10
+        fix_qnames: false
+
+    fix_cutadapt:
+        _depends: cutadapt
+
+    # tophat2:
+        # _depends: fix_cutadapt
+        # index: *bowtie2_genome_index
+        # library_type: fr-unstranded # or fr-firststrand, fr-secondstrand
+
+    bowtie2:
+        _depends: fix_cutadapt
+        index: *bowtie2_genome_index
+
+#    segemehl:
+#        _depends: fix_cutadapt
+#        genome: *genome
+#        index: *segemehl_genome_index
+
+    sort_bowtie2 (sam_to_sorted_bam):
+        _depends: bowtie2
+        sort-by-name: no
+        genome-faidx: *genome_faidx
+        temp-sort-directory: /tmp/
+
+    # Too few reads for preseq
+    # preseq_complexity_curve:
+        # _depends: sort_bowtie2
+        # pe: yes
+        # seg_len: 500
+
+    # preseq_future_yield:
+        # _depends: sort_bowtie2
+        # pe: yes
+        # extrap: 100000000
+
+    picard_markduplicates:
+        _depends: sort_bowtie2
+         # PROGRAM_RECORD_ID: 
+         # PROGRAM_GROUP_VERSION:
+         # PROGRAM_GROUP_COMMAND_LINE:
+         # PROGRAM_GROUP_NAME:
+         # COMMENT:
+         # ASSUME_SORTED:
+         # MAX_FILE_HANDLES:
+         # SORTING_COLLECTION_SIZE_RATIO:
+         # READ_NAME_REGEX:
+         # OPTICAL_DUPLICATE_PIXEL_DISTANCE:
+
+    samtools_index:
+        _depends: picard_markduplicates
+        index_type: bai
+
+    macs2:
+        _depends: picard_markduplicates
+        control: *bg_vs_ab
+        format: AUTO
+        gsize: '2.7e9'
+        # keep-dup: 0
+        # buffer-size:
+        verbose: 0
+        # read-length:
+        # shift:
+        # qvalue: 
+        # pvalue:
+        # to-large:
+        # down-sample:
+        # slocal:
+        # llocal:
+        broad: no
+        # broad-cutoff: # use only in conjunction with 'broad: yes'
+        call-summits: no
+
+    macs2_broad_peaks (macs2):
+        _depends: picard_markduplicates
+        broad: yes
+        control: *bg_vs_ab
+
+    bam_to_genome_browser:
+        _depends: samtools_index
+        output-format: bigWig
+        chromosome-sizes: example-data/mycoGeni.chrom.sizes
+        # bedtools-bamtobed-tag: 
+        # bedtools-bamtobed-color: 
+        bedtools-genomecov-report-zero-coverage: no
+        # bedtools-genomecov-max: 
+        bedtools-genomecov-split: yes
+        # bedtools-genomecov-strand: '+' # '-'
+        # bedtools-genomecov-scale: 0.5
+        # bedtools-genomecov-5: yes # no
+        # bedtools-genomecov-3: yes # no
+        # trackline: not implemented yet
+        # trackopts: not implemented yet
+
+tools:
+    ##################
+    # External Tools #
+    ##################
+
+    bedGraphToBigWig:
+        path: bedGraphToBigWig
+        get_version: ''
+        exit_code: 255
+
+    bedtools:
+        path: bedtools
+        get_version: '--version'
+        exit_code: 0
+
+    bedToBigBed:
+        path: bedToBigBed
+        get_version: ''
+        exit_code: 255
+
+    bowtie2:
+        path: bowtie2
+        get_version: '--version'
+        exit_code: 0
+
+    cutadapt:
+        path: cutadapt
+        get_version: '--version'
+        exit_code: 0
+
+    fastqc:
+        path: fastqc
+        get_version: '--version'
+        exit_code: 0
+
+    fastx_quality_stats:
+        path: fastx_quality_stats
+        get_version: '-h'
+        exit_code: 1
+
+#    segemehl:
+#        path: segemehl.x
+#        get_version: ''
+#        exit_code: 255
+
+    cufflinks:
+        path: cufflinks
+        get_version: '--version'
+        exit_code: 1
+
+#    htseq-count:
+#        path: htseq-count
+#        get_version: ''
+#        exit_code: 1
+
+    macs2:
+        path: macs2
+        get_version: '--version'
+        exit_code: 0
+
+    picard-tools:
+        path: picard-tools
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://zlib.net/pigz/
+    pigz:
+        path: pigz
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://smithlabresearch.org/software/preseq/
+    preseq:
+        path: 'preseq'
+        get_version: ''
+        exit_code: 0
+
+    samtools:
+        path: samtools
+        get_version: '--version'
+        exit_code: 0
+
+    tophat2:
+        path: tophat2
+        get_version: '--version'
+        exit_code: 0
+
+    ##################
+    # Internal Tools #
+    ##################
+
+#    cat4m:
+#        path: ./../tools/cat4m
+
+    fix_cutadapt:
+        path: ['./../python_env/bin/python', './../tools/fix_cutadapt.py']
+        get_version: ''
+        exit_code: 2
+
+    fix_qnames:
+        path: ['./../python_env/bin/python', './../tools/fix_qnames.py']
+
+    remove_reads_segemehl:
+        path: ['./../python_env/bin/python', './../tools/remove_reads_segemehl.py']
+        exit_code: 1
+
+    ##############
+    # Unix Tools #
+    ##############
+
+    cat:
+        path: cat
+        get_version: '--version'
+        exit_code: 0
+
+    curl:
+        path: curl
+        get_version: '--version'
+        exit_code: 0
+
+    dd:
+        path: dd
+        get_version: '--version'
+        exit_code: 0
+
+    head:
+        path: head
+        get_version: '--version'
+        exit_code: 0
+
+    grep:
+        path: grep
+        get_version: '--version'
+
+    ln:
+        path: ln
+        get_version: '--version'
+        exit_code: 0
+
+    mkdir:
+        path: mkdir
+        get_version: '--version'
+        exit_code: 0
+
+    mkfifo:
+        path: mkfifo
+        get_version: '--version'
+        exit_code: 0
+
+    mv:
+        path: mv
+        get_version: '--version'
+        exit_code: 0
+
+    sort:
+        path: 'sort'
+        get_version: '--version'
+        exit_code: 0
+
+    sha1sum:
+        path: sha1sum
+        get_version: '--version'
+        exit_code: 0
+
+    tar:
+        path: tar
+        get_version: '--version'
+        exit_code: 0
+
+    wc:
+        path: 'wc'
+        get_version: '--version'
+

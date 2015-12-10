@@ -41,12 +41,12 @@ class Bcl2FastqSource(AbstractSourceStep):
         self.add_option('positions-dir', str, optional=True)
         self.add_option('positions-format', str, optional=True)
         self.add_option('filter-dir', str, optional=True)
-        self.add_option('sample-sheet', str, optional=True)
+        self.add_option('sample-sheet', str, optional=False)
         self.add_option('mismatches', int, optional=True)
         self.add_option('fastq-cluster-count', int, optional=True)
-        self.add_option('ignore-missing-stats', str, optional=True)
-        self.add_option('ignore-missing-bcl', str, optional=True)
-        self.add_option('ignore-missing-control', str, optional=True)
+        self.add_option('ignore-missing-stats', bool, optional=True)
+        self.add_option('ignore-missing-bcl', bool, optional=True)
+        self.add_option('ignore-missing-control', bool, optional=True)
         self.add_option('tiles', str, optional=True)
         self.add_option('flowcell-id', str, optional=True)
 
@@ -56,6 +56,9 @@ class Bcl2FastqSource(AbstractSourceStep):
         
         '''
         input_dir = self.get_option('input-dir')
+        if not os.path.isdir(input_dir):
+            raise StandardError("The given input directory '%s' is not an "
+                                "existing directory." % input_dir)
         # Get path to output folder ...
         output_dir = os.path.abspath(input_dir)
         # ... or use the given path
@@ -64,16 +67,39 @@ class Bcl2FastqSource(AbstractSourceStep):
 
         # Get path to Unaligned folder
         output_unaligned_dir = os.path.join(output_dir, 'Unaligned')
-        # Create placeholder for Unaligned folder
-        temp_output_dir = os.path.join(
-            self.get_output_directory_du_jour_placeholder(),
-            'Unaligned')
+
+        # Check existence of Sample Sheet
+        sample_sheet = os.path.abspath(self.get_option('sample-sheet'))
+        if not os.path.isfile(sample_sheet):
+            raise StandardError("The given Sample Sheet '%s' is not an "
+                                "existing file." % sample_sheet)
+
+        # Compile the list of options
+        options = ['adapter-sequence', 'adapter-stringency', 'use-bases-mask',
+                   'no-eamss', 'with-failed-reads', 'intensities-dir',
+                   'positions-dir', 'positions-format', 'filter-dir',
+                   'sample-sheet', 'mismatches', 'fastq-cluster-count',
+                   'ignore-missing-stats', 'ignore-missing-bcl',
+                   'ignore-missing-control', 'tiles', 'flowcell-id']
+        set_options = [option for option in options if \
+                       self.is_option_set_in_config(option)]
+        option_list = list()
+        for option in set_options:
+            if self.get_option(option):
+                option_list.append('--%s' % option)
+            if not isinstance(self.get_option(option), bool):
+                option_list.append(str(self.get_option(option)))
 
         # Declare a new run
         with self.declare_run('read_demultiplexing') as run:
             if not os.path.exists(output_unaligned_dir):
                 # Create new execution group for configureBclToFastq.pl
                 with run.new_exec_group() as bcl2Fastq_exec_group:
+                    # Create placeholder for Unaligned folder
+                    temp_output_dir = os.path.join(
+                        run.get_output_directory_du_jour_placeholder(),
+                        'Unaligned')
+
                     # Assemble configureBclToFastq.pl command
                     configureBcl2Fastq = [
                         self.get_tool('configureBclToFastq.pl'),
@@ -82,20 +108,8 @@ class Bcl2FastqSource(AbstractSourceStep):
                                      'BaseCalls')
                     ]
                 
-                    options = ['adapter-sequence', 'adapter-stringency',
-                               'use-bases-mask', 'no-eamss',
-                               'with-failed-reads', 'intensities-dir',
-                               'positions-dir', 'positions-format',
-                               'filter-dir', 'sample-sheet', 'mismatches',
-                               'fastq-cluster-count', 'ignore-missing-stats',
-                               'ignore-missing-bcl', 'ignore-missing-control',
-                               'tiles', 'flowcell-id']
-                    set_options = [option for option in options if \
-                                   self.is_option_set_in_config(option)]
-                    for option in set_options:
-                        configureBcl2Fastq.extend([ '--%s' % option, 
-                                                    str(self.get_option(option))
-                                                ])
+                    configureBcl2Fastq.extend(option_list)
+
                     configureBcl2Fastq.extend(
                         ['--output-dir', temp_output_dir])
 

@@ -33,22 +33,23 @@ class CommandInfo(object):
             elif isinstance(self._eop, exec_group.ExecGroup):
                 run_info = self._eop.get_run()
             # Collect info to replace du_jour placeholder with temp_out_dir
-            step = run_info.get_step()
-            placeholder = step.get_output_directory_du_jour_placeholder()
-            temp_out_dir = step.get_output_directory_du_jour(run_info.get_run_id())
+            placeholder = run_info.get_output_directory_du_jour_placeholder()
+            temp_out_dir = run_info.get_output_directory_du_jour()
             
             command = None
             ret_value = func(self, *args)
             if isinstance(ret_value, list):
                 command = list()
                 for string in ret_value:
-                    if string != None and placeholder in string:
+                    if string != None and placeholder in string and\
+                       isinstance(temp_out_dir, str):
                         command.append(
                             string.replace(placeholder, temp_out_dir))
                     else:
                         command.append(string)
             elif isinstance(ret_value, str):
-                if ret_value != None and placeholder in ret_value:
+                if ret_value != None and placeholder in ret_value and\
+                   isinstance(temp_out_dir, str):
                         command = ret_value.replace(placeholder, temp_out_dir)
             elif ret_value == None:
                 command = None

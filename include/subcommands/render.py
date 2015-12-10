@@ -2,9 +2,15 @@
 # encoding: utf-8
 
 import sys
+import copy
+import glob
 import logging
 import os
+import re
+import socket
+import StringIO
 import subprocess
+import textwrap
 import yaml
 
 import abstract_step
@@ -74,21 +80,23 @@ def main(args):
     # Test if dot is available
     dot_version = ['dot', '-V']
     try:
-        subprocess.check_call(dot_version)
+        with open(os.devnull, 'w') as devnull:
+            subprocess.check_call(dot_version, stdout = devnull)
     except subprocess.CalledProcessError as e:
         raise StandardError("Execution of %s failed. GraphViz seems to be "
                             "unavailable." % " ".join(dot_version))
 
     if args.files:
         logger.info("Going to plot the graph containing all files of the analysis")
-    elif args.pipeline:
+        raise StandardError("Sorry, feature not implemented yet!")
+    elif args.steps:
         logger.info("Create a graph showing the DAG of the analysis")
-    else:
-        logger.info("Create graphs for all annotation files I can get my hands on.")
-        task_list = p.all_tasks_topologically_sorted
-        
+
+        render_graph_for_all_steps(p, args)
+
+    elif args.step_task:
         if len(args.step_task) >= 1:
-            # execute the specified tasks
+            # Compile a list of all tasks
             task_list = list()
             for task_id in args.step_task:
                 if '/' in task_id:
@@ -99,53 +107,58 @@ def main(args):
                         if str(task)[0:len(task_id)] == task_id:
                             task_list.append(task)
 
-        for task in task_list:
-            basic_task_state = task.get_task_state_basic()
-            if basic_task_state == p.states.FINISHED:
-                # getting the name of the annotation file outside of a executing
-                # run is quite difficult, because the filename contains a hash
-                # of the annotation files content. Bäh!
-                task.get_run
+            for task in task_list:
+                outdir = task.get_run().get_output_directory()
+                anno_files = glob.glob(os.path.join(
+                    outdir, ".%s*.annotation.yaml" % task.get_run().get_run_id()
+                ))
 
-#    if args.all or args.task:
-#        logs = []
-#        if args.all:
-#            for task in p.task_for_task_id.values():
-#                annotation_path = os.path.join(task.step.get_output_directory(), '.%s-annotation.yaml' % task.run_id)
-#                if os.path.exists(annotation_path):
-#                    log = yaml.load(open(annotation_path))
-#                    logs.append(log)
-#        else:
-#            for task_id in args.task:
-#                task = p.task_for_task_id[task_id]
-#                annotation_path = os.path.join(task.step.get_output_directory(), '.%s-annotation.yaml' % task.run_id)
-#                if os.path.exists(annotation_path):
-#                    log = yaml.load(open(annotation_path))
-#                    logs.append(log)
-#                else:
-#                    print("Unable to find annotation at %s." % annotation_path)
-#        gv = abstract_step.AbstractStep.render_pipeline(logs)
-#        with open('out.gv', 'w') as f:
-#            f.write(gv)
-#            
-#        exit(0)
-#    
+                for f in anno_files:
+                    logger.info("Going to plot the graph for task: %s" % task)
+                    render_single_annotation(f)
+
+    else:
+        # Just find everything that looks like an annotation file and generate
+        # the plots for it.
+        directory = os.path.abspath(p.config['destination_path'])
+        if not os.path.isdir(directory):
+            raise StandardError("%s is not a directory." % directory)
+
+        annotation_files = list()
+        for root, dirs, files in os.walk(directory):
+            anno_file_regex = re.compile('^\..*-annotation-.{6}\.yaml$')
+            for f in files:
+                if re.search(anno_file_regex, f):
+                    annotation_files.append(os.path.join(root, f))
+
+        for annotation_file in annotation_files:
+            render_single_annotation(annotation_file)
+        
 
 
+def render_graph_for_all_steps(p, args):
+    configuration_path = p.get_config_filepath()
+    if args.simple:
+        svg_file = configuration_path.replace('.yaml', '.simple.svg')
+        png_file = configuration_path.replace('.yaml', '.simple.png')        
+    else:
+        svg_file = configuration_path.replace('.yaml', '.svg')
+        png_file = configuration_path.replace('.yaml', '.png')
 
-
-
-    dot = subprocess.Popen(['dot', '-Tsvg'], stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+    dot = subprocess.Popen(['dot', '-Tsvg'],
+                           stdin = subprocess.PIPE,
+                           stdout = subprocess.PIPE)
     
     f = dot.stdin
     
     f.write("digraph {\n")
     f.write("  rankdir = TB;\n")
     f.write("  splines = true;\n")
-    f.write("    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", nodesep = 0.2, ranksep = 0.3];\n")
+    f.write("    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", "
+            "nodesep = 0.2, ranksep = 0.3];\n")
     f.write("    node [fontname = Helvetica, fontsize = 12, shape = rect];\n")
     f.write("    edge [fontname = Helvetica, fontsize = 12];\n")
-    for step_name, step in p.steps.items():
+    for step_name, step in p.get_steps().items():
         total_runs = len(step.get_run_ids())
         finished_runs = 0
         for _ in step.get_run_ids():
@@ -157,92 +170,125 @@ def main(args):
         label = step_name
         if step_name != step.__module__:
             label = "%s\\n(%s)" % (step_name, step.__module__)
-        f.write("    %s [label=\"%s\", style = filled, fillcolor = \"#fce94f\"];\n" % (step_name, label))
-        color = gradient(float(finished_runs) / total_runs if total_runs > 0 else 0.0, GRADIENTS['traffic_lights'])
+        f.write("    %s [label=\"%s\", style = filled, fillcolor = \"#fce94f\"];\n"
+                % (step_name, label))
+        color = gradient(float(finished_runs) / total_runs \
+                         if total_runs > 0 else 0.0, GRADIENTS['traffic_lights'])
         color = mix(color, '#ffffff', 0.5)
-        f.write("    %s_progress [label=\"%1.0f%%\", style = filled, fillcolor = \"%s\" height = 0.3];\n" % (step_name, float(finished_runs) * 100.0 / total_runs if total_runs > 0 else 0.0, color))
-        f.write("    %s -> %s_progress [arrowsize = 0];\n" % (step_name, step_name))
+        f.write("    %s_progress [label=\"%s/%s\", style = filled, "
+                "fillcolor = \"%s\" height = 0.3];\n"
+                % (step_name, finished_runs, total_runs, color))
+        f.write("    %s -> %s_progress [arrowsize = 0];\n"
+                % (step_name, step_name))
         f.write("    {rank=same; %s %s_progress}\n" % (step_name, step_name))
-        
-        for c in step._connections:
-            connection_key = escape(('%s/%s' % (step_name, c)).replace('/', '__'))
-            f.write("    %s [label=\"%s\", shape = ellipse, fontsize = 10];\n" % (connection_key, c))
-            if c[0:3] == 'in/':
-                f.write("    %s -> %s;\n" % (connection_key, step_name))
-            else:
-                f.write("    %s -> %s;\n" % (step_name, connection_key))
+
+        if not args.simple:
+            for c in step._connections:
+                connection_key = escape(('%s/%s'
+                                         % (step_name, c)).replace('/', '__'))
+                f.write("    %s [label=\"%s\", shape = ellipse, fontsize = 10];\n"
+                        % (connection_key, c))
+                if c[0:3] == 'in/':
+                    f.write("    %s -> %s;\n" % (connection_key, step_name))
+                else:
+                    f.write("    %s -> %s;\n" % (step_name, connection_key))
                 
         f.write("  graph[style=dashed];\n")
         f.write("}\n")
             
     for step_name, step in p.steps.items():
         for other_step in step.dependencies:
-            #f.write("    %s -> %s;\n" % (other_step.get_step_name(), step_name))
+            if args.simple:
+                f.write("    %s -> %s;\n"
+                        % (other_step.get_step_name(), step_name))
+            else:
             
-            for in_key in step._connections:
-                if in_key[0:3] != 'in/':
-                    continue
-                
-                out_key = in_key.replace('in/', 'out/')
-                allowed_steps = None
-                if '_connect' in step.options:
-                    if in_key in step.options['_connect']:
-                        declaration = step.options['_connect'][in_key]
-                        if declaration.__class__ == str:
-                            if '/' in declaration:
-                                parts = declaration.split('/')
-                                allowed_steps = set()
-                                allowed_steps.add(parts[0])
-                                out_key = 'out/' + parts[1]
-                            else:
-                                out_key = 'out/' + declaration
-                        else:
-                            raise StandardError("Invalid _connect value: %s" % yaml.dump(declaration))
-                        
-                for real_outkey in other_step._connections:
-                    if real_outkey[0:4] != 'out/':
+                for in_key in step._connections:
+                    if in_key[0:3] != 'in/':
                         continue
-                    if out_key == real_outkey:
-                        connection_key = escape(('%s/%s' % (step_name, in_key)).replace('/', '__'))
-                        other_connection_key = escape(('%s/%s' % (other_step.get_step_name(), out_key)).replace('/', '__'))
-                        f.write("    %s -> %s;\n" % (other_connection_key, connection_key))
+                
+                    out_key = in_key.replace('in/', 'out/')
+                    allowed_steps = None
+                    if '_connect' in step.get_options():
+                        if in_key in step.options['_connect']:
+                            declaration = step.options['_connect'][in_key]
+                            if declaration.__class__ == str:
+                                if '/' in declaration:
+                                    parts = declaration.split('/')
+                                    allowed_steps = set()
+                                    allowed_steps.add(parts[0])
+                                    out_key = 'out/' + parts[1]
+                                else:
+                                    out_key = 'out/' + declaration
+                            else:
+                                raise StandardError("Invalid _connect value: %s"
+                                                    % yaml.dump(declaration))
+                        
+                    for real_outkey in other_step._connections:
+                        if real_outkey[0:4] != 'out/':
+                            continue
+                        if out_key == real_outkey:
+                            connection_key = escape(
+                                ('%s/%s' % (step_name, in_key)).replace('/', '__')
+                            )
+                            other_connection_key = escape(
+                                ('%s/%s' % (other_step.get_step_name(),
+                                            out_key)).replace('/', '__')
+                            )
+                            f.write("    %s -> %s;\n"
+                                    % (other_connection_key, connection_key))
+
     f.write("}\n")
     
     dot.stdin.close()
+
+    svg = dot.stdout.read()
+    with open(svg_file, 'w') as f:
+        f.write(svg)
+
+
+    #print(yaml.dump(pipeline.get_steps()))
+
     
-    with open('steps.svg', 'w') as f:
-        f.write(dot.stdout.read())
 
 def render_single_annotation(annotation_path):
+    dot_file = annotation_path.replace('.yaml', '.dot')
+    svg_file = annotation_path.replace('.yaml', '.svg')
+    png_file = annotation_path.replace('.yaml', '.png')
+
+    log = dict()
+    with open(annotation_path, 'r') as f:
+        log = yaml.load(f)
     try:
-        gv = self.render_pipeline([log])
-        dot = subprocess.Popen(['dot', '-Tsvg'], stdin = subprocess.PIPE,
+        gv = render_pipeline([log])
+        with open(dot_file, 'w') as f:
+            f.write(gv)
+        
+        dot = subprocess.Popen(['dot', '-Tsvg', '-o%s' % svg_file, dot_file],
+                               stdin = subprocess.PIPE,
                                stdout = subprocess.PIPE)
-        dot.stdin.write(gv)
-        dot.stdin.close()
-        svg = dot.stdout.read()
-        with open(annotation_path + '.svg', 'w') as f:
-            f.write(svg)
+#        dot.stdin.write(gv)
+#        dot.stdin.close()
+#        svg = dot.stdout.read()
+#        with open(svg_file, 'w') as f:
+#            f.write(svg)
             
-        dot = subprocess.Popen(['dot', '-Tpng'], stdin = subprocess.PIPE,
+        dot = subprocess.Popen(['dot', '-Tpng', '-o%s' % png_file, dot_file],
+                               stdin = subprocess.PIPE,
                                stdout = subprocess.PIPE)
-        dot.stdin.write(gv)
-        dot.stdin.close()
-        png = dot.stdout.read()
-        with open(annotation_path + '.png', 'w') as f:
-            f.write(png)
+#        dot.stdin.write(gv)
+#        dot.stdin.close()
+#        png = dot.stdout.read()
+#        with open(png_file, 'w') as f:
+#            f.write(png)
     except:
-        # rendering the pipeline graph is not _that_ important, after all
-        # we can still try to render it later from the annotation file
-        print("There was an error rendering the annotation.")
-        print("Here is the information but we'll keep calm and carry on:")
         print(sys.exc_info())
         import traceback
         traceback.print_tb(sys.exc_info()[2])
         pass
 
 
-def render_pipeline( logs):
+def render_pipeline(logs):
     hash = {'nodes': {}, 'edges': {}, 'clusters': {}, 'graph_labels': {}}
     for log in logs:
         temp = render_pipeline_hash(log)
@@ -290,8 +336,7 @@ def render_pipeline( logs):
     f.close()
     return result
         
-
-def render_pipeline_hash( log):
+def render_pipeline_hash(log):
         
     def pid_hash(pid, suffix = ''):
         hashtag = "%s/%s/%d/%s" % (log['step']['name'], 
@@ -306,11 +351,11 @@ def render_pipeline_hash( log):
         return misc.str_to_sha1(path)
         
         
-    hash = dict()
-    hash['nodes'] = dict()
-    hash['edges'] = dict()
-    hash['clusters'] = dict()
-    hash['graph_labels'] = dict()
+    pipe_hash = dict()
+    pipe_hash['nodes'] = dict()
+    pipe_hash['edges'] = dict()
+    pipe_hash['clusters'] = dict()
+    pipe_hash['graph_labels'] = dict()
         
     def add_file_node(path):
         if not path in log['step']['known_paths']:
@@ -318,92 +363,118 @@ def render_pipeline_hash( log):
                 
         if 'real_path' in log['step']['known_paths'][path]:
             path = log['step']['known_paths'][path]['real_path']
-        label = log['step']['known_paths'][path]['label']
+        #label = log['step']['known_paths'][path]['label']
         color = '#ffffff'
         if log['step']['known_paths'][path]['type'] == 'fifo':
             color = '#c4f099'
+            label = os.path.basename(path)
         elif log['step']['known_paths'][path]['type'] == 'file':
             color = '#8ae234'
+            label = os.path.basename(path)
         elif log['step']['known_paths'][path]['type'] == 'step_file':
             color = '#97b7c8'
+            label = log['step']['known_paths'][path]['label']
             if path in log['step']['known_paths']:
                 if 'size' in log['step']['known_paths'][path]:
                     label += "\\n%s" % misc.bytes_to_str(
                         log['step']['known_paths'][path]['size'])
-        hash['nodes'][misc.str_to_sha1(path)] = {
+        pipe_hash['nodes'][misc.str_to_sha1(path)] = {
             'label': label,
             'fillcolor': color
         }
             
     for proc_info in copy.deepcopy(log['pipeline_log']['processes']):
         pid = proc_info['pid']
-        label = "PID %d" % pid
-        name = '(unknown)'
-        if 'name' in proc_info:
+        # Set name and label variable
+        try:
             name = proc_info['name']
-        label = "%s" % (proc_info['name'])
-        if 'writes' in proc_info['hints']:
+            label = "%s" % (proc_info['name'])
+        except KeyError:
+            name = '(unknown)'
+            label = "PID %d" % pid
+            
+        try:
+            # Add file nodes for every file in hints
             for path in proc_info['hints']['writes']:
                 add_file_node(path)
-        if 'args' in proc_info:
+                pipe_hash['edges'][(pid_hash(pid), file_hash(path))] = dict()
+        except KeyError:
+            pass
+
+        try:
+            # Add all the info for each process to pipe_hash
             stripped_args = []
-            for arg in copy.deepcopy(proc_info['args']):
-                if arg in log['step']['known_paths']:
-                    add_file_node(arg)
-                if arg in log['step']['known_paths']:
-                    if log['step']['known_paths'][arg]['type'] != 'step_file':
-                        arg = log['step']['known_paths'][arg]['label']
+            is_output_file = False
+            for arg in proc_info['args']:
+                # Try to investigate how fifos are integrated in data stream
+                # Hier muss die Entscheidung rein ob eine Datei für Input oder
+                # Output genutzt wird
+                io_type = None
+                if name == 'cat':
+                    is_output_file = False
+                elif name == 'dd' and arg.startswith('of='):
+                    is_output_file = True
+                elif name == 'dd' and arg.startswith('if='):
+                    is_output_file = False
+                for known_path in log['step']['known_paths'].keys():
+                    # Check if arg contains a known path ...
+                    if known_path in arg:
+                        # ... if so add this file to the graph 
+                        add_file_node(known_path)
+                        # Is the process able to in-/output files?
+                        if name in ['cat', 'dd']:
+                            if is_output_file:
+                                io_type = 'output'
+                            else:
+                                io_type = 'input'
+                        else:
+                            # we can't know whether the fifo is for input or
+                            # output, first look at the hints, then use the
+                            # designation (if any was given)
+                            if 'reads' in proc_info['hints'] and \
+                               arg in proc_info['hints']['reads']:
+                                io_type = 'input'
+                            if 'writes' in proc_info['hints'] and \
+                               arg in proc_info['hints']['writes']:
+                                io_type = 'output'
+                            if io_type is None:
+                                io_type = log['step']['known_paths'][known_path]\
+                                            ['designation']
+                        if io_type == 'input':
+                            # add edge from file to proc
+                            pipe_hash['edges']\
+                                [(file_hash(known_path),pid_hash(pid))] = dict()
+                        elif io_type == 'output':
+                            # add edge from proc to file
+                            pipe_hash['edges']\
+                                [(pid_hash(pid), file_hash(known_path))] = dict()
+
+                        basename = os.path.basename(known_path)
+                        #if log['step']['known_paths'][known_path]['type'] != \
+                        #   'step_file':
+                        arg = arg.replace(known_path, basename)
+#                            break
+#                        else:
+#                            arg = basename
+#                            break
                     else:
-                        arg = os.path.basename(arg)
-                else:
-                    if arg[0:4] != '/dev':
-                        arg = os.path.basename(arg)
+#                        if arg[0:4] != '/dev':
+#                            arg = os.path.basename(arg)
                         if (len(arg) > 16) and re.match('^[A-Z]+$', arg):
                             arg = "%s[...]" % arg[:16]
                 stripped_args.append(arg.replace('\t', '\\t').replace(
                     '\\', '\\\\'))
+                
             tw = textwrap.TextWrapper(
                 width = 50, 
                 break_long_words = False, 
                 break_on_hyphens = False)
             label = "%s" % ("\\n".join(tw.wrap(' '.join(stripped_args))))
-        if 'args' in proc_info:
-            cat4m_seen_minus_o = False
-            for arg in proc_info['args']:
-                fifo_type = None
-                if name == 'cat4m' and arg == '-o':
-                    cat4m_seen_minus_o = True
-                if arg in log['step']['known_paths']:
-                    add_file_node(arg)
-                    if name == 'cat4m':
-                        if cat4m_seen_minus_o:
-                            fifo_type = 'output'
-                        else:
-                            fifo_type = 'input'
-                    else:
-                        # we can't know whether the fifo is for input or
-                        # output, first look at the hints, then use the
-                        # designation (if any was given)
-                        if 'reads' in proc_info['hints'] and \
-                           arg in proc_info['hints']['reads']:
-                            fifo_type = 'input'
-                        if 'writes' in proc_info['hints'] and \
-                           arg in proc_info['hints']['writes']:
-                            fifo_type = 'output'
-                        if fifo_type is None:
-                            fifo_type = log['step']['known_paths'][arg]\
-                                        ['designation']
-                    if fifo_type == 'input':
-                        # add edge from file to proc
-                        hash['edges'][(file_hash(arg), pid_hash(pid))] \
-                            = dict()
-                    elif fifo_type == 'output':
-                        # add edge from proc to file
-                        hash['edges'][(pid_hash(pid), file_hash(arg))] \
-                            = dict()
-        if 'writes' in proc_info['hints']:
-            for path in proc_info['hints']['writes']:
-                hash['edges'][(pid_hash(pid), file_hash(path))] = dict()
+
+        # If any key wasn't around let's go on
+        except KeyError:
+            pass
+
         # add proc
         something_went_wrong = False
         if 'signal' in proc_info:
@@ -442,7 +513,7 @@ def render_pipeline_hash( log):
                     log['pipeline_log']['process_watcher']['max'][pid]\
                     ['memory_percent'])
                 
-        hash['nodes'][pid_hash(pid)] = {
+        pipe_hash['nodes'][pid_hash(pid)] = {
             'label': label,
             'fillcolor': color
         }
@@ -499,7 +570,7 @@ def render_pipeline_hash( log):
                         
                                 
                 # add proc_which
-                hash['nodes'][pid_hash(pid, which)] = {
+                pipe_hash['nodes'][pid_hash(pid, which)] = {
                     'label': label,
                     'fillcolor': color
                 }
@@ -511,15 +582,15 @@ def render_pipeline_hash( log):
         pid = proc_info['pid']
         if 'use_stdin_of' in proc_info:
             other_pid = proc_info['use_stdin_of']
-            hash['edges'][(pid_hash(other_pid, 'stdout'), pid_hash(pid))] \
+            pipe_hash['edges'][(pid_hash(other_pid, 'stdout'), pid_hash(pid))] \
                 = dict()
         for which in ['stdout', 'stderr']:
             key = "%s_copy" % which
             if key in proc_info:
                 other_pid = proc_info[key]['pid']
-                hash['edges'][(pid_hash(pid), pid_hash(pid, which))] = dict()
+                pipe_hash['edges'][(pid_hash(pid), pid_hash(pid, which))] = dict()
                 if 'sink_full_path' in proc_info[key]:
-                    hash['edges'][(
+                    pipe_hash['edges'][(
                         pid_hash(pid, which),
                         file_hash(proc_info[key]['sink_full_path']))] = dict()
 
@@ -531,33 +602,32 @@ def render_pipeline_hash( log):
 
     task_name = "%s/%s" % (log['step']['name'], log['run']['run_id'])
     cluster_hash = misc.str_to_sha1(task_name)
-    hash['clusters'][cluster_hash] = dict()
-    hash['clusters'][cluster_hash]['task_name'] = task_name
-    hash['clusters'][cluster_hash]['group'] = list()
-    for node in hash['nodes'].keys():
+    pipe_hash['clusters'][cluster_hash] = dict()
+    pipe_hash['clusters'][cluster_hash]['task_name'] = task_name
+    pipe_hash['clusters'][cluster_hash]['group'] = list()
+    for node in pipe_hash['nodes'].keys():
         if not node in step_file_nodes:
-            hash['clusters'][cluster_hash]['group'].append(node)
+            pipe_hash['clusters'][cluster_hash]['group'].append(node)
                 
     start_time = log['start_time']
     end_time = log['end_time']
     duration = end_time - start_time
-        
-    hash['graph_labels'][task_name] = "Task: %s\\lHost: %s\\lDuration: "
-    "%s\\l" % (task_name, 
-               socket.gethostname(),
-               misc.duration_to_str(duration, long = True))
+
+    text = "Task: %s\\lHost: %s\\lDuration: %s\\l" % (
+        task_name, socket.gethostname(),
+        misc.duration_to_str(duration, long = True)
+    )
+    pipe_hash['graph_labels'][task_name] = text
     if 'max' in log['pipeline_log']['process_watcher']:
-        hash['graph_labels'][task_name] += "CPU: %1.1f%%, %d "
-        "CORES_Requested , RAM: %s (%1.1f%%)\\l" % (
-            log['pipeline_log']['process_watcher']['max']['sum']\
-            ['cpu_percent'],
+        text = "CPU: %1.1f%%, %d CORES_Requested , RAM: %s (%1.1f%%)\\l" % (
+            log['pipeline_log']['process_watcher']['max']['sum']['cpu_percent'],
             log['step']['cores'],
             misc.bytes_to_str(log['pipeline_log']['process_watcher']['max']\
                               ['sum']['rss']), 
-            log['pipeline_log']['process_watcher']['max']['sum']\
-            ['memory_percent'])
+            log['pipeline_log']['process_watcher']['max']['sum']['memory_percent'])
+        pipe_hash['graph_labels'][task_name] += text
     if 'signal' in log:
-        hash['graph_labels'][task_name] += "Caught signal: %s\\l" % \
-                                           process_pool.ProcessPool.SIGNAL_NAMES[log['signal']]
-    hash['graph_labels'][task_name] += "\\l"
-    return hash
+        pipe_hash['graph_labels'][task_name] += "Caught signal: %s\\l" % (
+            process_pool.ProcessPool.SIGNAL_NAMES[log['signal']])
+    pipe_hash['graph_labels'][task_name] += "\\l"
+    return pipe_hash

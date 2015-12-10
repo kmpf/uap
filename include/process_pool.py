@@ -215,7 +215,8 @@ class ProcessPool(object):
 
     def __enter__(self):
         if ProcessPool.current_instance is not None:
-            raise StandardError("Sorry, only one instance of ProcessPool allowed at a time.")
+            raise StandardError("Sorry, only one instance of ProcessPool "
+                                "allowed at a time.")
         ProcessPool.current_instance = self
         
         # First we have to add the pre_command commands for execution
@@ -258,7 +259,7 @@ class ProcessPool(object):
                 self.load_unload_module(module_unload)
 
         # remove all temporary files or directories we know of
-        if self.clean_up_temp_paths:
+        if self.clean_up:
             self.get_run().remove_temporary_paths()
         
         ProcessPool.current_instance = None
@@ -420,14 +421,16 @@ class ProcessPool(object):
                 try:
                     # write report
                     with open(report_path, 'w') as freport:
-                        #sys.stderr.write("[%d] writing report...\n" % os.getpid())
                         report = dict()
                         report['sha1'] = checksum.hexdigest()
                         report['tail'] = tail
                         report['length'] = length
                         report['lines'] = newline_count
                         freport.write(yaml.dump(report))
-                except:
+                except (IOError, LookupError) as e:
+                    sys.stderr.write("Exception (%s): %s" % (type(e).__name__, sys.exc_info() ))
+                    sys.stderr.write(traceback.format_exc())
+                    sys.stderr.flush()
                     pass
                 
                 os._exit(0)
@@ -451,13 +454,9 @@ class ProcessPool(object):
             newline_count = 0
             
             while True:
-                #sys.stderr.write("[%d] reading from fin\n" % os.getpid())
                 block = fin.read(ProcessPool.COPY_BLOCK_SIZE)
-                #sys.stderr.write("%s\n" % block)
-                #sys.stderr.write("[%d] actually read %d bytes from fin\n" % (os.getpid(), len(block)))
                 if len(block) == 0:
                     # fin reports EOF, let's call it a day
-                    #sys.stderr.write("[%d] fin is at EOF\n" % os.getpid())
                     break
                     
                 # update checksum
@@ -478,34 +477,22 @@ class ProcessPool(object):
                 
                 # write block to output file
                 if fdout is not None:
-                    #sys.stderr.write("[%d] writing %d bytes to fdout\n" % (os.getpid(), len(block)))
                     bytes_written = os.write(fdout, block)
-                    #sys.stderr.write("[%d] actually wrote %d bytes to fdout\n" % (os.getpid(), bytes_written))
                     if bytes_written != len(block):
-                        #sys.stderr.write("Could not write to fdout.\n")
                         os._exit(1)
                     
                 # write block to pipe
                 if pipe is not None:
-                    #sys.stderr.write("[%d] writing %d bytes to pipe[1]\n" % (os.getpid(), len(block)))
                     bytes_written = os.write(pipe[1], block)
-                    #sys.stderr.write("[%d] actually wrote %d bytes to pipe[1]\n" % (os.getpid(), bytes_written))
                     if bytes_written != len(block):
-                        #sys.stderr.write("Could not write to pipe.\n")
                         os._exit(2)
                     
             # we're finished, close everything
-            #sys.stderr.write("[%d] closing fin...\n" % os.getpid())
             fin.close()
-            #sys.stderr.write("[%d] done closing fin...\n" % os.getpid())
             if fdout is not None:
-                #sys.stderr.write("[%d] closing fdout...\n" % os.getpid())
                 os.close(fdout)
-                #sys.stderr.write("[%d] done closing fdout...\n" % os.getpid())
             if pipe is not None:
-                #sys.stderr.write("[%d] closing pipe[1]...\n" % os.getpid())
                 os.close(pipe[1])
-                #sys.stderr.write("[%d] done closing pipe[1]...\n" % os.getpid())
 
             write_report_and_exit()
                 
@@ -547,12 +534,14 @@ class ProcessPool(object):
                 if pid == watcher_pid:
                     ProcessPool.process_watcher_pid = None
                     try:
-                        with open(watcher_report_path) as f:
+                        with open(watcher_report_path, 'r') as f:
                             self.process_watcher_report = yaml.load(f)
-                        os.unlink(watcher_report_path)
-                    except:
-                        print("Warning: Couldn't load watcher report from %s." %
+                    except IOError as e:
+                        sys.stderr.write("%s (%s): %s" %
+                              (type(e).__name__, e.errno, e.strerror))
+                        sys.stderr.write("Warning: Couldn't load watcher report from %s." %
                               watcher_report_path)
+                        sys.stderr.flush()
                         pass
                     # the process watcher has terminated, which is cool, I guess
                     # (if it's the last child process, anyway)
@@ -561,11 +550,13 @@ class ProcessPool(object):
                 try:
                     # remove pid from self.running_procs
                     self.running_procs.remove(pid)
-                except:
+                except KeyError as e:
+                    sys.stderr.write("Key error(%s): %s" % (e.args, e.message))
+                    sys.stderr.flush()
                     if pid != os.getpid():
                         sys.stderr.write("Note: Caught a process which we "
                                          "didn't know: %d.\n" % pid)
-
+                        sys.stderr.flush()
                 if pid in self.proc_details:
                     self.proc_details[pid]['end_time'] = datetime.datetime.now()
                 
@@ -595,8 +586,12 @@ class ProcessPool(object):
                     # now kill it's preceding process, if this is from a pipeline
                     if 'use_stdin_of' in self.proc_details[pid]:
                         pidlist = list()
-                        pidlist.append(self.copy_processes_for_pid[self.proc_details[pid]['use_stdin_of']][0])
-                        pidlist.append(self.copy_processes_for_pid[self.proc_details[pid]['use_stdin_of']][1])
+                        pidlist.append(self.copy_processes_for_pid\
+                                       [self.proc_details[pid]['use_stdin_of']]\
+                                       [0])
+                        pidlist.append(self.copy_processes_for_pid\
+                                       [self.proc_details[pid]['use_stdin_of']]\
+                                       [1])
                         pidlist.append(self.proc_details[pid]['use_stdin_of'])
                         for kpid in pidlist:
                             self.log("Now killing %d, the predecessor of %d." %
@@ -604,7 +599,7 @@ class ProcessPool(object):
                             self.ok_to_fail.add(kpid)
                             try:
                                 os.kill(kpid, signal.SIGPIPE)
-                            except OSError, e:
+                            except OSError as e:
                                 if e.errno == errno.ESRCH:
                                     self.log("Couldn't kill %d: no such "
                                              "process." % kpid)
@@ -615,22 +610,26 @@ class ProcessPool(object):
                     if pid in self.copy_process_reports:
                         report_path = self.copy_process_reports[pid]
                         if os.path.exists(report_path):
-                            f = open(report_path, 'r')
-                            report = yaml.load(f)
-                            f.close()
-                            os.unlink(report_path)
+                            with open(report_path, 'r') as f:
+                                report = yaml.load(f)
+
                             if report is not None:
                                 self.proc_details[pid].update(report)
                 
-            except TimeoutException:
+            except TimeoutException as e:
+                sys.stderr.write("TimeoutException (%s): %s" % (e.args, e.message))
+                sys.stderr.flush()
                 self.log("Timeout, killing all child processes now.")
                 ProcessPool.kill_all_child_processes()
-            except OSError, e:
+            except OSError as e:
                 if e.errno == errno.ECHILD:
                     # no more children running, we are done
-                    sys.stderr.write("ProcessPool: There are no child processes left, exiting.\n")
+                    sys.stderr.write("ProcessPool: There are no child "
+                                     "processes left, exiting.\n")
+                    sys.stderr.flush()
                     signal.alarm(0)
-                    self.log("Cancelling timeout (if there was one), all child processes have exited.")
+                    self.log("Cancelling timeout (if there was one), all "
+                             "child processes have exited.")
                     break
                 elif e.errno == errno.EINTR:
                     # a system call was interrupted, pfft.
@@ -640,25 +639,27 @@ class ProcessPool(object):
             else:
                 if exit_code_with_signal != 0:
                     if not pid in self.ok_to_fail:
-                        # Oops, something went wrong. See what happens and terminate
-                        # all child processes in a few seconds.
+                        # Oops, something went wrong. See what happens and
+                        # terminate all child processes in a few seconds.
                         something_went_wrong = True
                         signal.signal(signal.SIGALRM, timeout_handler)
-                        self.log("Terminating all children in %d seconds..." % ProcessPool.SIGTERM_TIMEOUT)
+                        self.log("Terminating all children in %d seconds..." %
+                                 ProcessPool.SIGTERM_TIMEOUT)
                         signal.alarm(ProcessPool.SIGTERM_TIMEOUT)
                         
         # now wait for the watcher process, if it still exists
         try:
             os.waitpid(watcher_pid, 0)
             try:
-                f = open(watcher_report_path)
-                self.process_watcher_report = yaml.load(f)
-                f.close()
-                os.unlink(watcher_report_path)
-            except:
-                print("Warning: Couldn't load watcher report from %s." % watcher_report_path)
+                with open(watcher_report_path, 'r') as f:
+                    self.process_watcher_report = yaml.load(f)
+            except IOError as e:
+                sys.stderr.write("%s (%s): %s" % (type(e).__name__, e.errno, e.strerror))
+                sys.stderr.write("Warning: Couldn't load watcher report from %s." %
+                      watcher_report_path)
+                sys.stderr.flush()
                 pass
-        except OSError, e:
+        except OSError as e:
             if e.errno == errno.ESRCH:
                 pass
             elif e.errno == errno.ECHILD:
@@ -785,7 +786,9 @@ class ProcessPool(object):
                         delay = 10
                     time.sleep(delay)
             except:
-                print(sys.exc_info())
+                sys.stderr.write("PID (%s) Process Watcher Exception: %s" %
+                      (os.get_pid(), sys.exc_info()))
+                sys.stderr.flush()
             finally:
                 os._exit(0)
         else:
@@ -794,8 +797,8 @@ class ProcessPool(object):
     @classmethod
     def kill(cls):
         '''
-        Kills all user-launched processes. After that, the remaining process will end 
-        and a report will be written.
+        Kills all user-launched processes. After that, the remaining process
+        will end and a report will be written.
         '''
         ProcessPool.process_pool_is_dead = True
         
@@ -805,7 +808,11 @@ class ProcessPool(object):
             for pid in ProcessPool.current_instance.copy_processes_for_pid.keys():
                 try:
                     os.kill(pid, signal.SIGTERM)
-                except:
+                except Exception as e:
+                    sys.stderr.write("PID (%s) threw %s: %s" %
+                          (pid, type(e).__name__, sys.exc_info()))
+                    sys.stderr.write(traceback.format_exc())
+                    sys.stderr.flush()
                     pass
 
     @classmethod

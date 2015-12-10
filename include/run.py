@@ -1,14 +1,20 @@
+import sys
+from datetime import datetime
 import glob
+import json
 import logging
 import os
 import random
+import stat
 import string
 import tempfile
 
 import yaml
 
-import abstract_step
+import abstract_step as abst
+import command as command_info
 import exec_group
+import pipeline_info
 import misc
 
 logger = logging.getLogger("uap_logger")
@@ -41,6 +47,8 @@ class Run(object):
         self._public_info = dict()
         self._input_files = list()
         self._output_files = dict()
+        for out_connection in self._step.get_out_connections():
+            self.add_out_connection(out_connection)
         '''
         Dictionary containing the output files for each outgoing connection and
         their corresponding input files::
@@ -56,7 +64,6 @@ class Run(object):
             'queued': None
         }
         self._exec_groups = list()
-        self._out_connections = list()
         self._temp_paths = list()
         '''
         List of temporary paths which can be either files or paths
@@ -91,12 +98,21 @@ class Run(object):
         return self._run_id
 
     def get_out_connections(self):
-        return self._out_connections
+        return self._output_files.keys()
 
+    def get_out_connection(self, connection):
+        if not connection.startswith("out/"):
+            connection = 'out/' + connection
+        if connection in self.get_out_connections():
+            return connection
+        else:
+            raise StandardError("Connection %s not declared for step %s" %
+                                (connection, self.get_step()))
+    
     def _get_ping_file(self, key):
         if self._ping_files[key] == None:
             self._ping_files[key] = os.path.join(
-                self.get_step().get_output_directory(),
+                self.get_output_directory(),
                 '.%s-%s-ping.yaml' % (self.get_run_id(), key)
             )
         return self._ping_files[key]
@@ -111,8 +127,8 @@ class Run(object):
         def inner(self, *args, **kwargs):
             # Collect info to replace du_jour placeholder with temp_out_dir
             step = self.get_step()
-            placeholder = step.get_output_directory_du_jour_placeholder()
-            temp_out_dir = step.get_output_directory_du_jour(self.get_run_id())
+            placeholder = self.get_output_directory_du_jour_placeholder()
+            temp_out_dir = self.get_output_directory_du_jour()
             
             value = None
             ret_value = func(self, *args, **kwargs)
@@ -130,6 +146,12 @@ class Run(object):
             elif isinstance(ret_value, str):
                 if ret_value != None and placeholder in ret_value:
                     value = ret_value.replace(placeholder, temp_out_dir)
+            elif isinstance(ret_value, dict):
+                for key in ret_value.keys():
+                    if key != None and placeholder in key:
+                        new_key = key.replace(placeholder, temp_out_dir)
+                        ret_value[new_key] = ret_value.pop(key)
+                value = ret_value
             elif ret_value == None:
                 value = None
             else:
@@ -140,11 +162,47 @@ class Run(object):
         return(inner)
 
     @replace_output_dir_du_jour
+    def get_known_paths(self):
+        return self._known_paths
+
+    def add_known_paths(self, known_paths_dict):
+        self._known_paths.update(known_paths_dict)
+
+    @replace_output_dir_du_jour
     def get_temp_paths(self):
         '''
         Returns a list of all temporary paths which belong to this run.
         '''
         return self._temp_paths
+
+    def get_output_directory_du_jour_placeholder(self):
+        '''
+        Returns a placeholder for the temporary output directory, which
+        needs to be replaced by the actual temp directory inside the
+        abstract_step.execute() method
+        '''
+        return("<%s-output-directory-du-jour>" %  
+               str(self.get_step().__class__.__name__))
+
+    def get_output_directory_du_jour(self):
+        '''
+        Returns the state-dependent output directory of the step.
+
+
+        Returns this steps output directory according to its current
+        state:
+            - if we are currently calling a step's declare_runs()
+              method, this will return None
+            - if we are currently calling a step's execute() method,
+              this will return the temporary directory
+            - otherwise, it will return the real output directory
+        '''
+        if self.get_step()._state == abst.AbstractStep.states.DEFAULT:
+            return self.get_output_directory()
+        elif self.get_step()._state == abst.AbstractStep.states.EXECUTING:
+            return self.get_temp_output_directory()
+        else:
+            return None
 
     def get_temp_output_directory(self):
         '''
@@ -152,18 +210,64 @@ class Run(object):
         '''
         if self._temp_directory == None:
             while True:
-                token = ''.join(random.choice(
-                    string.ascii_lowercase + string.digits) for x in range(8))
+                current_time = datetime.now().strftime('%y%m%d-%H%M%S-%f')
                 path = os.path.join(
                     self.get_step().get_pipeline().config['destination_path'],
                     'temp',
                     'temp-%s-%s-%s' % (self.get_step().get_step_name(),
-                                       self.get_run_id(), token))
+                                       self.get_run_id(), current_time))
                 if not os.path.exists(path):
                     self._temp_directory = path
                     return self._temp_directory
         
         return self._temp_directory
+
+    def get_execution_hashtag(self):
+        '''
+        Creates a hash tag based on the commands to be executed.
+
+        This causes runs to be marked for rerunning if the commands to be
+        executed change.
+        '''
+
+        # Store step state
+        previous_state = self.get_step()._state
+        # Set step state to DECLARING to avoid circular dependencies
+        self.get_step()._state = abst.AbstractStep.states.DECLARING
+
+        cmd_by_eg = dict()
+        eg_count = 0
+        for exec_group in self.get_exec_groups():
+            eg_count += 1
+            cmd_by_eg[eg_count] = dict()
+            pipe_count, cmd_count = (0, 0)
+            for poc in exec_group.get_pipes_and_commands():
+                # for each pipe or command (poc)
+                # check if it is a pipeline ...
+                if isinstance(poc, pipeline_info.PipelineInfo):
+                    pipe_count += 1
+                    cmd_by_eg[eg_count]['Pipe %s' % pipe_count] = list()
+                    for command in poc.get_commands():
+                        cmd_by_eg[eg_count]['Pipe %s' % pipe_count].append(
+                            command.get_command())
+                # ... or a command
+                elif isinstance(poc, command_info.CommandInfo):
+                    cmd_count += 1
+                    cmd_by_eg[eg_count]['Cmd %s' % cmd_count] = poc.get_command()
+
+        # Set step state back to original state
+        self.get_step()._state = previous_state
+        return misc.str_to_sha1_b62(json.dumps(cmd_by_eg))[0:8]
+
+    def get_output_directory(self):
+        '''
+        Returns the final output directory.
+        '''
+        return os.path.join(
+            self.get_step().get_pipeline().config['destination_path'], 
+            self.get_step().get_step_name(),
+            '%s-%s' % (self.get_run_id(), self.get_execution_hashtag())
+        )
 
     def get_basic_state(self):
         '''
@@ -422,7 +526,7 @@ class Run(object):
 
         # make sure there's no slash in out_path unless it's a source step
         if head != "" and not \
-           isinstance(self._step, abstract_step.AbstractSourceStep):
+           isinstance(self._step, abst.AbstractSourceStep):
             raise StandardError("The declared output file path contains "
                                 "directory separator: %s." % out_path)
         # make sure tag was declared with an outgoing connection
@@ -432,10 +536,9 @@ class Run(object):
                 "to the constructor of %s."
                 % (tag, str(self._step), tag, self._step.__module__))
 
-        if tag not in self._output_files:
-            self._output_files[tag] = dict()
+        out_connection = self.get_out_connection(tag)
 
-        if out_path in self._output_files[tag]:
+        if out_path in self.get_output_files_for_out_connection(out_connection):
             raise StandardError(
                 "You're trying to re-add an output file which has already "
                 "been declared: %s." % out_path)
@@ -453,11 +556,10 @@ class Run(object):
                 "Trying to add NoneType element as output file for input paths "
                 ": %s" % in_paths)
             
-        self._out_connections.append(tag)
         self._input_files.append(in_paths)
-        self._output_files[tag][out_path] = in_paths
+        self._output_files[out_connection][out_path] = in_paths
         return_value = os.path.join(
-                self._step.get_output_directory_du_jour_placeholder(), out_path)
+                self.get_output_directory_du_jour_placeholder(), out_path)
         if head != "":
             return_value = os.path.abspath(out_path)
         return return_value
@@ -465,42 +567,83 @@ class Run(object):
     @replace_output_dir_du_jour
     def add_temporary_file(self, prefix = '', suffix = '', designation = None):
         '''
-        Returns the name of a temporary file (created tempfile library).
+        Returns the name of a temporary file (created by tempfile library).
         Name and output directory placeholder are concatenated. The concatenated
         string is returned and stored in a list. The placeholder is immediately
         properly adjusted by @replace_output_dir_du_jour.
         '''
+        count = len(self._temp_paths)
+        temp_placeholder = str()
+
+        while True:
+            hashtag = misc.str_to_sha1_b62('%s.%s.%s' % (prefix, count, suffix))
+            temp_name = prefix + hashtag + suffix
+            temp_placeholder = os.path.join(
+                self.get_output_directory_du_jour_placeholder(), temp_name)
+
+            if not temp_placeholder in self._temp_paths:
+                break
+            else:
+                count += 1
         
-        temp_name = str
-        with tempfile.NamedTemporaryFile(suffix = suffix, prefix = prefix) as f:
-            temp_name = os.path.basename(f.name)
 
-        logger.info("Temporary name: %s" % temp_name)    
+        logger.info("Temporary file (#%s): %s" %
+              (len(self._temp_paths) + 1, temp_name) )
 
-        temp_placeholder = os.path.join(
-            self._step.get_output_directory_du_jour_placeholder(), temp_name)
-
-        # TODO: Rethink the concept of _known_path/_temp_paths
-        self._known_paths[temp_placeholder] = {'label': prefix,
-                                               'designation': designation,
-                                               'type': 'file'}
-
+        # _known_paths dict is logged
+        known_paths = dict()
+        known_paths[temp_placeholder] = {
+            'label': os.path.basename(temp_placeholder),
+            'designation': designation,
+            'type': ''
+        }
+        self.add_known_paths(known_paths)
+        # _temp_paths list contains all temporary files which are going to be
+        # deleted
         self._temp_paths.append(temp_placeholder)
         return temp_placeholder
 
-    def add_temporary_directory(self, prefix = '', designation = None):
+    def add_temporary_directory(self, prefix = '', suffix = '',
+                                designation = None ):
         '''
         Convenience method for creation of temporary directories.
         Basically, just calls self.add_temporary_file().
         The magic happens in ProcessPool.__exit__()
         '''
-        return self.add_temporary_file(prefix = prefix,
+        return self.add_temporary_file(prefix = prefix, suffix = suffix,
                                        designation = designation)
 
     def remove_temporary_paths(self):
+        '''
+        Everything stored in self._temp_paths is examined and deleted if
+        possible. Also, self._known_paths 'type' info is updated here.
+        NOTE: Included additional stat checks to detect FIFOs as well as other
+        special files.
+        '''
         for _ in self.get_temp_paths():
-            if os.path.isdir(_):
+            # Check file type
+            pathmode = os.stat(_).st_mode
+            isdir = False if stat.S_ISDIR(pathmode) == 0 else True
+            ischaracter = False if stat.S_ISCHR(pathmode) == 0 else True
+            isblock = False if stat.S_ISBLK(pathmode) == 0 else True
+            isfile = False if stat.S_ISREG(pathmode) == 0 else True
+            isfifo = False if stat.S_ISFIFO(pathmode) == 0 else True
+            islink = False if stat.S_ISLNK(pathmode) == 0 else True
+            issock = False if stat.S_ISSOCK(pathmode) == 0 else True
+            # Update 'type' value
+            if _ in self.get_known_paths().keys():
+                if isfile:
+                    logger.debug("Set %s 'type' info to 'file'" % _)
+                    self.get_known_paths()[_]['type'] = 'file'
+                elif isdir:
+                    logger.debug("Set %s 'type' info to 'directory'" % _)
+                    self.get_known_paths()[_]['type'] = 'directory'
+                elif isfifo:
+                    logger.debug("Set %s 'type' info to 'fifo'" % _)
+                    self.get_known_paths()[_]['type'] = 'fifo'
+            if os.path.isdir(_) and isdir:
                 try:
+                    logger.info("Now deleting directory: %s" % _)
                     os.rmdir(_)
                 except OSError as e:
                     logger.error("errno: %s" % e.errno)
@@ -509,10 +652,10 @@ class Run(object):
                     pass
             else:
                 try:
+                    logger.info("Now deleting: %s" % _)
                     os.unlink(_)
                 except OSError as e:
                     pass
-
 
     def add_empty_output_connection(self, tag):
         '''
@@ -526,21 +669,47 @@ class Run(object):
                 "to the constructor of %s."
                 % (tag, str(self._step), tag, self._step.__module__))
 
-        if tag not in self._output_files:
-            self._output_files[tag] = dict()
+        try:
+            out_connection = self.get_out_connection(tag)
+        except KeyError:
+            out_connection = self.add_out_connection(tag)
 
-        if None in self._output_files[tag]:
+        if None in self._output_files[out_connection]:
             raise StandardError(
                 "You're trying to re-declare %s as an empty output connection "
-                % tag)
+                % out_connection)
 
-        self._output_files[tag][None] = None
+        self._output_files[out_connection][None] = None
+
+    def add_out_connection(self, out_connection):
+        if not out_connection.startswith("out/"):
+            out_connection = 'out/' + out_connection
+        self._output_files[out_connection] = dict()
+        return out_connection
+
+    def get_input_files_for_output_file(self, output_file):
+        for connection in self.get_out_connections():
+            if output_file in \
+               self.get_output_files_for_out_connection(connection):
+                return self._output_files[connection][output_file]
+
+    def get_input_files_for_output_file_abspath(self, output_file):
+        for connection in self.get_out_connections():
+            if abspath_output_file in \
+               self.get_output_files_abspath_for_out_connection(connection):
+                return self.get_output_files_abspath()[connection]\
+                    [abspath_output_file]
+
+    def get_output_files_for_out_connection(self, out_connection):
+        return list( self._output_files[out_connection].keys() )
+
+    def get_output_files_abspath_for_out_connection(self, out_connection):
+        return sorted(
+            list( self.get_output_files_abspath()[out_connection].keys() )
+        )
 
     def get_output_files(self):
         return self._output_files
-
-    def get_output_files_abspath_for_out_connection(self, out_connection):
-        return list( self.get_output_files_abspath()[out_connection].keys() )
 
     def get_output_files_abspath(self):
         '''
@@ -556,17 +725,18 @@ class Run(object):
         file name.
         '''
         result = dict()
-        for tag in self._output_files:
-            result[tag] = dict()
-            for out_path, in_paths in self._output_files[tag].items():
-                directory = self.get_step().get_output_directory_du_jour(
-                    self.get_run_id())
-                head, tail = os.path.split(out_path)
-                if directory != None and out_path != None and head == "":
-                    full_path = os.path.join(directory, out_path)
-                else:
-                    full_path = out_path
-                result[tag][full_path] = in_paths
+        for connection in self._output_files.keys():
+            result[connection] = dict()
+            for out_path, in_paths in self._output_files[connection].items():
+                directory = self.get_output_directory_du_jour()
+                full_path = out_path
+                try:
+                    head, tail = os.path.split(out_path)
+                    if directory != None and out_path != None and head == "":
+                        full_path = os.path.join(directory, out_path)
+                except AttributeError:
+                    pass
+                result[connection][full_path] = in_paths
 
         return result
 
@@ -605,9 +775,6 @@ class Run(object):
         raise StandardError("Sorry, your output '%s' file couldn't be found in"
                             "the dictionary: %s." % (out_path, temp))
 
-#    def get_complete_public_info(self):
-#        return self._public_info
-        
     def get_public_info(self, key):
         '''
         Query public information which must have been previously stored via "
@@ -636,6 +803,7 @@ class Run(object):
 
     def as_dict(self):
         result = dict()
+        result['output_directory'] = self.get_output_directory()
         result['output_files'] = self._output_files
         result['private_info'] = self._private_info
         result['public_info'] = self._public_info
@@ -644,19 +812,17 @@ class Run(object):
 
     def write_annotation_file(self, path):
         '''
-        Write the YAML annotation after a successful or failed run and try to
-        render the process graph (but swallow any errors resulting from that --
-        after all, it's not *that* important to get the rendered graph, and it 
-        still can be created later from the YAML annotation).
+        Write the YAML annotation after a successful or failed run. The
+        annotation can later be used to render the process graph.
         '''
         
         # now write the annotation
         log = {}
         log['pid'] = os.getpid()
         log['step'] = {}
-        log['step']['options'] = self._options
+        log['step']['options'] = self.get_step().get_options()
         log['step']['name'] = self.get_step().get_step_name()
-        log['step']['known_paths'] = self.get_step().known_paths
+        log['step']['known_paths'] = self.get_known_paths()
         log['step']['cores'] = self.get_step()._cores
         log['run'] = {}
         log['run']['run_info'] = self.as_dict()
@@ -679,7 +845,7 @@ class Run(object):
         annotation_yaml = yaml.dump(log, default_flow_style = False)
         annotation_path = os.path.join(
             path, ".%s-annotation-%s.yaml" % 
-            (self.get_run_id, misc.str_to_sha1_b62(annotation_yaml)[:6]))
+            (self.get_run_id(), misc.str_to_sha1_b62(annotation_yaml)[:6]))
 
         # overwrite the annotation if it already exists
         with open(annotation_path, 'w') as f:

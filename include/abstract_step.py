@@ -16,7 +16,6 @@ sys.path.insert(0, './include/sources')
 import copy
 import datetime
 import inspect
-import json
 import logging
 import os
 import re
@@ -58,12 +57,12 @@ class AbstractStep(object):
         
         self._pipeline = pipeline
         
-        self.dependencies = []
+        self.dependencies = list()
         '''
         All steps this step depends on.
         '''
         
-        self._options = {}
+        self._options = dict()
         '''
         Options as specified in the configuration.
         '''
@@ -90,7 +89,7 @@ class AbstractStep(object):
         
         self._cores = 1
         self._connections = set()
-        self._connection_restrictions = {}
+        self._connection_restrictions = dict()
         self._pre_command = dict()
         self._post_command = dict()
         self._module_load = dict()
@@ -100,9 +99,7 @@ class AbstractStep(object):
         self._defined_options = dict()
         
         self.needs_parents = False
-        
-        self.known_paths = dict()
-        
+
         self.children_step_names = set()
         
         self.finalized = False
@@ -124,7 +121,6 @@ class AbstractStep(object):
         self.finalized = True
         
     def _reset(self):
-        self.known_paths = dict()
         self._pipeline_log = dict()
 
     def get_pipeline(self):
@@ -163,15 +159,6 @@ class AbstractStep(object):
         for run in self._runs:
             yield self._runs[run]
 
-    def get_output_directory_du_jour_placeholder(self):
-        '''
-        Returns a placeholder for the temporary output directory, which
-        needs to be replaced by the actual temp directory inside the
-        execute() method
-        '''
-        return("<%s-output-directory-du-jour>" %  
-               str(self.__class__.__name__))
-
     def set_step_name(self, step_name):
         '''
         Change the step name.
@@ -207,7 +194,7 @@ class AbstractStep(object):
                 if not key in self._defined_options:
                     raise StandardError(
                         "Unknown option in %s (%s): %s." % 
-                        (self._step_name, self.__module__, key))
+                        (self.get_step_name(), self.get_step_type(), key))
                 if type(value) not in self._defined_options[key]['types']:
                     raise StandardError(
                         "Invalid type for option %s - it's %s and should be "
@@ -222,7 +209,7 @@ class AbstractStep(object):
                 self._options[key] = value
 
         # set default values for unset options and make sure all required 
-        # options have been set        
+        # options have been set
         for key, info in self._defined_options.items():
             if key not in self._options:
                 value = info['default']
@@ -235,7 +222,34 @@ class AbstractStep(object):
                 
         if not '_volatile' in self._options:
             self._options['_volatile'] = False
-            
+
+    def get_options(self):
+        '''
+        Returns a dictionary of all given options
+        '''
+        return self._options
+
+    def get_option(self, key):
+        """
+        Query an option.
+        """
+        if key not in self._defined_options:
+            raise StandardError(
+                "Cannot query undefined option %s in step %s." % 
+                (key, self.__module__) )
+        return self._options[key]
+
+    def is_option_set_in_config(self, key):
+        """
+        Determine whether an optional option (that is, a non-required option)
+        has been set in the configuration.
+        """
+        if key not in self._defined_options:
+            raise StandardError(
+                "Cannot query undefined option %s in step %s." % 
+                (key, self.get_step_name()) )
+        return key in self._options
+
     def add_dependency(self, parent):
         '''
         Add a parent step to this steps dependencies.
@@ -250,6 +264,9 @@ class AbstractStep(object):
         self.dependencies.append(parent)
         parent.children_step_names.add(str(self))
         
+    def get_dependencies(self):
+        return self.dependencies
+
     def which_extensions_match_file_path(self, filepath, extensions):
         # Kann evtl. auch weg!
         extension_list = list()
@@ -270,14 +287,14 @@ class AbstractStep(object):
                 ext_in_filename.append(ext)
         return ext_in_filename
 
-    def get_input_run_info(self):
+    def get_input_runs(self):
         '''
-        Return a dict with run info for each parent.
+        Return a dict which contains all runs per parent steps.
         '''
-        input_run_info = dict()
-        for parent in self.dependencies:
-            input_run_info[parent.get_step_name()] = parent.get_runs()
-        return input_run_info
+        input_runs = dict()
+        for parent in self.get_dependencies():
+            input_runs[parent.get_step_name()] = parent.get_runs()
+        return input_runs
 
     def declare_runs(self):
         # Was muss hier alles passieren damit es funktioniert?
@@ -287,17 +304,17 @@ class AbstractStep(object):
 
         # fetch all incoming run IDs which produce reads...
 
-        in_connections = self.get_in_connections()
-        run_ids_connections_files = dict()
-        for in_connection in in_connections:
-            for run_id, input_paths in self.get_run_ids_and_input_files_for_connection(in_connection):
-                # das macht den schoenen Generator kaputt den Micha mal gebaut hat
-                if not run_id in run_ids_connections_files:
-                    run_ids_connections_files[run_id] = dict()
-                if not in_connection in run_ids_connections_files[run_id]:
-                    run_ids_connections_files[run_id][in_connection] = input_paths
-        
-        self.runs(run_ids_connections_files)
+#        in_connections = self.get_in_connections()
+#        run_ids_connections_files = dict()
+#        for in_connection in in_connections:
+#            for run_id, input_paths in self.get_run_ids_and_input_files_for_connection(in_connection):
+#                # das macht den schoenen Generator kaputt den Micha mal gebaut hat
+#                if not run_id in run_ids_connections_files:
+#                    run_ids_connections_files[run_id] = dict()
+#                if not in_connection in run_ids_connections_files[run_id]:
+#                    run_ids_connections_files[run_id][in_connection] = input_paths
+
+        self.runs( self.get_run_ids_in_connections_input_files() )
         
     def runs(self, run_ids_connections_files):
         '''
@@ -309,9 +326,6 @@ class AbstractStep(object):
         raise NotImplementedError()
         
     def execute(self, run_id, run):
-        # Ich muss noch ne Loesung finden um hier beliebigen Python Code auszufuehren
-        # exec() oder eval()?
-
         # get run_info objects
         with self.get_run(run_id) as run:
             print("Run ID: %s" % run_id)
@@ -321,6 +335,7 @@ class AbstractStep(object):
                 with process_pool.ProcessPool(run) as pool:
                     # Clean up (use last ProcessPool for that)
                     if exec_group == run.get_exec_groups()[-1]:
+                        logger.info("Telling pipeline to clean up!")
                         pool.clean_up_temp_paths()
 
                     for poc in exec_group.get_pipes_and_commands():
@@ -361,25 +376,27 @@ class AbstractStep(object):
             
             # define file dependencies
             for run_id in self._runs.keys():
-                for annotation in self.get_run(run_id).get_output_files_abspath().keys():
+                pipeline = self.get_pipeline()
+                run = self.get_run(run_id)
+                for connection in run.get_output_files_abspath().keys():
                     for output_path, input_paths in \
-                        self.get_run(run_id).get_output_files_abspath()[annotation].items():
+                        run.get_output_files_abspath()[connection].items():
                         # proceed if we have normal output_path/input_paths
                         if output_path != None and input_paths != None:
                             # store file dependencies
-                            self.get_pipeline().add_file_dependencies(
+                            pipeline.add_file_dependencies(
                                 output_path, input_paths)
                             # create task ID
                             task_id = '%s/%s' % (str(self), run_id)
-                            self.get_pipeline().add_task_for_output_file(
+                            pipeline.add_task_for_output_file(
                                 output_path, task_id)
                             # No input paths? Add empty string NOT None
                             # as file name
                             if len(input_paths) == 0:
-                                self.get_pipeline().add_task_for_input_file(
+                                pipeline.add_task_for_input_file(
                                     "", task_id)
                             for input_path in input_paths:
-                                self.get_pipeline().add_task_for_input_file(
+                                pipeline.add_task_for_input_file(
                                     input_path, task_id)
 
         # now that _runs exists, it remains constant, just return it
@@ -390,21 +407,6 @@ class AbstractStep(object):
         Returns sorted list of runs generated by step.
         '''
         return sorted(self.get_runs().keys())
-
-    def get_options_hashtag(self):
-        '''
-        Creates a hash tag for the options given.
-
-        
-        This causes steps to be marked for rerunning if the options inside
-        the config file are changed.
-        '''
-        options_without_dash_prefix = dict()
-        for k, v in self._options.items():
-            if k[0] != '_':
-                options_without_dash_prefix[k] = v
-        return misc.str_to_sha1(json.dumps(options_without_dash_prefix, 
-                                           sort_keys=True))[0:4]
 
     def get_step_name(self):
         '''
@@ -421,48 +423,6 @@ class AbstractStep(object):
         Returns the original step name (== module name).
         '''
         return self.__module__
-
-    def get_output_directory(self):
-        '''
-        Returns the final output directory path.
-        '''
-        return os.path.join(self.get_pipeline().config['destination_path'], 
-            '%s-%s' % (self.get_step_name(), self.get_options_hashtag()))
-
-    def get_output_directory_du_jour(self, run_id):
-        '''
-        Returns the state-dependent output directory of the step.
-
-
-        Returns this steps output directory according to its current
-        state:
-            - if we are currently calling a step's declare_runs()
-              method, this will return None
-            - if we are currently calling a step's execute() method,
-              this will return the temporary directory
-            - otherwise, it will return the real output directory
-        '''
-        if self._state == AbstractStep.states.DEFAULT:
-            return self.get_output_directory()
-        elif self._state == AbstractSourceStep.states.EXECUTING:
-            return self.get_run(run_id).get_temp_output_directory()
-        else:
-            return None
-
-    def get_temp_output_directory(self, run_id):
-        '''
-        Returns the temporary output directory of a step.
-        '''
-        if self._temp_directory == None:
-            while True:
-                token = ''.join(random.choice(
-                    string.ascii_lowercase + string.digits) for x in range(8))
-                path = os.path.join(
-                    self.get_pipeline().config['destination_path'],
-                    'temp', 'temp-%s-%s-%s' % (str(self), run_id, token))
-                if not os.path.exists(path):
-                    self._temp_directory = path
-        return self._temp_directory
 
     def get_run_state_basic(self, run_id):
         '''
@@ -695,8 +655,8 @@ class AbstractStep(object):
         run = self.get_run(run_id)
 
         # create the output directory if it doesn't exist yet
-        if not os.path.isdir(self.get_output_directory()):
-            os.makedirs(self.get_output_directory())
+        if not os.path.isdir(run.get_output_directory()):
+            os.makedirs(run.get_output_directory())
     
         # now write the run ping file
         executing_ping_path = run.get_executing_ping_file()
@@ -711,19 +671,19 @@ class AbstractStep(object):
         temp_directory = run.get_temp_output_directory()
         os.makedirs(temp_directory)
 
-        # prepare self.known_paths
-        self.known_paths = dict()
+        # prepare known_paths
+        known_paths = dict()
         for tag, tag_info in run.get_output_files_abspath().items():
             for output_path, input_paths in tag_info.items():
                 # add the real output path
                 if output_path != None and input_paths != None:
-                    self.known_paths[output_path] = {
+                    known_paths[output_path] = {
                         'type': 'output', 
                         'designation': 'output', 
                         'label': os.path.basename(output_path), 
                         'type': 'step_file'}
                     # ...and also add the temporary output path
-                    self.known_paths[
+                    known_paths[
                         os.path.join(temp_directory, os.path.basename(
                             output_path))] = {
                         'type': 'output', 
@@ -734,7 +694,7 @@ class AbstractStep(object):
                         'real_path': output_path}
                     for input_path in input_paths:
                         if input_path != None:
-                            self.known_paths[input_path] = {
+                            known_paths[input_path] = {
                                 'type': 'input', 
                                 'designation': 'input', 
                                 'label': os.path.basename(input_path), 
@@ -774,6 +734,7 @@ class AbstractStep(object):
         try:
             self.execute(run_id, run)
         except Exception as e:
+            print("%s: %s" % (type(e).__name__, sys.exc_info()))
             # Oh my. We have a situation. This is awkward. Tell the process
             # pool to wrap up. This way, we can try to get process stats before
             # shutting everything down.
@@ -829,18 +790,27 @@ class AbstractStep(object):
                             os.path.basename(out_file)
                         )
                         destination_path = os.path.join(
-                            self.get_output_directory(), 
+                            run.get_output_directory(), 
                             os.path.basename(out_file))
                         # first, delete a possibly existing volatile placeholder
                         # file
                         destination_path_volatile = destination_path + \
                                                     AbstractStep.VOLATILE_SUFFIX
                         if os.path.exists(destination_path_volatile):
+                            logger.info("Now deleting: %s" % destination_path_volatile)
                             os.unlink(destination_path_volatile)
                         # TODO: if the destination path already exists, this 
                         # will overwrite the file.
+                        # CK: Hmm, that's a feature, isn't it?
                         if os.path.exists(source_path):
                             os.rename(source_path, destination_path)
+                            for path in [source_path, destination_path]:
+                                if path in known_paths.keys():
+                                    if known_paths[path]['type'] != \
+                                       'step_file':
+                                        logger.debug("Set %s 'type' info to "
+                                                     "'step_file'" % path)
+                                        known_paths[path]['type'] = 'step_file'
                         else:
                             caught_exception = (
                                 None, 
@@ -850,13 +820,13 @@ class AbstractStep(object):
                                     os.path.basename(out_file)), 
                                 None)
 
-        for path, path_info in self.known_paths.items():
+        for path, path_info in known_paths.items():
             if os.path.exists(path):
-                self.known_paths[path]['size'] = os.path.getsize(path)
+                known_paths[path]['size'] = os.path.getsize(path)
                 
+        run.add_known_paths(known_paths)
         annotation_path, annotation_str = run.write_annotation_file(
-            run_id, 
-            self.get_output_directory() \
+            run.get_output_directory() \
             if ((self.get_pipeline().caught_signal is None) and \
                 (caught_exception is None)) \
             else run.get_temp_output_directory())
@@ -884,11 +854,12 @@ class AbstractStep(object):
                 for out_path in run._output_files[tag].keys():
                     if out_path != None:
                         destination_path = os.path.join(
-                            self.get_output_directory(), 
+                            run.get_output_directory(), 
                             '.' + os.path.basename(out_path) + 
                             '.annotation.yaml')
                         # overwrite the symbolic link if it already exists
                         if os.path.exists(destination_path):
+                            logger.info("Now deleting: %s" % destination_path)
                             os.unlink(destination_path)
                         oldwd = os.getcwd()
                         os.chdir(os.path.dirname(destination_path))
@@ -977,6 +948,27 @@ class AbstractStep(object):
                          'task %s/%s: %s' % (self._step_name, run_id,
                                              e))
 
+    def generate_one_report(self):
+        '''
+        Gathers the output files for each outgoing connection and calls
+        self.reports() to do the job of creating a report.
+        '''
+
+        run_ids_connections_output_files = self\
+            .get_run_ids_out_connections_output_files()
+        for run_id in run_ids_connections_output_files:
+            for con, files in run_ids_connections_output_files[run_id].items():
+                files = [f for f in files if os.path.isfile(f)]
+                run_ids_connections_output_files[run_id][con] = files
+        try:
+            self.reports( run_ids_connections_output_files )
+        except NotImplementedError as e:
+            logger.info('Step %s is not capable to generate reports' %
+                        (self._step_name))
+        except Exception as e:
+            logger.error('Unexpected error while trying to generate report for '
+                         'step %s: %s' % (self.get_step_name(), e))
+
     def get_pre_commands(self):
         """
         Return dictionary with commands to execute before starting any other
@@ -1053,342 +1045,8 @@ class AbstractStep(object):
     
 
     def __str__(self):
-        return self._step_name
-    
-    @classmethod
-    def render_pipeline(cls, logs):
-        hash = {'nodes': {}, 'edges': {}, 'clusters': {}, 'graph_labels': {}}
-        for log in logs:
-            temp = cls.render_pipeline_hash(log)
-            for _ in ['nodes', 'edges', 'clusters', 'graph_labels']:
-                hash[_].update(temp[_])
-
-        f = StringIO.StringIO()
-        f.write("digraph {\n")
-        f.write("    rankdir = TB;\n")
-        f.write("    splines = true;\n")
-        f.write("    graph [fontname = Helvetica, fontsize = 12, size = "
-                "\"14, 11\", nodesep = 0.2, ranksep = 0.3, labelloc = t, "
-                "labeljust = l];\n")
-        f.write("    node [fontname = Helvetica, fontsize = 12, shape = rect, "
-                "style = filled];\n")
-        f.write("    edge [fontname = Helvetica, fontsize = 12];\n")
-        f.write("\n")
+        return self._step_name  
         
-        f.write("    // nodes\n")
-        f.write("\n")
-        for node_key, node_info in hash['nodes'].items():
-            f.write("    _%s" % node_key)
-            if len(node_info) > 0:
-                f.write(" [%s]" % ', '.join(['%s = "%s"' % (k, node_info[k]) \
-                                             for k in node_info.keys()]))
-            f.write(";\n")
-            
-        f.write("\n")
-        
-        f.write("    // edges\n")
-        f.write("\n")
-        for edge_pair in hash['edges'].keys():
-            if edge_pair[0] in hash['nodes'] and edge_pair[1] in hash['nodes']:
-                f.write("    _%s -> _%s;\n" % (edge_pair[0], edge_pair[1]))
-        
-        f.write("\n")
-        
-        """
-        f.write("    // clusters\n")
-        f.write("\n")
-        for cluster_hash, cluster_info in hash['clusters'].items():
-            f.write("    subgraph cluster_%s {\n" % cluster_hash)
-            for node in cluster_info['group']:
-                f.write("        _%s;\n" % node)
-                
-            f.write("        label = \"%s\";\n" % cluster_info['task_name'])
-            f.write("        graph [style = dashed];\n")
-            f.write("    }\n")
-        """
-        
-        if len(hash['graph_labels']) == 1:
-            f.write("    graph [label=\"%s\"];\n" % 
-                    hash['graph_labels'].values()[0])
-        f.write("}\n")
-        
-        result = f.getvalue()
-        f.close()
-        return result
-        
-    @classmethod
-    def render_pipeline_hash(cls, log):
-        
-        def pid_hash(pid, suffix = ''):
-            hashtag = "%s/%s/%d/%s" % (log['step']['name'], 
-                                       log['run']['run_id'], 
-                                       pid, suffix)
-            return misc.str_to_sha1(hashtag)
-        
-        def file_hash(path):
-            if path in log['step']['known_paths']:
-                if 'real_path' in log['step']['known_paths'][path]:
-                    path = log['step']['known_paths'][path]['real_path']
-            return misc.str_to_sha1(path)
-        
-        #print(yaml.dump(self.known_paths, default_flow_style = False))
-        
-        hash = dict()
-        hash['nodes'] = dict()
-        hash['edges'] = dict()
-        hash['clusters'] = dict()
-        hash['graph_labels'] = dict()
-        
-        def add_file_node(path):
-            if not path in log['step']['known_paths']:
-                return
-                
-            if 'real_path' in log['step']['known_paths'][path]:
-                path = log['step']['known_paths'][path]['real_path']
-            label = log['step']['known_paths'][path]['label']
-            color = '#ffffff'
-            if log['step']['known_paths'][path]['type'] == 'fifo':
-                color = '#c4f099'
-            elif log['step']['known_paths'][path]['type'] == 'file':
-                color = '#8ae234'
-            elif log['step']['known_paths'][path]['type'] == 'step_file':
-                color = '#97b7c8'
-                if path in log['step']['known_paths']:
-                    if 'size' in log['step']['known_paths'][path]:
-                        label += "\\n%s" % misc.bytes_to_str(
-                            log['step']['known_paths'][path]['size'])
-            hash['nodes'][misc.str_to_sha1(path)] = {
-                'label': label,
-                'fillcolor': color
-            }
-            
-        for proc_info in copy.deepcopy(log['pipeline_log']['processes']):
-            pid = proc_info['pid']
-            label = "PID %d" % pid
-            name = '(unknown)'
-            if 'name' in proc_info:
-                name = proc_info['name']
-            label = "%s" % (proc_info['name'])
-            if 'writes' in proc_info['hints']:
-                for path in proc_info['hints']['writes']:
-                    add_file_node(path)
-            if 'args' in proc_info:
-                stripped_args = []
-                for arg in copy.deepcopy(proc_info['args']):
-                    if arg in log['step']['known_paths']:
-                        add_file_node(arg)
-                    if arg in log['step']['known_paths']:
-                        if log['step']['known_paths'][arg]['type'] != 'step_file':
-                            arg = log['step']['known_paths'][arg]['label']
-                        else:
-                            arg = os.path.basename(arg)
-                    else:
-                        if arg[0:4] != '/dev':
-                            arg = os.path.basename(arg)
-                            if (len(arg) > 16) and re.match('^[A-Z]+$', arg):
-                                arg = "%s[...]" % arg[:16]
-                    stripped_args.append(arg.replace('\t', '\\t').replace(
-                        '\\', '\\\\'))
-                tw = textwrap.TextWrapper(
-                    width = 50, 
-                    break_long_words = False, 
-                    break_on_hyphens = False)
-                label = "%s" % ("\\n".join(tw.wrap(' '.join(stripped_args))))
-            if 'args' in proc_info:
-                cat4m_seen_minus_o = False
-                for arg in proc_info['args']:
-                    fifo_type = None
-                    if name == 'cat4m' and arg == '-o':
-                        cat4m_seen_minus_o = True
-                    if arg in log['step']['known_paths']:
-                        add_file_node(arg)
-                        if name == 'cat4m':
-                            if cat4m_seen_minus_o:
-                                fifo_type = 'output'
-                            else:
-                                fifo_type = 'input'
-                        else:
-                            # we can't know whether the fifo is for input or
-                            # output, first look at the hints, then use the
-                            # designation (if any was given)
-                            if 'reads' in proc_info['hints'] and \
-                               arg in proc_info['hints']['reads']:
-                                fifo_type = 'input'
-                            if 'writes' in proc_info['hints'] and \
-                               arg in proc_info['hints']['writes']:
-                                fifo_type = 'output'
-                            if fifo_type is None:
-                                fifo_type = log['step']['known_paths'][arg]\
-                                            ['designation']
-                        if fifo_type == 'input':
-                            # add edge from file to proc
-                            hash['edges'][(file_hash(arg), pid_hash(pid))] \
-                                = dict()
-                        elif fifo_type == 'output':
-                            # add edge from proc to file
-                            hash['edges'][(pid_hash(pid), file_hash(arg))] \
-                                = dict()
-            if 'writes' in proc_info['hints']:
-                for path in proc_info['hints']['writes']:
-                    hash['edges'][(pid_hash(pid), file_hash(path))] = dict()
-            # add proc
-            something_went_wrong = False
-            if 'signal' in proc_info:
-                something_went_wrong = True
-            elif 'exit_code' in proc_info:
-                if proc_info['exit_code'] != 0:
-                    something_went_wrong = True
-            else:
-                something_went_wrong = True
-            color = "#fce94f"
-            if something_went_wrong:
-                if not pid in log['pipeline_log']['ok_to_fail']:
-                    color = "#d5291a"
-                if 'signal' in proc_info:
-                    label = "%s\\n(received %s%s)" % (
-                        label, 
-                        'friendly ' \
-                        if pid in log['pipeline_log']['ok_to_fail'] else '',
-                        proc_info['signal_name'] if 'signal_name' in \
-                        proc_info else 'signal %d' % proc_info['signal'])
-                elif 'exit_code' in proc_info:
-                    if proc_info['exit_code'] != 0:
-                        label = "%s\\n(failed with exit code %d)" % (
-                            label, proc_info['exit_code'])
-                else:
-                    label = "%s\\n(no exit code)" % label
-                    
-            if 'max' in log['pipeline_log']['process_watcher']:
-                if pid in log['pipeline_log']['process_watcher']['max']:
-                    label += "\\n%1.1f%% CPU, %s RAM (%1.1f%%)" % (
-                        log['pipeline_log']['process_watcher']['max'][pid]\
-                        ['cpu_percent'],
-                        misc.bytes_to_str(
-                            log['pipeline_log']['process_watcher']['max'][pid]\
-                            ['rss']),
-                        log['pipeline_log']['process_watcher']['max'][pid]\
-                        ['memory_percent'])
-                
-            hash['nodes'][pid_hash(pid)] = {
-                'label': label,
-                'fillcolor': color
-            }
-            
-            for which in ['stdout', 'stderr']:
-                key = "%s_copy" % which
-                if key in proc_info:
-                    if ('exit_code' in proc_info[key]) and \
-                       (proc_info[key]['exit_code'] == 0) and \
-                       ('length' in proc_info[key]) and \
-                       (proc_info[key]['length'] == 0) and \
-                       (not 'sink_full_path' in proc_info[key]):
-                        # skip this stdout/stderr box if it leads to nothing
-                        continue
-                    size_label = '(empty)'
-                    if ('length' in proc_info[key]) and \
-                       (proc_info[key]['length'] > 0):
-                        speed = float(proc_info[key]['length']) / (
-                            proc_info[key]['end_time'] - 
-                            proc_info[key]['start_time']).total_seconds()
-                        speed_label = "%s/s" % misc.bytes_to_str(speed)
-                        size_label = "%s / %s lines (%s)" % (
-                            misc.bytes_to_str(proc_info[key]['length']),
-                            "{:,}".format(proc_info[key]['lines']),
-                            speed_label)
-                    label = "%s\\n%s" % (which, size_label)
-                    
-                    something_went_wrong = False
-                    if 'signal' in proc_info[key]:
-                        something_went_wrong = True
-                    elif 'exit_code' in proc_info[key]:
-                        if proc_info[key]['exit_code'] != 0:
-                            something_went_wrong = True
-                    else:
-                        something_went_wrong = True
-                    color = "#fdf3a7"
-                    if something_went_wrong:
-                        if not pid in log['pipeline_log']['ok_to_fail']:
-                            color = "#d5291a"
-                        if 'signal' in proc_info[key]:
-                            label = "%s\\n(received %s%s)" % (
-                                label, 
-                                "friendly " if pid in \
-                                log['pipeline_log']['ok_to_fail'] else '',
-                                proc_info[key]['signal_name'] if 'signal_name'\
-                                in proc_info[key] else 'signal %d' % 
-                                proc_info[key]['signal'])
-                        elif 'exit_code' in proc_info[key]:
-                            if proc_info[key]['exit_code'] != 0:
-                                label = "%s\\n(failed with exit code %d)" % (
-                                    label, proc_info[key]['exit_code'])
-                        else:
-                            label = "%s\\n(no exit code)" % label
-                            
-                                
-                    # add proc_which
-                    hash['nodes'][pid_hash(pid, which)] = {
-                        'label': label,
-                        'fillcolor': color
-                    }
-                    if 'sink_full_path' in proc_info[key]:
-                        path = proc_info[key]['sink_full_path']
-                        add_file_node(path)
-
-        for proc_info in copy.deepcopy(log['pipeline_log']['processes']):
-            pid = proc_info['pid']
-            if 'use_stdin_of' in proc_info:
-                other_pid = proc_info['use_stdin_of']
-                hash['edges'][(pid_hash(other_pid, 'stdout'), pid_hash(pid))] \
-                    = dict()
-            for which in ['stdout', 'stderr']:
-                key = "%s_copy" % which
-                if key in proc_info:
-                    other_pid = proc_info[key]['pid']
-                    hash['edges'][(pid_hash(pid), pid_hash(pid, which))] = dict()
-                    if 'sink_full_path' in proc_info[key]:
-                        hash['edges'][(
-                            pid_hash(pid, which),
-                            file_hash(proc_info[key]['sink_full_path']))] = dict()
-
-        # define nodes which go into subgraph
-        step_file_nodes = dict()
-        for path, path_info in log['step']['known_paths'].items():
-            if path_info['type'] == 'step_file':
-                step_file_nodes[file_hash(path)] = path_info['designation']
-
-        task_name = "%s/%s" % (log['step']['name'], log['run']['run_id'])
-        cluster_hash = misc.str_to_sha1(task_name)
-        hash['clusters'][cluster_hash] = dict()
-        hash['clusters'][cluster_hash]['task_name'] = task_name
-        hash['clusters'][cluster_hash]['group'] = list()
-        for node in hash['nodes'].keys():
-            if not node in step_file_nodes:
-                hash['clusters'][cluster_hash]['group'].append(node)
-                
-        start_time = log['start_time']
-        end_time = log['end_time']
-        duration = end_time - start_time
-        
-        hash['graph_labels'][task_name] = "Task: %s\\lHost: %s\\lDuration: "
-        "%s\\l" % (task_name, 
-            socket.gethostname(),
-            misc.duration_to_str(duration, long = True))
-        if 'max' in log['pipeline_log']['process_watcher']:
-            hash['graph_labels'][task_name] += "CPU: %1.1f%%, %d "
-            "CORES_Requested , RAM: %s (%1.1f%%)\\l" % (
-                log['pipeline_log']['process_watcher']['max']['sum']\
-                ['cpu_percent'],
-                log['step']['cores'],
-                misc.bytes_to_str(log['pipeline_log']['process_watcher']['max']\
-                                  ['sum']['rss']), 
-                log['pipeline_log']['process_watcher']['max']['sum']\
-                ['memory_percent'])
-        if 'signal' in log:
-            hash['graph_labels'][task_name] += "Caught signal: %s\\l" % \
-            process_pool.ProcessPool.SIGNAL_NAMES[log['signal']]
-        hash['graph_labels'][task_name] += "\\l"
-        return hash
-
     @classmethod
     def get_step_class_for_key(cls, key):
         """
@@ -1433,6 +1091,18 @@ class AbstractStep(object):
         """
         return self._cores
 
+    def add_input_connection(self, connection, constraints = None):
+        '''
+        Add an input connection to this step
+        '''
+        self.add_connection('in/%s' % connection, constraints)
+
+    def add_output_connection(self, connection, constraints = None):
+        '''
+        Add an output connection to this step
+        '''
+        self.add_connection('out/%s' % connection, constraints)
+
     def add_connection(self, connection, constraints = None):
         """
         Add a connection, which must start with 'in/' or 'out/'.
@@ -1463,7 +1133,7 @@ class AbstractStep(object):
         connections = self._connections
         out_connections = set()
         for connection in connections:
-            if connection[0:3] == "out/":
+            if connection[0:4] == "out/":
                 out_connections.add(connection)
         return out_connections
 
@@ -1567,33 +1237,98 @@ class AbstractStep(object):
         result = self.find_upstream_info_for_input_paths_as_set(
             input_paths, key, expected = 1)
         return list(result)[0]
-                                                                
-    def get_option(self, key):
-        """
-        Query an option.
-        """
-        if key not in self._defined_options:
-            raise StandardError(
-                "Cannot query undefined option %s in step %s." % 
-                (key, __module__))
-        return self._options[key]
 
-    def get_options(self):
+    def get_run_ids_out_connections_output_files(self):
         '''
-        Returns a dictionary of all given options
-        '''
-        return self._options
+        Return a dictionary with all run IDs of the current step, their
+        out connections, and the files that belong to them::
+        
+           run_id_1:
+               in_connection_1: [input_path_1, input_path_2, ...]
+               in_connection_2: ...
+           run_id_2: ...
 
-    def is_option_set_in_config(self, key):
-        """
-        Determine whether an optional option (that is, a non-required option)
-        has been set in the configuration.
-        """
-        if key not in self._defined_options:
-            raise StandardError(
-                "Cannot query undefined option %s in step %s." % 
-                (key, __module__))
-        return key in self._options
+        Format of ``in_connection``: ``in/<connection>``. Input paths are
+        absolute.        
+        '''
+        run_ids_connections_files = dict()
+        
+        for run in self.get_runs():
+            run_id = run.get_run_id()
+            run_ids_connections_files[run_id] = dict()
+            for out_connection in run.get_out_connections():
+                run_ids_connections_files[run_id][out_connection] = run\
+                    .get_output_files_for_out_connection(out_connection)
+
+        return run_ids_connections_files
+                                                                    
+
+    def get_run_ids_in_connections_input_files(self):
+        '''
+        Return a dictionary with all run IDs from parent steps, the
+        in connections they provide data for, and the names of the files::
+        
+           run_id_1:
+               in_connection_1: [input_path_1, input_path_2, ...]
+               in_connection_2: ...
+           run_id_2: ...
+
+        Format of ``in_connection``: ``in/<connection>``. Input paths are
+        absolute.
+        '''
+
+        run_ids_connections_files = dict()
+
+        if '_connect' in self._options:
+            in_connections = list(self._options['_connect']\
+                                         .keys())
+            for in_connection in in_connections:
+                if in_connection not in self.get_in_connections():
+                    raise StandardError("'_connect': unknown input connection "
+                                        "%s found." % in_connection)
+
+        # Check each parent step ...
+        for parent in self.get_dependencies():
+            # ... for each run ...
+            for parent_run_id in parent.get_runs():
+                # Check if this key exists
+                if parent_run_id not in list( run_ids_connections_files.keys() ):
+                    run_ids_connections_files[parent_run_id] = dict()
+                # ... and each connection
+                for parent_out_connection in parent.get_run(parent_run_id)\
+                                                   .get_out_connections():
+                    output_files = parent.get_run(parent_run_id)\
+                            .get_output_files_abspath_for_out_connection(
+                                parent_out_connection)
+                    in_connection = parent_out_connection.replace('out/', 'in/')
+                    this_parent_out_connection = '%s/%s' % (
+                        parent.get_step_name(), parent_out_connection[4:])
+                    # Do we need to connect certain outputs to certain inputs?
+                    if '_connect' in self._options:
+                        for _con_in in list( self._options['_connect'].keys() ):
+                            # Check if current parent needs to be connected
+                            lopoc = self._options['_connect'][_con_in]
+                            logger.debug(lopoc)
+                            # If this_parent_out_connection can be found in
+                            # lopoc, this means ...
+                            if this_parent_out_connection == lopoc or \
+                               this_parent_out_connection in lopoc:
+                                logger.debug("Found %s in %s" % 
+                                             (this_parent_out_connection,lopoc))
+                                # ... we have to use a different in_connection
+                                in_connection = _con_in
+
+                    # Now lets fill our dict with data
+                    if in_connection not in \
+                       list( run_ids_connections_files[parent_run_id].keys() ):
+                        run_ids_connections_files[parent_run_id]\
+                            [in_connection] = list()
+                    
+                    run_ids_connections_files[parent_run_id][in_connection]\
+                        .extend(output_files)
+
+        return run_ids_connections_files
+
 
     def get_input_run_info_for_connection(self, in_key):
         if in_key[0:3] != 'in/':
@@ -1601,11 +1336,12 @@ class AbstractStep(object):
         if in_key not in self._connections:
             raise StandardError("Undeclared connection %s." % in_key)
         out_key = in_key.replace('in/', 'out/')
+        out_keys = None
         allowed_steps = None
         if '_connect' in self._options:
             if in_key in self._options['_connect']:
                 declaration = self._options['_connect'][in_key]
-                if declaration.__class__ == str:
+                if isinstance(declaration, str):
                     if '/' in declaration:
                         parts = declaration.split('/')
                         allowed_steps = set()
@@ -1613,6 +1349,21 @@ class AbstractStep(object):
                         out_key = 'out/' + parts[1]
                     else:
                         out_key = 'out/' + declaration
+                elif isinstance(declaration, list):
+                    for dec in declaration:
+                        if isinstance(declaration, str):
+                            if '/' in declaration:
+                                parts = declaration.split('/')
+                                if allowed_steps == None:
+                                    allowed_steps = set()
+                                allowed_steps.add(parts[0])
+                                if out_keys == None:
+                                    out_keys = list()
+                                out_keys.append('out/' + parts[1])
+                            else:
+                                if out_keys == None:
+                                    out_keys = list()
+                                out_keys.append('out/' + declaration)
                 else:
                     raise StandardError(
                         "Invalid _connect value: %s" % yaml.dump(declaration))
@@ -1639,11 +1390,11 @@ class AbstractStep(object):
                                          (result['counts'][key2], value)
             
         result['runs'] = dict()
-        for step_name, step_info in self.get_input_run_info().items():
+        for step_name, step_info in self.get_input_runs().items():
             if allowed_steps is not None:
                 if not step_name in allowed_steps:
                     continue
-            for key in self.get_pipeline().steps[step_name]._connections:
+            for key in self.get_pipeline().get_step(step_name)._connections:
                 if out_key == 'out/*' or out_key == key:
                     result['counts']['total_steps'] += 1
                     for run_id, run_info in step_info.items():
@@ -1736,7 +1487,7 @@ class AbstractStep(object):
         name).
         """
         # that's four nested loops
-        for dep in self.dependencies:
+        for dep in self.get_dependencies():
             run_info = dep.get_runs()
             for run_id, run in run_info.items():
                 for annotation, in_paths in run.get_output_files_abspath().items():

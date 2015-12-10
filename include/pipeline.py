@@ -98,7 +98,9 @@ class Pipeline(object):
         # Check the availability of git
         command = ['git', '--version']
         try:
-            subprocess.check_call(command)
+            with open(os.devnull, 'w') as devnull:
+                subprocess.check_call(command, stdout = devnull)
+
         except subprocess.CalledProcessError as e:
             raise StandardError("Execution of %s failed. Git seems to be "
                                 "unavailable." % " ".join(command))
@@ -117,13 +119,14 @@ class Pipeline(object):
         if 'arguments' in kwargs:
             args = kwargs['arguments']
       
-        if '-dirty' in self.git_hash_tag:
+        if self.git_hash_tag.endswith('-dirty'):
             if not args.even_if_dirty:
                 print("The repository has uncommitted changes, which is why " +
                       "we will exit right now.")
                 print("If this is not a production environment, you can skip " +
                       "this test by specifying --even-if-dirty on the command " +
                       "line.")
+                print(self.git_hash_tag)
                 exit(1)
                 command = ['git', 'diff']
                 try:
@@ -141,6 +144,11 @@ class Pipeline(object):
             # cluster type is not an applicable parameter here, and that's fine
             # (we're probably in run-locally.py)
             pass
+
+        self._config_filepath = args.config.name
+        '''
+        Name of the YAML configuration file
+        '''
 
         self.config = dict()
         '''
@@ -214,7 +222,7 @@ class Pipeline(object):
 
         # collect all tasks
         for step_name in self.topological_step_order:
-            step = self.steps[step_name]
+            step = self.get_step(step_name)
             logger.debug("Collect now all tasks for step: %s" % step)
             for run_index, run_id in enumerate(misc.natsorted(step.get_run_ids())):
                 task = task_module.Task(self, step, run_id, run_index)
@@ -236,6 +244,8 @@ class Pipeline(object):
         self.tool_versions = {}
         self.check_tools()
 
+    def get_config_filepath(self):
+        return self._config_filepath
 
     def get_steps(self):
         return self.steps
@@ -432,6 +442,9 @@ class Pipeline(object):
             command_response = '%s-respone' % info_key        
             (output, error) = proc.communicate()
             if info_key in ['module_load', 'module_unload']:
+                logger.info("Try '%s' for '%s': %s" % (
+                    info_key, tool_id, " ".join(command))
+                )
                 exec output
                 tool_check_info.update({
                     command_call : (' '.join(command)).strip(),

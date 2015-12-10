@@ -8,6 +8,7 @@ constants:
     - &genome /data/bioinf/Data/Indices/hg19/hg19.fa
     - &segemehl_genome_index /data/bioinf/Data/Indices/hg19/hg19.idx
     - &bowtie2_genome_index genomes/bacteria/Mycoplasma_genitalium/bowtie2_index-dd59/Mycoplasma_genitalium_index
+    - &genome_faidx genomes/bacteria/Mycoplasma_genitalium/samtools_faidx-bf21/M_genitalium_genome-download.fasta.fai
 
 steps:
     ##################
@@ -51,7 +52,7 @@ steps:
         _depends: merge_fastq_files
 
     cutadapt (cutadapt_runs):
-        _depends: fc
+        _depends: merge_fastq_files
         adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
         adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
         fix_qnames: false
@@ -85,6 +86,16 @@ steps:
 #        _depends: fix_cutadapt
 #        genome: *genome
 #        index: *segemehl_genome_index
+
+    sort_bowtie2 (sam_to_sorted_bam):
+        _depends: bowtie2
+        genome-faidx: *genome_faidx
+        temp-sort-directory: /tmp/
+
+    bowtie_rmdup (picard_markduplicates):
+        _depends: sort_bowtie2
+        
+
 
 tools:
     ##################
@@ -130,6 +141,11 @@ tools:
 #        path: htseq-count
 #        get_version: ''
 #        exit_code: 1
+
+    picard-tools:
+        path: picard-tools
+        get_version: '--version'
+        exit_code: 0
 
     # URL: http://zlib.net/pigz/
     pigz:

@@ -1,9 +1,9 @@
-# This is the rnaseq-pipeline configuration file.
-# 
+# This is the uap configuration file.
+ 
 destination_path: genomes/bacteria/Mycoplasma_genitalium/
 
 constants:
-    #- &bowtie2_genome_index /data/bioinf/genomes/data/animalia/chordata/mammalia/rodentia/homo_sapiens/hg19/indices/hg19 
+    - &some_constant some_value
 
 
 steps:
@@ -20,61 +20,16 @@ steps:
             in/reference_sequence: M_genitalium_genome_url/raw
         index-basename: Mycoplasma_genitalium_index
 
-    # FASTQC: Generates a quality control reports of FASTQ files
-#    fastqc:
-#        _depends: fc1
+    M_genitalium_uncompress (merge_fasta_files):
+        _depends: M_genitalium_genome_url
+        _connect:
+            in/sequence: M_genitalium_genome_url/raw
+        compress-output: no
+        output-fasta-basename: M_genitalium_genome
 
-    # Cutadapt: Removes adapter sequences from raw reads
-#    cutadapt:
-#        _depends: fc1
-#        # adapter-R1: CAAGCAGAAGACGGCATACGAGAT
-#        # adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
-#        adapter-type: 'g'
-#        ## Reading adapters from FASTA file introduced with v1.5
-#        adapter-file: './data/adapter_sequences/truseq_adapter_v1_v2_LT_ChIP_revcmp.fasta'
-#        fix_qnames: false
+    samtools_faidx:
+        _depends: M_genitalium_uncompress
 
-#    count_fastq (count_raw_reads_crashing):
-#        _depends: fc1   
-
-#    fix_cutadapt:
-#        _depends: cutadapt
-
-    ## Map reads onto genome ##
-#    segemehl:
-#        _depends: fix_cutadapt
-#        genome: *genome
-#        index: *segemehl_genome_index
-
-#    tophat2:
-#        _depends: cutadapt
-#        library_type: 'fr-unstranded'
-#        index: *bowtie2_genome_index
-
-#    count_tophat2 (count_mapped_reads):
-#        _depends: tophat2
-
-#        _depends: cutadapt
-#        library_type: 'fr-unstranded'
-#        index: *bowtie2_genome_index
-
-#    count_tophat2 (count_mapped_reads):
-#        _depends: tophat2
-
-#    s2c:
-#        _depends: segemehl
-
-#    fix_s2c:
-#        _depends: s2c
-
-#    sam_to_bam:
-#        _depends: fix_s2c
-#        sort_by_name: no
-#        genome: *genome
-
-#    remove_duplicate_reads:
-#        # depending on sam_to_bam saves us a sort step
-#        _depends: sam_to_bam
 
 tools:
     ##################

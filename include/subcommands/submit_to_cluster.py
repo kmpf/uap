@@ -122,17 +122,23 @@ def main(args):
         submit_script_args += p.ccla('set_job_name', short_task_id)
             
         submit_script_args.append(p.cc('set_stderr'))
-        submit_script_args.append(os.path.join(task.step.get_output_directory(), '.' + long_task_id_with_run_id + '.stderr'))
+        submit_script_args.append(
+            os.path.join(task.get_run().get_output_directory(),
+                         '.' + long_task_id_with_run_id + '.stderr'))
         submit_script_args.append(p.cc('set_stdout'))
-        submit_script_args.append(os.path.join(task.step.get_output_directory(), '.' + long_task_id_with_run_id + '.stdout'))
+        submit_script_args.append(
+            os.path.join(task.get_run().get_output_directory(),
+                         '.' + long_task_id_with_run_id + '.stdout'))
 
         # create the output directory if it doesn't exist yet
         # this is necessary here because otherwise, qsub will complain
-        if not os.path.isdir(task.step.get_output_directory()):
-            os.makedirs(task.step.get_output_directory())
+        if not os.path.isdir(task.get_run().get_output_directory()):
+            os.makedirs(task.get_run().get_output_directory())
 
         if len(dependent_tasks) > 0:
-            submit_script_args += p.ccla('hold_jid', (':' if p.cluster_type == 'slurm' else ',').join(dependent_tasks))
+            submit_script_args += p.ccla(
+                'hold_jid',
+                (':' if p.cluster_type == 'slurm' else ',').join(dependent_tasks))
 
         really_submit_this = True
         if task_wish_list:
@@ -142,10 +148,15 @@ def main(args):
             print("Skipping %s because it is already executing." % str(task))
             really_submit_this = False
         if really_submit_this:
-            sys.stdout.write("Submitting task " + str(task) + " with " + str(task.step._cores) + " cores => ")
+            sys.stdout.write("Submitting task " + str(task) + " with " +
+                             str(task.step._cores) + " cores => ")
             process = None
             try:
-                process = subprocess.Popen(submit_script_args, bufsize = -1, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+                process = subprocess.Popen(
+                    submit_script_args,
+                    bufsize = -1,
+                    stdin = subprocess.PIPE,
+                    stdout = subprocess.PIPE)
             except OSError as e:
                 if e.errno == os.errno.ENOENT:
                     raise StandardError("Unable to launch %s. Maybe " +
@@ -169,7 +180,7 @@ def main(args):
             queued_ping_info['run_id'] = task.run_id
             queued_ping_info['job_id'] = job_id
             queued_ping_info['submit_time'] = datetime.datetime.now()
-            with open(task.step.get_queued_ping_path_for_run_id(task.run_id), 'w') as f:
+            with open(task.get_step().get_run(task.run_id).get_queued_ping_file(), 'w') as f:
                 f.write(yaml.dump(queued_ping_info, default_flow_style = False))
 
             quota_jids[step_name][quota_offset[step_name]] = job_id
@@ -196,7 +207,7 @@ def main(args):
                 if parent_state in [p.states.EXECUTING, p.states.QUEUED]:
                     # determine job_id from YAML queued ping file
                     parent_job_id = None
-                    parent_queued_ping_path = parent_task.step.get_queued_ping_path_for_run_id(parent_task.run_id)
+                    parent_queued_ping_path = parent_task.get_step().get_run(parent_task.run_id).get_queued_ping_file()
                     try:
                         parent_info = yaml.load(open(parent_queued_ping_path))
                         parent_job_ids.append(parent_info['job_id'])
