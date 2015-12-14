@@ -34,8 +34,11 @@ class FastxQualityStats(AbstractStep):
         option_list = list()
         for option in [o for o in options.keys() \
                        if self.is_option_set_in_config(o)]:
-            option_list.append(options[option])
-            if not isinstance(self.get_option(option), bool):
+            if isinstance(self.get_option(option), bool) and \
+               self.get_option(option):
+                option_list.append(options[option])
+            else:
+                option_list.append(options[option])
                 option_list.append(str(self.get_option(option)))
 
         read_types = {'first_read': '_R1', 'second_read': '_R2'}

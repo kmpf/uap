@@ -1,7 +1,5 @@
 import sys
-
 from abstract_step import AbstractStep
-import misc
 
 class Segemehl(AbstractStep):
     '''
@@ -102,9 +100,11 @@ class Segemehl(AbstractStep):
 
         option_list = list()
         for option in set_options:
-            if self.get_option(option):
+            if isinstance(self.get_option(option), bool) and \
+                    self.get_option(option):
                 option_list.append('--%s' % option)
-            if not isinstance(self.get_option(option), bool):
+            else:
+                option_list.append('--%s' % option)
                 option_list.append(str(self.get_option(option)))
 
         for run_id in run_ids_connections_files.keys():
