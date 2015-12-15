@@ -162,11 +162,11 @@ class Segemehl(AbstractStep):
                     # 3. Read genome and output to FIFO
                     dd_genome = [self.get_tool('dd'),
                                  'bs=4M',
-                                 'if=%s' % self.get_option('genome')
+                                 'if=%s' % self.get_option('genome'),
                                  'of=%s' % fifo_path_genome]
                     exec_group.add_command(dd_genome)
                 
-                    with exec_group.new_pipeline() as segemhel_pipe:
+                    with exec_group.new_pipeline() as segemehl_pipe:
                         # 4. Start segemehl
                         segemehl = [
                             self.get_tool('segemehl'),
