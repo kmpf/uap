@@ -27,6 +27,12 @@ steps:
         compress-output: no
         output-fasta-basename: M_genitalium_genome
 
+    segemehl_index (segemehl_generate_index):
+        _depends: M_genitalium_uncompress
+        _connect: 
+            in/reference_sequence: M_genitalium_uncompress/sequence
+#        index-basename: Mycoplasma_genitalium_index
+
     samtools_faidx:
         _depends: M_genitalium_uncompress
 
