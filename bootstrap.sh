@@ -18,6 +18,4 @@ fi
 virtualenv python_env
 ./python_env/bin/pip install pyyaml numpy biopython psutil
 #./python_env/bin/easy_install -f http://biopython.org/DIST/ biopython
-gcc -o tools/cat4m tools/cat4m.c
 git submodule update --init --recursive
-cd tools/pigz4m; make; cd ../..
