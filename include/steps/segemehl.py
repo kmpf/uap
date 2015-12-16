@@ -1,4 +1,5 @@
 import sys
+import os
 from abstract_step import AbstractStep
 
 class Segemehl(AbstractStep):
@@ -40,6 +41,7 @@ class Segemehl(AbstractStep):
         self.add_connection('out/log')
         
         self.require_tool('dd')
+        self.require_tool('mkfifo')
         self.require_tool('pigz')
         self.require_tool('segemehl')
 
@@ -60,8 +62,8 @@ class Segemehl(AbstractStep):
         self.add_option('maxinterval', int, optional = True)
         self.add_option('splits', bool, default = True, optional = True)
         self.add_option('SEGEMEHL', bool, optional = True)
-        self.add_option('MEOP', optional = True)
-        self.add_option('nohead', optional = True)
+        self.add_option('MEOP', bool, optional = True)
+        self.add_option('nohead', bool, optional = True)
         ## [SEEDEXTENSIONPARAMS]
         self.add_option('extensionscore', int, optional = True)
         self.add_option('extensionpenalty', int, optional = True)
@@ -117,27 +119,24 @@ class Segemehl(AbstractStep):
                                for y in x if y != None ]
 
                 # Do we have paired end data?
-                is_paired_end = True if sr_input == [None] else False
+                is_paired_end = False if sr_input == [None] else True
 
-                first_read_file = 
-                if len(run_ids_connections_files[run_id]['in/first_read']) == 1:
-                    first_read_file = run_ids_connections_files[run_id]\
-                                      ['in/first_read']
-                else:
+                if len(fr_input) != 1:
                     raise StandardError("Expected one input file.")
 
-                if run_ids_connections_files[run_id]['in/second_read'] == [None]:
-                    second_read_files = None
-                elif len(run_ids_connections_files[run_id]['in/second_read']) == 1:
-                    second_read_files = run_ids_connections_files[run_id]\
-                                        ['in/second_read']
-                else:
+                if len(sr_input) != 1:
                     raise StandardError("Expected one input file.")
 
                 if not os.path.isfile(self.get_option('index')):
                     raise StandardError(
-                        "The path %s provided to 'index' is not a file."
+                        "The path %s provided to option 'index' is not a file."
                         % self.get_option('index') )
+
+
+                if not os.path.isfile(self.get_option('genome')):
+                    raise StandardError(
+                        "The path %s provided to option 'genome' is not a file."
+                        % self.get_option('genome'))
 
                 # SEGEMEHL can cope with gzipped files so we do not need to!!!
                 #is_fr_gzipped = True if os.path.splitext(first_read_file[0])[1]\
@@ -166,7 +165,7 @@ class Segemehl(AbstractStep):
                                  'of=%s' % fifo_path_genome]
                     exec_group.add_command(dd_genome)
                 
-                    with exec_group.new_pipeline() as segemehl_pipe:
+                    with exec_group.add_pipeline() as segemehl_pipe:
                         # 4. Start segemehl
                         segemehl = [
                             self.get_tool('segemehl'),
@@ -174,10 +173,10 @@ class Segemehl(AbstractStep):
                             '--index', self.get_option('index'),
                             '--nomatchfilename', fifo_path_unmapped,
                             '--threads', '10'
-                            '--query', first_read_path
+                            '--query', fr_input[0]
                         ]
                         if is_paired_end:
-                            segemehl.extend(['--mate', second_read_path])
+                            segemehl.extend(['--mate', sr_input[0]])
                         segemehl.extend(option_list)
                         segemehl_pipe.add_command(
                             segemehl,
