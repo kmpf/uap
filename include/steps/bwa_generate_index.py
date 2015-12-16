@@ -9,7 +9,7 @@ class BwaGenerateIndex(AbstractStep):
     '''
     
     def __init__(self, pipeline):
-        super(Bowtie2Build, self).__init__(pipeline)
+        super(BwaGenerateIndex, self).__init__(pipeline)
         self.set_cores(6)
 
         self.add_connection('in/reference_sequence')

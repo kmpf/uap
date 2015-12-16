@@ -2,7 +2,7 @@ import os
 
 from abstract_step import AbstractStep
 
-class Bowtie2Build(AbstractStep):
+class Bowtie2GenerateIndex(AbstractStep):
     '''
     bowtie-build builds a Bowtie index from a set of DNA sequences.
     bowtie-build outputs a set of 6 files with suffixes .1.ebwt, .2.ebwt,
@@ -22,7 +22,7 @@ class Bowtie2Build(AbstractStep):
     '''
     
     def __init__(self, pipeline):
-        super(Bowtie2Build, self).__init__(pipeline)
+        super(Bowtie2GenerateIndex, self).__init__(pipeline)
         self.set_cores(6)
 
         self.add_connection('in/reference_sequence')
