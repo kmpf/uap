@@ -30,12 +30,7 @@ located in ``./python_env/``)::
   $ cd uap
   $ ./bootstrap.sh
 
-There's no harm in accidentally running this script multiple times. 
-Also, it will compile ``cat4m``, a tool which can be found at 
-``./tools/cat4m`` and which is able to read arbitrary input files in chunks 
-of 4 MB and print them to stdout (we'll need this often in the pipeline,
-as ``cat`` reads in system-default blocks of 32 kB which is ok for a normal
-system but leads to high I/O load on a cluster system).
+There's no harm in accidentally running this script multiple times.
 
 Making **uap** Globally Available
 ---------------------------------

@@ -1,5 +1,5 @@
 ..
-  This is the documentation for rnaseq-pipeline. Please keep lines under
+  This is the documentation for uap. Please keep lines under
   80 characters if you can and start each sentence on a new line as it 
   decreases maintenance and makes diffs more readable.
 
@@ -14,9 +14,9 @@ Configuration of **uap**
 **uap** is made to control the execution of data analyses which are defined
 in `YAML <http://www.yaml.org/>`_ files.
 Each file describes a complete analysis.
-Further on these files are called analysis file(s).
+Further on these files are called configuration file(s).
 
-The configuration files consist of four sections (let's just call them sections,
+A configuration files consist of four sections (let's just call them sections,
 although technically, they are keys):
 
 * ``destination_path`` -- points to the directory where the result files,
@@ -25,9 +25,9 @@ although technically, they are keys):
   this email address by the cluster scheduler (nobody@example.com by default)
 * ``constants`` -- defines constants for later use (define repeatedly used
   values as constants to increase readability of the following sections)
-* ``tools`` -- defines all tools used in the pipeline and how to determine 
+* ``tools`` -- defines all tools used in the analysis and how to determine 
   their versions (for later reference)
-* ``steps`` -- defines the processing step and their order 
+* ``steps`` -- defines the source and processing steps and their order 
 
 If you want to know more about the notation that is used in this file, have a
 closer look at the `YAML definition <http://www.yaml.org/>`_.
@@ -39,12 +39,13 @@ Destination_path Section
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 The value of ``destination_path`` is the directory where **uap** is going
-to store the created files. It is possible to use a different directory for
-volatile files (see ).
+to store the created files.
+
+.. It is possible to use a different directory for volatile files (see ).
 
 .. code-block:: yaml
 
-    destination_path: "/path/to/dir"
+    destination_path: "/path/to/uap/output"
 
 Email Section
 ~~~~~~~~~~~~~
@@ -84,13 +85,13 @@ still ensure unique naming:
 There are two different types of steps:
 
 **Source Steps**
-  They are used to provide files for the analysis. They have no dependencies
-  and are usually the first steps of an analysis.
+  They provide input files for the analysis.
+  They have no dependencies and are usually the first steps of an analysis.
 
 **Processing Steps**
-  They depend upon one or more predecessor steps. Dependencies are defined via
-  the ``_depends`` key which may either be ``null``, a step name, or a list of
-  step names.
+  They depend upon one or more predecessor steps.
+  Dependencies are defined via the ``_depends`` key which may either be ``null``,
+  a step name, or a list of step names.
 
 .. code-block:: yaml
 
@@ -99,9 +100,12 @@ There are two different types of steps:
         fastq_source:
             # ...
             
+        run_folder_source:
+            # ...
+
         # the first processing step, which depends on the source step
         cutadapt:
-            _depends: fastq_source
+            _depends: [fastq_source, run_folder_source]
         
         # the second processing step, which depends on the cutadapt step
         fix_cutadapt:
