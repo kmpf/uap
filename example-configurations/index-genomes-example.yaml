@@ -66,6 +66,12 @@ tools:
         get_version: '--version'
         exit_code: 0
 
+    # URL: https://github.com/lh3/bwa
+    bwa:
+        path: bwa
+        get_version: ''
+        exit_code: 1
+
     # URL: http://cufflinks.cbcb.umd.edu/
 #    cufflinks:
 #        path: 'cufflinks'

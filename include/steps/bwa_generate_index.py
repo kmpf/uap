@@ -23,21 +23,6 @@ class BwaGenerateIndex(AbstractStep):
 
     def runs(self, run_ids_connections_files):
         # Compile the list of options
-        options = ['large-index', 'noauto', 'packed', 'bmax', 'bmaxdivn', 'dcv',
-                   'nodc', 'offrate', 'ftabchars', 'seed', 'cutoff']
-
-        set_options = [option for option in options if \
-                       self.is_option_set_in_config(option)]
-
-        option_list = list()
-        for option in set_options:
-            if isinstance(self.get_option(option), bool) and \
-               self.get_option(option):
-                option_list.append('--%s' % option)
-            else:
-                option_list.append('--%s' % option)
-                option_list.append(str(self.get_option(option)))
-
         for run_id in run_ids_connections_files.keys():
             # Get the basename
             index_basename = run_id
