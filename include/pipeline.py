@@ -256,7 +256,7 @@ class Pipeline(object):
     # read configuration and make sure it's good
     def read_config(self, config_file):
         #print >> sys.stderr, "Reading configuration..."
-#        self.config = yaml.load(open('config.yaml'))
+        # yaml.load works fine even for duplicate dictionary keys (WTF)
         self.config = yaml.load(config_file)
 
         if not 'id' in self.config:
