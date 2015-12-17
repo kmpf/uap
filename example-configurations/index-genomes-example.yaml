@@ -7,7 +7,7 @@ constants:
 
 
 steps:
-    M_genitalium_genome_url (raw_url_source_runs):
+    M_genitalium_genome_url (raw_url_source):
         hashing-algorithm: md5
         filename: 'Mycoplasma_genitalium.ASM2732v1.fna.gz'
         path: genomes/bacteria/Mycoplasma_genitalium/
@@ -180,6 +180,11 @@ tools:
 
     cat:
         path: cat
+        get_version: '--version'
+        exit_code: 0
+
+    cp:
+        path: cp
         get_version: '--version'
         exit_code: 0
 
