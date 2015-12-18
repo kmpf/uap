@@ -14,9 +14,10 @@ class RawUrlSource(AbstractSourceStep):
         self.add_connection('out/raw')
 
         self.require_tool('compare_secure_hashes')
-        self.require_tool('curl')
-        self.require_tool('mkdir')
         self.require_tool('cp')
+        self.require_tool('curl')
+        self.require_tool('dd')
+        self.require_tool('mkdir')
         self.require_tool('pigz')
 
         self.add_option('filename', str, optional = True,
@@ -97,10 +98,18 @@ class RawUrlSource(AbstractSourceStep):
                 check_exec_group.add_command(compare_secure_hashes)
             with run.new_exec_group() as cp_exec_group:
                 if self.get_option("uncompress"):
-                    pigz = [self.get_tool('pigz'), '--decompress', '--stdout',
-                            '--processes', '1', temp_filename]
-#                    temp_filename = os.path.splitext(temp_filename)[0]
-                    cp_exec_group.add_command(pigz, stdout_path = out_file)
+                    with cp_exec_group.add_pipeline() as pipe:
+                        pigz = [self.get_tool('pigz'),
+                                '--decompress',
+                                '--stdout',
+                                '--processes', '1',
+                                temp_filename]
+                        #                    temp_filename = os.path.splitext(temp_filename)[0]
+                        dd_out = [self.get_tool('dd'),
+                                  'bs=4M',
+                                  'of=%s' % out_file]
+                        pipe.add_command(pigz)
+                        pipe.add_command(dd_out)
                 else:
                     cp = [self.get_tool('cp'), '--update', temp_filename,
                           out_file]
