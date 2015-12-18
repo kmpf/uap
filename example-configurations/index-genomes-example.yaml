@@ -12,6 +12,7 @@ steps:
         filename: 'Mycoplasma_genitalium.ASM2732v1.fna.gz'
         path: genomes/bacteria/Mycoplasma_genitalium/
         secure-hash: a3e6e5655e4996dc2d49f876be9d1c27
+        uncompress: yes
         url: ftp://ftp.ncbi.nih.gov/genomes/genbank/bacteria/Mycoplasma_genitalium/latest_assembly_versions/GCA_000027325.1_ASM2732v1/GCA_000027325.1_ASM2732v1_genomic.fna.gz
 
     bowtie2_index (bowtie2_generate_index):
