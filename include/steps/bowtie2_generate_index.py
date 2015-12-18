@@ -113,7 +113,12 @@ class Bowtie2GenerateIndex(AbstractStep):
                                 unzip_pipe.add_command(pigz)
                                 unzip_pipe.add_command(dd_out)
                         elif is_fasta:
+                            dd = [self.get_tool('dd'),
+                                  'bs=4M',
+                                  'if=%s' % input_path, 
+                                  'of=%s' % temp_file]
                             temp_files.append(input_path)
+                            exec_group.add_command(dd)
                         else:
                             raise StandardError("File %s does not end with "
                                                 "any expected suffix ("
