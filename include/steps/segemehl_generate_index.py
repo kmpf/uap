@@ -32,7 +32,7 @@ class SegemehlGenerateIndex(AbstractStep):
                 index_basename = "%s-%s" % (
                     self.get_option('index-basename'), run_id)
 
-            with self.declare_run(run_id) as run:
+            with self.declare_run(index_basename) as run:
                 # Get list of files for first/second read
                 refseq = run_ids_connections_files[run_id]\
                          ['in/reference_sequence']
@@ -49,8 +49,15 @@ class SegemehlGenerateIndex(AbstractStep):
                     # 1. Create FIFOs ...
                     # 1.1 ... for the input sequence
                     for seq_file in refseq:
+                        # Is the reference gzipped?
+                        root, ext = os.path.splitext(os.path.basename(seq_file))
+                        is_gzipped = True if ext in ['.gz', '.gzip'] else False
+                        
+                        # Create FIFO for input file
                         seq_fifo = run.add_temporary_file(
-                            '%s-fifo' % os.path.basename(seq_file),
+                            '%s-fifo' % 
+                            os.path.basename(seq_file),
+                            suffix = '.fa',
                             designation = 'input')
                         refseq_fifos.append(seq_fifo)
 
@@ -59,14 +66,33 @@ class SegemehlGenerateIndex(AbstractStep):
                             seq_fifo
                         ]
                         exec_group.add_command(mkfifo_seq)
+                        
                         # Feed reference sequence to seq_fifo
                         dd_refseq = [
                             self.get_tool('dd'),
                             'bs=4M',
-                            'if=%s' % seq_file,
-                            'of=%s' % seq_fifo
+                            'if=%s' % seq_file
                         ]
-                        exec_group.add_command(dd_refseq)
+
+                        if is_gzipped:
+                            with exec_group.add_pipeline() as pipe:
+
+                                pigz = [
+                                    self.get_tool('pigz'),
+                                    '--decompress',
+                                    '--stdout']
+
+                                dd_out = [self.get_tool('dd'),
+                                          'bs=4M',
+                                          'of=%s' % seq_fifo]
+                                pipe.add_command(dd_refseq)
+                                pipe.add_command(pigz)
+                                pipe.add_command(dd_out)
+                        else:
+                            dd_refseq.append(
+                                'of=%s' % seq_fifo
+                            )
+                            exec_group.add_command(dd_refseq)
 
                     # 1.2 ... for the index to be generated
                     mkfifo_index = [

@@ -9,7 +9,7 @@ constants:
 steps:
     M_genitalium_genome_url (raw_url_source):
         hashing-algorithm: md5
-        filename: 'Mycoplasma_genitalium.ASM2732v1.fna.gz'
+        filename: 'Mycoplasma_genitalium.ASM2732v1.fa'
         path: genomes/bacteria/Mycoplasma_genitalium/
         secure-hash: a3e6e5655e4996dc2d49f876be9d1c27
         uncompress: yes
@@ -21,27 +21,29 @@ steps:
             in/reference_sequence: M_genitalium_genome_url/raw
         index-basename: Mycoplasma_genitalium_index
 
-    M_genitalium_uncompress (merge_fasta_files):
-        _depends: M_genitalium_genome_url
-        _connect:
-            in/sequence: M_genitalium_genome_url/raw
-        compress-output: no
-        output-fasta-basename: M_genitalium_genome
+#    M_genitalium_uncompress (merge_fasta_files):
+#        _depends: M_genitalium_genome_url
+#        _connect:
+#            in/sequence: M_genitalium_genome_url/raw
+#        compress-output: no
+#        output-fasta-basename: M_genitalium_genome
 
     segemehl_index (segemehl_generate_index):
-        _depends: M_genitalium_uncompress
+        _depends: M_genitalium_genome_url
         _connect: 
-            in/reference_sequence: M_genitalium_uncompress/sequence
-#        index-basename: Mycoplasma_genitalium_index
+            in/reference_sequence: M_genitalium_genome_url/raw
+        index-basename: Mycoplasma_genitalium_genome
 
     bwa_index (bwa_generate_index):
-        _depends: M_genitalium_uncompress
+        _depends: M_genitalium_genome_url
         _connect: 
-            in/reference_sequence: M_genitalium_uncompress/sequence
-#        index-basename: Mycoplasma_genitalium_index
+            in/reference_sequence: M_genitalium_genome_url/raw
+        index-basename: Mycoplasma_genitalium_index
 
     samtools_faidx:
-        _depends: M_genitalium_uncompress
+        _depends: M_genitalium_genome_url
+        _connect: 
+            in/sequence: M_genitalium_genome_url/raw
 
 
 tools:
