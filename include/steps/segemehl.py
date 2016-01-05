@@ -121,11 +121,13 @@ class Segemehl(AbstractStep):
                 # Do we have paired end data?
                 is_paired_end = False if sr_input == [None] else True
 
-                if len(fr_input) != 1:
-                    raise StandardError("Expected one input file.")
+                if len(fr_input) != 1 or fr_input == [None]:
+                    raise StandardError("Expected single input file for first "
+                                        "read.")
 
-                if len(sr_input) != 1:
-                    raise StandardError("Expected one input file.")
+                if is_paired_end and len(sr_input) != 1:
+                    raise StandardError("Expected single input file for second "
+                                        "read.")
 
                 if not os.path.isfile(self.get_option('index')):
                     raise StandardError(
