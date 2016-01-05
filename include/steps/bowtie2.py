@@ -103,12 +103,12 @@ class Bowtie2(AbstractStep):
                         return (exec_group, temp_fifos)
 
                     for input_path in fr_input:
-                        exec_group, fr_temp_fifos = prepare_input_for_bowtie(
+                        exec_group, fr_temp_fifos = prepare_input(
                             input_path, exec_group, fr_temp_fifos)
                     # And if we handle paired end data 
                     if is_paired_end:
                         for input_path in sr_input:
-                            exec_group, sr_temp_fifos = prepare_input_for_bowtie(
+                            exec_group, sr_temp_fifos = prepare_input(
                                 input_path, exec_group, sr_temp_fifos)
 
                     # 3. Map reads using bowtie2
