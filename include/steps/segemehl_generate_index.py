@@ -21,16 +21,14 @@ class SegemehlGenerateIndex(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('segemehl')
 
-        self.add_option('index-basename', str, default = "")
+        self.add_option('index-basename', str, optional = False)
 
     def runs(self, run_ids_connections_files):
 
 
         for run_id in run_ids_connections_files.keys():
-            index_basename = run_id
-            if self.get_option('index-basename'):
-                index_basename = "%s-%s" % (
-                    self.get_option('index-basename'), run_id)
+            index_basename = "%s-%s" % (
+                self.get_option('index-basename'), run_id)
 
             with self.declare_run(index_basename) as run:
                 # Get list of files for first/second read

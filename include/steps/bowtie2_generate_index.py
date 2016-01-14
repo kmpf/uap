@@ -64,8 +64,8 @@ class Bowtie2GenerateIndex(AbstractStep):
 
         for run_id in run_ids_connections_files.keys():
             # Get the basename
-            index_basename = "%s-%s" % (self.get_option('index-basename'),
-                                        run_id)
+            index_basename = "%s-%s" % (
+                self.get_option('index-basename'), run_id)
 
             with self.declare_run(index_basename) as run:
                 with run.new_exec_group() as exec_group:

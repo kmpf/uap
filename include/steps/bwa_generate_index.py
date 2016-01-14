@@ -19,16 +19,14 @@ class BwaGenerateIndex(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('bwa')
 
-        self.add_option('index-basename', str, default = "")
+        self.add_option('index-basename', str, optional = False)
 
     def runs(self, run_ids_connections_files):
         # Compile the list of options
         for run_id in run_ids_connections_files.keys():
             # Get the basename
-            index_basename = run_id
-            if self.get_option('index-basename'):
-                index_basename = "%s-%s" % (
-                    self.get_option('index-basename'), run_id)
+            index_basename =  "%s-%s" % (
+                self.get_option('index-basename'), run_id)
 
             with self.declare_run(index_basename) as run:
                 with run.new_exec_group() as exec_group:
