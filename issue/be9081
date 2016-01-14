@@ -1,0 +1,3 @@
+Summary: Change Error Reporting from Raising Exceptions to logging+sys.exit
+Priority: 6
+
