@@ -161,19 +161,16 @@ tools:
     # Internal Tools #
     ##################
 
-#    cat4m:
-#        path: ./../tools/cat4m
-
     fix_cutadapt:
-        path: ['./../python_env/bin/python', './../tools/fix_cutadapt.py']
+        path: './../tools/fix_cutadapt.py'
         get_version: ''
         exit_code: 2
 
     fix_qnames:
-        path: ['./../python_env/bin/python', './../tools/fix_qnames.py']
+        path: './../tools/fix_qnames.py'
 
     remove_reads_segemehl:
-        path: ['./../python_env/bin/python', './../tools/remove_reads_segemehl.py']
+        path: './../tools/remove_reads_segemehl.py'
         exit_code: 1
 
     ##############
