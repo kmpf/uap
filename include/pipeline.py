@@ -566,8 +566,12 @@ class Pipeline(object):
             check_queue = False
             
         if print_more_warnings and not check_queue:
+            try:
+                ce = self.cc('stat')
+            except KeyError:
+                ce = "a cluster engine"
             print("Attention, we cannot check stale queued ping files because "
-                  "this host does not have %s." % self.cc('stat'))
+                  "this host does not have %s." % ce)
             
         running_jids = set()
         

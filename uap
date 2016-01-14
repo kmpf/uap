@@ -392,16 +392,16 @@ def _configure_logger(verbosity):
     # Instantiate logger
     if verbosity == 0:
         logger.setLevel(logging.WARNING)
-        sys.stderr.write("[uap] Set log level to WARNING")
+        sys.stderr.write("[uap] Set log level to WARNING\n")
     elif verbosity == 1:
         logger.setLevel(logging.INFO)
-        sys.stderr.write("[uap] Set log level to INFO")
+        sys.stderr.write("[uap] Set log level to INFO\n")
     elif verbosity >= 2:
         logger.setLevel(logging.DEBUG)
-        sys.stderr.write("[uap] Set log level to DEBUG")
+        sys.stderr.write("[uap] Set log level to DEBUG\n")
     else:
         logger.setLevel(logging.NOTSET)
-        sys.stderr.write("[uap] Set log level to NOTSET")
+        sys.stderr.write("[uap] Set log level to NOTSET\n")
     sys.stderr.flush()
     return logger
 
