@@ -6,7 +6,7 @@ class BwaMem(AbstractStep):
     '''
     
     def __init__(self, pipeline):
-        super(BwaMem, self).__init__(pipeline))
+        super(BwaMem, self).__init__(pipeline)
         self.set_cores(6)
 
         self.add_connection('in/first_read')
@@ -158,7 +158,9 @@ class BwaMem(AbstractStep):
                         raise StandardError("%s possess unknown suffix. "
                                             "(None of: fastq, fq, fq.gz, fastq.gz)")
 
-                # BWA kann nur mit einer Datei für first und einer Datei für den second read umgehen egal ob sie gzipped sind oder nicht
+                # BWA can handle only single files for first and second read
+                # IMPORTANT: BWA handles gzipped as well as not gzipped files
+
                 with run.new_exec_group() as exec_group:
 
                     def prepare_input(input_path, exec_group):
@@ -174,7 +176,7 @@ class BwaMem(AbstractStep):
                               'of=%s' % temp_fifo]
                         exec_group.add_command(dd)
                         
-                    return (exec_group, temp_fifo)
+                        return (exec_group, temp_fifo)
 
                     # Temporary fifos
                     temp_fr_fifo, temp_sr_fifo = (str, str)
