@@ -148,6 +148,11 @@ steps:
                - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001447_1.fastq
                - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001461_1.fastq
                - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001462_1.fastq
+            'Pol II':
+               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001437_1.fastq
+               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001447_1.fastq
+               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001461_1.fastq
+               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001462_1.fastq
         paired_end: no
         first_read: _1.fastq
 
