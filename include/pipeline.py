@@ -255,13 +255,11 @@ class Pipeline(object):
 
     # read configuration and make sure it's good
     def read_config(self, config_file):
-        #print >> sys.stderr, "Reading configuration..."
-        # yaml.load works fine even for duplicate dictionary keys (WTF)
+        # yaml.load works fine, even for duplicate dictionary keys (WTF)
         self.config = yaml.load(config_file)
 
         if not 'id' in self.config:
             self.config['id'] = config_file.name
-        
         
         if not 'destination_path' in self.config:
             raise ConfigurationException("Missing key: destination_path")
