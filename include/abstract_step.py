@@ -304,16 +304,6 @@ class AbstractStep(object):
 
         # fetch all incoming run IDs which produce reads...
 
-#        in_connections = self.get_in_connections()
-#        run_ids_connections_files = dict()
-#        for in_connection in in_connections:
-#            for run_id, input_paths in self.get_run_ids_and_input_files_for_connection(in_connection):
-#                # das macht den schoenen Generator kaputt den Micha mal gebaut hat
-#                if not run_id in run_ids_connections_files:
-#                    run_ids_connections_files[run_id] = dict()
-#                if not in_connection in run_ids_connections_files[run_id]:
-#                    run_ids_connections_files[run_id][in_connection] = input_paths
-
         self.runs( self.get_run_ids_in_connections_input_files() )
         
     def runs(self, run_ids_connections_files):
@@ -1292,8 +1282,16 @@ class AbstractStep(object):
             # ... for each run ...
             for parent_run_id in parent.get_runs():
                 # Check if this key exists
+                parent_run_id_old = parent_run_id
+                parent_run_id = re.sub(r'\s', '_', parent_run_id)
                 if parent_run_id not in list( run_ids_connections_files.keys() ):
                     run_ids_connections_files[parent_run_id] = dict()
+                else:
+                    logger.error("Run ID '%s' and run ID '%s' are to similar. "
+                                 "Please rename '%s'." %
+                                 (parent_run_id_old, parent_run_id,
+                                  parent_run_id_old)
+                    )
                 # ... and each connection
                 for parent_out_connection in parent.get_run(parent_run_id)\
                                                    .get_out_connections():
