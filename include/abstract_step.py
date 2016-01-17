@@ -1282,10 +1282,9 @@ class AbstractStep(object):
             # ... for each run ...
             for parent_run_id in parent.get_runs():
                 # Check if this key exists
-                parent_run_id_old = parent_run_id
-                parent_run_id = re.sub(r'\s', '_', parent_run_id)
-                if parent_run_id not in list( run_ids_connections_files.keys() ):
-                    run_ids_connections_files[parent_run_id] = dict()
+                parent_run_id_new = re.sub(r'\s', '_', parent_run_id)
+                if parent_run_id_new not in list( run_ids_connections_files.keys() ):
+                    run_ids_connections_files[parent_run_id_new] = dict()
                 else:
                     logger.error("Run ID '%s' and run ID '%s' are to similar. "
                                  "Please rename '%s'." %
@@ -1293,8 +1292,8 @@ class AbstractStep(object):
                                   parent_run_id_old)
                     )
                 # ... and each connection
-                for parent_out_connection in parent.get_run(parent_run_id)\
-                                                   .get_out_connections():
+                for parent_out_connection in \
+                    parent.get_run(parent_run_id).get_out_connections():
                     output_files = parent.get_run(parent_run_id)\
                             .get_output_files_abspath_for_out_connection(
                                 parent_out_connection)
@@ -1318,11 +1317,11 @@ class AbstractStep(object):
 
                     # Now lets fill our dict with data
                     if in_connection not in \
-                       list( run_ids_connections_files[parent_run_id].keys() ):
-                        run_ids_connections_files[parent_run_id]\
+                       list( run_ids_connections_files[parent_run_id_new].keys() ):
+                        run_ids_connections_files[parent_run_id_new]\
                             [in_connection] = list()
                     
-                    run_ids_connections_files[parent_run_id][in_connection]\
+                    run_ids_connections_files[parent_run_id_new][in_connection]\
                         .extend(output_files)
 
         return run_ids_connections_files
