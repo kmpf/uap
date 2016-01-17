@@ -41,8 +41,6 @@ class Bowtie2(AbstractStep):
             raise StandardError("Could not find index file: %s.*" %
                                 self.get_option('index') )
 
-
-        read_types = {'first_read': '_R1', 'second_read': '_R2'}
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 # Get list of files for first/second read
@@ -64,8 +62,7 @@ class Bowtie2(AbstractStep):
                     sr_temp_fifos = list()
                     # 1. 
 
-                    def prepare_input_for_bowtie(
-                            input_path, exec_group, temp_fifos):
+                    def prepare_input(input_path, exec_group, temp_fifos):
                         # Create temporary fifo
                         temp_fifo = run.add_temporary_file(
                             'in-fifo-%s' %
@@ -76,7 +73,7 @@ class Bowtie2(AbstractStep):
                         # Is input gzipped fasta?
                         is_fastq_gz = False
                         if len([_ for _ in ['fq.gz', 'fastq.gz']\
-                                if input_path.endswith(_)]) >= 0:
+                                if input_path.endswith(_)]) == 1:
                             is_fastq_gz = True
                         # If yes we need to decompress it
                         if is_fastq_gz:
@@ -106,12 +103,12 @@ class Bowtie2(AbstractStep):
                         return (exec_group, temp_fifos)
 
                     for input_path in fr_input:
-                        exec_group, fr_temp_fifos = prepare_input_for_bowtie(
+                        exec_group, fr_temp_fifos = prepare_input(
                             input_path, exec_group, fr_temp_fifos)
                     # And if we handle paired end data 
                     if is_paired_end:
                         for input_path in sr_input:
-                            exec_group, sr_temp_fifos = prepare_input_for_bowtie(
+                            exec_group, sr_temp_fifos = prepare_input(
                                 input_path, exec_group, sr_temp_fifos)
 
                     # 3. Map reads using bowtie2
