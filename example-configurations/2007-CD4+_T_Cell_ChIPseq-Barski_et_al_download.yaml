@@ -1,0 +1,470 @@
+# This is the uap configuration file.
+ 
+destination_path: example-out/2007-Barski_et_al_download
+
+constants:
+    - &some_constant some_value
+
+steps:
+    SRR001392_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001392/SRR001392.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001393_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001393/SRR001393.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001394_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001394/SRR001394.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001395_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001395/SRR001395.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001396_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001396/SRR001396.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001397_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001397/SRR001397.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001398_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001398/SRR001398.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001399_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001399/SRR001399.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001400_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001400/SRR001400.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001401_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001401/SRR001401.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001402_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001402/SRR001402.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001403_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001403/SRR001403.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001404_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001404/SRR001404.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001405_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001405/SRR001405.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001406_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001406/SRR001406.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001407_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001407/SRR001407.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001408_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001408/SRR001408.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001409_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001409/SRR001409.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001410_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001410/SRR001410.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001411_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001411/SRR001411.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001412_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001392/SRR001412.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001413_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001393/SRR001413.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001414_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001394/SRR001414.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001415_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001395/SRR001415.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001416_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001396/SRR001416.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001417_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001397/SRR001417.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001418_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001398/SRR001418.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001419_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001399/SRR001419.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001420_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001400/SRR001420.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001421_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001401/SRR001421.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001422_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001402/SRR001422.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001423_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001403/SRR001423.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001424_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001404/SRR001424.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001425_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001405/SRR001425.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001426_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001406/SRR001426.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001427_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001407/SRR001427.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001428_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001408/SRR001428.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001429_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001409/SRR001429.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001430_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001410/SRR001430.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001431_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001411/SRR001431.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001432_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001392/SRR001432.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001433_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001393/SRR001433.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001434_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001394/SRR001434.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001435_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001395/SRR001435.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001436_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001396/SRR001436.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001437_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001397/SRR001437.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001438_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001398/SRR001438.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001439_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001399/SRR001439.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001440_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001400/SRR001440.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001441_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001401/SRR001441.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001442_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001402/SRR001442.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001443_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001403/SRR001443.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001444_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001404/SRR001444.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001445_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001405/SRR001445.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001446_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001406/SRR001446.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001447_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001407/SRR001447.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001448_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001408/SRR001448.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001449_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001409/SRR001449.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001450_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001410/SRR001450.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001451_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001411/SRR001451.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001452_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001392/SRR001452.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001453_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001393/SRR001453.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001454_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001394/SRR001454.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001455_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001395/SRR001455.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001456_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001396/SRR001456.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001457_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001397/SRR001457.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001458_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001398/SRR001458.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001459_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001399/SRR001459.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001460_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001400/SRR001460.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001461_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001401/SRR001461.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001462_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001402/SRR001462.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001463_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001403/SRR001463.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001464_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001404/SRR001464.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001465_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001405/SRR001465.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001466_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001406/SRR001466.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001467_download (raw_url_source):
+        url: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001407/SRR001467.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+tools:
+    ##################
+    # External Tools #
+    ##################
+
+    # URL: https://github.com/lh3/bwa
+    bwa:
+        path: bwa
+        get_version: ''
+        exit_code: 1
+        
+    # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
+    bowtie2-build:
+        path: bowtie2-build
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://zlib.net/pigz/
+    pigz: 
+        path: pigz
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://www.htslib.org/
+    samtools:
+        path: samtools
+        get_version: --version
+        exit_code: 0
+
+    # URL: 
+    segemehl:
+        path: segemehl.x
+        get_version: ''
+        exit_code: 255
+                
+    ##################
+    # Internal Tools #
+    ##################
+
+    compare_secure_hashes:
+        path: ../tools/compare_secure_hashes.py
+        get_version: --version
+        exit_code: 0
+
+    ##############
+    # Unix Tools #
+    ##############
+
+    cat:
+        path: cat
+        get_version: --version
+        exit_code: 0
+
+    cp:
+        path: cp
+        get_version: --version
+        exit_code: 0
+
+    curl:
+        path: curl
+        get_version: --version
+        exit_code: 0
+
+    dd:
+        path: dd
+        get_version: --version
+        exit_code: 0
+
+    mkdir:
+        path: mkdir
+        get_version: --version
+        exit_code: 0
+        
+    mkfifo:
+        path: mkfifo
+        get_version: --version
+        exit_code: 0
+
+    mv:
+        path: mv
+        get_version: --version
+        exit_code: 0
