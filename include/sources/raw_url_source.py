@@ -22,13 +22,13 @@ class RawUrlSource(AbstractSourceStep):
 
         self.add_option('filename', str, optional = True,
                         description = "local file name of downloaded file")
-        self.add_option('hashing-algorithm', str, optional=False,
+        self.add_option('hashing-algorithm', str, optional=True,
                         choices = ['md5', 'sha1', 'sha224', 'sha256',
                                    'sha384', 'sha512'],
                         description = "hashing algorithm to use")
         self.add_option('path', str, optional = False,
                         description = "directory to move downloaded file to")
-        self.add_option('secure-hash', str, optional = False,
+        self.add_option('secure-hash', str, optional = True,
                         description = "expected secure hash of downloaded file")
         self.add_option('uncompress', bool, optional = True, default = False,
                         description = 'Shall the file be uncompressed after '
@@ -87,15 +87,20 @@ class RawUrlSource(AbstractSourceStep):
                 # 1. download file
                 curl = [self.get_tool('curl'), self.get_option('url')]
                 curl_exec_group.add_command(curl, stdout_path = temp_filename)
-            with run.new_exec_group() as check_exec_group:
-                # 2. Compare secure hashes
-                compare_secure_hashes = [self.get_tool('compare_secure_hashes'),
-                                         '--algorithm',
-                                         self.get_option('hashing-algorithm'),
-                                         '--secure-hash',
-                                         self.get_option('secure-hash'),
-                                         temp_filename]
-                check_exec_group.add_command(compare_secure_hashes)
+            
+            if self.is_option_set_in_config('hashing-algorithm') and \
+               self.is_option_set_in_config('secure-hash'):
+                with run.new_exec_group() as check_exec_group:
+                    # 2. Compare secure hashes
+                    compare_secure_hashes = [
+                        self.get_tool('compare_secure_hashes'),
+                        '--algorithm',
+                        self.get_option('hashing-algorithm'),
+                        '--secure-hash',
+                        self.get_option('secure-hash'),
+                        temp_filename
+                    ]
+                    check_exec_group.add_command(compare_secure_hashes)
             with run.new_exec_group() as cp_exec_group:
                 if self.get_option("uncompress"):
                     with cp_exec_group.add_pipeline() as pipe:
