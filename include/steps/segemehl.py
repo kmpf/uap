@@ -40,6 +40,7 @@ class Segemehl(AbstractStep):
         self.add_connection('out/unmapped')
         self.add_connection('out/log')
         
+        self.require_tool('cat')
         self.require_tool('dd')
         self.require_tool('mkfifo')
         self.require_tool('pigz')
