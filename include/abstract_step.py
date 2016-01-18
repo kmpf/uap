@@ -1288,8 +1288,8 @@ class AbstractStep(object):
                 else:
                     logger.error("Run ID '%s' and run ID '%s' are to similar. "
                                  "Please rename '%s'." %
-                                 (parent_run_id_old, parent_run_id,
-                                  parent_run_id_old)
+                                 (parent_run_id, parent_run_id_new,
+                                  parent_run_id)
                     )
                 # ... and each connection
                 for parent_out_connection in \
