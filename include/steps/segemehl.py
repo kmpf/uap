@@ -206,12 +206,15 @@ class Segemehl(AbstractStep):
 
 
                     # 6. Compress unmapped reads
+                    dd_unmapped_reads = [self.get_tool('dd'),
+                                         'bs=4M',
+                                         'if=%s' % fifo_path_unmapped]
+                    exec_group.add_command(dd_unmapped_reads)
                     pigz_unmapped_reads = [
                         self.get_tool('pigz'),
                         '--stdout',
                         '--blocksize', '4096',
-                        '--processes', '1',
-                        fifo_path_unmapped
+                        '--processes', '1'
                     ]
                     exec_group.add_command(
                         pigz_unmapped_reads,
