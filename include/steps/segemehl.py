@@ -205,22 +205,23 @@ class Segemehl(AbstractStep):
                                 input_paths)
                         )
 
+                    with exec_group.add_pipeline() as compress_unmapped_pipe:
 
-                    # 6. Read unmapped reads from fifo
-                    cat_unmapped_reads = [self.get_tool('cat'),
-                                          fifo_path_unmapped]
-                    exec_group.add_command(cat_unmapped_reads)
-                    # 7. Compress unmapped reads
-                    pigz_unmapped_reads = [
-                        self.get_tool('pigz'),
-                        '--stdout',
-                        '--blocksize', '4096',
-                        '--processes', '1'
-                    ]
-                    exec_group.add_command(
-                        pigz_unmapped_reads,
-                        stdout_path = run.add_output_file(
-                            'unmapped',
-                            '%s-segemehl-unmapped.fastq.gz' % run_id,
-                            input_paths)
-                    )
+                        # 6. Read unmapped reads from fifo
+                        cat_unmapped_reads = [self.get_tool('cat'),
+                                              fifo_path_unmapped]
+                        compress_unmapped_pipe.add_command(cat_unmapped_reads)
+                        # 7. Compress unmapped reads
+                        pigz_unmapped_reads = [
+                            self.get_tool('pigz'),
+                            '--stdout',
+                            '--blocksize', '4096',
+                            '--processes', '1'
+                        ]
+                        compress_unmapped_pipe.add_command(
+                            pigz_unmapped_reads,
+                            stdout_path = run.add_output_file(
+                                'unmapped',
+                                '%s-segemehl-unmapped.fastq.gz' % run_id,
+                                input_paths)
+                        )
