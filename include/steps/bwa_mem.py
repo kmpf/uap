@@ -31,66 +31,89 @@ class BwaMem(AbstractStep):
         self.add_option('d', int, optional = True,
                         description = "off-diagonal X-dropoff [100]")
         self.add_option('r', float, optional = True,
-                        description = "look for internal seeds inside a seed longer than {-k} * FLOAT [1.5]")
+                        description = "look for internal seeds inside a seed "
+                        "longer than {-k} * FLOAT [1.5]")
         self.add_option('y', int, optional = True,
-                        description = "seed occurrence for the 3rd round seeding [20]")
+                        description = "seed occurrence for the 3rd round "
+                        "seeding [20]")
         self.add_option('c', int, optional = True,
-                        description = "skip seeds with more than INT occurrences [500]")
+                        description = "skip seeds with more than INT "
+                        "occurrences [500]")
         self.add_option('D', float, optional = True, 
-                        description = "drop chains shorter than FLOAT fraction of the longest overlapping chain [0.50]")
+                        description = "drop chains shorter than FLOAT fraction "
+                        "of the longest overlapping chain [0.50]")
         self.add_option('W', int, optional = True,
-                        description = "discard a chain if seeded bases shorter than INT [0]")
+                        description = "discard a chain if seeded bases shorter "
+                        "than INT [0]")
         self.add_option('m', int, optional = True,
-                        description = "perform at most INT rounds of mate rescues for each read [50]")
+                        description = "perform at most INT rounds of mate "
+                        "rescues for each read [50]")
         self.add_option('S', bool, optional = True, 
                         description = "skip mate rescue")
         self.add_option('P', bool, optional = True,
-                        description = "skip pairing; mate rescue performed unless -S also in use")
+                        description = "skip pairing; mate rescue performed "
+                        "unless -S also in use")
         self.add_option('e', bool, optional = True,
                         description = "discard full-length exact matches")
 
         ## [Scoring options:]
         self.add_option('A', int, optional = True,
-                        description = "score for a sequence match, which scales options -TdBOELU unless overridden [1]")
+                        description = "score for a sequence match, which "
+                        "scales options -TdBOELU unless overridden [1]")
         self.add_option('B', int, optional = True,
                         description = "penalty for a mismatch [4]")
         self.add_option('O', str, optional = True,
-                        description = "gap open penalties for deletions and insertions [6,6]")
+                        description = "gap open penalties for deletions and "
+                        "insertions [6,6]")
         self.add_option('E', str, optional = True,
-                        description = "gap extension penalty; a gap of size k cost '{-O} + {-E}*k' [1,1]")
+                        description = "gap extension penalty; a gap of size k "
+                        "cost '{-O} + {-E}*k' [1,1]")
         self.add_option('L', str, optional = True,
-                        description = "penalty for 5'- and 3'-end clipping [5,5]")
+                        description = "penalty for 5'- and 3'-end clipping "
+                        "[5,5]")
         self.add_option('U', int, optional = True,
                         description = "penalty for an unpaired read pair [17]")
         self.add_option('x', str, optional = True,
-                        description = "read type. Setting -x changes multiple parameters unless overriden [null]"
-                        "pacbio: -k17 -W40 -r10 -A1 -B1 -O1 -E1 -L0  (PacBio reads to ref)"
-                        "ont2d: -k14 -W20 -r10 -A1 -B1 -O1 -E1 -L0  (Oxford Nanopore 2D-reads to ref)"
-                        "intractg: -B9 -O16 -L5  (intra-species contigs to ref)")
+                        description = "read type. Setting -x changes multiple "
+                        "parameters unless overriden [null]\n"
+                        "pacbio: -k17 -W40 -r10 -A1 -B1 -O1 -E1 -L0  (PacBio "
+                        "reads to ref)\n"
+                        "ont2d: -k14 -W20 -r10 -A1 -B1 -O1 -E1 -L0  (Oxford "
+                        "Nanopore 2D-reads to ref)\n"
+                        "intractg: -B9 -O16 -L5  (intra-species contigs to ref)"
+        )
 
         ## [Input/output options:]
         self.add_option('p', bool, optional = True,
                         description = "smart pairing (ignoring in2.fq)")
         self.add_option('R', str, optional = True,
-                        description = "read group header line such as '@RG\tID:foo\tSM:bar' [null]")
+                        description = "read group header line such as "
+                        "'@RG\tID:foo\tSM:bar' [null]")
         self.add_option('H', str, optional = True,
-                        description = "insert STR to header if it starts with @; or insert lines in FILE [null]")
+                        description = "insert STR to header if it starts with "
+                        "@; or insert lines in FILE [null]")
         self.add_option('j', bool, optional = True,
-                        description = "treat ALT contigs as part of the primary assembly (i.e. ignore <idxbase>.alt file)")
+                        description = "treat ALT contigs as part of the "
+                        "primary assembly (i.e. ignore <idxbase>.alt file)")
         self.add_option('v', int, optional = True,
-                        description = "verbose level: 1=error, 2=warning, 3=message, 4+=debugging [3]")
+                        description = "verbose level: 1=error, 2=warning, "
+                        "3=message, 4+=debugging [3]")
         self.add_option('T', int, optional = True,
                         description = "minimum score to output [30]")
         self.add_option('h', str, optional = True,
-                        description = "if there are <INT hits with score >80% of the max score, output all in XA [5,200]")
+                        description = "if there are <INT hits with score >80% "
+                        "of the max score, output all in XA [5,200]")
         self.add_option('a', bool, optional = True,
-                        description = "output all alignments for SE or unpaired PE")
+                        description = "output all alignments for SE or "
+                        "unpaired PE")
         self.add_option('C', bool, optional = True,
                         description = "append FASTA/FASTQ comment to SAM output")
         self.add_option('V', bool, optional = True,
-                        description = "output the reference FASTA header in the XR tag")
+                        description = "output the reference FASTA header in "
+                        "the XR tag")
         self.add_option('Y', str, optional = True,
-                        description = "use soft clipping for supplementary alignments")
+                        description = "use soft clipping for supplementary "
+                        "alignments")
         self.add_option('M', str, optional = True,
                         description = "mark shorter split hits as secondary")
 
@@ -117,9 +140,9 @@ class BwaMem(AbstractStep):
 
         option_list = list()
         for option in set_options:
-            if isinstance(self.get_option(option), bool) and \
-                    self.get_option(option):
-                option_list.append('-%s' % option)
+            if isinstance(self.get_option(option), bool):
+                if self.get_option(option):
+                    option_list.append('-%s' % option)
             else:
                 option_list.append('-%s' % option)
                 option_list.append(str(self.get_option(option)))

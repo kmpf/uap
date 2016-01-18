@@ -39,7 +39,28 @@ class PicardMarkDuplicates(AbstractStep):
         self.add_option('OPTICAL_DUPLICATE_PIXEL_DISTANCE', int, optional = True)
 
     def runs(self, run_ids_connections_files):
-        
+
+        options = ['PROGRAM_RECORD_ID', 'PROGRAM_GROUP_VERSION',
+                   'PROGRAM_GROUP_COMMAND_LINE', 'PROGRAM_GROUP_NAME',
+                   'COMMENT', 'ASSUME_SORTED', 'MAX_FILE_HANDLES',
+                   'SORTING_COLLECTION_SIZE_RATIO', 'READ_NAME_REGEX',
+                   'OPTICAL_DUPLICATE_PIXEL_DISTANCE']
+
+        set_options = [option for option in options if \
+                       self.is_option_set_in_config(option)]
+
+        option_list = list()
+        for option in set_options:
+            if isinstance(self.get_option(option), bool):
+                if self.get_option(option):
+                    option_list.append('%s=true' % option)
+                else:
+                    option_list.append('%s=false' % option)
+            else:
+                option_list.append(
+                    '%s=%s' % (option, str(self.get_option(option)))
+                )
+
         for run_id in run_ids_connections_files.keys():
 
             with self.declare_run(run_id) as run:
