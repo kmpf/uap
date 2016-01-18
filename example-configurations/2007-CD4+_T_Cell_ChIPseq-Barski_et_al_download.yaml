@@ -391,35 +391,11 @@ tools:
     # External Tools #
     ##################
 
-    # URL: https://github.com/lh3/bwa
-    bwa:
-        path: bwa
-        get_version: ''
-        exit_code: 1
-        
-    # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
-    bowtie2-build:
-        path: bowtie2-build
-        get_version: --version
-        exit_code: 0
-
     # URL: http://zlib.net/pigz/
     pigz: 
         path: pigz
         get_version: --version
         exit_code: 0
-
-    # URL: http://www.htslib.org/
-    samtools:
-        path: samtools
-        get_version: --version
-        exit_code: 0
-
-    # URL: 
-    segemehl:
-        path: segemehl.x
-        get_version: ''
-        exit_code: 255
                 
     ##################
     # Internal Tools #
@@ -433,11 +409,6 @@ tools:
     ##############
     # Unix Tools #
     ##############
-
-    cat:
-        path: cat
-        get_version: --version
-        exit_code: 0
 
     cp:
         path: cp
@@ -456,15 +427,5 @@ tools:
 
     mkdir:
         path: mkdir
-        get_version: --version
-        exit_code: 0
-        
-    mkfifo:
-        path: mkfifo
-        get_version: --version
-        exit_code: 0
-
-    mv:
-        path: mv
         get_version: --version
         exit_code: 0
