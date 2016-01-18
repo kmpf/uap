@@ -206,10 +206,11 @@ class Segemehl(AbstractStep):
                         )
 
 
-                    # 6. Compress unmapped reads
+                    # 6. Read unmapped reads from fifo
                     cat_unmapped_reads = [self.get_tool('cat'),
                                           fifo_path_unmapped]
-                    exec_group.add_command(dd_unmapped_reads)
+                    exec_group.add_command(cat_unmapped_reads)
+                    # 7. Compress unmapped reads
                     pigz_unmapped_reads = [
                         self.get_tool('pigz'),
                         '--stdout',
