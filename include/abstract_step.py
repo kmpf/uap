@@ -133,6 +133,8 @@ class AbstractStep(object):
             with self.declare_run(run_id) as run:
                 # add output files and information to the run here
         '''
+        # Replace whitespaces by underscores
+        run_id = re.sub(r'\s', '_', run_id)
         if run_id in self._runs:
             raise StandardError(
                 "Cannot declare the same run ID twice: %s." % run_id)
@@ -1282,7 +1284,6 @@ class AbstractStep(object):
             # ... for each run ...
             for parent_run_id in parent.get_runs():
                 # Check if this key exists
-                parent_run_id = re.sub(r'\s', '_', parent_run_id)
                 if parent_run_id not in list( run_ids_connections_files.keys() ):
                     run_ids_connections_files[parent_run_id] = dict()
                 # ... and each connection
