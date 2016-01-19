@@ -50,111 +50,106 @@ steps:
     fastq_source:
         sample_to_files_map:
             CTCF:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001460_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001460.fastq
             H2A.Z:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001442_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001459_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001442.fastq
+               - example-out/2007-Barski_et_al_download/SRR001459.fastq
             H2BK5me1:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001401_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001412_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001413_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001401.fastq
+               - example-out/2007-Barski_et_al_download/SRR001412.fastq
+               - example-out/2007-Barski_et_al_download/SRR001413.fastq
             H3K27me1:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001438_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001448_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001463_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001464_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001438.fastq
+               - example-out/2007-Barski_et_al_download/SRR001448.fastq
+               - example-out/2007-Barski_et_al_download/SRR001463.fastq
+               - example-out/2007-Barski_et_al_download/SRR001464.fastq
             H3K27me2:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001433_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001434_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001435_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001436_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001433.fastq
+               - example-out/2007-Barski_et_al_download/SRR001434.fastq
+               - example-out/2007-Barski_et_al_download/SRR001435.fastq
+               - example-out/2007-Barski_et_al_download/SRR001436.fastq
             H3K27me3:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001426_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001427_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001428_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001429_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001426.fastq
+               - example-out/2007-Barski_et_al_download/SRR001427.fastq
+               - example-out/2007-Barski_et_al_download/SRR001428.fastq
+               - example-out/2007-Barski_et_al_download/SRR001429.fastq
             H3K36me1:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001397_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001406_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001407_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001397.fastq
+               - example-out/2007-Barski_et_al_download/SRR001406.fastq
+               - example-out/2007-Barski_et_al_download/SRR001407.fastq
             H3K36me3:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001392_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001393_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001394_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001450_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001392.fastq
+               - example-out/2007-Barski_et_al_download/SRR001393.fastq
+               - example-out/2007-Barski_et_al_download/SRR001394.fastq
+               - example-out/2007-Barski_et_al_download/SRR001450.fastq
             H3K4me1:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001439_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001444_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001445_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001446_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001439.fastq
+               - example-out/2007-Barski_et_al_download/SRR001444.fastq
+               - example-out/2007-Barski_et_al_download/SRR001445.fastq
+               - example-out/2007-Barski_et_al_download/SRR001446.fastq
             H3K4me2:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001449_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001465_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001466_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001449.fastq
+               - example-out/2007-Barski_et_al_download/SRR001465.fastq
+               - example-out/2007-Barski_et_al_download/SRR001466.fastq
             H3K4me3:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001414_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001419_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001420_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001421_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001430_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001431_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001432_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001414.fastq
+               - example-out/2007-Barski_et_al_download/SRR001419.fastq
+               - example-out/2007-Barski_et_al_download/SRR001420.fastq
+               - example-out/2007-Barski_et_al_download/SRR001421.fastq
+               - example-out/2007-Barski_et_al_download/SRR001430.fastq
+               - example-out/2007-Barski_et_al_download/SRR001431.fastq
+               - example-out/2007-Barski_et_al_download/SRR001432.fastq
             H3K79me1:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001398_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001408_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001409_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001398.fastq
+               - example-out/2007-Barski_et_al_download/SRR001408.fastq
+               - example-out/2007-Barski_et_al_download/SRR001409.fastq
             H3K79me2:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001410_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001410.fastq
             H3K79me3:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001441_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001457_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001458_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001441.fastq
+               - example-out/2007-Barski_et_al_download/SRR001457.fastq
+               - example-out/2007-Barski_et_al_download/SRR001458.fastq
             H3K9me1:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001399_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001400_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001454_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001467_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001399.fastq
+               - example-out/2007-Barski_et_al_download/SRR001400.fastq
+               - example-out/2007-Barski_et_al_download/SRR001454.fastq
+               - example-out/2007-Barski_et_al_download/SRR001467.fastq
             H3K9me2:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001440_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001455_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001456_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001440.fastq
+               - example-out/2007-Barski_et_al_download/SRR001455.fastq
+               - example-out/2007-Barski_et_al_download/SRR001456.fastq
             H3K9me3:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001422_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001423_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001424_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001425_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001422.fastq
+               - example-out/2007-Barski_et_al_download/SRR001423.fastq
+               - example-out/2007-Barski_et_al_download/SRR001424.fastq
+               - example-out/2007-Barski_et_al_download/SRR001425.fastq
             H3R2me1:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001395_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001396_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001453_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001395.fastq
+               - example-out/2007-Barski_et_al_download/SRR001396.fastq
+               - example-out/2007-Barski_et_al_download/SRR001453.fastq
             H3R2me2:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001411_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001443_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001411.fastq
+               - example-out/2007-Barski_et_al_download/SRR001443.fastq
             H4K20me1:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001402_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001403_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001452_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001402.fastq
+               - example-out/2007-Barski_et_al_download/SRR001403.fastq
+               - example-out/2007-Barski_et_al_download/SRR001452.fastq
             H4K20me3:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001404_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001405_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001451_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001404.fastq
+               - example-out/2007-Barski_et_al_download/SRR001405.fastq
+               - example-out/2007-Barski_et_al_download/SRR001451.fastq
             H4R3me2:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001415_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001416_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001417_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001418_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001415.fastq
+               - example-out/2007-Barski_et_al_download/SRR001416.fastq
+               - example-out/2007-Barski_et_al_download/SRR001417.fastq
+               - example-out/2007-Barski_et_al_download/SRR001418.fastq
             Pol_II:
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001437_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001447_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001461_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001462_1.fastq
-            'Pol II':
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001437_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001447_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001461_1.fastq
-               - /data/bioinf/projects/data/tcell/Epigenome-ChIPseq/2007-CD4+_T_Cell_ChIPseq-Barski_et_al/SRR001462_1.fastq
+               - example-out/2007-Barski_et_al_download/SRR001437.fastq
+               - example-out/2007-Barski_et_al_download/SRR001447.fastq
+               - example-out/2007-Barski_et_al_download/SRR001461.fastq
+               - example-out/2007-Barski_et_al_download/SRR001462.fastq
         paired_end: no
-        first_read: _1.fastq
+        first_read: .fastq
 
     ######################
     ## Processing steps ##
