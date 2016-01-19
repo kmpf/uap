@@ -13,6 +13,7 @@ class Pear(AbstractStep):
         self.add_output_connection('first_read')
         self.add_output_connection('second_read')
         self.add_output_connection('discarded_read')
+        self.add_output_connection('log')
 
         self.require_tool('pear')
 
@@ -111,6 +112,13 @@ class Pear(AbstractStep):
 
                     pear = [self.get_tool('pear')]
                     option_list.extend(param_list)
+
+                    option_list.append('>')
+                    option_list.append(
+                        os.path.join(
+                            run.get_output_directory_du_jour_placeholder(),
+                            '%s.log_stdout.txt' % run_id))
+
                     pear.extend(option_list)
                     pear_exec_group.add_command(pear)
 
@@ -138,5 +146,12 @@ class Pear(AbstractStep):
                         run.add_output_file(
                             'discarded_read',
                             '%s.discarded.fastq' % run_id,
+                            run_ids_connections_files[run_id]['in/first_read'] +
+                            run_ids_connections_files[run_id]['in/second_read'])
+
+                    output_files['%s.log_stdout.txt' % run_id] =\
+                        run.add_output_file(
+                            'discarded_read',
+                            '%s.log_stdout.txt' % run_id,
                             run_ids_connections_files[run_id]['in/first_read'] +
                             run_ids_connections_files[run_id]['in/second_read'])

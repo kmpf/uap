@@ -1,5 +1,5 @@
 from abstract_step import AbstractSourceStep
-from misc import Enum
+import misc
 import csv
 import glob
 import os
@@ -98,7 +98,7 @@ class FastqSource(AbstractSourceStep):
                 if sample_id not in found_files:
                     found_files[sample_id] = dict()
                 # either finds a single match or throws an error
-                which_read = Enum.assign_string(os.path.basename(path),
+                which_read = misc.assign_string(os.path.basename(path),
                                                 read_types.values())
                 # so this is save because which_read can only be a value from
                 # read_types
@@ -118,7 +118,7 @@ class FastqSource(AbstractSourceStep):
                     if sample_id not in found_files:
                         found_files[sample_id] = dict()
                         # either finds a single match or throws an error
-                    which_read = Enum.assign_string(os.path.basename(path),
+                    which_read = misc.assign_string(os.path.basename(path),
                                                     read_types.values())
                     # so this is save because which_read can only be a value
                     # from read_types
