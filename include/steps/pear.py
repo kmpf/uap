@@ -81,7 +81,6 @@ class Pear(AbstractStep):
                         'bases.')
 
     def runs(self, run_ids_connections_files):
-        print run_ids_connections_files
         param_list = list()
         for option, value in self.get_options('tool-specific').iteritems():
             if isinstance(self.get_option(option), bool):
