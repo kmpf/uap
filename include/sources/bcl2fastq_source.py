@@ -1,10 +1,10 @@
-import sys
 import logging
 import os
 
-from abstract_step import *
+from abstract_step import AbstractSourceStep
 
 logger = logging.getLogger("uap_logger")
+
 
 class Bcl2FastqSource(AbstractSourceStep):
 
@@ -20,12 +20,13 @@ class Bcl2FastqSource(AbstractSourceStep):
         self.require_tool('mv')
         self.require_tool('mkdir')
 
-        self.add_option('input-dir', str, optional=False, description="file URL")
+        self.add_option('input-dir', str, optional=False,
+                        description="file URL")
         self.add_option('output-dir', str, optional=True)
         self.add_option('adapter-sequence', str, optional=True)
         self.add_option('adapter-stringency', str, optional=True)
-        self.add_option('use-bases-mask', str, optional=True, description=
-                        'Conversion mask characters:'
+        self.add_option('use-bases-mask', str, optional=True,
+                        description='Conversion mask characters:'
                         '- Y or y: use'
                         '- N or n: discard'
                         '- I or i: use for indexing'
@@ -50,10 +51,9 @@ class Bcl2FastqSource(AbstractSourceStep):
         self.add_option('tiles', str, optional=True)
         self.add_option('flowcell-id', str, optional=True)
 
-
     def runs(self, run_ids_connections_files):
         '''
-        
+
         '''
         input_dir = self.get_option('input-dir')
         if not os.path.isdir(input_dir):
@@ -81,7 +81,7 @@ class Bcl2FastqSource(AbstractSourceStep):
                    'sample-sheet', 'mismatches', 'fastq-cluster-count',
                    'ignore-missing-stats', 'ignore-missing-bcl',
                    'ignore-missing-control', 'tiles', 'flowcell-id']
-        set_options = [option for option in options if \
+        set_options = [option for option in options if
                        self.is_option_set_in_config(option)]
         option_list = list()
         for option in set_options:
@@ -107,18 +107,18 @@ class Bcl2FastqSource(AbstractSourceStep):
                         os.path.join(input_dir, 'Data', 'Intensities',
                                      'BaseCalls')
                     ]
-                
+
                     configureBcl2Fastq.extend(option_list)
 
                     configureBcl2Fastq.extend(
                         ['--output-dir', temp_output_dir])
 
                     # Add command to execution group
-                    configureBcl2Fastq_command = bcl2Fastq_exec_group.add_command(
-                        configureBcl2Fastq,
-                        stderr_path = run.add_output_file(
-                            "configureBcl2Fastq_log_stderr",
-                            "bcl2fastq-log_stderr.txt", []) )
+                    bcl2Fastq_exec_group.add_command(
+                         configureBcl2Fastq,
+                         stderr_path=run.add_output_file(
+                             "configureBcl2Fastq_log_stderr",
+                             "bcl2fastq-log_stderr.txt", []))
                     logger.debug(" ".join(configureBcl2Fastq))
                     # Create new execution group for make
                     make_exec_group = run.new_exec_group()
@@ -127,9 +127,9 @@ class Bcl2FastqSource(AbstractSourceStep):
                     # Add make command to execution group
                     make_exec_group.add_command(
                         make,
-                        stderr_path = run.add_output_file(
+                        stderr_path=run.add_output_file(
                             "make_log_stderr",
-                            "make-log_stderr.txt", []) )
+                            "make-log_stderr.txt", []))
                     logger.debug(" ".join(make))
                     logger.debug("Temporary output directory: %s" %
                                  temp_output_dir)
@@ -148,7 +148,6 @@ class Bcl2FastqSource(AbstractSourceStep):
                         logger.debug(" ".join(mv))
                         # Add mv command to execution group
 
-                        mv_command = mv_exec_group.add_command(mv)
+                        mv_exec_group.add_command(mv)
                         run.add_public_info("bcl2fastq-output-folder",
                                             output_unaligned_dir)
-                        

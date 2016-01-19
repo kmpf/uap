@@ -1,5 +1,7 @@
 import os
 from abstract_step import AbstractStep
+import pipes
+
 
 class Bowtie2(AbstractStep):
     '''
@@ -12,12 +14,12 @@ class Bowtie2(AbstractStep):
     gapped, local, and paired-end alignment modes.
 
     http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
-    
+
     typical command line::
 
         bowtie2 [options]* -x <bt2-idx> {-1 <m1> -2 <m2> | -U <r>} -S [<hit>]
     '''
-    
+
     def __init__(self, pipeline):
         super(Bowtie2, self).__init__(pipeline)
         self.set_cores(6)
@@ -25,7 +27,6 @@ class Bowtie2(AbstractStep):
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/alignments')
-
 
         self.require_tool('dd')
         self.require_tool('mkfifo')
@@ -39,7 +40,7 @@ class Bowtie2(AbstractStep):
         # Check if option values are valid
         if not os.path.exists(self.get_option('index') + '.1.bt2'):
             raise StandardError("Could not find index file: %s.*" %
-                                self.get_option('index') )
+                                self.get_option('index'))
 
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
@@ -47,8 +48,8 @@ class Bowtie2(AbstractStep):
                 fr_input = run_ids_connections_files[run_id]['in/first_read']
                 sr_input = run_ids_connections_files[run_id]['in/second_read']
 
-                input_paths = [ y for x in [fr_input, sr_input] \
-                               for y in x if y !=None ]                    
+                input_paths = [y for x in [fr_input, sr_input]
+                               for y in x if y is not None]
 
                 # Do we have paired end data and is it exactly one ?
                 is_paired_end = True
@@ -60,28 +61,29 @@ class Bowtie2(AbstractStep):
                     # Lists of fifos
                     fr_temp_fifos = list()
                     sr_temp_fifos = list()
-                    # 1. 
+                    # 1.
 
-                    def prepare_input(input_path, exec_group, temp_fifos):
+                    def prepare_input_for_bowtie(
+                            input_path, exec_group, temp_fifos):
                         # Create temporary fifo
                         temp_fifo = run.add_temporary_file(
                             'in-fifo-%s' %
-                            os.path.basename(input_path) )
+                            os.path.basename(input_path))
                         mkfifo = [self.get_tool('mkfifo'), temp_fifo]
                         exec_group.add_command(mkfifo)
-                        temp_fifos.append(temp_fifo)
+                        temp_fifos.append(pipes.quote(temp_fifo))
                         # Is input gzipped fasta?
                         is_fastq_gz = False
-                        if len([_ for _ in ['fq.gz', 'fastq.gz']\
-                                if input_path.endswith(_)]) == 1:
+                        if len([_ for _ in ['fq.gz', 'fastq.gz']
+                                if input_path.endswith(_)]) >= 0:
                             is_fastq_gz = True
                         # If yes we need to decompress it
                         if is_fastq_gz:
                             with exec_group.add_pipeline() as unzip_pipe:
                                 # 2.1 command: Read file in 4MB chunks
                                 dd_in = [self.get_tool('dd'),
-                                      'bs=4M',
-                                      'if=%s' % input_path]
+                                         'bs=4M',
+                                         'if=%s' % input_path]
                                 unzip_pipe.add_command(dd_in)
                                 # 2.2 command: Uncompress data
                                 pigz = [self.get_tool('pigz'),
@@ -103,13 +105,14 @@ class Bowtie2(AbstractStep):
                         return (exec_group, temp_fifos)
 
                     for input_path in fr_input:
-                        exec_group, fr_temp_fifos = prepare_input(
+                        exec_group, fr_temp_fifos = prepare_input_for_bowtie(
                             input_path, exec_group, fr_temp_fifos)
-                    # And if we handle paired end data 
+                    # And if we handle paired end data
                     if is_paired_end:
                         for input_path in sr_input:
-                            exec_group, sr_temp_fifos = prepare_input(
-                                input_path, exec_group, sr_temp_fifos)
+                            exec_group, sr_temp_fifos =\
+                                prepare_input_for_bowtie(input_path, exec_group,
+                                                         sr_temp_fifos)
 
                     # 3. Map reads using bowtie2
                     with exec_group.add_pipeline() as bowtie2_pipe:

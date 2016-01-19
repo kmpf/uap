@@ -9,8 +9,8 @@
   This document describes how **uap** can be extended with new analysis steps.
 
 
-Extending **uap** Functionality
-===============================
+Extension of **uap**
+====================
 
 
 Implement new steps
@@ -237,11 +237,7 @@ steps or modifying existing steps:
   in files is involved), it is straightforward with tools that read a 
   continuous stream from ``stdin`` and write a continuous stream to 
   ``stdout``.
-* **NEVER**  remove files! If files need to be removed report the issue and 
-  exit **uap**. Only the user should delete files.
-* Always use ``os.path.join(...)`` when you handle paths.
-* Use bash commands like ``mkfifo`` over python library equivalents like
-  ``os.mkfifo()``
+
 
 
 Add the new step to your configuration

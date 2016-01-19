@@ -1,23 +1,25 @@
-import sys
-from abstract_step import *
+from abstract_step import AbstractStep
+import logging
+import os
 
 logger = logging.getLogger('uap_logger')
+
 
 class FastxQualityStats(AbstractStep):
 
     def __init__(self, pipeline):
         super(FastxQualityStats, self).__init__(pipeline)
-        
+
         self.set_cores(4)
-        
+
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/first_read_quality_stats')
         self.add_connection('out/second_read_quality_stats')
 
-        self.add_option('new_output_format', bool, default= True, optional=True)
+        self.add_option('new_output_format', bool, default=True, optional=True)
         self.add_option('quality', int, default=33, optional=True)
-        
+
         self.require_tool('cat')
         self.require_tool('dd')
         self.require_tool('mkfifo')
@@ -26,19 +28,16 @@ class FastxQualityStats(AbstractStep):
 
     def runs(self, run_ids_connections_files):
         # get a list of all read files we have to count
-        sample_input_paths_dict = dict()
-        reads_counts_files = dict()
-        read_files = list()
+        # sample_input_paths_dict = dict()
+        # reads_counts_files = dict()
+        # read_files = list()
 
         options = {'new_output_format': '-N', 'quality': '-Q'}
         option_list = list()
-        for option in [o for o in options.keys() \
+        for option in [o for o in options.keys()
                        if self.is_option_set_in_config(o)]:
-            if isinstance(self.get_option(option), bool) and \
-               self.get_option(option):
-                option_list.append(options[option])
-            else:
-                option_list.append(options[option])
+            option_list.append(options[option])
+            if not isinstance(self.get_option(option), bool):
                 option_list.append(str(self.get_option(option)))
 
         read_types = {'first_read': '_R1', 'second_read': '_R2'}
@@ -47,7 +46,7 @@ class FastxQualityStats(AbstractStep):
                 for read in read_types:
                     connection = 'in/%s' % read
                     input_paths = run_ids_connections_files[run_id][connection]
-                    
+
                     # Check for empty connections
                     if input_paths == [None]:
                         run.add_empty_output_connection(
@@ -58,7 +57,7 @@ class FastxQualityStats(AbstractStep):
                         for input_path in input_paths:
                             temp_fifo = run.add_temporary_file(
                                 "fifo-%s" %
-                                os.path.basename(input_path) )
+                                os.path.basename(input_path))
                             temp_fifos.append(temp_fifo)
                             mkfifo = [self.get_tool('mkfifo'), temp_fifo]
                             exec_group.add_command(mkfifo)
@@ -68,8 +67,8 @@ class FastxQualityStats(AbstractStep):
                                 with exec_group.add_pipeline() as unzip_pipe:
                                     # 2.1 command: Read file in 4MB chunks
                                     dd_in = [self.get_tool('dd'),
-                                           'ibs=4M',
-                                           'if=%s' % input_path]
+                                             'ibs=4M',
+                                             'if=%s' % input_path]
                                     # 2.2 command: Uncompress file to fifo
                                     pigz = [self.get_tool('pigz'),
                                             '--decompress',
@@ -78,7 +77,7 @@ class FastxQualityStats(AbstractStep):
                                     dd_out = [self.get_tool('dd'),
                                               'obs=4M',
                                               'of=%s' % temp_fifo]
-                                
+
                                     unzip_pipe.add_command(dd_in)
                                     unzip_pipe.add_command(pigz)
                                     unzip_pipe.add_command(dd_out)
@@ -93,8 +92,8 @@ class FastxQualityStats(AbstractStep):
                             else:
                                 raise StandardError("File %s does not end with "
                                                     "any expected suffix ("
-                                                    "fastq.gz or fastq). Please "
-                                                    "fix that issue.")
+                                                    "fastq.gz or fastq). "
+                                                    "Please fix that issue.")
 
                         # 3. Read data from fifos and check quality stats
                         with exec_group.add_pipeline() as fastx_pipe:
@@ -111,4 +110,4 @@ class FastxQualityStats(AbstractStep):
                             fastx_qs.extend(option_list)
                             fastx_pipe.add_command(cat)
                             fastx_pipe.add_command(fastx_qs,
-                                                   stdout_path = fastx_qs_file)
+                                                   stdout_path=fastx_qs_file)

@@ -1,8 +1,6 @@
-"""
-
-"""
 import pipeline_info
 import exec_group
+
 
 class CommandInfo(object):
     def __init__(self, eop, command, stdout_path=None, stderr_path=None):
@@ -35,28 +33,27 @@ class CommandInfo(object):
             # Collect info to replace du_jour placeholder with temp_out_dir
             placeholder = run_info.get_output_directory_du_jour_placeholder()
             temp_out_dir = run_info.get_output_directory_du_jour()
-            
+
             command = None
             ret_value = func(self, *args)
             if isinstance(ret_value, list):
                 command = list()
                 for string in ret_value:
-                    if string != None and placeholder in string and\
+                    if string is not None and placeholder in string and\
                        isinstance(temp_out_dir, str):
                         command.append(
                             string.replace(placeholder, temp_out_dir))
                     else:
                         command.append(string)
             elif isinstance(ret_value, str):
-                if ret_value != None and placeholder in ret_value and\
+                if ret_value is not None and placeholder in ret_value and\
                    isinstance(temp_out_dir, str):
                         command = ret_value.replace(placeholder, temp_out_dir)
-            elif ret_value == None:
+            elif ret_value is None:
                 command = None
             else:
                 raise StandardError("Function %s does not return list or "
-                                        "string object" % 
-                                        func.__class__.__name__)
+                                    "string object" % func.__class__.__name__)
             return(command)
         return(inner)
 
@@ -66,7 +63,7 @@ class CommandInfo(object):
         self._command = command
 
     def set_stdout_path(self, stdout_path):
-        if stdout_path != None:
+        if stdout_path is not None:
             self._stdout_path = stdout_path
 
     @replace_output_dir_du_jour
@@ -74,7 +71,7 @@ class CommandInfo(object):
         return(self._stdout_path)
 
     def set_stderr_path(self, stderr_path):
-        if stderr_path != None:
+        if stderr_path is not None:
             self._stderr_path = stderr_path
 
     @replace_output_dir_du_jour

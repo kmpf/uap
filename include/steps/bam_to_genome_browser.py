@@ -1,20 +1,19 @@
-import logging
-import sys
 import os
 from abstract_step import AbstractStep
+
 
 class BamToBedgraph(AbstractStep):
 
     def __init__(self, pipeline):
         super(BamToBedgraph, self).__init__(pipeline)
-        
+
         self.set_cores(8)
-        
+
         self.add_connection('in/alignments',
-                            constraints = {'min_files_per_run': 1,
-                                           'max_files_per_run': 1})
+                            constraints={'min_files_per_run': 1,
+                                         'max_files_per_run': 1})
         self.add_connection('out/alignments')
-        
+
         self.require_tool('dd')
         self.require_tool('pigz')
         self.require_tool('mkfifo')
@@ -24,45 +23,42 @@ class BamToBedgraph(AbstractStep):
 
         # General Options
         self.add_option('output-format', str,
-                        choices = ['bed', 'bigBed', 'bedGraph', 'bigWig'],
-                        default = 'bigWig',
-                        optional = False)
-        self.add_option('chromosome-sizes', str, optional = False)
+                        choices=['bed', 'bigBed', 'bedGraph', 'bigWig'],
+                        default='bigWig',
+                        optional=False)
+        self.add_option('chromosome-sizes', str, optional=False)
         # Options for bedtools bamtobed
-        self.add_option('bedtools-bamtobed-tag', str, optional = True)
-        self.add_option('bedtools-bamtobed-color', str, optional = True)
+        self.add_option('bedtools-bamtobed-tag', str, optional=True)
+        self.add_option('bedtools-bamtobed-color', str, optional=True)
 
         # Options for bedtools genomecov (that make sense for BAM to BG)
         self.add_option('bedtools-genomecov-report-zero-coverage',
-                        bool, optional = False)
-        self.add_option('bedtools-genomecov-max', int, optional = True)
-        self.add_option('bedtools-genomecov-split', bool, default = True)
-        self.add_option('bedtools-genomecov-strand', str, choices = ['+', '-'],
-                        optional = True)
-        self.add_option('bedtools-genomecov-scale', float, optional = True)
+                        bool, optional=False)
+        self.add_option('bedtools-genomecov-max', int, optional=True)
+        self.add_option('bedtools-genomecov-split', bool, default=True)
+        self.add_option('bedtools-genomecov-strand', str, choices=['+', '-'],
+                        optional=True)
+        self.add_option('bedtools-genomecov-scale', float, optional=True)
         self.add_option('bedtools-genomecov-5', bool,
-                        default = False, optional = True)
+                        default=False, optional=True)
         self.add_option('bedtools-genomecov-3', bool,
-                        default = False, optional = True)
+                        default=False, optional=True)
 
-
-        self.add_option('trackline', dict, optional = True)
-        self.add_option('trackopts', dict, optional = True)
+        self.add_option('trackline', dict, optional=True)
+        self.add_option('trackopts', dict, optional=True)
 
     def runs(self, run_ids_connections_files):
         def compile_option_list(prefix, options):
             options = ['%s%s' % (prefix, x) for x in options]
-            set_options = [option for option in options if \
+            set_options = [option for option in options if
                            self.is_option_set_in_config(option)]
 
             option_list = list()
             for option in set_options:
-                if isinstance(self.get_option(option), bool) and \
-                   self.get_option(option):
+                if self.get_option(option):
                     option_list.append('-%s' % option.replace(prefix, ''))
-                else:
-                    option_list.append('-%s' % option.replace(prefix, ''))
-                    option_list.append(str(self.get_option(option)))
+                    if not isinstance(self.get_option(option), bool):
+                        option_list.append(str(self.get_option(option)))
             return option_list
 
         # Compile the list of options for bedtools genomecov
@@ -76,7 +72,8 @@ class BamToBedgraph(AbstractStep):
         # Check if chromosome sizes points to a real file
         if not os.path.isfile(self.get_option('chromosome-sizes')):
             raise StandardError("Value for option 'chromosome-sizes' is not a "
-                                "file: %s" % self.get_option('chromosome-sizes'))
+                                "file: %s" %
+                                self.get_option('chromosome-sizes'))
 
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
@@ -88,7 +85,8 @@ class BamToBedgraph(AbstractStep):
                 elif len(input_paths) != 1:
                     raise StandardError("Expected exactly one alignments file.")
                 else:
-                    root, ext = os.path.splitext(os.path.basename(input_paths[0]))
+                    root, ext = os.path.splitext(os.path
+                                                   .basename(input_paths[0]))
                     if ext in ['.gz', '.gzip']:
                         is_gzipped = True
                     elif ext in ['.bam']:
@@ -105,7 +103,7 @@ class BamToBedgraph(AbstractStep):
                     with run.new_exec_group() as exec_group:
                         # Create FIFO for use with bedToBigBed, bedGraphToBigWig
                         big_fifo = run.add_temporary_file(
-                            'big_fifo', designation = 'ouput')
+                            'big_fifo', designation='ouput')
                         if self.get_option('output-format') in \
                            ['bigBed', 'bigWig']:
                             mkfifo = [self.get_tool('mkfifo'), big_fifo]
@@ -127,7 +125,7 @@ class BamToBedgraph(AbstractStep):
                                 pipe.add_command(pigz)
 
                             output_file = str()
-                            
+
                             # BAM -> BED
                             # (necessary for bed, bigBed)
                             if self.get_option('output-format') in \
@@ -148,10 +146,12 @@ class BamToBedgraph(AbstractStep):
                                 # 2. command: Convert BAM to BedGraph
                                 genomecov = [
                                     self.get_tool('bedtools'), 'genomecov']
-                                genomecov.extend( bedtools_genomecov_options)
-                                genomecov.extend( ['-ibam', 'stdin'] )
+                                genomecov.extend(bedtools_genomecov_options)
+                                genomecov.extend(['-ibam', 'stdin'])
 
-                                if self.get_option('bedtools-genomecov-report-zero-coverage'):
+                                if self.get_option(
+                                    'bedtools-genomecov-report-zero-coverage'
+                                                   ):
                                     genomecov.append('-bga')
                                 else:
                                     genomecov.append('-bg')
@@ -159,14 +159,14 @@ class BamToBedgraph(AbstractStep):
                                 pipe.add_command(genomecov)
                                 # Set output file name here for dd_out
                                 output_file = '%s.bg' % root
-                                    
+
                             # Write BED or BedGraph output to file
                             if self.get_option('output-format') in \
                                ['bed', 'bedGraph']:
                                 dd_out = [self.get_tool('dd'), 'obs=4M']
                                 pipe.add_command(
                                     dd_out,
-                                    stdout_path = run.add_output_file(
+                                    stdout_path=run.add_output_file(
                                         'alignments',
                                         output_file,
                                         input_paths)
@@ -182,7 +182,7 @@ class BamToBedgraph(AbstractStep):
                                 ]
                                 output_file = '%s.bb' % root
                                 pipe.add_command(bed_to_bigbed)
-                            
+
                             # BedGraph -> BigWig
                             if self.get_option('output-format') in ['bigWig']:
                                 bedgraph_to_bigwig = [
@@ -202,7 +202,7 @@ class BamToBedgraph(AbstractStep):
 
                                 pipe.add_command(
                                     dd_out,
-                                    stdout_path = run.add_output_file(
+                                    stdout_path=run.add_output_file(
                                         'alignments',
                                         output_file,
                                         input_paths)

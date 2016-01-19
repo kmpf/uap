@@ -1,12 +1,12 @@
-import sys
 import os
 from abstract_step import AbstractStep
 
+
 class Macs2(AbstractStep):
-    
+
     def __init__(self, pipeline):
         super(Macs2, self).__init__(pipeline)
-        
+
         self.set_cores(4)
 
         self.add_connection('in/alignments')
@@ -29,29 +29,29 @@ class Macs2(AbstractStep):
         self.require_tool('mv')
 
         # Options for MACS2 callpeak subcommand
-        ## Input file arguments:
+        # Input file arguments:
         self.add_option('control', dict, optional=False)
         self.add_option('format', str, default='AUTO',
                         choices=['AUTO', 'ELAND', 'ELANDMULTI', 'ELANDMULTIPET',
-                                 'ELANDEXPORT', 'BED', 'SAM', 'BAM', 'BAMPE', 
+                                 'ELANDEXPORT', 'BED', 'SAM', 'BAM', 'BAMPE',
                                  'BOWTIE'])
         self.add_option('gsize', str, default='2.7e9')
         self.add_option('keep-dup', int, optional=True)
         self.add_option('buffer-size', int, optional=True)
-        ## Output arguments:
+        # Output arguments:
         self.add_option('verbose', int, default=0, choices=[0, 1, 2, 3],
                         optional=True)
-        ## Shifting model arguments:
+        # Shifting model arguments:
         self.add_option('read-length', int, optional=True)
         self.add_option('shift', int, optional=True)
-        ## Peak calling arguments:
+        # Peak calling arguments:
         self.add_option('qvalue', float, optional=True)
         self.add_option('pvalue', float, optional=True)
         self.add_option('to-large', bool, optional=True)
         self.add_option('down-sample', bool, optional=True)
         self.add_option('slocal', str, optional=True)
         self.add_option('llocal', str, optional=True)
-        self.add_option('broad', bool, default = False, optional=True)
+        self.add_option('broad', bool, default=False, optional=True)
         # use "broad-cutoff" only in conjuction with "broad"
         self.add_option('broad-cutoff', float, optional=True)
         self.add_option('call-summits', bool, optional=True)
@@ -63,17 +63,17 @@ class Macs2(AbstractStep):
                    'down-sample', 'slocal', 'llocal', 'broad', 'broad-cutoff',
                    'call-summits']
 
-        set_options = [option for option in options if \
+        set_options = [option for option in options if
                        self.is_option_set_in_config(option)]
 
         option_list = list()
         for option in set_options:
-            if isinstance(self.get_option(option), bool) and \
-               self.get_option(option):
-                option_list.append('--%s' % option)
+            if isinstance(self.get_option(option), bool):
+                if self.get_option(option):
+                    option_list.append('--%s' % option)
             else:
-                option_list.append( '--%s' % option )
-                option_list.append( str(self.get_option(option)) )
+                option_list.append('--%s' % option)
+                option_list.append(str(self.get_option(option)))
 
         control_samples = self.get_option('control')
         for control_id, treatment_list in control_samples.iteritems():
@@ -81,8 +81,8 @@ class Macs2(AbstractStep):
             control_files = list()
             if control_id != 'None':
                 try:
-                    control_files = run_ids_connections_files[control_id]\
-                                    ['in/alignments']
+                    control_files =\
+                        run_ids_connections_files[control_id]['in/alignments']
                     control_id = "-" + control_id
                 except KeyError:
                     raise StandardError("No control for ID '%s' found."
@@ -94,8 +94,8 @@ class Macs2(AbstractStep):
             for tr in treatment_list:
                 treatments = dict()
                 try:
-                    treatments[tr] = run_ids_connections_files[tr]\
-                                     ['in/alignments']
+                    treatments[tr] =\
+                        run_ids_connections_files[tr]['in/alignments']
                 except KeyError:
                     raise StandardError("No treatment for ID '%s' found." % tr)
 
@@ -103,7 +103,7 @@ class Macs2(AbstractStep):
                 run_id = "%s%s" % (tr, control_id)
 
                 # Create list of input files
-                input_paths = [f for l in [treatments[tr], control_files]\
+                input_paths = [f for l in [treatments[tr], control_files]
                                for f in l]
 
                 with self.declare_run(run_id) as run:
@@ -114,11 +114,11 @@ class Macs2(AbstractStep):
                         '%s-macs2-model.r' % run_id,
                         input_paths
                     )
-                    #result_files["%s" % run_id] = run.add_output_file(
-                        #'log',
-                        #'%s-macs2-log.txt' % run_id,
-                        #input_paths
-                    #)
+                    # result_files["%s" % run_id] = run.add_output_file(
+                    #   'log',
+                    #   '%s-macs2-log.txt' % run_id,
+                    #   input_paths
+                    # )
 
                     if not self.get_option('broad'):
                         # ... if we compute narrow peaks ...
@@ -180,11 +180,11 @@ class Macs2(AbstractStep):
                         macs2 = [self.get_tool('macs2'), 'callpeak']
                         macs2.append('--treatment')
                         macs2.extend(treatments[tr])
-                        ## Append control information 
+                        # Append control information
                         if control_files:
                             macs2.append('--control')
                             macs2.extend(control_files)
-                        ## Append known info (--name, --directory)
+                        # Append known info (--name, --directory)
                         macs2.extend([
                             '--name', run_id,
                             '--outdir', temp_dir

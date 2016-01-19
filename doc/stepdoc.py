@@ -1,15 +1,13 @@
 #!../python_env/bin/python
 
 import sys
-sys.path.append('../include')
-sys.path.append('../include/steps')
-sys.path.append('../include/sources')
 import abstract_step
 import glob
 import os
-import pipeline
-import string
-import yaml
+sys.path.append('../include')
+sys.path.append('../include/steps')
+sys.path.append('../include/sources')
+
 
 def doc_module(module_name, fout):
     step_class = abstract_step.AbstractStep.get_step_class_for_key(module_name)
@@ -23,7 +21,7 @@ def doc_module(module_name, fout):
         doc = step.__doc__.split("\n")
         for line in doc:
             fout.write(line.strip() + "\n")
-        
+
     # print connections
     fout.write("**Connections:**\n\n")
     fout.write(".. graphviz::\n")
@@ -31,10 +29,13 @@ def doc_module(module_name, fout):
     fout.write("   digraph foo {\n")
     fout.write("      rankdir = LR;\n")
     fout.write("      splines = true;\n")
-    fout.write("      graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", nodesep = 0.2, ranksep = 0.3];\n")
-    fout.write("      node [fontname = Helvetica, fontsize = 12, shape = rect];\n")
+    fout.write("      graph [fontname = Helvetica, fontsize = 12, size = \"14, "
+               "11\", nodesep = 0.2, ranksep = 0.3];\n")
+    fout.write("      node [fontname = Helvetica, fontsize = 12, shape = rect];"
+               "\n")
     fout.write("      edge [fontname = Helvetica, fontsize = 12];\n")
-    fout.write("      %s [style=filled, fillcolor=\"#fce94f\"];\n" % module_name)
+    fout.write("      %s [style=filled, fillcolor=\"#fce94f\"];\n"
+               % module_name)
     for index, c in enumerate(sorted(step._connections)):
         c = c.split('/')
         if c[0] == 'out':
@@ -45,13 +46,13 @@ def doc_module(module_name, fout):
             fout.write("      in_%d -> %s;\n" % (index, module_name))
     fout.write("   }    \n")
     fout.write("\n")
-    
+
     # print options
     fout.write("**Options:**\n")
     for key in sorted(step._defined_options.keys()):
         option = step._defined_options[key]
         fout.write("  - **%s** (%s, %s)" % (
-            key, 
+            key,
             '/'.join([_.__name__ for _ in option['types']]),
             'optional' if option['optional'] else 'required'
             ))
@@ -64,24 +65,25 @@ def doc_module(module_name, fout):
             fout.write("    \n")
             for v in sorted(option['choices']):
                 fout.write("      - %s\n" % v)
-            
+
     fout.write("\n")
 
     # print tools
     if len(step._tools) > 0:
-        fout.write("**Required tools:** %s\n" % ', '.join(sorted(step._tools.keys())))
+        fout.write("**Required tools:** %s\n" %
+                   ', '.join(sorted(step._tools.keys())))
         fout.write("\n")
-        
+
     if abstract_step.AbstractSourceStep in step.__class__.__bases__:
         # this is a source step which does not create any tasks
-        fout.write("This step provides input files which already exists and therefore creates no tasks in the pipeline.\n")
+        fout.write("This step provides input files which already exists and "
+                   "therefore creates no tasks in the pipeline.\n")
         fout.write("\n")
     else:
         # this is a step which creates tasks
         fout.write("**CPU Cores:** %s\n" % step._cores)
         fout.write("\n")
-        
-    
+
     '''
     print("Cores: %d" % step._cores)
     print("Connections: %s" % step._connections)
@@ -90,6 +92,7 @@ def doc_module(module_name, fout):
     print("Options: %s" % sorted(step._defined_options.keys()))
     print(step.__doc__)
     '''
+
 
 def main():
     with open('source/steps.rst', 'w') as fout:

@@ -1,3 +1,4 @@
+import sys
 import os
 import subprocess
 from distutils.core import setup
@@ -27,9 +28,9 @@ uap_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/python_env/bin/activate_this.py' % uap_path
 
 requires = [
-    'pyyaml', 
-    'numpy', 
-    'biopython', 
+    'pyyaml',
+    'numpy',
+    'biopython',
     'psutil'
 ]
 
