@@ -220,10 +220,10 @@ class BwaMem(AbstractStep):
                         ]
                         bwa_mem.extend(option_list)
                         bwa_mem.append(self.get_option('index'))
-                        bwa_mem.extend(temp_fr_fifo)
+                        bwa_mem.append(temp_fr_fifo)
 
                         if is_paired_end:
-                            bwa_mem.extend(temp_sr_fifo)
+                            bwa_mem.append(temp_sr_fifo)
 
                         bwa_mem_pipe.add_command(bwa_mem)
                         # Compress bwa mem output
