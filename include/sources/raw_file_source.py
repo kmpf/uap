@@ -33,7 +33,7 @@ class RawFileSource(AbstractSourceStep):
 
 
 
-    def declare_runs(self):
+    def runs(self, run_ids_connections_files):
         # found_files holds the runIDs and their related files
         found_files = dict()
 

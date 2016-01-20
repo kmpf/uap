@@ -213,11 +213,6 @@ class Pipeline(object):
         List of all tasks in topological order. 
         '''
 
-        self.config_file_name = args.config.name
-        '''
-        This stores the name of the configuration file of the current analysis
-        '''
-
         self.read_config(args.config)
 
         # collect all tasks
@@ -648,11 +643,11 @@ class Pipeline(object):
         if show_hint:
             if print_more_warnings and not print_details or not fix_problems:
                 print("Hint: Run 'uap %s fix-problems --details' to see the "
-                      "details."  % self.config_file_name)
+                      "details."  % self.get_config_filepath())
             if not fix_problems:
                 print("Hint: Run 'uap %s fix-problems --srsly' to fix these "
                       "problems (that is, delete all problematic ping files)."
-                      % self.config_file_name)
+                      % self.get_config_filepath())
 
     def check_volatile_files(self, details = False, srsly = False):
         collected_files = set()

@@ -37,7 +37,7 @@ class RunFolderSource(AbstractSourceStep):
                 "files containing sequencing data of the second read. "
                 "Example: 'R2.fastq' or '_2.fastq'")
         
-    def declare_runs(self):
+    def runs(self, run_ids_connections_files):
 
         found_samples = dict()
         read_types = dict()
