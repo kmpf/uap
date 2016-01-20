@@ -85,7 +85,10 @@ class Pear(AbstractStep):
         for option, value in self.get_options('tool-specific').iteritems():
             if isinstance(self.get_option(option), bool):
                 if self.get_option(option):
-                    param_list.append('--' + str(option))
+                    if len(option) > 1:
+                        param_list.append('--' + str(option))
+                    else:
+                        param_list.append('-' + str(option))
             else:
                 if len(option) > 1:
                     param_list.append('--' + str(option))
@@ -120,7 +123,15 @@ class Pear(AbstractStep):
                             '%s.log_stdout.txt' % run_id))
 
                     pear.extend(option_list)
-                    pear_exec_group.add_command(pear)
+                    pear_exec_group.add_command(
+                        pear,
+                        stdout_path=run
+                        .add_output_file(
+                            'log',
+                            '%s.log_stdout.txt' % run_id,
+                            run_ids_connections_files[run_id]['in/first_read'] +
+                            run_ids_connections_files[run_id]
+                            ['in/second_read']))
 
                     output_files = dict()
                     output_files['%s.assembled.fastq' % run_id] =\
@@ -146,12 +157,5 @@ class Pear(AbstractStep):
                         run.add_output_file(
                             'discarded_read',
                             '%s.discarded.fastq' % run_id,
-                            run_ids_connections_files[run_id]['in/first_read'] +
-                            run_ids_connections_files[run_id]['in/second_read'])
-
-                    output_files['%s.log_stdout.txt' % run_id] =\
-                        run.add_output_file(
-                            'log',
-                            '%s.log_stdout.txt' % run_id,
                             run_ids_connections_files[run_id]['in/first_read'] +
                             run_ids_connections_files[run_id]['in/second_read'])
