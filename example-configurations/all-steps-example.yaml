@@ -1,10 +1,12 @@
 destination_path: example-out/all-steps/
 
 constants:
-    - &genome genomes/bacteria/Mycoplasma_genitalium/M_genitalium_uncompress-281d
-    - &segemehl_genome_index 
-    - &bowtie2_genome_index genomes/bacteria/Mycoplasma_genitalium/bowtie2_index-dd59/Mycoplasma_genitalium_index
-    - &genome_faidx genomes/bacteria/Mycoplasma_genitalium/samtools_faidx-bf21/M_genitalium_genome-download.fasta.fai
+    - &genome genomes/bacteria/Mycoplasma_genitalium/Mycoplasma_genitalium.ASM2732v1.fa
+    - &genome_faidx genomes/bacteria/Mycoplasma_genitalium/samtools_faidx/M_genitalium_genome-download-e6f7QENG/M_genitalium_genome-download.fasta.fai
+    - &segemehl_genome_index genomes/bacteria/Mycoplasma_genitalium/segemehl_index/Mycoplasma_genitalium_genome-download-zgtEpQmV/Mycoplasma_genitalium_genome-download.idx
+    - &bowtie2_genome_index genomes/bacteria/Mycoplasma_genitalium/bowtie2_index/Mycoplasma_genitalium_index-download-cMQPtBxs/Mycoplasma_genitalium_index-download
+    - &bwa_genome_index 
+
     - control: &bg_vs_ab
             Replicate1_CellType1_Condition2:
                - 'Replicate1_CellType1_Condition3'

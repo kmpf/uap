@@ -5,10 +5,10 @@
 destination_path: example-out/ChIPseq/
 
 constants:
-    - &genome genomes/bacteria/Mycoplasma_genitalium/M_genitalium_uncompress/M_genitalium_genome-download-jUKOyZvR/M_genitalium_genome-download.fasta
+    - &genome genomes/bacteria/Mycoplasma_genitalium/Mycoplasma_genitalium.ASM2732v1.fa
     - &genome_faidx genomes/bacteria/Mycoplasma_genitalium/samtools_faidx/M_genitalium_genome-download-e6f7QENG/M_genitalium_genome-download.fasta.fai
-    - &segemehl_genome_index genomes/bacteria/Mycoplasma_genitalium/segemehl_index/M_genitalium_genome-download-NDJwuqAG/M_genitalium_genome-download.idx
-    - &bowtie2_genome_index genomes/bacteria/Mycoplasma_genitalium/bowtie2_index/Mycoplasma_genitalium_index-download-PpEzwKRv/Mycoplasma_genitalium_index-download
+    - &segemehl_genome_index genomes/bacteria/Mycoplasma_genitalium/segemehl_index/Mycoplasma_genitalium_genome-download-zgtEpQmV/Mycoplasma_genitalium_genome-download.idx
+    - &bowtie2_genome_index genomes/bacteria/Mycoplasma_genitalium/bowtie2_index/Mycoplasma_genitalium_index-download-cMQPtBxs/Mycoplasma_genitalium_index-download
     - &bwa_genome_index 
 
 steps:
