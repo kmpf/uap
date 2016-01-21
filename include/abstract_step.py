@@ -255,11 +255,11 @@ class AbstractStep(object):
         if '_volatile' not in self._options:
             self._options['_volatile'] = False
 
-    def get_options(self, *arg):
+    def get_options(self, tool_specific=False):
         '''
         Returns a dictionary of all given options
         '''
-        if 'tool-specific' in arg:
+        if tool_specific:
             self._options_tool = deepcopy(self._options)
             for key, value in self._options.iteritems():
                 if key[0] is '_':
@@ -1542,7 +1542,51 @@ class AbstractStep(object):
         raise StandardError(
             "Unable to determine annotation type for input file %s." % path)
 
+    def get_param_list(self, equal_sign=False):
+        param_list = list()
+        for option, value in self.get_options(tool_specific=True).iteritems():
+            if isinstance(self.get_option(option), bool):
+                if self.get_option(option):
+                    if len(option) == 1:
+                        param_list.append('-' + str(option))
+                    else:
+                        param_list.append('--' + str(option))
+            else:
+                if len(option) == 1:
+                    param_list.append('-' + str(option))
+                else:
+                    param_list.append('--' + str(option))
+                param_list.append(str(value))
 
+        if equal_sign:
+            for i in range(len(param_list)/2):
+                param_list[i] = '='.join(param_list[2*i], param_list[2*i+1])
+        return param_list
+
+   #                 output_files['%s.log_stdout.txt' % run_id] =\
+   #                     run.add_output_file(
+   #                         'log',
+   #                         '%s.log_stdout.txt' % run_id,
+   #                         run_ids_connections_files[run_id]['in/first_read'] +
+   #                         run_ids_connections_files[run_id]['in/second_read'])
+   #                 output_files['%s.log_stdout.txt' % run_id] =\
+   #                     run.add_output_file(
+   #                         'log',
+   #                         '%s.log_stdout.txt' % run_id,
+   #                         run_ids_connections_files[run_id]['in/first_read'] +
+   #                         run_ids_connections_files[run_id]['in/second_read'])
+   #                 output_files['%s.log_stdout.txt' % run_id] =\
+   #                     run.add_output_file(
+   #                         'log',
+   #                         '%s.log_stdout.txt' % run_id,
+   #                         run_ids_connections_files[run_id]['in/first_read'] +
+   #                         run_ids_connections_files[run_id]['in/second_read'])
+   #                 output_files['%s.log_stdout.txt' % run_id] =\
+   #                     run.add_output_file(
+   #                         'log',
+   #                         '%s.log_stdout.txt' % run_id,
+   #                         run_ids_connections_files[run_id]['in/first_read'] +
+   #                         run_ids_connections_files[run_id]['in/second_read'])
 class AbstractSourceStep(AbstractStep):
     """
     A subclass all source steps inherit from and which distinguishes source
