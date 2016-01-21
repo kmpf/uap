@@ -43,9 +43,9 @@ class Pear(AbstractStep):
                         'for trimming the low quality part of a read.')
 
         self.add_option('max-uncalled-base', float, optional=True,
-                        choices=['[0.0..1.0]'],
-                        default=1.0, description='Specify the maximal '
-                        'proportion of uncalled bases in a read.')
+                        choices=['[0.0..1.0]'], default=1.0,
+                        description='Specify the maximal proportion of '
+                        'uncalled bases in a read.')
 
         self.add_option('test-method', int, optional=True, default=1,
                         choices=[1, 2], description='Specify the type of '
