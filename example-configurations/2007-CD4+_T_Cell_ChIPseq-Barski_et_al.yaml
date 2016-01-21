@@ -5,16 +5,19 @@ destination_path: example-out/2007-Barski_et_al
 constants:
     # Genome information goes here:
     ## Complete sequence (FASTA)
-    - &genome genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19
+    - &genome
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_UCSC_complete_genome/hg19_all_chr_UCSC-download-RwaETA3q/hg19_all_chr_UCSC-download.fasta
     ## FASTA index
-    - &genome_faidx genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19
+    - &genome_faidx
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/samtools_faidx/hg19_all_chr_UCSC-download-B7ceRp9K/hg19_all_chr_UCSC-download.fasta.fai
     # Mapping indices go here:
     ## 1. Bowtie2
-    - &bowtie2_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bowtie2_index/bowtie2_index-hg19_all_chr_UCSC-download-yVv5kTxk/
+    - &bowtie2_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bowtie2_index/bowtie2_index-hg19_all_chr_UCSC-download-yVv5kTxk/bowtie2_index-hg19_all_chr_UCSC-download
     ## 2. BWA
-    - &bwa_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19
-    ## 3. Segemehl
-    - &segemehl_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19
+    - &bwa_genome_index
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bwa_index/bwa_index-hg19_all_chr_UCSC-download-bUVhXHo5/bwa_index-hg19_all_chr_UCSC-download
+#    ## 3. Segemehl
+#    - &segemehl_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19
     ## Control vs. Treatment information needed for MACS2
     - control: &control-treatment-hash
             None:
@@ -191,10 +194,10 @@ steps:
          _depends: fix_cutadapt
          index: *bwa_genome_index
         
-    segemehl:
-        _depends: fix_cutadapt
-        genome: *genome
-        index: *segemehl_genome_index
+#    segemehl:
+#        _depends: fix_cutadapt
+#        genome: *genome
+#        index: *segemehl_genome_index
 
     tophat2:
         _depends: fix_cutadapt
@@ -204,22 +207,22 @@ steps:
     sort_bowtie2 (sam_to_sorted_bam):
         _depends: bowtie2
         genome-faidx: *genome_faidx
-        temp-sort-directory: /work/kaempf
+        temp-sort-directory: /tmp
 
     sort_bwa_mem (sam_to_sorted_bam):
         _depends: bwa_mem
         genome-faidx: *genome_faidx
-        temp-sort-directory: /work/kaempf
+        temp-sort-directory: /tmp
 
     sort_segemehl (sam_to_sorted_bam):
         _depends: segemehl
         genome-faidx: *genome_faidx
-        temp-sort-directory: /work/kaempf
+        temp-sort-directory: /tmp
 
     sort_tophat2 (sam_to_sorted_bam):
         _depends: tophat2
         genome-faidx: *genome_faidx
-        temp-sort-directory: /work/kaempf
+        temp-sort-directory: /tmp
         
     complexity_curve_bowtie2 (preseq_complexity_curve):
         _depends: sort_bowtie2
@@ -306,6 +309,7 @@ tools:
         get_version: --version
         exit_code: 0
 
+    # URL: https://github.com/lh3/bwa
     bwa:
         path: bwa
         get_version: ''
@@ -323,6 +327,7 @@ tools:
         get_version: --version
         exit_code: 0
 
+    # URL: http://hannonlab.cshl.edu/fastx_toolkit/
     fastx_quality_stats:
         path: fastx_quality_stats
         get_version: -h
@@ -371,6 +376,7 @@ tools:
         get_version: --version
         exit_code: 0
 
+    # URL: https://github.com/ENCODE-DCC/kentUtils
     bedGraphToBigWig:
         path: bedGraphToBigWig
         get_version: ''
@@ -385,8 +391,8 @@ tools:
         get_version: --version
         exit_code: 0
 
-    fix_s2c:
-        path: ../tools/fix_s2c.py
+    fix_make_segemehl_output_cufflinks_compatible:
+        path: ../tools/fix_make_segemehl_output_cufflinks_compatible.py
         exit_code: 1
 
     fix_qnames:
@@ -402,8 +408,8 @@ tools:
         path: ../tools/remove_reads_segemehl.py
         exit_code: 1
 
-    s2c:
-        path: ../tools/s2c.py
+    make_segemehl_output_cufflinks_compatible:
+        path: ../tools/make_segemehl_output_cufflinks_compatible.py
         get_version: ''
         exit_code: 2
 
