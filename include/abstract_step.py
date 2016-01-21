@@ -169,29 +169,31 @@ class AbstractStep(object):
 
     def float_in_range(self, value, choices):
         for choice in choices:
-            if (choice[0] in ('(', '[', ']') and
-               choice[-1] in(')', '[', ']') and
-               '..' in choice):
+            if isinstance(value, str):
+                if (choice[0] in ('(', '[', ']') and
+                   choice[-1] in(')', '[', ']') and
+                   '..' in choice):
 
-                lower_bound = float(choice[1:choice.find('..')])
-                upper_bound = float(choice[choice.find('..')+2:-1])
+                    lower_bound = float(choice[1:choice.find('..')])
+                    upper_bound = float(choice[choice.find('..')+2:-1])
 
-                if choice[0] is '[':
-                    if choice[-1] is ']':
-                        if lower_bound < value < upper_bound:
-                            return True
+                    if choice[0] is '[':
+                        if choice[-1] is ']':
+                            if lower_bound < value < upper_bound:
+                                return True
+                        else:
+                            if lower_bound < value <= upper_bound:
+                                return True
                     else:
-                        if lower_bound < value <= upper_bound:
-                            return True
-                else:
-                    if choice[-1] is ']':
-                        if lower_bound <= value < upper_bound:
-                            return True
-                    else:
-                        if lower_bound <= value <= upper_bound:
-                            return True
-            elif value == choice:
-                return True
+                        if choice[-1] is ']':
+                            if lower_bound <= value < upper_bound:
+                                return True
+                        else:
+                            if lower_bound <= value <= upper_bound:
+                                return True
+                elif isinstance(value, float):
+                    if value == choice:
+                        return True
         return False
 
     def set_options(self, options):
