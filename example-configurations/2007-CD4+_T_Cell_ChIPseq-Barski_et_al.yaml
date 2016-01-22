@@ -17,7 +17,7 @@ constants:
     - &bwa_genome_index
         genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bwa_index/bwa_index-hg19_all_chr_UCSC-download-bUVhXHo5/bwa_index-hg19_all_chr_UCSC-download
     ## 3. Segemehl
-    - &segemehl_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_segemehl_index/segemehl_index-hg19_all_chr_UCSC-download-s8p1Hh3g/segemehl_index-hg19_all_chr_UCSC-download.idx
+#    - &segemehl_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_segemehl_index/segemehl_index-hg19_all_chr_UCSC-download-s8p1Hh3g/segemehl_index-hg19_all_chr_UCSC-download.idx
     ## Control vs. Treatment information needed for MACS2
     - control: &control-treatment-hash
             None:
@@ -194,10 +194,10 @@ steps:
          _depends: fix_cutadapt
          index: *bwa_genome_index
         
-    segemehl:
-        _depends: fix_cutadapt
-        genome: *genome
-        index: *segemehl_genome_index
+#    segemehl:
+#        _depends: fix_cutadapt
+#        genome: *genome
+#        index: *segemehl_genome_index
 
     tophat2:
         _depends: fix_cutadapt
@@ -214,10 +214,10 @@ steps:
         genome-faidx: *genome_faidx
         temp-sort-directory: /tmp
 
-    sort_segemehl (sam_to_sorted_bam):
-        _depends: segemehl
-        genome-faidx: *genome_faidx
-        temp-sort-directory: /tmp
+#    sort_segemehl (sam_to_sorted_bam):
+#        _depends: segemehl
+#        genome-faidx: *genome_faidx
+#        temp-sort-directory: /tmp
 
     sort_tophat2 (sam_to_sorted_bam):
         _depends: tophat2
@@ -234,10 +234,10 @@ steps:
         pe: no
         seg_len: 500
 
-    complexity_curve_segemehl (preseq_complexity_curve):
-        _depends: sort_segemehl
-        pe: no
-        seg_len: 500
+#    complexity_curve_segemehl (preseq_complexity_curve):
+#        _depends: sort_segemehl
+#        pe: no
+#        seg_len: 500
 
     complexity_curve_tophat2 (preseq_complexity_curve):
         _depends: sort_tophat2
@@ -250,8 +250,8 @@ steps:
     rmdup_bwa_mem (picard_markduplicates):
         _depends: sort_bwa_mem
         
-    rmdup_segemehl (picard_markduplicates):
-        _depends: sort_segemehl
+#    rmdup_segemehl (picard_markduplicates):
+#        _depends: sort_segemehl
         
     rmdup_tophat2 (picard_markduplicates):
         _depends: sort_tophat2
@@ -274,14 +274,14 @@ steps:
         broad: yes
         control: *control-treatment-hash
 
-    macs2_segemehl_narrow_peaks (macs2):
-        _depends: rmdup_segemehl
-        control: *control-treatment-hash
+#    macs2_segemehl_narrow_peaks (macs2):
+#        _depends: rmdup_segemehl
+#        control: *control-treatment-hash
 
-    macs2_segemehl_broad_peaks (macs2):
-        _depends: rmdup_segemehl
-        broad: yes
-        control: *control-treatment-hash
+#    macs2_segemehl_broad_peaks (macs2):
+#        _depends: rmdup_segemehl
+#        broad: yes
+#        control: *control-treatment-hash
 
     macs2_tophat2_narrow_peaks (macs2):
         _depends: rmdup_tophat2
