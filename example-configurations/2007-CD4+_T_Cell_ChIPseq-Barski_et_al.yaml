@@ -16,8 +16,8 @@ constants:
     ## 2. BWA
     - &bwa_genome_index
         genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bwa_index/bwa_index-hg19_all_chr_UCSC-download-bUVhXHo5/bwa_index-hg19_all_chr_UCSC-download
-#    ## 3. Segemehl
-#    - &segemehl_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19
+    ## 3. Segemehl
+    - &segemehl_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_segemehl_index/segemehl_index-hg19_all_chr_UCSC-download-s8p1Hh3g/segemehl_index-hg19_all_chr_UCSC-download.idx
     ## Control vs. Treatment information needed for MACS2
     - control: &control-treatment-hash
             None:
@@ -194,10 +194,10 @@ steps:
          _depends: fix_cutadapt
          index: *bwa_genome_index
         
-#    segemehl:
-#        _depends: fix_cutadapt
-#        genome: *genome
-#        index: *segemehl_genome_index
+    segemehl:
+        _depends: fix_cutadapt
+        genome: *genome
+        index: *segemehl_genome_index
 
     tophat2:
         _depends: fix_cutadapt
