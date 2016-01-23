@@ -270,8 +270,12 @@ steps:
             in/reference_sequence: hg19_UCSC_complete_genome/sequence
         index-basename: bwa_index
 
-    samtools_faidx:
+    hg19_samtools_faidx (samtools_faidx):
         _depends: hg19_UCSC_complete_genome
+
+    hg19_chrom_sizes (fetch_chrom_sizes_source):
+        ucsc-database: hg19
+        path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
 
 tools:
     ##################
@@ -289,6 +293,12 @@ tools:
         path: bowtie2-build
         get_version: --version
         exit_code: 0
+
+    # URL: http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/fetchChromSizes
+    fetchChromSizes:
+        path: fetchChromSizes
+        get_version: ''
+        exit_code: 255
 
     # URL: http://zlib.net/pigz/
     pigz: 
