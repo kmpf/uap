@@ -57,9 +57,9 @@ class BamToBedgraph(AbstractStep):
 
             option_list = list()
             for option in set_options:
-                if isinstance(self.get_option(option), bool) and \
-                   self.get_option(option):
-                    option_list.append('-%s' % option.replace(prefix, ''))
+                if isinstance(self.get_option(option), bool):
+                    if self.get_option(option):
+                        option_list.append('-%s' % option.replace(prefix, ''))
                 else:
                     option_list.append('-%s' % option.replace(prefix, ''))
                     option_list.append(str(self.get_option(option)))

@@ -57,9 +57,9 @@ class PreseqFutureYield(AbstractStep):
 
         option_list = list()
         for option in set_options:
-            if isinstance(self.get_option(option), bool) and \
-               self.get_option(option):
-                option_list.append('-%s' % option)
+            if isinstance(self.get_option(option), bool):
+                if self.get_option(option):
+                    option_list.append('-%s' % option)
             else:
                 option_list.append('-%s' % option)
                 option_list.append(str(self.get_option(option)))

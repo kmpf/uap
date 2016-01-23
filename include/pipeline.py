@@ -213,11 +213,6 @@ class Pipeline(object):
         List of all tasks in topological order. 
         '''
 
-        self.config_file_name = args.config.name
-        '''
-        This stores the name of the configuration file of the current analysis
-        '''
-
         self.read_config(args.config)
 
         # collect all tasks
@@ -255,13 +250,11 @@ class Pipeline(object):
 
     # read configuration and make sure it's good
     def read_config(self, config_file):
-        #print >> sys.stderr, "Reading configuration..."
-        # yaml.load works fine even for duplicate dictionary keys (WTF)
+        # yaml.load works fine, even for duplicate dictionary keys (WTF)
         self.config = yaml.load(config_file)
 
         if not 'id' in self.config:
             self.config['id'] = config_file.name
-        
         
         if not 'destination_path' in self.config:
             raise ConfigurationException("Missing key: destination_path")
@@ -566,8 +559,12 @@ class Pipeline(object):
             check_queue = False
             
         if print_more_warnings and not check_queue:
+            try:
+                ce = self.cc('stat')
+            except KeyError:
+                ce = "a cluster engine"
             print("Attention, we cannot check stale queued ping files because "
-                  "this host does not have %s." % self.cc('stat'))
+                  "this host does not have %s." % ce)
             
         running_jids = set()
         
@@ -646,11 +643,11 @@ class Pipeline(object):
         if show_hint:
             if print_more_warnings and not print_details or not fix_problems:
                 print("Hint: Run 'uap %s fix-problems --details' to see the "
-                      "details."  % self.config_file_name)
+                      "details."  % self.get_config_filepath())
             if not fix_problems:
                 print("Hint: Run 'uap %s fix-problems --srsly' to fix these "
                       "problems (that is, delete all problematic ping files)."
-                      % self.config_file_name)
+                      % self.get_config_filepath())
 
     def check_volatile_files(self, details = False, srsly = False):
         collected_files = set()

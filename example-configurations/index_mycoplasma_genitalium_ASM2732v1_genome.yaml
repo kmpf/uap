@@ -15,27 +15,27 @@ steps:
         uncompress: yes
 
     bowtie2_index (bowtie2_generate_index):
-        _depends: M_genitalium_genome_url
+        _depends: M_genitalium_genome
         _connect: 
-            in/reference_sequence: M_genitalium_genome_url/raw
+            in/reference_sequence: M_genitalium_genome/raw
         index-basename: Mycoplasma_genitalium_index
 
     segemehl_index (segemehl_generate_index):
-        _depends: M_genitalium_genome_url
+        _depends: M_genitalium_genome
         _connect: 
-            in/reference_sequence: M_genitalium_genome_url/raw
+            in/reference_sequence: M_genitalium_genome/raw
         index-basename: Mycoplasma_genitalium_genome
 
     bwa_index (bwa_generate_index):
-        _depends: M_genitalium_genome_url
+        _depends: M_genitalium_genome
         _connect: 
-            in/reference_sequence: M_genitalium_genome_url/raw
+            in/reference_sequence: M_genitalium_genome/raw
         index-basename: Mycoplasma_genitalium_index
 
     fasta_index (samtools_faidx):
-        _depends: M_genitalium_genome_url
+        _depends: M_genitalium_genome
         _connect: 
-            in/sequence: M_genitalium_genome_url/raw
+            in/sequence: M_genitalium_genome/raw
 
 tools:
     ##################

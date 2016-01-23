@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env bash
+"exec" "`dirname $0`/python_env/bin/python" "$0" "$@"
+
 
 import os
 uap_path = os.path.dirname(os.path.realpath(__file__))
@@ -51,21 +53,22 @@ def main():
         dest="even_if_dirty",
         action="store_true",
         default=False,
-        help="Must be set if the local git repository contains uncommited changes." +
-        "Otherwise the pipeline will not start.")
+        help="Must be set if the local git repository contains uncommited "
+        "changes. Otherwise the pipeline will not start.")
     
     # Definition of the final parser
     
     parser = argparse.ArgumentParser(
-        description="This script controls the 'seq-pipeline'.",
-        epilog="For further information visit ...\n" +
+        description="This script starts and controls 'uap' analysis.",
+        epilog="For further information please visit "
+        "http://uap.readthedocs.org/en/latest/\n"
         "For citation use ...",
         formatter_class=argparse.RawTextHelpFormatter
         )
     
     parser.add_argument(
         "config",
-        help="Path to YAML file which holds the pipeline configuration. It has " +
+        help="Path to YAML file which holds the pipeline configuration. It has "
         "to follow the structure given in the documentation.",
         metavar="<project-config>.yaml",
         type=argparse.FileType('r'))
@@ -75,17 +78,18 @@ def main():
         dest="verbose",
         action="count", 
         default=0,
-        help="increase output verbosity")
+        help="Increase output verbosity")
     
     parser.add_argument(
         "--version",
         dest="version",
         action="version",
-        version="%(prog)s 0.01 alpha")
-    
+        version="%(prog)s 0.01 alpha",
+        help = "Display version information.")
+
     subparsers = parser.add_subparsers(
         title="subcommands", 
-        description="These subcommands are understood by the seq-pipeline")
+        description="Available subcommands.")
     
     '''
     The argument parser for 'fix-problems.py' is created here."
@@ -93,7 +97,7 @@ def main():
     
     fix_problems_parser = subparsers.add_parser(
         "fix-problems",
-        help="Fixes problems the pipeline encountered.",
+        help="Fixes problematic states by removing stall files.",
         description="",
         parents=[common_parser])
     
@@ -103,21 +107,21 @@ def main():
         type=str,
         default="auto",
         help="Specify the cluster type (sge, slurm), defaults to auto.")
-    
+
     fix_problems_parser.add_argument(
         "--details",
         dest="details",
         action="store_true",
         default=False,
-        help="Displays detailed information about problems that " +
-        "occured during the execution of the pipeline.")
-    
+        help="Displays information about problematic files which need to be "
+        "deleted to fix problem.")
+
     fix_problems_parser.add_argument(
         "--srsly",
         dest="srsly",
         action="store_true",
         default=False,
-        help="Fixes the problems that the pipeline has encountered.")
+        help="Deletes problematic files.")
     
     fix_problems_parser.set_defaults(func=fix_problems.main)
     
@@ -127,7 +131,7 @@ def main():
     
     render_parser = subparsers.add_parser(
         "render",
-        help="Renders the dot-graphs created by the seq-pipeline",
+        help="Renders DOT-graphs displaying information of the analysis.",
         description="render.py is called here.",
         parents=[common_parser])
     
@@ -157,10 +161,9 @@ def main():
         nargs='*',
         default=list(),
         type=str,
-        help="Displays only the named task IDs" +
-        "Can take multiple task ID(s) as input. A task ID " +
-        "looks like ths 'step_name/run_id'. A list of all " +
-        "task IDs is returned by running './status.py'.")
+        help="Displays only the named task IDs. Can take multiple task ID(s) "
+        "as input. A task ID looks like this 'step_name/run_id'. A list of all "
+        "task IDs is returned by running 'uap <project-config>.yaml status'.")
     
     render_parser.set_defaults(func=render.main)
 
@@ -179,10 +182,10 @@ def main():
         nargs='*',
         default=list(),
         type=str,
-        help="Can take multiple step names as input. A step name "
-        "is the name of any entry in the 'steps:' section "
-        "as defined in 'config.yaml'. A list of all task IDs "
-        "is returned by running './status.py'.")
+        help="Can take multiple step names as input. A step name is the name "
+        "of any entry in the 'steps:' section as defined in "
+        "'<project-config>.yaml'. A list of all task IDs is returned by "
+        "running 'uap <project-config>.yaml status'.")
     
     report_parser.set_defaults(func=report.main)
     
@@ -192,24 +195,24 @@ def main():
     
     run_locally_parser = subparsers.add_parser(
         "run-locally",
-        help="Executes the pipeline on the local machine",
+        help="Executes the analysis on the local machine.",
         description="This command  starts 'uap' on the local machine. "
         "It can be used to start:\n"
-        " * all tasks of the pipeline as configured in <config>.yaml\n"
-        " * all tasks defined by a specific step in <config>.yaml\n"
+        " * all tasks of the pipeline as configured in <project-config>.yaml\n"
+        " * all tasks defined by a specific step in <project-config>.yaml\n"
         " * one or more steps\n"
-        "To start the complete pipeline as configured in <config>.yaml "
+        "To start the complete pipeline as configured in <project-config>.yaml "
         "execute:\n"
-        "$ uap <config>.yaml run-locally\n"
+        "$ uap <project-config>.yaml run-locally\n"
         "To start a specific step execute:\n"
-        "$ uap <config>.yaml run-locally <step_name>\n"
+        "$ uap <project-config>.yaml run-locally <step_name>\n"
         "To start a specific task execute:\n"
-        "$ uap <config>.yaml run-locally <step_name/run_id>\n"
+        "$ uap <project-config>.yaml run-locally <step_name/run_id>\n"
         "The step_name is the name of an entry in the 'steps:' section "
-        "as defined in 'config.yaml'. A specific task is defined via "
+        "as defined in '<project-config>.yaml'. A specific task is defined via "
         "its task ID 'step_name/run_id'. A list of all task IDs is " 
         "returned by running:\n"
-        "$ uap <config.yaml status",
+        "$ uap <project-config>.yaml status",
         parents=[common_parser])
     
     run_locally_parser.add_argument(
@@ -217,10 +220,10 @@ def main():
         nargs='*',
         default=list(),
         type=str,
-        help="Can take multiple step names as input. A step name "
-        "is the name of any entry in the 'steps:' section "
-        "as defined in '<config>.yaml'. A list of all task IDs "
-        "is returned by running '$ uap <config>.yaml status'.")
+        help="Can take multiple step names as input. A step name is the name "
+        "of any entry in the 'steps:' section as defined in '<config>.yaml'. "
+        "A list of all task IDs is returned by running:\n"
+        "$ uap <project-config>.yaml status.")
     
     run_locally_parser.set_defaults(func=run_locally.main)
     
@@ -230,13 +233,13 @@ def main():
     
     status_parser = subparsers.add_parser(
         "status",
-        help="Displays information about the status of the seq-pipeline",
-        description="This script displays by default information about all tasks "
-        "of the pipeline as configured in 'config.yaml'. But the "
-        "displayed information can be narrowed down via command "
-        "line options.\n"
-        "IMPORTANT: Hints given by this script are just valid if YOU "
-        "submitted the jobs to the cluster.",
+        help="Displays information about the status of the analysis.",
+        description="This script displays by default information about all "
+        "tasks of the pipeline as configured in '<project-config>.yaml'. But "
+        "the displayed information can be narrowed down via command line "
+        "options.\n"
+        "IMPORTANT: Hints given by this script are just valid if the jobs were "
+        "submitted to the cluster.",
         parents=[common_parser])
     
     status_parser.add_argument(
@@ -245,21 +248,21 @@ def main():
         type=str,
         default="auto",
         help="Specify the cluster type (sge, slurm), defaults to auto.")
-    
+
     status_parser.add_argument(
         "--summarize",
         dest="summarize",
         action="store_true",
         default=False,
-        help="Displays summarized information of the pipeline")
-    
+        help="Displays summarized information of the analysis.")
+
     status_parser.add_argument(
         "--graph",
         dest="graph",
         action="store_true",
         default=False,
-        help="Displays the dependency graph of the pipeline")
-    
+        help="Displays the dependency graph of the analysis.")
+
     status_parser.add_argument(
         "--sources",
         dest="sources",
@@ -273,10 +276,10 @@ def main():
         nargs='*',
         default=list(),
         type=str,
-        help="Displays only the named task IDs. " +
-        "Can take multiple task ID(s) as input. A task ID " +
-        "looks like ths 'step_name/run_id'. A list of all " +
-        "task IDs is returned by running './status.py'.")
+        help="Displays only the named task IDs. Can take multiple task ID(s) "
+        "as input. A task ID looks like ths 'step_name/run_id'. A list of all "
+        "task IDs is returned by running:\n"
+        "$ uap <project-config>.yaml status")
     
     status_parser.set_defaults(func=status.main)
     
@@ -287,30 +290,31 @@ def main():
     submit_to_cluster_parser = subparsers.add_parser(
         "submit-to-cluster",
         help="Submits the jobs created by the seq-pipeline to a cluster",
-        description='This script submits all tasks configured in config.yaml to a ' +
-        'Sun GridEngine or SLURM cluster. The list of tasks can be ' +
-        'narrowed down by specifying a step name (in which case all ' +
-        'runs of this steps will be considered) or individual tasks ' +
-        '(step_name/run_id).',
+        description="This script submits all tasks configured in "
+        "<project-config>.yaml to a SGE/OGE/UGE or SLURM cluster. The list of "
+        "tasks can be narrowed down by specifying a step name (in which case all "
+        "runs of this steps will be considered) or individual tasks "
+        "(step_name/run_id).",
         parents=[common_parser])
-    
+
     submit_to_cluster_parser.add_argument(
         "--cluster",
         dest="cluster",
         type=str,
         default="auto",
         help="Specify the cluster type (sge, slurm), defaults to auto.")
-    
+
     submit_to_cluster_parser.add_argument(
         "step_task",
         nargs='*',
         default=list(),
         type=str,
-        help="Can take multiple step names as input. A step name " +
-        "is the name of any entry in the 'steps:' section " +
-        "as defined in 'config.yaml'. A list of all task IDs " +
-        "is returned by running './status.py'.")
-    
+        help="Can take multiple step names as input. A step name is the name "
+        "of any entry in the 'steps:' section as defined in "
+        "'<project-config>.yaml'. A list of all task IDs is returned by "
+        "running:\n"
+        "$ uap <project-config>.yaml status")
+
     submit_to_cluster_parser.set_defaults(func=submit_to_cluster.main)
 
     '''
@@ -336,10 +340,10 @@ def main():
         nargs='*',
         default=list(),
         type=str,
-        help="Displays only the named task IDs. " +
-        "Can take multiple task ID(s) as input. A task ID " +
-        "looks like ths 'step_name/run_id'. A list of all " +
-        "task IDs is returned by running './status.py'.")
+        help="Displays only the named task IDs. Can take multiple task ID(s) "
+        "as input. A task ID looks like ths 'step_name/run_id'. A list of all "
+        "task IDs is returned by running:\n"
+        "$ uap <project-config>.yaml status")
 
     task_info_parser.set_defaults(func=task_info.main)
         
@@ -378,31 +382,50 @@ def main():
 
 def _configure_logger(verbosity):
     logger = logging.getLogger("uap_logger")
-    # create formatter
-    formatter = logging.Formatter(fmt='[%(levelname)s] %(funcName)s in '
-                                  '%(filename)s: %(message)s ')
-    # create console handler and set level to debug
+
+    # create formatter for different log level
+    debug_formatter = logging.Formatter(
+        fmt = '[uap][%(levelname)s] %(funcName)s in %(filename)s: %(message)s '
+    )
+    info_formatter = logging.Formatter(
+        fmt = '[uap][%(levelname)s]: %(message)s '
+    )
+    # create console handler
     ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    # add formatter to ch
-    ch.setFormatter(formatter)
-    # add ch to logger
-    logger.addHandler(ch)
+    # set handler logging level
+    ch.setLevel(logging.NOTSET)
     
     # Instantiate logger
     if verbosity == 0:
-        logger.setLevel(logging.WARNING)
-        sys.stderr.write("[uap] Set log level to WARNING")
+        # add formatter to ch
+        ch.setFormatter(info_formatter)
+        # set logger logging level
+        logger.setLevel(logging.ERROR)
+        sys.stderr.write("[uap] Set log level to ERROR\n")
     elif verbosity == 1:
+        # add formatter to ch
+        ch.setFormatter(info_formatter)
+        # set logger logging level
+        logger.setLevel(logging.WARNING)
+        sys.stderr.write("[uap] Set log level to WARNING\n")
+    elif verbosity == 2:
+        # add formatter to ch
+        ch.setFormatter(info_formatter)
+        # set logger logging level
         logger.setLevel(logging.INFO)
-        sys.stderr.write("[uap] Set log level to INFO")
-    elif verbosity >= 2:
+        sys.stderr.write("[uap] Set log level to INFO\n")
+    elif verbosity >= 3:
+        # add formatter to ch
+        ch.setFormatter(debug_formatter)
+        # set logger logging level
         logger.setLevel(logging.DEBUG)
-        sys.stderr.write("[uap] Set log level to DEBUG")
-    else:
-        logger.setLevel(logging.NOTSET)
-        sys.stderr.write("[uap] Set log level to NOTSET")
+        sys.stderr.write("[uap] Set log level to DEBUG\n")
+
     sys.stderr.flush()
+
+    # add ch to logger
+    logger.addHandler(ch)
+
     return logger
 
 

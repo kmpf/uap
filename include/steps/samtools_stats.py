@@ -20,14 +20,6 @@ class SamtoolsStats(AbstractStep):
         self.require_tool('pigz')
 
     def runs(self, run_ids_connections_files):
-        '''
-        
-        '''
-        # Compile list of options
-        options = []
-        # Compile list of set options
-        set_options = [option for option in options if \
-                       self.is_option_set_in_config(option)]
 
         for run_id in run_ids_connections_files.keys():
             # Get input alignments

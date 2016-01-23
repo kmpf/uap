@@ -133,6 +133,8 @@ class AbstractStep(object):
             with self.declare_run(run_id) as run:
                 # add output files and information to the run here
         '''
+        # Replace whitespaces by underscores
+        run_id = re.sub(r'\s', '_', run_id)
         if run_id in self._runs:
             raise StandardError(
                 "Cannot declare the same run ID twice: %s." % run_id)
@@ -303,16 +305,6 @@ class AbstractStep(object):
         # * es MUESSEN die Output Dateien den Connections zugeordnet werden
 
         # fetch all incoming run IDs which produce reads...
-
-#        in_connections = self.get_in_connections()
-#        run_ids_connections_files = dict()
-#        for in_connection in in_connections:
-#            for run_id, input_paths in self.get_run_ids_and_input_files_for_connection(in_connection):
-#                # das macht den schoenen Generator kaputt den Micha mal gebaut hat
-#                if not run_id in run_ids_connections_files:
-#                    run_ids_connections_files[run_id] = dict()
-#                if not in_connection in run_ids_connections_files[run_id]:
-#                    run_ids_connections_files[run_id][in_connection] = input_paths
 
         self.runs( self.get_run_ids_in_connections_input_files() )
         
@@ -1295,8 +1287,8 @@ class AbstractStep(object):
                 if parent_run_id not in list( run_ids_connections_files.keys() ):
                     run_ids_connections_files[parent_run_id] = dict()
                 # ... and each connection
-                for parent_out_connection in parent.get_run(parent_run_id)\
-                                                   .get_out_connections():
+                for parent_out_connection in \
+                    parent.get_run(parent_run_id).get_out_connections():
                     output_files = parent.get_run(parent_run_id)\
                             .get_output_files_abspath_for_out_connection(
                                 parent_out_connection)
@@ -1323,7 +1315,7 @@ class AbstractStep(object):
                        list( run_ids_connections_files[parent_run_id].keys() ):
                         run_ids_connections_files[parent_run_id]\
                             [in_connection] = list()
-                    
+
                     run_ids_connections_files[parent_run_id][in_connection]\
                         .extend(output_files)
 
