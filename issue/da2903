@@ -1,5 +1,0 @@
-Summary: Remove white spaces from sample names
-Priority: 5
-
-* some programs can't handle file names containing non-escaped white spaces
-* I think the best way to handle this is to replace white spaces by under scores
