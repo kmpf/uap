@@ -154,7 +154,7 @@ class ChromHmmBinarizeBam(AbstractStep):
                             if linked_controls:
                                 for lc in linked_controls:
                                     line += "\t%s" % lc
-                            cell_mark_file_content += line + "\n"
+                            cell_mark_file_content += "%s\n" % line
                                 
                         echo = [self.get_tool('echo'), cell_mark_file_content]
 
