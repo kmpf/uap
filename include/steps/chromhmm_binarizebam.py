@@ -148,7 +148,7 @@ class ChromHmmBinarizeBam(AbstractStep):
                                      ", ".join(linked_treatments))
                         
                         # Create the table file
-                        cell_mark_file_content = str
+                        cell_mark_file_content = str()
                         for lt in linked_treatments:
                             line = "%s\t%s\t%s" % (control_id, tr, lt)
                             if linked_controls:
