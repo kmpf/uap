@@ -1,6 +1,8 @@
-import sys
+import os
+from logging import getLogger
 from abstract_step import AbstractStep
 
+logger = getLogger('uap_logger')
 
 class ChromHmmBinarizeBam(AbstractStep):
     '''
