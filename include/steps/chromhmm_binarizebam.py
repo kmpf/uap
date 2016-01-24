@@ -155,7 +155,7 @@ class ChromHmmBinarizeBam(AbstractStep):
                                 for lc in linked_controls:
                                     line += "\t%s" % lc
                             cell_mark_file_content += "%s\n" % line
-                                
+                        logger.error(cell_mark_file_content)
                         echo = [self.get_tool('echo'), cell_mark_file_content]
 
                         cell_mark_file = run.add_temporary_file(suffix = run_id)
