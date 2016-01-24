@@ -26,7 +26,7 @@ class ChromHmmBinarizeBam(AbstractStep):
         self.add_connection('out/alignments')
         self.add_connection('out/metrics')
         
-        self.require_tool('chromhmm')
+        self.require_tool('ChromHMM')
         self.require_tool('echo')
         self.require_tool('ln')
 
