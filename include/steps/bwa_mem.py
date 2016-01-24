@@ -172,7 +172,7 @@ class BwaMem(AbstractStep):
 
                 input_paths = fr_input # single element list
                 if is_paired_end:
-                    input_paths.append(sr_input)
+                    input_paths.extend(sr_input)
 
                 # Check file endings for proper type
                 for input_path in input_paths:
