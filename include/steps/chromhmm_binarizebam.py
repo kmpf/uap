@@ -88,7 +88,7 @@ class ChromHmmBinarizeBam(AbstractStep):
 
         control_samples = self.get_option('control')
         for control_id, treatment_list in control_samples.iteritems():
-            control_id = control
+            control = control_id
             # Check for existence of control files
             control_files = list()
             if control_id != 'None':
