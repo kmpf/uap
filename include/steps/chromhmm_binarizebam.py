@@ -148,8 +148,7 @@ class ChromHmmBinarizeBam(AbstractStep):
                         # Create the table file
                         cell_mark_file_content = str
                         for lt in linked_treatments:
-                            line += "%s\t%s\t%s" %
-                            (control_id, tr, lt)
+                            line = "%s\t%s\t%s" % (control_id, tr, lt)
                             if linked_controls:
                                 for lc in linked_controls:
                                     line += "\t%s" % lc
