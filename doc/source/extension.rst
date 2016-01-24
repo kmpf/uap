@@ -242,7 +242,9 @@ steps or modifying existing steps:
 * Always use ``os.path.join(...)`` when you handle paths.
 * Use bash commands like ``mkfifo`` over python library equivalents like
   ``os.mkfifo()``
-
+* If you need to decide between possible ways to implement a step, stcik to the
+  more flexibel (often more configuration extensive one).
+  You don't know what other user might need, so let them decide.
 
 Add the new step to your configuration
 --------------------------------------
