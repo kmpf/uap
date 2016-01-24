@@ -88,6 +88,7 @@ class ChromHmmBinarizeBam(AbstractStep):
 
         control_samples = self.get_option('control')
         for control_id, treatment_list in control_samples.iteritems():
+            control_id = control
             # Check for existence of control files
             control_files = list()
             if control_id != 'None':
@@ -150,7 +151,7 @@ class ChromHmmBinarizeBam(AbstractStep):
                         # Create the table file
                         cell_mark_file_content = str()
                         for lt in linked_treatments:
-                            line = "%s\t%s\t%s" % (control_id, tr, lt)
+                            line = "%s\t%s\t%s" % (control, tr, lt)
                             if linked_controls:
                                 for lc in linked_controls:
                                     line += "\t%s" % lc
