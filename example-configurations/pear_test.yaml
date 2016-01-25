@@ -1,0 +1,31 @@
+project-id: "TestPear"
+destination_path: "/mnt/workdata2/user_worktmp/lucas.fein/verify_pear"
+
+steps:
+    fastq_in (fastq_source):
+        pattern: /mnt/workdata2/user_worktmp/lucas.fein/data/*.fastq
+        first_read: _1.fastq
+        second_read: _2.fastq
+        group: (mcbath[AB])
+        paired_end: yes
+
+    pear:
+      _depends: fastq_in
+
+tools:
+    pigz:
+        path: pigz
+        get_version: '--version'
+        exit_code: 0
+    pear:
+         path: pear
+         get_version: '0.9.6'
+         exit_code: 1
+    mv:
+        path: mv
+        get_version: '--version'
+        exit_code: 0
+    mkdir:
+        path: mkdir
+        get_version: '--version'
+        exit_code: 0
