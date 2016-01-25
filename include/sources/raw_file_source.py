@@ -8,36 +8,35 @@ class RawFileSource(AbstractSourceStep):
     def __init__(self, pipeline):
         super(RawFileSource, self).__init__(pipeline)
 
-        self.add_option('pattern', str, 
-                        description = "A file name pattern, for example "
-                        "``/home/test/fastq/Sample_*.fastq.gz``.",
-                        optional=True)
+        self.add_connection('out/raw')
 
-        self.add_option('group', str, 
-                        description = "A regular expression which is applied to found "
-                        "files, and which is used to determine the sample name from the "
-                        "file name. For example, `(Sample_\d+)_R[12].fastq.gz``, when "
-                        "applied to a file called ``Sample_1_R1.fastq.gz``, would result "
-                        "in a sample name of ``Sample_1``. You can specify multiple "
-                        "capture groups in the regular expression.",
-                        optional=True)
+        self.add_option(
+            'pattern', str, optional = True,
+            description = "A file name pattern, for example "
+            "``/home/test/fastq/Sample_*.fastq.gz``.")
 
-        self.add_option('sample_id_prefix', str, optional=True )
+        self.add_option(
+            'group', str, optional = True, 
+            description = "A regular expression which is applied to found "
+            "files, and which is used to determine the sample name from the "
+            "file name. For example, `(Sample_\d+)_R[12].fastq.gz``, when "
+            "applied to a file called ``Sample_1_R1.fastq.gz``, would result "
+            "in a sample name of ``Sample_1``. You can specify multiple "
+            "capture groups in the regular expression.")
+
+        self.add_option('sample_id_prefix', str, optional = True )
 
         self.add_option('sample_to_files_map', dict, str, 
                         description = "A listing of sample names and their "
                         "associated files. This must be provided as a YAML "
-                        "dictionary.", optional=True)
-
-        self.add_connection('out/raw')
-
-
+                        "dictionary.", optional = True)
 
     def runs(self, run_ids_connections_files):
         # found_files holds the runIDs and their related files
         found_files = dict()
 
-        if self.is_option_set_in_config('group') and self.is_option_set_in_config('pattern'):
+        if self.is_option_set_in_config('group') and \
+           self.is_option_set_in_config('pattern'):
             regex = re.compile(self.get_option('group'))
             
             # find files matching the 'group' pattern in all files matching 'pattern'
