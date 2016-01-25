@@ -57,7 +57,7 @@ class RawFileSource(AbstractSourceStep):
                 found_files[sample_id].append(path)
                 
         elif self.is_option_set_in_config('sample_to_files_map'):
-            for run_id, paths in self.get_option('sample_to_file'):
+            for run_id, paths in self.get_option('sample_to_files_map'):
                 for path in paths:
                     if not os.path.isfile(path):
                         raise StandardError("[raw_file_source]: %s is no file. "
