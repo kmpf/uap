@@ -1,5 +1,5 @@
-from abstract_step import AbstractStep
 import os
+from abstract_step import AbstractStep
 
 
 class Pear(AbstractStep):
@@ -82,67 +82,73 @@ class Pear(AbstractStep):
 
     def runs(self, run_ids_connections_files):
         param_list = self.get_param_list()
-
-        for run_id in run_ids_connections_files:
+        for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
-                option_list = list()
-                option_list.append('--forward-fastq')
-                option_list.append(run_ids_connections_files[run_id]
-                                   ['in/first_read'][0])
-                option_list.append('--reverse-fastq')
-                option_list.append(run_ids_connections_files[run_id]
-                                   ['in/second_read'][0])
+                for file_no in range(len(run_ids_connections_files[run_id]
+                                         ['in/first_read'])):
+                    option_list = list()
+                    if len(run_ids_connections_files[run_id]
+                           ['in/first_read']) > 1:
+                        file_id = '%s_%d' % (run_id, file_no + 1)
+                    else:
+                        file_id = run_id
 
-                with run.new_exec_group() as pear_exec_group:
-                    option_list.append('--output')
-                    option_list.append(
-                        os.path.join(
-                            run.get_output_directory_du_jour_placeholder(),
-                            run_id))
+                    option_list.append('--forward-fastq')
+                    option_list.append(run_ids_connections_files[run_id]
+                                       ['in/first_read'][file_no])
+                    option_list.append('--reverse-fastq')
+                    option_list.append(run_ids_connections_files[run_id]
+                                       ['in/second_read'][file_no])
 
-                    pear = [self.get_tool('pear')]
-                    option_list.extend(param_list)
+                    with run.new_exec_group() as pear_exec_group:
+                        option_list.append('--output')
+                        option_list.append(
+                            os.path.join(
+                                run.get_output_directory_du_jour_placeholder(),
+                                file_id))
 
-                    option_list.append('>')
-                    option_list.append(
-                        os.path.join(
-                            run.get_output_directory_du_jour_placeholder(),
-                            '%s.log_stdout.txt' % run_id))
+                        pear = [self.get_tool('pear')]
+                        option_list.extend(param_list)
+                        pear.extend(option_list)
+                        pear_exec_group.add_command(
+                            pear,
+                            stdout_path=run.add_output_file(
+                                'log',
+                                '%s.log_stdout.txt' % file_id,
+                                run_ids_connections_files[run_id]
+                                ['in/first_read'] +
+                                run_ids_connections_files[run_id]
+                                ['in/second_read']))
 
-                    pear.extend(option_list)
-                    pear_exec_group.add_command(
-                        pear,
-                        stdout_path=run
-                        .add_output_file(
-                            'log',
-                            '%s.log_stdout.txt' % run_id,
-                            run_ids_connections_files[run_id]['in/first_read'] +
-                            run_ids_connections_files[run_id]
-                            ['in/second_read']))
+                        output_files = dict()
+                        output_files['.assembled.fastq'] =\
+                            run.add_output_file(
+                                'read',
+                                '%s.assembled.fastq' % file_id,
+                                run_ids_connections_files[run_id]
+                                ['in/first_read'] +
+                                run_ids_connections_files[run_id]
+                                ['in/second_read'])
 
-                    output_files = dict()
-                    output_files['%s.assembled.fastq' % run_id] =\
-                        run.add_output_file(
-                            'read',
-                            '%s.assembled.fastq' % run_id,
-                            run_ids_connections_files[run_id]['in/first_read'] +
-                            run_ids_connections_files[run_id]['in/second_read'])
+                        output_files['.unassembled.forward.fastq'] =\
+                            run.add_output_file(
+                                'first_read',
+                                '%s.unassembled.forward.fastq' % file_id,
+                                run_ids_connections_files[run_id]
+                                ['in/first_read'])
 
-                    output_files['%s.unassembled.forward.fastq' % run_id] =\
-                        run.add_output_file(
-                            'first_read',
-                            '%s.unassembled.forward.fastq' % run_id,
-                            run_ids_connections_files[run_id]['in/first_read'])
+                        output_files['.unassembled.reverse.fastq'] =\
+                            run.add_output_file(
+                                'second_read',
+                                '%s.unassembled.reverse.fastq' % file_id,
+                                run_ids_connections_files[run_id]
+                                ['in/second_read'])
 
-                    output_files['%s.unassembled.reverse.fastq' % run_id] =\
-                        run.add_output_file(
-                            'second_read',
-                            '%s.unassembled.reverse.fastq' % run_id,
-                            run_ids_connections_files[run_id]['in/second_read'])
-
-                    output_files['%s.discarded.fastq' % run_id] =\
-                        run.add_output_file(
-                            'discarded_read',
-                            '%s.discarded.fastq' % run_id,
-                            run_ids_connections_files[run_id]['in/first_read'] +
-                            run_ids_connections_files[run_id]['in/second_read'])
+                        output_files['.discarded.fastq'] =\
+                            run.add_output_file(
+                                'discarded_read',
+                                '%s.discarded.fastq' % file_id,
+                                run_ids_connections_files[run_id]
+                                ['in/first_read'] +
+                                run_ids_connections_files[run_id]
+                                ['in/second_read'])
