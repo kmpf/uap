@@ -71,6 +71,7 @@ def main():
         help="Path to YAML file which holds the pipeline configuration. It has "
         "to follow the structure given in the documentation.",
         metavar="<project-config>.yaml",
+        nargs='?',
         type=argparse.FileType('r'))
     
     parser.add_argument(
@@ -282,6 +283,33 @@ def main():
         "$ uap <project-config>.yaml status")
     
     status_parser.set_defaults(func=status.main)
+    
+    '''
+    The argument parser for 'steps.py' is created here.
+    '''
+    
+    steps_parser = subparsers.add_parser(
+        "steps",
+        help="Displays information about the steps available in UAP.",
+        description="This script displays by default a list of all "
+        "steps the pipeline can use.\n",
+        parents=[common_parser])
+    
+    steps_parser.add_argument(
+        "--processing",
+        dest="proc_step",
+        type=str,
+        default="",
+        help="Show the details of a specific processing step.")
+
+    steps_parser.add_argument(
+        "--source",
+        dest="source_step",
+        type=str,
+        default="",
+        help="Show the details of a specific source step.")
+    
+    steps_parser.set_defaults(func=steps.main)
     
     '''
     The argument parser for 'submit-to-cluster.py' is created here."
