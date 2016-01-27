@@ -1565,30 +1565,32 @@ class AbstractStep(object):
                 param_list[i] = '='.join(param_list[2*i], param_list[2*i+1])
         return param_list
 
-   #                 output_files['%s.log_stdout.txt' % run_id] =\
-   #                     run.add_output_file(
-   #                         'log',
-   #                         '%s.log_stdout.txt' % run_id,
-   #                         run_ids_connections_files[run_id]['in/first_read'] +
-   #                         run_ids_connections_files[run_id]['in/second_read'])
-   #                 output_files['%s.log_stdout.txt' % run_id] =\
-   #                     run.add_output_file(
-   #                         'log',
-   #                         '%s.log_stdout.txt' % run_id,
-   #                         run_ids_connections_files[run_id]['in/first_read'] +
-   #                         run_ids_connections_files[run_id]['in/second_read'])
-   #                 output_files['%s.log_stdout.txt' % run_id] =\
-   #                     run.add_output_file(
-   #                         'log',
-   #                         '%s.log_stdout.txt' % run_id,
-   #                         run_ids_connections_files[run_id]['in/first_read'] +
-   #                         run_ids_connections_files[run_id]['in/second_read'])
-   #                 output_files['%s.log_stdout.txt' % run_id] =\
-   #                     run.add_output_file(
-   #                         'log',
-   #                         '%s.log_stdout.txt' % run_id,
-   #                         run_ids_connections_files[run_id]['in/first_read'] +
-   #                         run_ids_connections_files[run_id]['in/second_read'])
+    #   output_files['%s.log_stdout.txt' % run_id] =\
+    #       run.add_output_file(
+    #           'log',
+    #           '%s.log_stdout.txt' % run_id,
+    #           run_ids_connections_files[run_id]['in/first_read'] +
+    #           run_ids_connections_files[run_id]['in/second_read'])
+    #   output_files['%s.log_stdout.txt' % run_id] =\
+    #       run.add_output_file(
+    #           'log',
+    #           '%s.log_stdout.txt' % run_id,
+    #           run_ids_connections_files[run_id]['in/first_read'] +
+    #           run_ids_connections_files[run_id]['in/second_read'])
+    #   output_files['%s.log_stdout.txt' % run_id] =\
+    #       run.add_output_file(
+    #           'log',
+    #           '%s.log_stdout.txt' % run_id,
+    #           run_ids_connections_files[run_id]['in/first_read'] +
+    #           run_ids_connections_files[run_id]['in/second_read'])
+    #   output_files['%s.log_stdout.txt' % run_id] =\
+    #       run.add_output_file(
+    #           'log',
+    #           '%s.log_stdout.txt' % run_id,
+    #           run_ids_connections_files[run_id]['in/first_read'] +
+    #           run_ids_connections_files[run_id]['in/second_read'])
+
+
 class AbstractSourceStep(AbstractStep):
     """
     A subclass all source steps inherit from and which distinguishes source
