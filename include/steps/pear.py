@@ -1,6 +1,7 @@
 import os
 from abstract_step import AbstractStep
 
+
 class Pear(AbstractStep):
     def __init__(self, pipeline):
         super(Pear, self).__init__(pipeline)
