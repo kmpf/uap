@@ -68,8 +68,8 @@ class Pear(AbstractStep):
 
         self.add_option('cap', int, optional=True, default=40,
                         choices=[0] + range(33, 158),
-                        description='Specify the upper bound for the resulting '
-                        'quality score.')
+                        description='Specify the upper bound for the '
+                        'resulting quality score.')
 
         self.add_option('threads', int, optional=True,
                         description='Number of threads to use.')
