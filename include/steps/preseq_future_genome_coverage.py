@@ -73,7 +73,7 @@ class PreseqFutureGenomeCoverage(AbstractStep):
                     raise StandardError("Expected exactly one alignments file.")
                 elif not is_bam and not is_bed:
                     raise StandardError("Input file %s is niether BAM nor BED." %
-                                        input_paths[0])[1])
+                                        input_paths[0])
                 else:
                     with run.new_exec_group() as gc_group:
                         gc_extrap_out = run.add_output_file(

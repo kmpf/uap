@@ -296,18 +296,11 @@ def main():
         parents=[common_parser])
     
     steps_parser.add_argument(
-        "--processing",
-        dest="proc_step",
+        "--show",
+        dest="step",
         type=str,
         default="",
-        help="Show the details of a specific processing step.")
-
-    steps_parser.add_argument(
-        "--source",
-        dest="source_step",
-        type=str,
-        default="",
-        help="Show the details of a specific source step.")
+        help="Show the details of a specific step.")
     
     steps_parser.set_defaults(func=steps.main)
     

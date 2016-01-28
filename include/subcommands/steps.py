@@ -1,55 +1,149 @@
 #!/usr/bin/env python
 
+import ast
 import inspect
 import glob
 import os
 import string
+from logging import getLogger
+logger = getLogger('uap_logger')
 
 from abstract_step import AbstractSourceStep, AbstractStep
+from pipeline import Pipeline
 
 def main(args):
 
-    def is_key_a_class(key):
+    # Define Class to return all 'self.add_connection' calls
+    class AddConnectionLister(ast.NodeVisitor):
+        def visit_Call(self, node):
+            value, attr = (str(), str())
+            try:
+                value = node.func.value.id
+                attr = node.func.attr
+            except AttributeError as e:
+                pass
+            if value == 'self' and attr == 'add_connection':
+                for s in node.args:
+                    print("  - '%s'" % s.s)
+            self.generic_visit(node)
+
+
+    # Define Class to return all 'self.require_tool' calls
+    class RequireToolLister(ast.NodeVisitor):
+        def visit_Call(self, node):
+            value, attr = (str(), str())
+            try:
+                value = node.func.value.id
+                attr = node.func.attr
+            except AttributeError as e:
+                pass
+            if value == 'self' and attr == 'require_tool':
+                for s in node.args:
+                    print("  - '%s'" % s.s)
+
+            self.generic_visit(node)
+            
+    # Define Class to return all 'self.add_option' calls
+    class AddOptionLister(ast.NodeVisitor):
+        def visit_Call(self, node):
+            value, attr = (str(), str())
+            try:
+                value = node.func.value.id
+                attr = node.func.attr
+            except AttributeError as e:
+                pass
+            if value == 'self' and attr == 'add_option':
+                try:
+                    print("   - '%s' (expects %s)" % (node.args[0].s, node.args[1].id) )
+                except:
+                    pass
+
+                for k in node.keywords:
+                    try:
+                        print("      |_ %s=%s " % (k.arg, k.value.id))
+                    except:
+                        pass
+                    try:
+                        print("      |_ %s=%s " % (k.arg, k.value.s))
+                    except:
+                        pass
+
+            self.generic_visit(node)
+
+    steps_path = os.path.dirname(os.path.realpath(__file__))
+
+    def is_key_a_step(key, step_type):
         '''
         Check if given key belongs to a loadable class
         '''
 
-        classes = [_ for _ in inspect.getmembers(__import__(key), 
+        classes = [cl for cl in inspect.getmembers(__import__(key), 
                                                  inspect.isclass) \
-                   if c in _[1].__bases__]
+                   if cl[1] == step_type]
 
-
-        for index, c in enumerate(check_classes):
-            classes = [_ for _ in inspect.getmembers(__import__(key), 
-                                                     inspect.isclass) \
-                       if c in _[1].__bases__]
-            print(classes[0][1])
-            for k in range(index):
-                classes = [_ for _ in classes if _[1] != check_classes[k]]
-            if len(classes) > 0:
-                if len(classes) != 1:
-                    raise StandardError(
-                        "need exactly one subclass of %s in %s" % (c, key))
-                return classes[0][1]
-
-        raise StandardError("No suitable class found for module %s." % key)
+        if len(classes) == 1:
+            return True
+        else:
+            return False
 
 
     # Assemble list of all files in ../sources and ../steps which end on .py
     # Check if they are loadable objects of type AbstractStep or AbstractSourceStep
 
-    source_steps = [os.path.splitext( os.path.basename(f) )[0] \
-                    for f in glob.glob('../sources/*.py')
-                ]
-    
-    proc_steps = [os.path.splitext( os.path.basename(f) )[0] \
-                    for f in glob.glob('../steps/*.py')
-                ]
+    if args.step:
+        for cl in [AbstractSourceStep, AbstractStep]:
+            if is_key_a_step(args.step, cl):
+                step_file = '../sources/%s.py' % args.step \
+                        if cl == AbstractSourceStep else \
+                           '../steps/%s.py' % args.step
+                if not os.path.exists(step_file):
+                    logger.error("Step file %s does not exists." %
+                                 step_file)
+                    sys.exit(1)
+                
+                with open(step_file) as f:
+                    fc = f.read()
+                    
+                tree = ast.parse(fc)
+                    
+                step = AbstractStep.get_step_class_for_key(args.step)
+                print("Step: %s" % args.step)
+                print("* General Information:")
+                print(step.__doc__)
+                print("* Provided Connections:")
+                AddConnectionLister().visit(tree)                
+                print("* Required Tools:")
+                RequireToolLister().visit(tree)
+                print("* Available Options:")
+                AddOptionLister().visit(tree)
+#                print(ast.dump(tree) )
+#                print(rt.body[0].value.args)
 
-    print("Source steps:\n")
-    for s in source_steps:
-        is_key_a_class(s, AbstractSourceStep)
 
-    print("Processing steps:\n")
-    for s in proc_steps:
-        is_key_a_class(s, AbstractStep)
+            else:
+                logger.error("'%s' is not a source or processing step")
+
+    else:
+        source_steps = sorted([
+            os.path.splitext( os.path.basename(f) )[0] \
+            for f in glob.glob(os.path.join(steps_path, '../sources/*.py'))
+        ])
+
+        proc_steps = sorted([
+            os.path.splitext( os.path.basename(f) )[0] \
+            for f in glob.glob(os.path.join(steps_path, '../steps/*.py'))
+        ])
+
+        print("\nAvailable steps (Ordered by type):")
+        print("==================================")
+        print("Source steps:")
+        print("-------------")
+        for s in source_steps:
+            if is_key_a_step(s, AbstractSourceStep):
+                print("- %s" % s)
+
+        print("\nProcessing steps:")
+        print("-----------------")
+        for s in proc_steps:
+            if is_key_a_step(s, AbstractStep):
+                print("- %s" % s)
