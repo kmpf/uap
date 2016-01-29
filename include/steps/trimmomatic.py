@@ -1,9 +1,10 @@
 import os
 from abstract_step import AbstractStep
 
+
 class Trimmomatic(AbstractStep):
     def __init__(self, pipeline):
-        super(Pear, self).__init__(pipeline)
+        super(Trimmomatic, self).__init__(pipeline)
 
         # Input
         # Single-end
@@ -53,7 +54,7 @@ class Trimmomatic(AbstractStep):
             trimmomatic.append('phred33')
 
         for run_id in run_ids_connections_files.keys():
-            trimmomatic = [self.get_tool('trimmomatic')
+            trimmomatic = [self.get_tool('trimmomatic')]
             step_list = list()
             for option in self.get_option('steps'):
                 option = option.upper()
@@ -94,19 +95,17 @@ class Trimmomatic(AbstractStep):
                     raise StandardError("TRIMMOMATIC: Invalid step declared")
                 step_list.append(':'.join(option))
 
-                se_out_files = ('log', 'forward')
-                pe_out = ('reverse', 'forward.unpaired',
-                          'reverse.unpaired')
-
             with self.declare_run(run_id) as run:
                 if self.get_option('paired-end'):
                     if len(run_ids_connections_files[run_id]
-                           ['in/first_read']) != len(run_ids_connections_files
-                                                     [run_id]['in/second_read'):
+                           ['in/first_read']) !=\
+                        len(run_ids_connections_files[run_id]
+                            ['in/second_read']):
                         raise StandardError("Incorrect pairing of paired-end-"
                                             "files in run %s" % run_id)
                 for file_no in range(len(run_ids_connections_files[run_id]
-                                         ['in/first_read')):
+                                         ['in/first_read'])):
+
                     if len(run_ids_connections_files[run_id]
                            ['in/first_read']) > 1:
                         file_id = '%s_%d' % (run_id, file_no + 1)
@@ -122,24 +121,28 @@ class Trimmomatic(AbstractStep):
                                 '%s.log' % file_id))
 
                         option_list.append(
-                            run_ids_connections_files[run_id]\
-                                ['in/first_read'][file_no])
+                            run_ids_connections_files[run_id]
+                            ['in/first_read'][file_no])
                         if self.get_option('paired_end'):
                             option_list.append(
-                                run_ids_connections_files[run_id]\
-                                    ['in/second_read'][file_no])
+                                run_ids_connections_files[run_id]
+                                ['in/second_read'][file_no])
 
                         option_list.append(
                             os.path.join(
                                 run.get_output_directory_du_jour_placeholder(),
                                 '%s.forward.fastq' % file_id))
                         if self.get_option('paired_end'):
-                            for output_file in pe_out:
+                            pe_out_files = ('forward.unpaired',
+                                            'reverse',
+                                            'reverse.unpaired')
+
+                            for output_file in pe_out_files:
                                 option_list.append(
                                     os.path.join(
                                      run.
                                      get_output_directory_du_jour_placeholder(),
-                                     '%s.%s.fastq' % (file_id, output_file))
+                                     '%s.%s.fastq' % (file_id, output_file)))
 
                         option_list.extend(step_list)
                         trimmomatic.extend(option_list)
@@ -152,26 +155,31 @@ class Trimmomatic(AbstractStep):
                                 ['ini/first_read']))
 
                         output_files = dict()
+
+                        output_files['log'] =\
+                            run.add_output_file(
+                                output_file,
+                                '%s.log' % file_id,
+                                run_ids_connections_files[run_id]
+                                    ['in/first_read'][file_no])
+
+                        output_files['forward'] =\
+                            run.add_output_file(
+                                output_file,
+                                '%s.forward.fastq' % file_id,
+                                run_ids_connections_files[run_id]
+                                    ['in/first_read'][file_no])
+
                         if self.get_option('paired_end'):
-                            for output_file in se_out_files + pe_out:
+                            pe_out_files = ('forward.unpaired',
+                                            'reverse',
+                                            'reverse.unpaired')
+                            for output_file in pe_out_files:
                                 output_files[output_file] =\
                                     run.add_output_file(
                                         output_file,
-                                        '%s.%s.fastq' % (file_id, output_file)
+                                        '%s.%s.fastq' % (file_id, output_file),
                                         run_ids_connections_files[run_id]
                                         ['in/first_read'][file_no] +
                                         run_ids_connections_files[run_id]
                                         ['in/second_read'][file_no])
-                        else:
-                            for output_file in se_out_files:
-                                output_files[output_file] =\
-                                    run.add_output_file(
-                                    output_file,
-                                    '%s.%s.fastq' % (file_id, output_file)
-                                    run_ids_connections_files[run_id]
-                                    ['in/first_read'][file_no])
-
-
-
-
-

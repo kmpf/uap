@@ -9,8 +9,10 @@ steps:
         group: (mcbath*)
         paired_end: yes
 
-    pear:
+    trimmomatic:
       _depends: fastq_in
+      paired-end: True
+      steps: [['SLIDINGWINDOW', 12, 35]]
 
 tools:
     pigz:
