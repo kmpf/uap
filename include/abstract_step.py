@@ -175,7 +175,7 @@ class AbstractStep(object):
                    '..' in choice):
 
                     lower_bound = float(choice[1:choice.find('..')])
-                    upper_bound = float(choice[choice.find('..')+2:-1])
+                    upper_bound = float(choice[choice.find('..') + 2:-1])
 
                     if choice[0] is '[':
                         if choice[-1] is ']':
@@ -223,7 +223,7 @@ class AbstractStep(object):
                         "one of %s." % (key, type(value),
                                         self._defined_options[key]['types']))
                 if isinstance(value, float):
-                    if (self._defined_options[key]['choices'] != None and
+                    if (self._defined_options[key]['choices'] is not None and
                         not self.float_in_range(value, self._defined_options
                                                 [key]['choices'])):
                         raise StandardError("Value %s for option '%s' is "
@@ -233,12 +233,13 @@ class AbstractStep(object):
                                                         [key]['choices'])))
 
                 else:
-                    if (self._defined_options[key]['choices'] != None and
+                    if (self._defined_options[key]['choices'] is not None and
                        value not in self._defined_options[key]['choices']):
                         raise StandardError(
                             "Invalid value '%s' specified for option %s - "
                             "possible values are %s." %
-                            (value, key, self._defined_options[key]['choices']))
+                            (value, key, self._defined_options[key]
+                             ['choices']))
 
                 self._options[key] = value
 
@@ -248,7 +249,7 @@ class AbstractStep(object):
             if key not in self._options:
                 value = info['default']
                 if value is None:
-                    if info['optional'] == False:
+                    if info['optional'] is False:
                         raise StandardError(
                             "Required option not set in %s: %s." % (self, key))
                 else:
@@ -520,14 +521,14 @@ class AbstractStep(object):
                 # error scanning YAML
                 return False
 
-            # now check whether all downstream files are in place and up-to-date
-            # also check whether all downstream files as defined in
+            # now check whether all downstream files are in place and
+            # up-to-date also check whether all downstream files as defined in
             # file_dependencies_reverse are covered
 
             uncovered_files = set()
             if path in self.get_pipeline().file_dependencies_reverse:
                 uncovered_files = self.get_pipeline().\
-                                  file_dependencies_reverse[path]
+                    file_dependencies_reverse[path]
 
             for downstream_path, downstream_info in info['downstream'].items():
                 if (downstream_path in
@@ -601,7 +602,8 @@ class AbstractStep(object):
                 if not is_path_up_to_date(path, dep_paths):
                     result = level + 1
                 for dep_path in dep_paths:
-                    recursive_result = up_to_dateness_level(dep_path, level + 1)
+                    recursive_result = up_to_dateness_level(dep_path,
+                                                            level + 1)
                     if recursive_result > level + 1:
                         result = max(result, recursive_result)
                 return result

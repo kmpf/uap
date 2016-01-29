@@ -9,10 +9,10 @@ class Pear(AbstractStep):
         self.add_input_connection('first_read')
         self.add_input_connection('second_read')
 
-        self.add_output_connection('read')
-        self.add_output_connection('first_read')
-        self.add_output_connection('second_read')
-        self.add_output_connection('discarded_read')
+        self.add_output_connection('assembled')
+        self.add_output_connection('unassembled.forward')
+        self.add_output_connection('unassmbled.reverse')
+        self.add_output_connection('discarded')
         self.add_output_connection('log')
 
         self.require_tool('pear')
@@ -81,9 +81,16 @@ class Pear(AbstractStep):
                         'bases.')
 
     def runs(self, run_ids_connections_files):
+        pear = [self.get_tool('pear')]
         param_list = self.get_param_list()
+        out_files = ('assembled', 'unassembled.forward', 'unassembled.reverse',
+                     'discarded')
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
+                if len(run_ids_connections_files[run_id]['in/first_read']) !=\
+                   len(run_ids_connections_files[run_id]['in/second_read']):
+                    raise StandardError("Incorrect pairing of paired-end-files "
+                                        "in run %s" % run_id)
                 for file_no in range(len(run_ids_connections_files[run_id]
                                          ['in/first_read'])):
                     option_list = list()
@@ -107,7 +114,6 @@ class Pear(AbstractStep):
                                 run.get_output_directory_du_jour_placeholder(),
                                 file_id))
 
-                        pear = [self.get_tool('pear')]
                         option_list.extend(param_list)
                         pear.extend(option_list)
                         pear_exec_group.add_command(
@@ -121,34 +127,12 @@ class Pear(AbstractStep):
                                 ['in/second_read']))
 
                         output_files = dict()
-                        output_files['.assembled.fastq'] =\
-                            run.add_output_file(
-                                'read',
-                                '%s.assembled.fastq' % file_id,
-                                run_ids_connections_files[run_id]
-                                ['in/first_read'] +
-                                run_ids_connections_files[run_id]
-                                ['in/second_read'])
-
-                        output_files['.unassembled.forward.fastq'] =\
-                            run.add_output_file(
-                                'first_read',
-                                '%s.unassembled.forward.fastq' % file_id,
-                                run_ids_connections_files[run_id]
-                                ['in/first_read'])
-
-                        output_files['.unassembled.reverse.fastq'] =\
-                            run.add_output_file(
-                                'second_read',
-                                '%s.unassembled.reverse.fastq' % file_id,
-                                run_ids_connections_files[run_id]
-                                ['in/second_read'])
-
-                        output_files['.discarded.fastq'] =\
-                            run.add_output_file(
-                                'discarded_read',
-                                '%s.discarded.fastq' % file_id,
-                                run_ids_connections_files[run_id]
-                                ['in/first_read'] +
-                                run_ids_connections_files[run_id]
-                                ['in/second_read'])
+                        for output_file in out_files:
+                            output_files[output_file] =\
+                                run.add_output_file(
+                                    output_file,
+                                    '%s.%s.fastq' % (file_id, output_file),
+                                    run_ids_connections_files[run_id]
+                                    ['in/first_read'][file_no] +
+                                    run_ids_connections_files[run_id]
+                                    ['in/second_read'][file_no])
