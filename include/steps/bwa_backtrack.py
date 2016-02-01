@@ -47,7 +47,7 @@ class BwaBacktrack(AbstractStep):
                         "ranged from 25 to 35 for '-k 2'. [inf]")
         self.add_option('aln-k', int, optional = True,
                         description = "Maximum edit distance in the seed [2]")
-        self.add_option('aln-t', int, optional = True, 
+        self.add_option('aln-t', int, optional = True, default = 6, 
                         description = "Number of threads (multi-threading mode) "
                         "[1]")
         self.add_option('aln-M', int, optional = True,

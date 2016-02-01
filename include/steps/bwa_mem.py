@@ -22,7 +22,7 @@ class BwaMem(AbstractStep):
         # Options to set bwa mem flags
         self.add_option('index', str)
         ## [Algorithm options:]
-        self.add_option('t', int, optional = True,
+        self.add_option('t', int, optional = True, default = 6,
                         description = "number of threads [1]")
         self.add_option('k', int, optional = True,
                         description = "minimum seed length [19]")
