@@ -146,7 +146,7 @@ class BwaBacktrack(AbstractStep):
                         "more than INT hits, the XA tag will not be written. [3]")
         self.add_option('sampe-r', str, optional = True,
                         description = "Specify the read group in a format like "
-                        "‘@RG\tID:foo\tSM:bar’. [null]")
+                        "'@RG\tID:foo\tSM:bar'. [null]")
 
     def runs(self, run_ids_connections_files):
 
