@@ -264,7 +264,7 @@ class BwaBacktrack(AbstractStep):
 
                             # 3.2 Write bwa aln output to temporary file
                             temp_file = run.add_temporary_file(
-                                suffix='bwa-aln.sai' % run_id
+                                suffix='%s-bwa-aln.sai' % run_id
                             )
                             dd = [
                                 self.get_tool('dd'),
