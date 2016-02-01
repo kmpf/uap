@@ -36,7 +36,7 @@ class BwaBacktrack(AbstractStep):
                         "k-difference mode (disallowing long gaps) [-1]")
         self.add_option('aln-d', int, optional = True,
                         description = "Disallow a long deletion within INT bp "
-                        "towards the 3’-end [16]")
+                        "towards the 3'-end [16]")
         self.add_option('aln-i', int, optional = True,
                         description = "Disallow an indel within INT bp towards "
                         "the ends [5]")
@@ -44,7 +44,7 @@ class BwaBacktrack(AbstractStep):
                         description = "Take the first INT subsequence as seed. "
                         "If INT is larger than the query sequence, seeding will "
                         "be disabled. For long reads, this option is typically "
-                        "ranged from 25 to 35 for ‘-k 2’. [inf]")
+                        "ranged from 25 to 35 for '-k 2'. [inf]")
         self.add_option('aln-k', int, optional = True,
                         description = "Maximum edit distance in the seed [2]")
         self.add_option('aln-t', int, optional = True, 
@@ -82,7 +82,7 @@ class BwaBacktrack(AbstractStep):
                         "format (quality equals ASCII-64).")
         self.add_option('aln-B', int, optional = True,
                         description = "Length of barcode starting from the "
-                        "5’-end. When INT is positive, the barcode of each read "
+                        "5'-end. When INT is positive, the barcode of each read "
                         "will be trimmed before mapping and will be written at "
                         "the BC SAM tag. For paired-end reads, the barcode from "
                         "both ends are concatenated. [0]")
