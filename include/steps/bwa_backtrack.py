@@ -116,7 +116,7 @@ class BwaBacktrack(AbstractStep):
                         " [3]")
         self.add_option('samse-r', str, optional = True,
                         description = "Specify the read group in a format like "
-                        "‘@RG\tID:foo\tSM:bar’. [null]")
+                        "'@RG\tID:foo\tSM:bar'. [null]")
 
         ## [Options for 'bwa sampe':]
         self.add_option('sampe-a', int, optional = True,
