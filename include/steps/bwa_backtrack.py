@@ -260,7 +260,7 @@ class BwaBacktrack(AbstractStep):
                             bwa_aln.append(self.get_option('index'))
                             bwa_aln.append(temp_fifo)
                             # 3.1.1 Add 'bwa aln' to pipeline
-                            bwa_aln_pipe.append(bwa_aln)
+                            bwa_aln_pipe.add_command(bwa_aln)
 
                             # 3.2 Write bwa aln output to temporary file
                             temp_file = run.add_temporary_file(
