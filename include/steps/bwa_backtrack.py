@@ -172,6 +172,7 @@ class BwaBacktrack(AbstractStep):
                                  self.is_option_set_in_config(o)]
 
         def make_option_list(set_options, prefix=""):
+            option_list = list()
             for option in set_options:
                 option_wo_prefix = re.sub(r'^%s' % prefix, '', option)
                 if isinstance(self.get_option(option), bool):
@@ -180,6 +181,7 @@ class BwaBacktrack(AbstractStep):
                 else:
                     option_list.append('-%s' % option_wo_prefix)
                     option_list.append(str(self.get_option(option)))
+            return option_list()
 
         option_list_bwa_aln = make_option_list(set_bwa_aln_options,
                                                     prefix="aln-")
