@@ -181,7 +181,7 @@ class BwaBacktrack(AbstractStep):
                 else:
                     option_list.append('-%s' % option_wo_prefix)
                     option_list.append(str(self.get_option(option)))
-            return option_list()
+            return option_list
 
         option_list_bwa_aln = make_option_list(set_bwa_aln_options,
                                                     prefix="aln-")
