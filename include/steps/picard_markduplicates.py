@@ -152,4 +152,5 @@ class PicardMarkDuplicates(AbstractStep):
                             'METRICS_FILE=%s' % metrics,
                             'REMOVE_DUPLICATES=true'                
                         ]
+                        mark_duplicates.extend(option_list)
                         exec_group.add_command(mark_duplicates)
