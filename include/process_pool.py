@@ -384,7 +384,8 @@ class ProcessPool(object):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             preexec_fn=restore_sigpipe_handler,
-            close_fds=True
+            close_fds=True,
+            shell=True
         )
         pid = proc.pid
         self.popen_procs[pid] = proc
