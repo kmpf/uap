@@ -1551,22 +1551,20 @@ class AbstractStep(object):
         for option, value in self.get_options(tool_specific=True).iteritems():
             if isinstance(self.get_option(option), bool):
                 if self.get_option(option):
-                    if equal_sign:
-                        param_list.append(option)
-                    else:
-                        if len(option) == 1:
-                            param_list.append('-' + str(option))
-                        else:
-                            param_list.append('--' + str(option))
-            else:
-                if equal_sign:
-                    param_list.append('='.join(option, value))
-                else:
                     if len(option) == 1:
                         param_list.append('-' + str(option))
                     else:
                         param_list.append('--' + str(option))
-                    param_list.append(str(value))
+            else:
+                if len(option) == 1:
+                    param_list.append('-' + str(option))
+                else:
+                    param_list.append('--' + str(option))
+                param_list.append(str(value))
+
+        if equal_sign:
+            for i in range(len(param_list)/2):
+                param_list[i] = '='.join(param_list[2*i], param_list[2*i+1])
         return param_list
 
     #   output_files['%s.log_stdout.txt' % run_id] =\
@@ -1610,3 +1608,4 @@ class AbstractSourceStep(AbstractStep):
 
     def __init__(self, pipeline):
         super(AbstractSourceStep, self).__init__(pipeline)
+
