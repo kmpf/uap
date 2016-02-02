@@ -8,7 +8,7 @@ class BwaBacktrack(AbstractStep):
     
     def __init__(self, pipeline):
         super(BwaBacktrack, self).__init__(pipeline)
-        self.set_cores(6)
+        self.set_cores(8)
 
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
