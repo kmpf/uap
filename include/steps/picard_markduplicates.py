@@ -26,6 +26,62 @@ class PicardMarkDuplicates(AbstractStep):
         
         self.require_tool('picard-tools')
 
+        # [Standard Picard Options:]
+
+        self.add_option('TMP_DIR', str, optional = True, 
+                        description='A file. Default value: null. This option '
+                        'may be specified 0 or more times.')
+        self.add_option('VERBOSITY', str, optional=True,
+                        choices=['ERROR', 'WARNING', 'INFO', 'DEBUG'],
+                        description='Control verbosity of logging. '
+                        'Default value: INFO. This option can be set to "null" '
+                        'to clear the default value.')
+        self.add_option('QUIET', bool, optional=True,
+                        description='Whether to suppress job-summary info on '
+                        'System.err. Default value: false. This option can be '
+                        'set to "null" to clear the default value.')
+        self.add_option('VALIDATION_STRINGENCY', str, optional=True,
+                        choices=['STRICT', 'LENIENT', 'SILENT'],
+                        description='Validation stringency for all SAM files '
+                        'read by this program. Setting stringency to SILENT can '
+                        'improve performance when processing a BAM file in '
+                        'which variable-length data (read, qualities, tags) do '
+                        'not otherwise need to be decoded. Default value: '
+                        'STRICT. This option can be set to "null" to clear the '
+                        'default value.')
+        self.add_option('COMPRESSION_LEVEL', int, optional=True,
+                        description='Compression level for all compressed files '
+                        'created (e.g. BAM and GELI). Default value: 5. This '
+                        'option can be set to "null" to clear the default value.')
+        self.add_option('MAX_RECORDS_IN_RAM', int, optional=True,
+                        description='When writing SAM files that need to be '
+                        'sorted, this will specify the number of records stored '
+                        'in RAM before spilling to disk. Increasing this number '
+                        'reduces the number of file handles needed to sort a '
+                        'SAM file, and increases the amount of RAM needed. '
+                        'Default value: 500000. This option can be set to "null" '
+                        'to clear the default value.')
+        self.add_option('CREATE_INDEX', bool, optional=True,
+                        description='Whether to create a BAM index when writing '
+                        'a coordinate-sorted BAM file. Default value: false. '
+                        'This option can be set to "null" to clear the default '
+                        'value. ')
+        self.add_option('CREATE_MD5_FILE', bool, optional=True,
+                        description='Whether to create an MD5 digest for any '
+                        'BAM or FASTQ files created. Default value: false. '
+                        'This option can be set to 'null' to clear the default '
+                        'value.')
+        self.add_option('REFERENCE_SEQUENCE', str, optional=True,
+                        description='Reference sequence file. Default value: '
+                        'null.')
+        self.add_option('GA4GH_CLIENT_SECRETS', str, optional=True,
+                        description='Google Genomics API client_secrets.json '
+                        'file path. Default value: client_secrets.json. This '
+                        'option can be set to "null" to clear the default '
+                        'value.')
+
+        # [Picard MarkDuplicates Options:]
+
         self.add_option('PROGRAM_RECORD_ID', str, optional = True)
         self.add_option('PROGRAM_GROUP_VERSION', str, optional = True)
         self.add_option('PROGRAM_GROUP_COMMAND_LINE', str, optional = True)
@@ -40,11 +96,18 @@ class PicardMarkDuplicates(AbstractStep):
 
     def runs(self, run_ids_connections_files):
 
-        options = ['PROGRAM_RECORD_ID', 'PROGRAM_GROUP_VERSION',
-                   'PROGRAM_GROUP_COMMAND_LINE', 'PROGRAM_GROUP_NAME',
-                   'COMMENT', 'ASSUME_SORTED', 'MAX_FILE_HANDLES',
-                   'SORTING_COLLECTION_SIZE_RATIO', 'READ_NAME_REGEX',
-                   'OPTICAL_DUPLICATE_PIXEL_DISTANCE']
+        options = [
+            # Standard Picard Options:
+            'TMP_DIR', 'VERBOSITY', 'QUIET', 'VALIDATION_STRINGENCY',
+            'COMPRESSION_LEVEL', 'MAX_RECORDS_IN_RAM', 'CREATE_INDEX',
+            'CREATE_MD5_FILE', 'REFERENCE_SEQUENCE', 'GA4GH_CLIENT_SECRETS',
+            # Picard MarkDuplicates Options:
+            'PROGRAM_RECORD_ID', 'PROGRAM_GROUP_VERSION',
+            'PROGRAM_GROUP_COMMAND_LINE', 'PROGRAM_GROUP_NAME',
+            'COMMENT', 'ASSUME_SORTED', 'MAX_FILE_HANDLES',
+            'SORTING_COLLECTION_SIZE_RATIO', 'READ_NAME_REGEX',
+            'OPTICAL_DUPLICATE_PIXEL_DISTANCE'
+        ]
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
