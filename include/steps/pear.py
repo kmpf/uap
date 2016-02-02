@@ -11,7 +11,7 @@ class Pear(AbstractStep):
 
         self.add_output_connection('assembled')
         self.add_output_connection('unassembled.forward')
-        self.add_output_connection('unassmbled.reverse')
+        self.add_output_connection('unassembled.reverse')
         self.add_output_connection('discarded')
         self.add_output_connection('log')
 
@@ -81,7 +81,6 @@ class Pear(AbstractStep):
                         'bases.')
 
     def runs(self, run_ids_connections_files):
-        pear = [self.get_tool('pear')]
         param_list = self.get_param_list()
         out_files = ('assembled', 'unassembled.forward', 'unassembled.reverse',
                      'discarded')
@@ -114,8 +113,9 @@ class Pear(AbstractStep):
                                 run.get_output_directory_du_jour_placeholder(),
                                 file_id))
 
-                        option_list.extend(param_list)
+                        pear = [self.get_tool('pear')]
                         pear.extend(option_list)
+                        pear.extend(param_list)
                         pear_exec_group.add_command(
                             pear,
                             stdout_path=run.add_output_file(
@@ -126,13 +126,11 @@ class Pear(AbstractStep):
                                 run_ids_connections_files[run_id]
                                 ['in/second_read']))
 
-                        output_files = dict()
                         for output_file in out_files:
-                            output_files[output_file] =\
-                                run.add_output_file(
+                            run.add_output_file(
                                     output_file,
                                     '%s.%s.fastq' % (file_id, output_file),
+                                    [run_ids_connections_files[run_id]
+                                    ['in/first_read'][file_no],
                                     run_ids_connections_files[run_id]
-                                    ['in/first_read'][file_no] +
-                                    run_ids_connections_files[run_id]
-                                    ['in/second_read'][file_no])
+                                    ['in/second_read'][file_no]])
