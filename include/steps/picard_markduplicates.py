@@ -69,7 +69,7 @@ class PicardMarkDuplicates(AbstractStep):
         self.add_option('CREATE_MD5_FILE', bool, optional=True,
                         description='Whether to create an MD5 digest for any '
                         'BAM or FASTQ files created. Default value: false. '
-                        'This option can be set to 'null' to clear the default '
+                        'This option can be set to "null" to clear the default '
                         'value.')
         self.add_option('REFERENCE_SEQUENCE', str, optional=True,
                         description='Reference sequence file. Default value: '
