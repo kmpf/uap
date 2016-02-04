@@ -58,7 +58,7 @@ class SamToSortedBam(AbstractStep):
                                 pipe.add_command(pigz)
 
                             # 1.3 command: Fix QNAMES in input SAM
-                            if self.get_option('fix_qnames'):
+                            if self.get_option('fix-qnames'):
                                 fix_qnames = [
                                     self.get_tool('fix_qnames'),
                                     '--filetype', 'SAM'
