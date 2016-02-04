@@ -49,13 +49,22 @@ class SamToSortedBam(AbstractStep):
                                      'if=%s' % input_paths[0]]
                             pipe.add_command(dd_in)
 
+                            # 1.1 command: Uncompress file to fifo
                             if is_gzipped:
-                                # 1.1 command: Uncompress file to fifo
                                 pigz = [self.get_tool('pigz'),
                                         '--decompress',
                                         '--processes', '1',
                                         '--stdout']
                                 pipe.add_command(pigz)
+
+                            # 1.3 command: Fix QNAMES in input SAM
+                            if self.get_option('fix_qnames'):
+                                fix_qnames = [
+                                    self.get_tool('fix_qnames'),
+                                    '--filetype', 'SAM'
+                                ]
+                                pipe.add_command(fix_qnames)
+
 
                             # 2. command: Convert sam to bam
                             samtools_view = [
@@ -82,13 +91,6 @@ class SamToSortedBam(AbstractStep):
                                  '-@', '6']
                             )
                             pipe.add_command(samtools_sort)
-
-                            if self.get_option('fix_qnames'):
-                                fix_qnames = [
-                                    self.get_tool('fix_qnames'),
-                                    '--filetype', 'SAM'
-                                ]
-                                pipe.add_command(fix_qnames)
 
                             # 4. command:
                             dd_out = [self.get_tool('dd'), 'obs=4M']
