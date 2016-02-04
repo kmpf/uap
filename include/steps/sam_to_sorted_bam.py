@@ -22,8 +22,8 @@ class SamToSortedBam(AbstractStep):
         self.add_option('temp-sort-directory', str, optional = False,
                         description = 'Intermediate sort files are stored into'
                         'this directory.')
-        self.add_option('fix_qnames', bool, optional = True, default = False,
-                        description="The QNAMES field of the sorted output will "
+        self.add_option('fix-qnames', bool, optional = True, default = False,
+                        description="The QNAMES field of the input will "
                         "be purged from spaces and everything thereafter.")
 
     def runs(self, run_ids_connections_files):
