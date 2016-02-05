@@ -42,9 +42,15 @@ class Segemehl(AbstractStep):
         
         self.require_tool('cat')
         self.require_tool('dd')
+        self.require_tool('fix_qnames')
         self.require_tool('mkfifo')
         self.require_tool('pigz')
         self.require_tool('segemehl')
+
+        # Options for additional programs
+        self.add_option('fix-qnames', bool, optional = True, default = False,
+                        description="The QNAMES field of the input will "
+                        "be purged from spaces and everything thereafter.")
 
         # Options to set segemehl flags
         ## [INPUT]
@@ -188,6 +194,13 @@ class Segemehl(AbstractStep):
                                 '%s-segemehl-log.txt' % run_id,
                                 input_paths)
                         )
+                        # 4.1 command: Fix QNAMES in input SAM, if need be
+                        if self.get_option('fix-qnames'):
+                            fix_qnames = [
+                                self.get_tool('fix_qnames'),
+                                '--filetype', 'SAM'
+                            ]
+                            segemehl_pipe.add_command(fix_qnames)
 
                         # 5. Compress segemehl mapped reads
                         pigz_mapped_reads = [
@@ -211,6 +224,15 @@ class Segemehl(AbstractStep):
                         cat_unmapped_reads = [self.get_tool('cat'),
                                               fifo_path_unmapped]
                         compress_unmapped_pipe.add_command(cat_unmapped_reads)
+                        
+                        # 6.1 command: Fix QNAMES in input SAM, if need be
+                        if self.get_option('fix-qnames'):
+                            fix_qnames = [
+                                self.get_tool('fix_qnames'),
+                                '--filetype', 'FASTQ'
+                            ]
+                            compress_unmapped_pipe.add_command(fix_qnames)
+
                         # 7. Compress unmapped reads
                         pigz_unmapped_reads = [
                             self.get_tool('pigz'),

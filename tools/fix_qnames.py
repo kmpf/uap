@@ -52,9 +52,12 @@ def main():
 
     elif args.filetype == 'SAM':
         for l in args.input_file:
-            line = l.split('\t')
-            line[0] = line[0].split(' ')[0]
-            args.output_file.write("\t".join(line))
+            if l.startswith('@'):
+                args.output_file.write(l)
+            else:
+                line = l.split('\t')
+                line[0] = line[0].split(' ')[0]
+                args.output_file.write("\t".join(line))
 
 
     args.input_file.close()
