@@ -13,7 +13,6 @@ class SamToSortedBam(AbstractStep):
         self.add_connection('out/alignments')
         
         self.require_tool('dd')
-        self.require_tool('fix_qnames')
         self.require_tool('samtools')
         self.require_tool('pigz')
 
@@ -22,9 +21,6 @@ class SamToSortedBam(AbstractStep):
         self.add_option('temp-sort-directory', str, optional = False,
                         description = 'Intermediate sort files are stored into'
                         'this directory.')
-        self.add_option('fix-qnames', bool, optional = True, default = False,
-                        description="The QNAMES field of the input will "
-                        "be purged from spaces and everything thereafter.")
 
     def runs(self, run_ids_connections_files):
         
@@ -56,15 +52,6 @@ class SamToSortedBam(AbstractStep):
                                         '--processes', '1',
                                         '--stdout']
                                 pipe.add_command(pigz)
-
-                            # 1.3 command: Fix QNAMES in input SAM
-                            if self.get_option('fix-qnames'):
-                                fix_qnames = [
-                                    self.get_tool('fix_qnames'),
-                                    '--filetype', 'SAM'
-                                ]
-                                pipe.add_command(fix_qnames)
-
 
                             # 2. command: Convert sam to bam
                             samtools_view = [
