@@ -31,7 +31,7 @@ class PreseqComplexityCurve(AbstractStep):
         self.add_option('vals', bool, optional = True, default = False,
                         description = 'input is a text file containing only '
                         'the observed counts')
-        self.add_option('seg_len', int, optional = False, description =
+        self.add_option('seg_len', int, optional = True, description =
                         'maximum segment length when merging paired end bam '
                         'reads (default: 5000)')
 
