@@ -5,6 +5,7 @@ import inspect
 import glob
 import os
 import string
+import sys
 from logging import getLogger
 logger = getLogger('uap_logger')
 
@@ -70,8 +71,6 @@ def main(args):
 
             self.generic_visit(node)
 
-    steps_path = os.path.dirname(os.path.realpath(__file__))
-
     def is_key_a_step(key, step_type):
         '''
         Check if given key belongs to a loadable class
@@ -87,6 +86,8 @@ def main(args):
             return False
 
 
+    steps_path = os.path.dirname(os.path.realpath(__file__))
+
     # Assemble list of all files in ../sources and ../steps which end on .py
     # Check if they are loadable objects of type AbstractStep or AbstractSourceStep
 
@@ -96,6 +97,9 @@ def main(args):
                 step_file = '../sources/%s.py' % args.step \
                         if cl == AbstractSourceStep else \
                            '../steps/%s.py' % args.step
+
+                step_file = os.path.join(steps_path, step_file)
+                
                 if not os.path.exists(step_file):
                     logger.error("Step file %s does not exists." %
                                  step_file)
