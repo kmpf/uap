@@ -92,8 +92,10 @@ def main(args):
     # Check if they are loadable objects of type AbstractStep or AbstractSourceStep
 
     if args.step:
+        is_step = False
         for cl in [AbstractSourceStep, AbstractStep]:
             if is_key_a_step(args.step, cl):
+                is_step = True
                 step_file = '../sources/%s.py' % args.step \
                         if cl == AbstractSourceStep else \
                            '../steps/%s.py' % args.step
@@ -120,12 +122,12 @@ def main(args):
                 RequireToolLister().visit(tree)
                 print("* Available Options:")
                 AddOptionLister().visit(tree)
-#                print(ast.dump(tree) )
-#                print(rt.body[0].value.args)
+                #print(ast.dump(tree) )
+                #print(rt.body[0].value.args)
 
-
-            else:
-                logger.error("'%s' is not a source or processing step")
+        if not is_step:
+            logger.error("'%s' is neither a source nor a processing step"
+                         % args.step)
 
     else:
         source_steps = sorted([
