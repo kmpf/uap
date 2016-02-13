@@ -32,7 +32,11 @@ class Bowtie2(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('bowtie2')
 
-        self.add_option('index', str)
+        self.add_option('index', str, optional=False,
+                        description="Path to bowtie2 index (not containing file "
+                        "suffixes).")
+        # Bowtie2 has so many options that I'm avoiding to add them all now,
+        # but it might be necessary later on.
 
     def runs(self, run_ids_connections_files):
 

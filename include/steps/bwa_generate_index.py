@@ -5,7 +5,11 @@ from abstract_step import AbstractStep
 
 class BwaGenerateIndex(AbstractStep):
     '''
-    
+    This step generates the index database from sequences in the FASTA format.
+
+    Typical command line::
+
+        bwa index -p <index-basename> <seqeunce.fasta>
     '''
     
     def __init__(self, pipeline):
@@ -19,7 +23,8 @@ class BwaGenerateIndex(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('bwa')
 
-        self.add_option('index-basename', str, optional = False)
+        self.add_option('index-basename', str, optional = False,
+                        description="Prefix of the created index database")
 
     def runs(self, run_ids_connections_files):
         # Compile the list of options

@@ -4,6 +4,24 @@ from abstract_step import AbstractStep
 
 class BwaBacktrack(AbstractStep):
     '''
+    bwa-backtrack is the bwa algorithm designed for Illumina sequence reads up
+    to 100bp. The computation of the alignments is done by running 'bwa aln'
+    first, to align the reads, followed by running 'bwa samse' or 'bwa sampe'
+    afterwards to generate the final SAM output.
+
+    http://bio-bwa.sourceforge.net/
+
+    typical command line for single-end data::
+    
+        bwa aln <bwa-index> <first-read.fastq> > <first-read.sai>
+        bwa samse <bwa-index> <first-read.sai> <first-read.fastq> > <sam-output>
+
+    typical command line for paired-end data::
+
+        bwa aln <bwa-index> <first-read.fastq> > <first-read.sai>
+        bwa aln <bwa-index> <second-read.fastq> > <second-read.sai>        
+        bwa sampe <bwa-index> <first-read.sai> <second-read.sai> \
+                  <first-read.fastq> <second-read.fastq> > <sam-output>
     '''
     
     def __init__(self, pipeline):
@@ -21,7 +39,8 @@ class BwaBacktrack(AbstractStep):
         self.require_tool('bwa')
 
         # Options for the programs bwa aln/samse/sampe
-        self.add_option('index', str, description="Path to index for BWA")
+        self.add_option('index', str, optional=False, 
+                        description="Path to BWA index")
         ## [Options for 'bwa aln':]
         self.add_option('aln-n', float, optional = True,
                         description = "Maximum edit distance if the value is "

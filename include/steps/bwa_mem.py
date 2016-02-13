@@ -3,6 +3,16 @@ from abstract_step import AbstractStep
 
 class BwaMem(AbstractStep):
     '''
+    Align 70bp-1Mbp query sequences with the BWA-MEM algorithm. Briefly, the
+    algorithm works by seeding alignments with maximal exact matches (MEMs) and
+    then extending seeds with the affine-gap Smith-Waterman algorithm (SW).
+
+    http://bio-bwa.sourceforge.net/bwa.shtml
+
+    Typical command line::
+
+        bwa mem [options] <bwa-index> <first-read.fastq> [<second-read.fastq>] \
+        > <sam-output>
     '''
     
     def __init__(self, pipeline):
@@ -20,10 +30,11 @@ class BwaMem(AbstractStep):
         self.require_tool('bwa')
 
         # Options to set bwa mem flags
-        self.add_option('index', str)
+        self.add_option('index', str, optional=False,
+                        description="Path to BWA index")
         ## [Algorithm options:]
         self.add_option('t', int, optional = True, default = 6,
-                        description = "number of threads [1]")
+                        description = "number of threads [6]")
         self.add_option('k', int, optional = True,
                         description = "minimum seed length [19]")
         self.add_option('w', int, optional = True,

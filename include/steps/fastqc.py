@@ -7,10 +7,11 @@ logger = logging.getLogger('uap_logger')
 
 class Fastqc(AbstractStep):
     '''
-    The fastqc step  is a wrapper for the fastqc tool. 
-    It generates some quality metrics for fastq files.
-    http://www.bioinformatics.babraham.ac.uk/projects/fastqc/ 
-    For this specific instance only the zip archive is preserved
+    The fastqc step  is a wrapper for the fastqc tool. It generates some quality
+    metrics for fastq files. For this specific instance only the zip archive is
+    preserved.
+
+    http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
     '''
     
     def __init__(self, pipeline):
