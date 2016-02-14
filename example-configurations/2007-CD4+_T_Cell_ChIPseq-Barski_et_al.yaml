@@ -190,7 +190,7 @@ steps:
          _depends: fix_cutadapt
          index: *bowtie2_genome_index
         
-    bwa_mem:
+    bwa_backtrack:
          _depends: fix_cutadapt
          index: *bwa_genome_index
         
@@ -209,8 +209,8 @@ steps:
         genome-faidx: *genome_faidx
         temp-sort-directory: /tmp
 
-    sort_bwa_mem (sam_to_sorted_bam):
-        _depends: bwa_mem
+    sort_bwa_backtrack (sam_to_sorted_bam):
+        _depends: bwa_backtrack
         genome-faidx: *genome_faidx
         temp-sort-directory: /tmp
 
@@ -229,8 +229,8 @@ steps:
         pe: no
         seg_len: 500
         
-    complexity_curve_bwa_mem (preseq_complexity_curve):
-        _depends: sort_bwa_mem
+    complexity_curve_bwa_backtrack (preseq_complexity_curve):
+        _depends: sort_bwa_backtrack
         pe: no
         seg_len: 500
 
@@ -247,8 +247,8 @@ steps:
     rmdup_bowtie2 (picard_markduplicates):
         _depends: sort_bowtie2
 
-    rmdup_bwa_mem (picard_markduplicates):
-        _depends: sort_bwa_mem
+    rmdup_bwa_backtrack (picard_markduplicates):
+        _depends: sort_bwa_backtrack
         
 #    rmdup_segemehl (picard_markduplicates):
 #        _depends: sort_segemehl
@@ -265,12 +265,12 @@ steps:
         broad: yes
         control: *control-treatment-hash
 
-    macs2_bwa_mem_narrow_peaks (macs2):
-        _depends: rmdup_bwa_mem
+    macs2_bwa_backtrack_narrow_peaks (macs2):
+        _depends: rmdup_bwa_backtrack
         control: *control-treatment-hash
 
-    macs2_bwa_mem_broad_peaks (macs2):
-        _depends: rmdup_bwa_mem
+    macs2_bwa_backtrack_broad_peaks (macs2):
+        _depends: rmdup_bwa_backtrack
         broad: yes
         control: *control-treatment-hash
 
