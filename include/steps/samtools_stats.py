@@ -3,8 +3,12 @@ from abstract_step import *
 
 class SamtoolsStats(AbstractStep):
     '''
-    The samtools_stats step can be used to collect read statistics from BAM
-    files using samtools stats.
+    samtools stats collects statistics from BAM files and outputs in a text
+    format. The output can be visualized graphically using plot-bamstats.
+
+    Documentation::
+
+        http://www.htslib.org/doc/samtools.html
     '''
 
     def __init__(self, pipeline):

@@ -3,7 +3,8 @@ from abstract_step import *
 
 class MergeFastaFiles(AbstractStep):
     '''
-    Merge all .fasta(.gz) files of a sample.
+    This step merges all .fasta(.gz) files belonging to a certain sample.
+    The output files are gzipped.
     '''
     
     def __init__(self, pipeline):
@@ -19,8 +20,10 @@ class MergeFastaFiles(AbstractStep):
         self.require_tool('mkfifo')
         self.require_tool('pigz')
 
-        self.add_option('compress-output', bool, optional = True, default = True)
-        self.add_option('output-fasta-basename', str, optional = True, default = "")
+        self.add_option('compress-output', bool, optional=True, default=True,
+                        description="If set to true output is gzipped.")
+        self.add_option('output-fasta-basename', str, optional=True, default="",
+                        description="Name used as prefix for FASTA output.")
 
     def runs(self, run_ids_connections_files):
         '''

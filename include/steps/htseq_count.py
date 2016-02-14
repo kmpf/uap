@@ -3,6 +3,14 @@ import os
 from abstract_step import AbstractStep
 
 class HtSeqCount(AbstractStep):
+    '''
+    The htseq-count script counts the number of reads overlapping a feature.
+    Input needs to be a file with aligned sequencing reads and a list of genomic
+    features. For more information see::
+
+    http://www-huber.embl.de/users/anders/HTSeq/doc/count.html
+    '''
+    
     
     def __init__(self, pipeline):
         super(HtSeqCount, self).__init__(pipeline)
@@ -10,11 +18,13 @@ class HtSeqCount(AbstractStep):
         self.set_cores(2)
         
         self.add_connection(
-            'in/alignments', constraints = {'min_files_per_run': 1,
-                                            'max_files_per_run': 1}
+            'in/alignments',
+            constraints = {'min_files_per_run': 1, 'max_files_per_run': 1}
         )
         self.add_connection(
-            'in/features', constraints = {'total_files': 1} )
+            'in/features',
+            constraints = {'total_files': 1}
+        )
         self.add_connection('out/counts')
         
         self.require_tool('dd')

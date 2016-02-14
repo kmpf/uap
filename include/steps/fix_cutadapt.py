@@ -4,8 +4,8 @@ import process_pool
 
 class FixCutadapt(AbstractStep):
     '''
-    Remove both reads of a paired end read if one of them has been completely
-    removed by cutadapt
+    This step takes FASTQ data and removes both reads of a paired-end read, if
+    one of them has been completely removed by cutadapt (or any other software).
     '''
     def __init__(self, pipeline):
         super(FixCutadapt, self).__init__(pipeline)

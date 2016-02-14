@@ -1,4 +1,5 @@
 import sys
+import logging
 from abstract_step import AbstractStep
 
 logger = logging.getLogger('uap_logger')
@@ -8,7 +9,9 @@ class FastxQualityStats(AbstractStep):
     fastx_quality_stats generates a text file containing quality information
     of the input FASTQ data.
 
-    http://hannonlab.cshl.edu/fastx_toolkit/
+    Documentation::
+
+        http://hannonlab.cshl.edu/fastx_toolkit/
     '''
 
     def __init__(self, pipeline):

@@ -1,6 +1,9 @@
 import sys
 import os
+import logging
 from abstract_step import AbstractStep
+
+logger = logging.getLogger('uap_logger')
 
 class PreseqFutureYield(AbstractStep):
     '''
@@ -8,6 +11,10 @@ class PreseqFutureYield(AbstractStep):
     genomic library from an initial sequencing experiment. The estimates can then
     be used to examine the utility of further sequencing, optimize the sequencing
     depth, or to screen multiple libraries to avoid low complexity samples.
+
+    lc_extrap computes the expected future yield of distinct reads and bounds on
+    the number of total distinct reads in the library and the associated
+    confidence intervals.
     '''
 
     def __init__(self, pipeline):

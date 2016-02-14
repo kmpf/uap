@@ -3,7 +3,23 @@ import os
 from abstract_step import AbstractStep
 
 class Macs2(AbstractStep):
+    '''
+    Model-based Analysis of ChIP-Seq (MACS) is a algorithm, for the identifcation
+    of transcript factor binding sites. MACS captures the influence of genome
+    complexity to evaluate the significance of enriched ChIP regions, and MACS
+    improves the spatial resolution of binding sites through combining the
+    information of both sequencing tag position and orientation. MACS can be
+    easily used for ChIP-Seq data alone, or with control sample data to increase
+    the specificity.
     
+    https://github.com/taoliu/MACS
+
+    typical command line for single-end data::
+
+        macs2 callpeak --treatment <aligned-reads> [--control <aligned-reads>]
+                       --name <run-id> --gsize 2.7e9
+    '''
+
     def __init__(self, pipeline):
         super(Macs2, self).__init__(pipeline)
         

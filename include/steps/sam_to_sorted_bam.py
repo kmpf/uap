@@ -1,8 +1,23 @@
 import sys
 import os
+import logging
 from abstract_step import AbstractStep
 
+logger = logging.getLogger('uap_logger')
+
 class SamToSortedBam(AbstractStep):
+    '''
+    The step sam_to_sorted_bam builds on 'samtools sort' to sort SAM files and
+    output BAM files. 
+
+    Sort alignments by leftmost coordinates, or by read name when -n is used.
+    An appropriate @HD-SO sort order header tag will be added or an existing
+    one updated if necessary.
+
+    Documentation::
+
+        http://www.htslib.org/doc/samtools.html
+    '''
 
     def __init__(self, pipeline):
         super(SamToSortedBam, self).__init__(pipeline)

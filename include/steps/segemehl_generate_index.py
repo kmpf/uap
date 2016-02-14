@@ -1,10 +1,18 @@
 import sys
 import os
+import logging
 from abstract_step import AbstractStep
+
+logger = logging.getLogger('uap_logger')
 
 class SegemehlGenerateIndex(AbstractStep):
     '''
-    segemehl is a software to map short sequencer reads to reference genomes. 
+    The step segemehl_generate_index generates a index for given reference
+    sequences.
+
+    Documentation::
+
+       http://www.bioinf.uni-leipzig.de/Software/segemehl/
     '''
 
     def __init__(self, pipeline):

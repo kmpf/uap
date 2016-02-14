@@ -1,5 +1,8 @@
 import sys
+import logging
 from abstract_step import AbstractStep
+
+logger = logging.getLogger('uap_logger')
 
 class PreseqFutureGenomeCoverage(AbstractStep):
     '''
@@ -7,6 +10,11 @@ class PreseqFutureGenomeCoverage(AbstractStep):
     genomic library from an initial sequencing experiment. The estimates can then
     be used to examine the utility of further sequencing, optimize the sequencing
     depth, or to screen multiple libraries to avoid low complexity samples.
+
+    gc_extrap computes the expected genomic coverage for deeper sequencing for
+    single cell sequencing experiments. The input should be a mr or bed file.
+    The tool bam2mr is provided to convert sorted bam or sam files to mapped
+    read format.
     '''
 
     def __init__(self, pipeline):

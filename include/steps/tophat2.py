@@ -1,6 +1,9 @@
 import sys
 import os
+import logging
 from abstract_step import AbstractStep
+
+logger = logging.getLogger('uap_logger')
 
 class TopHat2(AbstractStep):
     '''
@@ -13,7 +16,8 @@ class TopHat2(AbstractStep):
     
     typical command line::
 
-        tophat [options]* <index_base> <reads1_1[,...,readsN_1]> [reads1_2,...readsN_2]
+        tophat [options]* <index_base> <reads1_1[,...,readsN_1]> \
+        [reads1_2,...readsN_2]
 
 
     '''
@@ -39,9 +43,17 @@ class TopHat2(AbstractStep):
         self.require_tool('tar')
         self.require_tool('tophat2')
 
-        self.add_option('index', str)
-        self.add_option('library_type', str, choices = [
-            'fr-unstranded', 'fr-firststrand', 'fr-secondstrand'])
+        self.add_option('index', str, optional=False,
+                        description="Path to genome index for tophat2")
+        self.add_option('library_type', str, optional=False, choices=
+                        ['fr-unstranded', 'fr-firststrand', 'fr-secondstrand'],
+                        description="The default is unstranded (fr-unstranded). "
+                        "If either fr-firststrand or fr-secondstrand is "
+                        "specified, every read alignment will have an XS "
+                        "attribute tag as explained below. Consider supplying "
+                        "library type options below to select the correct "
+                        "RNA-seq protocol.
+                        (https://ccb.jhu.edu/software/tophat/manual.shtml)")
 
     def runs(self, run_ids_connections_files):
 

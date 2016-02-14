@@ -1,6 +1,9 @@
 import sys
 import os
+import logging
 from abstract_step import AbstractStep
+
+logger = logging.getLogger('uap_logger')
 
 class PreseqComplexityCurve(AbstractStep):
     '''
@@ -8,6 +11,14 @@ class PreseqComplexityCurve(AbstractStep):
     genomic library from an initial sequencing experiment. The estimates can then
     be used to examine the utility of further sequencing, optimize the sequencing
     depth, or to screen multiple libraries to avoid low complexity samples.
+
+    c_curve computes the expected yield of distinct reads for experiments smaller
+    than the input experiment in a .bed or .bam file through resampling. The full
+    set of parameters can be outputed by simply typing the program name. If
+    output.txt is the desired output file name and input.bed is the input .bed
+    file, then simply type::
+
+        preseq c_curve -o output.txt input.sort.bed
     '''
 
     def __init__(self, pipeline):

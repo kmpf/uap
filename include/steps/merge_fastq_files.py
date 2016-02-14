@@ -1,9 +1,13 @@
-from abstract_step import *
+import logging
+from abstract_step import AbstractStep
 
+logger = logging.getLogger('uap_logger')
 
 class MergeFastqFiles(AbstractStep):
     '''
-    Merge all .fastq(.gz) files of a sample.
+    This step merges all .fastq(.gz) files belonging to a certain sample.
+    First and second read files are merged separately. The output files are
+    gzipped.
     '''
     
     def __init__(self, pipeline):
@@ -25,11 +29,7 @@ class MergeFastqFiles(AbstractStep):
         #                default = True)
 
     def runs(self, run_ids_connections_files):
-        '''
-        self.runs() should be a replacement for declare_runs() and execute_runs()
-        All information given here should end up in the step object which is 
-        provided to this method.
-        '''
+
         read_types = {'first_read': '_R1', 'second_read': '_R2'}
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:

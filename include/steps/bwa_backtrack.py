@@ -28,8 +28,14 @@ class BwaBacktrack(AbstractStep):
         super(BwaBacktrack, self).__init__(pipeline)
         self.set_cores(8)
 
-        self.add_connection('in/first_read')
-        self.add_connection('in/second_read')
+        self.add_connection(
+            'in/first_read',
+            #constraints={'min_files_per_run': 1, 'max_files_per_run': 1}
+        )
+        self.add_connection(
+            'in/second_read',
+            #constraints={'min_files_per_run': 0, 'max_files_per_run': 1}
+        )
         self.add_connection('out/alignments')
 
 

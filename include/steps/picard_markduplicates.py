@@ -1,18 +1,19 @@
 import sys
-from abstract_step import *
-import misc
-import process_pool
-import yaml
+import logging
+from abstract_step import AbstractStep
 
+logger = logging.getLogger('uap_logger')
 
 class PicardMarkDuplicates(AbstractStep):
     '''
-    Documentation:
-    http://picard.sourceforge.net/command-line-overview.shtml#MarkDuplicates
-
     Examines aligned records in the supplied SAM or BAM file to locate duplicate
     molecules. All records are then written to the output file with the
     duplicate records flagged.
+
+    Documentation::
+
+        http://picard.sourceforge.net/command-line-overview.shtml#MarkDuplicates
+
     '''
 
     def __init__(self, pipeline):

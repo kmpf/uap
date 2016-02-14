@@ -1,8 +1,16 @@
 import os
-
+import logging
 from abstract_step import AbstractStep
 
+logger = logging.getLogger('uap_logger')
+
 class SamtoolsFaidx(AbstractStep):
+    '''
+    Index reference sequence in the FASTA format or extract subsequence from
+    indexed reference sequence. If no region is specified, faidx will index the
+    file and create <ref.fasta>.fai on the disk. If regions are specified, the
+    subsequences will be retrieved and printed to stdout in the FASTA format.
+    '''
 
     def __init__(self, pipeline):
         super(SamtoolsFaidx, self).__init__(pipeline)
