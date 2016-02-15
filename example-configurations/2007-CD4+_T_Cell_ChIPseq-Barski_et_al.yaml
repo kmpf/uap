@@ -342,9 +342,9 @@ tools:
 
     # URL: http://broadinstitute.github.io/picard/
     picard-tools:
-        path: picard
-        get_version: -h
-        exit_code: 1
+        path: picard-tools
+        get_version: --help
+        exit_code: 0
 
     # URL: http://zlib.net/pigz/
     pigz: 
@@ -366,7 +366,7 @@ tools:
 
     # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
     segemehl:
-        path: segemehl
+        path: segemehl.x
         get_version: ''
         exit_code: 255
 
