@@ -9,10 +9,10 @@ class SamtoolsIndex(AbstractStep):
     '''
     Index a coordinate-sorted BAM or CRAM file for fast random access.
     (Note that this does not work with SAM files even if they are bgzip
-    compressed — to index such files, use tabix(1) instead.)
+    compressed to index such files, use tabix(1) instead.)
 
     Documentation::
-        
+
         http://www.htslib.org/doc/samtools.html
     '''
 

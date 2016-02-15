@@ -52,8 +52,8 @@ class TopHat2(AbstractStep):
                         "specified, every read alignment will have an XS "
                         "attribute tag as explained below. Consider supplying "
                         "library type options below to select the correct "
-                        "RNA-seq protocol.
-                        (https://ccb.jhu.edu/software/tophat/manual.shtml)")
+                        "RNA-seq protocol."
+                        "(https://ccb.jhu.edu/software/tophat/manual.shtml)")
 
     def runs(self, run_ids_connections_files):
 
