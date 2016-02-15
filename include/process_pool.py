@@ -10,7 +10,7 @@ import datetime
 import errno
 import fcntl
 import hashlib
-import logging
+from logging import getLogger
 import misc
 import os
 import psutil
@@ -21,7 +21,7 @@ import time
 import traceback
 import yaml
 
-logger = logging.getLogger("uap_logger")
+logger=getLogger("uap_logger")
 
 class TimeoutException(Exception):
     pass
@@ -113,8 +113,8 @@ class ProcessPool(object):
             
     def __init__(self, run):
         if ProcessPool.process_pool_is_dead:
-            raise StandardError("We have encountered an error, stopping now...")
-       
+            logger.error("We have encountered an error, stopping now...")
+            sys.exit(1)
         # the run for which this ProcessPool computes stuff
         # (for temporary paths etc.)
         self._run = run
@@ -166,11 +166,12 @@ class ProcessPool(object):
     def check_subprocess_command(self, command):
         for argument in command:
             if not isinstance(argument, str):
-                raise  StandardError(
+                logger.error(
                     "The command to be launched '%s' " % command +
                     "contains non-string argument '%s'. " % argument + 
                     "Therefore the command will fail. Please " +
                     "fix this type issue.")
+                sys.exit(1)
         return
 
     def load_unload_module(self, module_cmd):
@@ -191,10 +192,10 @@ class ProcessPool(object):
                     close_fds = True)
                 
             except OSError as e:
-                raise ConfigurationException(
-                    "Error while executing '%s' "
-                    "Error no.: %s Error message: %s" % 
-                    (" ".join(command), e.errno, e.strerror))
+                logger.error("Error while executing '%s' "
+                             "Error no.: %s Error message: %s" % 
+                             (" ".join(command), e.errno, e.strerror))
+                sys.exit(1)
 
             (output, error) = proc.communicate()
             exec output
@@ -215,8 +216,9 @@ class ProcessPool(object):
 
     def __enter__(self):
         if ProcessPool.current_instance is not None:
-            raise StandardError("Sorry, only one instance of ProcessPool "
-                                "allowed at a time.")
+            logger.error("Sorry, only one instance of ProcessPool allowed at "
+                         "a time.")
+            sys.exit(1)
         ProcessPool.current_instance = self
         
         # First we have to add the pre_command commands for execution
@@ -669,8 +671,9 @@ class ProcessPool(object):
                 
         if something_went_wrong:
             self.log("Pipeline crashed.")
-            raise StandardError("Pipeline crashed.")        
-        
+            logger.error("Pipeline crashed.")
+            sys.exit(1)
+
     def _launch_process_watcher(self, watcher_report_path):
         '''
         Launch the process watcher via fork. The process watcher repeatedly
