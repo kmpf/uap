@@ -331,7 +331,7 @@ class Pipeline(object):
                 if not '_depends' in step._options:
                     logger.error("%s: Missing key in step '%s': _depends (set "
                                  "to null if the step has no dependencies)." 
-                                 % self.get_config_filepath(), step_name))
+                                 % (self.get_config_filepath(), step_name))
                     sys.exit(1)
                 depends = step._options['_depends']
                 if depends == None:
@@ -424,10 +424,9 @@ class Pipeline(object):
         for argument in command:
             if not isinstance(argument, str):
                 logger.error(
-                    "The command to be launched '%s' " % command
-                    "contains non-string argument '%s'. " % argument 
-                    "Therefore the command will fail. Please "
-                    "fix this type issue.")
+                    "The command to be launched '%s' contains non-string "
+                    "argument '%s'. Therefore the command will fail. Please "
+                    "fix this type issue." % (command, argument))
                 sys.exit(1)
         return
 
