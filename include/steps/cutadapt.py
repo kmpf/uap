@@ -1,7 +1,10 @@
+import sys
 import os
 import re
-
+from logging import getLogger
 from abstract_step import AbstractStep
+
+logger=getLogger('uap_logger')
 
 class Cutadapt(AbstractStep):
     '''
@@ -59,9 +62,9 @@ class Cutadapt(AbstractStep):
         ## Make sure the adapter type is one of -a, -b or -g 
         if self.is_option_set_in_config('adapter-type'):
             if not self.get_option('adapter-type') in set(['-a','-b','-g']):
-                raise StandardError("Option 'adapter-type' must be "
-                                    "either '-a', '-b', or '-g'!")
-
+                logger.error("Option 'adapter-type' must be either '-a', "
+                             "'-b', or '-g'!")
+                sys.exit(1)
 
         read_types = {'first_read': 'R1', 'second_read': 'R2'}
         paired_end_info = dict()
@@ -82,29 +85,30 @@ class Cutadapt(AbstractStep):
                         if paired_end_info[run_id]:
                             if ( not self.is_option_set_in_config('adapter-R2') and 
                                  not self.is_option_set_in_config('adapter-file') ):
-                                raise StandardError(
-                                    "Option 'adapter-R2' or " +
-                                    "'adapter-file' required because " +
-                                    "sample %s is paired end!" % run_id)
+                                logger.error(
+                                    "Option 'adapter-R2' or 'adapter-file' "
+                                    "required because sample %s is paired end!"
+                                    % run_id)
+                                sys.exit(1)
                         elif ( self.is_option_set_in_config('adapter-R2') and
                                not self.is_option_set_in_config('adapter-file') ):
-                            raise StandardError(
-                                "Option 'adapter-R2' not allowed because " +
+                            logger.error(
+                                "Option 'adapter-R2' not allowed because "
                                 "sample %s is not paired end!" % run_id)
-                            
+                            sys.exit(1)
                         if ( self.is_option_set_in_config('adapter-file') and
                              self.is_option_set_in_config('adapter-R1') ):
-                            raise StandardError(
-                                "Option 'adapter-R1' and 'adapter-file' " +
-                                "are both set but are mutually exclusive!" )
-    
+                            logger.error(
+                                "Option 'adapter-R1' and 'adapter-file' "
+                                "are both set but are mutually exclusive!")
+                            sys.exit(1)
                         if ( not self.is_option_set_in_config('adapter-file') and
                              not self.is_option_set_in_config('adapter-R1') ):
-                            raise StandardError(
-                                "Option 'adapter-R1' or 'adapter-file' " +
-                                "required to call cutadapt for sample %s!" % 
-                                run_id)
-
+                            logger.error(
+                                "Option 'adapter-R1' or 'adapter-file' "
+                                "required to call cutadapt for sample %s!"
+                                % run_id)
+                            sys.exit(1)
                         temp_fifos = list()
                         exec_group = run.new_exec_group()
                         for input_path in input_paths:
@@ -144,11 +148,10 @@ class Cutadapt(AbstractStep):
                                          'of=%s' % temp_fifo]
                                 exec_group.add_command(dd_in)
                             else:
-                                raise StandardError("File %s does not end with "
-                                                    "any expected suffix ("
-                                                    "fastq.gz or fastq). Please "
-                                                    "fix that issue.")
-
+                                logger.error("File %s does not end with any "
+                                             "expected suffix (fastq.gz or "
+                                             "fastq). Please fix that issue.")
+                                sys.exit(1)
                         # 3. Read data from fifos
                         with exec_group.add_pipeline() as cutadapt_pipe:
                             # 3.1 command: Read from ALL fifos
@@ -185,9 +188,10 @@ class Cutadapt(AbstractStep):
                                 
                                 # make sure the adapter is looking good
                                 if re.search('^[ACGT]+$', adapter) == None:
-                                    raise StandardError("Unable to come up with "
-                                                        "a legit-looking adapter:"
-                                                        "%s" % adapter)
+                                    logger.error("Unable to come up with a "
+                                                 "legit-looking adapter: %s"
+                                                 % adapter)
+                                    sys.exit(1)
                             # Or do we have a adapter sequence fasta file?
                             elif self.is_option_set_in_config('adapter-file'):
                                 adapter = "file:" + self.get_option('adapter-file')

@@ -1,5 +1,8 @@
 import sys
-from abstract_step import *
+from logging import getLogger
+from abstract_step import AbstractStep
+
+logger=getLogger('uap_logger')
 
 class SamtoolsStats(AbstractStep):
     '''

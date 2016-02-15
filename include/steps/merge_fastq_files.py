@@ -1,7 +1,8 @@
-import logging
+import sys
+from logging import getLogger
 from abstract_step import AbstractStep
 
-logger = logging.getLogger('uap_logger')
+logger=getLogger('uap_logger')
 
 class MergeFastqFiles(AbstractStep):
     '''
@@ -86,11 +87,11 @@ class MergeFastqFiles(AbstractStep):
                                          'of=%s' % temp_fifo]
                                 exec_group.add_command(dd_in)
                             else:
-                                raise StandardError("File %s does not end with "
-                                                    "any expected suffix ("
-                                                    "fastq.gz or fastq). Please "
-                                                    "fix that issue." %
-                                                    input_path)
+                                logger.error("File %s does not end with any "
+                                             "expected suffix (fastq.gz or "
+                                             "fastq). Please fix that issue." %
+                                             input_path)
+                                sys.exit(1)
                         # 3. Read data from fifos
                         with exec_group.add_pipeline() as pigz_pipe:
                             # 3.1 command: Read from ALL fifos

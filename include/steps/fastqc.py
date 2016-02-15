@@ -1,9 +1,9 @@
 import sys
-import logging
-from abstract_step import AbstractStep
+from logging import getLogger
 import os
+from abstract_step import AbstractStep
 
-logger = logging.getLogger('uap_logger')
+logger=getLogger('uap_logger')
 
 class Fastqc(AbstractStep):
     '''

@@ -253,6 +253,12 @@ class Pipeline(object):
         # yaml.load works fine, even for duplicate dictionary keys (WTF)
         self.config = yaml.load(config_file)
 
+        # Make self.config['destination_path'] an absolute path if necessary
+        if not os.path.isabs(self.config['destination_path']):
+            config_abspath = os.path.dirname(config_file.name)
+            self.config['destination_path'] = os.path.join(
+                config_abspath,self.config['destination_path'])
+
         if not 'id' in self.config:
             self.config['id'] = config_file.name
         

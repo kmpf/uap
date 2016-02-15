@@ -1,9 +1,9 @@
 import sys
 import os
-import logging
+from logging import getLogger
 from abstract_step import AbstractStep
 
-logger = logging.getLogger('uap_logger')
+logger = getLogger('uap_logger')
 
 class TopHat2(AbstractStep):
     '''
@@ -59,8 +59,9 @@ class TopHat2(AbstractStep):
 
         # Check if option values are valid
         if not os.path.exists(self.get_option('index') + '.1.bt2'):
-            raise StandardError("Could not find index file: %s.*" %
-                                self.get_option('index') )
+            logger.error("Could not find index file: %s.*" %
+                         self.get_option('index') )
+            sys.exit(1)
 
 
         read_types = {'first_read': '_R1', 'second_read': '_R2'}
@@ -69,11 +70,6 @@ class TopHat2(AbstractStep):
                 # Get list of files for first/second read
                 fr_input = run_ids_connections_files[run_id]['in/first_read']
                 sr_input = run_ids_connections_files[run_id]['in/second_read']
-
-#                if len(fr_input) != 1:
-#                    raise StandardError("Expected single input file. "
-#                                        "Found files %s for run: %s" %
-#                                        (fr_input, run_id) )
 
                 input_paths = [ y for x in [fr_input, sr_input] \
                                for y in x if y != None ]

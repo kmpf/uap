@@ -1,5 +1,9 @@
+import sys
 import os
+from logging import getLogger
 from abstract_step import AbstractStep
+
+logger=getLogger('uap_logger')
 
 class BwaMem(AbstractStep):
     '''
@@ -132,9 +136,9 @@ class BwaMem(AbstractStep):
 
         # Check if index is valid
         if not os.path.exists(self.get_option('index') + '.bwt'):
-            raise StandardError("Could not find index: %s.*" %
-                                self.get_option('index') )
-
+            logger.error("Could not find index: %s.*" %
+                         self.get_option('index') )
+            sys.exit(1)
 
         # Compile the list of options
         options = [
@@ -173,14 +177,12 @@ class BwaMem(AbstractStep):
                 # Fail if we have don't have exactly one file or 
                 # an empty connection
                 if len(fr_input) != 1 or fr_input == [None]:
-                    raise StandardError("Expected single input file for first "
-                                        "read.")
-
+                    logger.error("Expected single input file for first read.")
+                    sys.exit(1)
                 # Fail if we don't have exactly one file
                 if is_paired_end and len(sr_input) != 1:
-                    raise StandardError("Expected single input file for second "
-                                        "read.")
-
+                    logger.error("Expected single input file for second read.")
+                    sys.exit(1)
                 input_paths = fr_input # single element list
                 if is_paired_end:
                     input_paths.extend(sr_input)
@@ -189,9 +191,9 @@ class BwaMem(AbstractStep):
                 for input_path in input_paths:
                     if len([_ for _ in ['fastq', 'fq', 'fq.gz', 'fastq.gz']\
                                if input_path.endswith(_)]) != 1:
-                        raise StandardError("%s possess unknown suffix. "
-                                            "(None of: fastq, fq, fq.gz, fastq.gz)")
-
+                        logger.error("%s possess unknown suffix. "
+                                     "(None of: fastq, fq, fq.gz, fastq.gz)")
+                        sys.exit(1)
                 # BWA can handle only single files for first and second read
                 # IMPORTANT: BWA handles gzipped as well as not gzipped files
 

@@ -1,5 +1,9 @@
+import sys
 import os
+from logging import getLogger
 from abstract_step import AbstractStep
+
+logger=getLogger('uap_logger')
 
 class Bowtie2(AbstractStep):
     '''
@@ -42,9 +46,9 @@ class Bowtie2(AbstractStep):
 
         # Check if option values are valid
         if not os.path.exists(self.get_option('index') + '.1.bt2'):
-            raise StandardError("Could not find index file: %s.*" %
-                                self.get_option('index') )
-
+            logger.error("Could not find index file: %s.*" %
+                         self.get_option('index'))
+            sys.exit(1)
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 # Get list of files for first/second read

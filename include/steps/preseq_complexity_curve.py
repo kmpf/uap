@@ -1,9 +1,9 @@
 import sys
 import os
-import logging
+from logging import getLogger
 from abstract_step import AbstractStep
 
-logger = logging.getLogger('uap_logger')
+logger=getLogger('uap_logger')
 
 class PreseqComplexityCurve(AbstractStep):
     '''
@@ -73,10 +73,12 @@ class PreseqComplexityCurve(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("complexity_curve")
                 elif len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file.")
+                    logger.error("Expected exactly one alignments file.")
+                    sys.exit(1)
                 elif not is_bam and not is_bed:
-                    raise StandardError("Input file %s is niether BAM nor BED." %
-                                        input_paths[0])
+                    logger.error("Input file %s is niether BAM nor BED." %
+                                 input_paths[0])
+                    sys.exit(1)
                 else:
                     with run.new_exec_group() as cc_group:
                         c_curve_out = run.add_output_file(

@@ -1,8 +1,8 @@
 import sys
-import logging
+from logging import getLogger
 from abstract_step import AbstractStep
 
-logger = logging.getLogger('uap_logger')
+logger=getLogger('uap_logger')
 
 class RSeQC(AbstractStep):
     '''
@@ -39,7 +39,8 @@ class RSeQC(AbstractStep):
             with self.declare_run(run_id) as run:
 
                 if len(alignments) != 1:
-                    raise StandardError("Expected exactly one alignment file.")
+                    logger.error("Expected exactly one alignment file.")
+                    sys.exit(1)
 
                 basename = os.path.basename(alignments[0]).split('.')[0]
 

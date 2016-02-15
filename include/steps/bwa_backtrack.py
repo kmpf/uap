@@ -1,6 +1,10 @@
+import sys
 import os
 import re
+from logging import getLogger
 from abstract_step import AbstractStep
+
+logger=getLogger('uap_logger')
 
 class BwaBacktrack(AbstractStep):
     '''
@@ -177,9 +181,9 @@ class BwaBacktrack(AbstractStep):
 
         # Check if index is valid
         if not os.path.exists(self.get_option('index') + '.bwt'):
-            raise StandardError("Could not find index: %s.*" %
-                                self.get_option('index') )
-
+            logger.error("Could not find index: %s.*" %
+                         self.get_option('index') )
+            sys.exit(1)
         # Compile the list of options
         options_bwa_aln = ['aln-n', 'aln-o', 'aln-e', 'aln-d', 'aln-i', 'aln-l',
                            'aln-k', 'aln-t', 'aln-M', 'aln-E', 'aln-R', 'aln-c',
@@ -230,15 +234,14 @@ class BwaBacktrack(AbstractStep):
                 # Fail if we don't have exactly one first read file or 
                 # an empty connection
                 if len(fr_input) != 1 or fr_input == [None]:
-                    raise StandardError("Expected single input file for first "
-                                        "read.")
-
+                    logger.error("Expected single input file for first read.")
+                    sys.exit(1)
                 # Fail if we don't have exactly one second read file in case of
                 # paired end reads
                 if is_paired_end and len(sr_input) != 1:
-                    raise StandardError("Expected single input file for second "
-                                        "read.")
-
+                    logger.error(
+                        "Expected single input file for seconnd read.")
+                    sys.exit(1)
                 input_paths = fr_input # single element list
                 if is_paired_end:
                     input_paths.extend(sr_input)
@@ -247,9 +250,9 @@ class BwaBacktrack(AbstractStep):
                 for input_path in input_paths:
                     if len([_ for _ in ['fastq', 'fq', 'fq.gz', 'fastq.gz']\
                                if input_path.endswith(_)]) != 1:
-                        raise StandardError("%s possess unknown suffix. "
-                                            "(None of: fastq, fq, fq.gz, fastq.gz)")
-
+                        logger.error("%s possess unknown suffix. "
+                                     "(None of: fastq, fq, fq.gz, fastq.gz)")
+                        sys.exit(1)
                 # BWA can handle only single files for first and second read
                 # IMPORTANT: BWA handles gzipped as well as not gzipped files
 

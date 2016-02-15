@@ -1,6 +1,8 @@
 import sys
-from abstract_step import *
-import process_pool
+from logging import getLogger
+from abstract_step import AbstractStep
+
+logger=getLogger('uap_logger')
 
 class FixCutadapt(AbstractStep):
     '''
@@ -24,9 +26,7 @@ class FixCutadapt(AbstractStep):
         self.require_tool('pigz')
 
     def runs(self, run_ids_connections_files):
-        '''
 
-        '''
         read_types = {'first_read': '-R1', 'second_read': '-R2'}
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
@@ -41,9 +41,9 @@ class FixCutadapt(AbstractStep):
                         run.add_empty_output_connection("%s" % read)
 
                     elif len(input_paths) != 1:
-                        raise StandardError("Expected single input file. "
-                                            "Found files %s for run: %s" %
-                                            (input_paths, run_id) )
+                        logger.error("Expected single input file. Found files "
+                                     "%s for run: %s" % (input_paths, run_id))
+                        sys.exit(1)
                     else:
                         # 1. Create temporary fifos
                         # 1.1 Input fifo
@@ -88,12 +88,10 @@ class FixCutadapt(AbstractStep):
                                      'of=%s' % temp_fifos["%s_in" % read] ]
                             exec_group.add_command(dd_in)
                         else:
-                            raise StandardError("File %s does not end with "
-                                                "any expected suffix ("
-                                                "fastq.gz or fastq). Please "
-                                                "fix that issue." %
-                                                input_path)
-
+                            logger.error("File %s does not end with any "
+                                         "expected suffix (fastq.gz or fastq). "
+                                         "Please fix that issue." % input_path)
+                            sys.exit(1)
                 # 3. Start fix_cutadapt
                 fix_cutadapt = [self.get_tool('fix_cutadapt'),
                                 temp_fifos["first_read_in"], 

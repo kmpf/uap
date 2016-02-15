@@ -1,8 +1,8 @@
 import sys
-import logging
+from logging import getLogger
 from abstract_step import AbstractStep
 
-logger = logging.getLogger('uap_logger')
+logger=getLogger('uap_logger')
 
 class FastxQualityStats(AbstractStep):
     '''
@@ -100,11 +100,10 @@ class FastxQualityStats(AbstractStep):
                                          'of=%s' % temp_fifo]
                                 exec_group.add_command(dd_in)
                             else:
-                                raise StandardError("File %s does not end with "
-                                                    "any expected suffix ("
-                                                    "fastq.gz or fastq). Please "
-                                                    "fix that issue.")
-
+                                logger.error("File %s does not end with any "
+                                             "expected suffix (fastq.gz or "
+                                             "fastq). Please fix that issue.")
+                                sys.exit(1)
                         # 3. Read data from fifos and check quality stats
                         with exec_group.add_pipeline() as fastx_pipe:
                             # 3.1 command: Read from ALL fifos

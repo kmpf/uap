@@ -1,7 +1,9 @@
-import logging
 import sys
 import os
+from logging import getLogger
 from abstract_step import AbstractStep
+
+logger=getLogger('uap_logger')
 
 class BamToBedgraph(AbstractStep):
 
@@ -75,9 +77,9 @@ class BamToBedgraph(AbstractStep):
 
         # Check if chromosome sizes points to a real file
         if not os.path.isfile(self.get_option('chromosome-sizes')):
-            raise StandardError("Value for option 'chromosome-sizes' is not a "
-                                "file: %s" % self.get_option('chromosome-sizes'))
-
+            logger.error("Value for option 'chromosome-sizes' is not a "
+                         "file: %s" % self.get_option('chromosome-sizes'))
+            sys.exit(1)
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 input_paths = run_ids_connections_files[run_id]["in/alignments"]
@@ -86,7 +88,8 @@ class BamToBedgraph(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file.")
+                    logger.error("Expected exactly one alignments file.")
+                    sys.exit(1)
                 else:
                     root, ext = os.path.splitext(os.path.basename(input_paths[0]))
                     if ext in ['.gz', '.gzip']:
@@ -99,9 +102,11 @@ class BamToBedgraph(AbstractStep):
                             is_bam = True
 
                     if not is_bam:
-                        raise StandardError('The file %s does not appear to be '
-                                            'any of bam.gz, bam.gzip, or bam'
-                                            % input_paths[0])
+                        logger.error("The file %s does not appear to be any "
+                                     "of bam.gz, bam.gzip, or bam"
+                                     % input_paths[0]
+                        )
+                        sys.exit(1)
                     with run.new_exec_group() as exec_group:
                         # Create FIFO for use with bedToBigBed, bedGraphToBigWig
                         big_fifo = run.add_temporary_file(

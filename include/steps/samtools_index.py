@@ -1,9 +1,9 @@
 import sys
 import os
-import logging
+from logging import getLogger
 from abstract_step import AbstractStep
 
-logger = logging.getLogger('uap_logger')
+logger=getLogger('uap_logger')
 
 class SamtoolsIndex(AbstractStep):
     '''
@@ -43,13 +43,15 @@ class SamtoolsIndex(AbstractStep):
                     run.add_empty_output_connection("indices")
                 # Fail if we haven't exactly one input file
                 elif len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file.")
+                    logger.error("Expected exactly one alignments file.")
+                    sys.exit(1)
                 # Fail if the input is not a bam file
                 elif os.path.splitext(input_paths[0])[1] not in ['.bam']:
-                    raise StandardError(
+                    logger.error(
                         "The file %s seems not to be a BAM file. At "
                         "least the suffix is wrong." % input_paths[0]
                     )
+                    sys.exit(1)
                 # Everything seems fine, lets start
                 else:
                     input_bam = input_paths[0]
