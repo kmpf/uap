@@ -1,5 +1,0 @@
-Summary: Create BWA ALN/SAMSE/SAMPE step
-Priority: 5
-
-* At first run bwa aln once or twice (for paired-end reads)
-* Then run bwa samse or bwa sampe (for paired-end reads)
