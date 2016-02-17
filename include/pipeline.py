@@ -270,8 +270,8 @@ class Pipeline(object):
             sys.exit(1)
         if not os.path.exists(self.config['destination_path']):
             logger.error("%s: Destination path does not exist: %s" 
-                          (self.get_config_filepath(),
-                           self.config['destination_path'])
+                         % (self.get_config_filepath(),
+                            self.config['destination_path'])
             )
             sys.exit(1)
         if not os.path.exists("%s-out" % self.config['id']):
