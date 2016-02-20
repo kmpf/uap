@@ -16,7 +16,7 @@ class Trimmomatic(AbstractStep):
         # Output
         # Single-end
         self.add_output_connection('log')
-        self.add_output_connection('log_stdout')
+        self.add_output_connection('log_stderr')
         self.add_output_connection('forward')
 
         # Paired-end
@@ -29,59 +29,73 @@ class Trimmomatic(AbstractStep):
 
         # Options
         # Mandatory
-        self.add_option('jar_path', str, optional=False,
-                        description="Path to trimmomatic.jar")
-        self.add_option('paired-end', bool, optional=False,
-                        description="Single-end- or paired-end-mode")
         self.add_option('steps', list, optional=False,
                         description="List defining the analysis, in terms of "
                         "trimmomatic-commands")
         # Optional
         self.add_option('threads', int, optional=True, default=1,
                         description="Number of threads to use")
-
         self.add_option('phred-base', int, optional=True, choices=[33, 64],
                         description="PHRED-base")
+        self.add_option('base_file_name', int, optional=True,
+                        description="The prefix commoon to all output files, "
+                        "replacing the run-ID")
+        self.add_option('jar_path', str, optional=True, default="trimmomatic",
+                        description="Path to trimmomatic.jar")
 
     def runs(self, run_ids_connections_files):
-        trimmomatic_base = [self.get_tool('java')]
-        trimmomatic_base.extend(('-jar', self.get_option('jar_path')))
-        if self.get_option('paired-end'):
-            trimmomatic_base.append('PE')
-        else:
-            trimmomatic_base.append('SE')
+         for run_id in run_ids_connections_files.keys():
+            trimmomatic_base = [self.get_tool('java')]
+            trimmomatic_base.extend(('-jar', self.get_option('jar_path')))
 
-        if self.is_option_set_in_config('threads'):
-            trimmomatic_base.extend(('-threads',
-                                     str(self.get_option('threads'))))
+            if run_ids_connections_files[run_id]['in/second_read'][0]:
+                trimmomatic_base.append('PE')
+                paired_end = True
+            else:
+                trimmomatic_base.append('SE')
+                paired_end = False
 
-        if self.is_option_set_in_config('phred-base'):
-            if self.get_option('phred-base') == 64:
-                trimmomatic_base.append('-phred64')
+            if self.is_option_set_in_config('threads'):
+                trimmomatic_base.extend(('-threads',
+                                        str(self.get_option('threads'))))
+
+            if self.is_option_set_in_config('phred-base'):
+                if self.get_option('phred-base') == 64:
+                    trimmomatic_base.append('-phred64')
             else:
                 trimmomatic_base.append('-phred33')
 
-        for run_id in run_ids_connections_files.keys():
             step_list = list()
             for option in self.get_option('steps'):
                 option[0] = option[0].upper()
                 if option[0] == 'ILLUMINACLIP':
-                    assert(len(option[1:]) == 4)
-                    assert(str(option[2]).isdigit())
-                    assert(str(option[3]).isdigit())
-                    assert(str(option[4]).isdigit())
+                    assert(len(option) in range(4, 7))
+                    if option[1][-6:] != '.fasta':
+                        raise StandardError("Adapters should be provided as "
+                                            "FASTA-file.")
+                    if int(option[2]) not in range(17):
+                        raise StandardError("The alignment-seed can contain up "
+                                            "to 17 mismatches.")
                 elif option[0] == 'SLIDINGWINDOW':
                     assert(len(option[1:]) == 2)
-                    assert(str(option[1]).isdigit())
-                    assert(str(option[2]).isdigit())
+                    if int(option[2]) not in range(33, 158):
+                        raise StandardError("SLIDINGWINDOW: Specify a valid "
+                                            "PHRED-score.")
                 elif option[0] == 'MAXINFO':
-                    assert(len(option) == 1)
+                    assert(len(option[1:]) == 2)
+                    if not 0 <= float(option[2]) <= 1:
+                        raise StandardError("Strictness should be set between "
+                                            " 0.0 and 1.0")
                 elif option[0] == 'LEADING':
                     assert(len(option[1:]) == 1)
-                    assert(str(option[1]).isdigit())
+                    if int(option[1]) not in range(33, 158):
+                        raise StandardError("LEADING: Specify a valid "
+                                            "PHRED-score.")
                 elif option[0] == 'TRAILING':
                     assert(len(option[1:]) == 1)
-                    assert(str(option[1]).isdigit())
+                    if int(option[1]) not in range(33, 158):
+                        raise StandardError("TRAILING: Specify a valid "
+                                            "PHRED-score.")
                 elif option[0] == 'CROP':
                     assert(len(option[1:]) == 1)
                     assert(str(option[1]).isdigit())
@@ -93,7 +107,8 @@ class Trimmomatic(AbstractStep):
                     assert(str(option[1]).isdigit())
                 elif option[0] == 'AVGQUAL':
                     assert(len(option[1:]) == 1)
-                    assert(str(option[1]).isdigit())
+                    if int(option[1]) not in range(33, 158):
+                        raise StandardError("Specify a valid PHRED-score.")
                 elif option[0] == 'TOPHRED33':
                     assert(len(option) == 1)
                 elif option[0] == 'TOPHRED64':
@@ -105,7 +120,7 @@ class Trimmomatic(AbstractStep):
                 step_list.append(':'.join(option))
 
             with self.declare_run(run_id) as run:
-                if self.get_option('paired-end'):
+                if paired_end:
                     if len(run_ids_connections_files[run_id]
                            ['in/first_read']) !=\
                         len(run_ids_connections_files[run_id]
@@ -115,11 +130,13 @@ class Trimmomatic(AbstractStep):
                 for file_no in range(len(run_ids_connections_files[run_id]
                                          ['in/first_read'])):
 
-                    if len(run_ids_connections_files[run_id]
-                           ['in/first_read']) > 1:
-                        file_id = '%s%d' % (run_id, file_no + 1)
+                    if self.is_option_set_in_config('base_file_name'):
+                        file_id = self.get_option('base_file_name')
                     else:
                         file_id = run_id
+                    if len(run_ids_connections_files[run_id]
+                           ['in/first_read']) > 1:
+                        file_id += str(file_no + 1)
 
                     with run.new_exec_group() as trimmomatic_exec_group:
                         option_list = list()
@@ -132,7 +149,7 @@ class Trimmomatic(AbstractStep):
                         option_list.append(
                             run_ids_connections_files[run_id]
                             ['in/first_read'][file_no])
-                        if self.get_option('paired-end'):
+                        if paired_end:
                             option_list.append(
                                 run_ids_connections_files[run_id]
                                 ['in/second_read'][file_no])
@@ -143,7 +160,7 @@ class Trimmomatic(AbstractStep):
                                 get_output_directory_du_jour_placeholder(),
                                 '%s.forward.fastq' % file_id))
 
-                        if self.get_option('paired-end'):
+                        if paired_end:
                             pe_out_files = ('forward.unpaired',
                                             'reverse',
                                             'reverse.unpaired')
@@ -159,25 +176,25 @@ class Trimmomatic(AbstractStep):
                         trimmomatic.extend(step_list)
                         trimmomatic_exec_group.add_command(
                             trimmomatic,
-                            stdout_path=run.add_output_file(
-                                'log_stdout',
-                                '%s.log_stdout.txt' % file_id,
+                            stderr_path=run.add_output_file(
+                                'log_stderr',
+                                '%s.log_stderr.txt' % file_id,
                                 [run_ids_connections_files[run_id]
                                  ['in/first_read'][file_no]]))
 
                         run.add_output_file(
-                            output_file,
+                            'log',
                             '%s.log' % file_id,
                             [run_ids_connections_files[run_id]
                              ['in/first_read'][file_no]])
 
                         run.add_output_file(
-                            output_file,
+                            'forward',
                             '%s.forward.fastq' % file_id,
                             [run_ids_connections_files[run_id]
                              ['in/first_read'][file_no]])
 
-                        if self.get_option('paired-end'):
+                        if paired_end:
                             for output_file in pe_out_files:
                                 run.add_output_file(
                                     output_file,
