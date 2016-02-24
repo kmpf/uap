@@ -7,13 +7,35 @@ logger=getLogger('uap_logger')
 
 class PicardMarkDuplicates(AbstractStep):
     '''
-    Examines aligned records in the supplied SAM or BAM file to locate duplicate
-    molecules. All records are then written to the output file with the
-    duplicate records flagged.
+    Identifies duplicate reads.
+    This tool locates and tags duplicate reads (both PCR and optical/
+    sequencing-driven) in a BAM or SAM file, where duplicate reads are defined
+    as originating from the same original fragment of DNA.
+    Duplicates are identified as read pairs having identical 5' positions
+    (coordinate and strand) for both reads in a mate pair (and optinally,
+    matching unique molecular identifier reads; see BARCODE_TAG option).
+    Optical, or more broadly Sequencing, duplicates are duplicates that appear
+    clustered together spatially during sequencing and can arise from optical/
+    imagine-processing artifacts or from bio-chemical processes during clonal
+    amplification and sequencing; they are identified using the READ_NAME_REGEX
+    and the OPTICAL_DUPLICATE_PIXEL_DISTANCE options.
+    The tool's main output is a new SAM or BAM file in which duplicates have
+    been identified in the SAM flags field, or optionally removed (see
+    REMOVE_DUPLICATE and REMOVE_SEQUENCING_DUPLICATES), and optionally marked
+    with a duplicate type in the 'DT' optional attribute.
+    In addition, it also outputs a metrics file containing the numbers of
+    READ_PAIRS_EXAMINED, UNMAPPED_READS, UNPAIRED_READS,
+    UNPAIRED_READ_DUPLICATES, READ_PAIR_DUPLICATES, and
+    READ_PAIR_OPTICAL_DUPLICATES.
+    
+    Usage example::
+
+        java -jar picard.jar MarkDuplicates I=input.bam \
+        O=marked_duplicates.bam M=marked_dup_metrics.txt
 
     Documentation::
 
-        http://picard.sourceforge.net/command-line-overview.shtml#MarkDuplicates
+        https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates
 
     '''
 
