@@ -159,7 +159,7 @@ class PicardMergeSamFiles(AbstractStep):
                         "least the suffix is wrong." % input_paths[0]
                     )
                     sys.exit(1)
-                elif self.get_option("INTERVALS") and \
+                elif self.is_option_set_in_config("INTERVALS") and \
                      not os.path.exists(self.get_option("INTERVALS")):
                     logger.error("The path %s given to option 'INTERVALS' is "
                                  "not pointing to a file.")
