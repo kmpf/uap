@@ -22,6 +22,7 @@ class PicardMergeSamFiles(AbstractStep):
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
         
+        self.require_tool('ln')
         self.require_tool('picard-tools')
 
         # [Standard Picard Options:]
@@ -83,7 +84,7 @@ class PicardMergeSamFiles(AbstractStep):
         self.add_option('SORT_ORDER', str, optional = True,
                         choices=['unsorted', 'queryname', 'coordinate',
                                  'duplicate'],
-                        description="Sort order of output file Default value: "
+                        description="Sort order of output file. Default value: "
                         "coordinate. This option can be set to 'null' to clear "
                         "the default value. Possible values: {unsorted, "
                         "queryname, coordinate, duplicate}")
@@ -152,9 +153,6 @@ class PicardMergeSamFiles(AbstractStep):
 
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
-                elif len(input_paths) != 1:
-                    logger.error("Expected exactly one alignments file.")
-                    sys.exit(1)
                 elif os.path.splitext(input_paths[0])[1] not in ['.sam', '.bam']:
                     logger.error(
                         "The file %s seems not to be a SAM or BAM file. At "
@@ -166,6 +164,19 @@ class PicardMergeSamFiles(AbstractStep):
                     logger.error("The path %s given to option 'INTERVALS' is "
                                  "not pointing to a file.")
                     sys.exit(1)
+                elif len(input_paths) == 0:
+                    run.add_empty_output_connection("alignments")
+                elif len(input_paths) == 1:
+                    base = os.path.basename(input_paths[0])
+                    with run.new_exec_group() as ln_alignment:
+                        # 1. command: Create symbolic link to original bam file
+                        # (use absolute path)
+                        ln = [self.get_tool('ln'), '-s',
+                              input_paths[0],
+                              run.add_output_file(
+                                  'alignments', base, input_paths)]
+                        ln_alignment.add_command(ln)
+
                 else:
                     with run.new_exec_group() as exec_group:
                         alignments = run.add_output_file(
@@ -176,8 +187,6 @@ class PicardMergeSamFiles(AbstractStep):
                             'MergeSamFiles']
                         for f in input_paths:
                             merge_sam_files.append('INPUT=%s' % f)
-
                         merge_sam_files.append('OUTPUT=%s' % alignments)
-
                         merge_sam_files.extend(option_list)
                         exec_group.add_command(merge_sam_files)

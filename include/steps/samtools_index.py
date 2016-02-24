@@ -61,7 +61,8 @@ class SamtoolsIndex(AbstractStep):
                         # 1. command: Create symbolic link to original bam file
                         # (use absolute path)
                         ln = [self.get_tool('ln'), '-s', input_bam]
-                        bam_link = run.add_output_file('alignments', base, input_paths)
+                        bam_link = run.add_output_file('alignments', base,
+                                                       input_paths)
                         ln.append(bam_link)
                             
                         index_exgr.add_command(ln)
