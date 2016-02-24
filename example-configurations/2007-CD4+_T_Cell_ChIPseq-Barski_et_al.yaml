@@ -171,7 +171,7 @@ steps:
     cutadapt:
         _depends: fastq_source
         ## Reading adapters from FASTA file introduced with v1.5
-        adapter-file: ./adapter_sequences_Barski_2007.mfa
+        adapter-file: ./example-data/adapter_sequences/adapter_sequences_Barski_2007.mfa
         use_reverse_complement: False
         adapter-type: -a
         fix_qnames: false
