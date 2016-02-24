@@ -95,7 +95,7 @@ class PicardMergeSamFiles(AbstractStep):
                         "value: false. This option can be set to 'null' to "
                         "clear the default value. Possible values: "
                         "{true, false}")
-        self.add_option('MERGE_SEQUENCE_DICTIONARIES ', bool, optional=True,
+        self.add_option('MERGE_SEQUENCE_DICTIONARIES', bool, optional=True,
                         description="Merge the sequence dictionaries. Default "
                         "value: false. This option can be set to 'null' to "
                         "clear the default value. Possible values: "
