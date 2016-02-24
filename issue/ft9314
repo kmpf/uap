@@ -1,0 +1,4 @@
+Summary: Create step to add read groups
+Priority: 5
+
+Therefore, picards AddOrReplaceReadGroups is used, because samtools similar command is only available in newer versions.
