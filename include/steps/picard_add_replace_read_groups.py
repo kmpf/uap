@@ -160,12 +160,14 @@ class PicardAddOrReplaceReadGroups(AbstractStep):
                 else:
                     with run.new_exec_group() as exec_group:
                         alignments = run.add_output_file(
-                            'alignments', os.path.basename(input_paths[0]), input_paths)
+                            'alignments', os.path.basename(input_paths[0]),
+                            input_paths)
                         add_replace_read_groups = [
-                            self.get_tool('picard-tools'), 'AddOrReplaceReadGroups',
+                            self.get_tool('picard-tools'),
+                            'AddOrReplaceReadGroups',
                             'INPUT=%s' % input_paths[0],
                             'OUTPUT=%s' % alignments,
-                            'RGSM=%s' % run_id                
+                            'RGSM=%s' % run_id
                         ]
                         add_replace_read_groups.extend(option_list)
                         exec_group.add_command(add_replace_read_groups)
