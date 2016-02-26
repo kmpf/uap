@@ -259,6 +259,8 @@ def render_single_annotation(annotation_path):
     svg_file = os.path.join(path, svg_file[0].replace('.', ''))
     path, png_file = os.path.split(annotation_path.replace('.yaml', '.png'))
     png_file = os.path.join(path, png_file[0].replace('.', ''))
+    logger.debug("SVG file: %s" % svg_file)
+    logger.debug("PNG file: %s" % png_file)
 
     log = dict()
     with open(annotation_path, 'r') as f:
