@@ -4,7 +4,7 @@
 import sys
 import copy
 import glob
-import logging
+from logging import getLogger
 import os
 import re
 import socket
@@ -21,7 +21,7 @@ This script uses graphviz to produce graphs that display information about the
 tasks processed by the pipeline. 
 '''
 
-logger = logging.getLogger("uap_logger")
+logger = getLogger("uap_logger")
 
 def escape(s):
     result = ''
@@ -252,6 +252,7 @@ def render_graph_for_all_steps(p, args):
     
 
 def render_single_annotation(annotation_path):
+    logger.info("Start rendering %s" % annotation_path)
     dot_file = annotation_path.replace('.yaml', '.dot')
     # Replace leading dot to make graphs easier to find
     annotation_path = annotation_path[0].replace('.', '')
