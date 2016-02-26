@@ -367,7 +367,7 @@ def render_pipeline_hash(log):
                 
         if 'real_path' in log['step']['known_paths'][path]:
             path = log['step']['known_paths'][path]['real_path']
-        #label = log['step']['known_paths'][path]['label']
+        label = log['step']['known_paths'][path]['label']
         color = '#ffffff'
         if log['step']['known_paths'][path]['type'] == 'fifo':
             color = '#c4f099'
