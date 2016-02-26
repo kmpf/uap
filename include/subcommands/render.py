@@ -253,6 +253,8 @@ def render_graph_for_all_steps(p, args):
 
 def render_single_annotation(annotation_path):
     dot_file = annotation_path.replace('.yaml', '.dot')
+    # Replace leading dot to make graphs easier to find
+    annotation_path = annotation_path[0].replace('.', '')
     svg_file = annotation_path.replace('.yaml', '.svg')
     png_file = annotation_path.replace('.yaml', '.png')
 
