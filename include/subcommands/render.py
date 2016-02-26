@@ -256,8 +256,10 @@ def render_single_annotation(annotation_path):
     dot_file = annotation_path.replace('.yaml', '.dot')
     # Replace leading dot to make graphs easier to find
     (path, svg_file) = os.path.split(annotation_path.replace('.yaml', '.svg'))
+    logger.debug("Path: %s, SVG: %s" % (path, svg_file))
     svg_file = os.path.join(path, svg_file[0].replace('.', ''))
     (path, png_file) = os.path.split(annotation_path.replace('.yaml', '.png'))
+    logger.debug("Path: %s, PNG: %s" % (path, png_file))
     png_file = os.path.join(path, png_file[0].replace('.', ''))
     logger.debug("SVG file: %s" % svg_file)
     logger.debug("PNG file: %s" % png_file)
