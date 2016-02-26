@@ -257,11 +257,11 @@ def render_single_annotation(annotation_path):
     # Replace leading dot to make graphs easier to find
     (head, tail) = os.path.split(annotation_path.replace('.yaml', '.svg'))
     logger.debug("Path: %s, SVG: %s" % (head, tail))
-    tail = ''.join(tail[0].replace('.', ''), tail[1:])
+    tail = ''.join([tail[0].replace('.', ''), tail[1:]])
     svg_file= os.path.join(head, tail)
     (head, tail) = os.path.split(annotation_path.replace('.yaml', '.png'))
     logger.debug("Path: %s, PNG: %s" % (head, tail))
-    tail = ''.join(tail[0].replace('.', ''), tail[1:])
+    tail = ''.join([tail[0].replace('.', ''), tail[1:]])
     png_file = os.path.join(head, tail)
     logger.debug("SVG file: %s" % svg_file)
     logger.debug("PNG file: %s" % png_file)
