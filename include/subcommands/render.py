@@ -255,9 +255,9 @@ def render_single_annotation(annotation_path):
     logger.info("Start rendering %s" % annotation_path)
     dot_file = annotation_path.replace('.yaml', '.dot')
     # Replace leading dot to make graphs easier to find
-    path, svg_file = os.path.split(annotation_path.replace('.yaml', '.svg'))
+    (path, svg_file) = os.path.split(annotation_path.replace('.yaml', '.svg'))
     svg_file = os.path.join(path, svg_file[0].replace('.', ''))
-    path, png_file = os.path.split(annotation_path.replace('.yaml', '.png'))
+    (path, png_file) = os.path.split(annotation_path.replace('.yaml', '.png'))
     png_file = os.path.join(path, png_file[0].replace('.', ''))
     logger.debug("SVG file: %s" % svg_file)
     logger.debug("PNG file: %s" % png_file)
