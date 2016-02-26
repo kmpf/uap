@@ -255,9 +255,10 @@ def render_single_annotation(annotation_path):
     logger.info("Start rendering %s" % annotation_path)
     dot_file = annotation_path.replace('.yaml', '.dot')
     # Replace leading dot to make graphs easier to find
-    annotation_path = annotation_path[0].replace('.', '')
     svg_file = annotation_path.replace('.yaml', '.svg')
+    svg_file = svg_file[0].replace('.', '')
     png_file = annotation_path.replace('.yaml', '.png')
+    png_file = png_file[0].replace('.', '')
 
     log = dict()
     with open(annotation_path, 'r') as f:
