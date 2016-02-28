@@ -294,13 +294,13 @@ def create_dot_file_from_annotations(logs):
     f.write("    // nodes\n")
     f.write("\n")
 
-    nodes_ordered = [node for node in hash['nodes'].keys() \
+    node_keys_ordered = [node for node in hash['nodes'].keys() \
                      if 'start_time' in hash['nodes'][node].keys()]
-    nodes_ordered = sorted(process_nodes, key=lambda node: hash['nodes'][node]\
+    node_keys_ordered = sorted(node_keys_ordered, key=lambda node: hash['nodes'][node]\
                            ['start_time'], reverse=True)
-    nodes_ordered.extend([node for node in hash['nodes'].keys() \
-                          if node not in process_nodes])
-    for node_key in nodes_ordered:
+    node_keys_ordered.extend([node for node in hash['nodes'].keys() \
+                          if node not in node_keys_ordered])
+    for node_key in node_keys_ordered:
         node_info = hash['nodes'][node_key]
         f.write("    _%s" % node_key)
         if len(node_info) > 0:
