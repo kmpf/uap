@@ -3,6 +3,7 @@
 
 import sys
 import copy
+import datetime
 import glob
 from logging import getLogger
 import os
@@ -13,7 +14,6 @@ import subprocess
 import textwrap
 import yaml
 
-import abstract_step
 import pipeline
 import misc
 '''
@@ -94,10 +94,13 @@ def main(args):
 
         render_graph_for_all_steps(p, args)
 
-    elif args.step_task:
-        if len(args.step_task) >= 1:
-            # Compile a list of all tasks
-            task_list = list()
+    else:
+#    elif args.step_task:
+#        if len(args.step_task) >= 1:
+        # Compile a list of all tasks
+        task_list = list()
+        # Only use tasks listed in args.step_task
+        if args.step_task and len(args.step_task) >= 1:
             for task_id in args.step_task:
                 if '/' in task_id:
                     task = p.task_for_task_id[task_id]
@@ -106,35 +109,21 @@ def main(args):
                     for task in p.all_tasks_topologically_sorted:
                         if str(task)[0:len(task_id)] == task_id:
                             task_list.append(task)
+        # or take all available tasks
+        else:
+            task_list = p.all_tasks_topologically_sorted
 
-            for task in task_list:
-                outdir = task.get_run().get_output_directory()
-                anno_files = glob.glob(os.path.join(
-                    outdir, ".%s*.annotation.yaml" % task.get_run().get_run_id()
-                ))
+        for task in task_list:
+            outdir = task.get_run().get_output_directory()
+            anno_files = glob.glob(os.path.join(
+                outdir, ".%s*.annotation.yaml" % task.get_run().get_run_id()
+            ))
 
-                for f in anno_files:
-                    logger.info("Going to plot the graph for task: %s" % task)
-                    render_single_annotation(f)
-
-    else:
-        # Just find everything that looks like an annotation file and generate
-        # the plots for it.
-        directory = os.path.abspath(p.config['destination_path'])
-        if not os.path.isdir(directory):
-            raise StandardError("%s is not a directory." % directory)
-
-        annotation_files = list()
-        for root, dirs, files in os.walk(directory):
-            anno_file_regex = re.compile('^\..*-annotation-.{6}\.yaml$')
-            for f in files:
-                if re.search(anno_file_regex, f):
-                    annotation_files.append(os.path.join(root, f))
-
-        for annotation_file in annotation_files:
-            render_single_annotation(annotation_file)
-        
-
+            yaml_files = { os.path.realpath(f) for f in anno_files \
+                           if os.path.islink(f) }
+            for y in yaml_files:
+                logger.info("Going to plot the graph for task: %s" % task)
+                render_single_annotation(y)
 
 def render_graph_for_all_steps(p, args):
     configuration_path = p.get_config_filepath()
@@ -246,11 +235,6 @@ def render_graph_for_all_steps(p, args):
     with open(svg_file, 'w') as f:
         f.write(svg)
 
-
-    #print(yaml.dump(pipeline.get_steps()))
-
-    
-
 def render_single_annotation(annotation_path):
     logger.info("Start rendering %s" % annotation_path)
     dot_file = annotation_path.replace('.yaml', '.dot')
@@ -270,27 +254,17 @@ def render_single_annotation(annotation_path):
     with open(annotation_path, 'r') as f:
         log = yaml.load(f)
     try:
-        gv = render_pipeline([log])
+        gv = create_dot_file_from_annotations([log])
         with open(dot_file, 'w') as f:
             f.write(gv)
         
         dot = subprocess.Popen(['dot', '-Tsvg', '-o%s' % svg_file, dot_file],
                                stdin = subprocess.PIPE,
                                stdout = subprocess.PIPE)
-#        dot.stdin.write(gv)
-#        dot.stdin.close()
-#        svg = dot.stdout.read()
-#        with open(svg_file, 'w') as f:
-#            f.write(svg)
             
         dot = subprocess.Popen(['dot', '-Tpng', '-o%s' % png_file, dot_file],
                                stdin = subprocess.PIPE,
                                stdout = subprocess.PIPE)
-#        dot.stdin.write(gv)
-#        dot.stdin.close()
-#        png = dot.stdout.read()
-#        with open(png_file, 'w') as f:
-#            f.write(png)
     except:
         print(sys.exc_info())
         import traceback
@@ -298,16 +272,16 @@ def render_single_annotation(annotation_path):
         pass
 
 
-def render_pipeline(logs):
+def create_dot_file_from_annotations(logs):
     hash = {'nodes': {}, 'edges': {}, 'clusters': {}, 'graph_labels': {}}
     for log in logs:
-        temp = render_pipeline_hash(log)
+        temp = create_hash_from_annotation(log)
         for _ in ['nodes', 'edges', 'clusters', 'graph_labels']:
             hash[_].update(temp[_])
 
     f = StringIO.StringIO()
     f.write("digraph {\n")
-    f.write("    rankdir = TB;\n")
+    f.write("    rankdir = LR;\n")
     f.write("    splines = true;\n")
     f.write("    graph [fontname = Helvetica, fontsize = 12, size = "
             "\"14, 11\", nodesep = 0.2, ranksep = 0.3, labelloc = t, "
@@ -319,7 +293,15 @@ def render_pipeline(logs):
     
     f.write("    // nodes\n")
     f.write("\n")
-    for node_key, node_info in hash['nodes'].items():
+
+    nodes_ordered = [node for node in hash['nodes'].keys() \
+                     if 'start_time' in hash['nodes'][node].keys()]
+    nodes_ordered = sorted(process_nodes, key=lambda node: hash['nodes'][node]\
+                           ['start_time'], reverse=True)
+    nodes_ordered.extend([node for node in hash['nodes'].keys() \
+                          if node not in process_nodes])
+    for node_key in nodes_ordered:
+        node_info = hash['nodes'][node_key]
         f.write("    _%s" % node_key)
         if len(node_info) > 0:
             f.write(" [%s]" % ', '.join(['%s = "%s"' % (k, node_info[k]) \
@@ -346,7 +328,7 @@ def render_pipeline(logs):
     f.close()
     return result
         
-def render_pipeline_hash(log):
+def create_hash_from_annotation(log):
         
     def pid_hash(pid, suffix = ''):
         hashtag = "%s/%s/%d/%s" % (log['step']['name'], 
@@ -373,14 +355,12 @@ def render_pipeline_hash(log):
                 
         if 'real_path' in log['step']['known_paths'][path]:
             path = log['step']['known_paths'][path]['real_path']
-        label = log['step']['known_paths'][path]['label']
+        label = os.path.basename(path)
         color = '#ffffff'
-        if log['step']['known_paths'][path]['type'] == 'fifo':
+        if log['step']['known_paths'][path]['type'] in ['fifo', 'directory']:
             color = '#c4f099'
-            label = os.path.basename(path)
         elif log['step']['known_paths'][path]['type'] == 'file':
             color = '#8ae234'
-            label = os.path.basename(path)
         elif log['step']['known_paths'][path]['type'] == 'step_file':
             color = '#97b7c8'
             label = log['step']['known_paths'][path]['label']
@@ -393,7 +373,7 @@ def render_pipeline_hash(log):
             'fillcolor': color
         }
             
-    for proc_info in copy.deepcopy(log['pipeline_log']['processes']):
+    for proc_info in log['pipeline_log']['processes']:
         pid = proc_info['pid']
         # Set name and label variable
         try:
@@ -426,13 +406,15 @@ def render_pipeline_hash(log):
                     is_output_file = True
                 elif name == 'dd' and arg.startswith('if='):
                     is_output_file = False
+                elif name in ['mkdir', 'mkfifo']:
+                    is_output_file = True
                 for known_path in log['step']['known_paths'].keys():
                     # Check if arg contains a known path ...
                     if known_path in arg:
                         # ... if so add this file to the graph 
                         add_file_node(known_path)
                         # Is the process able to in-/output files?
-                        if name in ['cat', 'dd']:
+                        if name in ['cat', 'dd', 'mkdir', 'mkfifo']:
                             if is_output_file:
                                 io_type = 'output'
                             else:
@@ -525,7 +507,8 @@ def render_pipeline_hash(log):
                 
         pipe_hash['nodes'][pid_hash(pid)] = {
             'label': label,
-            'fillcolor': color
+            'fillcolor': color,
+            'start_time': proc_info['start_time']
         }
             
         for which in ['stdout', 'stderr']:
@@ -577,8 +560,7 @@ def render_pipeline_hash(log):
                                 label, proc_info[key]['exit_code'])
                     else:
                         label = "%s\\n(no exit code)" % label
-                        
-                                
+
                 # add proc_which
                 pipe_hash['nodes'][pid_hash(pid, which)] = {
                     'label': label,
