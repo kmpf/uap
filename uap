@@ -133,7 +133,9 @@ def main():
     render_parser = subparsers.add_parser(
         "render",
         help="Renders DOT-graphs displaying information of the analysis.",
-        description="render.py is called here.",
+        description="'render' generates DOT-graphs. Without arguments "
+        "it takes the log file of each task and generates a graph, showing "
+        "details of the computation.",
         parents=[common_parser])
     
     render_parser.add_argument(
@@ -141,14 +143,16 @@ def main():
         dest="files",
         action="store_true",
         default=False,
-        help="Renders a graph showing all files of the analysis.")
+        help="Renders a graph showing all files of the analysis. "
+        "[Not implemented yet!]")
     
     render_parser.add_argument(
         "--steps",
         dest="steps",
         action="store_true",
         default=False,
-        help="Renders a graph showing all steps of the analysis.")
+        help="Renders a graph showing all steps of the analysis and their "
+        "connections.")
 
     render_parser.add_argument(
         "--simple",
