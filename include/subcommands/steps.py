@@ -71,20 +71,21 @@ def main(args):
 
             self.generic_visit(node)
 
-    def is_key_a_step(key, step_type):
+    def is_key_a_step(key, step_type, state=False):
         '''
         Check if given key belongs to a loadable class
         '''
+        #been there 
+        if state == True:
+            return False 
 
-        classes = [cl for cl in inspect.getmembers(__import__(key), 
-                                                 inspect.isclass) \
-                   if cl[1] == step_type]
-
-        if len(classes) == 1:
-            return True
-        else:
-            return False
-
+        res = False 
+        for name, cl in inspect.getmembers(__import__(key), inspect.isclass):
+                if  cl.__module__ == key:
+                    if issubclass(cl, step_type):
+                        res = True
+        return res
+        
 
     steps_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -94,7 +95,7 @@ def main(args):
     if args.step:
         is_step = False
         for cl in [AbstractSourceStep, AbstractStep]:
-            if is_key_a_step(args.step, cl):
+            if is_key_a_step(args.step, cl, is_step):
                 is_step = True
                 step_file = '../sources/%s.py' % args.step \
                         if cl == AbstractSourceStep else \
@@ -124,7 +125,7 @@ def main(args):
                 AddOptionLister().visit(tree)
                 #print(ast.dump(tree) )
                 #print(rt.body[0].value.args)
-
+                
         if not is_step:
             logger.error("'%s' is neither a source nor a processing step"
                          % args.step)
@@ -146,6 +147,7 @@ def main(args):
         print("-------------")
         for s in source_steps:
             if is_key_a_step(s, AbstractSourceStep):
+#            if is_key_a_step(s, AbstractStep):
                 print("- %s" % s)
 
         print("\nProcessing steps:")
