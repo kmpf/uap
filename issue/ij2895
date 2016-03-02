@@ -1,0 +1,7 @@
+Summary: Repair volatilize subcommand
+Priority: 5
+
+* volatilize does not correct schedule tasks for recomputation
+** if two succeeding steps are volatilized
+** and a non-finished step is added directly to the last volatilized step
+** only the last volatilized step gets marked for recomputation instead of both steps
