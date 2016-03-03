@@ -199,8 +199,8 @@ def render_graph_for_all_steps(p, args):
                     out_key = in_key.replace('in/', 'out/')
                     allowed_steps = None
                     if '_connect' in step.get_options():
-                        if in_key in step.options['_connect']:
-                            declaration = step.options['_connect'][in_key]
+                        if in_key in step.get_options()['_connect']:
+                            declaration = step.get_options()['_connect'][in_key]
                             if declaration.__class__ == str:
                                 if '/' in declaration:
                                     parts = declaration.split('/')
