@@ -1,3 +1,4 @@
 Summary: Debug render.py
 Priority: 5
 
+render.py fails to produce correct graphs if '_connect' has a list of dependencies.
