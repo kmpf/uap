@@ -1,9 +1,20 @@
 import sys
 import os
+from logging import getLogger
 from abstract_step import AbstractStep
-import yaml
+
+logger=getLogger('uap_logger')
 
 class SamtoolsIndex(AbstractStep):
+    '''
+    Index a coordinate-sorted BAM or CRAM file for fast random access.
+    (Note that this does not work with SAM files even if they are bgzip
+    compressed to index such files, use tabix(1) instead.)
+
+    Documentation::
+
+        http://www.htslib.org/doc/samtools.html
+    '''
 
     def __init__(self, pipeline):
         super(SamtoolsIndex, self).__init__(pipeline)
@@ -32,13 +43,15 @@ class SamtoolsIndex(AbstractStep):
                     run.add_empty_output_connection("indices")
                 # Fail if we haven't exactly one input file
                 elif len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file.")
+                    logger.error("Expected exactly one alignments file.")
+                    sys.exit(1)
                 # Fail if the input is not a bam file
                 elif os.path.splitext(input_paths[0])[1] not in ['.bam']:
-                    raise StandardError(
+                    logger.error(
                         "The file %s seems not to be a BAM file. At "
                         "least the suffix is wrong." % input_paths[0]
                     )
+                    sys.exit(1)
                 # Everything seems fine, lets start
                 else:
                     input_bam = input_paths[0]
@@ -48,7 +61,8 @@ class SamtoolsIndex(AbstractStep):
                         # 1. command: Create symbolic link to original bam file
                         # (use absolute path)
                         ln = [self.get_tool('ln'), '-s', input_bam]
-                        bam_link = run.add_output_file('alignments', base, input_paths)
+                        bam_link = run.add_output_file('alignments', base,
+                                                       input_paths)
                         ln.append(bam_link)
                             
                         index_exgr.add_command(ln)

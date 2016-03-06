@@ -1,6 +1,9 @@
 import sys
 import os
+from logging import getLogger
 from abstract_step import AbstractStep
+
+logger=getLogger('uap_logger')
 
 class PreseqComplexityCurve(AbstractStep):
     '''
@@ -8,6 +11,14 @@ class PreseqComplexityCurve(AbstractStep):
     genomic library from an initial sequencing experiment. The estimates can then
     be used to examine the utility of further sequencing, optimize the sequencing
     depth, or to screen multiple libraries to avoid low complexity samples.
+
+    c_curve computes the expected yield of distinct reads for experiments smaller
+    than the input experiment in a .bed or .bam file through resampling. The full
+    set of parameters can be outputed by simply typing the program name. If
+    output.txt is the desired output file name and input.bed is the input .bed
+    file, then simply type::
+
+        preseq c_curve -o output.txt input.sort.bed
     '''
 
     def __init__(self, pipeline):
@@ -62,10 +73,12 @@ class PreseqComplexityCurve(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("complexity_curve")
                 elif len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file.")
+                    logger.error("Expected exactly one alignments file.")
+                    sys.exit(1)
                 elif not is_bam and not is_bed:
-                    raise StandardError("Input file %s is niether BAM nor BED." %
-                                        input_paths[0])
+                    logger.error("Input file %s is niether BAM nor BED." %
+                                 input_paths[0])
+                    sys.exit(1)
                 else:
                     with run.new_exec_group() as cc_group:
                         c_curve_out = run.add_output_file(

@@ -1,5 +1,8 @@
 import sys
+from logging import getLogger
 from abstract_step import AbstractStep
+
+logger=getLogger('uap_logger')
 
 class PreseqFutureGenomeCoverage(AbstractStep):
     '''
@@ -7,6 +10,11 @@ class PreseqFutureGenomeCoverage(AbstractStep):
     genomic library from an initial sequencing experiment. The estimates can then
     be used to examine the utility of further sequencing, optimize the sequencing
     depth, or to screen multiple libraries to avoid low complexity samples.
+
+    gc_extrap computes the expected genomic coverage for deeper sequencing for
+    single cell sequencing experiments. The input should be a mr or bed file.
+    The tool bam2mr is provided to convert sorted bam or sam files to mapped
+    read format.
     '''
 
     def __init__(self, pipeline):
@@ -70,10 +78,12 @@ class PreseqFutureGenomeCoverage(AbstractStep):
                     run.add_empty_output_connection("complexity_curve")
                     run.add_empty_output_connection("future_yield")
                 elif len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file.")
+                    logger.error("Expected exactly one alignments file.")
+                    sys.exit(1)
                 elif not is_bam and not is_bed:
-                    raise StandardError("Input file %s is niether BAM nor BED." %
-                                        input_paths[0])
+                    logger.error("Input file %s is niether BAM nor BED." %
+                                 input_paths[0])
+                    sys.exit(1)
                 else:
                     with run.new_exec_group() as gc_group:
                         gc_extrap_out = run.add_output_file(

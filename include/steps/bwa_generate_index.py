@@ -1,11 +1,17 @@
 import sys
 import os
-
+from logging import getLogger
 from abstract_step import AbstractStep
+
+logger=getLogger('uap_logger')
 
 class BwaGenerateIndex(AbstractStep):
     '''
-    
+    This step generates the index database from sequences in the FASTA format.
+
+    Typical command line::
+
+        bwa index -p <index-basename> <seqeunce.fasta>
     '''
     
     def __init__(self, pipeline):
@@ -19,7 +25,8 @@ class BwaGenerateIndex(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('bwa')
 
-        self.add_option('index-basename', str, optional = False)
+        self.add_option('index-basename', str, optional = False,
+                        description="Prefix of the created index database")
 
     def runs(self, run_ids_connections_files):
         # Compile the list of options
@@ -34,12 +41,12 @@ class BwaGenerateIndex(AbstractStep):
                              ['in/reference_sequence']
 
                     if refseq == [None]:
-                        raise StandardError("No reference sequence received.")
-
+                        logger.error("No reference sequence received.")
+                        sys.exit(1)
                     if len(refseq) != 1:
-                        raise StandardError("Reference sequence is not a "
-                                            "single file.")
-
+                        logger.error(
+                            "Reference sequence is not a single file.")
+                        sys.exit(1)
                     bwa_index = [self.get_tool('bwa'), 'index']
                     # Add index_basename 
                     bwa_index.extend(

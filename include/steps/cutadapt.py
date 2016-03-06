@@ -1,15 +1,19 @@
+import sys
 import os
 import re
-
+from logging import getLogger
 from abstract_step import AbstractStep
+
+logger=getLogger('uap_logger')
 
 class Cutadapt(AbstractStep):
     '''
-    The cutadapt step can be used to clip adapter sequences from RNASeq reads.
-    
-    Any adapter may contain ``((INDEX))`` which will be replaced with every
-    sample's index. The resulting adapter is checked for sanity and an
-    exception is thrown if the adapter looks non-legit.
+    Cutadapt finds and removes adapter sequences, primers, poly-A tails and
+    other types of unwanted sequence from your high-throughput sequencing reads.
+
+    https://cutadapt.readthedocs.org/en/stable/
+
+
     '''
     
     def __init__(self, pipeline):
@@ -32,24 +36,35 @@ class Cutadapt(AbstractStep):
         self.require_tool('pigz')
 
         # Options for cutadapt
-        self.add_option('adapter-type', str, optional = True, default='-a')
-        self.add_option('adapter-R1', str, optional = True)
-        self.add_option('adapter-R2', str, optional = True)
-        self.add_option('adapter-file', str, optional = True)
-        self.add_option('use_reverse_complement', bool, default = False)
-        self.add_option('minimal-length', int, default = 10, optional = True)
-        self.add_option('fix_qnames', bool, default = False)
+        self.add_option('adapter-type', str, optional = True, default='-a',
+                        choices=['-a', '-g', '-b'],
+                        description="")
+        self.add_option('adapter-R1', str, optional = True,
+                        description="Adapter sequence to be clipped off of the"
+                        "first read.")
+        self.add_option('adapter-R2', str, optional = True,
+                        description="Adapter sequence to be clipped off of the"
+                        "second read")
+        self.add_option('adapter-file', str, optional = True,
+                        description="File containing adapter sequences to be "
+                        "clipped off of the reads.")
+        self.add_option('use_reverse_complement', bool, default = False,
+                        description="The reverse complement of adapter "
+                        "sequences 'adapter-R1' and 'adapter-R2' are used for "
+                        "adapter clipping.")
+        self.add_option('fix_qnames', bool, default = False,
+                        description="If set to true, only the leftmost string "
+                        "without spaces of the QNAME field of the FASTQ data is "
+                        "kept. This might be necessary for downstream analysis.")
 
     def runs(self, run_ids_connections_files):
-        '''
-        
-        '''
+
         ## Make sure the adapter type is one of -a, -b or -g 
         if self.is_option_set_in_config('adapter-type'):
             if not self.get_option('adapter-type') in set(['-a','-b','-g']):
-                raise StandardError("Option 'adapter-type' must be "
-                                    "either '-a', '-b', or '-g'!")
-
+                logger.error("Option 'adapter-type' must be either '-a', "
+                             "'-b', or '-g'!")
+                sys.exit(1)
 
         read_types = {'first_read': 'R1', 'second_read': 'R2'}
         paired_end_info = dict()
@@ -70,29 +85,30 @@ class Cutadapt(AbstractStep):
                         if paired_end_info[run_id]:
                             if ( not self.is_option_set_in_config('adapter-R2') and 
                                  not self.is_option_set_in_config('adapter-file') ):
-                                raise StandardError(
-                                    "Option 'adapter-R2' or " +
-                                    "'adapter-file' required because " +
-                                    "sample %s is paired end!" % run_id)
+                                logger.error(
+                                    "Option 'adapter-R2' or 'adapter-file' "
+                                    "required because sample %s is paired end!"
+                                    % run_id)
+                                sys.exit(1)
                         elif ( self.is_option_set_in_config('adapter-R2') and
                                not self.is_option_set_in_config('adapter-file') ):
-                            raise StandardError(
-                                "Option 'adapter-R2' not allowed because " +
+                            logger.error(
+                                "Option 'adapter-R2' not allowed because "
                                 "sample %s is not paired end!" % run_id)
-                            
+                            sys.exit(1)
                         if ( self.is_option_set_in_config('adapter-file') and
                              self.is_option_set_in_config('adapter-R1') ):
-                            raise StandardError(
-                                "Option 'adapter-R1' and 'adapter-file' " +
-                                "are both set but are mutually exclusive!" )
-    
+                            logger.error(
+                                "Option 'adapter-R1' and 'adapter-file' "
+                                "are both set but are mutually exclusive!")
+                            sys.exit(1)
                         if ( not self.is_option_set_in_config('adapter-file') and
                              not self.is_option_set_in_config('adapter-R1') ):
-                            raise StandardError(
-                                "Option 'adapter-R1' or 'adapter-file' " +
-                                "required to call cutadapt for sample %s!" % 
-                                run_id)
-
+                            logger.error(
+                                "Option 'adapter-R1' or 'adapter-file' "
+                                "required to call cutadapt for sample %s!"
+                                % run_id)
+                            sys.exit(1)
                         temp_fifos = list()
                         exec_group = run.new_exec_group()
                         for input_path in input_paths:
@@ -132,11 +148,10 @@ class Cutadapt(AbstractStep):
                                          'of=%s' % temp_fifo]
                                 exec_group.add_command(dd_in)
                             else:
-                                raise StandardError("File %s does not end with "
-                                                    "any expected suffix ("
-                                                    "fastq.gz or fastq). Please "
-                                                    "fix that issue.")
-
+                                logger.error("File %s does not end with any "
+                                             "expected suffix (fastq.gz or "
+                                             "fastq). Please fix that issue.")
+                                sys.exit(1)
                         # 3. Read data from fifos
                         with exec_group.add_pipeline() as cutadapt_pipe:
                             # 3.1 command: Read from ALL fifos
@@ -173,12 +188,22 @@ class Cutadapt(AbstractStep):
                                 
                                 # make sure the adapter is looking good
                                 if re.search('^[ACGT]+$', adapter) == None:
-                                    raise StandardError("Unable to come up with "
-                                                        "a legit-looking adapter:"
-                                                        "%s" % adapter)
+                                    logger.error("Unable to come up with a "
+                                                 "legit-looking adapter: %s"
+                                                 % adapter)
+                                    sys.exit(1)
                             # Or do we have a adapter sequence fasta file?
                             elif self.is_option_set_in_config('adapter-file'):
-                                adapter = "file:" + self.get_option('adapter-file')
+                                adapter = "file:" + self.get_option(
+                                    'adapter-file')
+                                if not os.path.exists(
+                                        self.get_option('adapter-file')):
+                                    logger.error(
+                                        "File %s containing adapter sequences "
+                                        "does not exist."
+                                        % self.get_option('adapter-file'))
+                                    sys.exit(1)
+
 
                             # 3.3 command: Clip adapters
                             cutadapt = [self.get_tool('cutadapt'), 

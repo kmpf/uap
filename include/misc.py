@@ -1,7 +1,11 @@
+import sys
 import hashlib
 import json
+from logging import getLogger
 import os
 import re
+
+logger=getLogger('uap_logger')
 
 # an enum class, yanked from http://stackoverflow.com/questions/36932/whats-the-best-way-to-implement-an-enum-in-python
 class Enum(set):
@@ -50,8 +54,8 @@ def assign_strings(paths, tags):
 
     results = {}
     if len(paths) != len(tags):
-        raise StandardError("Number of tags must be equal to number of paths")
-    
+        logger.error("Number of tags must be equal to number of paths")
+        sys.exit(1)
     for tag in tags:
         for path in paths:
             result_candidate = {}
@@ -72,7 +76,8 @@ def assign_strings(paths, tags):
                     offset = index + 1
                     
     if len(results) != 1:
-        raise StandardError("Unable to find an unambiguous mapping.")
+        logger.error("Unable to find an unambiguous mapping.")
+        sys.exit(1)
     
     return results[results.keys()[0]]
 
@@ -81,10 +86,13 @@ def assign_string(s, tags):
     for tag in tags:
         if tag in s:
             if match != None:
-                raise StandardError("Could not unambiguously match %s to %s." % (s, tags))
+                logger.error("Could not unambiguously match %s to %s."
+                             % (s, tags))
+                sys.exit(1)
             match = tag
     if match == None:
-        raise StandardError("Could not match %s to %s." % (s, tags))
+        logger.error("Could not match %s to %s." % (s, tags))
+        sys.exit(1)
     return match
 
 def natsorted(l):

@@ -1,8 +1,19 @@
 import sys
 import os
+from logging import getLogger
 from abstract_step import AbstractStep
 
+logger=getLogger('uap_logger')
+
 class HtSeqCount(AbstractStep):
+    '''
+    The htseq-count script counts the number of reads overlapping a feature.
+    Input needs to be a file with aligned sequencing reads and a list of genomic
+    features. For more information see::
+
+    http://www-huber.embl.de/users/anders/HTSeq/doc/count.html
+    '''
+    
     
     def __init__(self, pipeline):
         super(HtSeqCount, self).__init__(pipeline)
@@ -10,11 +21,13 @@ class HtSeqCount(AbstractStep):
         self.set_cores(2)
         
         self.add_connection(
-            'in/alignments', constraints = {'min_files_per_run': 1,
-                                            'max_files_per_run': 1}
+            'in/alignments',
+            constraints = {'min_files_per_run': 1, 'max_files_per_run': 1}
         )
         self.add_connection(
-            'in/features', constraints = {'total_files': 1} )
+            'in/features',
+            constraints = {'total_files': 1}
+        )
         self.add_connection('out/counts')
         
         self.require_tool('dd')
@@ -64,12 +77,13 @@ class HtSeqCount(AbstractStep):
                 if self.is_option_set_in_config('feature-file'):
                     features_path = self.get_option('feature-file')
                 else:
-                    raise StandardError(
+                    logger.error(
                         "No feature file could be found for '%s'" % run_id)
+                    sys.exit(1)
             if not os.path.isfile(features_path):
-                raise StandardError("Feature file '%s' is not a file."
+                logger.error("Feature file '%s' is not a file."
                                     % features_path)
-
+                sys.exit(1)
             # Is the alignment gzipped?
             root, ext = os.path.splitext(alignments[0])
             is_gzipped = True if ext in ['.gz', '.gzip'] else False
@@ -79,8 +93,9 @@ class HtSeqCount(AbstractStep):
             is_bam = True if ext in ['.bam'] else False
             is_sam = True if ext in ['.sam'] else False
             if not (bool(is_bam) ^ bool(is_sam)):
-                raise StandardError("Alignment file '%s' is neither SAM nor BAM "
-                                    "format" % alignments[0])
+                logger.error("Alignment file '%s' is neither SAM nor BAM "
+                             "format" % alignments[0])
+                sys.exit(1)
             alignments_path = alignments[0]
 
             with self.declare_run(run_id) as run:

@@ -1,10 +1,10 @@
 import sys
-from abstract_step import AbstractSourceStep
-import logging
+from logging import getLogger
 import os
 import urlparse
+from abstract_step import AbstractSourceStep
 
-logger = logging.getLogger("uap_logger")
+logger=getLogger("uap_logger")
 
 class RawUrlSource(AbstractSourceStep):
 

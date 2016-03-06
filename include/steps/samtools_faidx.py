@@ -1,8 +1,17 @@
+import sys
 import os
-
+from logging import getLogger
 from abstract_step import AbstractStep
 
+logger=getLogger('uap_logger')
+
 class SamtoolsFaidx(AbstractStep):
+    '''
+    Index reference sequence in the FASTA format or extract subsequence from
+    indexed reference sequence. If no region is specified, faidx will index the
+    file and create <ref.fasta>.fai on the disk. If regions are specified, the
+    subsequences will be retrieved and printed to stdout in the FASTA format.
+    '''
 
     def __init__(self, pipeline):
         super(SamtoolsFaidx, self).__init__(pipeline)
@@ -24,11 +33,13 @@ class SamtoolsFaidx(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("sequence")
                 elif len(input_paths) != 1:
-                    raise StandardError("Expected exactly one sequence file.")
+                    logger.error("Expected exactly one sequence file.")
+                    sys.exit(1)
                 elif os.path.splitext(os.path.basename(input_paths[0]))[1] \
                 not in ['.fa', '.fna', '.fasta']:
-                    raise StandardError("The input file %s does not seem to be "
-                                        "a FASTA file." % input_paths[0])
+                    logger.error("The input file %s does not seem to be "
+                                 "a FASTA file." % input_paths[0])
+                    sys.exit(1)
                 else:
                     with run.new_exec_group() as faidx_group:
                         samtools_faidx = [

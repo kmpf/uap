@@ -1,17 +1,45 @@
+import sys
 import os
 import re
+from logging import getLogger
 from abstract_step import AbstractStep
+
+logger=getLogger('uap_logger')
 
 class BwaBacktrack(AbstractStep):
     '''
+    bwa-backtrack is the bwa algorithm designed for Illumina sequence reads up
+    to 100bp. The computation of the alignments is done by running 'bwa aln'
+    first, to align the reads, followed by running 'bwa samse' or 'bwa sampe'
+    afterwards to generate the final SAM output.
+
+    http://bio-bwa.sourceforge.net/
+
+    typical command line for single-end data::
+    
+        bwa aln <bwa-index> <first-read.fastq> > <first-read.sai>
+        bwa samse <bwa-index> <first-read.sai> <first-read.fastq> > <sam-output>
+
+    typical command line for paired-end data::
+
+        bwa aln <bwa-index> <first-read.fastq> > <first-read.sai>
+        bwa aln <bwa-index> <second-read.fastq> > <second-read.sai>        
+        bwa sampe <bwa-index> <first-read.sai> <second-read.sai> \
+                  <first-read.fastq> <second-read.fastq> > <sam-output>
     '''
     
     def __init__(self, pipeline):
         super(BwaBacktrack, self).__init__(pipeline)
         self.set_cores(8)
 
-        self.add_connection('in/first_read')
-        self.add_connection('in/second_read')
+        self.add_connection(
+            'in/first_read',
+            #constraints={'min_files_per_run': 1, 'max_files_per_run': 1}
+        )
+        self.add_connection(
+            'in/second_read',
+            #constraints={'min_files_per_run': 0, 'max_files_per_run': 1}
+        )
         self.add_connection('out/alignments')
 
 
@@ -21,7 +49,8 @@ class BwaBacktrack(AbstractStep):
         self.require_tool('bwa')
 
         # Options for the programs bwa aln/samse/sampe
-        self.add_option('index', str, description="Path to index for BWA")
+        self.add_option('index', str, optional=False, 
+                        description="Path to BWA index")
         ## [Options for 'bwa aln':]
         self.add_option('aln-n', float, optional = True,
                         description = "Maximum edit distance if the value is "
@@ -152,9 +181,9 @@ class BwaBacktrack(AbstractStep):
 
         # Check if index is valid
         if not os.path.exists(self.get_option('index') + '.bwt'):
-            raise StandardError("Could not find index: %s.*" %
-                                self.get_option('index') )
-
+            logger.error("Could not find index: %s.*" %
+                         self.get_option('index') )
+            sys.exit(1)
         # Compile the list of options
         options_bwa_aln = ['aln-n', 'aln-o', 'aln-e', 'aln-d', 'aln-i', 'aln-l',
                            'aln-k', 'aln-t', 'aln-M', 'aln-E', 'aln-R', 'aln-c',
@@ -205,15 +234,14 @@ class BwaBacktrack(AbstractStep):
                 # Fail if we don't have exactly one first read file or 
                 # an empty connection
                 if len(fr_input) != 1 or fr_input == [None]:
-                    raise StandardError("Expected single input file for first "
-                                        "read.")
-
+                    logger.error("Expected single input file for first read.")
+                    sys.exit(1)
                 # Fail if we don't have exactly one second read file in case of
                 # paired end reads
                 if is_paired_end and len(sr_input) != 1:
-                    raise StandardError("Expected single input file for second "
-                                        "read.")
-
+                    logger.error(
+                        "Expected single input file for seconnd read.")
+                    sys.exit(1)
                 input_paths = fr_input # single element list
                 if is_paired_end:
                     input_paths.extend(sr_input)
@@ -222,9 +250,9 @@ class BwaBacktrack(AbstractStep):
                 for input_path in input_paths:
                     if len([_ for _ in ['fastq', 'fq', 'fq.gz', 'fastq.gz']\
                                if input_path.endswith(_)]) != 1:
-                        raise StandardError("%s possess unknown suffix. "
-                                            "(None of: fastq, fq, fq.gz, fastq.gz)")
-
+                        logger.error("%s possess unknown suffix. "
+                                     "(None of: fastq, fq, fq.gz, fastq.gz)")
+                        sys.exit(1)
                 # BWA can handle only single files for first and second read
                 # IMPORTANT: BWA handles gzipped as well as not gzipped files
 

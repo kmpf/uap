@@ -1,9 +1,28 @@
 import sys
 import os
+from logging import getLogger
 from abstract_step import AbstractStep
 
+logger=getLogger('uap_logger')
+
 class Macs2(AbstractStep):
+    '''
+    Model-based Analysis of ChIP-Seq (MACS) is a algorithm, for the identifcation
+    of transcript factor binding sites. MACS captures the influence of genome
+    complexity to evaluate the significance of enriched ChIP regions, and MACS
+    improves the spatial resolution of binding sites through combining the
+    information of both sequencing tag position and orientation. MACS can be
+    easily used for ChIP-Seq data alone, or with control sample data to increase
+    the specificity.
     
+    https://github.com/taoliu/MACS
+
+    typical command line for single-end data::
+
+        macs2 callpeak --treatment <aligned-reads> [--control <aligned-reads>]
+                       --name <run-id> --gsize 2.7e9
+    '''
+
     def __init__(self, pipeline):
         super(Macs2, self).__init__(pipeline)
         
@@ -85,8 +104,8 @@ class Macs2(AbstractStep):
                                     ['in/alignments']
                     control_id = "-" + control_id
                 except KeyError:
-                    raise StandardError("No control for ID '%s' found."
-                                        % control_id)
+                    logger.error("No control for ID '%s' found." % control_id)
+                    sys.exit(1)
             else:
                 control_id = ""
 
@@ -97,8 +116,8 @@ class Macs2(AbstractStep):
                     treatments[tr] = run_ids_connections_files[tr]\
                                      ['in/alignments']
                 except KeyError:
-                    raise StandardError("No treatment for ID '%s' found." % tr)
-
+                    logger.error("No treatment for ID '%s' found." % tr)
+                    sys.exit(1)
                 # Assemble rund ID
                 run_id = "%s%s" % (tr, control_id)
 

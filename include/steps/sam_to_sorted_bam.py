@@ -1,8 +1,23 @@
 import sys
 import os
+from logging import getLogger
 from abstract_step import AbstractStep
 
+logger=getLogger('uap_logger')
+
 class SamToSortedBam(AbstractStep):
+    '''
+    The step sam_to_sorted_bam builds on 'samtools sort' to sort SAM files and
+    output BAM files. 
+
+    Sort alignments by leftmost coordinates, or by read name when -n is used.
+    An appropriate @HD-SO sort order header tag will be added or an existing
+    one updated if necessary.
+
+    Documentation::
+
+        http://www.htslib.org/doc/samtools.html
+    '''
 
     def __init__(self, pipeline):
         super(SamToSortedBam, self).__init__(pipeline)
@@ -31,7 +46,8 @@ class SamToSortedBam(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file.")
+                    logger.error("Expected exactly one alignments file.")
+                    sys.exit(1)
                 else:
                     is_gzipped = True if os.path.splitext(input_paths[0])[1]\
                                  in ['.gz', '.gzip'] else False

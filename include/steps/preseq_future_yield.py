@@ -1,6 +1,9 @@
 import sys
 import os
+from logging import getLogger
 from abstract_step import AbstractStep
+
+logger=getLogger('uap_logger')
 
 class PreseqFutureYield(AbstractStep):
     '''
@@ -8,6 +11,10 @@ class PreseqFutureYield(AbstractStep):
     genomic library from an initial sequencing experiment. The estimates can then
     be used to examine the utility of further sequencing, optimize the sequencing
     depth, or to screen multiple libraries to avoid low complexity samples.
+
+    lc_extrap computes the expected future yield of distinct reads and bounds on
+    the number of total distinct reads in the library and the associated
+    confidence intervals.
     '''
 
     def __init__(self, pipeline):
@@ -76,10 +83,12 @@ class PreseqFutureYield(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("future_yield")
                 elif len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file.")
+                    logger.error("Expected exactly one alignments file.")
+                    sys.exit(1)
                 elif not is_bam and not is_bed:
-                    raise StandardError("Input file %s is niether BAM nor BED." %
-                                        input_paths[0])
+                    logger.error("Input file %s is niether BAM nor BED." %
+                                 input_paths[0])
+                    sys.exit(1)
                 else:
                     with run.new_exec_group() as lc_group:
                         lc_extrap_out = run.add_output_file(

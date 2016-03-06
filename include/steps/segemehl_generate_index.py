@@ -1,10 +1,18 @@
 import sys
 import os
+from logging import getLogger
 from abstract_step import AbstractStep
+
+logger = getLogger('uap_logger')
 
 class SegemehlGenerateIndex(AbstractStep):
     '''
-    segemehl is a software to map short sequencer reads to reference genomes. 
+    The step segemehl_generate_index generates a index for given reference
+    sequences.
+
+    Documentation::
+
+       http://www.bioinf.uni-leipzig.de/Software/segemehl/
     '''
 
     def __init__(self, pipeline):
@@ -21,7 +29,8 @@ class SegemehlGenerateIndex(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('segemehl')
 
-        self.add_option('index-basename', str, optional = False)
+        self.add_option('index-basename', str, optional=False, description=
+                        "Basename for created segemehl index.")
 
     def runs(self, run_ids_connections_files):
 
@@ -36,8 +45,9 @@ class SegemehlGenerateIndex(AbstractStep):
                          ['in/reference_sequence']
 
                 if refseq == [None]:
-                    raise StandardError("No reference sequence received.")
-
+                    logger.error("No reference sequence received via "
+                                 "connection in/reference_sequence.")
+                    sys.exit(1)
                 # Get names of FIFOs
                 refseq_fifos = list()
                 index_fifo = run.add_temporary_file(

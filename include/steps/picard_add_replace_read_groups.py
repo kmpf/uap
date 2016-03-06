@@ -5,48 +5,25 @@ from abstract_step import AbstractStep
 
 logger=getLogger('uap_logger')
 
-class PicardMarkDuplicates(AbstractStep):
+class PicardAddOrReplaceReadGroups(AbstractStep):
     '''
-    Identifies duplicate reads.
-    This tool locates and tags duplicate reads (both PCR and optical/
-    sequencing-driven) in a BAM or SAM file, where duplicate reads are defined
-    as originating from the same original fragment of DNA.
-    Duplicates are identified as read pairs having identical 5' positions
-    (coordinate and strand) for both reads in a mate pair (and optinally,
-    matching unique molecular identifier reads; see BARCODE_TAG option).
-    Optical, or more broadly Sequencing, duplicates are duplicates that appear
-    clustered together spatially during sequencing and can arise from optical/
-    imagine-processing artifacts or from bio-chemical processes during clonal
-    amplification and sequencing; they are identified using the READ_NAME_REGEX
-    and the OPTICAL_DUPLICATE_PIXEL_DISTANCE options.
-    The tool's main output is a new SAM or BAM file in which duplicates have
-    been identified in the SAM flags field, or optionally removed (see
-    REMOVE_DUPLICATE and REMOVE_SEQUENCING_DUPLICATES), and optionally marked
-    with a duplicate type in the 'DT' optional attribute.
-    In addition, it also outputs a metrics file containing the numbers of
-    READ_PAIRS_EXAMINED, UNMAPPED_READS, UNPAIRED_READS,
-    UNPAIRED_READ_DUPLICATES, READ_PAIR_DUPLICATES, and
-    READ_PAIR_OPTICAL_DUPLICATES.
-    
-    Usage example::
-
-        java -jar picard.jar MarkDuplicates I=input.bam \
-        O=marked_duplicates.bam M=marked_dup_metrics.txt
+    Replace read groups in a BAM file. This tool enables the user to replace all
+    read groups in the INPUT file with a single new read group and assign all
+    reads to this read group in the OUTPUT BAM file.
 
     Documentation::
 
-        https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates
+        https://broadinstitute.github.io/picard/command-line-overview.html#AddOrReplaceReadGroups
 
     '''
 
     def __init__(self, pipeline):
-        super(PicardMarkDuplicates, self).__init__(pipeline)
+        super(PicardAddOrReplaceReadGroups, self).__init__(pipeline)
 
-        self.set_cores(12)
+        self.set_cores(6)
         
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
-        self.add_connection('out/metrics')
         
         self.require_tool('picard-tools')
 
@@ -104,19 +81,38 @@ class PicardMarkDuplicates(AbstractStep):
                         'option can be set to "null" to clear the default '
                         'value.')
 
-        # [Picard MarkDuplicates Options:]
+        # [Picard AddOrReplaceReadGroups Options:]
 
-        self.add_option('PROGRAM_RECORD_ID', str, optional = True)
-        self.add_option('PROGRAM_GROUP_VERSION', str, optional = True)
-        self.add_option('PROGRAM_GROUP_COMMAND_LINE', str, optional = True)
-        self.add_option('PROGRAM_GROUP_NAME', str, optional = True)
-        self.add_option('COMMENT', str, optional = True)
-
-        self.add_option('ASSUME_SORTED', bool, optional = True)
-        self.add_option('MAX_FILE_HANDLES', int, optional = True)
-        self.add_option('SORTING_COLLECTION_SIZE_RATIO', float, optional = True)
-        self.add_option('READ_NAME_REGEX', str, optional = True)
-        self.add_option('OPTICAL_DUPLICATE_PIXEL_DISTANCE', int, optional = True)
+        self.add_option('SORT_ORDER', str, optional = True,
+                        choices=['unsorted', 'queryname', 'coordinate',
+                                 'duplicate'],
+                        description="Optional sort order to output in. If not "
+                        "supplied OUTPUT is in the same order as INPUT. "
+                        "Default value: null. Possible values: {unsorted, "
+                        "queryname, coordinate, duplicate}")
+        self.add_option('RGID', str, optional=True, description="Read Group "
+                        "ID Default value: 1. This option can be set to 'null' "
+                        "to clear the default value.")
+        self.add_option('RGLB', str, optional=False,
+                        description="Read Group library")
+        self.add_option('RGPL', str, optional=False,
+                        description="Read Group platform (e.g. illumina, solid)"
+        )
+        self.add_option('RGPU', str, optional=False,
+                        description="Read Group platform unit (eg. run barcode)"
+        )
+        self.add_option('RGCN', str, optional=True, description="Read Group "
+                        "sequencing center name. Default value: null.")
+        self.add_option('RGDS', str, optional=True, description="Read Group "
+                        "description. Default value: null.")
+        self.add_option('RGDT', str, optional=True, description="Read Group "
+                        "run date. Default value: null.")
+        self.add_option('RGPI', int, optional=True, description="Read Group "
+                        "predicted insert size. Default value: null.")
+        self.add_option('RGPG', str, optional=True, description="Read Group "
+                        "program group. Default value: null.")
+        self.add_option('RGPM', str, optional=True, description="Read Group "
+                        "platform model. Default value: null.")
 
     def runs(self, run_ids_connections_files):
 
@@ -126,11 +122,8 @@ class PicardMarkDuplicates(AbstractStep):
             'COMPRESSION_LEVEL', 'MAX_RECORDS_IN_RAM', 'CREATE_INDEX',
             'CREATE_MD5_FILE', 'REFERENCE_SEQUENCE', 'GA4GH_CLIENT_SECRETS',
             # Picard MarkDuplicates Options:
-            'PROGRAM_RECORD_ID', 'PROGRAM_GROUP_VERSION',
-            'PROGRAM_GROUP_COMMAND_LINE', 'PROGRAM_GROUP_NAME',
-            'COMMENT', 'ASSUME_SORTED', 'MAX_FILE_HANDLES',
-            'SORTING_COLLECTION_SIZE_RATIO', 'READ_NAME_REGEX',
-            'OPTICAL_DUPLICATE_PIXEL_DISTANCE'
+            'SORT_ORDER', 'RGID', 'RGLB', 'RGPL', 'RGPU', 'RGCN',
+            'RGDS', 'RGDT', 'RGPI', 'RGPG', 'RGPM'
         ]
 
         set_options = [option for option in options if \
@@ -167,16 +160,14 @@ class PicardMarkDuplicates(AbstractStep):
                 else:
                     with run.new_exec_group() as exec_group:
                         alignments = run.add_output_file(
-                            'alignments', '%s-rm-dup.bam' % run_id, input_paths)
-                        metrics = run.add_output_file(
-                            "metrics", '%s-rm-dup-metrics.txt' % run_id,
+                            'alignments', os.path.basename(input_paths[0]),
                             input_paths)
-                        mark_duplicates = [
-                            self.get_tool('picard-tools'), 'MarkDuplicates',
+                        add_replace_read_groups = [
+                            self.get_tool('picard-tools'),
+                            'AddOrReplaceReadGroups',
                             'INPUT=%s' % input_paths[0],
                             'OUTPUT=%s' % alignments,
-                            'METRICS_FILE=%s' % metrics,
-                            'REMOVE_DUPLICATES=true'                
+                            'RGSM=%s' % run_id
                         ]
-                        mark_duplicates.extend(option_list)
-                        exec_group.add_command(mark_duplicates)
+                        add_replace_read_groups.extend(option_list)
+                        exec_group.add_command(add_replace_read_groups)

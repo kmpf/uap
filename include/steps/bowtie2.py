@@ -1,5 +1,9 @@
+import sys
 import os
+from logging import getLogger
 from abstract_step import AbstractStep
+
+logger=getLogger('uap_logger')
 
 class Bowtie2(AbstractStep):
     '''
@@ -32,15 +36,19 @@ class Bowtie2(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('bowtie2')
 
-        self.add_option('index', str)
+        self.add_option('index', str, optional=False,
+                        description="Path to bowtie2 index (not containing file "
+                        "suffixes).")
+        # Bowtie2 has so many options that I'm avoiding to add them all now,
+        # but it might be necessary later on.
 
     def runs(self, run_ids_connections_files):
 
         # Check if option values are valid
         if not os.path.exists(self.get_option('index') + '.1.bt2'):
-            raise StandardError("Could not find index file: %s.*" %
-                                self.get_option('index') )
-
+            logger.error("Could not find index file: %s.*" %
+                         self.get_option('index'))
+            sys.exit(1)
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 # Get list of files for first/second read

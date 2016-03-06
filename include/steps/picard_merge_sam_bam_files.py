@@ -5,49 +5,24 @@ from abstract_step import AbstractStep
 
 logger=getLogger('uap_logger')
 
-class PicardMarkDuplicates(AbstractStep):
+class PicardMergeSamFiles(AbstractStep):
     '''
-    Identifies duplicate reads.
-    This tool locates and tags duplicate reads (both PCR and optical/
-    sequencing-driven) in a BAM or SAM file, where duplicate reads are defined
-    as originating from the same original fragment of DNA.
-    Duplicates are identified as read pairs having identical 5' positions
-    (coordinate and strand) for both reads in a mate pair (and optinally,
-    matching unique molecular identifier reads; see BARCODE_TAG option).
-    Optical, or more broadly Sequencing, duplicates are duplicates that appear
-    clustered together spatially during sequencing and can arise from optical/
-    imagine-processing artifacts or from bio-chemical processes during clonal
-    amplification and sequencing; they are identified using the READ_NAME_REGEX
-    and the OPTICAL_DUPLICATE_PIXEL_DISTANCE options.
-    The tool's main output is a new SAM or BAM file in which duplicates have
-    been identified in the SAM flags field, or optionally removed (see
-    REMOVE_DUPLICATE and REMOVE_SEQUENCING_DUPLICATES), and optionally marked
-    with a duplicate type in the 'DT' optional attribute.
-    In addition, it also outputs a metrics file containing the numbers of
-    READ_PAIRS_EXAMINED, UNMAPPED_READS, UNPAIRED_READS,
-    UNPAIRED_READ_DUPLICATES, READ_PAIR_DUPLICATES, and
-    READ_PAIR_OPTICAL_DUPLICATES.
-    
-    Usage example::
-
-        java -jar picard.jar MarkDuplicates I=input.bam \
-        O=marked_duplicates.bam M=marked_dup_metrics.txt
 
     Documentation::
 
-        https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates
+        https://broadinstitute.github.io/picard/command-line-overview.html#MergeSamFiles
 
     '''
 
     def __init__(self, pipeline):
-        super(PicardMarkDuplicates, self).__init__(pipeline)
+        super(PicardMergeSamFiles, self).__init__(pipeline)
 
         self.set_cores(12)
         
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
-        self.add_connection('out/metrics')
         
+        self.require_tool('ln')
         self.require_tool('picard-tools')
 
         # [Standard Picard Options:]
@@ -104,19 +79,45 @@ class PicardMarkDuplicates(AbstractStep):
                         'option can be set to "null" to clear the default '
                         'value.')
 
-        # [Picard MarkDuplicates Options:]
+        # [Picard MergeSamFiles Options:]
 
-        self.add_option('PROGRAM_RECORD_ID', str, optional = True)
-        self.add_option('PROGRAM_GROUP_VERSION', str, optional = True)
-        self.add_option('PROGRAM_GROUP_COMMAND_LINE', str, optional = True)
-        self.add_option('PROGRAM_GROUP_NAME', str, optional = True)
-        self.add_option('COMMENT', str, optional = True)
-
-        self.add_option('ASSUME_SORTED', bool, optional = True)
-        self.add_option('MAX_FILE_HANDLES', int, optional = True)
-        self.add_option('SORTING_COLLECTION_SIZE_RATIO', float, optional = True)
-        self.add_option('READ_NAME_REGEX', str, optional = True)
-        self.add_option('OPTICAL_DUPLICATE_PIXEL_DISTANCE', int, optional = True)
+        self.add_option('SORT_ORDER', str, optional = True,
+                        choices=['unsorted', 'queryname', 'coordinate',
+                                 'duplicate'],
+                        description="Sort order of output file. Default value: "
+                        "coordinate. This option can be set to 'null' to clear "
+                        "the default value. Possible values: {unsorted, "
+                        "queryname, coordinate, duplicate}")
+        self.add_option('ASSUME_SORTED', bool, optional=True,
+                        description="If true, assume that the input files are "
+                        "in the same sort order as the requested output sort "
+                        "order, even if their headers say otherwise. Default "
+                        "value: false. This option can be set to 'null' to "
+                        "clear the default value. Possible values: "
+                        "{true, false}")
+        self.add_option('MERGE_SEQUENCE_DICTIONARIES', bool, optional=True,
+                        description="Merge the sequence dictionaries. Default "
+                        "value: false. This option can be set to 'null' to "
+                        "clear the default value. Possible values: "
+                        "{true, false}")
+        self.add_option('USE_THREADING', bool, optional=True,
+                        description="Option to create a background thread to "
+                        "encode, compress and write to disk the output file. "
+                        "The threaded version uses about 20% more CPU and "
+                        "decreases runtime by ~20% when writing out a "
+                        "compressed BAM file. Default value: false. This "
+                        "option can be set to 'null' to clear the default "
+                        "value. Possible values: {true, false}")
+        self.add_option('COMMENT', str, optional=True,
+                        description="Comment(s) to include in the merged "
+                        "output file's header. Default value: null.")
+        self.add_option('INTERVALS', str, optional=True,
+                        description="An interval list file that contains the "
+                        "locations of the positions to merge. Assume bam are "
+                        "sorted and indexed. The resulting file will contain "
+                        "alignments that may overlap with genomic regions "
+                        "outside the requested region. Unmapped reads are "
+                        "discarded. Default value: null.")
 
     def runs(self, run_ids_connections_files):
 
@@ -126,11 +127,8 @@ class PicardMarkDuplicates(AbstractStep):
             'COMPRESSION_LEVEL', 'MAX_RECORDS_IN_RAM', 'CREATE_INDEX',
             'CREATE_MD5_FILE', 'REFERENCE_SEQUENCE', 'GA4GH_CLIENT_SECRETS',
             # Picard MarkDuplicates Options:
-            'PROGRAM_RECORD_ID', 'PROGRAM_GROUP_VERSION',
-            'PROGRAM_GROUP_COMMAND_LINE', 'PROGRAM_GROUP_NAME',
-            'COMMENT', 'ASSUME_SORTED', 'MAX_FILE_HANDLES',
-            'SORTING_COLLECTION_SIZE_RATIO', 'READ_NAME_REGEX',
-            'OPTICAL_DUPLICATE_PIXEL_DISTANCE'
+            'SORT_ORDER', 'ASSUME_SORTED', 'MERGE_SEQUENCE_DICTIONARIES',
+            'USE_THREADING', 'COMMENT', 'INTERVALS'
         ]
 
         set_options = [option for option in options if \
@@ -155,28 +153,40 @@ class PicardMarkDuplicates(AbstractStep):
 
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
-                elif len(input_paths) != 1:
-                    logger.error("Expected exactly one alignments file.")
-                    sys.exit(1)
                 elif os.path.splitext(input_paths[0])[1] not in ['.sam', '.bam']:
                     logger.error(
                         "The file %s seems not to be a SAM or BAM file. At "
                         "least the suffix is wrong." % input_paths[0]
                     )
                     sys.exit(1)
+                elif self.is_option_set_in_config("INTERVALS") and \
+                     not os.path.exists(self.get_option("INTERVALS")):
+                    logger.error("The path %s given to option 'INTERVALS' is "
+                                 "not pointing to a file.")
+                    sys.exit(1)
+                elif len(input_paths) == 0:
+                    run.add_empty_output_connection("alignments")
+                elif len(input_paths) == 1:
+                    base = os.path.basename(input_paths[0])
+                    with run.new_exec_group() as ln_alignment:
+                        # 1. command: Create symbolic link to original bam file
+                        # (use absolute path)
+                        ln = [self.get_tool('ln'), '-s',
+                              input_paths[0],
+                              run.add_output_file(
+                                  'alignments', base, input_paths)]
+                        ln_alignment.add_command(ln)
+
                 else:
                     with run.new_exec_group() as exec_group:
                         alignments = run.add_output_file(
-                            'alignments', '%s-rm-dup.bam' % run_id, input_paths)
-                        metrics = run.add_output_file(
-                            "metrics", '%s-rm-dup-metrics.txt' % run_id,
+                            'alignments', '%s-merged.bam' % run_id,
                             input_paths)
-                        mark_duplicates = [
-                            self.get_tool('picard-tools'), 'MarkDuplicates',
-                            'INPUT=%s' % input_paths[0],
-                            'OUTPUT=%s' % alignments,
-                            'METRICS_FILE=%s' % metrics,
-                            'REMOVE_DUPLICATES=true'                
-                        ]
-                        mark_duplicates.extend(option_list)
-                        exec_group.add_command(mark_duplicates)
+                        merge_sam_files = [
+                            self.get_tool('picard-tools'),
+                            'MergeSamFiles']
+                        for f in input_paths:
+                            merge_sam_files.append('INPUT=%s' % f)
+                        merge_sam_files.append('OUTPUT=%s' % alignments)
+                        merge_sam_files.extend(option_list)
+                        exec_group.add_command(merge_sam_files)
