@@ -8,6 +8,8 @@
 ..
   This document aims to describe how to install **uap**.
 
+.. _installation_of_uap
+
 Installation of **uap**
 =======================
 

@@ -8,6 +8,8 @@
 ..
   This document aims to describe how to use **uap** via the command-line.
 
+.. _cli_usage_uap
+
 Command-Line Usage of **uap**
 =============================
 
@@ -73,6 +75,8 @@ The subcommands are described in detail below.
 .. _ExplanationOfSubcommands:
 Explanation of Subcommands
 **************************
+
+.. _uap_status
 
 status
 ------
@@ -230,43 +234,29 @@ line.
 
 This subcommand provides usage information::
     
-    $ ./run-locally.py -h
+  usage: uap [<project-config>.yaml] run-locally [-h] [--even-if-dirty]
+                                                 [step_task [step_task ...]]
 
-    usage: run-locally.py [-h] [--even-if-dirty] [-s [STEP [STEP ...]]]
-                          [-t [TASK [TASK ...]]]
+  This command  starts 'uap' on the local machine. It can be used to start:
+  * all tasks of the pipeline as configured in <project-config>.yaml
+  * all tasks defined by a specific step in <project-config>.yaml
+  * one or more steps
+  To start the complete pipeline as configured in <project-config>.yaml execute:
+  $ uap <project-config>.yaml run-locally
+  To start a specific step execute:
+  $ uap <project-config>.yaml run-locally <step_name>
+  To start a specific task execute:
+  $ uap <project-config>.yaml run-locally <step_name/run_id>
+  The step_name is the name of an entry in the 'steps:' section as defined in '<project-config>.yaml'. A specific task is defined via its task ID 'step_name/run_id'. A list of all task IDs is returned by running:
+  $ uap <project-config>.yaml status
 
-    This script starts the 'rnaseq-pipeline' on the local machine. It can be 
-    used to start:
-     * all tasks of the pipeline as configured in 'config.yaml'
-     * all tasks defined by a specific step in 'config.yaml'
-     * one or more steps
+  positional arguments:
+    step_task        Can take multiple step names as input. A step name is the name of any entry in the 'steps:' section as defined in '<config>.yaml'. A list of all task IDs is returned by running:
+                   $ uap <project-config>.yaml status.
 
-    To start the complete pipeline as configured in 'config.yaml' execute:
-    $ ./run-locally.py
-
-    To start a specific step execute:
-    $ ./run-locally.py <step_name>
-
-    To start a specific task execute:
-    $ ./run-locally.py <step_name/run_id>
-
-    The step_name is the name of an entry in the 'steps:' section as defined in 
-    'config.yaml'. A specific task is defined via its task ID 'step_name/run_id'.
-    A list of all task IDs is returned by running './status.py'.
-
-    optional arguments:
-      -h, --help            show this help message and exit
-      --even-if-dirty       Must be set if the local git repository contains 
-                            uncommited changes. Otherwise the pipeline will not 
-                            start.
-      -s [STEP [STEP ...]], --step [STEP [STEP ...]]
-                            Can take multiple step names as input. A step name 
-                            is the name of any entry in the 'steps:' section as 
-                            defined in 'config.yaml'
-      -t [TASK [TASK ...]], --task [TASK [TASK ...]]
-                            Can take multiple task ID(s) as input. A task ID 
-                            looks like ths 'step_name/run_id'. A list of all 
-                            task IDs is returned by running './status.py'.
+  optional arguments:
+    -h, --help       show this help message and exit
+    --even-if-dirty  Must be set if the local git repository contains uncommited changtes. Otherwise the pipeline will not start.
 
 
 .. NOTE:: Why is it safe to cancel the pipeline? 
@@ -278,6 +268,8 @@ This subcommand provides usage information::
     moved to their real target directory, and it is not until the last file 
     rename operation has finished that a task is regarded as finished.
     
+.. _uap_submit_to_cluster
+
 submit-to-cluster
 -----------------
 

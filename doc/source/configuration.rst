@@ -8,6 +8,8 @@
 ..
   This document aims to describe how to configure **uap**.
 
+.. _configuration_of_uap
+
 Configuration of **uap**
 ========================
 
