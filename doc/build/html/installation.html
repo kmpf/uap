@@ -32,7 +32,7 @@
   
     <link rel="top" title="uap 0.1.1 documentation" href="index.html"/>
         <link rel="next" title="Configuration of uap" href="configuration.html"/>
-        <link rel="prev" title="Introduction" href="index.html"/> 
+        <link rel="prev" title="How-To Create Your First uap Analysis" href="how-to.html"/> 
 
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
@@ -64,6 +64,10 @@
           
           
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="how-to.html">How-To Create Your First <strong>uap</strong> Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#example-configurations">Example configurations</a></li>
+</ul>
+</li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Installation of <strong>uap</strong></a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#downloading-the-software">Downloading the software</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#making-uap-globally-available">Making <strong>uap</strong> Globally Available</a></li>
@@ -78,13 +82,9 @@
 <li class="toctree-l2"><a class="reference internal" href="interaction.html#explanation-of-subcommands">Explanation of Subcommands</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="extension.html">Extension of <strong>uap</strong></a><ul>
+<li class="toctree-l1"><a class="reference internal" href="extension.html">Extending <strong>uap</strong> Functionality</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="extension.html#implement-new-steps">Implement new steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="extension.html#add-the-new-step-to-your-configuration">Add the new step to your configuration</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="how-to.html">How-To Create Your First <strong>uap</strong> Analysis</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="how-to.html#example-configurations">Example configurations</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="steps.html">Available steps</a><ul>
@@ -137,7 +137,7 @@
 <div class="section" id="downloading-the-software">
 <h2>Downloading the software<a class="headerlink" href="#downloading-the-software" title="Permalink to this headline">¶</a></h2>
 <p>The repository can be obtained like this:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ git clone git@github.com:kmpf/uap.git
+<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/kmpf/uap.git
 </pre></div>
 </div>
 <p>We&#8217;ll need <code class="docutils literal"><span class="pre">virtualenv</span></code>, so install it if you don&#8217;t have it already:</p>
@@ -151,12 +151,7 @@ located in <code class="docutils literal"><span class="pre">./python_env/</span>
 $ ./bootstrap.sh
 </pre></div>
 </div>
-<p>There&#8217;s no harm in accidentally running this script multiple times.
-Also, it will compile <code class="docutils literal"><span class="pre">cat4m</span></code>, a tool which can be found at
-<code class="docutils literal"><span class="pre">./tools/cat4m</span></code> and which is able to read arbitrary input files in chunks
-of 4 MB and print them to stdout (we&#8217;ll need this often in the pipeline,
-as <code class="docutils literal"><span class="pre">cat</span></code> reads in system-default blocks of 32 kB which is ok for a normal
-system but leads to high I/O load on a cluster system).</p>
+<p>There&#8217;s no harm in accidentally running this script multiple times.</p>
 </div>
 <div class="section" id="making-uap-globally-available">
 <h2>Making <strong>uap</strong> Globally Available<a class="headerlink" href="#making-uap-globally-available" title="Permalink to this headline">¶</a></h2>
@@ -190,7 +185,7 @@ $ source ~/.bash_profile
         <a href="configuration.html" class="btn btn-neutral float-right" title="Configuration of uap">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="Introduction"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="how-to.html" class="btn btn-neutral" title="How-To Create Your First uap Analysis"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
