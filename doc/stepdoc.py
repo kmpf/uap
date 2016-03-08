@@ -6,6 +6,7 @@ sys.path.append('../include/steps')
 sys.path.append('../include/sources')
 import abstract_step
 import glob
+import logging
 import os
 import pipeline
 import string
@@ -25,7 +26,20 @@ def doc_module(module_name, fout):
             fout.write(line.strip() + "\n")
         
     # print connections
-    fout.write("**Connections:**\n\n")
+    fout.write("**Connections:**\n")
+    in_con = [i for i in sorted(step._connections) if 'in/' in i]
+    out_con = [i for i in sorted(step._connections) if 'out/' in i]
+    if in_con:
+        fout.write("  - Input Connection:\n")
+        fout.write("    \n")
+        for con in in_con:
+            fout.write("    - '%s'\n" % con)
+    if out_con:
+        fout.write("  - Output Connection:\n")
+        fout.write("    \n")
+        for con in out_con:
+            fout.write("    - '%s'\n" % con)
+    fout.write("\n")
     fout.write(".. graphviz::\n")
     fout.write("\n")
     fout.write("   digraph foo {\n")
@@ -60,13 +74,10 @@ def doc_module(module_name, fout):
         fout.write("\n")
         fout.write("    \n")
         if option['choices']:
-            fout.write("    - possible values:\n")
+            fout.write("    - possible values: %s\n" %
+                       ", ".join(["'%s'" % x for x in option['choices']]) )
             fout.write("    \n")
-            for v in sorted(option['choices']):
-                fout.write("      - %s\n" % v)
             
-    fout.write("\n")
-
     # print tools
     if len(step._tools) > 0:
         fout.write("**Required tools:** %s\n" % ', '.join(sorted(step._tools.keys())))
@@ -101,7 +112,8 @@ def main():
         modules = glob.glob('../include/sources/*.py')
         for m in sorted(modules):
             module_name = os.path.basename(m).replace('.py', '')
-            doc_module(module_name, fout)
+            if not '__' in module_name:
+                doc_module(module_name, fout)
 
         fout.write("Processing steps\n")
         fout.write("----------------\n\n")
@@ -110,7 +122,24 @@ def main():
             module_name = os.path.basename(m).replace('.py', '')
             if module_name == 'io_step':
                 continue
-            doc_module(module_name, fout)
+            if not '__' in module_name:
+                doc_module(module_name, fout)
 
 if __name__ == '__main__':
+    logger = logging.getLogger("uap_logger")
+    info_formatter = logging.Formatter(
+        fmt = '[uap][%(levelname)s]: %(message)s '
+    )
+    # create console handler
+    ch = logging.StreamHandler()
+    # set handler logging level
+    ch.setLevel(logging.NOTSET)
+    # add formatter to ch
+    ch.setFormatter(info_formatter)
+    # add ch to logger
+    logger.addHandler(ch)
+    # Instantiate logger
+    # set logger logging level
+    logger.setLevel(logging.ERROR)
+
     main()
