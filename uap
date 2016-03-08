@@ -46,7 +46,10 @@ def main():
     
     # Definition of common parser(s)
     
-    common_parser = argparse.ArgumentParser(add_help=False)
+    common_parser = argparse.ArgumentParser(
+        add_help=False,
+        formatter_class=argparse.RawTextHelpFormatter
+    )
     
     common_parser.add_argument(
         "--even-if-dirty",
@@ -100,6 +103,7 @@ def main():
         "fix-problems",
         help="Fixes problematic states by removing stall files.",
         description="",
+        formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
     
     fix_problems_parser.add_argument(
@@ -136,6 +140,7 @@ def main():
         description="'render' generates DOT-graphs. Without arguments "
         "it takes the log file of each task and generates a graph, showing "
         "details of the computation.",
+        formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
     
     render_parser.add_argument(
@@ -180,6 +185,7 @@ def main():
         "report",
         help="Generates reports of steps which can do so.",
         description="",
+        formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
     
     report_parser.add_argument(
@@ -218,6 +224,7 @@ def main():
         "its task ID 'step_name/run_id'. A list of all task IDs is " 
         "returned by running:\n"
         "$ uap <project-config>.yaml status",
+        formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
     
     run_locally_parser.add_argument(
@@ -245,6 +252,7 @@ def main():
         "options.\n"
         "IMPORTANT: Hints given by this script are just valid if the jobs were "
         "submitted to the cluster.",
+        formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
     
     status_parser.add_argument(
@@ -297,6 +305,7 @@ def main():
         help="Displays information about the steps available in UAP.",
         description="This script displays by default a list of all "
         "steps the pipeline can use.\n",
+        formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
     
     steps_parser.add_argument(
@@ -320,6 +329,7 @@ def main():
         "tasks can be narrowed down by specifying a step name (in which case all "
         "runs of this steps will be considered) or individual tasks "
         "(step_name/run_id).",
+        formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
 
     submit_to_cluster_parser.add_argument(
@@ -327,7 +337,8 @@ def main():
         dest="cluster",
         type=str,
         default="auto",
-        help="Specify the cluster type (sge, slurm), defaults to auto.")
+        help="Specify the cluster type. Choices: [auto, sge, slurm]. "
+        "Default: [auto].")
 
     submit_to_cluster_parser.add_argument(
         "step_task",
@@ -350,6 +361,7 @@ def main():
         "task-info",
         help="Displays information about certain source or processing tasks.",
         description="",
+        formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
     
     task_info_parser.add_argument(
@@ -379,7 +391,9 @@ def main():
     volatilize_parser = subparsers.add_parser(
         "volatilize",
         help="Saves disk space by volatilizing intermediate results",
-        description="This script does something, of course.",
+        description="Save disk space by volatilizing intermediate results. "
+        "Only steps marked with '_volatile: True' are considered.",
+        formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
     
     volatilize_parser.add_argument(
@@ -387,14 +401,14 @@ def main():
         dest="details",
         action="store_true",
         default=False,
-        help="Displays detailed information about ")
+        help="Shows which files can be volatilized.")
     
     volatilize_parser.add_argument(
         "--srsly",
         dest="srsly",
         action="store_true",
         default=False,
-        help="")
+        help="Replaces files marked for volatilization with a placeholder.")
     
     volatilize_parser.set_defaults(func=volatilize.main)
     
