@@ -37,6 +37,8 @@ closer look at the `YAML definition <http://www.yaml.org/>`_.
 Sections of a Configuration File
 ********************************
 
+.. _config_file_destination_path
+
 Destination_path Section
 ~~~~~~~~~~~~~~~~~~~~~~~~
 

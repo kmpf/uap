@@ -5,22 +5,30 @@
   
 .. title:: uap -- Universal Analysis Pipeline
 
+.. _uap--index
 
 uap -- Robust, Consistent, and Reproducible Data Analysis
 =========================================================
 
 **uap** executes, controls and keeps track of the analysis of large data sets.
 It enables users to perform robust, consistent, and reprodcuible data analysis.
+Users can either combine predefined analysis steps to create custom analysis or
+they can extend **uap** with their own analysis steps.
+Steps are best practice usages for the encapsulated commands.
+
 **uap** is a command-line tool, implemented in Python, and runs under
 GNU/Linux.
-A single configuration file is required for an entire analysis.
+It takes a user-defined configuration file, which describes the analysis, as
+input.
+**uap** works on the analysis via subcommands.
 
-Its main focus is the analysis of high-throughput sequencing data.
-But, its plugin architecture allows users to add functionality and adapt it for
-any kind of large data analysis.
+**uap**'s  main focus is the analysis of high-throughput sequencing data.
+But, as already mentioned, its plugin architecture allows users to add
+functionality.
+This would enable any kind of large data analysis.
 
-General Information
--------------------
+Important Information
+---------------------
 
 The **uap** installation *does not* include all necessary tools for the data
 analysis.
@@ -41,19 +49,13 @@ The recommended workflow to analyse data with **uap** is:
 
 When the analysis is finished, you are left with:
 
-* *The original input files*, which are, of course, left untouched
+* *The original input files* (which are, of course, left untouched)
 * *The experiment-specific configuration file* (see :ref:`configuration_of_uap`)
   You should keep this configuration file for later reference and you could even
   make it publicly available along with your input files for anybody to re-run
   the entire data analysis or parts thereof.
-* *The destination path containing the output files and comprehensive 
-  annotation files of the analysis* (see :ref:`annotations`).
-  The annotation files contain detailed information about every output file.
-  Also, the Git SHA1 hash of the **uap** repository at the time of
-  data processing is included.
-  The executed commands are listed.
-  Annotation contains information about inter-process streams and output files,
-  including SHA1 checksums, file sizes, and line counts as well.
+* *The output files and comprehensive annotations of the analysis* (see :ref:`annotations`).
+  These files are stored in the destination path defined in the configuration file.
 
 Core aspects
 ------------
@@ -63,57 +65,35 @@ Core aspects
 * All steps write their output files to a temporary location. 
   Only if a step has completed successfully, the output files are copied to 
   the correct output directory.
-* The output directory names are suffixed with a four-character hashtag 
-  which mirrors the options specified for the step.
+* The output directory names are suffixed with a hashtag which is based on the
+  commands executed to generate the output data.
 * Processing can be aborted and continued from the command line at any time. 
   This way, cluster failures are less critical because output files do not
   get compromised.
 * Errors are caught as early as possible. Tools are checked for availability, 
   and the entire processing pipeline is calculated in advance before 
   jobs are being started or submitted to a cluster.
-  
-**Reproduceability:**
 
-* Comprehensive annotations are written to the output directories, allowing 
-  for later investigation about what exactly happened.
-      
+**Consistency:**
+
+* Steps and files are defined in a directed acyclic graph (DAG).
+  The DAG defines dependencies between in- and output files.
+* Prior to any execution the dependencies between files are calculated.
+  If a file is newer or an option for a calculation has changed all dependent
+  files are marked for recalculation.
+
+**Reproducibility:**
+
+* Comprehensive annotations are written to the output directories.
+  They allow for later investigation of errors or review of executed commands.
+  They contain also versions of used tool, required runtime, memory and CPU
+  usage, etc.
+
 **Simplicity:**
 
 * The entire processing pipeline is described via a configuration file. 
-  Steps are defined in a directed acyclic graph (DAG).
 * Interaction with the pipeline happens through a single command-line tool which 
   can be used to execute and monitor the analysis.
-
-Design
-------
-
-**uap** is designed as a plugin architecture.
-The plugins are  where **uap** itself controls
-the ordered execution of the plugged in so called steps.
-Steps are organized in a dependency graph (a directed acyclic graph) -- every 
-step may have one or more parent steps, which may in turn have other parent 
-steps, and so on.
-Steps without parents are usually sources which provide source files, for
-example FASTQ files with the raw sequences obtained from the sequencer,
-genome sequence databases or annotation tracks.
-
-Each step defines a number of runs and each run represents a piece of the
-entire data analysis, typically at the level of a single sample.
-A certain *run* of a certain *step* is called a *task*.
-While the steps only describe what needs to be done on a very abstract level,
-it is through the individual runs of each step that a **uap** wide list of 
-actual tasks becomes available.
-Each run may provide a number of output files which depend on output files
-of one or several runs from parent steps.
-
-Source steps define a run for every input sample, and a subsequent step
-may:
-
-* define the same number of runs, 
-* define more runs (for example when R1 and R2 reads in a paired-end RNASeq 
-  experiment should be treated separately),
-* define fewer runs (usually towards the end of a pipeline, where results are
-  summarized).
 
 
 Table of contents
