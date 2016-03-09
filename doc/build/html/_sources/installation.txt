@@ -8,36 +8,56 @@
 ..
   This document aims to describe how to install **uap**.
 
-.. _installation_of_uap
-
+.. _installation_of_uap:
+#######################
 Installation of **uap**
-=======================
+#######################
 
+*************
+Prerequisites
+*************
 
-Downloading the software
-------------------------
-
-The repository can be obtained like this::
-
-  $ git clone https://github.com/kmpf/uap.git
-    
-We'll need ``virtualenv``, so install it if you don't have it already::
+The installation requires Python's ``virtualenv`` tool.
+So, please install it if its not already installed.::
 
   $ sudo apt-get install python-virtualenv
+  OR
+  $ sudo pip install virtualenv
+
+************************
+Downloading the Software
+************************
+
+Download the software from `uap's github repository <https://github.com/kmpf/uap>`_
+like this::
+
+  $ git clone https://github.com/kmpf/uap.git
+
+*****************************    
+Setting Up Python Environment
+*****************************
 
 After cloning the repository, change into the created directory and run the 
-bootstrapping script to create the required Python environment (which will be
-located in ``./python_env/``)::
+bootstrapping script ``bootstrap.sh``::
 
   $ cd uap
   $ ./bootstrap.sh
 
-There's no harm in accidentally running this script multiple times.
+The script creates the required Python environment (which will be located in
+``./python_env/``).
+Afterwards it installs
+`PyYAML <https://pypi.python.org/pypi/PyYAML>`_,
+`NumPy <https://pypi.python.org/pypi/numpy>`_,
+`biopython <https://pypi.python.org/pypi/biopython>`_, and
+`psutil <https://pypi.python.org/pypi/psutil>`_ into the freshly created
+environment.
+There is no harm in accidentally running this script multiple times.
 
+*********************************
 Making **uap** Globally Available
----------------------------------
+*********************************
 
-You can use **uap** system-wide.
+**uap** can be used globally.
 On Unix-type operating systems it is advised to add the installation path to
 your ``$PATH`` variable.
 Therefore change into the **uap** directory and execute::

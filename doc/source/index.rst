@@ -6,9 +6,9 @@
 .. title:: uap -- Universal Analysis Pipeline
 
 .. _uap--index:
-
+#########################################################
 uap -- Robust, Consistent, and Reproducible Data Analysis
-=========================================================
+#########################################################
 
 **uap** executes, controls and keeps track of the analysis of large data sets.
 It enables users to perform robust, consistent, and reprodcuible data analysis.
@@ -30,8 +30,10 @@ But, as already mentioned, its plugin architecture allows users to add
 functionality.
 This would enable any kind of large data analysis.
 
+.. _uap-important-information:
+*********************
 Important Information
----------------------
+*********************
 
 The **uap** installation **does not** include all necessary tools for the data
 analysis.
@@ -39,20 +41,21 @@ It expects that the required tools are **already installed**.
 
 The recommended workflow to analyse data with **uap** is:
 
-1. Install **uap** (see :ref:`installation_of_uap`)
-2. Optionally: Extend **uap** by adding new steps (see :ref:`extending_uap`)
+1. Install **uap** (see :ref:`installation-of-uap`)
+2. Optionally: Extend **uap** by adding new steps (see :ref:`extending-uap`)
 3. Write a configuration file to setup the analysis (see
-   :ref:`configuration_of_uap`)
-4. Start the analysis locally (see :ref:`uap_run_locally`) or submit it to the
-   cluster (see :ref:`uap_submit_to_cluster`)
-5. Follow the progress of the analysis (see :ref:`uap_status`)
+   :ref:`configuration-of-uap`)
+4. Start the analysis locally (see :ref:`run-locally <uap-run-locally>`) or
+   submit it to the cluster (see
+   :ref:`submit-to-cluster <uap-submit-to-cluster>`)
+5. Follow the progress of the analysis (see :ref:`status <uap-status>`)
 6. Share your extensions with others (send a pull request via github)
 
 A finished analysis leaves the user with:
 
 * *The original input files* (which are, of course, left untouched).
 * *The experiment-specific configuration file*
-  (see :ref:`configuration_of_uap`).
+  (see :ref:`configuration-of-uap`).
   You should keep this configuration file for later reference and you could
   even make it publicly available along with your input files for anybody to
   re-run the entire data analysis or parts thereof.
@@ -61,11 +64,12 @@ A finished analysis leaves the user with:
   These files are stored in the destination path defined in the configuration
   file.
 
+************
 Core aspects
-------------
+************
 
 Robustness:
-~~~~~~~~~~~
+===========
 
 * Data is processed in temporary location.
   If and only if ALL involved processes exited graceful, the output files are
@@ -81,7 +85,7 @@ Robustness:
   calculated in advance before jobs are being started or submitted to a cluster.
 
 Consistency:
-~~~~~~~~~~~~
+============
 
 * Steps and files are defined in a directed acyclic graph (DAG).
   The DAG defines dependencies between in- and output files.
@@ -90,7 +94,7 @@ Consistency:
   files are marked for recalculation.
 
 Reproducibility:
-~~~~~~~~~~~~~~~~
+================
 
 * Comprehensive annotations are written to the output directories.
   They allow for later investigation of errors or review of executed commands.
@@ -98,18 +102,18 @@ Reproducibility:
   usage, etc.
 
 Usability:
-~~~~~~~~~~
+==========
 
 * Single configuration file describdes entire processing pipeline.
 * Single command-line tool interacts with the pipeline.
   It can be used to execute, monitor, and analyse the pipeline.
 
-
+*****************
 Table of contents
------------------
+*****************
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    how-to
    installation
@@ -123,17 +127,17 @@ Table of contents
    api
 
 
-
+*******
 Remarks
--------
+*******
 
 This documentation has been created using `Sphinx <http://sphinx-doc.org/>`_
 and `reStructuredText <http://docutils.sourceforge.net/rst.html>`_.
 
+******************
 Indices and tables
-------------------
+******************
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

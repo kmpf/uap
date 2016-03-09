@@ -1,13 +1,15 @@
+###############
 Available steps
-===============
+###############
 
+************
 Source steps
-------------
+************
 
 .. index:: bcl2fastq_source
 
 bcl2fastq_source
-~~~~~~~~~~~~~~~~
+================
 
 
 **Connections:**
@@ -80,7 +82,7 @@ This step provides input files which already exists and therefore creates no tas
 .. index:: fastq_source
 
 fastq_source
-~~~~~~~~~~~~
+============
 
 
 
@@ -137,7 +139,7 @@ This step provides input files which already exists and therefore creates no tas
 .. index:: fetch_chrom_sizes_source
 
 fetch_chrom_sizes_source
-~~~~~~~~~~~~~~~~~~~~~~~~
+========================
 
 
 **Connections:**
@@ -170,7 +172,7 @@ This step provides input files which already exists and therefore creates no tas
 .. index:: raw_file_source
 
 raw_file_source
-~~~~~~~~~~~~~~~
+===============
 
 
 **Connections:**
@@ -205,7 +207,7 @@ This step provides input files which already exists and therefore creates no tas
 .. index:: raw_file_sources
 
 raw_file_sources
-~~~~~~~~~~~~~~~~
+================
 
 
 
@@ -249,7 +251,7 @@ This step provides input files which already exists and therefore creates no tas
 .. index:: raw_url_source
 
 raw_url_source
-~~~~~~~~~~~~~~
+==============
 
 
 **Connections:**
@@ -292,7 +294,7 @@ This step provides input files which already exists and therefore creates no tas
 .. index:: run_folder_source
 
 run_folder_source
-~~~~~~~~~~~~~~~~~
+=================
 
 
 
@@ -335,13 +337,14 @@ for all samples is coherent and unambiguous.
     
 This step provides input files which already exists and therefore creates no tasks in the pipeline.
 
+****************
 Processing steps
-----------------
+****************
 
 .. index:: bam_to_genome_browser
 
 bam_to_genome_browser
-~~~~~~~~~~~~~~~~~~~~~
+=====================
 
 
 **Connections:**
@@ -405,7 +408,7 @@ bam_to_genome_browser
 .. index:: bowtie2
 
 bowtie2
-~~~~~~~
+=======
 
 
 
@@ -459,7 +462,7 @@ bowtie2 [options]* -x <bt2-idx> {-1 <m1> -2 <m2> | -U <r>} -S [<hit>]
 .. index:: bowtie2_generate_index
 
 bowtie2_generate_index
-~~~~~~~~~~~~~~~~~~~~~~
+======================
 
 
 
@@ -532,7 +535,7 @@ bowtie2-build [options]* <reference_in> <bt2_index_base>
 .. index:: bwa_backtrack
 
 bwa_backtrack
-~~~~~~~~~~~~~
+=============
 
 
 
@@ -651,7 +654,7 @@ bwa sampe <bwa-index> <first-read.sai> <second-read.sai>                   <firs
 .. index:: bwa_generate_index
 
 bwa_generate_index
-~~~~~~~~~~~~~~~~~~
+==================
 
 
 
@@ -694,7 +697,7 @@ bwa index -p <index-basename> <seqeunce.fasta>
 .. index:: bwa_mem
 
 bwa_mem
-~~~~~~~
+=======
 
 
 
@@ -811,7 +814,7 @@ intractg: -B9 -O16 -L5  (intra-species contigs to ref)
 .. index:: chromhmm_binarizebam
 
 chromhmm_binarizebam
-~~~~~~~~~~~~~~~~~~~~
+====================
 
 
 
@@ -893,7 +896,7 @@ form using the BinarizeSignal command.
 .. index:: cutadapt
 
 cutadapt
-~~~~~~~~
+========
 
 
 
@@ -961,7 +964,7 @@ https://cutadapt.readthedocs.org/en/stable/
 .. index:: fastqc
 
 fastqc
-~~~~~~
+======
 
 
 
@@ -1020,7 +1023,7 @@ http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
 .. index:: fastx_quality_stats
 
 fastx_quality_stats
-~~~~~~~~~~~~~~~~~~~
+===================
 
 
 
@@ -1072,7 +1075,7 @@ http://hannonlab.cshl.edu/fastx_toolkit/
 .. index:: fix_cutadapt
 
 fix_cutadapt
-~~~~~~~~~~~~
+============
 
 
 
@@ -1116,7 +1119,7 @@ one of them has been completely removed by cutadapt (or any other software).
 .. index:: htseq_count
 
 htseq_count
-~~~~~~~~~~~
+===========
 
 
 
@@ -1180,7 +1183,7 @@ http://www-huber.embl.de/users/anders/HTSeq/doc/count.html
 .. index:: macs2
 
 macs2
-~~~~~
+=====
 
 
 
@@ -1292,7 +1295,7 @@ macs2 callpeak --treatment <aligned-reads> [--control <aligned-reads>]
 .. index:: merge_fasta_files
 
 merge_fasta_files
-~~~~~~~~~~~~~~~~~
+=================
 
 
 
@@ -1334,7 +1337,7 @@ The output files are gzipped.
 .. index:: merge_fastq_files
 
 merge_fastq_files
-~~~~~~~~~~~~~~~~~
+=================
 
 
 
@@ -1379,7 +1382,7 @@ gzipped.
 .. index:: narrowpeak_to_bed
 
 narrowpeak_to_bed
-~~~~~~~~~~~~~~~~~
+=================
 
 
 **Connections:**
@@ -1425,7 +1428,7 @@ narrowpeak_to_bed
 .. index:: picard_add_replace_read_groups
 
 picard_add_replace_read_groups
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+==============================
 
 
 
@@ -1517,7 +1520,7 @@ https://broadinstitute.github.io/picard/command-line-overview.html#AddOrReplaceR
 .. index:: picard_markduplicates
 
 picard_markduplicates
-~~~~~~~~~~~~~~~~~~~~~
+=====================
 
 
 
@@ -1629,7 +1632,7 @@ https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicate
 .. index:: picard_merge_sam_bam_files
 
 picard_merge_sam_bam_files
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+==========================
 
 
 
@@ -1708,7 +1711,7 @@ https://broadinstitute.github.io/picard/command-line-overview.html#MergeSamFiles
 .. index:: preseq_complexity_curve
 
 preseq_complexity_curve
-~~~~~~~~~~~~~~~~~~~~~~~
+=======================
 
 
 
@@ -1766,7 +1769,7 @@ preseq c_curve -o output.txt input.sort.bed
 .. index:: preseq_future_genome_coverage
 
 preseq_future_genome_coverage
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+=============================
 
 
 
@@ -1827,7 +1830,7 @@ read format.
 .. index:: preseq_future_yield
 
 preseq_future_yield
-~~~~~~~~~~~~~~~~~~~
+===================
 
 
 
@@ -1893,7 +1896,7 @@ confidence intervals.
 .. index:: remove_duplicate_reads_runs
 
 remove_duplicate_reads_runs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+===========================
 
 
 
@@ -1938,7 +1941,7 @@ METRICS_FILE=<metrics-out> REMOVE_DUPLICATES=true
 .. index:: rseqc
 
 rseqc
-~~~~~
+=====
 
 
 
@@ -1985,7 +1988,7 @@ metrics like read distribution, gene coverage, and sequencing depth.
 .. index:: sam_to_sorted_bam
 
 sam_to_sorted_bam
-~~~~~~~~~~~~~~~~~
+=================
 
 
 
@@ -2037,7 +2040,7 @@ http://www.htslib.org/doc/samtools.html
 .. index:: samtools_faidx
 
 samtools_faidx
-~~~~~~~~~~~~~~
+==============
 
 
 
@@ -2077,7 +2080,7 @@ subsequences will be retrieved and printed to stdout in the FASTA format.
 .. index:: samtools_index
 
 samtools_index
-~~~~~~~~~~~~~~
+==============
 
 
 
@@ -2130,7 +2133,7 @@ http://www.htslib.org/doc/samtools.html
 .. index:: samtools_stats
 
 samtools_stats
-~~~~~~~~~~~~~~
+==============
 
 
 
@@ -2172,7 +2175,7 @@ http://www.htslib.org/doc/samtools.html
 .. index:: segemehl
 
 segemehl
-~~~~~~~~
+========
 
 
 
@@ -2313,7 +2316,7 @@ cat unmapped_fifo | pigz --blocksize 4096 --processes 2 -c >
 .. index:: segemehl_generate_index
 
 segemehl_generate_index
-~~~~~~~~~~~~~~~~~~~~~~~
+=======================
 
 
 
@@ -2360,7 +2363,7 @@ http://www.bioinf.uni-leipzig.de/Software/segemehl/
 .. index:: tophat2
 
 tophat2
-~~~~~~~
+=======
 
 
 

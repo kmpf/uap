@@ -8,13 +8,14 @@
 ..
   This document describes how **uap** can be extended with new analysis steps.
 
-
+.. _extending_uap:
+###############################
 Extending **uap** Functionality
-===============================
+###############################
 
-
+*******************
 Implement new steps
--------------------
+*******************
 
 **uap** can be easily extended by implementing new source or processing steps.
 Therefore basic python programming skills are necessary.
@@ -28,7 +29,7 @@ New steps are added to **uap** by placing a single Python file in:
 Let's get through that file step by step.
 
 Step 1: Import Statements and Logger
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+====================================
 
 Please organize your imports in a similar fashion as shown below.
 Essential imports are ``import logging`` and ``from abstract_step import *``.
@@ -52,7 +53,7 @@ the latter to inherit from.
    ..
 
 Step 2: Class Definition and Constructor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+========================================
 
 Each python file has to define a class with a constructor and a single
 functions.
@@ -210,7 +211,7 @@ react accordingly. Inspect ``complete_input_run_info`` to find out what your
 step gets as input.
 
 Best practices
-**************
+==============
 
 There are a couple of things which should be kept in mind when implementing new 
 steps or modifying existing steps:
@@ -246,8 +247,9 @@ steps or modifying existing steps:
   more flexibel (often more configuration extensive one).
   You don't know what other user might need, so let them decide.
 
+**************************************
 Add the new step to your configuration
---------------------------------------
+**************************************
 
 To make a new step known to **uap**, it has to be copied into either of these
 folders:

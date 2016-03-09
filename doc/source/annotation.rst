@@ -8,10 +8,10 @@
 ..
   This document aims to describe how to use **uap** via the command-line.
 
-.. _annotation_files
-
+.. _annotation_files:
+################
 Annotation Files
-================
+################
 
 The annotation files contain detailed information about every output file.
 Also, the Git SHA1 hash of the **uap** repository at the time of

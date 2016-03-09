@@ -9,8 +9,9 @@
   This document describes how-to analyse problems that occured while using
   **uap** and how-to find the cause of the problem.
 
+#############################
 Post-mortem pipeline analysis
-=============================
+#############################
     
 Upon successful completion of a task, an extensive YAML-formatted annotation 
 is placed next to the output files in a file called 

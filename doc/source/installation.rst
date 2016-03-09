@@ -9,12 +9,13 @@
   This document aims to describe how to install **uap**.
 
 .. _installation_of_uap:
-
+#######################
 Installation of **uap**
-=======================
+#######################
 
+*************
 Prerequisites
--------------
+*************
 
 The installation requires Python's ``virtualenv`` tool.
 So, please install it if its not already installed.::
@@ -23,17 +24,18 @@ So, please install it if its not already installed.::
   OR
   $ sudo pip install virtualenv
 
-
+************************
 Downloading the Software
-------------------------
+************************
 
 Download the software from `uap's github repository <https://github.com/kmpf/uap>`_
 like this::
 
   $ git clone https://github.com/kmpf/uap.git
-    
+
+*****************************    
 Setting Up Python Environment
-------------------------
+*****************************
 
 After cloning the repository, change into the created directory and run the 
 bootstrapping script ``bootstrap.sh``::
@@ -51,8 +53,9 @@ Afterwards it installs
 environment.
 There is no harm in accidentally running this script multiple times.
 
+*********************************
 Making **uap** Globally Available
----------------------------------
+*********************************
 
 **uap** can be used globally.
 On Unix-type operating systems it is advised to add the installation path to

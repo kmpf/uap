@@ -9,14 +9,15 @@
   This document describes how to set-up your first **uap** analysis.
 
 .. _how-to:
-
+##################
 How-To Use **uap**
-==================
+##################
 
 At first, you need to install uap (see :ref:`installation_of_uap`).
 
+***************************
 Try Existing Configurations
----------------------------
+***************************
 
 After you have done that you need a working configuration file.
 Example configurations are included in **uap**'s installation directory.
@@ -81,9 +82,9 @@ You want to create indexes of the human genome (hg19)::
   $ uap index_homo_sapiens_hg19_genome.yaml run-locally
   <Analysis starts>
 
-
+*****************************
 Create Your Own Configuration
------------------------------
+*****************************
 
 Although writing the configuration may seem a bit complicated, the trouble 
 pays off later because further interaction with the pipeline is quite simple.
@@ -96,7 +97,7 @@ Here is a simple configuration:
   Insert YAML here!
 
 General Structure of Sequencing Analysis
-**************************************** 
+========================================
 
 Every analysis of high-throughput sequencing data evolves around some basic
 tasks.
@@ -114,11 +115,11 @@ performed.
 
 
 RNAseq analysis
-***************
+---------------
 
 
 Differential expression
-~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^
 
 RNAseq analysis often aims at the discovery of differentially expressed
 (known) transcripts. Therefore mappped reads for at least two different samples
@@ -129,7 +130,7 @@ have to be available.
 6. Perform statistical analysis, based on counts 
 
 Assemble novel transcripts
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As the publicly available annotations, e.g. from GENCODE, are probably not
 complete, the assembly of novel transcripts from RNAseq data is another task one
@@ -137,7 +138,7 @@ would perform to invetsigate the transcriptome.
 
 
 ChIPseq analysis
-****************
+----------------
 
 ChIPseq analysis aims at the discovery of genomic loci at which protein(s) of
 interest were bound. The experiment is an enrichment procedure using specific
@@ -149,7 +150,7 @@ calling programs.
 
 
 Prepare UCSC genome browser tracks
-**********************************
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The conversion of sequencing data into an format that can be displayed by the
 UCSC genome browser is needed in almost all sequencing projects.

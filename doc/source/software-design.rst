@@ -8,10 +8,10 @@
 ..
   This document aims to describe how to use **uap** via the command-line.
 
-.. _software_design
-
+.. _software_design:
+###############
 Software Design
-===============
+###############
 
 **uap** is designed as a plugin architecture.
 The plugins are internally called steps.

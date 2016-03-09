@@ -18,7 +18,7 @@ def doc_module(module_name, fout):
     fout.write(".. index:: %s\n" % module_name)
     fout.write("\n")
     fout.write(module_name + "\n")
-    fout.write('~' * len(module_name) + "\n\n")
+    fout.write('=' * len(module_name) + "\n\n")
     fout.write("\n")
     if step.__doc__:
         doc = step.__doc__.split("\n")
@@ -104,19 +104,21 @@ def doc_module(module_name, fout):
 
 def main():
     with open('source/steps.rst', 'w') as fout:
+        fout.write("###############\n")
         fout.write("Available steps\n")
-        fout.write("===============\n\n")
-
+        fout.write("###############\n")
+        fout.write("\n")
+        fout.write("************\n")
         fout.write("Source steps\n")
-        fout.write("------------\n\n")
+        fout.write("************\n\n")
         modules = glob.glob('../include/sources/*.py')
         for m in sorted(modules):
             module_name = os.path.basename(m).replace('.py', '')
             if not '__' in module_name:
                 doc_module(module_name, fout)
-
+        fout.write("****************\n")
         fout.write("Processing steps\n")
-        fout.write("----------------\n\n")
+        fout.write("****************\n\n")
         modules = glob.glob('../include/steps/*.py')
         for m in sorted(modules):
             module_name = os.path.basename(m).replace('.py', '')
