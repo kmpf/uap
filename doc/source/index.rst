@@ -5,16 +5,19 @@
   
 .. title:: uap -- Universal Analysis Pipeline
 
-.. _uap--index
+.. _uap--index:
 
 uap -- Robust, Consistent, and Reproducible Data Analysis
 =========================================================
 
 **uap** executes, controls and keeps track of the analysis of large data sets.
 It enables users to perform robust, consistent, and reprodcuible data analysis.
+**uap** encapsulates the usage of (bioinformatic) tools and handles data flow
+and processing during an analysis.
 Users can either combine predefined analysis steps to create custom analysis or
 they can extend **uap** with their own analysis steps.
 Steps are best practice usages for the encapsulated commands.
+
 
 **uap** is a command-line tool, implemented in Python, and runs under
 GNU/Linux.
@@ -30,11 +33,9 @@ This would enable any kind of large data analysis.
 Important Information
 ---------------------
 
-The **uap** installation *does not* include all necessary tools for the data
+The **uap** installation **does not** include all necessary tools for the data
 analysis.
-It expects that the required tools are *already installed*.
-**uap** encapsulates the usage of (bioinformatic) tools and handles data flow
-and processing during an analysis.
+It expects that the required tools are **already installed**.
 
 The recommended workflow to analyse data with **uap** is:
 
@@ -47,34 +48,40 @@ The recommended workflow to analyse data with **uap** is:
 5. Follow the progress of the analysis (see :ref:`uap_status`)
 6. Share your extensions with others (send a pull request via github)
 
-When the analysis is finished, you are left with:
+A finished analysis leaves the user with:
 
-* *The original input files* (which are, of course, left untouched)
-* *The experiment-specific configuration file* (see :ref:`configuration_of_uap`)
-  You should keep this configuration file for later reference and you could even
-  make it publicly available along with your input files for anybody to re-run
-  the entire data analysis or parts thereof.
-* *The output files and comprehensive annotations of the analysis* (see :ref:`annotations`).
-  These files are stored in the destination path defined in the configuration file.
+* *The original input files* (which are, of course, left untouched).
+* *The experiment-specific configuration file*
+  (see :ref:`configuration_of_uap`).
+  You should keep this configuration file for later reference and you could
+  even make it publicly available along with your input files for anybody to
+  re-run the entire data analysis or parts thereof.
+* *The output files and comprehensive annotations of the analysis*
+  (see :ref:`annotations`).
+  These files are stored in the destination path defined in the configuration
+  file.
 
 Core aspects
 ------------
 
-**Robustness:**
+Robustness:
+~~~~~~~~~~~
 
-* All steps write their output files to a temporary location. 
-  Only if a step has completed successfully, the output files are copied to 
-  the correct output directory.
-* The output directory names are suffixed with a hashtag which is based on the
-  commands executed to generate the output data.
-* Processing can be aborted and continued from the command line at any time. 
-  This way, cluster failures are less critical because output files do not
-  get compromised.
-* Errors are caught as early as possible. Tools are checked for availability, 
-  and the entire processing pipeline is calculated in advance before 
-  jobs are being started or submitted to a cluster.
+* Data is processed in temporary location.
+  If and only if ALL involved processes exited graceful, the output files are
+  copied to the final output directory.
+* The final output directory names are suffixed with a hashtag which is based
+  on the commands executed to generate the output data.
+  Data is not easily overwritten and this helps to check for necessary
+  recomputations.
+* Processing can be aborted and continued from the command line at any time.
+  Failures during data processing do not lead to unstable state of analysis.
+* Errors are reported as early as possible, fail-fast.
+  Tools are checked for availability, and the entire processing pipeline is
+  calculated in advance before jobs are being started or submitted to a cluster.
 
-**Consistency:**
+Consistency:
+~~~~~~~~~~~~
 
 * Steps and files are defined in a directed acyclic graph (DAG).
   The DAG defines dependencies between in- and output files.
@@ -82,22 +89,24 @@ Core aspects
   If a file is newer or an option for a calculation has changed all dependent
   files are marked for recalculation.
 
-**Reproducibility:**
+Reproducibility:
+~~~~~~~~~~~~~~~~
 
 * Comprehensive annotations are written to the output directories.
   They allow for later investigation of errors or review of executed commands.
   They contain also versions of used tool, required runtime, memory and CPU
   usage, etc.
 
-**Simplicity:**
+Usability:
+~~~~~~~~~~
 
-* The entire processing pipeline is described via a configuration file. 
-* Interaction with the pipeline happens through a single command-line tool which 
-  can be used to execute and monitor the analysis.
+* Single configuration file describdes entire processing pipeline.
+* Single command-line tool interacts with the pipeline.
+  It can be used to execute, monitor, and analyse the pipeline.
 
 
 Table of contents
-=================
+-----------------
 
 .. toctree::
    :maxdepth: 2
@@ -110,18 +119,19 @@ Table of contents
    software-design
    annotation
    steps
+   troubleshooting
    api
-   post-mortem
+
 
 
 Remarks
-=======
+-------
 
 This documentation has been created using `Sphinx <http://sphinx-doc.org/>`_
 and `reStructuredText <http://docutils.sourceforge.net/rst.html>`_.
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
