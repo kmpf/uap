@@ -8,64 +8,105 @@
 ..
   This document describes how to set-up your first **uap** analysis.
 
-How-To Create Your First **uap** Analysis
-=========================================
+.. _how-to:
 
-Next, edit ``config.sample.yaml`` and save it as ``config.yaml``. 
+How-To Use **uap**
+==================
+
+At first, you need to install uap (see :ref:`installation_of_uap`).
+
+Try Existing Configurations
+---------------------------
+
+After you have done that you need a working configuration file.
+Example configurations are included in **uap**'s installation directory.
+They are stored inside the ``example-configurations`` folder inside the
+**uap** installation.
+Go there and try::
+
+  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
+  
+  Waiting tasks
+  -------------
+  [w] bowtie2_index/Mycoplasma_genitalium_index-download
+  [w] bwa_index/Mycoplasma_genitalium_index-download
+  [w] fasta_index/download
+  [w] segemehl_index/Mycoplasma_genitalium_genome-download
+  
+  Ready tasks
+  -----------
+  [r] M_genitalium_genome/download
+  
+  tasks: 5 total, 4 waiting, 1 ready
+
+
+Start your first **uap** analysis showcasing the controlled indexing of a
+genome (arguably a tiny one)::
+
+  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
+  [uap] Set log level to ERROR
+  [uap][ERROR]: index_mycoplasma_genitalium_ASM2732v1_genome.yaml: Destination path does not exist: genomes/bacteria/Mycoplasma_genitalium/
+  
+Oops, the :ref:`config_file_destination_path` does not exist.
+Create it and start again::
+
+  $ mkdir genomes/bacteria/Mycoplasma_genitalium/
+  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
+
+  Waiting tasks
+  -------------
+  [w] bowtie2_index/Mycoplasma_genitalium_index-download
+  [w] bwa_index/Mycoplasma_genitalium_index-download
+  [w] fasta_index/download
+  [w] segemehl_index/Mycoplasma_genitalium_genome-download
+  
+  Ready tasks
+  -----------
+  [r] M_genitalium_genome/download
+  
+  tasks: 5 total, 4 waiting, 1 ready
+
+If you still do get errors, please check that the tools defined in
+``index_mycoplasma_genitalium_ASM2732v1_genome.yaml`` are available in your
+environment (see :ref:`uap_config_tools_section`).
+
+Go on and try some more example configurations (let's for now assume that all
+tools are installed and configured correctly).
+You want to create indexes of the human genome (hg19)::
+
+  $ uap index_homo_sapiens_hg19_genome.yaml status
+  [uap] Set log level to ERROR
+  [uap][ERROR]: Output directory (genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes) does not exist. Please create it.
+  $ mkdir genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
+  $ uap index_homo_sapiens_hg19_genome.yaml run-locally
+  <Analysis starts>
+
+
+Create Your Own Configuration
+-----------------------------
+
 Although writing the configuration may seem a bit complicated, the trouble 
-pays off later because further interaction with the pipeline is quite simple. 
-Here is a sample configuration:
+pays off later because further interaction with the pipeline is quite simple.
+The structure and content of the configuration files is very detailed described
+on another page (see :ref:`configuration_of_uap`).
+Here is a simple configuration:
 
 .. code-block:: yaml
 
-    # This is the rnaseq-pipeline configuration file.
+  Insert YAML here!
 
-    destination_path: "/home/michael/test-pipeline/out"
+General Structure of Sequencing Analysis
+**************************************** 
 
-    steps:
-        fastq_source:
-            pattern: /home/michael/test-pipeline/fastq/*.fastq.gz
-            group: (Sample_COPD_\d+)_R[12]-head.fastq.gz
-            indices: copd-barcodes.csv
-            paired_end: yes
-            
-        cutadapt:
-            _depends: fastq_source
-            adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG
-            adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
-            
-    tools:
-        cutadapt:
-            path: /home/michael/Desktop/rnaseq-pipeline/tools/cutadapt-1.2.1/bin/cutadapt
-            get_version: '--version'
-        pigz:
-            path: pigz
-            get_version: '--version'
-        head:
-            path: head
-            get_version: '--version'
-        cat4m:
-            path: ./tools/cat4m
-
-
-Example configurations
-----------------------
-
-There is currently no step implemented to execute Illuminas CASAVA pipeline, which 
-converts BCL files to FASTQ files. Therefore all example configurations
-begin with a source step that relies on the availability of fastq.gz files.
-
-General sequencing analysis steps
-********************************* 
-
-Every analysis of high-throughput sequencing results starts with some basic
-steps. Irrespective of sequencing RNA or DNA, given a reference genome
-exists.
+Every analysis of high-throughput sequencing data evolves around some basic
+tasks.
+Irrespective of sequencing RNA or DNA.
 
 1. Get the sequencing reads as input (most likely fastq.gz)
 2. Remove adapter sequences from your sequencing reads
-3. Align the sequencing reads onto the refernce genome
+3. Align the sequencing reads onto the reference genome
 
+The
 After these steps are finished a lot of different analysis could be applied on
 the data. Furtheron example configurations for often used analyses are shown.
 The enumeration of steps show continues as if the basic steps were already
