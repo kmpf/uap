@@ -8,12 +8,12 @@
 ..
   This document aims to describe how to configure **uap**.
 
-.. _configuration_of_uap:
+.. _configuration-of-uap:
 ##################
 Configuration File
 ##################
 
-**uap** operates on `YAML <http://www.yaml.org/>`_ files which define data
+**uap** operates on |yaml_link| files which define data
 analysis.
 These files are called configuration files.
 
@@ -32,7 +32,7 @@ although technically, they are keys):
   their versions (for later reference)
 
 If you want to know more about the notation that is used in this file, have a
-closer look at the `YAML definition <http://www.yaml.org/>`_.
+closer look at the |yaml_link| definition.
 
 ********************************
 Sections of a Configuration File
@@ -264,8 +264,8 @@ If a tool does not exit with exit code 0, find out which code it is by typing
             path: /path/to/some-tool
             get_version: --version
 
-If you are working on a cluster running `UGE <http://www.univa.com/products/>`_
-or `SLURM <http://slurm.schedmd.com/>`_ you can also use their module system.
+If you are working on a cluster running |uge_link|
+or |slurm_link| you can also use their module system.
 You need to know what actually happens when you load or unload a module::
 
   $ module load <module-name>
@@ -314,5 +314,20 @@ Example Configurations
 
 Please check out the example configurations provided inside the ``example-configurations`` folder of **uap**'s installation directory.
 
-.. [1] `PyYAML does not complain about duplicate keys
-       <http://pyyaml.org/ticket/128>`_
+.. [1] |pyyaml_link|
+
+.. |uge_link| raw:: html
+
+   <a href="http://www.univa.com/products/" target="_blank">UGE</a>.
+
+.. |slurm_link| raw:: html
+
+   <a href="http://slurm.schedmd.com/" target="_blank">SLURM</a>.
+
+.. |yaml_link| raw:: html
+
+   <a href="http://www.yaml.org/" target="_blank">YAML</a>.
+
+.. |pyyaml_link| raw:: html
+
+   <a href="http://pyyaml.org/ticket/128" target="_blank">PyYAML does not complain about duplicate keys</a>.

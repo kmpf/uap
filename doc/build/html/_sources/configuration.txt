@@ -8,7 +8,7 @@
 ..
   This document aims to describe how to configure **uap**.
 
-.. _configuration_of_uap:
+.. _configuration-of-uap:
 ##################
 Configuration File
 ##################
@@ -264,8 +264,8 @@ If a tool does not exit with exit code 0, find out which code it is by typing
             path: /path/to/some-tool
             get_version: --version
 
-If you are working on a cluster running `UGE <http://www.univa.com/products/>`_
-or `SLURM <http://slurm.schedmd.com/>`_ you can also use their module system.
+If you are working on a cluster running |uge_link|
+or |slurm_link| you can also use their module system.
 You need to know what actually happens when you load or unload a module::
 
   $ module load <module-name>
@@ -316,3 +316,11 @@ Please check out the example configurations provided inside the ``example-config
 
 .. [1] `PyYAML does not complain about duplicate keys
        <http://pyyaml.org/ticket/128>`_
+
+.. |uge_link| raw:: html
+
+   <a href="http://www.univa.com/products/" target="_blank">UGE</a>.
+
+.. |slurm_link| raw:: html
+
+   <a href="http://slurm.schedmd.com/" target="_blank">SLURM</a>.

@@ -8,7 +8,7 @@
 ..
   This document describes how **uap** can be extended with new analysis steps.
 
-.. _extending_uap:
+.. _extending-uap:
 ###############################
 Extending **uap** Functionality
 ###############################

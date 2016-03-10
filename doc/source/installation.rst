@@ -8,7 +8,7 @@
 ..
   This document aims to describe how to install **uap**.
 
-.. _installation_of_uap:
+.. _installation-of-uap:
 #######################
 Installation of **uap**
 #######################
@@ -28,8 +28,7 @@ So, please install it if its not already installed.::
 Downloading the Software
 ************************
 
-Download the software from `uap's github repository <https://github.com/kmpf/uap>`_
-like this::
+Download the software from |github_uap_link| like this::
 
   $ git clone https://github.com/kmpf/uap.git
 
@@ -76,3 +75,20 @@ Finally, make the changes known to your environment by sourcing the changed
 file::
   $ source ~/.bashrc
   $ source ~/.bash_profile
+
+.. |github_uap_link| raw:: html
+
+   <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
+
+.. |github_uap_link| raw:: html
+
+   <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
+.. |github_uap_link| raw:: html
+
+   <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
+.. |github_uap_link| raw:: html
+
+   <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
+.. |github_uap_link| raw:: html
+
+   <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.

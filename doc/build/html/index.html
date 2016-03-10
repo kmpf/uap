@@ -139,22 +139,31 @@
             
   <div class="section" id="uap-robust-consistent-and-reproducible-data-analysis">
 <h1>uap &#8211; Robust, Consistent, and Reproducible Data Analysis<a class="headerlink" href="#uap-robust-consistent-and-reproducible-data-analysis" title="Permalink to this headline">¶</a></h1>
-<p><strong>uap</strong> executes, controls and keeps track of the analysis of large data sets.
+<p><strong>What?</strong></p>
+<blockquote>
+<div><strong>uap</strong> executes, controls and keeps track of the analysis of large data sets.
 It enables users to perform robust, consistent, and reprodcuible data analysis.
 <strong>uap</strong> encapsulates the usage of (bioinformatic) tools and handles data flow
 and processing during an analysis.
 Users can either combine predefined analysis steps to create custom analysis or
 they can extend <strong>uap</strong> with their own analysis steps.
-Steps are best practice usages for the encapsulated commands.</p>
-<p><strong>uap</strong> is a command-line tool, implemented in Python, and runs under
+Steps are best practice usages for the encapsulated commands.
+<strong>uap</strong>&#8216;s  main focus is the analysis of high-throughput sequencing data.
+But, as already mentioned, its plugin architecture allows users to add
+functionality.
+This would enable any kind of large data analysis.</div></blockquote>
+<p><strong>How?</strong></p>
+<blockquote>
+<div><strong>uap</strong> is a command-line tool, implemented in Python, and runs under
 GNU/Linux.
 It takes a user-defined configuration file, which describes the analysis, as
 input.
-<strong>uap</strong> works on the analysis via subcommands.</p>
-<p><strong>uap</strong>&#8216;s  main focus is the analysis of high-throughput sequencing data.
-But, as already mentioned, its plugin architecture allows users to add
-functionality.
-This would enable any kind of large data analysis.</p>
+<strong>uap</strong> works on the analysis via subcommands.</div></blockquote>
+<p><strong>Where?</strong></p>
+<blockquote>
+<div><strong>uap</strong> runs natively on Unix-like operating systems.
+But, it does also support the cluster engines <a href="http://www.univa.com/products/" target="_blank">UGE</a>/OGE/SGE and
+<a href="http://slurm.schedmd.com/" target="_blank">SLURM</a>.</div></blockquote>
 <div class="section" id="important-information">
 <h2>Important Information<a class="headerlink" href="#important-information" title="Permalink to this headline">¶</a></h2>
 <p>The <strong>uap</strong> installation <strong>does not</strong> include all necessary tools for the data
@@ -162,10 +171,10 @@ analysis.
 It expects that the required tools are <strong>already installed</strong>.</p>
 <p>The recommended workflow to analyse data with <strong>uap</strong> is:</p>
 <ol class="arabic simple">
-<li>Install <strong>uap</strong> (see <span class="xref std std-ref">installation-of-uap</span>)</li>
-<li>Optionally: Extend <strong>uap</strong> by adding new steps (see <span class="xref std std-ref">extending-uap</span>)</li>
+<li>Install <strong>uap</strong> (see <a class="reference internal" href="installation.html"><em>Installation of uap</em></a>)</li>
+<li>Optionally: Extend <strong>uap</strong> by adding new steps (see <a class="reference internal" href="extension.html"><em>Extending uap Functionality</em></a>)</li>
 <li>Write a configuration file to setup the analysis (see
-<span class="xref std std-ref">configuration-of-uap</span>)</li>
+<a class="reference internal" href="configuration.html"><em>Configuration File</em></a>)</li>
 <li>Start the analysis locally (see <a class="reference internal" href="interaction.html#uap-run-locally"><span>run-locally</span></a>) or
 submit it to the cluster (see
 <a class="reference internal" href="interaction.html#uap-submit-to-cluster"><span>submit-to-cluster</span></a>)</li>
@@ -176,12 +185,12 @@ submit it to the cluster (see
 <ul class="simple">
 <li><em>The original input files</em> (which are, of course, left untouched).</li>
 <li><em>The experiment-specific configuration file</em>
-(see <span class="xref std std-ref">configuration-of-uap</span>).
+(see <a class="reference internal" href="configuration.html"><em>Configuration File</em></a>).
 You should keep this configuration file for later reference and you could
 even make it publicly available along with your input files for anybody to
 re-run the entire data analysis or parts thereof.</li>
 <li><em>The output files and comprehensive annotations of the analysis</em>
-(see <span class="xref std std-ref">annotations</span>).
+(see <a class="reference internal" href="annotation.html"><em>Annotation Files</em></a>).
 These files are stored in the destination path defined in the configuration
 file.</li>
 </ul>

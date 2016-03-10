@@ -13,21 +13,23 @@
 Command-Line Usage of **uap**
 #############################
 
-**uap** uses Python's
-`argparse <https://docs.python.org/2.7/library/argparse.html>`_.
+**uap** uses Python's |argparse_link|.
 Therefore, **uap** provides help infromation on the command-line::
 
   $ uap -h
   usage: uap [-h] [-v] [--version]
              [<project-config>.yaml]
-             {fix-problems,render,report,run-locally,status,steps,submit-to-cluster,task-info,volatilize}
+             {fix-problems,render,report,run-locally,status,steps,
+             submit-to-cluster,task-info,volatilize}
              ...
   
   This script starts and controls 'uap' analysis.
   
   positional arguments:
     <project-config>.yaml
-                          Path to YAML file which holds the pipeline configuration. It has to follow the structure given in the documentation.
+                          Path to YAML file which holds the pipeline
+                          configuration. It has to follow the structure given
+                          in the documentation.
   
   optional arguments:
     -h, --help            show this help message and exit
@@ -74,7 +76,8 @@ This may seem a bit harsh, but after all, it's better to fail early than
 to fail late if failing is unavoidable.
 
 **uap** creates a symbolic link, if it does not exist already, pointing to the
-:ref:`destination path <config-file-destination-path>` called ``<project-config>.yaml-out``.
+:ref:`destination path <config-file-destination-path>` called
+``<project-config>.yaml-out``.
 The symbolic link is created in the directory containing the
 ``<project-config>.yaml``.
 
@@ -539,3 +542,7 @@ report
 The ``report`` subcommand is at the moment experimental.
 It might be used to create standardized output to enable easy loading and
 processing in downstream tools e.g. ``R``.
+
+.. |argparse_link| raw:: html
+
+   <a href="https://docs.python.org/2.7/library/argparse.html" target="_blank">argparse</a>.
