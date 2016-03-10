@@ -326,7 +326,7 @@ To execute all runs of a certain step, specify the step name on the command
 line.
 
 This subcommands usage information::
-    
+
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml run-locally -h
   usage: uap [<project-config>.yaml] run-locally [-h] [--even-if-dirty]
                                                [step_task [step_task ...]]
