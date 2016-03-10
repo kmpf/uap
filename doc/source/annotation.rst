@@ -3,15 +3,24 @@
   you can and start each sentence on a new line as it decreases maintenance
   and makes diffs more readable.
 
-.. title:: Post-Mortem Analysis
+.. title:: Results: Annotation Files
 
 ..
-  This document describes how-to analyse problems that occured while using
-  **uap** and how-to find the cause of the problem.
+  This document aims to describe how to use **uap** via the command-line.
 
-Post-mortem pipeline analysis
-=============================
-    
+.. _annotation_files:
+################
+Annotation Files
+################
+
+The annotation files contain detailed information about every output file.
+Also, the Git SHA1 hash of the **uap** repository at the time of
+data processing is included.
+The executed commands are listed.
+Annotation contains information about inter-process streams and output files,
+including SHA1 checksums, file sizes, and line counts as well.
+
+
 Upon successful completion of a task, an extensive YAML-formatted annotation 
 is placed next to the output files in a file called 
 ``.[task_id]-annotation.yaml``.
@@ -34,4 +43,3 @@ Also, annotations may help to identify bottlenecks.
 | output files and inter-process        | each and therefore cannot compress the        |
 | streams.                              | results fast enough.                          |
 +---------------------------------------+-----------------------------------------------+
-

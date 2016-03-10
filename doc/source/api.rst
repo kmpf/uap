@@ -1,11 +1,13 @@
+#################
 API documentation
-=================
+#################
 
+*************************
 Pipeline-specific modules
--------------------------
+*************************
 
 abstract_step
-~~~~~~~~~~~~~
+=============
 
 .. automodule:: abstract_step
     
@@ -15,13 +17,13 @@ abstract_step
 .. autoclass:: AbstractSourceStep
 
 pipeline
-~~~~~~~~
+========
 
 .. automodule:: pipeline
     :members:
     
 run
-~~~
+===
 
 .. automodule:: run
     
@@ -29,28 +31,29 @@ run
     :members:
 
 task
-~~~~
+====
 
 .. automodule:: task
     :members:
     
+*********************
 Miscellaneous modules
----------------------
+*********************
     
 process_pool
-~~~~~~~~~~~~
+============
 
 .. automodule:: process_pool
     :members:
     
 fscache
-~~~~~~~
+=======
 
 .. automodule:: fscache
     :members:
     
 misc
-~~~~
+====
 
 .. automodule:: misc
     :members:

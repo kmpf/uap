@@ -63,12 +63,19 @@
           
           
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="how-to.html">How-To Use <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#try-existing-configurations">Try Existing Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#create-your-own-configuration">Create Your Own Configuration</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation of <strong>uap</strong></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#downloading-the-software">Downloading the software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#downloading-the-software">Downloading the Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#setting-up-python-environment">Setting Up Python Environment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#making-uap-globally-available">Making <strong>uap</strong> Globally Available</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration of <strong>uap</strong></a><ul>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration File</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#sections-of-a-configuration-file">Sections of a Configuration File</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#example-configurations">Example Configurations</a></li>
 </ul>
@@ -77,20 +84,19 @@
 <li class="toctree-l2"><a class="reference internal" href="interaction.html#explanation-of-subcommands">Explanation of Subcommands</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="extension.html">Extension of <strong>uap</strong></a><ul>
+<li class="toctree-l1"><a class="reference internal" href="extension.html">Extending <strong>uap</strong> Functionality</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="extension.html#implement-new-steps">Implement new steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="extension.html#add-the-new-step-to-your-configuration">Add the new step to your configuration</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="how-to.html">How-To Create Your First <strong>uap</strong> Analysis</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="how-to.html#example-configurations">Example configurations</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="software-design.html">Software Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="annotation.html">Annotation Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="steps.html">Available steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="steps.html#source-steps">Source steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="steps.html#processing-steps">Processing steps</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Post-mortem pipeline analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="api.html#pipeline-specific-modules">Pipeline-specific modules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#miscellaneous-modules">Miscellaneous modules</a></li>
@@ -182,7 +188,15 @@
   </dt>
 
       
+  <dt><a href="api.html#abstract_step.AbstractStep.add_input_connection">add_input_connection() (abstract_step.AbstractStep method)</a>
+  </dt>
+
+      
   <dt><a href="api.html#abstract_step.AbstractStep.add_option">add_option() (abstract_step.AbstractStep method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#abstract_step.AbstractStep.add_output_connection">add_output_connection() (abstract_step.AbstractStep method)</a>
   </dt>
 
   </dl></td>
@@ -197,6 +211,14 @@
 
       
   <dt><a href="api.html#run.Run.add_public_info">add_public_info() (run.Run method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#run.Run.add_temporary_directory">add_temporary_directory() (run.Run method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#pipeline.Pipeline.all_tasks_topologically_sorted">all_tasks_topologically_sorted (pipeline.Pipeline attribute)</a>
   </dt>
 
       
@@ -218,25 +240,33 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="steps.html#index-5">bam_to_bed</a>
+  <dt><a href="steps.html#index-7">bam_to_genome_browser</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-6">bam_to_bed12</a>
+  <dt><a href="steps.html#index-0">bcl2fastq_source</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-7">bam_to_sam</a>
+  <dt><a href="steps.html#index-8">bowtie2</a>
+  </dt>
+
+      
+  <dt><a href="steps.html#index-9">bowtie2_generate_index</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="steps.html#index-8">bed_to_bedgraph</a>
+  <dt><a href="steps.html#index-10">bwa_backtrack</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-9">bedgraph_to_bigwig</a>
+  <dt><a href="steps.html#index-11">bwa_generate_index</a>
+  </dt>
+
+      
+  <dt><a href="steps.html#index-12">bwa_mem</a>
   </dt>
 
       
@@ -254,6 +284,10 @@
   </dt>
 
       
+  <dt><a href="steps.html#index-13">chromhmm_binarizebam</a>
+  </dt>
+
+      
   <dt><a href="api.html#pipeline.Pipeline.cluster_config">cluster_config (pipeline.Pipeline attribute)</a>
   </dt>
 
@@ -261,8 +295,10 @@
   <dt><a href="api.html#pipeline.Pipeline.cluster_type">cluster_type (pipeline.Pipeline attribute)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="steps.html#index-10">combine_assemblies</a>
+  <dt><a href="api.html#pipeline.Pipeline.config">config (pipeline.Pipeline attribute)</a>
   </dt>
 
       
@@ -270,29 +306,7 @@
   </dt>
 
       
-  <dt><a href="steps.html#index-11">count_mapped_reads</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="steps.html#index-12">count_raw_reads</a>
-  </dt>
-
-      
-  <dt><a href="steps.html#index-13">count_raw_reads_crashing</a>
-  </dt>
-
-      
-  <dt><a href="steps.html#index-14">cufflinks</a>
-  </dt>
-
-      
-  <dt><a href="steps.html#index-15">cuffmerge</a>
-  </dt>
-
-      
-  <dt><a href="steps.html#index-16">cutadapt</a>
+  <dt><a href="steps.html#index-14">cutadapt</a>
   </dt>
 
   </dl></td>
@@ -322,15 +336,19 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="steps.html#index-0">fastq_source</a>
+  <dt><a href="steps.html#index-1">fastq_source</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-17">fastqc</a>
+  <dt><a href="steps.html#index-15">fastqc</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-18">fastqc_decorator_test</a>
+  <dt><a href="steps.html#index-16">fastx_quality_stats</a>
+  </dt>
+
+      
+  <dt><a href="steps.html#index-2">fetch_chrom_sizes_source</a>
   </dt>
 
       
@@ -341,22 +359,18 @@
   <dt><a href="api.html#pipeline.Pipeline.file_dependencies_reverse">file_dependencies_reverse (pipeline.Pipeline attribute)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api.html#abstract_step.AbstractStep.finalize">finalize() (abstract_step.AbstractStep method)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api.html#abstract_step.AbstractStep.find_upstream_info_for_input_paths">find_upstream_info_for_input_paths() (abstract_step.AbstractStep method)</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-19">fix_cutadapt</a>
-  </dt>
-
-      
-  <dt><a href="steps.html#index-20">fix_s2c</a>
+  <dt><a href="steps.html#index-17">fix_cutadapt</a>
   </dt>
 
       
@@ -374,11 +388,33 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="api.html#abstract_step.AbstractStep.generate_one_report">generate_one_report() (abstract_step.AbstractStep method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#abstract_step.AbstractStep.generate_report">generate_report() (abstract_step.AbstractStep method)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#task.Task.generate_report">(task.Task method)</a>
+  </dt>
+
+      </dl></dd>
+      
   <dt><a href="api.html#abstract_step.AbstractStep.get_annotation_for_input_file">get_annotation_for_input_file() (abstract_step.AbstractStep method)</a>
   </dt>
 
       
+  <dt><a href="api.html#run.Run.get_basic_state">get_basic_state() (run.Run method)</a>
+  </dt>
+
+      
   <dt><a href="api.html#abstract_step.AbstractStep.get_cores">get_cores() (abstract_step.AbstractStep method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#run.Run.get_execution_hashtag">get_execution_hashtag() (run.Run method)</a>
   </dt>
 
       
@@ -394,7 +430,7 @@
   </dt>
 
       
-  <dt><a href="api.html#abstract_step.AbstractStep.get_input_run_info">get_input_run_info() (abstract_step.AbstractStep method)</a>
+  <dt><a href="api.html#abstract_step.AbstractStep.get_input_runs">get_input_runs() (abstract_step.AbstractStep method)</a>
   </dt>
 
       
@@ -414,7 +450,7 @@
   </dt>
 
       
-  <dt><a href="api.html#abstract_step.AbstractStep.get_options_hashtag">get_options_hashtag() (abstract_step.AbstractStep method)</a>
+  <dt><a href="api.html#abstract_step.AbstractStep.get_options">get_options() (abstract_step.AbstractStep method)</a>
   </dt>
 
       
@@ -422,19 +458,19 @@
   </dt>
 
       
-  <dt><a href="api.html#abstract_step.AbstractStep.get_output_directory">get_output_directory() (abstract_step.AbstractStep method)</a>
+  <dt><a href="api.html#run.Run.get_output_directory">get_output_directory() (run.Run method)</a>
   </dt>
 
       
-  <dt><a href="api.html#abstract_step.AbstractStep.get_output_directory_du_jour">get_output_directory_du_jour() (abstract_step.AbstractStep method)</a>
+  <dt><a href="api.html#run.Run.get_output_directory_du_jour">get_output_directory_du_jour() (run.Run method)</a>
   </dt>
 
       
-  <dt><a href="api.html#abstract_step.AbstractStep.get_output_directory_du_jour_placeholder">get_output_directory_du_jour_placeholder() (abstract_step.AbstractStep method)</a>
+  <dt><a href="api.html#run.Run.get_output_directory_du_jour_placeholder">get_output_directory_du_jour_placeholder() (run.Run method)</a>
   </dt>
 
       
-  <dt><a href="api.html#run.Run.get_output_files">get_output_files() (run.Run method)</a>
+  <dt><a href="api.html#run.Run.get_output_files_abspath">get_output_files_abspath() (run.Run method)</a>
   </dt>
 
       
@@ -446,6 +482,12 @@
   </dt>
 
       
+  <dt><a href="api.html#task.Task.get_pipeline">get_pipeline() (task.Task method)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
   <dt><a href="api.html#abstract_step.AbstractStep.get_post_commands">get_post_commands() (abstract_step.AbstractStep method)</a>
   </dt>
 
@@ -453,8 +495,6 @@
   <dt><a href="api.html#abstract_step.AbstractStep.get_pre_commands">get_pre_commands() (abstract_step.AbstractStep method)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api.html#run.Run.get_private_info">get_private_info() (run.Run method)</a>
   </dt>
@@ -464,6 +504,16 @@
   </dt>
 
       
+  <dt><a href="api.html#abstract_step.AbstractStep.get_run">get_run() (abstract_step.AbstractStep method)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#task.Task.get_run">(task.Task method)</a>
+  </dt>
+
+      </dl></dd>
+      
   <dt><a href="api.html#abstract_step.AbstractStep.get_run_ids">get_run_ids() (abstract_step.AbstractStep method)</a>
   </dt>
 
@@ -472,7 +522,11 @@
   </dt>
 
       
-  <dt><a href="api.html#abstract_step.AbstractStep.get_run_info">get_run_info() (abstract_step.AbstractStep method)</a>
+  <dt><a href="api.html#abstract_step.AbstractStep.get_run_ids_in_connections_input_files">get_run_ids_in_connections_input_files() (abstract_step.AbstractStep method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#abstract_step.AbstractStep.get_run_ids_out_connections_output_files">get_run_ids_out_connections_output_files() (abstract_step.AbstractStep method)</a>
   </dt>
 
       
@@ -484,11 +538,19 @@
   </dt>
 
       
+  <dt><a href="api.html#abstract_step.AbstractStep.get_runs">get_runs() (abstract_step.AbstractStep method)</a>
+  </dt>
+
+      
   <dt><a href="api.html#abstract_step.AbstractStep.get_single_input_file_for_connection">get_single_input_file_for_connection() (abstract_step.AbstractStep method)</a>
   </dt>
 
       
   <dt><a href="api.html#run.Run.get_single_output_file_for_annotation">get_single_output_file_for_annotation() (run.Run method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#task.Task.get_step">get_step() (task.Task method)</a>
   </dt>
 
       
@@ -512,23 +574,11 @@
   </dt>
 
       
-  <dt><a href="api.html#abstract_step.AbstractStep.get_temp_output_directory">get_temp_output_directory() (abstract_step.AbstractStep method)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#abstract_step.AbstractStep.get_temporary_fifo">get_temporary_fifo() (abstract_step.AbstractStep method)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#abstract_step.AbstractStep.get_temporary_path">get_temporary_path() (abstract_step.AbstractStep method)</a>
+  <dt><a href="api.html#run.Run.get_temp_output_directory">get_temp_output_directory() (run.Run method)</a>
   </dt>
 
       
   <dt><a href="api.html#abstract_step.AbstractStep.get_tool">get_tool() (abstract_step.AbstractStep method)</a>
-  </dt>
-
-      
-  <dt><a href="steps.html#index-21">grep</a>
   </dt>
 
   </dl></td>
@@ -548,11 +598,7 @@
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="steps.html#index-22">head</a>
-  </dt>
-
-      
-  <dt><a href="steps.html#index-23">htseq_count</a>
+  <dt><a href="steps.html#index-18">htseq_count</a>
   </dt>
 
   </dl></td>
@@ -614,21 +660,17 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="steps.html#index-24">macs14</a>
+  <dt><a href="steps.html#index-19">macs2</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-25">macs2</a>
-  </dt>
-
-      
-  <dt><a href="steps.html#index-26">merge_bam_by_replicate</a>
+  <dt><a href="steps.html#index-20">merge_fasta_files</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="steps.html#index-27">merge_gencode_novel_workaround</a>
+  <dt><a href="steps.html#index-21">merge_fastq_files</a>
   </dt>
 
       
@@ -642,11 +684,11 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api.html#misc.natsorted">natsorted() (in module misc)</a>
+  <dt><a href="steps.html#index-22">narrowpeak_to_bed</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-28">normalize_bigwig</a>
+  <dt><a href="api.html#misc.natsorted">natsorted() (in module misc)</a>
   </dt>
 
   </dl></td>
@@ -678,6 +720,18 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="steps.html#index-23">picard_add_replace_read_groups</a>
+  </dt>
+
+      
+  <dt><a href="steps.html#index-24">picard_markduplicates</a>
+  </dt>
+
+      
+  <dt><a href="steps.html#index-25">picard_merge_sam_bam_files</a>
+  </dt>
+
+      
   <dt><a href="api.html#pipeline.Pipeline">Pipeline (class in pipeline)</a>
   </dt>
 
@@ -689,14 +743,18 @@
   <dt><a href="api.html#pipeline.Pipeline.pipeline_path">pipeline_path (pipeline.Pipeline attribute)</a>
   </dt>
 
-      
-  <dt><a href="steps.html#index-29">post_cufflinks_merge</a>
-  </dt>
-
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="steps.html#index-30">post_sawdust</a>
+  <dt><a href="steps.html#index-26">preseq_complexity_curve</a>
+  </dt>
+
+      
+  <dt><a href="steps.html#index-27">preseq_future_genome_coverage</a>
+  </dt>
+
+      
+  <dt><a href="steps.html#index-28">preseq_future_yield</a>
   </dt>
 
       
@@ -718,37 +776,37 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="steps.html#index-31">random_sample_fastq</a>
+  <dt><a href="steps.html#index-3">raw_file_source</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-1">raw_file_source</a>
+  <dt><a href="steps.html#index-4">raw_file_sources</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-2">raw_file_sources</a>
+  <dt><a href="steps.html#index-5">raw_url_source</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-3">raw_url_source</a>
+  <dt><a href="steps.html#index-29">remove_duplicate_reads_runs</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-32">remove_duplicate_reads</a>
+  <dt><a href="api.html#run.Run.remove_temporary_paths">remove_temporary_paths() (run.Run method)</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-33">rename_gtf_segemehl</a>
+  <dt><a href="api.html#abstract_step.AbstractStep.reports">reports() (abstract_step.AbstractStep method)</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-34">rename_gtf_tophat</a>
+  <dt><a href="api.html#abstract_step.AbstractStep.require_tool">require_tool() (abstract_step.AbstractStep method)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api.html#abstract_step.AbstractStep.require_tool">require_tool() (abstract_step.AbstractStep method)</a>
+  <dt><a href="steps.html#index-30">rseqc</a>
   </dt>
 
       
@@ -770,7 +828,7 @@
 
       </dl></dd>
       
-  <dt><a href="steps.html#index-4">run_folder_source</a>
+  <dt><a href="steps.html#index-6">run_folder_source</a>
   </dt>
 
       
@@ -784,23 +842,35 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="steps.html#index-35">s2c</a>
+  <dt><a href="steps.html#index-31">sam_to_sorted_bam</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-36">sam_to_bam</a>
+  <dt><a href="steps.html#index-32">samtools_faidx</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-37">segemehl</a>
+  <dt><a href="steps.html#index-33">samtools_index</a>
   </dt>
 
       
-  <dt><a href="api.html#abstract_step.AbstractStep.set_cores">set_cores() (abstract_step.AbstractStep method)</a>
+  <dt><a href="steps.html#index-34">samtools_stats</a>
+  </dt>
+
+      
+  <dt><a href="steps.html#index-35">segemehl</a>
+  </dt>
+
+      
+  <dt><a href="steps.html#index-36">segemehl_generate_index</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#abstract_step.AbstractStep.set_cores">set_cores() (abstract_step.AbstractStep method)</a>
+  </dt>
+
       
   <dt><a href="api.html#abstract_step.AbstractStep.set_options">set_options() (abstract_step.AbstractStep method)</a>
   </dt>
@@ -815,6 +885,10 @@
 
       
   <dt><a href="api.html#pipeline.Pipeline.states">states (pipeline.Pipeline attribute)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#pipeline.Pipeline.steps">steps (pipeline.Pipeline attribute)</a>
   </dt>
 
   </dl></td>
@@ -836,21 +910,25 @@
   </dt>
 
       
-  <dt><a href="api.html#pipeline.Pipeline.task_id_for_output_file">task_id_for_output_file (pipeline.Pipeline attribute)</a>
+  <dt><a href="api.html#pipeline.Pipeline.task_for_task_id">task_for_task_id (pipeline.Pipeline attribute)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="api.html#pipeline.Pipeline.task_id_for_output_file">task_id_for_output_file (pipeline.Pipeline attribute)</a>
+  </dt>
+
+      
   <dt><a href="api.html#pipeline.Pipeline.task_ids_for_input_file">task_ids_for_input_file (pipeline.Pipeline attribute)</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-38">testrealign</a>
+  <dt><a href="steps.html#index-37">tophat2</a>
   </dt>
 
       
-  <dt><a href="steps.html#index-39">tophat2</a>
+  <dt><a href="api.html#pipeline.Pipeline.topological_step_order">topological_step_order (pipeline.Pipeline attribute)</a>
   </dt>
 
   </dl></td>
@@ -870,7 +948,7 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api.html#abstract_step.AbstractStep.write_annotation">write_annotation() (abstract_step.AbstractStep method)</a>
+  <dt><a href="api.html#run.Run.write_annotation_file">write_annotation_file() (run.Run method)</a>
   </dt>
 
   </dl></td>

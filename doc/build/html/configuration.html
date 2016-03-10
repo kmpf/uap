@@ -64,12 +64,19 @@
           
           
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="how-to.html">How-To Use <strong>uap</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#try-existing-configurations">Try Existing Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to.html#create-your-own-configuration">Create Your Own Configuration</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation of <strong>uap</strong></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#downloading-the-software">Downloading the software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#downloading-the-software">Downloading the Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#setting-up-python-environment">Setting Up Python Environment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#making-uap-globally-available">Making <strong>uap</strong> Globally Available</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Configuration of <strong>uap</strong></a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Configuration File</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#sections-of-a-configuration-file">Sections of a Configuration File</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#example-configurations">Example Configurations</a></li>
 </ul>
@@ -78,21 +85,19 @@
 <li class="toctree-l2"><a class="reference internal" href="interaction.html#explanation-of-subcommands">Explanation of Subcommands</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="extension.html">Extension of <strong>uap</strong></a><ul>
+<li class="toctree-l1"><a class="reference internal" href="extension.html">Extending <strong>uap</strong> Functionality</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="extension.html#implement-new-steps">Implement new steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="extension.html#add-the-new-step-to-your-configuration">Add the new step to your configuration</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="how-to.html">How-To Create Your First <strong>uap</strong> Analysis</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="how-to.html#example-configurations">Example configurations</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="steps.html">Indices and tables</a></li>
-<li class="toctree-l1"><a class="reference internal" href="steps.html#available-steps">Available steps</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="software-design.html">Software Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="annotation.html">Annotation Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="steps.html">Available steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="steps.html#source-steps">Source steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="steps.html#processing-steps">Processing steps</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Post-mortem pipeline analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="api.html#pipeline-specific-modules">Pipeline-specific modules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#miscellaneous-modules">Miscellaneous modules</a></li>
@@ -133,24 +138,24 @@
 </div>
           <div role="main" class="document">
             
-  <div class="section" id="configuration-of-uap">
-<h1>Configuration of <strong>uap</strong><a class="headerlink" href="#configuration-of-uap" title="Permalink to this headline">¶</a></h1>
-<p><strong>uap</strong> is made to control the execution of data analyses which are defined
-in <a class="reference external" href="http://www.yaml.org/">YAML</a> files.
-Each file describes a complete analysis.
-Further on these files are called analysis file(s).</p>
-<p>The configuration files consist of four sections (let&#8217;s just call them sections,
+  <div class="section" id="configuration-file">
+<h1>Configuration File<a class="headerlink" href="#configuration-file" title="Permalink to this headline">¶</a></h1>
+<p><strong>uap</strong> operates on <a class="reference external" href="http://www.yaml.org/">YAML</a> files which define data
+analysis.
+These files are called configuration files.</p>
+<p>A configuration file describes a analysis completely.
+Configurations consist of four sections (let&#8217;s just call them sections,
 although technically, they are keys):</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">destination_path</span></code> &#8211; points to the directory where the result files,
 annotations and temporary files are written to</li>
 <li><code class="docutils literal"><span class="pre">email</span></code> &#8211; when submitting jobs on a cluster, messages will be sent to
-this email address by the cluster scheduler (<a class="reference external" href="mailto:nobody&#37;&#52;&#48;example&#46;com">nobody<span>&#64;</span>example<span>&#46;</span>com</a> by default)</li>
+this email address by the cluster engine (<a class="reference external" href="mailto:nobody&#37;&#52;&#48;example&#46;com">nobody<span>&#64;</span>example<span>&#46;</span>com</a> by default)</li>
 <li><code class="docutils literal"><span class="pre">constants</span></code> &#8211; defines constants for later use (define repeatedly used
 values as constants to increase readability of the following sections)</li>
-<li><code class="docutils literal"><span class="pre">tools</span></code> &#8211; defines all tools used in the pipeline and how to determine
+<li><code class="docutils literal"><span class="pre">steps</span></code> &#8211; defines the source and processing steps and their order</li>
+<li><code class="docutils literal"><span class="pre">tools</span></code> &#8211; defines all tools used in the analysis and how to determine
 their versions (for later reference)</li>
-<li><code class="docutils literal"><span class="pre">steps</span></code> &#8211; defines the processing step and their order</li>
 </ul>
 <p>If you want to know more about the notation that is used in this file, have a
 closer look at the <a class="reference external" href="http://www.yaml.org/">YAML definition</a>.</p>
@@ -159,9 +164,8 @@ closer look at the <a class="reference external" href="http://www.yaml.org/">YAM
 <div class="section" id="destination-path-section">
 <h3>Destination_path Section<a class="headerlink" href="#destination-path-section" title="Permalink to this headline">¶</a></h3>
 <p>The value of <code class="docutils literal"><span class="pre">destination_path</span></code> is the directory where <strong>uap</strong> is going
-to store the created files. It is possible to use a different directory for
-volatile files (see ).</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">destination_path</span><span class="p-Indicator">:</span> <span class="s">&quot;/path/to/dir&quot;</span>
+to store the created files.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">destination_path</span><span class="p-Indicator">:</span> <span class="s">&quot;/path/to/uap/output&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -178,8 +182,10 @@ changes of submitted jobs.</p>
 <h3>Steps Section<a class="headerlink" href="#steps-section" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal"><span class="pre">steps</span></code> section is the core of the analysis file, because it defines when
 steps are executed and how they depend on each other.
+All available steps are described in detail in the steps documentation:
+<a class="reference internal" href="steps.html"><em>Available steps</em></a>.
 This section (technically it is a dictionary) contains a key for every step,
-therefore each step must have a unique name.
+therefore each step must have a unique name <a class="footnote-reference" href="#id2" id="id1">[1]</a>.
 There are two ways to name a step to allow multiple steps of the same type and
 still ensure unique naming:</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
@@ -195,33 +201,95 @@ still ensure unique naming:</p>
 </pre></div>
 </div>
 <p>There are two different types of steps:</p>
+<div class="section" id="source-steps">
+<h4>Source Steps<a class="headerlink" href="#source-steps" title="Permalink to this headline">¶</a></h4>
+<p>They provide input files for the analysis.
+They might start processes such as downloading files or demultiplexing
+sequence reads.
+But, they do not have dependencies, they can introduce files from outside the
+destination path (see <a class="reference external" href="source/../build/html/configuration.html#config-file-destination-path" title="(in uap v0.1)"><span>Destination_path Section</span></a>), and they are
+usually the first steps of an analysis.</p>
+</div>
+<div class="section" id="processing-steps">
+<h4>Processing Steps<a class="headerlink" href="#processing-steps" title="Permalink to this headline">¶</a></h4>
+<p>They depend upon one or more predecessor steps and work with their output
+files.
+Output files of processing steps are automatically named and placed by <strong>uap</strong>.
+Processing steps are usually configurable.
+For a complete list of available options please visit <a class="reference internal" href="steps.html"><em>Available steps</em></a> or use the
+subcommand <a class="reference external" href="source/../build/html/interaction.html#uap-steps" title="(in uap v0.1)"><span class="xref std std-ref">uap_steps</span></a>.</p>
+</div>
+<div class="section" id="reserved-keywords-for-steps">
+<h4>Reserved Keywords for Steps<a class="headerlink" href="#reserved-keywords-for-steps" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
-<dt><strong>Source Steps</strong></dt>
-<dd>They are used to provide files for the analysis. They have no dependencies
-and are usually the first steps of an analysis.</dd>
-<dt><strong>Processing Steps</strong></dt>
-<dd>They depend upon one or more predecessor steps. Dependencies are defined via
-the <code class="docutils literal"><span class="pre">_depends</span></code> key which may either be <code class="docutils literal"><span class="pre">null</span></code>, a step name, or a list of
-step names.</dd>
+<dt><strong>_depends:</strong></dt>
+<dd>Dependencies are defined via the <code class="docutils literal"><span class="pre">_depends</span></code> key which may either be <code class="docutils literal"><span class="pre">null</span></code>,
+a step name, or a list of step names.</dd>
 </dl>
 <div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
     <span class="c1"># the source step which depends on nothing</span>
     <span class="l-Scalar-Plain">fastq_source</span><span class="p-Indicator">:</span>
         <span class="c1"># ...</span>
 
+    <span class="l-Scalar-Plain">run_folder_source</span><span class="p-Indicator">:</span>
+        <span class="c1"># ...</span>
+
     <span class="c1"># the first processing step, which depends on the source step</span>
     <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">fastq_source</span>
+        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">fastq_source</span><span class="p-Indicator">,</span> <span class="nv">run_folder_source</span><span class="p-Indicator">]</span>
 
     <span class="c1"># the second processing step, which depends on the cutadapt step</span>
     <span class="l-Scalar-Plain">fix_cutadapt</span><span class="p-Indicator">:</span>
         <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cutadapt</span>
 </pre></div>
 </div>
-<p>If you want to cut off entire branches of the step graph, set the <code class="docutils literal"><span class="pre">_BREAK</span></code>
+<dl class="docutils">
+<dt><strong>_connect:</strong></dt>
+<dd>Normally steps connected with <code class="docutils literal"><span class="pre">_depends</span></code> do pass data along by defining
+so called connections.
+If the name of an output connection matches the name of an input connection
+of its succeeding step data gets passed on automatically.
+But, sometimes the user wants to force the connection of differently named
+connections.
+This can be done with the <code class="docutils literal"><span class="pre">_connect</span></code> keyword.
+A common usage is to connect downloaded data with a
+<a class="reference external" href="source/../build/html/configuration.html#config-file-processing-steps" title="(in uap v0.1)"><span class="xref std std-ref">config_file_processing_steps</span></a>.</dd>
+</dl>
+<div class="highlight-yaml"><div class="highlight"><pre>  <span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
+      <span class="c1"># Source step to download i.e. sequence of chr1 of some species</span>
+      <span class="l-Scalar-Plain">chr1 (raw_url_source)</span><span class="p-Indicator">:</span>
+          <span class="l-Scalar-Plain">...</span>
+
+      <span class="c1"># Download chr2 sequence</span>
+      <span class="l-Scalar-Plain">chr2 (raw_url_source)</span><span class="p-Indicator">:</span>
+          <span class="l-Scalar-Plain">...</span>
+
+      <span class="l-Scalar-Plain">merge_fasta_files</span><span class="p-Indicator">:</span>
+          <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span>
+              <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">chr1</span>
+              <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">chr2</span>
+          <span class="c1"># Equivalent to:</span>
+          <span class="c1"># _depends: [chr1, chr2]</span>
+          <span class="l-Scalar-Plain">_connect</span><span class="p-Indicator">:</span>
+              <span class="l-Scalar-Plain">in/sequence</span><span class="p-Indicator">:</span>
+                  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">chr1/raw</span>
+                  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">chr2/raw</span>
+          <span class="c1"># Equivalent to:</span>
+          <span class="c1"># _connect:</span>
+          <span class="c1">#     in/sequence: [chr1/raw, chr2/raw]</span>
+
+<span class="l-Scalar-Plain">The examples shows how the ``raw_url_source`` output connection ``raw`` is</span>
+<span class="l-Scalar-Plain">connected to the input connection ``sequence`` of the ``merge_fasta_files``</span>
+<span class="l-Scalar-Plain">step.</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt><strong>_BREAK:</strong></dt>
+<dd>If you want to cut off entire branches of the step graph, set the <code class="docutils literal"><span class="pre">_BREAK</span></code>
 flag in a step definition, which will force the step to produce no runs
 (which will in turn give all following steps nothing to do, thereby
-effectively disabling these steps):</p>
+effectively disabling these steps):</dd>
+</dl>
 <div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
     <span class="l-Scalar-Plain">fastq_source</span><span class="p-Indicator">:</span>
         <span class="c1"># ...</span>
@@ -235,14 +303,50 @@ effectively disabling these steps):</p>
         <span class="l-Scalar-Plain">_BREAK</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
 </pre></div>
 </div>
-<p>All available steps are described in detail in the steps documentation:
-<a class="reference internal" href="steps.html"><em>Indices and tables</em></a>.</p>
+<dl class="docutils">
+<dt><strong>_volatile:</strong></dt>
+<dd>Steps can be marked with <code class="docutils literal"><span class="pre">_volatile:</span> <span class="pre">yes</span></code>.
+This flag tells <strong>uap</strong> that the output files of the marked step are only
+intermediate results.</dd>
+</dl>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
+    <span class="c1"># the source step which depends on nothing</span>
+    <span class="l-Scalar-Plain">fastq_source</span><span class="p-Indicator">:</span>
+        <span class="c1"># ...</span>
+
+    <span class="c1"># this steps output can be deleted if all depending steps are finished</span>
+    <span class="l-Scalar-Plain">cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">fastq_source</span>
+        <span class="l-Scalar-Plain">_volatile</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
+        <span class="c1"># same as:</span>
+        <span class="c1"># _volatile: True</span>
+
+    <span class="c1"># if fix_cutadapt is finished the output files of cutadapt can be</span>
+    <span class="c1"># volatilized</span>
+    <span class="l-Scalar-Plain">fix_cutadapt</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">_depends</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cutadapt</span>
+</pre></div>
+</div>
+<p>If all steps depending on the intermediate step are finished <strong>uap</strong> tells the
+user that he can free disk space.
+The message is output if the <a class="reference internal" href="interaction.html#uap-status"><span>status</span></a> is checked and looks like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>Hint: You could save 156.9 GB of disk space by volatilizing 104 output files.
+Call &#39;uap &lt;project-config&gt;.yaml volatilize --srsly&#39; to purge the files.
+</pre></div>
+</div>
+<p>If the user executes the <a class="reference internal" href="interaction.html#uap-volatilize"><span>volatilize</span></a> command the output
+files are replaced by placeholder files.</p>
+</div>
 </div>
 <div class="section" id="tools-section">
 <h3>Tools Section<a class="headerlink" href="#tools-section" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal"><span class="pre">tools</span></code> section must list all programs needed during the execution of an
-<strong>uap</strong> analysis.
-<strong>uap</strong> determines and records their versions for future reference.</p>
+<p>The <code class="docutils literal"><span class="pre">tools</span></code> section must list all programs required for the execution of a
+particular analysis.
+<strong>uap</strong> uses the information given here to check if a tool is available given
+the current environment.
+This is particularly useful on cluster systems were software might not always
+be loaded.
+Also, <strong>uap</strong> logs the version of each tool used by a step.</p>
 <p>By default, version determination is simply attempted by calling the program
 without command-line arguments.</p>
 <p>If a certain argument is required, specify it in <code class="docutils literal"><span class="pre">get_version</span></code>.
@@ -252,47 +356,65 @@ If a tool does not exit with exit code 0, find out which code it is by typing
     <span class="c1"># you don&#39;t have to specify a path if the tool can be found in $PATH</span>
     <span class="l-Scalar-Plain">cat</span><span class="p-Indicator">:</span>
         <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cat</span>
-        <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="s">&quot;--version&quot;</span>
+        <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">--version</span>
     <span class="c1"># you have to specify a path if the tool can not be found in $PATH</span>
     <span class="l-Scalar-Plain">some-tool</span><span class="p-Indicator">:</span>
         <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/path/to/some-tool</span>
-        <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="s">&quot;--version&quot;</span>
+        <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">--version</span>
 </pre></div>
+</div>
+<p>If you are working on a cluster running <a href="http://www.univa.com/products/" target="_blank">UGE</a>.
+or <a href="http://slurm.schedmd.com/" target="_blank">SLURM</a>. you can also use their module system.
+You need to know what actually happens when you load or unload a module:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ module load &lt;module-name&gt;
+$ module unload &lt;module-name&gt;
+</pre></div>
+</div>
+<p>As far as I know is <code class="docutils literal"><span class="pre">module</span></code> neither a command nor an alias.
+It is a BASH function. So use <code class="docutils literal"><span class="pre">declare</span> <span class="pre">-f</span></code> to find out what it is actually
+doing:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ declare -f module
+</pre></div>
+</div>
+<p>The output should look like this:</p>
+<div class="highlight-bash"><div class="highlight"><pre>module <span class="o">()</span>
+    <span class="o">{</span>
+        <span class="nb">eval</span> <span class="sb">`</span>/usr/local/modules/3.2.10-1/Modules/<span class="nv">$MODULE_VERSION</span>/bin/modulecmd bash <span class="nv">$*</span><span class="sb">`</span>
+    <span class="o">}</span>
+</pre></div>
+</div>
+<p>Now you can use this newly gathered information to load a module before use
+and unload it afterwards.
+You only need to replace <code class="docutils literal"><span class="pre">$MODULE_VERSION</span></code> with the current version of the
+module system you are using and <code class="docutils literal"><span class="pre">bash</span></code> with <code class="docutils literal"><span class="pre">python</span></code>.
+A potential <code class="docutils literal"><span class="pre">bedtools</span></code> entry in the <code class="docutils literal"><span class="pre">tools</span></code> section, might look like this.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">tools</span><span class="p-Indicator">:</span>
+    <span class="l-Scalar-Plain">....</span>
+    <span class="l-Scalar-Plain">bedtools</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">module_load</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/usr/local/modules/3.2.10-1/Modules/3.2.10/bin/modulecmd python load bedtools/2.24.0-1</span>
+        <span class="l-Scalar-Plain">module_unload</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/usr/local/modules/3.2.10-1/Modules/3.2.10/bin/modulecmd python unload bedtools/2.24.0-1</span>
+        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">bedtools</span>
+        <span class="l-Scalar-Plain">get_version</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">--version</span>
+        <span class="l-Scalar-Plain">exit_code</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Use <code class="docutils literal"><span class="pre">python</span></code> instead of <code class="docutils literal"><span class="pre">bash</span></code> for loading modules via <strong>uap</strong>.
+Because the module is loaded from within a python environment and
+not within a BASH shell.</p>
 </div>
 </div>
 </div>
 <div class="section" id="example-configurations">
 <h2>Example Configurations<a class="headerlink" href="#example-configurations" title="Permalink to this headline">¶</a></h2>
-<p>Example configurations for various source steps are shown below:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="c1"># sources steps</span>
-<span class="l-Scalar-Plain">steps</span><span class="p-Indicator">:</span>
-    <span class="c1"># fastq_source provides a number of fastq.gz files as pipeline input</span>
-    <span class="l-Scalar-Plain">casava_output (fastq_source)</span><span class="p-Indicator">:</span>
-        <span class="c1"># a glob pattern</span>
-        <span class="l-Scalar-Plain">pattern</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/home/kaempf/Projects/RNAseq_Jurkats+BaP/data/</span>
-        <span class="l-Scalar-Plain">group</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">(Sample_COPD_\d+)_R[12]-head.fastq.gz</span>
-        <span class="l-Scalar-Plain">indices</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">indices.csv</span>
-        <span class="l-Scalar-Plain">paired_end</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-
-    <span class="c1"># run_folder_sources</span>
-    <span class="l-Scalar-Plain">fc1 (run_folder_source)</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/data/bioinf/projects/data/Jurkats_BaP_Transcriptome/130108_SN928_0083_AD11VNACXX_Keep/</span>
-        <span class="l-Scalar-Plain">paired_end</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-    <span class="l-Scalar-Plain">fc2 (run_folder_source)</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/data/bioinf/projects/data/Jurkats_BaP_Transcriptome/130108_SN928_0084_BC0UT2ACXX_Keep/</span>
-        <span class="l-Scalar-Plain">paired_end</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-
-    <span class="c1"># raw_file_source can provide any filesystem file as pipeline input</span>
-    <span class="l-Scalar-Plain">mapped_reads (raw_file_source)</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">data/H3K4me3_GCCAAT_L001_001.dup_rm.sam.gz</span>
-        <span class="l-Scalar-Plain">sha1</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">835779504aa63f80c9e1008f93f554269d0ec506</span>
-
-    <span class="c1"># raw_url_source can provide any downloadable file as pipeline input</span>
-    <span class="l-Scalar-Plain">gencode (raw_url_source)</span><span class="p-Indicator">:</span>
-        <span class="l-Scalar-Plain">url</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ftp://ftp.sanger.ac.uk/pub/gencode/release_15/gencode.v15.annotation.gtf.gz</span>
-        <span class="l-Scalar-Plain">sha1</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">9b272fde8bca544e6cd8621ddeec55aa09cf7a05</span>
-</pre></div>
-</div>
+<p>Please check out the example configurations provided inside the <code class="docutils literal"><span class="pre">example-configurations</span></code> folder of <strong>uap</strong>&#8216;s installation directory.</p>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><a class="reference external" href="http://pyyaml.org/ticket/128">PyYAML does not complain about duplicate keys</a></td></tr>
+</tbody>
+</table>
 </div>
 </div>
 
