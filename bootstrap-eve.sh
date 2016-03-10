@@ -15,12 +15,14 @@ if [[ -n "$missing" ]]; then
     exit 1
 fi
 
+# J: create virtual python environment named 'python_env'
 virtualenv python_env
+# J: use this python to install required libraries (pyyaml,psutil,biopython)
 ./python_env/bin/pip install pyyaml psutil biopython 
 ./python_env/bin/easy_install -f http://biopython.org/DIST/ biopython
 
 # Installation of NumPy on EVE #
-
+# J: Why is the installation of NumPy so different?
 # Backup LDFLAGS and CPPFLAGS values 
 export LDFLAGS_BAK=$LDFLAGS && export CPPFLAGS_BAK=$CPPFLAGS
 # unset environment variables
