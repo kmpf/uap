@@ -1,4 +1,5 @@
 # uap specific
+uap
 python_env
 config.yaml
 *.pyc
