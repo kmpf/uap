@@ -26,58 +26,66 @@ New steps are added to **uap** by placing a single Python file in:
 :``include/steps``:
    for processing steps.
 
-Let's get through that file step by step.
+Let's get through that file(s) step by step.
 
 Step 1: Import Statements and Logger
 ====================================
 
 Please organize your imports in a similar fashion as shown below.
-Essential imports are ``import logging`` and ``from abstract_step import *``.
+Essential imports are ``from logging import getLogger`` and
+``from abstract_step import ...``.
 The former is necessary for getting access to the application wide logger and
-the latter to inherit from.
+the latter to inherit either from ``AbstractStep`` or ``AbstractSourceStep``.
 
 .. code-block:: python
 
    # First import standard libraries
-   import logging
+   import os
+   from logging import getLogger
 
    # Secondly import third party libraries
    import yaml
 
    # Thirdly import local application files
-   from abstract_step import * 
+   from abstract_step import AbstractStep # or AbstractSourceStep
 
    # Get application wide logger
-   logger = logging.getLogger("uap_logger")
+   logger = getLogger("uap_logger")
 
    ..
 
 Step 2: Class Definition and Constructor
 ========================================
 
-Each python file has to define a class with a constructor and a single
+Each step has to define a class with a constructor and a single
 functions.
-The new class needs to be derived from either ``AbstractStep`` or
-``AbstractSourceStep``.
-The constructor (``__init__``) checks for the availability of required tools
-and tells the pipeline which connections this step expects (``in/``) and which
-it provides (``out/``).
+The new class needs to be derived from either ``AbstractStep``, for processing
+steps, or ``AbstractSourceStep``, for source steps.
+The ``__init__`` method should contain the declarations of:
 
-Connections:
-  They are defined by the method ``add_connection('in/something')``.
-  Information is transferred from one step to another via these.
-  In-connections (``in/something``) are automatically connected with
-  out-connections (``out/something``) of the same name.
-  Use names describing the data itself **NOT** the data type.
-  For instance, use ``in/genome`` over ``in/fasta``.
+  * tools used in the step: ``self.require_tool('tool_name')``
+  * input and output connection(s): ``self.add_connection('in/*')`` or 
+    ``self.add_connection('out/*')``
+  * options: ``self.add_option()``
 
 Tools:
   Normally, steps use tools to perform there task.
   Each tool that is going to be used by a step needs to be requested via the
   method ``require_tool('tool_name')``.
   When the step is executed  **uap** searches for ``tool_name`` in the tools
-  section of the configuration and uses information given there to verify the
-  tools accessibility.
+  section of the configuration and uses the information given there to verify
+  the tools accessibility.
+
+Connections:
+  They are defined by the method ``add_connection(...)``.
+  Information is transferred from one step to another via these connections.
+  An output connection (``out/something``) of a predecessor step is
+  automatically connected with an input connection of the same name
+  (``in/something``).
+  Connection names should describe the data itself **NOT** the data type.
+  For instance, use ``in/genome`` over ``in/fasta``.
+  The data type of the input data should be checked in the step anyway to
+  execute the correct corresponding commands.
 
 Options:
   Steps can have any number of options.

@@ -30,7 +30,7 @@ uap -- Robust, Consistent, and Reproducible Data Analysis
   GNU/Linux.
   It takes a user-defined configuration file, which describes the analysis, as
   input.
-  **uap** works on the analysis via subcommands.
+  **uap** interacts with the analysis via subcommands.
 
 **Where?**
 

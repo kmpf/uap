@@ -218,7 +218,7 @@ To get a more concise summary, specify ``--summarize``::
 
 
 Detailed information about a specific task can be obtained by specifying the 
-task ID on the command line::
+run ID on the command line::
 
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status -t \
     bowtie2_index/Mycoplasma_genitalium_index-download --even
@@ -327,7 +327,7 @@ line.
 
 This subcommands usage information::
 
-  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml run-locally -h
+  $ uap <project-config>.yaml run-locally -h
   usage: uap [<project-config>.yaml] run-locally [-h] [--even-if-dirty]
                                                [step_task [step_task ...]]
 
@@ -361,10 +361,10 @@ This subcommands usage information::
     The pipeline is written in a way which expects processes to fail or 
     cluster jobs to disappear without notice. 
     This problem is mitigated by a design which relies on file presence and 
-    file timestamps to determine whether a task is finished or not. 
+    file timestamps to determine whether a run is finished or not. 
     Output files are automatically written to temporary locations and later 
     moved to their real target directory, and it is not until the last file 
-    rename operation has finished that a task is regarded as finished.
+    rename operation has finished that a run is regarded as finished.
     
 .. _uap-submit-to-cluster:
 submit-to-cluster
@@ -399,7 +399,7 @@ highly I/O-efficient, it has a higher quota.
 
 This subcommand provides usage information::
     
-  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml submit-to-cluster -h
+  $ uap <project-config>.yaml submit-to-cluster -h
   usage: uap [<project-config>.yaml] submit-to-cluster [-h] [--even-if-dirty]
                                                        [--cluster CLUSTER]
                                                        [step_task [step_task ...]]
@@ -433,7 +433,7 @@ The ``fix-problems`` subcommand removes temporary files written by **uap** if
 they are not required anymore.
 This subcommand provides usage information::
 
-  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml fix-problems -h
+  $ uap <project-config>.yaml fix-problems -h
   usage: uap [<project-config>.yaml] fix-problems [-h] [--even-if-dirty]
                                                   [--cluster CLUSTER]
                                                   [--details] [--srsly]
@@ -479,7 +479,7 @@ files as normal but they can be deleted if their dependent steps are finished.
 
 This subcommand provides usage information::
 
-  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml volatilize -h
+  $ uap <project-config>.yaml volatilize -h
   usage: uap [<project-config>.yaml] volatilize [-h] [--even-if-dirty]
                                                 [--details] [--srsly]
 
@@ -508,7 +508,7 @@ At the moment ``--simple`` only has an effect in combination with ``--steps``.
 
 This subcommand provides usage information::
 
-   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml render -h
+   $ uap <project-config>.yaml render -h
 
    usage: uap [<project-config>.yaml] render [-h] [--even-if-dirty] [--files]
                                              [--steps] [--simple]
