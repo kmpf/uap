@@ -1,11 +1,9 @@
 # uap specific
 uap
 python_env
-config.yaml
 *.pyc
 out
-doc/doctrees
-doc/html
+doc/build
 _monitor_disk_io
 steps.svg
 *~
