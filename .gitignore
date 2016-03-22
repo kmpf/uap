@@ -2,11 +2,9 @@
 uap
 python_env
 python3_venv
-config.yaml
 *.pyc
 out
-doc/doctrees
-doc/html
+doc/build
 _monitor_disk_io
 steps.svg
 *~
