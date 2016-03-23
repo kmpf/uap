@@ -36,14 +36,19 @@ class Segemehl(AbstractStep):
     def __init__(self, pipeline):
         super(Segemehl, self).__init__(pipeline)
 
-        self.set_cores(12)
-        
+        self.set_cores(12) # set # of cores for cluster, it is ignored if run locally
+
+        # connections - indentifier for in/output
+        #             - expects list, maybe empty or 'none', e.g. if only first_read info available
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/alignments')
         self.add_connection('out/unmapped')
         self.add_connection('out/log')
-        
+
+        # tools from tools section of YAML config file
+        # -> logs version information
+        # -> for module load/unload stuff
         self.require_tool('cat')
         self.require_tool('dd')
         self.require_tool('fix_qnames')
@@ -52,6 +57,7 @@ class Segemehl(AbstractStep):
         self.require_tool('segemehl')
 
         # Options for additional programs
+        # these options can be used in YAML config file
         self.add_option('fix-qnames', bool, optional=True, default=False,
                         description="The QNAMES field of the input will "
                         "be purged from spaces and everything thereafter.")
@@ -143,6 +149,8 @@ class Segemehl(AbstractStep):
                         "maximum size of the inserts (paired end) "
                         "(default:5000)")
 
+    # self - macht class-funktion draus.
+    # run_ids_connections_files - hash : run id -> n connections -> m files
     def runs(self, run_ids_connections_files):
         # Compile the list of options
         options = ['bisulfite', 'minsize', 'silent', 'brief', 'differences',

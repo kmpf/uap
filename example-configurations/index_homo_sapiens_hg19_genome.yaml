@@ -315,11 +315,11 @@ tools:
         get_version: --version
         exit_code: 0
 
-    # URL: 
-    segemehl:
-        path: segemehl.x
-        get_version: ''
-        exit_code: 255
+#    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
+#    segemehl:
+#        path: segemehl.x
+#        get_version: ''
+#        exit_code: 255
                 
     ##################
     # Internal Tools #
