@@ -1070,9 +1070,11 @@ class AbstractStep(object):
         
         check_classes = [AbstractSourceStep, AbstractStep, io_step.IOStep]
         for index, c in enumerate(check_classes):
+
             classes = [_ for _ in inspect.getmembers(__import__(key), 
                                                      inspect.isclass) \
                        if c in _[1].__bases__]
+
             for k in range(index):
                 classes = [_ for _ in classes if _[1] != check_classes[k]]
             if len(classes) > 0:
@@ -1203,10 +1205,11 @@ class AbstractStep(object):
         if kwargs['optional'] and (kwargs['default'] != None):
             if type(kwargs['default']) not in option_types:
                 logger.error(
-                    "Type of default value (%s) does not match any of the "
+                    "In step: (%s) option: (%s) Type of default value (%s) does not match any of the "
                     "declared possible types (%s)."
-                    % (type(kwargs['default']), option_types))
+                    % (self, key, type(kwargs['default']), option_types))
                 sys.exit(1)
+
         info = dict()
         info['types'] = option_types
         for _ in ['optional', 'default', 'label', 'description', 'group', 
