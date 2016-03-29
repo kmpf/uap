@@ -58,7 +58,12 @@ class Pipeline(object):
             'set_job_name': '--job-name=%s',
             'set_stderr': '-e',
             'set_stdout': '-o',
-            'parse_job_id': 'Submitted batch job (\d+)'},
+            'parse_job_id': 'Submitted batch job (\d+)',
+            'mem': '--mem=%s',
+            'time': '--time=%s',
+            'nice': '--nice=%s',
+            'exclusive': '--exclusive' ,
+            'queue': '-p%s'},
 
         'sge':
            {'submit': 'qsub',
