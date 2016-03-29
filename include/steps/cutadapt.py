@@ -37,7 +37,7 @@ class Cutadapt(AbstractStep):
 
         # Options for cutadapt
         self.add_option('adapter-type', str, optional = True, default='-a',
-                        choices=['-a', '-g', '-b'],
+                        choices=['-a', '-g', '-b', ''],
                         description="")
         self.add_option('adapter-R1', str, optional = True,
                         description="Adapter sequence to be clipped off of the"
@@ -56,12 +56,15 @@ class Cutadapt(AbstractStep):
                         description="If set to true, only the leftmost string "
                         "without spaces of the QNAME field of the FASTQ data is "
                         "kept. This might be necessary for downstream analysis.")
+        self.add_option('m', int, default = 1)
+        self.add_option('q', int, default = None, optional =True)
+        self.add_option('u', int, default = None, optional =True)
 
     def runs(self, run_ids_connections_files):
 
         ## Make sure the adapter type is one of -a, -b or -g 
         if self.is_option_set_in_config('adapter-type'):
-            if not self.get_option('adapter-type') in set(['-a','-b','-g']):
+            if not self.get_option('adapter-type') in set(['-a','-b','-g', '']):
                 logger.error("Option 'adapter-type' must be either '-a', "
                              "'-b', or '-g'!")
                 sys.exit(1)
@@ -73,6 +76,7 @@ class Cutadapt(AbstractStep):
                 for read in read_types:                
                     connection = 'in/%s' % read
                     input_paths = run_ids_connections_files[run_id][connection]
+
                     if input_paths == [None]:
                         run.add_empty_output_connection("%s" % read)
                         run.add_empty_output_connection("log_%s" % read)
@@ -187,11 +191,11 @@ class Cutadapt(AbstractStep):
                                     adapter = adapter.translate(complements)[::-1]
                                 
                                 # make sure the adapter is looking good
-                                if re.search('^[ACGT]+$', adapter) == None:
-                                    logger.error("Unable to come up with a "
-                                                 "legit-looking adapter: %s"
-                                                 % adapter)
-                                    sys.exit(1)
+#                                if re.search('^[ACGT]+$', adapter) == None:
+#                                    logger.error("Unable to come up with a "
+#                                                 "legit-looking adapter: %s"
+#                                                 % adapter)
+#                                    sys.exit(1)
                             # Or do we have a adapter sequence fasta file?
                             elif self.is_option_set_in_config('adapter-file'):
                                 adapter = "file:" + self.get_option(
@@ -206,9 +210,23 @@ class Cutadapt(AbstractStep):
 
 
                             # 3.3 command: Clip adapters
-                            cutadapt = [self.get_tool('cutadapt'), 
-                                        self.get_option('adapter-type'), 
-                                        adapter, '-']
+                            cutadapt = [self.get_tool('cutadapt')]
+
+                            if self.get_option('adapter-type') == '':
+                                cutadapt.extend(['-'])
+                            else:
+                                cutadapt.extend([self.get_option('adapter-type'), 
+                                                 adapter, '-'])
+
+
+                            if self.is_option_set_in_config('m'):
+                                cutadapt.extend(['-m',  str(self.get_option('m'))])
+                            if self.is_option_set_in_config('q'):
+                                cutadapt.extend(['-q',  str(self.get_option('q'))])
+                            if self.is_option_set_in_config('u'):
+                                cutadapt.extend(['-u',  str(self.get_option('u'))])
+
+
                             cutadapt_log_file = run.add_output_file(
                                     'log_%s' % read,
                                     '%s-cutadapt-%s-log.txt'
