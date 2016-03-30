@@ -1,0 +1,14 @@
+destination_path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode
+
+steps:
+    gencode_v24_annotation (raw_url_source):
+        url: ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_24/gencode.v24.annotation.gtf.gz
+        path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode
+        filename: gencode.v24.annotation.gtf
+        uncompress: yes
+
+    gencode_v24_long_noncoding_RNAs (raw_url_source):
+        url: ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_24/gencode.v24.long_noncoding_RNAs.gtf.gz
+        path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode
+        filename: gencode.v24.long_noncoding_RNAs.gtf
+        uncompress: yes
