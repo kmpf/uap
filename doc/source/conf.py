@@ -31,12 +31,13 @@ sys.path.insert(0, os.path.abspath('../../include'))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.coverage',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
-    'sphinx.ext.coverage',
+    'sphinx.ext.graphviz',
     'sphinx.ext.pngmath',
-    'sphinx.ext.viewcode',
+    'sphinx.ext.todo',
+    'sphinx.ext.viewcode'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

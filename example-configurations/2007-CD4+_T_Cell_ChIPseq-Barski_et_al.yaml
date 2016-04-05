@@ -207,22 +207,22 @@ steps:
     sort_bowtie2 (sam_to_sorted_bam):
         _depends: bowtie2
         genome-faidx: *genome_faidx
-        temp-sort-directory: /tmp
+        temp-sort-dir: /tmp
 
     sort_bwa_backtrack (sam_to_sorted_bam):
         _depends: bwa_backtrack
         genome-faidx: *genome_faidx
-        temp-sort-directory: /tmp
+        temp-sort-dir: /tmp
 
 #    sort_segemehl (sam_to_sorted_bam):
 #        _depends: segemehl
 #        genome-faidx: *genome_faidx
-#        temp-sort-directory: /tmp
+#        temp-sort-dir: /tmp
 
     sort_tophat2 (sam_to_sorted_bam):
         _depends: tophat2
         genome-faidx: *genome_faidx
-        temp-sort-directory: /tmp
+        temp-sort-dir: /tmp
         
     complexity_curve_bowtie2 (preseq_complexity_curve):
         _depends: sort_bowtie2

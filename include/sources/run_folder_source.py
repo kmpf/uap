@@ -26,6 +26,9 @@ class RunFolderSource(AbstractSourceStep):
         self.add_connection('out/second_read')
         
         self.add_option('path', str)
+        self.add_option('project', str, default='*')
+
+
         self.add_option('paired_end', bool)
         self.add_option('first_read', str, default = "_R1",
             description = "Part of the file name that marks all "
@@ -54,7 +57,10 @@ class RunFolderSource(AbstractSourceStep):
             raise StandardError("Source path does not exist: " + path)
 
         # find all samples
-        for sample_path in glob.glob(os.path.join(path, 'Unaligned', 'Project_*', 'Sample_*')):
+        
+        project = 'Project_' + self.get_option('project') 
+        for sample_path in glob.glob(os.path.join(path, 'Unaligned', project, 'Sample_*')):
+            
             sample_name = os.path.basename(sample_path).replace('Sample_', '')
             if sample_name in found_samples:
                 raise StandardError("Duplicate sample: " + sample_name)

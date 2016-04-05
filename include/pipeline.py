@@ -692,7 +692,8 @@ class Pipeline(object):
             print("Hint: You could save %s of disk space by volatilizing %d "
                   "output files." % (misc.bytes_to_str(total_size),
                                      len(collected_files)))
-            print("Call ./volatilize.py --srsly to purge the files.")
+            print("Call 'uap %s volatilize --srsly' to purge the files."
+                  % self.get_config_filepath())
 
     def autodetect_cluster_type(self):
         try:

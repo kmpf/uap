@@ -1,0 +1,49 @@
+destination_path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode
+
+steps:
+    gencode_v24_annotation (raw_url_source):
+        url: ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_24/gencode.v24.annotation.gtf.gz
+        path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode
+        filename: gencode.v24.annotation.gtf
+        uncompress: yes
+
+    gencode_v24_long_noncoding_RNAs (raw_url_source):
+        url: ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_24/gencode.v24.long_noncoding_RNAs.gtf.gz
+        path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode
+        filename: gencode.v24.long_noncoding_RNAs.gtf
+        uncompress: yes
+
+tools:
+    curl:
+        path: curl
+        get_version: --version
+        exit_code: 0
+
+    pigz: 
+        path: pigz
+        get_version: --version
+        exit_code: 0
+
+    ##################
+    # Internal Tools #
+    ##################
+
+    compare_secure_hashes:
+        path: ../tools/compare_secure_hashes.py
+        get_version: --version
+        exit_code: 0
+
+    cp:
+        path: cp
+        get_version: --version
+        exit_code: 0
+
+    dd:
+        path: dd
+        get_version: --version
+        exit_code: 0
+
+    mkdir:
+        path: mkdir
+        get_version: --version
+        exit_code: 0
