@@ -1337,11 +1337,18 @@ class AbstractStep(object):
                         for _con_in, parent_out_connection_to_bend in \
                             self._options['_connect'].items(): 
 
-                            if parent_out_connection_to_bend  == parent_out_connection or \
-                               parent_out_connection_to_bend  in parent_out_connection:
-                                logger.debug("Found %s to connect to  %s" % 
-                                            (parent_out_connection_to_bend,_con_in))
-                                in_connection = _con_in
+                            if isinstance(parent_out_connection_to_bend, list):
+                                pass
+                            else:
+                               parent_out_connection_to_bend =  [parent_out_connection_to_bend]
+
+                            for entry in parent_out_connection_to_bend:
+                                if entry ==  parent_out_connection:
+                                    logger.debug("Found %s to connect to  %s" %
+                                                 (parent_out_connection_to_bend,_con_in))
+                                    in_connection = _con_in
+
+                                    
 
                         
                     if in_connection not in \
