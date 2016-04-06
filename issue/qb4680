@@ -1,2 +1,10 @@
-Summary: Add 'max-cores' per pipeline option to YAML; 'cluster-submit-options' string per step
+Summary: Add section to YAML for cluster config
+Priority: 5
 
+It is necessary to make the configuration for the cluster available from within the config file.
+Therfore, we need a section/key in the config for global cluster configuration like:
+* max-cores
+* buffer-size (for dd)
+
+A general step-specific cluster config would be also nice to have, like:
+* 'cluster-submit-options' string per step
