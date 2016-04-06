@@ -3,9 +3,9 @@ python_env
 config.yaml
 *.pyc
 out
-tools/cat4m
 doc/doctrees
 doc/html
+doc/build
 _monitor_disk_io
 steps.svg
 *~

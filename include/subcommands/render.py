@@ -210,10 +210,15 @@ def render_graph_for_all_steps(p, args):
                                 else:
                                     out_key = 'out/' + declaration
                             elif isinstance(declaration, list):
-                                raise StandardError(
-                                    "_connect received a list as input. "
-                                    "Correct handling needs to be "
-                                    "implemented.")
+                                for connection in declaration:
+                                    if isinstance(connection, str):
+                                        if '/' in connection:
+                                            parts = connection.split('/')
+                                            allowed_steps = set()
+                                            allowed_steps.add(parts[0])
+                                            out_key = 'out/' + parts[1]
+                                        else:
+                                            out_key = 'out/' + connection
                             else:
                                 raise StandardError("Invalid _connect value: %s"
                                                     % yaml.dump(declaration))
