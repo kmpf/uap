@@ -33,7 +33,7 @@ class SamToSortedBam(AbstractStep):
 
         self.add_option('sort-by-name', bool, default = False)
         self.add_option('genome-faidx', str, optional = False)
-        self.add_option('temp-sort-directory', str, optional = False,
+        self.add_option('temp-sort-dir', str, optional = False,
                         description = 'Intermediate sort files are stored into'
                         'this directory.')
 
@@ -51,6 +51,17 @@ class SamToSortedBam(AbstractStep):
                 else:
                     is_gzipped = True if os.path.splitext(input_paths[0])[1]\
                                  in ['.gz', '.gzip'] else False
+
+                if self.is_option_set_in_config('temp-sort-dir'):
+                    if not os.path.isdir(self.get_option('temp-sort-dir')):
+                        #dir not present
+                        logger.error("Directory %s not found" % self.get_option('temp-sort-dir'))
+                        sys.exit(1)
+                    if not os.access(self.get_option('temp-sort-dir'), os.W_OK):
+                        #not accessible
+                        logger.error("Directory %s not accessible." % self.get_option('temp-sort-dir'))
+                        sys.exit(1)
+                
 
                     with run.new_exec_group() as exec_group:
 
@@ -88,14 +99,14 @@ class SamToSortedBam(AbstractStep):
                             samtools_sort.extend(
                                 ['-T',
                                  os.path.join(
-                                    self.get_option('temp-sort-directory'),
+                                    self.get_option('temp-sort-dir'),
                                      run_id), 
                                  '-',
                                  '-@', '6']
                             )
                             pipe.add_command(samtools_sort)
 
-                            # 4. command:
+                            # 4. command: dd
                             dd_out = [self.get_tool('dd'), 'obs=4M']
                             pipe.add_command(
                                 dd_out,

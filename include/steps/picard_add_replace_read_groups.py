@@ -20,7 +20,7 @@ class PicardAddOrReplaceReadGroups(AbstractStep):
     def __init__(self, pipeline):
         super(PicardAddOrReplaceReadGroups, self).__init__(pipeline)
 
-        self.set_cores(12)
+        self.set_cores(6)
         
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')

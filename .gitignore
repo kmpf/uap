@@ -1,6 +1,7 @@
 # uap specific
+uap
 python_env
-config.yaml
+python3_venv
 *.pyc
 out
 doc/doctrees
@@ -9,7 +10,6 @@ doc/build
 _monitor_disk_io
 steps.svg
 *~
-doc/source/steps.rst
 data/test
 data/adapter_sequences
 
