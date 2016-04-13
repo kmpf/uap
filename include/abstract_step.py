@@ -1347,18 +1347,16 @@ class AbstractStep(object):
                                     logger.debug("Found %s to connect to  %s" %
                                                  (parent_out_connection_to_bend,_con_in))
                                     in_connection = _con_in
-
-                                    
-
                         
                     if in_connection not in \
                        list( run_ids_connections_files[parent_run_id].keys() ):
                         run_ids_connections_files[parent_run_id]\
                             [in_connection] = list()
 
-                    run_ids_connections_files[parent_run_id][in_connection]\
+                    if run_ids_connections_files[parent_run_id][in_connection] != [None]:
+                        run_ids_connections_files[parent_run_id][in_connection]\
                         .extend(output_files)
-                                            
+
         return run_ids_connections_files
 
 
