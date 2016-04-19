@@ -16,28 +16,9 @@ steps:
     ## Source steps ##
     ##################
 
-#    read_annotation (raw_file_source):
-#        path: data/ChIPseq/H3K4me3_GCCAAT_L001_001.bed
-#        sha1: 297ceb1895c75f1a793423a8b4a7a92f48241159
-
-#    gencode (raw_url_source):
-#        url: ftp://ftp.sanger.ac.uk/pub/gencode/release_15/gencode.v15.annotation.gtf.gz
-#        sha1: 9b272fde8bca544e6cd8621ddeec55aa09cf7a05
-#        
-#    gencode_genes_only (grep):
-#        _depends: gencode
-#        pattern: "\tgene\t"
-
     fc (run_folder_source):
         path: example-data/IlluminaRunFolder
         paired_end: yes
-
-#    fastq_source:
-#        pattern: data/ChIPseq/*.fastq.gz
-#        group: (H3K4me3)_GCCAAT_L001_R[12]_001.fastq.gz
-#        indices: indices.chipseqcsv
-#        paired_end: yes
-
 
     ######################
     ## Processing steps ##
@@ -46,13 +27,13 @@ steps:
     merge_fastq_files:
         _depends: fc
 
-    fastqc (fastqc):
+    fastqc:
         _depends: merge_fastq_files
 
     fastx_quality_stats:
         _depends: merge_fastq_files
 
-    cutadapt (cutadapt):
+    cutadapt:
         _depends: merge_fastq_files
         adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
         adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
@@ -66,7 +47,7 @@ steps:
 
     fix_cutadapt:
         _depends: cutadapt
-#        _volatile: true
+        _volatile: true
 
     fix_cutadapt_fastqc (fastqc):
         _depends: fix_cutadapt
@@ -74,26 +55,16 @@ steps:
     fix_cutadapt_fastx_quality_stats (fastx_quality_stats):
         _depends: fix_cutadapt
 
-    tophat2:
-        _depends: fix_cutadapt
-        library_type: 'fr-unstranded'
-        index: *bowtie2_genome_index
-
     bowtie2:
         _depends: fix_cutadapt
         index: *bowtie2_genome_index
-
-    segemehl:
-        _depends: fix_cutadapt
-        genome: *genome
-        index: *segemehl_genome_index
 
     sort_bowtie2 (sam_to_sorted_bam):
         _depends: bowtie2
         genome-faidx: *genome_faidx
         temp-sort-directory: /tmp/
 
-    bowtie_rmdup (picard_markduplicates):
+    rmdup_bowtie2 (picard_markduplicates):
         _depends: sort_bowtie2
 
 tools:
@@ -120,26 +91,6 @@ tools:
         path: fastx_quality_stats
         get_version: '-h'
         exit_code: 1
-
-    tophat2:
-        path: tophat2
-        get_version: '--version'
-        exit_code: 0
-
-    segemehl:
-        path: segemehl.x
-        get_version: ''
-        exit_code: 255
-
-#    cufflinks:
-#        path: /home/spechtm/cufflinks/cufflinks-2.1.1.Linux_x86_64/cufflinks
-#        get_version: '--version'
-#        exit_code: 1
-
-#    htseq-count:
-#        path: htseq-count
-#        get_version: ''
-#        exit_code: 1
 
     picard-tools:
         path: picard-tools
