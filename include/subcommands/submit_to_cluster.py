@@ -158,9 +158,9 @@ def main(args):
                     stdout = subprocess.PIPE)
             except OSError as e:
                 if e.errno == os.errno.ENOENT:
-                    raise StandardError("Unable to launch %s. Maybe " +
+                    raise StandardError("Unable to launch %s. Maybe " % p.cc('submit') +
                                         "you are not executing this script on " +
-                                        "the cluster" % p.cc('submit'))
+                                        "the cluster")
                 else:
                     raise e
             process.stdin.write(submit_script)
