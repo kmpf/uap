@@ -38,6 +38,84 @@ uap -- Robust, Consistent, and Reproducible Data Analysis
   But, it does also support the cluster engines |uge_link|/OGE/SGE and
   |slurm_link|.
 
+*********************
+Important Information
+*********************
+
+The **uap** installation **does not** include all necessary tools for the data
+analysis.
+It expects that the required tools are **already installed**.
+
+The recommended workflow to analyse data with **uap** is:
+
+1. Install **uap** (see :doc:`installation`)
+2. Optionally: Extend **uap** by adding new steps (see :doc:`extension`)
+3. Write a configuration file to setup the analysis (see
+   :doc:`configuration`)
+4. Start the analysis locally (see :ref:`run-locally <uap-run-locally>`) or
+   submit it to the cluster (see
+   :ref:`submit-to-cluster <uap-submit-to-cluster>`)
+5. Follow the progress of the analysis (see :ref:`status <uap-status>`)
+6. Share your extensions with others (send a pull request via github)
+
+A finished analysis leaves the user with:
+
+* *The original input files* (which are, of course, left untouched).
+* *The experiment-specific configuration file*
+  (see :doc:`configuration`).
+  You should keep this configuration file for later reference and you could
+  even make it publicly available along with your input files for anybody to
+  re-run the entire data analysis or parts thereof.
+* *The result files and comprehensive annotations of the analysis*
+  (see :doc:`annotation`).
+  These files are located at the destination path defined in the configuration
+  file.
+
+************
+Core aspects
+************
+
+Robust Data Analysis:
+=====================
+
+* Data is processed in temporary location.
+  If and only if ALL involved processes exit gracefully, the output files are
+  copied to the final output directory.
+* Processing can be aborted and continued from the command line at any time.
+  Failures during data processing do not lead to unstable state of analysis.
+* The final output directory names are suffixed with a hashtag which is based
+  on the commands executed to generate the output data.
+  Data is not easily overwritten and this helps to check for necessary
+  recomputations.
+* Fail fast, fail often.
+  During initiation **uap** controls the availability of all required tools,
+  calculates the paths of all files of the analysis, and controls if these files
+  exist.
+  If any problems are encountered the user is requested to fix them.
+
+Consistency:
+============
+
+* Steps and files are defined in a directed acyclic graph (DAG).
+  The DAG defines dependencies between in- and output files.
+* Prior to any execution the dependencies between files are calculated.
+  If a file is newer or an option for a calculation has changed all dependent
+  files are marked for recalculation.
+
+Reproducibility:
+================
+
+* Comprehensive annotations are written to the output directories.
+  They allow for later investigation of errors or review of executed commands.
+  They contain also versions of used tool, required runtime, memory and CPU
+  usage, etc.
+
+Usability:
+==========
+
+* Single configuration file describes entire data analysis work-flow.
+* Single command-line tool to interacts with **uap**.
+  It can be used to execute, monitor, and analyse defined work-flows.
 
 *****************
 Table of contents
