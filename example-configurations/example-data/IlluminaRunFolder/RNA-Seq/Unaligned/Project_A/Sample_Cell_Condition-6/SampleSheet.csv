@@ -1,0 +1,9 @@
+FCID,Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator,SampleProject
+D0HH1ACXX,1,Cell_Condition-6,hg19,ATCACG,RNA-Seq_experiment,N,SR_indexing,user,A
+D0HH1ACXX,2,Cell_Condition-6,hg19,ATCACG,RNA-Seq_experiment,N,SR_indexing,user,A
+D0HH1ACXX,3,Cell_Condition-6,hg19,ATCACG,RNA-Seq_experiment,N,SR_indexing,user,A
+D0HH1ACXX,4,Cell_Condition-6,hg19,ATCACG,RNA-Seq_experiment,N,SR_indexing,user,A
+D0HH1ACXX,5,Cell_Condition-6,hg19,ATCACG,RNA-Seq_experiment,N,SR_indexing,user,A
+D0HH1ACXX,6,Cell_Condition-6,hg19,ATCACG,RNA-Seq_experiment,N,SR_indexing,user,A
+D0HH1ACXX,7,Cell_Condition-6,hg19,ATCACG,RNA-Seq_experiment,N,SR_indexing,user,A
+D0HH1ACXX,8,Cell_Condition-6,hg19,ATCACG,RNA-Seq_experiment,N,SR_indexing,user,A
