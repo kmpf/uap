@@ -77,12 +77,11 @@ class Cutadapt(AbstractStep):
                         run.add_empty_output_connection("%s" % read)
                         run.add_empty_output_connection("log_%s" % read)
                     else:
-                        paired_end_info[run_id] = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
                         # make sure that adapter-R1/adapter-R2 or adapter-file are
                         # correctly set 
                         # this kind of mutual exclusive option checking is a bit 
                         # tedious, so we do it here.
-                        if paired_end_info[run_id]:
+                        if read == 'second_read':
                             if ( not self.is_option_set_in_config('adapter-R2') and 
                                  not self.is_option_set_in_config('adapter-file') ):
                                 logger.error(
