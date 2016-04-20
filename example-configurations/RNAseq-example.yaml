@@ -1,136 +1,244 @@
-# This is the rnaseq-pipeline configuration file.
+# This is an example configuration for the analysis of RNAseq data
 
-# This is an example configuration for the analysis of ChIPseq data
-
-destination_path: data/out/RNAseq/
+destination_path: example-out/RNA-Seq/
 
 constants:
-    - &genome /data/bioinf/Data/Indices/hg19/hg19.fa
-    - &segemehl_genome_index /data/bioinf/Data/Indices/hg19/hg19.idx
-    - &bowtie2_genome_index /data/bioinf/genomes/data/animalia/chordata/mammalia/rodentia/homo_sapiens/hg19/indices/hg19 
+    # 1.  Genome Information:
+    # 1.1 Complete Sequence (FASTA)
+    - &genome
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_UCSC_complete_genome/hg19_all_chr_UCSC-download-RwaETA3q/hg19_all_chr_UCSC-download.fasta
+
+    # 1.2 FASTA index
+    - &genome_faidx 
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_samtools_faidx/hg19_all_chr_UCSC-download-B7ceRp9K/hg19_all_chr_UCSC-download.fasta.fai
+
+    # 2.  Mapping Indices:
+    # 2.1 Bowtie2
+    - &bowtie2_genome_index
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bowtie2_index/bowtie2_index-hg19_all_chr_UCSC-download-yVv5kTxk/bowtie2_index-hg19_all_chr_UCSC-download
+
+    # 2.2 Segemehl
+    - &segemehl_genome_index
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_segemehl_index/segemehl_index-hg19_all_chr_UCSC-download-s8p1Hh3g/segemehl_index-hg19_all_chr_UCSC-download.idx
+
+    # 3.  Gencode Annotation:
+    # 3.1 Version 24
+    - &gencode_v24_annotation_gtf
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode/gencode.v24.annotation.gtf
 
 steps:
-#    read_annotation (raw_file_source):
-#        path: data/ChIPseq/H3K4me3_GCCAAT_L001_001.bed
-#        sha1: 297ceb1895c75f1a793423a8b4a7a92f48241159
+    fc (run_folder_source):
+        path: example-data/IlluminaRunFolder/RNA-Seq/
+        paired_end: no
 
-    gencode (raw_url_source):
-        url: ftp://ftp.sanger.ac.uk/pub/gencode/release_15/gencode.v15.annotation.gtf.gz
-        sha1: 9b272fde8bca544e6cd8621ddeec55aa09cf7a05
-        
-    gencode_genes_only (grep):
-        _depends: gencode
-        pattern: "\tgene\t"
+    merge_fastq_files:
+      _depends: fc
 
+    fastqc_runs (fastqc):
+      _depends: merge_fastq_files
 
-    fastq_source:
-        pattern: data/RNAseq/*.fastq.gz
-        group: (rnaseq)-R[12].fastq.gz
-        indices: indices.rnaseq.csv
-        paired_end: yes
+    fastx_quality_stats:
+      _depends: merge_fastq_files
 
     cutadapt:
-        _depends: fastq_source
-        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG
-        adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
-        fix_qnames: false
+        _depends: merge_fastq_files
+        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+        fix_qnames: true
+
+    cutadapt_fastqc (fastqc):
+      _depends: cutadapt
+
+    cutadapt_fastx_quality_stats (fastx_quality_stats):
+      _depends: cutadapt
 
     fix_cutadapt:
         _depends: cutadapt
         _volatile: true
 
-    segemehl:
+    tophat2:
         _depends: fix_cutadapt
-        genome: *genome
-        index: *segemehl_genome_index
+        library_type: fr-secondstrand
+        index: *bowtie2_genome_index
 
-    s2c:
-        _depends: segemehl
+    sam_to_sorted_bam_tophat2 (sam_to_sorted_bam):
+        _depends: tophat2
+        genome-faidx: *genome_faidx
+        sort-by-name: true
+        temp-sort-dir: '/tmp/'
 
-    fix_s2c:
-        _depends: s2c
-
-    count_genes (htseq_count):
-        _depends:
-            - fix_s2c
-            - gencode_genes_only
-        _connect:
-            in/features: raw
+    count_genes_tophat2 (htseq_count):
+        _depends: sam_to_sorted_bam_tophat2
+        feature-file: *gencode_v24_annotation_gtf
+        order: name
         stranded: 'yes'
         mode: intersection-strict
-        type: gene
+        type: exon
         idattr: gene_id
 
+    cufflinks_tophat2 (cufflinks):
+        _depends: sam_to_sorted_bam_tophat2
+        library-type: fr-secondstrand
+        mask-file: *gencode_v24_annotation_gtf
 
-#    call_peaks (macs14):
-#        _depends: read_annotation
-#        _connect: 
-#            in/annotation: raw
+# Uncomment the following steps if you created the segemehl genome index
+#    segemehl:
+#        _depends: fix_cutadapt
+#        genome: *genome
+#        index: *segemehl_genome_index
 
-#tools:
-#    macs14:
-#        path: ~/virt-python/bin/macs14
-#        get_version: '--version'
+#    s2c:
+#        _depends: segemehl
+#        tmp_dir: /tmp/
+
+#    sam_to_sorted_bam_segemehl (sam_to_sorted_bam):
+#        _depends: s2c
+#        genome-faidx: *genome_faidx
+#        temp-sort-dir: /tmp/
+
+#    count_genes_segemehl (htseq_count):
+#        _depends: sam_to_sorted_bam_segemehl
+#        feature-file: *gencode_v24_annotation_gtf
+#        order: name
+#        stranded: 'yes'
+#        mode: intersection-strict
+#        type: exon
+#        idattr: gene_id
+
+#    cufflinks_segemehl (cufflinks):
+#        _depends: sam_to_sorted_bam_segemehl
+#        library-type: fr-secondstrand
+#        mask-file: *gencode_v24_annotation_gtf
+
 
 tools:
-    cat4m:
-        path: ./tools/cat4m
-#    cufflinks:
-#        path: /home/spechtm/cufflinks/cufflinks-2.1.1.Linux_x86_64/cufflinks
-#        get_version: '--version'
-#        exit_code: 1
-    curl:
-        path: /usr/bin/curl
-        get_version: '--version'
-        exit_code: 2
+    ##################
+    # External Tools #
+    ##################
+
+    # URL: http://cufflinks.cbcb.umd.edu/
+    cufflinks:
+        path: cufflinks
+        get_version: --version
+        exit_code: 1
+
+    # URL: https://github.com/marcelm/cutadapt
     cutadapt:
-        path: /home/kaempf/virt-python/bin/cutadapt
-        get_version: '--version'
-    fix_cutadapt:
-        path: ['./python_env/bin/python', './tools/fix_cutadapt.py']
-        get_version: ''
-        exit_code: 1
-    fix_qnames:
-        path: ['./python_env/bin/python', './tools/fix_qnames.py']
-    fix_s2c:
-        path: ['./python_env/bin/python', './tools/fix_s2c.py']
-        exit_code: 1
-    grep:
-        path: grep
-        get_version: '--version'
+        path: cutadapt
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+    fastqc:
+        path: fastqc
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://www-huber.embl.de/users/anders/HTSeq/doc/count.html
     htseq-count:
-        path: /data/bioinf/projects/code/projects_misc/Ribolution/copd-retro/2013-01/tools/htseq-env/bin/htseq-count
-        get_version: ''
-        exit_code: 1
-    head:
-        path: head
-        get_version: '--version'
-    invertGood:
-        path: /data/bioinf/projects/code/projects_misc/Ribolution/copd-retro/2013-01/tools/invertSamStrand/invertGood
-    pigz:
+        path: htseq-count
+        get_version: -h
+        exit_code: 0
+
+    # URL: http://zlib.net/pigz/
+    pigz: 
         path: pigz
-        get_version: '--version'
-    remove_reads_segemehl:
-        path: ['./python_env/bin/python', './tools/remove_reads_segemehl.py']
-        exit_code: 1
-    s2c:
-        path: ['./python_env/bin/python', './tools/s2c.py']
-        get_version: ''
-        exit_code: 2
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://www.htslib.org/
     samtools:
         path: samtools
         get_version: ''
         exit_code: 1
-    sha1sum:
-        path: sha1sum
-        get_version: '--version'
+
+    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
     segemehl:
-        path: '/data/bioinf/projects/code/projects_misc/Tools/SEGEMEHL/segemehl-04182013-mod-stdout/segemehl.x'
+        path: segemehl.x
         get_version: ''
         exit_code: 255
-#    tophat2:
-#        path: /home/spechtm/tophat-2.0.8b.Linux_x86_64/tophat2
-#        get_version: '--version'
-#    bowtie2:
-#        path: bowtie2
-#        get_version: '--version'
+
+    # URL: http://ccb.jhu.edu/software/tophat/index.shtml
+    tophat2:
+        path: tophat2
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://hannonlab.cshl.edu/fastx_toolkit/
+    fastx_quality_stats:
+        path: fastx_quality_stats
+        get_version: -h
+        exit_code: 1
+
+    ##################
+    # Internal Tools #
+    ##################
+
+    fix_cutadapt:
+        path: ../tools/fix_cutadapt.py
+        get_version: --version
+        exit_code: 0
+
+    fix_s2c:
+        path: ../tools/fix_make_segemehl_output_cufflinks_compatible.py
+        exit_code: 1
+
+    fix_qnames:
+        path: ../tools/fix_qnames.py
+        exit_code: 0
+
+    mate_pair_strand_switch:
+        path: ../tools/mate_pair_strand_switch.py
+        get_version: --version
+        exit_code: 0
+
+    remove_reads_segemehl:
+        path: ../tools/remove_reads_segemehl.py
+        exit_code: 1
+
+    s2c:
+        path: ../tools/make_segemehl_output_cufflinks_compatible.py
+        exit_code: 2
+
+    compare_secure_hashes:
+        path: ../tools/compare_secure_hashes.py
+        get_version: --version
+        exit_code: 0
+
+    ##############
+    # Unix Tools #
+    ##############
+
+    cat:
+        path: cat
+        get_version: --version
+        exit_code: 0
+
+    cp:
+        path: 'cp'
+        get_version: '--version'
+        exit_code: 0
+
+    mkdir:
+        path: 'mkdir'
+        get_version: '--version'
+        exit_code: 0
+
+    mv:
+        path: 'mv'
+        get_version: '--version'
+        exit_code: 0
+
+    dd:
+        path: 'dd'
+        get_version: '--version'
+        exit_code: 0
+
+    mkfifo:
+        path: 'mkfifo'
+        get_version: '--version'
+        exit_code: 0
+
+    tar:
+        path: 'tar'
+        get_version: '--version'
+        exit_code: 0
