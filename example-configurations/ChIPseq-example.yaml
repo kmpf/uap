@@ -85,12 +85,14 @@ steps:
         _depends: rmdup_bowtie2
         broad: no
         control: *control-treatment-hash
+        # Attention: Comment out the following line for a real analysis!
         nomodel: yes
 
     macs2_bowtie2_broad_peaks (macs2):
         _depends: rmdup_bowtie2
         broad: yes
         control: *control-treatment-hash
+        # Attention: Comment out the following line for a real analysis!
         nomodel: yes
 
 tools:
