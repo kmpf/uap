@@ -200,6 +200,7 @@ steps:
 #        _depends: fix_cutadapt
 #        genome: *genome
 #        index: *segemehl_genome_index
+#        fix-qnames: yes       
 
     tophat2:
         _depends: fix_cutadapt
@@ -251,6 +252,7 @@ steps:
 
     rmdup_bwa_backtrack (picard_markduplicates):
         _depends: sort_bwa_backtrack
+        VALIDATION_STRINGENCY: LENIENT
         
 #    rmdup_segemehl (picard_markduplicates):
 #        _depends: sort_segemehl
@@ -344,9 +346,9 @@ tools:
 
     # URL: http://broadinstitute.github.io/picard/
     picard-tools:
-        path: picard-tools
-        get_version: --help
-        exit_code: 0
+        path: picard
+        get_version: -h
+        exit_code: 1
 
     # URL: http://zlib.net/pigz/
     pigz: 
