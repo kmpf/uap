@@ -201,7 +201,7 @@ def render_graph_for_all_steps(p, args):
                     if '_connect' in step.get_options():
                         if in_key in step.get_options()['_connect']:
                             declaration = step.get_options()['_connect'][in_key]
-                            if declaration.__class__ == str:
+                            if isinstance(declaration, str):
                                 if '/' in declaration:
                                     parts = declaration.split('/')
                                     allowed_steps = set()
@@ -209,6 +209,16 @@ def render_graph_for_all_steps(p, args):
                                     out_key = 'out/' + parts[1]
                                 else:
                                     out_key = 'out/' + declaration
+                            elif isinstance(declaration, list):
+                                for connection in declaration:
+                                    if isinstance(connection, str):
+                                        if '/' in connection:
+                                            parts = connection.split('/')
+                                            allowed_steps = set()
+                                            allowed_steps.add(parts[0])
+                                            out_key = 'out/' + parts[1]
+                                        else:
+                                            out_key = 'out/' + connection
                             else:
                                 raise StandardError("Invalid _connect value: %s"
                                                     % yaml.dump(declaration))

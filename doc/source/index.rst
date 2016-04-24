@@ -10,35 +10,34 @@
 uap -- Robust, Consistent, and Reproducible Data Analysis
 #########################################################
 
-**What?**
+****
 
   **uap** executes, controls and keeps track of the analysis of large data sets.
   It enables users to perform robust, consistent, and reprodcuible data analysis.
   **uap** encapsulates the usage of (bioinformatic) tools and handles data flow
   and processing during an analysis.
-  Users can either combine predefined analysis steps to create custom analysis or
-  they can extend **uap** with their own analysis steps.
-  Steps are best practice usages for the encapsulated commands.
-  **uap**'s  main focus is the analysis of high-throughput sequencing data.
-  But, as already mentioned, its plugin architecture allows users to add
-  functionality.
+  Users can use predefined or self-made analysis steps to create custom analysis.
+  Analysis steps encapsulate best practice usages for bioinformatic software
+  tools.
+  Although **uap**  focuses on the analysis of high-throughput sequencing data
+  it can be extended to handle any analysis.
+  But its plugin architecture allows users to add functionality.
   This would enable any kind of large data analysis.
 
-**How?**
+**Usage:**
 
   **uap** is a command-line tool, implemented in Python, and runs under
   GNU/Linux.
   It takes a user-defined configuration file, which describes the analysis, as
   input.
-  **uap** works on the analysis via subcommands.
+  **uap** interacts with the analysis via subcommands.
 
-**Where?**
+**Supported Platforms:**
 
   **uap** runs natively on Unix-like operating systems.
   But, it does also support the cluster engines |uge_link|/OGE/SGE and
   |slurm_link|.
 
-.. _uap-important-information:
 *********************
 Important Information
 *********************
@@ -67,30 +66,32 @@ A finished analysis leaves the user with:
   You should keep this configuration file for later reference and you could
   even make it publicly available along with your input files for anybody to
   re-run the entire data analysis or parts thereof.
-* *The output files and comprehensive annotations of the analysis*
-(see :doc:`annotation`).
-  These files are stored in the destination path defined in the configuration
+* *The result files and comprehensive annotations of the analysis*
+  (see :doc:`annotation`).
+  These files are located at the destination path defined in the configuration
   file.
 
 ************
 Core aspects
 ************
 
-Robustness:
-===========
+Robust Data Analysis:
+=====================
 
 * Data is processed in temporary location.
-  If and only if ALL involved processes exited graceful, the output files are
+  If and only if ALL involved processes exit gracefully, the output files are
   copied to the final output directory.
+* Processing can be aborted and continued from the command line at any time.
+  Failures during data processing do not lead to unstable state of analysis.
 * The final output directory names are suffixed with a hashtag which is based
   on the commands executed to generate the output data.
   Data is not easily overwritten and this helps to check for necessary
   recomputations.
-* Processing can be aborted and continued from the command line at any time.
-  Failures during data processing do not lead to unstable state of analysis.
-* Errors are reported as early as possible, fail-fast.
-  Tools are checked for availability, and the entire processing pipeline is
-  calculated in advance before jobs are being started or submitted to a cluster.
+* Fail fast, fail often.
+  During initiation **uap** controls the availability of all required tools,
+  calculates the paths of all files of the analysis, and controls if these files
+  exist.
+  If any problems are encountered the user is requested to fix them.
 
 Consistency:
 ============
@@ -112,9 +113,9 @@ Reproducibility:
 Usability:
 ==========
 
-* Single configuration file describdes entire processing pipeline.
-* Single command-line tool interacts with the pipeline.
-  It can be used to execute, monitor, and analyse the pipeline.
+* Single configuration file describes entire data analysis work-flow.
+* Single command-line tool to interacts with **uap**.
+  It can be used to execute, monitor, and analyse defined work-flows.
 
 *****************
 Table of contents
@@ -149,19 +150,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-.. |uge_link| raw:: html
-
-   <a href="http://www.univa.com/products/" target="_blank">UGE</a>
-
-.. |slurm_link| raw:: html
-
-   <a href="http://slurm.schedmd.com/" target="_blank">SLURM</a>
-
-.. |sphinx_link| raw:: html
-
-   <a href="http://sphinx-doc.org/" target="_blank">Sphinx</a>
-
-.. |rest_link| raw:: html
-
-   <a href="http://docutils.sourceforge.net/rst.html" target="_blank">`reStructuredText</a>
