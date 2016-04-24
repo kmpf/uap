@@ -198,6 +198,7 @@ steps:
 #        _depends: fix_cutadapt
 #        genome: *genome
 #        index: *segemehl_genome_index
+#        fix-qnames: yes       
 
     tophat2:
         _depends: fix_cutadapt
@@ -249,6 +250,7 @@ steps:
 
     rmdup_bwa_backtrack (picard_markduplicates):
         _depends: sort_bwa_backtrack
+        VALIDATION_STRINGENCY: LENIENT
         
 #    rmdup_segemehl (picard_markduplicates):
 #        _depends: sort_segemehl
