@@ -5,7 +5,7 @@ import sys
 import copy
 import datetime
 import glob
-from logging import getLogger
+import logging
 import os
 import re
 import socket
@@ -21,7 +21,7 @@ This script uses graphviz to produce graphs that display information about the
 tasks processed by the pipeline. 
 '''
 
-logger = getLogger("uap_logger")
+logger = logging.getLogger("uap_logger")
 
 def escape(s):
     result = ''
@@ -122,8 +122,11 @@ def main(args):
             yaml_files = { os.path.realpath(f) for f in anno_files \
                            if os.path.islink(f) }
             for y in yaml_files:
+                log_level = logger.getEffectiveLevel()
+                logger.setLevel(logging.INFO)
                 logger.info("Going to plot the graph for task: %s" % task)
-                render_single_annotation(y)
+                logger.setLevel(log_level)
+                render_single_annotation(y, args)
 
 def render_graph_for_all_steps(p, args):
     configuration_path = p.get_config_filepath()
@@ -141,7 +144,12 @@ def render_graph_for_all_steps(p, args):
     f = dot.stdin
     
     f.write("digraph {\n")
-    f.write("  rankdir = TB;\n")
+    if args.orientation == "top-to-bottom":
+        f.write("  rankdir = TB;\n")        
+    elif args.orientation == "left-to-right":
+        f.write("  rankdir = LR;\n")
+    elif args.orientation == "right-to-left":
+        f.write("  rankdir = RL;\n")
     f.write("  splines = true;\n")
     f.write("    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", "
             "nodesep = 0.2, ranksep = 0.3];\n")
@@ -245,7 +253,7 @@ def render_graph_for_all_steps(p, args):
     with open(svg_file, 'w') as f:
         f.write(svg)
 
-def render_single_annotation(annotation_path):
+def render_single_annotation(annotation_path, args):
     logger.info("Start rendering %s" % annotation_path)
     dot_file = annotation_path.replace('.yaml', '.dot')
     # Replace leading dot to make graphs easier to find
@@ -264,7 +272,7 @@ def render_single_annotation(annotation_path):
     with open(annotation_path, 'r') as f:
         log = yaml.load(f)
     try:
-        gv = create_dot_file_from_annotations([log])
+        gv = create_dot_file_from_annotations([log], args)
         with open(dot_file, 'w') as f:
             f.write(gv)
         
@@ -282,7 +290,7 @@ def render_single_annotation(annotation_path):
         pass
 
 
-def create_dot_file_from_annotations(logs):
+def create_dot_file_from_annotations(logs, args):
     hash = {'nodes': {}, 'edges': {}, 'clusters': {}, 'graph_labels': {}}
     for log in logs:
         temp = create_hash_from_annotation(log)
@@ -291,7 +299,12 @@ def create_dot_file_from_annotations(logs):
 
     f = StringIO.StringIO()
     f.write("digraph {\n")
-    f.write("    rankdir = LR;\n")
+    if args.orientation == "top-to-bottom":
+        f.write("    rankdir = TB;\n")        
+    elif args.orientation == "left-to-right":
+        f.write("    rankdir = LR;\n")
+    elif args.orientation == "right-to-left":
+        f.write("    rankdir = RL;\n")
     f.write("    splines = true;\n")
     f.write("    graph [fontname = Helvetica, fontsize = 12, size = "
             "\"14, 11\", nodesep = 0.2, ranksep = 0.3, labelloc = t, "
@@ -442,6 +455,13 @@ def create_hash_from_annotation(log):
                             if io_type is None:
                                 io_type = log['step']['known_paths'][known_path]\
                                             ['designation']
+                                if io_type is None:
+                                    io_type = 'input'
+
+                                print('io_type: %s\nknown_path: %s' % 
+                                      (io_type, known_path)
+                                )
+
                         if io_type == 'input':
                             # add edge from file to proc
                             pipe_hash['edges']\

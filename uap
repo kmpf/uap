@@ -167,6 +167,15 @@ def main():
         help = "Rendered graphs are simplified.")
 
     render_parser.add_argument(
+        "--orientation",
+        choices = ['left-to-right', 'right-to-left', 'top-to-bottom'],
+        dest = "orientation",
+        default = 'top-to-bottom',
+        help = "Defines orientation of the graph. Default: 'top-to-bottom'",
+        type = str       
+    )
+
+    render_parser.add_argument(
         "step_task",
         nargs='*',
         default=list(),

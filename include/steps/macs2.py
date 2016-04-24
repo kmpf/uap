@@ -74,13 +74,21 @@ class Macs2(AbstractStep):
         # use "broad-cutoff" only in conjuction with "broad"
         self.add_option('broad-cutoff', float, optional=True)
         self.add_option('call-summits', bool, optional=True)
+        # More options
+        self.add_option('bdg', bool, optional=True)
+        self.add_option('bw', int, optional=True)
+        self.add_option('mfold', str, optional=True)
+        self.add_option('nolambda', bool, optional=True)
+        self.add_option('nomodel', bool, optional=True)
+        self.add_option('extsize', int, optional=True)
 
     def runs(self, run_ids_connections_files):
         # Compile the list of options
         options = ['format', 'gsize', 'keep-dup', 'buffer-size', 'verbose',
                    'read-length', 'shift', 'qvalue', 'pvalue', 'to-large',
                    'down-sample', 'slocal', 'llocal', 'broad', 'broad-cutoff',
-                   'call-summits']
+                   'call-summits', 'bdg', 'bw', 'mfold', 'nolambda',
+                   'nomodel', 'extsize']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -128,11 +136,12 @@ class Macs2(AbstractStep):
                 with self.declare_run(run_id) as run:
                     # Create empty output connections depending on ...
                     result_files = dict()
-                    result_files["%s_model.r" % run_id] = run.add_output_file(
-                        'model',
-                        '%s-macs2-model.r' % run_id,
-                        input_paths
-                    )
+                    if not self.is_option_set_in_config( 'nomodel' ):
+                        result_files["%s_model.r" % run_id] = run.add_output_file(
+                            'model',
+                            '%s-macs2-model.r' % run_id,
+                            input_paths
+                        )
                     #result_files["%s" % run_id] = run.add_output_file(
                         #'log',
                         #'%s-macs2-log.txt' % run_id,
