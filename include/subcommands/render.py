@@ -442,6 +442,17 @@ def create_hash_from_annotation(log):
                                 io_type = 'output'
                             else:
                                 io_type = 'input'
+                        elif name == 'fix_cutadapt.py':
+                            if arg == proc_info['args'][-2]:
+                                io_type = 'input'
+                            elif arg == proc_info['args'][-1]:
+                                io_type = 'output'
+                            elif proc_info[ proc_info['args'].index(arg) - 1 ] \
+                                 == '--R2-in':
+                                io_type = 'input'
+                            elif proc_info[ proc_info['args'].index(arg) - 1 ] \
+                                 == '--R2-out':
+                                io_type = 'output'
                         else:
                             # we can't know whether the fifo is for input or
                             # output, first look at the hints, then use the
