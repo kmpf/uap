@@ -196,7 +196,6 @@ steps:
         _depends: fix_cutadapt
         _cluster_runtime: 48:00:00
         index: *bwa_genome_index
-        aln-t: 7
         
 #    segemehl:
 #        _depends: fix_cutadapt
