@@ -115,13 +115,13 @@ tools:
     # URL: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
     fastqc:
         path: fastqc
-        get_version: '--version'
+        get_version: --version
         exit_code: 0
 
     # URL: http://hannonlab.cshl.edu/fastx_toolkit/
     fastx_quality_stats:
         path: fastx_quality_stats
-        get_version: '-h'
+        get_version: -h
         exit_code: 1
 
     # URL: https://github.com/taoliu/MACS/
@@ -133,14 +133,14 @@ tools:
 
     # URL: http://broadinstitute.github.io/picard/
     picard-tools:
-        path: picard
-        get_version: -h
-        exit_code: 1
+        path: picard-tools
+        get_version: --version
+        exit_code: 0
 
     # URL: http://zlib.net/pigz/
     pigz:
         path: pigz
-        get_version: '--version'
+        get_version: --version
         exit_code: 0
 
     # URL: http://www.htslib.org/
