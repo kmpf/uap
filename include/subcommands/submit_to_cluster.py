@@ -101,6 +101,10 @@ def main(args):
 
         submit_script = copy.copy(template)
         submit_script = submit_script.replace("#{CORES}", str(task.step._cores))
+        submit_script = submit_script.replace(
+            "#{TIME}", str(task.step.get_option('_cluster_runtime') ))
+        submit_script =  submit_script.replace(
+            "#{MEMORY}", str(task.step.get_option('_cluster_memory') ))
         email = 'nobody@example.com'
         if 'email' in p.config:
             email = p.config['email']
