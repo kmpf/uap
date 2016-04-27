@@ -189,12 +189,13 @@ steps:
 
     ## Map reads onto genome ##
     bowtie2:
-         _depends: fix_cutadapt
-         index: *bowtie2_genome_index
+        _depends: fix_cutadapt
+        index: *bowtie2_genome_index
         
     bwa_backtrack:
-         _depends: fix_cutadapt
-         index: *bwa_genome_index
+        _depends: fix_cutadapt
+        index: *bwa_genome_index
+        aln-t: 7
         
 #    segemehl:
 #        _depends: fix_cutadapt
