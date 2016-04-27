@@ -345,7 +345,7 @@ tools:
     # URL: http://broadinstitute.github.io/picard/
     picard-tools:
         path: picard-tools
-        get_version: --help
+        get_version: --version
         exit_code: 0
 
     # URL: http://zlib.net/pigz/
