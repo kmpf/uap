@@ -1,4 +1,5 @@
 import sys
+import yaml
 import os
 from logging import getLogger
 from abstract_step import AbstractStep
@@ -29,6 +30,8 @@ class Bowtie2(AbstractStep):
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/alignments')
+        self.add_connection('out/log_stderr')
+        self.add_connection('out/metrics')
 
 
         self.require_tool('dd')
@@ -39,10 +42,13 @@ class Bowtie2(AbstractStep):
         self.add_option('index', str, optional=False,
                         description="Path to bowtie2 index (not containing file "
                         "suffixes).")
+                        
+        self.add_option('cores', int, default=6)
         # Bowtie2 has so many options that I'm avoiding to add them all now,
         # but it might be necessary later on.
 
     def runs(self, run_ids_connections_files):
+        self.set_cores(self.get_option('cores'))
 
         # Check if option values are valid
         if not os.path.exists(self.get_option('index') + '.1.bt2'):
@@ -55,6 +61,7 @@ class Bowtie2(AbstractStep):
                 fr_input = run_ids_connections_files[run_id]['in/first_read']
                 sr_input = run_ids_connections_files[run_id]['in/second_read']
 
+                
                 input_paths = [ y for x in [fr_input, sr_input] \
                                for y in x if y !=None ]                    
 
@@ -80,9 +87,10 @@ class Bowtie2(AbstractStep):
                         temp_fifos.append(temp_fifo)
                         # Is input gzipped fasta?
                         is_fastq_gz = False
-                        if len([_ for _ in ['fq.gz', 'fastq.gz']\
+                        if len([_ for _ in ['fq.gz', 'fastq.gz','.gz']\
                                 if input_path.endswith(_)]) == 1:
                             is_fastq_gz = True
+
                         # If yes we need to decompress it
                         if is_fastq_gz:
                             with exec_group.add_pipeline() as unzip_pipe:
@@ -124,7 +132,7 @@ class Bowtie2(AbstractStep):
                         # Assemble bowtie2 command
                         bowtie2 = [
                             self.get_tool('bowtie2'),
-                            '-p', '3',
+                            '-p', str(self.get_option('cores') - 3),
                             '-x', self.get_option('index')
                         ]
                         if is_paired_end:
@@ -133,8 +141,19 @@ class Bowtie2(AbstractStep):
                                 '-2', ','.join(sr_temp_fifos)])
                         else:
                             bowtie2.extend(['-U', ','.join(fr_temp_fifos)])
+                
+                        log_stderr = run.add_output_file(
+                                'log_stderr',
+                                '%s-bowtie2-log_stderr.txt' % run_id,
+                                input_paths)
 
-                        bowtie2_pipe.add_command(bowtie2)
+                        metrics = run.add_output_file(
+                                'metrics',
+                                '%s-bowtie2-metrics.txt' % run_id,
+                                input_paths)
+                        bowtie2.extend(['--met-file', metrics])
+                        bowtie2_pipe.add_command(bowtie2, stderr_path=log_stderr)
+                        
                         # Compress bowtie2 output
                         pigz = [self.get_tool('pigz'),
                                 '--stdout']
