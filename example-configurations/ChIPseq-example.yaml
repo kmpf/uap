@@ -1,43 +1,39 @@
-# This is the rnaseq-pipeline configuration file.
-
 # This is an example configuration for the analysis of ChIPseq data
 
-destination_path: example-out/ChIPseq/
+destination_path: example-out/ChIP-Seq/
 
 constants:
-    - &genome genomes/bacteria/Mycoplasma_genitalium/Mycoplasma_genitalium.ASM2732v1.fa
-    - &genome_faidx genomes/bacteria/Mycoplasma_genitalium/samtools_faidx/M_genitalium_genome-download-e6f7QENG/M_genitalium_genome-download.fasta.fai
-    - &segemehl_genome_index genomes/bacteria/Mycoplasma_genitalium/segemehl_index/Mycoplasma_genitalium_genome-download-zgtEpQmV/Mycoplasma_genitalium_genome-download.idx
-    - &bowtie2_genome_index genomes/bacteria/Mycoplasma_genitalium/bowtie2_index/Mycoplasma_genitalium_index-download-cMQPtBxs/Mycoplasma_genitalium_index-download
-    - &bwa_genome_index 
+    # 1.  Genome Information:
+    # 1.1 Complete Sequence (FASTA)
+    - &genome
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_UCSC_complete_genome/hg19_all_chr_UCSC-download-RwaETA3q/hg19_all_chr_UCSC-download.fasta
+
+    # 1.2 FASTA index
+    - &genome_faidx 
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_samtools_faidx/hg19_all_chr_UCSC-download-B7ceRp9K/hg19_all_chr_UCSC-download.fasta.fai
+
+    # 2.  Mapping Indices:
+    # 2.1 Bowtie2
+    - &bowtie2_genome_index
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bowtie2_index/bowtie2_index-hg19_all_chr_UCSC-download-yVv5kTxk/bowtie2_index-hg19_all_chr_UCSC-download
+
+    # 3.  Peak Calling 
+    # 3.1 Control vs. Treatment Information (for MACS2)
+    - control: &control-treatment-hash
+        rabbit_IgG:
+            - H3K4me1
+            - H3K4me3
+            - H3K27me3
+            - H3K36me3
 
 steps:
     ##################
     ## Source steps ##
     ##################
 
-#    read_annotation (raw_file_source):
-#        path: data/ChIPseq/H3K4me3_GCCAAT_L001_001.bed
-#        sha1: 297ceb1895c75f1a793423a8b4a7a92f48241159
-
-#    gencode (raw_url_source):
-#        url: ftp://ftp.sanger.ac.uk/pub/gencode/release_15/gencode.v15.annotation.gtf.gz
-#        sha1: 9b272fde8bca544e6cd8621ddeec55aa09cf7a05
-#        
-#    gencode_genes_only (grep):
-#        _depends: gencode
-#        pattern: "\tgene\t"
-
     fc (run_folder_source):
-        path: example-data/IlluminaRunFolder
+        path: example-data/IlluminaRunFolder/ChIP-Seq/
         paired_end: yes
-
-#    fastq_source:
-#        pattern: data/ChIPseq/*.fastq.gz
-#        group: (H3K4me3)_GCCAAT_L001_R[12]_001.fastq.gz
-#        indices: indices.chipseqcsv
-#        paired_end: yes
-
 
     ######################
     ## Processing steps ##
@@ -46,13 +42,13 @@ steps:
     merge_fastq_files:
         _depends: fc
 
-    fastqc (fastqc):
+    fastqc:
         _depends: merge_fastq_files
 
     fastx_quality_stats:
         _depends: merge_fastq_files
 
-    cutadapt (cutadapt):
+    cutadapt:
         _depends: merge_fastq_files
         adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
         adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
@@ -66,7 +62,6 @@ steps:
 
     fix_cutadapt:
         _depends: cutadapt
-#        _volatile: true
 
     fix_cutadapt_fastqc (fastqc):
         _depends: fix_cutadapt
@@ -74,84 +69,81 @@ steps:
     fix_cutadapt_fastx_quality_stats (fastx_quality_stats):
         _depends: fix_cutadapt
 
-    tophat2:
-        _depends: fix_cutadapt
-        library_type: 'fr-unstranded'
-        index: *bowtie2_genome_index
-
     bowtie2:
         _depends: fix_cutadapt
         index: *bowtie2_genome_index
 
-    segemehl:
-        _depends: fix_cutadapt
-        genome: *genome
-        index: *segemehl_genome_index
-
     sort_bowtie2 (sam_to_sorted_bam):
         _depends: bowtie2
         genome-faidx: *genome_faidx
-        temp-sort-directory: /tmp/
+        temp-sort-dir: /tmp/
 
-    bowtie_rmdup (picard_markduplicates):
+    rmdup_bowtie2 (picard_markduplicates):
         _depends: sort_bowtie2
+
+    macs2_bowtie2_narrow_peaks (macs2):
+        _depends: rmdup_bowtie2
+        broad: no
+        control: *control-treatment-hash
+        # Attention: Comment out the following line for a real analysis!
+        nomodel: yes
+
+    macs2_bowtie2_broad_peaks (macs2):
+        _depends: rmdup_bowtie2
+        broad: yes
+        control: *control-treatment-hash
+        # Attention: Comment out the following line for a real analysis!
+        nomodel: yes
 
 tools:
     ##################
     # External Tools #
     ##################
 
+    # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
     bowtie2:
         path: bowtie2
         get_version: '--version'
         exit_code: 0
 
+    # URL: https://github.com/marcelm/cutadapt
     cutadapt:
         path: cutadapt
         get_version: '--version'
         exit_code: 0
 
+    # URL: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
     fastqc:
         path: fastqc
-        get_version: '--version'
+        get_version: --version
         exit_code: 0
 
+    # URL: http://hannonlab.cshl.edu/fastx_toolkit/
     fastx_quality_stats:
         path: fastx_quality_stats
-        get_version: '-h'
+        get_version: -h
         exit_code: 1
 
-    tophat2:
-        path: tophat2
-        get_version: '--version'
+    # URL: https://github.com/taoliu/MACS/
+    # Installation via 'pip install MACS2'
+    macs2:
+        path: macs2
+        get_version: --version
         exit_code: 0
 
-    segemehl:
-        path: segemehl.x
-        get_version: ''
-        exit_code: 255
-
-#    cufflinks:
-#        path: /home/spechtm/cufflinks/cufflinks-2.1.1.Linux_x86_64/cufflinks
-#        get_version: '--version'
-#        exit_code: 1
-
-#    htseq-count:
-#        path: htseq-count
-#        get_version: ''
-#        exit_code: 1
-
+    # URL: http://broadinstitute.github.io/picard/
     picard-tools:
         path: picard-tools
-        get_version: '--version'
+        get_version: --version
         exit_code: 0
 
     # URL: http://zlib.net/pigz/
     pigz:
         path: pigz
-        get_version: '--version'
+        get_version: --version
         exit_code: 0
 
+    # URL: http://www.htslib.org/
     samtools:
         path: samtools
         get_version: '--version'

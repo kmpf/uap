@@ -259,8 +259,8 @@ steps:
         index-basename: bowtie2_index
 
 #    ## !ATTENTION! 
-#    ## only enable if your machine possesses enough memory (~60GB)
-#    ## otherwise this step is likely to crash
+#    ## only enable if your machine possesses enough RAM (~60GB)
+#    ## otherwise this step is going to crash
 #    hg19_segemehl_index (segemehl_generate_index):
 #        _depends: hg19_UCSC_complete_genome
 #        _connect:

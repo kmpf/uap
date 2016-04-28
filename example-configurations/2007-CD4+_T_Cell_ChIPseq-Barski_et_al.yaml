@@ -3,15 +3,17 @@
 destination_path: example-out/2007-Barski_et_al
 
 constants:
-    # Genome information goes here:
-    ## Complete sequence (FASTA)
+    # 1.  Genome information:
+    # 1.1 Complete sequence (FASTA)
     - &genome
         genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_UCSC_complete_genome/hg19_all_chr_UCSC-download-RwaETA3q/hg19_all_chr_UCSC-download.fasta
-    ## FASTA index
+
+    # 1.2 FASTA index
     - &genome_faidx
         genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/samtools_faidx/hg19_all_chr_UCSC-download-B7ceRp9K/hg19_all_chr_UCSC-download.fasta.fai
-    # Mapping indices go here:
-    ## 1. Bowtie2
+
+    # 2.  Mapping indices:
+    # 2.1 Bowtie2
     - &bowtie2_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bowtie2_index/bowtie2_index-hg19_all_chr_UCSC-download-yVv5kTxk/bowtie2_index-hg19_all_chr_UCSC-download
     ## 2. BWA
     - &bwa_genome_index
@@ -187,17 +189,19 @@ steps:
 
     ## Map reads onto genome ##
     bowtie2:
-         _depends: fix_cutadapt
-         index: *bowtie2_genome_index
+        _depends: fix_cutadapt
+        index: *bowtie2_genome_index
         
     bwa_backtrack:
-         _depends: fix_cutadapt
-         index: *bwa_genome_index
+        _depends: fix_cutadapt
+        _cluster_runtime: 48:00:00
+        index: *bwa_genome_index
         
 #    segemehl:
 #        _depends: fix_cutadapt
 #        genome: *genome
 #        index: *segemehl_genome_index
+#        fix-qnames: yes       
 
     tophat2:
         _depends: fix_cutadapt
@@ -249,6 +253,7 @@ steps:
 
     rmdup_bwa_backtrack (picard_markduplicates):
         _depends: sort_bwa_backtrack
+        VALIDATION_STRINGENCY: LENIENT
         
 #    rmdup_segemehl (picard_markduplicates):
 #        _depends: sort_segemehl
@@ -343,7 +348,7 @@ tools:
     # URL: http://broadinstitute.github.io/picard/
     picard-tools:
         path: picard-tools
-        get_version: --help
+        get_version: --version
         exit_code: 0
 
     # URL: http://zlib.net/pigz/
