@@ -24,6 +24,10 @@ So, please install it if its not already installed.::
   OR
   $ sudo pip install virtualenv
 
+The **uap** installation **does not** include all necessary tools for the data
+analysis.
+It is expected that the required tools are **already installed**.
+
 ************************
 Downloading the Software
 ************************

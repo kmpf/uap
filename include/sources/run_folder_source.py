@@ -44,10 +44,9 @@ class RunFolderSource(AbstractSourceStep):
 
         found_samples = dict()
         read_types = dict()
-        if self.get_option('first_read'):
-            read_types['first_read'] = self.get_option('first_read')
+        read_types['first_read'] = self.get_option('first_read')
 
-        if self.get_option('second_read'):
+        if self.get_option('paired_end'):
             read_types['second_read'] = self.get_option('second_read')
 
         # let's look if the path to our data exists 
@@ -79,9 +78,9 @@ class RunFolderSource(AbstractSourceStep):
         # create a run for each sample in found_samples and store data therein
         for run_id in found_samples.keys():
             with self.declare_run(run_id) as run:
-                run.add_public_info('paired_end', self.get_option('paired_end'))
                 
                 sample_path = None
+                
                 for read in ['first_read', 'second_read']:
                     if read in read_types.keys():
                         for path in found_samples[run_id][read_types[read]]:

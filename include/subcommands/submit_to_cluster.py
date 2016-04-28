@@ -101,6 +101,10 @@ def main(args):
 
         submit_script = copy.copy(template)
         submit_script = submit_script.replace("#{CORES}", str(task.step._cores))
+        submit_script = submit_script.replace(
+            "#{TIME}", str(task.step._options['_cluster_runtime'] ))
+        submit_script =  submit_script.replace(
+            "#{MEMORY}", str(task.step._options['_cluster_memory'] ))
         email = 'nobody@example.com'
         if 'email' in p.config:
             email = p.config['email']
@@ -158,9 +162,9 @@ def main(args):
                     stdout = subprocess.PIPE)
             except OSError as e:
                 if e.errno == os.errno.ENOENT:
-                    raise StandardError("Unable to launch %s. Maybe " +
+                    raise StandardError("Unable to launch %s. Maybe " % p.cc('submit') +
                                         "you are not executing this script on " +
-                                        "the cluster" % p.cc('submit'))
+                                        "the cluster")
                 else:
                     raise e
             process.stdin.write(submit_script)
