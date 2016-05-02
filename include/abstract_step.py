@@ -1071,13 +1071,15 @@ class AbstractStep(object):
         # a circular reference, because AbstractStep is imported at the beginning
         # of io_step. There's probably a better solution, but I think it doesn't
         # hurt, either. Here goes the awkward line:
-        import io_step
+
         
-        check_classes = [AbstractSourceStep, AbstractStep, io_step.IOStep]
+        check_classes = [AbstractSourceStep, AbstractStep]
         for index, c in enumerate(check_classes):
+
             classes = [_ for _ in inspect.getmembers(__import__(key), 
                                                      inspect.isclass) \
                        if c in _[1].__bases__]
+
             for k in range(index):
                 classes = [_ for _ in classes if _[1] != check_classes[k]]
             if len(classes) > 0:
@@ -1208,10 +1210,11 @@ class AbstractStep(object):
         if kwargs['optional'] and (kwargs['default'] != None):
             if type(kwargs['default']) not in option_types:
                 logger.error(
-                    "Type of default value (%s) does not match any of the "
+                    "In step: (%s) option: (%s) Type of default value (%s) does not match any of the "
                     "declared possible types (%s)."
-                    % (type(kwargs['default']), option_types))
+                    % (self, key, type(kwargs['default']), option_types))
                 sys.exit(1)
+
         info = dict()
         info['types'] = option_types
         for _ in ['optional', 'default', 'label', 'description', 'group', 
@@ -1313,6 +1316,19 @@ class AbstractStep(object):
                 # Check if this key exists
                 if parent_run_id not in list( run_ids_connections_files.keys() ):
                     run_ids_connections_files[parent_run_id] = dict()
+
+                # Workaround: Set empty connections
+                if '_connect' in self._options:
+                    for _con_in, parent_out_connection_to_bend in \
+                        self._options['_connect'].items(): 
+
+                        if parent_out_connection_to_bend == 'empty':
+                            run_ids_connections_files[parent_run_id]\
+                                [_con_in] = [None]
+
+                            logger.debug("Found connection %s which is declared empty" % 
+                                         (_con_in))
+
                 # ... and each connection
                 for parent_out_connection in \
                     parent.get_run(parent_run_id).get_out_connections():
@@ -1320,30 +1336,30 @@ class AbstractStep(object):
                             .get_output_files_abspath_for_out_connection(
                                 parent_out_connection)
                     in_connection = parent_out_connection.replace('out/', 'in/')
-                    this_parent_out_connection = '%s/%s' % (
-                        parent.get_step_name(), parent_out_connection[4:])
+
                     # Do we need to connect certain outputs to certain inputs?
                     if '_connect' in self._options:
-                        for _con_in in list( self._options['_connect'].keys() ):
-                            # Check if current parent needs to be connected
-                            lopoc = self._options['_connect'][_con_in]
-                            logger.debug(lopoc)
-                            # If this_parent_out_connection can be found in
-                            # lopoc, this means ...
-                            if this_parent_out_connection == lopoc or \
-                               this_parent_out_connection in lopoc:
-                                logger.debug("Found %s in %s" % 
-                                             (this_parent_out_connection,lopoc))
-                                # ... we have to use a different in_connection
-                                in_connection = _con_in
+                        for _con_in, parent_out_connection_to_bend in \
+                            self._options['_connect'].items(): 
 
-                    # Now lets fill our dict with data
+                            if isinstance(parent_out_connection_to_bend, list):
+                                pass
+                            else:
+                               parent_out_connection_to_bend =  [parent_out_connection_to_bend]
+
+                            for entry in parent_out_connection_to_bend:
+                                if entry ==  parent_out_connection:
+                                    logger.debug("Found %s to connect to  %s" %
+                                                 (parent_out_connection_to_bend,_con_in))
+                                    in_connection = _con_in
+                        
                     if in_connection not in \
                        list( run_ids_connections_files[parent_run_id].keys() ):
                         run_ids_connections_files[parent_run_id]\
                             [in_connection] = list()
 
-                    run_ids_connections_files[parent_run_id][in_connection]\
+                    if run_ids_connections_files[parent_run_id][in_connection] != [None]:
+                        run_ids_connections_files[parent_run_id][in_connection]\
                         .extend(output_files)
 
         return run_ids_connections_files
@@ -1452,75 +1468,7 @@ class AbstractStep(object):
                     sys.exit(1)
 
         return result
-
-    def get_run_ids_and_input_files_for_connection(self, in_key):
-        """
-        Returns an iterator/generator with run_id and input_files where:
-            - run_id is a string
-            - input_files is a list of input paths
-        """
-        result = self.get_input_run_info_for_connection(in_key)
-        for run_id, info in result['runs'].items():
-            input_files = list()
-            for step_name, input_paths in info.items():
-                input_files.extend(input_paths)
-            input_files = sorted(input_files)
-            yield run_id, input_files
-
-    def get_run_ids_and_input_run_infos(self, in_key):
-        pass
-
-    def get_input_files_for_run_id_and_connection(self, run_id, in_key):
-        """
-        Returns a list of all input files given a run_id and a connection
-        """
-        result = self.get_input_run_info_for_connection(in_key)
-        info = result['runs'][run_id]
-        input_files = list()
-        for step_name, input_paths in info.items():
-            input_files.extend(input_paths)
-        input_files = sorted(input_files)
-        return input_files
-        
-        
-
-    def get_n_input_file_for_connection(self, in_key, expected):
-        result = self.get_input_run_info_for_connection(in_key)
-        values = set()
-        for run_id, info in result['runs'].items():
-            for step_name, input_paths in info.items():
-                for path in input_paths:
-                    values.add(path)
-        if len(values) != expected:
-            logger.error("Expected exactly %d files for %s in %s, "
-                         "got %d instead."
-                         % (expected, in_key, self, len(values)))
-            sys.exit(1)
-        return list(values)
-        
-    def get_single_input_file_for_connection(self, in_key):
-        """
-        Return a single input file for a given connection, also make sure that
-        there's exactly one such input file.
-        """
-        return self.get_n_input_file_for_connection(in_key, 1)[0]
-
-    def get_annotation_for_input_file(self, path):
-        """
-        Determine the annotation for a given input file (that is, the connection
-        name).
-        """
-        # that's four nested loops
-        for dep in self.get_dependencies():
-            run_info = dep.get_runs()
-            for run_id, run in run_info.items():
-                for annotation, in_paths in run.get_output_files_abspath().items():
-                    for in_path in in_paths:
-                        if path == in_path:
-                            return annotation
-        logger.error(
-            "Unable to determine annotation type for input file %s." % path)
-        sys.exit(1)
+     
 
 class AbstractSourceStep(AbstractStep):
     """
