@@ -11,6 +11,10 @@ class FastqSample(AbstractStep):
     wrapper class for fastq-sample
     sample random reads from a fastq file
     http://homes.cs.washington.edu/~dcjones/fastq-tools/fastq-sample.html
+
+    for a specific seed the subsampling process will ever produce the
+    same order of positions so the connections between R1 and R2 remains
+    (paired end)
     '''
 
     def __init__(self, pipeline):
