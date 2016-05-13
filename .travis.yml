@@ -8,3 +8,5 @@ matrix:
 
 install:
   - ./bootstrap.sh
+
+script: ./uap example-configurations/travis_uap.yaml status
