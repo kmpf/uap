@@ -7,4 +7,4 @@ matrix:
       python: '2.6'
 
 install:
-  - python setup.py
+  - ./bootstrap.sh
