@@ -1,0 +1,26 @@
+
+# This is the SmallRNA Kit test 
+# 
+
+destination_path:  out
+
+steps:
+
+
+tools:
+       
+        cat:
+            path: 'cat'
+            get_version: '--version'
+
+        grep:
+            path: 'grep'
+            get_version: '--version'
+
+        cp:
+            path: 'cp'
+            get_version: '--version'
+
+        echo:
+            path: '/bin/echo'
+            get_version: '--version'
