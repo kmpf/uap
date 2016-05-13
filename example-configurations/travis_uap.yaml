@@ -2,9 +2,14 @@
 # This is the SmallRNA Kit test 
 # 
 
-destination_path:  out
+destination_path:  travis_output
 
 steps:
+    # read sourcefile
+    read_test_file (raw_file_source):
+        pattern: sources/*.txt
+        group: (\w+).txt
+        sample_id_prefix: Result
 
 
 tools:
