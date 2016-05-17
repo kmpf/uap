@@ -1338,6 +1338,9 @@ class AbstractStep(object):
                     in_connection = parent_out_connection.replace('out/', 'in/')
 
                     # Do we need to connect certain outputs to certain inputs?
+                    this_parent_out_connection = '%s/%s' % (
+                            parent.get_step_name(), parent_out_connection[4:])
+
                     if '_connect' in self._options:
                         for _con_in, parent_out_connection_to_bend in \
                             self._options['_connect'].items(): 
@@ -1348,7 +1351,7 @@ class AbstractStep(object):
                                parent_out_connection_to_bend =  [parent_out_connection_to_bend]
 
                             for entry in parent_out_connection_to_bend:
-                                if entry ==  parent_out_connection:
+                                if entry ==  this_parent_out_connection:
                                     logger.debug("Found %s to connect to  %s" %
                                                  (parent_out_connection_to_bend,_con_in))
                                     in_connection = _con_in
