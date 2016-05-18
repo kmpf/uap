@@ -5,34 +5,41 @@ matrix:
   # Ubuntu 12.04.5 LTS
     - os: linux
       python: '2.6'
+      env: PAGER=/bin/cat
     - os: linux
       python: '2.7'
+      env: PAGER=/bin/cat
     - os: linux
       python: '3.3'
+      env: PAGER=/bin/cat
     - os: linux
       python: '3.4'
+      env: PAGER=/bin/cat
     - os: linux
       python: '3.5'
+      env: PAGER=/bin/cat
 
   # Ubuntu 14.04.3 LTS
     - os: linux
       dist: trusty
       python: '2.6'
+      env: PAGER=/bin/cat
     - os: linux
       dist: trusty
       python: '2.7'
+      env: PAGER=/bin/cat
     - os: linux
       dist: trusty
       python: '3.3'
+      env: PAGER=/bin/cat
     - os: linux
       dist: trusty
       python: '3.4'
+      env: PAGER=/bin/cat
     - os: linux
       dist: trusty
       python: '3.5'
-
-env:
-  - PAGER=/bin/cat
+      env: PAGER=/bin/cat
 
 install:
   - ./bootstrap.sh
