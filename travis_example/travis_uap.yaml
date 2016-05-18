@@ -1,0 +1,30 @@
+
+# This is the SmallRNA Kit test 
+# 
+
+destination_path:  output_data
+
+steps:
+    # read sourcefile
+    read_test_file (raw_file_source):
+        pattern: sources/*.txt
+        group: (\w+).txt
+        sample_id_prefix: Result
+
+tools:
+       
+        cat:
+            path: 'cat'
+            get_version: '--version'
+
+        grep:
+            path: 'grep'
+            get_version: '--version'
+
+        cp:
+            path: 'cp'
+            get_version: '--version'
+
+        echo:
+            path: '/bin/echo'
+            get_version: '--version'

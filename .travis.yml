@@ -9,4 +9,4 @@ matrix:
 install:
   - ./bootstrap.sh
 
-script: ./uap example-configurations/travis_uap.yaml status
+script: ./uap travis_example/travis_uap.yaml status
