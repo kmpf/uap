@@ -37,4 +37,4 @@ env:
 install:
   - ./bootstrap.sh
 
-script: ./uap travis_example/travis_uap.yaml status > /dev/null
+script: ./uap travis_example/travis_uap.yaml status
