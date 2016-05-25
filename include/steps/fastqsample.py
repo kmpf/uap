@@ -73,6 +73,9 @@ class FastqSample(AbstractStep):
 
         read_types = {'first_read': '_R1', 'second_read': '_R2'}
         for run_id in run_ids_connections_files.keys():
+            # create new run id if 
+            # self.is_option_set_in_config('o')
+            # if true new rundfi prefix_runid
             with self.declare_run(run_id) as run:
 
                 for read in read_types:
@@ -115,7 +118,7 @@ class FastqSample(AbstractStep):
                             # maybe rename method?
                             outfile_path = run.get_output_directory_du_jour_placeholder() + '/%s'
                             outfile_prefix = 'sample'
-
+## remove start
                             if 'o' in config_options:
                                 outfile_prefix = config_options['o']
                             outfile = outfile_path % (outfile_prefix)
@@ -124,10 +127,11 @@ class FastqSample(AbstractStep):
                             for option, value in config_options.iteritems():
                                 if option in self.possible_options:
                                     if option == 'o':
+                                        #continoue 
                                         value = outfile
                                     fastqsample.extend(['-%s' % (option),
                                                        str(value)])
-
+# remove end 
                             fastqsample.append(temp_file)
                             fastqsample_eg.add_command(fastqsample)
 
@@ -139,12 +143,12 @@ class FastqSample(AbstractStep):
                                                run_id,
                                                read_types[read],
                                                read_count)
-
+# adjust params
                             subsample_file = run.add_output_file(
                                 "%s" % read,
                                 "%s_%s%s_%s.fastq.gz" % filename_params,
                                 [input_path])
-
+# adjust outfiler tp sample.fatsq (get full path)
                             pigz_compress_eg = run.new_exec_group()
                             pigz_compress = [self.get_tool('pigz'),
                                              '--best', '--stdout',
