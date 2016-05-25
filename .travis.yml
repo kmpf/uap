@@ -41,11 +41,14 @@ matrix:
       python: '3.5'
       env: PAGER=/bin/cat
 
-# command to install dependencies
-#install: "pip install -r travis_example/requirements.txt"
+matrix:
+  include:
+    - os: linux
+      python: '2.6'
+      env: PAGER=/bin/cat
 
 install:
   - "pip install -r travis_example/requirements.txt"
   - ./bootstrap.sh
 
-script: ./uap travis_example/travis_uap.yaml status
+script: ./uap travis_example/uap_config.yaml status

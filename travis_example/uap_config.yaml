@@ -1,0 +1,73 @@
+destination_path: output_data/
+
+steps:
+    ##################
+    ## Source steps ##
+    ##################
+
+    #fc (run_folder_source):
+    #    path: example-configurations/example-data/IlluminaRunFolder/Unaligned/Undetermined_indices/Sample_lane1/*.fastq.gz
+    #    paired_end: yes
+
+    # lane1_Undetermined_L001_R1_001.fastq.gz
+    fastq_input (fastq_source):                                                                                                                                                                   
+        pattern: travis_example/Sample_lane1/*.fastq.gz
+        group: \w*_(L\d{3})_R[\d]_00[\d].fastq.gz
+        sample_id_prefix: fastqinput
+        first_read: '_R1'
+        second_read: '_R2'
+        paired_end: true
+
+    ######################
+    ## Processing steps ##
+    ######################
+
+    #merge_fastq_files:
+    #    _depends: fastq_input
+
+    cutadapt:
+        _depends: fastq_input
+        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+        adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+        fix_qnames: false
+
+tools:
+    ##################
+    # External Tools #
+    ##################
+
+    cutadapt:
+        path: cutadapt
+        get_version: '--version'
+        exit_code: 0
+
+    pigz:
+        path: pigz
+        get_version: '--version'
+        exit_code: 0
+
+    ##################
+    # Internal Tools #
+    ##################
+
+    fix_qnames:
+        path: './tools/fix_qnames.py'
+
+    ##############
+    # Unix Tools #
+    ##############
+
+    cat:
+        path: cat
+        get_version: '--version'
+        exit_code: 0
+
+    dd:
+        path: dd
+        get_version: '--version'
+        exit_code: 0
+
+    mkfifo:
+        path: mkfifo
+        get_version: '--version'
+        exit_code: 0
