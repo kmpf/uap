@@ -41,6 +41,9 @@ matrix:
       python: '3.5'
       env: PAGER=/bin/cat
 
+# command to install dependencies
+install: "pip install -r travis_example/requirements.txt"
+
 install:
   - ./bootstrap.sh
 
