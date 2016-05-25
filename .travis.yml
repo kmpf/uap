@@ -42,9 +42,10 @@ matrix:
       env: PAGER=/bin/cat
 
 # command to install dependencies
-install: "pip install -r travis_example/requirements.txt"
+#install: "pip install -r travis_example/requirements.txt"
 
 install:
+  - "pip install -r travis_example/requirements.txt"
   - ./bootstrap.sh
 
 script: ./uap travis_example/travis_uap.yaml status
