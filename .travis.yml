@@ -55,4 +55,4 @@ install:
   - "pip install -r travis_example/requirements.txt"
   - ./bootstrap.sh
 
-script: ./uap travis_example/uap_config.yaml status
+script: ./uap travis_example/uap_config.yaml run-locally
