@@ -17,7 +17,7 @@ class MergeFastxFiles(AbstractStep):
     def __init__(self, pipeline):
         super(MergeFastxFiles, self).__init__(pipeline)
 
-        self.set_cores(12)  # muss auch in den Decorator
+        self.set_cores(4)  # muss auch in den Decorator
 
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
@@ -114,18 +114,17 @@ class MergeFastxFiles(AbstractStep):
                             input_paths)
 
                         if is_gzipped:
-                            for input_path in input_paths:
-                                with exec_group.add_pipeline() as unzip_pipe:
-                                    pigz_input = [self.get_tool('pigz'),
-                                                  '--decompress', '--stdout']
-                                    pigz_input.extend(input_paths)
+                            with exec_group.add_pipeline() as unzip_pipe:
+                                pigz_input = [self.get_tool('pigz'),
+                                              '--decompress', '--stdout']
+                                pigz_input.extend(input_paths)
 
-                                    pigz_output = [self.get_tool('pigz'),
-                                                   '--stdout', '/dev/stdin']
+                                pigz_output = [self.get_tool('pigz'),
+                                               '--stdout', '/dev/stdin']
 
-                                    unzip_pipe.add_command(pigz_input)
-                                    unzip_pipe.add_command(pigz_output,
-                                                           stdout_path=p_out)
+                                unzip_pipe.add_command(pigz_input)
+                                unzip_pipe.add_command(pigz_output,
+                                                       stdout_path=p_out)
                         else:
 
                                 pigz_output = [self.get_tool('pigz'),
