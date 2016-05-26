@@ -40,7 +40,7 @@ class FastqSample(AbstractStep):
                         "of the proportion of total reads. "
                         "If sampling with replacement, this number "
                         "may be greater than 1.0")
-        self.add_option('o', str, default='sample', optional=True,
+        self.add_option('o', str, default=None, optional=True,
                         description="The filename prefix to which output "
                         "should be written. If single-end data is being "
                         "sampled, the output file is [PREFIX].fastq, "
@@ -73,7 +73,12 @@ class FastqSample(AbstractStep):
 
         read_types = {'first_read': '_R1', 'second_read': '_R2'}
         for run_id in run_ids_connections_files.keys():
-            with self.declare_run(run_id) as run:
+            new_run_id = run_id
+            # create new run id if option o isset
+            if self.is_option_set_in_config('o'):
+               new_run_id = config_options['o'] + '_' + run_id
+
+            with self.declare_run(new_run_id) as run:
 
                 for read in read_types:
                     connection = 'in/%s' % read
@@ -113,36 +118,29 @@ class FastqSample(AbstractStep):
                             # @todo: its impossible to get a shorter line at
                             # this position for pep8-compatibility...
                             # maybe rename method?
-                            outfile_path = run.get_output_directory_du_jour_placeholder() + '/%s'
-                            outfile_prefix = 'sample'
+                            outfile_path = run.get_output_directory_du_jour_placeholder()
+                            outfile = outfile_path + "/sample"
 
-                            if 'o' in config_options:
-                                outfile_prefix = config_options['o']
-                            outfile = outfile_path % (outfile_prefix)
                             fastqsample = [self.get_tool('fastq-sample')]
 
                             for option, value in config_options.iteritems():
                                 if option in self.possible_options:
                                     if option == 'o':
-                                        value = outfile
+                                        continue
                                     fastqsample.extend(['-%s' % (option),
                                                        str(value)])
 
+                            fastqsample.extend(['-o', outfile])
                             fastqsample.append(temp_file)
                             fastqsample_eg.add_command(fastqsample)
 
-                            # get read count from inputfile
-                            read_count = root.split('-')[-1]
-
                             #output compress subsample
-                            filename_params = (outfile_prefix,
-                                               run_id,
-                                               read_types[read],
-                                               read_count)
+                            filename_params = (new_run_id,
+                                               read_types[read])
 
                             subsample_file = run.add_output_file(
                                 "%s" % read,
-                                "%s_%s%s_%s.fastq.gz" % filename_params,
+                                "%s%s.fastq.gz" % filename_params,
                                 [input_path])
 
                             pigz_compress_eg = run.new_exec_group()
