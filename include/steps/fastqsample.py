@@ -123,7 +123,7 @@ class FastqSample(AbstractStep):
                                 outfile_prefix = config_options['o']
                             outfile = outfile_path % (outfile_prefix)
                             fastqsample = [self.get_tool('fastq-sample')]
-
+# remove end 
                             for option, value in config_options.iteritems():
                                 if option in self.possible_options:
                                     if option == 'o':
@@ -131,7 +131,7 @@ class FastqSample(AbstractStep):
                                         value = outfile
                                     fastqsample.extend(['-%s' % (option),
                                                        str(value)])
-# remove end 
+
                             fastqsample.append(temp_file)
                             fastqsample_eg.add_command(fastqsample)
 
