@@ -34,7 +34,8 @@ class SamtoolsStats(AbstractStep):
                           ['in/alignments']
             with self.declare_run(run_id) as run:
                 for input_path in input_paths:
-                    basename = od.path.splitext(
+#                    basename = od.path.splitext(
+                    basename = os.path.splitext(
                         os.path.basename(input_path))[0]
 
                     with run.new_exec_group().add_pipeline() as pipe:

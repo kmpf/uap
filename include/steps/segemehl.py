@@ -237,7 +237,7 @@ class Segemehl(AbstractStep):
                             '--database', fifo_path_genome,
                             '--index', self.get_option('index'),
                             '--nomatchfilename', fifo_path_unmapped,
-                            '--threads', self.get_cores(),
+                            '--threads', str(self.get_cores()),
                             '--query', fr_input[0]
                         ]
                         if is_paired_end:
