@@ -11,6 +11,8 @@ class Bcl2FastqSource(AbstractSourceStep):
     def __init__(self, pipeline):
         super(Bcl2FastqSource, self).__init__(pipeline)
 
+        self.set_cores(12)
+
         self.add_connection('out/configureBcl2Fastq_log_stderr')
         self.add_connection('out/make_log_stderr')
         self.add_connection('out/sample_sheet')

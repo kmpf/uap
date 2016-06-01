@@ -90,13 +90,13 @@ class Cutadapt(AbstractStep):
                                     % run_id)
                                 sys.exit(1)
                                 
-                            elif ( self.is_option_set_in_config('adapter-R2') and
-                                   self.is_option_set_in_config('adapter-file') ):
-                                logger.error(
-                                    "Option 'adapter-R2' and 'adapter-file' "
-                                    "are both set but are mutually exclusive!"
-                                )
-                                sys.exit(1)
+#                            elif ( self.is_option_set_in_config('adapter-R2') and
+#                                   self.is_option_set_in_config('adapter-file') ):
+#                                logger.error(
+#                                    "Option 'adapter-R2' and 'adapter-file' "
+#                                    "are both set but are mutually exclusive!"
+#                                )
+#                                sys.exit(1)
                         if ( self.is_option_set_in_config('adapter-file') and
                              self.is_option_set_in_config('adapter-R1') ):
                             logger.error(
