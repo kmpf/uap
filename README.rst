@@ -8,6 +8,9 @@ uap -- Universal Analysis Pipeline
     :scale: 100%
     :target: https://readthedocs.org/projects/uap/
 
+.. image:: https://travis-ci.org/alexanderscholz/uap.svg?branch=master
+    :target: https://travis-ci.org/alexanderscholz/uap
+
 Introduction
 ============
 
