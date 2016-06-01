@@ -1,14 +1,16 @@
 uap -- Universal Analysis Pipeline
 ==================================
 
-|docs|
+|docs| |travis|
 
 .. |docs| image:: https://readthedocs.org/projects/uap/badge/?version=latest 
     :alt: Documentation Status
     :scale: 100%
     :target: https://readthedocs.org/projects/uap/
 
-.. image:: https://travis-ci.org/alexanderscholz/uap.svg?branch=master
+.. |travis| image:: https://travis-ci.org/alexanderscholz/uap.svg?branch=master
+    :alt: Travis CI Build Status
+    :scale: 100%
     :target: https://travis-ci.org/alexanderscholz/uap
 
 Introduction
