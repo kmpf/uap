@@ -4,6 +4,8 @@ python_env
 python3_venv
 *.pyc
 out
+doc/doctrees
+doc/html
 doc/build
 _monitor_disk_io
 steps.svg

@@ -1,0 +1,2 @@
+FCID,Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator,SampleProject
+000000000-A1V79,1,rabbit_IgG,hg19,TGACCA,ChIPseq,N,PE_indexing,user,A
