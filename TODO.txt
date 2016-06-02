@@ -1,3 +1,10 @@
+WICHTIG!!!
+==========
+
+* Reparieren von volatilize!!!
+
+* Erzeugt uap Zombie-Prozesse?
+
 RNASeq Pipeline Meeting 2014/04/29
 ----------------------------------
 
