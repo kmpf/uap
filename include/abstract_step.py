@@ -265,6 +265,10 @@ class AbstractStep(object):
             sys.exit(1)
         return key in self._options
 
+    def is_volatile(self):
+        return self._options['_volatile']
+
+
     def add_dependency(self, parent):
         '''
         Add a parent step to this steps dependencies.
@@ -919,8 +923,10 @@ class AbstractStep(object):
                     if task.step._options['_volatile'] == True:
                         candidate_tasks.add(task)
                     
-            for task in candidate_tasks:
-                task.volatilize_if_possible(srsly = True)
+            # We should never volatilize runs automatically, that's why this
+            # is commented out:
+#             for task in candidate_tasks:
+#                 task.volatilize_if_possible(srsly = True)
                                 
             self._reset()
 
