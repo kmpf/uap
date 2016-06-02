@@ -11,7 +11,7 @@ class Bcl2FastqSource(AbstractSourceStep):
     def __init__(self, pipeline):
         super(Bcl2FastqSource, self).__init__(pipeline)
 
-        self.set_cores(12)
+        self.set_cores(10) # set # of cores for cluster, it is ignored if run locally
 
         self.add_connection('out/configureBcl2Fastq_log_stderr')
         self.add_connection('out/make_log_stderr')
@@ -125,7 +125,7 @@ class Bcl2FastqSource(AbstractSourceStep):
                     # Create new execution group for make
                     make_exec_group = run.new_exec_group()
                     # Assemble make command
-                    make = [self.get_tool('make'), '-C', temp_output_dir]
+                    make = [self.get_tool('make'), '-C', temp_output_dir, '-j', self.get_cores()]
                     # Add make command to execution group
                     make_exec_group.add_command(
                         make,

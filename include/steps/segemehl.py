@@ -36,7 +36,7 @@ class Segemehl(AbstractStep):
     def __init__(self, pipeline):
         super(Segemehl, self).__init__(pipeline)
 
-        self.set_cores(12) # set # of cores for cluster, it is ignored if run locally
+        self.set_cores(10) # set # of cores for cluster, it is ignored if run locally
 
         # connections - indentifier for in/output
         #             - expects list, maybe empty or 'none', e.g. if only first_read info available
@@ -237,7 +237,7 @@ class Segemehl(AbstractStep):
                             '--database', fifo_path_genome,
                             '--index', self.get_option('index'),
                             '--nomatchfilename', fifo_path_unmapped,
-                            '--threads', '10',
+                            '--threads', str(self.get_cores()),
                             '--query', fr_input[0]
                         ]
                         if is_paired_end:
