@@ -178,7 +178,7 @@ class Pipeline(object):
         '''
         This dict stores file dependencies within this pipeline, but regardless
         of step, output file tag or run ID. This dict has, for all input
-        files required pipeline, a set of output files which are generated
+        files required by the pipeline, a set of output files which are generated
         using this input file.
         '''
         
