@@ -112,9 +112,9 @@ class Task(object):
     
     def volatilize_if_possible(self, srsly = False):
         result = set()
-        if not self.step._options['_volatile']:
-            return set()
-        for path_a in self.pipeline.output_files_for_task_id[str(self)]:
+        if not self.step.is_volatile():
+            return result
+        for path_a in self.output_files():
             if AbstractStep.fsc.exists(path_a):
                 # now check whether we can volatilize path A
                 path_a_can_be_removed = True
