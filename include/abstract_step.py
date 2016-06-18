@@ -454,6 +454,8 @@ class AbstractStep(object):
             This function receives a volatile path and tries to load the
             placeholder YAML data structure. It then checks all downstream
             paths, which may in turn be volatile placeholder files.
+            It then checks all upstream paths, which may in turn be volatile
+            placeholder files.
             '''
             
             # reconstruct original path from volatile placeholder path
@@ -470,8 +472,7 @@ class AbstractStep(object):
             task_id = self.get_pipeline().task_id_for_output_file[path]
             
             task = self.get_pipeline().task_for_task_id[task_id]
-#            if not task.step.options['_volatile']:
-            if not task.step._options['_volatile']:
+            if not task.step.is_volatile():
                 # the task is not declared volatile
                 return False
             
@@ -488,7 +489,23 @@ class AbstractStep(object):
             except yaml.scanner.ScannerError:
                 # error scanning YAML
                 return False
-            
+
+            # check whether the upstream files are non-volatile files
+            upstream_paths = set()
+            if path in self.get_pipeline().file_dependencies:
+                upstream_paths = self.get_pipeline().\
+                                 file_dependencies[path]
+
+            for upstream_path in upstream_paths:
+                # check if the upstream files exist (as non-volatile file) 
+                if not AbstractStep.fsc.exists(upstream_path):
+                    return False
+                # check if the upstream files modification time was earlier
+                # than the one of the volatile_path to be checked
+                if not AbstractStep.fsc.getmtime(upstream_path) >= \
+                   info['self']['mtime']:
+                    return False
+
             # now check whether all downstream files are in place and up-to-date
             # also check whether all downstream files as defined in
             # file_dependencies_reverse are covered
@@ -512,12 +529,12 @@ class AbstractStep(object):
                         return False
                     if downstream_path in uncovered_files:
                         uncovered_files.remove(downstream_path)
-                
+
             if len(uncovered_files) > 0:
                 # there are still files defined which are not covered by the
                 # placeholder
                 return False
-                
+
             return True
         
         def change_to_volatile_if_need_be(path, recurse = True):
@@ -532,8 +549,7 @@ class AbstractStep(object):
                 return path
 
         def is_path_up_to_date(outpath, inpaths):
-            """Checks if
-
+            """
             First, replace paths with volatile paths if the step is marked
             as volatile and the real path is missing.
             But, only consider volatile placeholders if all child tasks
@@ -557,6 +573,7 @@ class AbstractStep(object):
             for pv_inpath in pv_inpaths:
                 if not AbstractStep.fsc.exists(pv_inpath):
                     return False
+                # Check that inpath was last modified before outpath
                 if AbstractStep.fsc.getmtime(pv_inpath) > \
                    AbstractStep.fsc.getmtime(pv_outpath):
                     return False
@@ -923,10 +940,8 @@ class AbstractStep(object):
                     if task.step._options['_volatile'] == True:
                         candidate_tasks.add(task)
                     
-            # We should never volatilize runs automatically, that's why this
-            # is commented out:
-#             for task in candidate_tasks:
-#                 task.volatilize_if_possible(srsly = True)
+            for task in candidate_tasks:
+                task.volatilize_if_possible(srsly = True)
                                 
             self._reset()
 
