@@ -101,6 +101,12 @@ def main(args):
 
         submit_script = copy.copy(template)
         submit_script = submit_script.replace("#{CORES}", str(task.step._cores))
+        try:
+            submit_options = str(task.step._options['_submit_options'])
+        except KeyError:
+            submit_options = ""
+
+        submit_script = submit_script.replace("#{SUBMIT_OPTIONS}", submit_options)
         submit_script = submit_script.replace(
             "#{TIME}", str(task.step._options['_cluster_runtime'] ))
         submit_script =  submit_script.replace(
@@ -116,6 +122,8 @@ def main(args):
         command.append('"' + str(task) + '"')
 
         submit_script = submit_script.replace("#{COMMAND}", ' '.join(command))
+        sys.stdout.write(submit_script)
+        exit(0)
 
         long_task_id_with_run_id = '%s_%s' % (str(task.step), task.run_id)
         long_task_id = str(task.step)

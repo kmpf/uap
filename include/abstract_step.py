@@ -50,7 +50,8 @@ class AbstractStep(object):
     PING_RENEW = 30
     VOLATILE_SUFFIX = '.volatile.placeholder.yaml'
     UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK', '_connect',
-                          '_cluster_runtime', '_cluster_memory']
+                          '_cluster_runtime', '_cluster_memory',
+                          '_submit_options']
     
     states = misc.Enum(['DEFAULT', 'DECLARING', 'EXECUTING'])
 
