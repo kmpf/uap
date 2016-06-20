@@ -490,22 +490,6 @@ class AbstractStep(object):
                 # error scanning YAML
                 return False
 
-            # check whether the upstream files are non-volatile files
-            upstream_paths = set()
-            if path in self.get_pipeline().file_dependencies:
-                upstream_paths = self.get_pipeline().\
-                                 file_dependencies[path]
-
-            for upstream_path in upstream_paths:
-                # check if the upstream files exist (as non-volatile file) 
-                if not AbstractStep.fsc.exists(upstream_path):
-                    return False
-                # check if the upstream files modification time was earlier
-                # than the one of the volatile_path to be checked
-                if not AbstractStep.fsc.getmtime(upstream_path) >= \
-                   info['self']['mtime']:
-                    return False
-
             # now check whether all downstream files are in place and up-to-date
             # also check whether all downstream files as defined in
             # file_dependencies_reverse are covered
@@ -529,6 +513,9 @@ class AbstractStep(object):
                         return False
                     if downstream_path in uncovered_files:
                         uncovered_files.remove(downstream_path)
+                    if pv_downstream_path.endswith(AbstractStep.VOLATILE_SUFFIX):
+                        if not volatile_path_good(pv_downstream_path, recurse):
+                            return False
 
             if len(uncovered_files) > 0:
                 # there are still files defined which are not covered by the
