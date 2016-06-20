@@ -1,9 +1,10 @@
 #!/bin/bash
-##SBATCH --job-name=md5sum
-##SBATCH --output="my_test_job_%j.txt"
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=#{CORES}
 
+#SBATCH --cpus-per-task=#{CORES}   # Request #{CORES} for this task
+#SBATCH --ntasks=1
+#SBATCH #{SUBMIT_OPTIONS}          # Arbitrary submit options
+
+## Execute command
 
 #{COMMAND}
 
