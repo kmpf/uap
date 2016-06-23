@@ -114,7 +114,8 @@ class RunFolderSource(AbstractSourceStep):
                         else: 
                             stored_index = (run.get_public_info('index-R1') + '-' 
                                             + run.get_public_info('index-R2'))
-                            if index.join('-') != stored_index:
+
+                            if ('-').join(index)                            != stored_index:
                                 raise StandardError("Inconsistent index defined "
                                     "in %s for sample %s" % (sample_sheet_path,
                                                              sample_id))
@@ -129,6 +130,6 @@ class RunFolderSource(AbstractSourceStep):
 
                     else:
                         raise StandardError("Unknown index definition %s found "
-                            "in %s" % (index.join('-'), sample_sheet_path))
+                            "in %s" % (('-').join(index), sample_sheet_path))
 
                 csv_file.close()
