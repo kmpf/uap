@@ -926,9 +926,6 @@ class AbstractStep(object):
                     task = self.get_pipeline().task_for_task_id[task_id]
                     if task.step._options['_volatile'] == True:
                         candidate_tasks.add(task)
-                    
-            for task in candidate_tasks:
-                task.volatilize_if_possible(srsly = True)
                                 
             self._reset()
 
