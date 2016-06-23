@@ -37,6 +37,14 @@ This task wish list is now processed one by one (in topological order):
 
 logger = logging.getLogger("uap_logger")
 
+
+def _batch_options_from_config(options, key):
+        #test if _batch is set
+        if '_cluster' in options.keys():
+            if key in options['_cluster'].keys():
+                return options['_cluster'][key]
+        return None 
+
 def main(args):
     p = pipeline.Pipeline(arguments=args)
         
@@ -64,23 +72,30 @@ def main(args):
     print("Now attempting to submit %d jobs..." % len(tasks_left))
 
     quotas = dict()
-    quotas['default'] = 5
+    quotas['default'] = 105
 
     # read quotas
     # -> for every step, a quota can be defined (with a default quota in place for steps
     #    which have no defined quota)
     # -> during submitting, there is a list of N previous job ids in which every item
     #    holds one of the previously submitted tasks
-    if os.path.exists("quotas.yaml"):
-        all_quotas = yaml.load(open("quotas.yaml", 'r'))
+
+
+    quotas_path = args.uap_path + "/quotas.yaml"
+
+    if os.path.exists(quotas_path):
+        
+        all_quotas = yaml.load(open(quotas_path, 'r'))
         hostname = subprocess.check_output(['hostname']).strip()
         for key in all_quotas.keys():
+
             if re.match(key, hostname):
                 print("Applying quotas for " + hostname + ".")
                 quotas = all_quotas[key]
 
-    if not 'default' in quotas:
-        raise StandardError("No default quota defined for this host.")
+#  useless becaus defined above
+#    if not 'default' in quotas:
+#        raise StandardError("No default quota defined for this host.")
 
     quota_jids = {}
     quota_offset = {}
@@ -102,6 +117,9 @@ def main(args):
         submit_script = copy.copy(template)
         submit_script = submit_script.replace("#{CORES}", str(task.step._cores))
         email = 'nobody@example.com'
+        
+
+                
         if 'email' in p.config:
             email = p.config['email']
         submit_script = submit_script.replace("#{EMAIL}", email)
@@ -128,6 +146,59 @@ def main(args):
         submit_script_args.append(
             os.path.join(task.get_run().get_output_directory(),
                          '.' + long_task_id_with_run_id + '.stdout'))
+
+
+        if p.cluster_type == 'slurm':
+            res =  _batch_options_from_config(task.step._options, 'mem')
+            if (res):
+                submit_script_args += p.ccla('mem', res)
+                
+                # days-hours:minutes:seconds 2-08:00:00
+            res =  _batch_options_from_config(task.step._options, 'time')
+            if (res):
+                submit_script_args += p.ccla('time', res)
+                
+            res =  _batch_options_from_config(task.step._options, 'exclusive')
+            if (res):
+                submit_script_args.append( p.cc('exclusive'))
+
+            res =  _batch_options_from_config(task.step._options, 'queue')
+            if (res):
+                submit_script_args += p.ccla('queue', res)
+                    
+            res =  _batch_options_from_config(task.step._options, 'nice')
+            if (res):
+                submit_script_args += p.ccla('nice', res)
+        print submit_script_args
+        
+
+        if p.cluster_type == 'sge' or p.cluster_type == 'uge':
+
+            res =  _batch_options_from_config(task.step._options, 'h_vmem')
+            if (res):
+                submit_script_args += p.ccla('h_vmem', res)
+
+            res =  _batch_options_from_config(task.step._options, 'queue')
+            if (res):
+                submit_script_args += p.ccla('queue', res)
+
+
+            res =  _batch_options_from_config(task.step._options, 'h_rt')
+            if (res):
+                submit_script_args += p.ccla('h_rt', res)
+
+            res =  _batch_options_from_config(task.step._options, 's_rt')
+            if (res):
+                submit_script_args += p.ccla('s_rt', res)
+
+
+        
+
+        
+
+
+
+
 
         # create the output directory if it doesn't exist yet
         # this is necessary here because otherwise, qsub will complain

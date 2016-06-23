@@ -63,7 +63,7 @@ class Pipeline(object):
             'time': '--time=%s',
             'nice': '--nice=%s',
             'exclusive': '--exclusive' ,
-            'queue': '-p%s'},
+            'queue': '--partition=%s'},
 
         'sge':
            {'submit': 'qsub',
@@ -73,7 +73,11 @@ class Pipeline(object):
             'set_job_name': '-N',
             'set_stderr': '-e',
             'set_stdout': '-o',
-            'parse_job_id': 'Your job (\d+)'},
+            'parse_job_id': 'Your job (\d+)',
+            'h_vmem': ['-l', 'h_vmem=%s' ],
+            'h_rt': ['-l', 'h_rt=%s' ],
+            's_rt': ['-l', 's_rt=%s'],
+            'queue': '-q'},
 
         'uge':
            {'submit': 'qsub',
@@ -84,7 +88,8 @@ class Pipeline(object):
             'set_stderr': '-e',
             'set_stdout': '-o',
             'parse_job_id': 'Your job (\d+)'}
-}
+    }
+
     '''
     Cluster-related configuration for every cluster system supported.
     '''
@@ -744,7 +749,17 @@ class Pipeline(object):
     '''
     def ccla(self, key, value):
         result = Pipeline.cluster_config[self.cluster_type][key]
+        if isinstance(result, list):
+            resl =[]
+            for i in result:
+                if '%s' in i:
+                    resl.append(i % value)
+                else:
+                    resl.append(i)
+            return resl
+
         if '%s' in result:
             return [result % value]
         else:
             return [result, value]
+        

@@ -76,6 +76,15 @@ def main():
         metavar="<project-config>.yaml",
         nargs='?',
         type=argparse.FileType('r'))
+
+
+
+    parser.add_argument(
+        "--uap-path",
+	dest="uap_path",
+        help="temporary workaround for path",
+	default=uap_path,
+        type=str)
     
     parser.add_argument(
         "-v", "--verbose",
