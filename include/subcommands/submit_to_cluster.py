@@ -169,7 +169,7 @@ def main(args):
             res =  _batch_options_from_config(task.step._options, 'nice')
             if (res):
                 submit_script_args += p.ccla('nice', res)
-        print submit_script_args
+
         
 
         if p.cluster_type == 'sge' or p.cluster_type == 'uge':
