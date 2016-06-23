@@ -81,15 +81,18 @@ class Bowtie2(AbstractStep):
                         # Create temporary fifo
                         temp_fifo = run.add_temporary_file(
                             'in-fifo-%s' %
-                            os.path.basename(input_path) )
+                            os.path.basename(input_path), suffix='.fastq' )
                         mkfifo = [self.get_tool('mkfifo'), temp_fifo]
                         exec_group.add_command(mkfifo)
                         temp_fifos.append(temp_fifo)
                         # Is input gzipped fasta?
                         is_fastq_gz = False
-                        if len([_ for _ in ['fq.gz', 'fastq.gz','.gz']\
-                                if input_path.endswith(_)]) == 1:
-                            is_fastq_gz = True
+                        
+
+                        
+                        for suff  in ['fq.gz', 'fastq.gz','.gz']:
+                            if input_path.endswith(suff):
+                                is_fastq_gz = True
 
                         # If yes we need to decompress it
                         if is_fastq_gz:
@@ -131,7 +134,7 @@ class Bowtie2(AbstractStep):
                     with exec_group.add_pipeline() as bowtie2_pipe:
                         # Assemble bowtie2 command
                         bowtie2 = [
-                            self.get_tool('bowtie2'),
+                            self.get_tool('bowtie2'), '-q',
                             '-p', str(self.get_option('cores') - 3),
                             '-x', self.get_option('index')
                         ]
