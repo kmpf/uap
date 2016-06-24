@@ -1,9 +1,57 @@
-WICHTIG!!!
-==========
+========================
+TODOs für die uap v0.0.2
+========================
 
-* Reparieren von volatilize!!!
+uap <project>.yaml volatilize Probleme
+--------------------------------------
 
-* Erzeugt uap Zombie-Prozesse?
+* volatilize Subcommand reparieren (DONE):
+** kein automatisches volatilisieren
+** korrektes markieren von mehreren aufeinanderfolgenden volatilisierten Runs
+   wenn ein neuer Step angehangen wird.
+
+* uap scheint Prozesse zu erzeugen die weiterlaufen nachdem der Hauptprozesse
+  getötet wurde. Warum werden die Kinderprozesse nicht gestoppt wenn der Eltern
+  Prozess gestoppt wird?
+
+
+Zusammenspiel von <project>.yaml und Submit Script Template
+-----------------------------------------------------------
+
+* Überarbeiten der Config und der Submit Script Templates
+** in der Config sollte man folgendes angeben können:
+*** default submit_options
+*** default pre_job_commands
+*** default post_job_commands
+*** job_quota default Werte
+** Pro Step sollte man die Möglichkeit haben:
+*** die default Werte zu überschreiben
+** Pro Tool sollte es die Möglichkeit geben:
+*** ein module load/unload Kommando anzugeben das dann einfach in das Submit Skript Template geschrieben wird
+
+Cluster Config als separate YAML Datei
+--------------------------------------
+
+
+
+Dokumentation
+-------------
+
+Es wäre super wenn wir eine FAQ Seite für die häufigsten Fehlermeldungen haben würden (für Alexander aber auch alle anderen).
+Die Doku des fastq_source Steps sollte ein Beispiel für ein YAML dictionary enthalten.
+
+Deadline für uap Bugfixes: !!! 14.07.16 !!!
+
+
+s2c.py
+------
+
+Bitte Error Messages ins Englische übersetzen.
+
+
+
+
+
 
 RNASeq Pipeline Meeting 2014/04/29
 ----------------------------------
