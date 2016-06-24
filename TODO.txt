@@ -10,13 +10,16 @@ uap <project>.yaml volatilize Probleme
 ** korrektes markieren von mehreren aufeinanderfolgenden volatilisierten Runs
    wenn ein neuer Step angehangen wird.
 
+Zombie-Prozesse? (???)
+----------------------
+
 * uap scheint Prozesse zu erzeugen die weiterlaufen nachdem der Hauptprozesse
   getötet wurde. Warum werden die Kinderprozesse nicht gestoppt wenn der Eltern
   Prozess gestoppt wird?
 
 
-Zusammenspiel von <project>.yaml und Submit Script Template
------------------------------------------------------------
+Zusammenspiel von <project>.yaml und Submit Script Template (Christoph)
+-----------------------------------------------------------------------
 
 * Überarbeiten der Config und der Submit Script Templates
 ** in der Config sollte man folgendes angeben können:
@@ -27,26 +30,100 @@ Zusammenspiel von <project>.yaml und Submit Script Template
 ** Pro Step sollte man die Möglichkeit haben:
 *** die default Werte zu überschreiben
 ** Pro Tool sollte es die Möglichkeit geben:
-*** ein module load/unload Kommando anzugeben das dann einfach in das Submit Skript Template geschrieben wird
+*** ein module load/unload Kommando anzugeben das dann einfach in das
+*Submit Skript Template geschrieben wird
 
-Cluster Config als separate YAML Datei
---------------------------------------
-
-
-
-Dokumentation
--------------
-
-Es wäre super wenn wir eine FAQ Seite für die häufigsten Fehlermeldungen haben würden (für Alexander aber auch alle anderen).
-Die Doku des fastq_source Steps sollte ein Beispiel für ein YAML dictionary enthalten.
-
-Deadline für uap Bugfixes: !!! 14.07.16 !!!
+Andere Idee:
+* Default Template und optionale Templates
 
 
-s2c.py
-------
+Cluster Config als separate YAML Datei (Sven)
+---------------------------------------------
+
+Die Cluster Config ist aktuell ein hart-kodiertes Dictionary in
+pipeline.py, das sollte am besten überführt werden in eine YAML
+Konfigurationsdatei. Plus Doku.
+
+s2c.py (Sven + Gero)
+--------------------
 
 Bitte Error Messages ins Englische übersetzen.
+Außerdem wäre es super wenn wir uns für eine Variante entscheiden
+würden wie wir die Konvertierung von segemehl output zu cufflinks
+durchführen wollen.
+Aktuell haben wir mehrere Möglichkeiten:
+
+* make_segemehl_output_cufflinks_compatible.py (f.k.a. s2c.py)
+* fix_make_segemehl_output_cufflinks_compatible.py (f.k.a. fix_s2c.py)
+* post_sawdust.py (Merge der beiden vorgenannten?)
+
+Sven würde gerne alle Tools aus uap rausschmiessen und die über Git
+Repos etc. holen.
+
+Dokumentation (Alexander + Christoph + Sven)
+--------------------------------------------
+
+Es wäre super wenn wir eine FAQ Seite für die häufigsten
+Fehlermeldungen haben würden (für Alexander aber auch alle anderen).
+Die Doku des fastq_source Steps sollte ein Beispiel für ein YAML
+dictionary enthalten.
+Generell muss die Doku auf fehlenden Inhalt Kontroll gelesen werden.
+
+SHAsum für nicht nicht-gepippte Ausgabedateien (Christoph)
+----------------------------------------------------------
+
+Wollen wir das jetzt für alle erzeugten Ausgabedaten. (Ja)
+SHAsum einmal in der Annotation und in separater SHAsum Datei.
+
+PyPI (least concern)
+---------------------
+
+Distribution über Python Package Repos
+
+Docker (Alexander)
+------------------
+
+Docker Support einbauen mittels Dockerfiles
+
+Pfadangaben für Dateien die aus uap geladen werden (Sven)
+---------------------------------------------------------
+
+absolute Pfadangaben für alle open() calls.
+
+
+Debugging (???)
+---------------
+
+Evtl. Subcommand fürs zusammensuchen von Ausgabedaten des Runs.
+
+Mailinglist/GitHub Issue Tracker
+--------------------------------
+
+* Vorbereiten das wir für Fehlermeldungen erreichbar sind
+
+=========================
+Deadline für uap Bugfixes
+=========================
+
+**14.07.16**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
