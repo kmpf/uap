@@ -64,20 +64,24 @@ def main(args):
     print("Now attempting to submit %d jobs..." % len(tasks_left))
 
     quotas = dict()
-    quotas['default'] = 5
+    if 'default_job_quota' in p.config:
+        quotas['default'] = p.config['default_job_quota']
+    else: quotas['default']= 80
+        
 
     # read quotas
     # -> for every step, a quota can be defined (with a default quota in place for steps
     #    which have no defined quota)
     # -> during submitting, there is a list of N previous job ids in which every item
     #    holds one of the previously submitted tasks
-    if os.path.exists("quotas.yaml"):
-        all_quotas = yaml.load(open("quotas.yaml", 'r'))
-        hostname = subprocess.check_output(['hostname']).strip()
-        for key in all_quotas.keys():
-            if re.match(key, hostname):
-                print("Applying quotas for " + hostname + ".")
-                quotas = all_quotas[key]
+    ##if os.path.exists("quotas.yaml"):
+#        all_quotas = yaml.load(open("quotas.yaml", 'r'))
+#        hostname = subprocess.check_output(['hostname']).strip()
+#        for key in all_quotas.keys():
+#            if re.match(key, hostname):
+#                print("Applying quotas for " + hostname + ".")
+#                quotas = all_quotas[key]
+#
 
     if not 'default' in quotas:
         raise StandardError("No default quota defined for this host.")
@@ -90,6 +94,7 @@ def main(args):
 
         step_name = task.step.get_step_name()
         step_type = task.step.get_step_type()
+        quotas[step_type] = task.step._options['_job_quota']
         if not step_name in quota_jids:
             size = quotas[step_type] if step_type in quotas else quotas['default']
             quota_jids[step_name] = [None for _ in range(size)]

@@ -50,7 +50,7 @@ class AbstractStep(object):
     PING_RENEW = 30
     VOLATILE_SUFFIX = '.volatile.placeholder.yaml'
     UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK', '_connect',
-                          '_cluster_runtime', '_cluster_memory']
+                          '_cluster_runtime', '_cluster_memory', '_job_quota']
     
     states = misc.Enum(['DEFAULT', 'DECLARING', 'EXECUTING'])
 
@@ -106,6 +106,8 @@ class AbstractStep(object):
         self.finalized = False
         
         self._state = AbstractStep.states.DEFAULT
+
+
 
     def finalize(self):
         '''Finalizes the step.
@@ -235,6 +237,9 @@ class AbstractStep(object):
             self._options['_cluster_runtime'] = '96:00:00'
         if not '_cluster_memory' in self._options:
             self._options['_cluster_memory'] = '8G'
+    
+        if not '_job_quota' in self._options:
+            self._options['_job_quota'] = self._pipeline.config['default_job_quota']
 
     def get_options(self):
         '''
