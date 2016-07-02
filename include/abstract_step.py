@@ -51,7 +51,8 @@ class AbstractStep(object):
     VOLATILE_SUFFIX = '.volatile.placeholder.yaml'
     UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK', '_connect',
                           '_cluster_runtime', '_cluster_memory',
-                          '_submit_options']
+                          '_submit_options', '_pre_job_command',
+                          '_post_job_command']
     
     states = misc.Enum(['DEFAULT', 'DECLARING', 'EXECUTING'])
 
@@ -232,10 +233,10 @@ class AbstractStep(object):
                 
         if not '_volatile' in self._options:
             self._options['_volatile'] = False
-        if not '_cluster_runtime' in self._options:
-            self._options['_cluster_runtime'] = '96:00:00'
-        if not '_cluster_memory' in self._options:
-            self._options['_cluster_memory'] = '8G'
+#        if not '_cluster_runtime' in self._options:
+#            self._options['_cluster_runtime'] = '96:00:00'
+#        if not '_cluster_memory' in self._options:
+#            self._options['_cluster_memory'] = '8G'
 
     def get_options(self):
         '''
@@ -1190,7 +1191,7 @@ class AbstractStep(object):
             if 'module_load' in self.get_pipeline().config['tools'][tool]:
                 self._module_load[tool] = self.get_pipeline().config['tools'][tool]\
                                           ['module_load']
-            if 'module_load' in self.get_pipeline().config['tools'][tool]:
+            if 'module_unload' in self.get_pipeline().config['tools'][tool]:
                 self._module_unload[tool] = self.get_pipeline().config['tools'][tool]\
                                             ['module_unload']
             if 'post_command' in self.get_pipeline().config['tools'][tool]:

@@ -53,7 +53,13 @@ def main(args):
 
     tasks_left = []
 
-    template = open(p.cc('template'), 'r').read()
+    template_path = os.path.join(p.get_uap_path(),
+                                 p.get_cluster_command('template'))
+    try:
+        template = open(template_path, 'r').read()
+    except OSError:
+        logger.error("Couldn't open %s." % template_path)
+        sys.exit(1)
 
     for task in p.all_tasks_topologically_sorted:
         if task_wish_list is not None:
@@ -64,23 +70,33 @@ def main(args):
     print("Now attempting to submit %d jobs..." % len(tasks_left))
 
     quotas = dict()
-    quotas['default'] = 5
-
+    try:
+        quotas['default'] = p.config['cluster']['default_job_quota']
+    except:
+        print("No default quota defined in %s. Set default quota to '5'." % 
+              p.get_config_filepath())
+        quotas['default'] = 5
     # read quotas
-    # -> for every step, a quota can be defined (with a default quota in place for steps
-    #    which have no defined quota)
-    # -> during submitting, there is a list of N previous job ids in which every item
-    #    holds one of the previously submitted tasks
-    if os.path.exists("quotas.yaml"):
-        all_quotas = yaml.load(open("quotas.yaml", 'r'))
+    # -> for every step, a quota can be defined (with a default quota
+    #    in place for steps which have no defined quota)
+    # -> during submission, there is a list of N previous job ids in
+    #    which every item holds one of the previously submitted tasks
+    quotas_path = os.path.join(p.get_uap_path(), "cluster/quotas.yaml")
+    if os.path.exists(quotas_path):
+        try:
+            all_quotas = yaml.load(open(quotas_path, 'r'))
+        except OSError:
+            logger.error("Couldn't load file %s" % quotas_path)
+            sys.exit(1)
+    
         hostname = subprocess.check_output(['hostname']).strip()
         for key in all_quotas.keys():
             if re.match(key, hostname):
-                print("Applying quotas for " + hostname + ".")
+                print("Applying quotas for %s." % hostname)
                 quotas = all_quotas[key]
 
-    if not 'default' in quotas:
-        raise StandardError("No default quota defined for this host.")
+        if not 'default' in quotas:
+            raise StandardError("No default quota defined for this host.")
 
     quota_jids = {}
     quota_offset = {}
@@ -88,6 +104,7 @@ def main(args):
     def submit_task(task, dependent_tasks_in = []):
         dependent_tasks = copy.copy(dependent_tasks_in)
 
+        step = task.step
         step_name = task.step.get_step_name()
         step_type = task.step.get_step_type()
         if not step_name in quota_jids:
@@ -99,22 +116,47 @@ def main(args):
         if quota_predecessor:
             dependent_tasks.append(quota_predecessor)
 
-        submit_script = copy.copy(template)
-        submit_script = submit_script.replace("#{CORES}", str(task.step._cores))
-        try:
-            submit_options = str(task.step._options['_submit_options'])
-        except KeyError:
-            submit_options = ""
+        ##########################
+        # Assemble submit script #
+        ##########################
 
-        submit_script = submit_script.replace("#{SUBMIT_OPTIONS}", submit_options)
-        submit_script = submit_script.replace(
-            "#{TIME}", str(task.step._options['_cluster_runtime'] ))
-        submit_script =  submit_script.replace(
-            "#{MEMORY}", str(task.step._options['_cluster_memory'] ))
-        email = 'nobody@example.com'
-        if 'email' in p.config:
-            email = p.config['email']
-        submit_script = submit_script.replace("#{EMAIL}", email)
+        submit_script = copy.copy(template)
+        # Here we need to replace the place holders with the stuff defined
+        # in our config file
+        #
+
+        # Get the values for the placeholders:
+        # SUBMIT_OPTIONS
+        placeholder_values = dict()
+        if step.is_option_set_in_config('_submit_options'):
+            placeholder_values['#{SUBMIT_OPTIONS}'] = step.get_option(
+                '_submit_options'))
+        else:
+            placeholder_values['#{SUBMIT_OPTIONS}'] = p.config['cluster']\
+                                                      ['default_submit_options']
+        # PRE_JOB_COMMAND
+        if step.is_option_set_in_config('_pre_job_command'):
+            placeholder_values['#{PRE_JOB_COMMAND}'] = step.get_option(
+            '_pre_job_command')
+        else:
+            placeholder_values['#{PRE_JOB_COMMAND}'] = p.config['cluster']\
+                                                       ['default_pre_job_command']
+        # POST_JOB_COMMAND
+        if step.is_option_set_in_config('_post_job_command'):
+            placeholder_values['#{POST_JOB_COMMAND}'] = step.get_option(
+                '_post_job_command')
+        else:
+            placeholder_values['#{POST_JOB_COMMAND}'] = p.config['cluster']\
+                                                        ['default_post_job_command']
+        placeholder_values['#{MODULE_LOAD}'] = "\n".join(step.get_module_loads().values())
+        placeholder_values['#{MODULE_UNLOAD}'] = "\n".join(step.get_module_unloads().values())
+        
+        # Replace placeholders with their values
+        for placeholder, value in placeholder_values.items(): 
+            submit_script = submit_script.replace(placeholder, value)
+
+        submit_script = submit_script.replace("#{CORES}", str(task.step._cores))
+
         config_file_path = args.config.name
         command = ['uap', config_file_path, 'run-locally']
         if args.even_if_dirty:
@@ -122,35 +164,41 @@ def main(args):
         command.append('"' + str(task) + '"')
 
         submit_script = submit_script.replace("#{COMMAND}", ' '.join(command))
-        sys.stdout.write(submit_script)
-        exit(0)
 
+        # create the output directory if it doesn't exist yet
+        # this is necessary here because otherwise, qsub will complain
+        run_output_dir = task.get_run().get_output_directory()
+        if not os.path.isdir(run_output_dir):
+            os.makedirs(run_output_dir)
+
+        ###########################
+        # Assemble submit command #
+        ###########################
         long_task_id_with_run_id = '%s_%s' % (str(task.step), task.run_id)
         long_task_id = str(task.step)
         short_task_id = long_task_id[0:15]
 
-        submit_script_args = [p.cc('submit')]
-        submit_script_args += p.ccla('set_job_name', short_task_id)
+        submit_script_args = [p.get_cluster_command('submit')]
+        submit_script_args += p.get_cluster_command_cli_option(
+            'set_job_name', short_task_id)
             
-        submit_script_args.append(p.cc('set_stderr'))
+        submit_script_args.append(p.get_cluster_command('set_stderr'))
         submit_script_args.append(
             os.path.join(task.get_run().get_output_directory(),
                          '.' + long_task_id_with_run_id + '.stderr'))
-        submit_script_args.append(p.cc('set_stdout'))
+        submit_script_args.append(p.get_cluster_command('set_stdout'))
         submit_script_args.append(
             os.path.join(task.get_run().get_output_directory(),
                          '.' + long_task_id_with_run_id + '.stdout'))
 
-        # create the output directory if it doesn't exist yet
-        # this is necessary here because otherwise, qsub will complain
-        if not os.path.isdir(task.get_run().get_output_directory()):
-            os.makedirs(task.get_run().get_output_directory())
-
         if len(dependent_tasks) > 0:
-            submit_script_args += p.ccla(
+            submit_script_args += p.get_cluster_command_cli_option(
                 'hold_jid',
-                (':' if p.cluster_type == 'slurm' else ',').join(dependent_tasks))
+                p.get_cluster_command('hold_jid_separator').join(dependent_tasks))
 
+        ########################################
+        # Submit the run if everything is fine #
+        ########################################
         really_submit_this = True
         if task_wish_list:
             if not str(task) in task_wish_list:
@@ -161,16 +209,26 @@ def main(args):
         if really_submit_this:
             sys.stdout.write("Submitting task " + str(task) + " with " +
                              str(task.step._cores) + " cores => ")
+            
+            # Store submit script in the run_output_dir
+            now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            submit_script_path = os.path.join(
+                run_output_dir, ".%s-submit-%s-%s.sh" % 
+                (now, step.get_step_name(), task.get_run().get_run_id() ))
+            with open(submit_script_path, 'w') as f:
+                f.write(submit_script)
+
             process = None
             try:
-                process = subprocess.Popen(
+                process = subprocess.Pop(
                     submit_script_args,
                     bufsize = -1,
                     stdin = subprocess.PIPE,
                     stdout = subprocess.PIPE)
             except OSError as e:
                 if e.errno == os.errno.ENOENT:
-                    raise StandardError("Unable to launch %s. Maybe " % p.cc('submit') +
+                    raise StandardError("Unable to launch %s. Maybe " %
+                                        p.get_cluster_command('submit') +
                                         "you are not executing this script on " +
                                         "the cluster")
                 else:
@@ -180,18 +238,22 @@ def main(args):
             process.wait()
             response = process.stdout.read()
             print("GOT A RESPONSE: %s" % response)
-            job_id = re.search(p.cc('parse_job_id'), response).group(1)
-
+            job_id = re.search(
+                p.get_cluster_command('parse_job_id'), response).group(1)
 
             if job_id == None or len(job_id) == 0:
-                raise StandardError("Error: We couldn't parse a job_id from this:\n" + response)
+                raise StandardError(
+                    "Error: We couldn't parse a job_id from this:\n" + response)
             
             queued_ping_info = dict()
             queued_ping_info['step'] = str(task.step)
             queued_ping_info['run_id'] = task.run_id
             queued_ping_info['job_id'] = job_id
             queued_ping_info['submit_time'] = datetime.datetime.now()
-            with open(task.get_step().get_run(task.run_id).get_queued_ping_file(), 'w') as f:
+            with open(
+                    task.get_step().get_run(task.run_id).get_queued_ping_file(),
+                    'w'
+            ) as f:
                 f.write(yaml.dump(queued_ping_info, default_flow_style = False))
 
             quota_jids[step_name][quota_offset[step_name]] = job_id

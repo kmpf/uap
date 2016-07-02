@@ -6,9 +6,9 @@ uap <project>.yaml volatilize Probleme
 --------------------------------------
 
 * volatilize Subcommand reparieren (DONE):
-** kein automatisches volatilisieren
+** kein automatisches volatilisieren (DONE)
 ** korrektes markieren von mehreren aufeinanderfolgenden volatilisierten Runs
-   wenn ein neuer Step angehangen wird.
+   wenn ein neuer Step angehangen wird. (DONE)
 
 Zombie-Prozesse? (???)
 ----------------------
@@ -31,7 +31,7 @@ Zusammenspiel von <project>.yaml und Submit Script Template (Christoph)
 *** die default Werte zu überschreiben
 ** Pro Tool sollte es die Möglichkeit geben:
 *** ein module load/unload Kommando anzugeben das dann einfach in das
-*Submit Skript Template geschrieben wird
+    Submit Skript Template geschrieben wird
 
 Andere Idee:
 * Default Template und optionale Templates
@@ -42,7 +42,9 @@ Cluster Config als separate YAML Datei (Sven)
 
 Die Cluster Config ist aktuell ein hart-kodiertes Dictionary in
 pipeline.py, das sollte am besten überführt werden in eine YAML
-Konfigurationsdatei. Plus Doku.
+Konfigurationsdatei. (Hab ich gemacht. CK) Plus Doku.
+
+
 
 s2c.py (Sven + Gero)
 --------------------

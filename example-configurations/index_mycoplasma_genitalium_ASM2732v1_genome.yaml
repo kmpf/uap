@@ -1,5 +1,10 @@
 # This is the uap configuration file.
- 
+
+cluster:
+    default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -m as -M me@example.com -l h_rt=24:00:00 -l h_vmem=6G"
+    default_pre_job_command: "echo 'Started the run!'"
+    default_post_job_command: "echo 'Finished the run!'"
+    default_job_quota: 5 
 destination_path: genomes/bacteria/Mycoplasma_genitalium/
 
 constants:
