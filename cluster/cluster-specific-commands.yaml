@@ -27,8 +27,8 @@ sge:
 uge:
     identity_test: ['qstat', '-help']
     identity_answer: 'UGE'
-    submit: 'qsub',
-    stat: 'qstat',
+    submit: 'qsub'
+    stat: 'qstat'
     template: pipeline_path + '/../submit-scripts/qsub-template.sh'
     hold_jid: '-hold_jid'
     hold_jid_separator: ';'
