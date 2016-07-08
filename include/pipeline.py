@@ -120,7 +120,7 @@ class Pipeline(object):
         '''
     
         self.cluster_config_path = os.path.join(
-            pipeline_path, '../cluster/cluster-specific-commands.yaml')
+            self.get_uap_path(), 'cluster/cluster-specific-commands.yaml')
         self.cluster_config = yaml.load( cluster_config_path )
         '''
         Cluster-related configuration for every cluster system supported.

@@ -2,13 +2,13 @@
 TODOs für die uap v0.0.2
 ========================
 
-uap <project>.yaml volatilize Probleme
---------------------------------------
+uap <project>.yaml volatilize Probleme (Done)
+---------------------------------------------
 
-* volatilize Subcommand reparieren (DONE):
-** kein automatisches volatilisieren (DONE)
+* volatilize Subcommand reparieren:
+** kein automatisches volatilisieren
 ** korrektes markieren von mehreren aufeinanderfolgenden volatilisierten Runs
-   wenn ein neuer Step angehangen wird. (DONE)
+   wenn ein neuer Step angehangen wird.
 
 Zombie-Prozesse? (???)
 ----------------------
@@ -29,6 +29,10 @@ Zusammenspiel von <project>.yaml und Submit Script Template (Christoph)
 *** job_quota default Werte
 ** Pro Step sollte man die Möglichkeit haben:
 *** die default Werte zu überschreiben
+!!! 
+    Die folgende Idee ist nicht umsetzbar, ohne die Nutzbarkeit auf den
+    Frontend Nodes massiv zu beeinträchtigen.
+!!!
 ** Pro Tool sollte es die Möglichkeit geben:
 *** ein module load/unload Kommando anzugeben das dann einfach in das
     Submit Skript Template geschrieben wird
@@ -37,30 +41,19 @@ Andere Idee:
 * Default Template und optionale Templates
 
 
-Cluster Config als separate YAML Datei (Sven)
----------------------------------------------
+Cluster Config als separate YAML Datei (Sven) Done by (Christoph)
+-----------------------------------------------------------------
 
 Die Cluster Config ist aktuell ein hart-kodiertes Dictionary in
 pipeline.py, das sollte am besten überführt werden in eine YAML
 Konfigurationsdatei. (Hab ich gemacht. CK) Plus Doku.
 
 
+s2c.py (Sven + Gero) Done
+-------------------------
 
-s2c.py (Sven + Gero)
---------------------
-
-Bitte Error Messages ins Englische übersetzen.
-Außerdem wäre es super wenn wir uns für eine Variante entscheiden
-würden wie wir die Konvertierung von segemehl output zu cufflinks
-durchführen wollen.
-Aktuell haben wir mehrere Möglichkeiten:
-
-* make_segemehl_output_cufflinks_compatible.py (f.k.a. s2c.py)
-* fix_make_segemehl_output_cufflinks_compatible.py (f.k.a. fix_s2c.py)
-* post_sawdust.py (Merge der beiden vorgenannten?)
-
-Sven würde gerne alle Tools aus uap rausschmiessen und die über Git
-Repos etc. holen.
+Bitte Error Messages ins Englische übersetzen. (Done by Gero)
+Die Lösung mit s2c.py und fix_s2c.py bleibt erhalten. (Done)
 
 Dokumentation (Alexander + Christoph + Sven)
 --------------------------------------------
@@ -71,8 +64,8 @@ Die Doku des fastq_source Steps sollte ein Beispiel für ein YAML
 dictionary enthalten.
 Generell muss die Doku auf fehlenden Inhalt Kontroll gelesen werden.
 
-SHAsum für nicht nicht-gepippte Ausgabedateien (Christoph)
-----------------------------------------------------------
+SHAsum für nicht nicht-gepipte Ausgabedateien (Christoph)
+---------------------------------------------------------
 
 Wollen wir das jetzt für alle erzeugten Ausgabedaten. (Ja)
 SHAsum einmal in der Annotation und in separater SHAsum Datei.
@@ -82,10 +75,10 @@ PyPI (least concern)
 
 Distribution über Python Package Repos
 
-Docker (Alexander)
-------------------
+Docker (Alexander/Christoph) 
+----------------------------
 
-Docker Support einbauen mittels Dockerfiles
+Docker Support einbauen mittels Dockerfiles. Sitze ich gerade dran (Christoph).
 
 Pfadangaben für Dateien die aus uap geladen werden (Sven)
 ---------------------------------------------------------

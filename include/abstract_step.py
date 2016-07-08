@@ -50,7 +50,6 @@ class AbstractStep(object):
     PING_RENEW = 30
     VOLATILE_SUFFIX = '.volatile.placeholder.yaml'
     UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK', '_connect',
-                          '_cluster_runtime', '_cluster_memory',
                           '_submit_options', '_pre_job_command',
                           '_post_job_command']
     
@@ -233,10 +232,6 @@ class AbstractStep(object):
                 
         if not '_volatile' in self._options:
             self._options['_volatile'] = False
-#        if not '_cluster_runtime' in self._options:
-#            self._options['_cluster_runtime'] = '96:00:00'
-#        if not '_cluster_memory' in self._options:
-#            self._options['_cluster_memory'] = '8G'
 
     def get_options(self):
         '''
