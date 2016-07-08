@@ -130,7 +130,7 @@ def main(args):
         placeholder_values = dict()
         if step.is_option_set_in_config('_submit_options'):
             placeholder_values['#{SUBMIT_OPTIONS}'] = step.get_option(
-                '_submit_options'))
+                '_submit_options')
         else:
             placeholder_values['#{SUBMIT_OPTIONS}'] = p.config['cluster']\
                                                       ['default_submit_options']

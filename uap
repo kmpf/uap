@@ -424,7 +424,8 @@ def main():
     # get arguments and call the appropriate function
     args = parser.parse_args()
     # Add the path to this very file
-    args['uap_path'] = uap_path
+    args_dict = vars(args)
+    args_dict['uap_path'] = uap_path
     # create logger object
     logger = _configure_logger(args.verbose)
     # call subcommand
