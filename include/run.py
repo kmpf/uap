@@ -63,6 +63,7 @@ class Run(object):
             'run': None,
             'queued': None
         }
+        self._submit_script = None
         self._exec_groups = list()
         self._temp_paths = list()
         '''
@@ -123,6 +124,15 @@ class Run(object):
 
     def get_queued_ping_file(self):
         return self._get_ping_file('queued')
+
+    def get_submit_script_file(self):
+        if self._submit_scripts == None:
+            self._submit_scripts = os.path.join(
+                self.get_output_directory(),
+                ".submit-%s-%s.sh" % (self.get_step().get_step_name(),
+                                      self.get_run_id())
+            )
+        return self._submit_scripts
 
     def replace_output_dir_du_jour(func):
         def inner(self, *args, **kwargs):
@@ -836,12 +846,19 @@ class Run(object):
         log['step'] = {}
         log['step']['options'] = self.get_step().get_options()
         log['step']['name'] = self.get_step().get_step_name()
-        log['step']['known_paths'] = self.get_known_paths()
         log['step']['cores'] = self.get_step()._cores
         log['run'] = {}
         log['run']['run_info'] = self.as_dict()
         log['run']['run_id'] = self.get_run_id()
         log['run']['temp_directory'] = self.get_temp_output_directory()
+        # if a submit script was used ...
+        if os.path.exists(self.get_submit_script_file()):
+            # ... read it and store it ...
+            with open(self.get_submit_script_file(), 'r') as f:
+                log['run']['submit_script'] = f.read()
+            # ... finally delete it
+            os.unlink(self.get_submit_script_file())
+        log['run']['known_paths'] = self.get_known_paths()
         log['config'] = self.get_step().get_pipeline().config
         log['git_hash_tag'] = self.get_step().get_pipeline().git_hash_tag
         log['tool_versions'] = {}
