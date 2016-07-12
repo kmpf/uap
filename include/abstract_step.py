@@ -834,9 +834,19 @@ class AbstractStep(object):
                                 None)
 
         for path, path_info in known_paths.items():
+            # Get the file size
             if os.path.exists(path):
                 known_paths[path]['size'] = os.path.getsize(path)
-                
+            # Calculate SHA1 hash for output files
+            if known_paths[path]['type'] == 'output':
+                try:
+                    with open(path, 'rb') as f:
+                        known_paths[path]['sha1'] = hashlib.sha1(f.read())\
+                                                           .hexdigest()
+                except:
+                    logger.error("Error while calculating SHA1sum of %s" % path)
+                    sys.exit(1)
+
         run.add_known_paths(known_paths)
         annotation_path, annotation_str = run.write_annotation_file(
             run.get_output_directory() \
