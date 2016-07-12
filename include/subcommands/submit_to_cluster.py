@@ -212,7 +212,7 @@ def main(args):
             
             # Store submit script in the run_output_dir
             now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-            submit_script_path = task.get_run().get_submit_script_file():
+            submit_script_path = task.get_run().get_submit_script_file()
             with open(submit_script_path, 'w') as f:
                 f.write(submit_script)
 

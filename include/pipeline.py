@@ -121,7 +121,7 @@ class Pipeline(object):
     
         self.cluster_config_path = os.path.join(
             self.get_uap_path(), 'cluster/cluster-specific-commands.yaml')
-        self.cluster_config = yaml.load( cluster_config_path )
+        self.cluster_config = yaml.load( self.cluster_config_path )
         '''
         Cluster-related configuration for every cluster system supported.
         '''
@@ -717,7 +717,7 @@ class Pipeline(object):
                   % self.get_config_filepath())
 
     def autodetect_cluster_type(self):
-        cluster_config = Pipeline.cluster_config
+        cluster_config = self.cluster_config
         # Let's see if we can successfully run a cluster identity test
         # Test all configured cluster types
         for cluster_type in cluster_config.keys():
@@ -730,7 +730,7 @@ class Pipeline(object):
                 except KeyError:
                     logger.error("%s: Missing 'identity_%s' for %s"
                                  "cluster type."
-                                 % (Pipeline.cluster_config_path, 
+                                 % (self.cluster_config_path, 
                                     key, cluster_type) 
                              )
                     sys.exit(1)
@@ -748,9 +748,9 @@ class Pipeline(object):
         return self.cluster_type
 
     def set_cluster_type(self, cluster_type):
-        if not cluster_type in Pipeline.cluster_config:
+        if not cluster_type in self.cluster_config:
             print("Unknown cluster type: %s (choose one of %s)." % (
-                cluster_type, ', '.join(Pipeline.self.cluster_config.keys())))
+                cluster_type, ', '.join(self.cluster_config.keys())))
             exit(1)
         self.cluster_type = cluster_type
 
@@ -759,14 +759,14 @@ class Pipeline(object):
     (cc == cluster command).
     '''
     def get_cluster_command(self, key):
-        return self.get_cluster_config()[self.cluster_type][key]
+        return self.cluster_config[self.cluster_type][key]
 
     '''
     Shorthand to retrieve a cluster-type-dependent command line part (this is a
     list)
     '''
     def get_cluster_command_cli_option(self, key, value):
-        result = self.get_cluster_config(key)
+        result = self.cluster_config[key]
         if '%s' in result:
             return [result % value]
         else:
