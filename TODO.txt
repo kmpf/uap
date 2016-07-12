@@ -10,36 +10,34 @@ uap <project>.yaml volatilize Probleme (Done)
 ** korrektes markieren von mehreren aufeinanderfolgenden volatilisierten Runs
    wenn ein neuer Step angehangen wird.
 
-Zombie-Prozesse? (???)
-----------------------
+Zombie-Prozesse? (Don't do)
+---------------------------
 
 * uap scheint Prozesse zu erzeugen die weiterlaufen nachdem der Hauptprozesse
   getötet wurde. Warum werden die Kinderprozesse nicht gestoppt wenn der Eltern
   Prozess gestoppt wird?
-
 
 Zusammenspiel von <project>.yaml und Submit Script Template (Christoph)
 -----------------------------------------------------------------------
 
 * Überarbeiten der Config und der Submit Script Templates
 ** in der Config sollte man folgendes angeben können:
-*** default submit_options
-*** default pre_job_commands
-*** default post_job_commands
-*** job_quota default Werte
+*** default submit_options (check)
+*** default pre_job_commands (check)
+*** default post_job_commands (check)
+*** job_quota default Werte (check)
 ** Pro Step sollte man die Möglichkeit haben:
 *** die default Werte zu überschreiben
-!!! 
+!!!
     Die folgende Idee ist nicht umsetzbar, ohne die Nutzbarkeit auf den
-    Frontend Nodes massiv zu beeinträchtigen.
+    Frontend Nodes massiv zu beeinträchtigen. Außerdem baut uap bei jedem
+    Aufruf den kompletten DAG auf und dafür checkt er die Verfügbarkeit aller
+    Tools. Das würde zwangsläufig crashen wenn wir diese Änderung einführen,
+    da nur die Tools für den auszuführenden Step/Run geladen werden würden.
 !!!
 ** Pro Tool sollte es die Möglichkeit geben:
 *** ein module load/unload Kommando anzugeben das dann einfach in das
     Submit Skript Template geschrieben wird
-
-Andere Idee:
-* Default Template und optionale Templates
-
 
 Cluster Config als separate YAML Datei (Sven) Done by (Christoph)
 -----------------------------------------------------------------
@@ -67,16 +65,11 @@ Generell muss die Doku auf fehlenden Inhalt Kontroll gelesen werden.
 SHAsum für nicht nicht-gepipte Ausgabedateien (Christoph)
 ---------------------------------------------------------
 
-Wollen wir das jetzt für alle erzeugten Ausgabedaten. (Ja)
-SHAsum einmal in der Annotation und in separater SHAsum Datei.
+Wollen wir das jetzt für alle erzeugten Ausgabedaten. (Done)
+SHA1sum einmal in der Annotation und in separater SHAsum Datei. 
 
-PyPI (least concern)
----------------------
-
-Distribution über Python Package Repos
-
-Docker (Alexander/Christoph) 
-----------------------------
+Docker (Alexander/Christoph) (Geringste Prio)
+---------------------------------------------
 
 Docker Support einbauen mittels Dockerfiles. Sitze ich gerade dran (Christoph).
 
@@ -89,7 +82,15 @@ absolute Pfadangaben für alle open() calls.
 Debugging (???)
 ---------------
 
+Submit Script in Annotation Datei speichern. (Done)
+Prosa Log nach STDERR mittels logger 
 Evtl. Subcommand fürs zusammensuchen von Ausgabedaten des Runs.
+
+Weitere Ideen
+-------------
+
+* Verteilen von uap über PyPI (Python Package Repos)
+
 
 Mailinglist/GitHub Issue Tracker
 --------------------------------
