@@ -112,16 +112,16 @@ class Pipeline(object):
         if 'arguments' in kwargs:
             args = kwargs['arguments']
 
-
         self._uap_path = args.uap_path
         '''
         Absolute path to the directory of the uap executable.
         It is used to circumvent path issues.
         '''
     
-        self.cluster_config_path = os.path.join(
-            self.get_uap_path(), 'cluster/cluster-specific-commands.yaml')
-        self.cluster_config = yaml.load( self.cluster_config_path )
+        self._cluster_config_path = os.path.join(
+            self._uap_path, 'cluster/cluster-specific-commands.yaml')
+        with open(self._cluster_config_path, 'r') as cluster_config_file:
+            self._cluster_config = yaml.load( cluster_config_file )
         '''
         Cluster-related configuration for every cluster system supported.
         '''
@@ -151,8 +151,6 @@ class Pipeline(object):
             # cluster type is not an applicable parameter here, and that's fine
             # (we're probably in run-locally.py)
             pass
-
-
 
         self._config_filepath = args.config.name
         '''
@@ -256,6 +254,9 @@ class Pipeline(object):
     def get_config_filepath(self):
         return self._config_filepath
 
+    def get_cluster_config(self):
+        return self._cluster_config
+    
     def get_steps(self):
         return self.steps
 
@@ -717,7 +718,7 @@ class Pipeline(object):
                   % self.get_config_filepath())
 
     def autodetect_cluster_type(self):
-        cluster_config = self.cluster_config
+        cluster_config = self.get_cluster_config()
         # Let's see if we can successfully run a cluster identity test
         # Test all configured cluster types
         for cluster_type in cluster_config.keys():
@@ -730,7 +731,7 @@ class Pipeline(object):
                 except KeyError:
                     logger.error("%s: Missing 'identity_%s' for %s"
                                  "cluster type."
-                                 % (self.cluster_config_path, 
+                                 % (self._cluster_config_path, 
                                     key, cluster_type) 
                              )
                     sys.exit(1)
@@ -748,9 +749,9 @@ class Pipeline(object):
         return self.cluster_type
 
     def set_cluster_type(self, cluster_type):
-        if not cluster_type in self.cluster_config:
+        if not cluster_type in self.get_cluster_config():
             print("Unknown cluster type: %s (choose one of %s)." % (
-                cluster_type, ', '.join(self.cluster_config.keys())))
+                cluster_type, ', '.join(self.get_cluster_config().keys())))
             exit(1)
         self.cluster_type = cluster_type
 
@@ -759,7 +760,7 @@ class Pipeline(object):
     (cc == cluster command).
     '''
     def get_cluster_command(self, key):
-        return self.cluster_config[self.cluster_type][key]
+        return self.get_cluster_config()[self.get_cluster_type()][key]
 
     '''
     Shorthand to retrieve a cluster-type-dependent command line part (this is a
