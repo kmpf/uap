@@ -3,7 +3,7 @@ slurm:
     identity_answer: 'slurm'
     submit: 'sbatch'
     stat: 'squeue'
-    template: pipeline_path + '/../submit-scripts/sbatch-template.sh'
+    template: 'cluster/submit-scripts/sbatch-template.sh'
     hold_jid: '--dependency=afterany:%s'
     hold_jid_separator: ':'
     set_job_name: '--job-name=%s'
@@ -16,7 +16,7 @@ sge:
     identity_answer: 'SGE'
     submit: qsub
     stat: qstat
-    template: pipeline_path + '/../submit-scripts/qsub-template.sh'
+    template: 'cluster/submit-scripts/qsub-template.sh'
     hold_jid: '-hold_jid'
     hold_jid_separator: ';'
     set_job_name: '-N'
@@ -29,7 +29,7 @@ uge:
     identity_answer: 'UGE'
     submit: 'qsub'
     stat: 'qstat'
-    template: pipeline_path + '/../submit-scripts/qsub-template.sh'
+    template: 'cluster/submit-scripts/qsub-template.sh'
     hold_jid: '-hold_jid'
     hold_jid_separator: ';'
     set_job_name: '-N'
