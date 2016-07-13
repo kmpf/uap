@@ -363,24 +363,24 @@ def main():
     submit_to_cluster_parser.set_defaults(func=submit_to_cluster.main)
 
     '''
-    The argument parser for 'task-info.py' is created here."
+    The argument parser for 'run-info.py' is created here."
     '''
     
-    task_info_parser = subparsers.add_parser(
-        "task-info",
+    run_info_parser = subparsers.add_parser(
+        "run-info",
         help="Displays information about certain source or processing tasks.",
         description="",
         formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
     
-    task_info_parser.add_argument(
+    run_info_parser.add_argument(
          "--sources",
         dest="sources",
         action="store_true",
         default=False,
         help="Displays only information about the source runs.")
     
-    task_info_parser.add_argument(
+    run_info_parser.add_argument(
         "-t","--task",
         dest="task",
         nargs='*',
@@ -391,7 +391,7 @@ def main():
         "task IDs is returned by running:\n"
         "$ uap <project-config>.yaml status")
 
-    task_info_parser.set_defaults(func=task_info.main)
+    run_info_parser.set_defaults(func=run_info.main)
         
     '''
     The argument parser for 'volatilize.py' is created here."
