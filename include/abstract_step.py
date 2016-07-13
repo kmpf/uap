@@ -50,8 +50,8 @@ class AbstractStep(object):
     PING_RENEW = 30
     VOLATILE_SUFFIX = '.volatile.placeholder.yaml'
     UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK', '_connect',
-                          '_submit_options', '_pre_job_command',
-                          '_post_job_command']
+                          '_cluster_submit_options', '_cluster_pre_job_command',
+                          '_cluster_post_job_command', '_cluster_job_quota']
     
     states = misc.Enum(['DEFAULT', 'DECLARING', 'EXECUTING'])
 
@@ -316,11 +316,6 @@ class AbstractStep(object):
         return input_runs
 
     def declare_runs(self):
-        # Was muss hier alles passieren damit es funktioniert?
-        # * es muessen alle runs definiert werden
-        # * pro run muessen alle public/private Infos gesetzt werden
-        # * es MUESSEN die Output Dateien den Connections zugeordnet werden
-
         # fetch all incoming run IDs which produce reads...
 
         self.runs( self.get_run_ids_in_connections_input_files() )
