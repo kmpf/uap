@@ -5,11 +5,14 @@ destination_path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19
 steps:
     # Download all chromosomal sequences
     hg19_UCSC_chr1 (raw_url_source):
-        url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr1.fa.gz
+        url: 
+            - ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr1.fa.gz
+        secure-hash: 
+            - e103808b81f7d0a52353dee92d2ff164
         hashing-algorithm: md5
-        secure-hash: e103808b81f7d0a52353dee92d2ff164
         path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-        filename: chr1.fa
+        filename: 
+            - chr1.fa
         uncompress: yes
 
     hg19_UCSC_chr2 (raw_url_source):
