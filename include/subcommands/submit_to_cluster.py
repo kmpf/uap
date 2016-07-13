@@ -128,28 +128,28 @@ def main(args):
         # Get the values for the placeholders:
         # SUBMIT_OPTIONS
         placeholder_values = dict()
-        if step.is_option_set_in_config('_submit_options'):
-            placeholder_values['#{SUBMIT_OPTIONS}'] = step.get_option(
-                '_submit_options')
+        if step._options['_cluster_submit_options']:
+            placeholder_values['#{SUBMIT_OPTIONS}'] = step._options[
+                '_cluster_submit_options']
         else:
             placeholder_values['#{SUBMIT_OPTIONS}'] = p.config['cluster']\
                                                       ['default_submit_options']
         # PRE_JOB_COMMAND
-        if step.is_option_set_in_config('_pre_job_command'):
-            placeholder_values['#{PRE_JOB_COMMAND}'] = step.get_option(
-            '_pre_job_command')
+        if step._options['_cluster_pre_job_command']:
+            placeholder_values['#{PRE_JOB_COMMAND}'] = step._options[
+            '_cluster_pre_job_command']
         else:
             placeholder_values['#{PRE_JOB_COMMAND}'] = p.config['cluster']\
                                                        ['default_pre_job_command']
         # POST_JOB_COMMAND
-        if step.is_option_set_in_config('_post_job_command'):
-            placeholder_values['#{POST_JOB_COMMAND}'] = step.get_option(
-                '_post_job_command')
+        if step._options['_cluster_post_job_command']:
+            placeholder_values['#{POST_JOB_COMMAND}'] = step._options[
+                '_cluster_post_job_command']
         else:
             placeholder_values['#{POST_JOB_COMMAND}'] = p.config['cluster']\
                                                         ['default_post_job_command']
-        placeholder_values['#{MODULE_LOAD}'] = "\n".join(step.get_module_loads().values())
-        placeholder_values['#{MODULE_UNLOAD}'] = "\n".join(step.get_module_unloads().values())
+#         placeholder_values['#{MODULE_LOAD}'] = "\n".join(step.get_module_loads().values())
+#         placeholder_values['#{MODULE_UNLOAD}'] = "\n".join(step.get_module_unloads().values())
         
         # Replace placeholders with their values
         for placeholder, value in placeholder_values.items(): 
@@ -218,7 +218,7 @@ def main(args):
 
             process = None
             try:
-                process = subprocess.Pop(
+                process = subprocess.Popen(
                     submit_script_args,
                     bufsize = -1,
                     stdin = subprocess.PIPE,
