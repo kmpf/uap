@@ -39,8 +39,8 @@ Zusammenspiel von <project>.yaml und Submit Script Template (Christoph)
 *** ein module load/unload Kommando anzugeben das dann einfach in das
     Submit Skript Template geschrieben wird
 
-Cluster Config als separate YAML Datei (Sven) Done by (Christoph)
------------------------------------------------------------------
+Cluster Config als separate YAML Datei (Done)
+---------------------------------------------
 
 Die Cluster Config ist aktuell ein hart-kodiertes Dictionary in
 pipeline.py, das sollte am besten überführt werden in eine YAML
@@ -62,11 +62,11 @@ Die Doku des fastq_source Steps sollte ein Beispiel für ein YAML
 dictionary enthalten.
 Generell muss die Doku auf fehlenden Inhalt Kontroll gelesen werden.
 
-SHAsum für nicht nicht-gepipte Ausgabedateien (Christoph)
----------------------------------------------------------
+SHAsum für alle Ausgabedateien (Christoph) (Done)
+-------------------------------------------------
 
 Wollen wir das jetzt für alle erzeugten Ausgabedaten. (Done)
-SHA1sum einmal in der Annotation und in separater SHAsum Datei. 
+SHA1sum für Output Dateien in der Annotation (Done).
 
 Docker (Alexander/Christoph) (Geringste Prio)
 ---------------------------------------------
