@@ -9,6 +9,7 @@
   This document aims to describe how to install **uap**.
 
 .. _installation-of-uap:
+
 #######################
 Installation of **uap**
 #######################
@@ -87,12 +88,15 @@ file::
 .. |github_uap_link| raw:: html
 
    <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
+
 .. |github_uap_link| raw:: html
 
    <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
+
 .. |github_uap_link| raw:: html
 
    <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
+
 .. |github_uap_link| raw:: html
 
    <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
