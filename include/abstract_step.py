@@ -15,6 +15,7 @@ sys.path.insert(0, './include/steps')
 sys.path.insert(0, './include/sources')
 import copy
 import datetime
+import hashlib
 import inspect
 from logging import getLogger
 import os
@@ -50,8 +51,8 @@ class AbstractStep(object):
     PING_RENEW = 30
     VOLATILE_SUFFIX = '.volatile.placeholder.yaml'
     UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK', '_connect',
-                          '_submit_options', '_pre_job_command',
-                          '_post_job_command']
+                          '_cluster_submit_options', '_cluster_pre_job_command',
+                          '_cluster_post_job_command']
     
     states = misc.Enum(['DEFAULT', 'DECLARING', 'EXECUTING'])
 
@@ -233,6 +234,11 @@ class AbstractStep(object):
         if not '_volatile' in self._options:
             self._options['_volatile'] = False
 
+        for i in ['_cluster_submit_options', '_cluster_pre_job_command',
+                       '_cluster_post_job_command']:
+            if not i in self._options:
+                self._options[i] = ''
+            
     def get_options(self):
         '''
         Returns a dictionary of all given options
@@ -816,9 +822,22 @@ class AbstractStep(object):
                         # will overwrite the file.
                         # CK: Hmm, that's a feature, isn't it?
                         if os.path.exists(source_path):
+                            # Calculate SHA1 hash for output files
+                            sha1sum = str()
+                            try:
+                                with open(source_path, 'rb') as f:
+                                    sha1sum = hashlib.sha1(f.read()).hexdigest()
+                            except:
+                                logger.error("Error while calculating SHA1sum "
+                                             "of %s" % source_path)
+                                raise
+
                             os.rename(source_path, destination_path)
                             for path in [source_path, destination_path]:
                                 if path in known_paths.keys():
+                                    if known_paths[path]['designation'] == \
+                                       'output':
+                                        known_paths[path]['sha1'] = sha1sum
                                     if known_paths[path]['type'] != \
                                        'step_file':
                                         logger.debug("Set %s 'type' info to "
@@ -837,15 +856,6 @@ class AbstractStep(object):
             # Get the file size
             if os.path.exists(path):
                 known_paths[path]['size'] = os.path.getsize(path)
-            # Calculate SHA1 hash for output files
-            if known_paths[path]['type'] == 'output':
-                try:
-                    with open(path, 'rb') as f:
-                        known_paths[path]['sha1'] = hashlib.sha1(f.read())\
-                                                           .hexdigest()
-                except:
-                    logger.error("Error while calculating SHA1sum of %s" % path)
-                    sys.exit(1)
 
         run.add_known_paths(known_paths)
         annotation_path, annotation_str = run.write_annotation_file(
