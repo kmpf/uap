@@ -746,7 +746,6 @@ class Pipeline(object):
                     return cluster_type
             except OSError:
                 pass
-
         return None
 
     def get_cluster_type(self):
@@ -754,9 +753,8 @@ class Pipeline(object):
 
     def set_cluster_type(self, cluster_type):
         if not cluster_type in self.get_cluster_config():
-            print("Unknown cluster type: %s (choose one of %s)." % (
-                cluster_type, ', '.join(self.get_cluster_config().keys())))
-            exit(1)
+            logger.info("No cluster type detected.")
+            self.cluster_type = None
         self.cluster_type = cluster_type
 
     '''
