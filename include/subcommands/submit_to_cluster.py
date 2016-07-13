@@ -81,27 +81,34 @@ def main(args):
     #    in place for steps which have no defined quota)
     # -> during submission, there is a list of N previous job ids in
     #    which every item holds one of the previously submitted tasks
-    quotas_path = os.path.join(p.get_uap_path(), "cluster/quotas.yaml")
-    if os.path.exists(quotas_path):
-        try:
-            all_quotas = yaml.load(open(quotas_path, 'r'))
-        except OSError:
-            logger.error("Couldn't load file %s" % quotas_path)
-            sys.exit(1)
-    
-        hostname = subprocess.check_output(['hostname']).strip()
-        for key in all_quotas.keys():
-            if re.match(key, hostname):
-                print("Applying quotas for %s." % hostname)
-                quotas = all_quotas[key]
+#     quotas_path = os.path.join(p.get_uap_path(), "cluster/quotas.yaml")
+#     if os.path.exists(quotas_path):
+#         try:
+#             all_quotas = yaml.load(open(quotas_path, 'r'))
+#         except OSError:
+#             logger.error("Couldn't load file %s" % quotas_path)
+#             sys.exit(1)
+#     
+#         hostname = subprocess.check_output(['hostname']).strip()
+#         for key in all_quotas.keys():
+#             if re.match(key, hostname):
+#                 print("Applying quotas for %s." % hostname)
+#                 quotas = all_quotas[key]
+# 
+#         if not 'default' in quotas:
+#             raise StandardError("No default quota defined for this host.")
 
-        if not 'default' in quotas:
-            raise StandardError("No default quota defined for this host.")
+
 
     quota_jids = {}
     quota_offset = {}
 
     def submit_task(task, dependent_tasks_in = []):
+    '''
+    This method reads and modifies the necessary submit script for a given
+    task. It applies job quotas. Finally, it starts the submit command.
+
+    '''
         dependent_tasks = copy.copy(dependent_tasks_in)
 
         step = task.step
@@ -263,7 +270,16 @@ def main(args):
                 
             abstract_step.AbstractStep.fsc = fscache.FSCache()
 
+    # After defining submit_task() let's walk through tasks_left 
+
     for task in tasks_left:
+        # Update quotas dict for current step if necessary
+        if not str(task.get_step()) in quotas.keys():
+            step = task.get_step()
+            quotas[str(step)] = quotas['default']
+            if step.is_option_set_in_config('_cluster_job_quota'):
+                quotas[str(step)] = step.get_option('_cluster_job_quota')
+                
         state = task.get_task_state()
         if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
             print("Skipping %s because it is already %s..." % (str(task), state.lower()))
