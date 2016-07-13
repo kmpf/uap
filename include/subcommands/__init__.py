@@ -8,4 +8,4 @@ import submit_to_cluster
 import task_info
 import volatilize
 __all__ = ['fix_problems', 'render', 'report', 'run_locally', 'status', 'steps',
-           'submit_to_cluster', 'task_info', 'volatilize']
+           'submit_to_cluster', 'run_info', 'volatilize']
