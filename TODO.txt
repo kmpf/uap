@@ -20,14 +20,25 @@ Zombie-Prozesse? (Don't do)
 Zusammenspiel von <project>.yaml und Submit Script Template (Christoph)
 -----------------------------------------------------------------------
 
-* Überarbeiten der Config und der Submit Script Templates
-** in der Config sollte man folgendes angeben können:
-*** default submit_options (check)
-*** default pre_job_commands (check)
-*** default post_job_commands (check)
-*** job_quota default Werte (check)
-** Pro Step sollte man die Möglichkeit haben:
+* in der Project Config kann man folgendes angeben:
+
+cluster:
+    default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -m as -l h_rt=48:00:00 -l h_vmem=4G"
+    default_pre_job_command: "module ..."
+    default_post_job_command: "module ..."
+    default_job_quota: <int>
+
+** Pro Step kann man die default Werte überschreiben:
+
+steps:
+    step_a:
+        _cluster_submit_options: "..."
+        _cluster_pre_job_command: "..."
+        _cluster_post_job_command: "..."
+
 *** die default Werte zu überschreiben
+
+
 !!!
     Die folgende Idee ist nicht umsetzbar, ohne die Nutzbarkeit auf den
     Frontend Nodes massiv zu beeinträchtigen. Außerdem baut uap bei jedem
