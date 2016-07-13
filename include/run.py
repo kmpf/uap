@@ -126,13 +126,13 @@ class Run(object):
         return self._get_ping_file('queued')
 
     def get_submit_script_file(self):
-        if self._submit_scripts == None:
-            self._submit_scripts = os.path.join(
+        if self._submit_script == None:
+            self._submit_script = os.path.join(
                 self.get_output_directory(),
                 ".submit-%s-%s.sh" % (self.get_step().get_step_name(),
                                       self.get_run_id())
             )
-        return self._submit_scripts
+        return self._submit_script
 
     def replace_output_dir_du_jour(func):
         def inner(self, *args, **kwargs):
