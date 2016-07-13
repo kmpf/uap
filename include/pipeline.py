@@ -125,7 +125,7 @@ class Pipeline(object):
         '''
         Cluster-related configuration for every cluster system supported.
         '''
-      
+        
         if self.git_hash_tag.endswith('-dirty'):
             if not args.even_if_dirty:
                 print("The repository has uncommitted changes, which is why " +
@@ -299,6 +299,9 @@ class Pipeline(object):
                 self.config['cluster'][i] = ''
 
         self.build_steps()
+
+    def get_config(self):
+        return self.config
         
     def build_steps(self):
         self.steps = {}
@@ -459,6 +462,7 @@ class Pipeline(object):
             if type(command) is str:
                 command = command.split()
             self.check_command(command)
+            logger.info("Executing command: %s" % " ".join(command))
             try:
                 proc = subprocess.Popen(
                     command,
@@ -767,7 +771,7 @@ class Pipeline(object):
     list)
     '''
     def get_cluster_command_cli_option(self, key, value):
-        result = self.cluster_config[key]
+        result = self.get_cluster_config()[self.get_cluster_type()][key]
         if '%s' in result:
             return [result % value]
         else:
