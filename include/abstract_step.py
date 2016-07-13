@@ -235,7 +235,7 @@ class AbstractStep(object):
             self._options['_volatile'] = False
 
         for i in ['_cluster_submit_options', '_cluster_pre_job_command',
-                       '_cluster_post_job_command']:
+                       '_cluster_post_job_command', '_cluster_job_quota']:
             if not i in self._options:
                 self._options[i] = ''
             

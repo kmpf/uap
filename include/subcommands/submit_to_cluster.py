@@ -72,6 +72,7 @@ def main(args):
     quotas = dict()
     try:
         quotas['default'] = p.config['cluster']['default_job_quota']
+        print("Set default quota to %s" % quotas['default'])
     except:
         print("No default quota defined in %s. Set default quota to '5'." % 
               p.get_config_filepath())
@@ -104,11 +105,10 @@ def main(args):
     quota_offset = {}
 
     def submit_task(task, dependent_tasks_in = []):
-    '''
-    This method reads and modifies the necessary submit script for a given
-    task. It applies job quotas. Finally, it starts the submit command.
-
-    '''
+        '''
+        This method reads and modifies the necessary submit script for a given
+        task. It applies job quotas. Finally, it starts the submit command.
+        '''
         dependent_tasks = copy.copy(dependent_tasks_in)
 
         step = task.step
@@ -277,9 +277,10 @@ def main(args):
         if not str(task.get_step()) in quotas.keys():
             step = task.get_step()
             quotas[str(step)] = quotas['default']
-            if step.is_option_set_in_config('_cluster_job_quota'):
-                quotas[str(step)] = step.get_option('_cluster_job_quota')
-                
+            if step._options['_cluster_job_quota']:
+                quotas[str(step)] = step._options['_cluster_job_quota']
+
+            print("Set job quota for %s to %s" % (str(step), quotas[str(step)]))
         state = task.get_task_state()
         if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
             print("Skipping %s because it is already %s..." % (str(task), state.lower()))
