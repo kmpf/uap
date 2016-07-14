@@ -108,24 +108,6 @@ Mailinglist/GitHub Issue Tracker
 
 * Vorbereiten das wir für Fehlermeldungen erreichbar sind
 
-=========================
-Deadline für uap Bugfixes
-=========================
-
-**14.07.16**
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -144,20 +126,11 @@ Sven, Jörg, Kristin, Christoph, Micha
 
 Tasks:
 
-- implement SLURM support <moved to AG>
 - interactive tool to handle big config files might be helpful <least concern>
 - add more options to steps with default values which may be adjusted by users
   (for example cufflinks), also add corresponding command line switches
-- don't hard-code CPU & RAM requirements, both should be configurable per step
-  - also define global CPU & RAM limits in the configuration
-- don't hard-code modules, define which modules are required for which tool in
-  the config
 - status.py: add option to skip tool checking, find out why it's so slow (fstat?)
   <solved>
-- are multiple output files per out/ connection possible?
-  <yes>
-- add ''-joined process args string to YAML log file to facilitate manual re-runs
-  <should be output by option to status.py>
 - is it possible to watch a processes' stderr while a step is running?
   - preferably not only if you launched in debug mode, but always, like inter-
   cepting write calls to the respective file descriptor
@@ -167,11 +140,7 @@ Tasks:
   become the same thing
   - we need a well-defined ontology of file types regardless of actual file
   type, more from the semantic perspective
-- fix quoting in result graph rendering (when " appears in a command line, the 
-  dot file gets messed up)
 - add a random suffix to SGE's stdout and stderr log filenames
-- information about created public_info should be better documented
-  <documentation per step should be generally better>
 
 Problems:
 - if different sources contain identically named samples they are probably gone
