@@ -2,20 +2,14 @@
 TODOs für die uap v0.0.2
 ========================
 
-uap <project>.yaml volatilize Probleme (Done)
----------------------------------------------
-
-* volatilize Subcommand reparieren:
-** kein automatisches volatilisieren
-** korrektes markieren von mehreren aufeinanderfolgenden volatilisierten Runs
-   wenn ein neuer Step angehangen wird.
-
 Zombie-Prozesse? (Don't do)
 ---------------------------
 
 * uap scheint Prozesse zu erzeugen die weiterlaufen nachdem der Hauptprozesse
   getötet wurde. Warum werden die Kinderprozesse nicht gestoppt wenn der Eltern
   Prozess gestoppt wird?
+* qdel von Jobs hinterlässt noch laufende Prozesse (produzierbar auch mit normalen Pipes)
+
 
 Zusammenspiel von <project>.yaml und Submit Script Template (Christoph)
 -----------------------------------------------------------------------
@@ -51,20 +45,6 @@ steps:
 *** ein module load/unload Kommando anzugeben das dann einfach in das
     Submit Skript Template geschrieben wird
 
-Cluster Config als separate YAML Datei (Done)
----------------------------------------------
-
-Die Cluster Config ist aktuell ein hart-kodiertes Dictionary in
-pipeline.py, das sollte am besten überführt werden in eine YAML
-Konfigurationsdatei. (Hab ich gemacht. CK) Plus Doku.
-
-
-s2c.py (Sven + Gero) Done
--------------------------
-
-Bitte Error Messages ins Englische übersetzen. (Done by Gero)
-Die Lösung mit s2c.py und fix_s2c.py bleibt erhalten. (Done)
-
 Dokumentation (Alexander + Christoph + Sven)
 --------------------------------------------
 
@@ -73,12 +53,7 @@ Fehlermeldungen haben würden (für Alexander aber auch alle anderen).
 Die Doku des fastq_source Steps sollte ein Beispiel für ein YAML
 dictionary enthalten.
 Generell muss die Doku auf fehlenden Inhalt Kontroll gelesen werden.
-
-SHAsum für alle Ausgabedateien (Christoph) (Done)
--------------------------------------------------
-
-Wollen wir das jetzt für alle erzeugten Ausgabedaten. (Done)
-SHA1sum für Output Dateien in der Annotation (Done).
+--even-if-dirty Zweck beschreiben 
 
 Docker (Alexander/Christoph) (Geringste Prio)
 ---------------------------------------------
@@ -89,7 +64,7 @@ Pfadangaben für Dateien die aus uap geladen werden (Sven)
 ---------------------------------------------------------
 
 absolute Pfadangaben für alle open() calls.
-
+Dateien und Verzeichnisse werden in Abhängigkeit vom Ort, von dem die uap ausgeführt wird, geschrieben... absoluten Dateipfad erzeugen und benutzen?
 
 Debugging (???)
 ---------------
@@ -97,6 +72,8 @@ Debugging (???)
 Submit Script in Annotation Datei speichern. (Done)
 Prosa Log nach STDERR mittels logger 
 Evtl. Subcommand fürs zusammensuchen von Ausgabedaten des Runs.
+
+* Invaild state: WAITING -> besser siehe Notizen
 
 Weitere Ideen
 -------------
@@ -134,6 +111,7 @@ Logging
 =======
 
 * Fehlermeldungen kürzen
+** "Pipeline crashed"
 * Stacktrace nur anzeigen wenn log-level auf z.B. debug
 
 Fehler
@@ -146,29 +124,22 @@ Steps
 
 * hg19 download reparieren (index_homo_sapiens) einen Download Step erstellen
   für mehrere Dateien/Runs
+* add_option(dd-blocksize) wo nötig
+** dd blocksize default-mäßig auf Linux default 256k -> als add_option in jeden Schritt der dd nutzt
 
 Umbenennungen/Aufräumen
 -----------------------
 
-* TASK in subcommands ändern
-* Verzeichnis "old_steps" unter include/steps: Löschen?
-* Report Funktionalität entfernen (sollte konzeptionell überdacht werden)
-* Notify Funktionalität entfernen
-* quotas.yaml entfernen
-
-http://izi-uap.readthedocs.io/en/documentation_review/software-design.html?highlight=task
-oder nur ein Beispiel hinzufügen?
+* tools/ Verzeichnis aufräumen. Welche Dateien von dort werden noch benötigt?
+* Verzeichnis "old_steps" unter include/steps: Löschen? Merken des commits im Wiki und dann löschen
 
 Git Repository
 ==============
 
-### http://uap.readthedocs.io/en/latest/installation.html
-"git clone https://github.com/kmpf/uap.git"
-	seperates production Repository ohne Branches anbieten?
+Organisieren eines git Repositories für uap (Jörg/Jana)
 
-* Jana Hertel als Owner des finalen Repos
 
-Dateien und Verzeichnisse werden in Abhängigkeit vom Ort, von dem die uap ausgeführt wird, geschrieben... absoluten Dateipfad erzeugen und benutzen?
+
 
 
 
@@ -189,8 +160,6 @@ Sven, Jörg, Kristin, Christoph, Micha
 Tasks:
 
 - interactive tool to handle big config files might be helpful <least concern>
-- add more options to steps with default values which may be adjusted by users
-  (for example cufflinks), also add corresponding command line switches
 - status.py: add option to skip tool checking, find out why it's so slow (fstat?)
   <solved>
 - is it possible to watch a processes' stderr while a step is running?
@@ -206,34 +175,3 @@ Tasks:
 Problems:
 - if different sources contain identically named samples they are probably gone
   overwrite there output files handled wrong
-  
-Sequencing Workflows
-====================
-
-Reference Genome
-----------------
-
-* Genome Resequencing
-** Variant Calling
-
-* Methylome
-** Specific alignment (Bisulfite converted bases)
-** Methylation calling
-
-* Transcriptome
-** De-novo transcript assembly
-** Counts per annotation
-** Differential expression
-
-* ChIP-seq
-** aggregate to peaks
-** peak calling (foreground vs background)
-
-Non-reference Genome
---------------------
-
-* Genome
-** Genome Assembly
-
-* Transcriptome
-** Assemble Transcripts
