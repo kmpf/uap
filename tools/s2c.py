@@ -391,7 +391,10 @@ for line in args.my_sam:
 temp.flush()
 temp.seek(0)
 temp2 = tempfile.TemporaryFile(dir=outPath)
-p=subprocess.Popen(['sort', '-t','\t','-k', '1,1', '-k', '4,4n',mytempName],stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+p=subprocess.Popen(
+    ['sort', '-t','\t','-k', '1,1', '-k', '4,4n', '-T', outPath, mytempName],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE)
 temp2.write(p.communicate()[0])
 temp.close()
 temp2.flush()
