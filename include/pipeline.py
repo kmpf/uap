@@ -571,33 +571,6 @@ class Pipeline(object):
             # Store captured information
             self.tool_versions[tool_id] = tool_check_info
 
-    def notify(self, message, attachment = None):
-        '''
-        prints a notification to the screen and optionally delivers the
-        message on additional channels (as defined by the configuration)
-        '''
-        print(message.split("\n")[0])
-        if 'notify' in self.config:
-            try:
-                notify = self.config['notify']
-                match = re.search('^(http://[a-z\.]+:\d+)/([a-z0-9]+)$', notify)
-                if match:
-                    host = match.group(1)
-                    token = match.group(2)
-                    args = ['curl', host, '-X', 'POST', '-d', '@-']
-                    proc = subprocess.Popen(args, stdin = subprocess.PIPE)
-                    data = {'token': token, 'message': message}
-                    if attachment:
-                        data['attachment_name'] = attachment['name']
-                        data['attachment_data'] = base64.b64encode(attachment['data'])
-                    proc.stdin.write(json.dumps(data))
-                    proc.stdin.close()
-                    proc.wait()
-            except:
-                # swallow all exception that happen here, failing notifications
-                # are no reason to crash the entire thing
-                pass
-
     def check_ping_files(self, print_more_warnings = False,
                          print_details = False, fix_problems = False):
         run_problems = list()

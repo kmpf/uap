@@ -739,10 +739,6 @@ class AbstractStep(object):
                 os._exit(0)
             
         self.start_time = datetime.datetime.now()
-        self.get_pipeline().notify(
-            "[INFO] [%s] starting %s/%s on %s" % 
-            (self.get_pipeline().config['id'], str(self), run_id, 
-             socket.gethostname()))
         caught_exception = None
         self._state = AbstractStep.states.EXECUTING
         try:
@@ -873,7 +869,6 @@ class AbstractStep(object):
                 attachment = dict()
                 attachment['name'] = 'details.png'
                 attachment['data'] = open(annotation_path + '.png').read()
-            self.get_pipeline().notify(message, attachment)
             if caught_exception is not None:
                 raise caught_exception[1], None, caught_exception[2]
         else:
@@ -917,7 +912,6 @@ class AbstractStep(object):
                 attachment = dict()
                 attachment['name'] = 'details.png'
                 attachment['data'] = open(annotation_path + '.png').read()
-            self.get_pipeline().notify(message, attachment)
             
             # and now... check whether we have any volatile parents. If we find
             # one, determine for each of its output files A whether all output
