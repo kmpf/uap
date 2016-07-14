@@ -460,7 +460,10 @@ temp2.close()
 temp_mate.flush()
 temp_mate.seek(0)
 temp2_mate = tempfile.TemporaryFile(dir=outPath)
-p_mate=subprocess.Popen(['sort', '-t','\t','-k', '1,1', '-k', '4,4n',mytemp_mateName],stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+p_mate=subprocess.Popen(
+    ['sort', '-t','\t','-k', '1,1', '-k', '4,4n', '-T', outPath, mytemp_mateName],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE)
 temp2_mate.write(p_mate.communicate()[0])
 temp_mate.close()
 temp2_mate.flush()
