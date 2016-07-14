@@ -28,9 +28,9 @@ def main(args):
         # print all sources (i. e. instances of AbstractSourceStep)
         p.print_source_runs()
 
-    elif len( args.task ) >= 1:
+    elif len( args.run ) >= 1:
         # print run infos of one or more specific tasks
-        for task_id in args.task:
+        for task_id in args.run:
             parts = task_id.split('/')
             if len(parts) != 2:
                 raise StandardError("Invalid task ID %s." % task_id)

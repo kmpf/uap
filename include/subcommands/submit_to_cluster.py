@@ -181,7 +181,9 @@ def main(args):
         ###########################
         # Assemble submit command #
         ###########################
-        long_task_id_with_run_id = '%s_%s' % (str(task.step), task.run_id)
+        now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        long_task_id_with_run_id = '%s_%s_%s' % (str(task.step),
+                                                 task.run_id, now)
         long_task_id = str(task.step)
         short_task_id = long_task_id[0:15]
 
@@ -218,7 +220,6 @@ def main(args):
                              str(task.step._cores) + " cores => ")
             
             # Store submit script in the run_output_dir
-            now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
             submit_script_path = task.get_run().get_submit_script_file()
             with open(submit_script_path, 'w') as f:
                 f.write(submit_script)

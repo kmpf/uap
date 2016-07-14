@@ -40,11 +40,12 @@ steps:
 
 
 !!!
-    Die folgende Idee ist nicht umsetzbar, ohne die Nutzbarkeit auf den
-    Frontend Nodes massiv zu beeinträchtigen. Außerdem baut uap bei jedem
-    Aufruf den kompletten DAG auf und dafür checkt er die Verfügbarkeit aller
-    Tools. Das würde zwangsläufig crashen wenn wir diese Änderung einführen,
-    da nur die Tools für den auszuführenden Step/Run geladen werden würden.
+    Die folgende Idee ist schwer umsetzbar. Einzige Möglichkeit wäre das
+    Tool checking auf den Cluster Nodes abzustellen. Außerdem benötigt man
+    dann zwei module load/unload Kommandos:
+    1. eine Version für das Laden von Modulen in Python
+    2. eine Version für die BASH
+    das bläht die Config auf für wenig bis keinen Mehrwert.
 !!!
 ** Pro Tool sollte es die Möglichkeit geben:
 *** ein module load/unload Kommando anzugeben das dann einfach in das
@@ -108,6 +109,67 @@ Mailinglist/GitHub Issue Tracker
 
 * Vorbereiten das wir für Fehlermeldungen erreichbar sind
 
+Documentation
+=============
+
+* FAQ für häufig Fehler
+* Problem: steps.rst wird dynamisch durch stepdoc.py erzeugt
+* Lösung: conf.py erweitern mit stepdoc.py damit die Doku automatisch aktualisiert wird?
+** funktioniert nicht. immer manuell ausführen?
+** nicht alle Inhalte sind dann perfekt formatiert, manuelle Bearbeitungen gehen nach dem neu erzeugen verloren
+* Verwendung von AbstractStep::runs() beschreiben in Doku anstatt von self.declare_run() und execute()
+** http://uap.readthedocs.io/en/latest/extension.html
+* Bemerkung zur scheinbar sporadischen Verwendung von fifos, dd usw? Tool abhängige Nutzung von FIFOs
+* narrowpeak_to_bed fehlt als Datei in Repository (ist noch bei mit lokal)
+
+Examples
+--------
+
+* abändern der Beispiele für neue Version
+* zwei Klassen von Beispielen (mit ungefährer CPU-/Speicher-/Dauer-Abschätzung)
+** kleine (weniger rechenintensive) Beispiele
+** richtige (rechenintensive/speicherhungrige) Beispiele 
+
+Logging
+=======
+
+* Fehlermeldungen kürzen
+* Stacktrace nur anzeigen wenn log-level auf z.B. debug
+
+Fehler
+======
+
+Fehler mit .yaml-out dokumentieren
+
+Steps
+=====
+
+* hg19 download reparieren (index_homo_sapiens) einen Download Step erstellen
+  für mehrere Dateien/Runs
+
+Umbenennungen/Aufräumen
+-----------------------
+
+* TASK in subcommands ändern
+* Verzeichnis "old_steps" unter include/steps: Löschen?
+* Report Funktionalität entfernen (sollte konzeptionell überdacht werden)
+* Notify Funktionalität entfernen
+* quotas.yaml entfernen
+
+http://izi-uap.readthedocs.io/en/documentation_review/software-design.html?highlight=task
+oder nur ein Beispiel hinzufügen?
+
+Git Repository
+==============
+
+### http://uap.readthedocs.io/en/latest/installation.html
+"git clone https://github.com/kmpf/uap.git"
+	seperates production Repository ohne Branches anbieten?
+
+* Jana Hertel als Owner des finalen Repos
+
+Dateien und Verzeichnisse werden in Abhängigkeit vom Ort, von dem die uap ausgeführt wird, geschrieben... absoluten Dateipfad erzeugen und benutzen?
+
 
 
 
@@ -140,7 +202,6 @@ Tasks:
   become the same thing
   - we need a well-defined ontology of file types regardless of actual file
   type, more from the semantic perspective
-- add a random suffix to SGE's stdout and stderr log filenames
 
 Problems:
 - if different sources contain identically named samples they are probably gone
