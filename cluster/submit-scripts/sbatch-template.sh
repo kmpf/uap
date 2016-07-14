@@ -1,13 +1,17 @@
 #!/bin/bash
 
-#SBATCH --cpus-per-task=#{CORES}   # Request #{CORES} for this task
-#SBATCH --ntasks=1
+##################
+# Submit Options #
+##################
+
 #SBATCH #{SUBMIT_OPTIONS}          # Arbitrary submit options
 
-## Execute command
+############
+# Commands #
+############
+
+#{PRE_JOB_COMMAND}
 
 #{COMMAND}
 
-
-
-
+#{POST_JOB_COMMAND}

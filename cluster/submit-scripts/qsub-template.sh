@@ -1,8 +1,14 @@
 #!/bin/bash
 
+##################
+# Submit Options #
+##################
+
 #$ #{SUBMIT_OPTIONS}          # User defined submit options
 
-## Execute command
+############
+# Commands #
+############
 
 #{PRE_JOB_COMMAND}
 
