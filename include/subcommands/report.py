@@ -40,13 +40,3 @@ def main(args):
                         task_list.append(task)
             
     # try to generate reports for all tasks
-    for task in task_list:
-        basic_task_state = task.get_task_state_basic()
-        if basic_task_state == p.states.FINISHED:
-            try:
-                task.generate_report()
-            except:
-                logger.info("Task %s did not produce")
-        else:
-            sys.stderr.write("Skipping %s because it's not finished yet.\n" %
-                             task)

@@ -64,17 +64,6 @@ class Task(object):
             sys.exit(1)
         self.step.run(self.run_id)
 
-    def generate_report(self):
-        '''
-        Generate the report for the task. Skip this if task is not finished yet.
-        '''
-        task_state = self.get_task_state()
-        if task_state != self.pipeline.states.FINISHED:
-            print("Skipping task: %s its not finished yet." % self)
-            return
-        self.step.generate_report(self.run_id)
-        
-
     def input_files(self):
         '''
         Return a list of input files required by this task.
