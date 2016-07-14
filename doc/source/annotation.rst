@@ -9,6 +9,7 @@
   This document aims to describe how to use **uap** via the command-line.
 
 .. _annotation_files:
+
 ################
 Annotation Files
 ################
@@ -43,3 +44,10 @@ Also, annotations may help to identify bottlenecks.
 | output files and inter-process        | each and therefore cannot compress the        |
 | streams.                              | results fast enough.                          |
 +---------------------------------------+-----------------------------------------------+
+
+known_paths
+-----------
+
+Contains information about all directories/files used during processing a run.
+uap calculates the SHA1 hexdigest for each known file with the designation 'output' aka.
+output/result files. 

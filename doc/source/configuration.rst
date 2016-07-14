@@ -9,9 +9,9 @@
   This document aims to describe how to configure **uap**.
 
 .. _configuration-of-uap:
-##################
-Configuration File
-##################
+###########################
+Analysis Configuration File
+###########################
 
 **uap** operates on |yaml_link| files which define data
 analysis.
@@ -313,6 +313,40 @@ Example Configurations
 **********************
 
 Please check out the example configurations provided inside the ``example-configurations`` folder of **uap**'s installation directory.
+
+
+##########################
+Cluster Configuration File
+##########################
+
+The cluster configuration file resides at:
+
+.. code-block:: bash
+
+    $ ls -la $(dirname $(which uap))/cluster/cluster-specific-commands.yaml
+
+This YAML file contains a dictionary per cluster type, that looks like that:
+
+.. code-block:: yaml
+
+    uge: # Uniq name of the cluster engine
+        identity_test: ['qstat', '-help'] # Command to get version information
+        identity_answer: 'UGE' # The output of the above command for that cluster
+        submit: 'qsub' # Command to submit job
+        stat: 'qstat' # Command to check job status
+        template: 'cluster/submit-scripts/qsub-template.sh' # Path to template for submit script (relative to dirname $(which uap))
+        hold_jid: '-hold_jid' # way to define job dependencies
+        hold_jid_separator: ';' # Separator for job dependencies
+        set_job_name: '-N' # Way to set job names
+        set_stderr: '-e' # Way to set path to file for stderr
+        set_stdout: '-o' # Way to set path to file for stdout
+        parse_job_id: 'Your job (\d+)' # Regex to extract Job ID after submission
+
+
+Ausbauen!!!
+
+
+
 
 .. [1] |pyyaml_link|
 
