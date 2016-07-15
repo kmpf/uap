@@ -42,7 +42,6 @@ import run as run_module
 abs_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(abs_path, 'steps'))
 sys.path.insert(0, os.path.join(abs_path, 'sources'))
-print(sys.path)
 logger=getLogger('uap_logger')
 
 class AbstractStep(object):
