@@ -11,7 +11,6 @@ Source steps
 bcl2fastq_source
 ================
 
-
 **Connections:**
   - Output Connection:
     
@@ -84,8 +83,6 @@ This step provides input files which already exists and therefore creates no tas
 fastq_source
 ============
 
-
-
 The FastqSource class acts as a source for FASTQ files. This source creates a
 run for every sample.
 
@@ -141,7 +138,6 @@ This step provides input files which already exists and therefore creates no tas
 fetch_chrom_sizes_source
 ========================
 
-
 **Connections:**
   - Output Connection:
     
@@ -173,7 +169,6 @@ This step provides input files which already exists and therefore creates no tas
 
 raw_file_source
 ===============
-
 
 **Connections:**
   - Output Connection:
@@ -209,15 +204,11 @@ This step provides input files which already exists and therefore creates no tas
 raw_file_sources
 ================
 
-
-
-The RawFileSources class acts as a tyemporary fix to get files into the pipeline.
-This source creates a    run for every sample.
+The RawFileSources class acts as a temporary fix to get files into the pipeline.
+This source creates a run for every sample.
 
 Specify a file name pattern in *pattern* and define how sample names should be
 determined from file names by specifyign a regular expression in *group*.
-
-
 
 **Connections:**
   - Output Connection:
@@ -252,7 +243,6 @@ This step provides input files which already exists and therefore creates no tas
 
 raw_url_source
 ==============
-
 
 **Connections:**
   - Output Connection:
@@ -295,8 +285,6 @@ This step provides input files which already exists and therefore creates no tas
 
 run_folder_source
 =================
-
-
 
 This source looks for fastq.gz files in
 ``[path]/Unaligned/Project_*/Sample_*`` and pulls additional information
@@ -345,7 +333,6 @@ Processing steps
 
 bam_to_genome_browser
 =====================
-
 
 **Connections:**
   - Input Connection:
@@ -410,8 +397,6 @@ bam_to_genome_browser
 bowtie2
 =======
 
-
-
 Bowtie2 is an ultrafast and memory-efficient tool for aligning sequencing
 reads to long reference sequences. It is particularly good at aligning reads
 of about 50 up to 100s or 1,000s of characters, and particularly good at
@@ -420,11 +405,13 @@ genome with an FM Index to keep its memory footprint small: for the human
 genome, its memory footprint is typically around 3.2 GB. Bowtie 2 supports
 gapped, local, and paired-end alignment modes.
 
-http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
+|bowtie2_link|
 
-typical command line::
+typical command line:
 
-bowtie2 [options]* -x <bt2-idx> {-1 <m1> -2 <m2> | -U <r>} -S [<hit>]
+.. code-block:: bash
+
+    bowtie2 [options]* -x <bt2-idx> {-1 <m1> -2 <m2> | -U <r>} -S [<hit>]
 
 **Connections:**
   - Input Connection:
@@ -464,8 +451,6 @@ bowtie2 [options]* -x <bt2-idx> {-1 <m1> -2 <m2> | -U <r>} -S [<hit>]
 bowtie2_generate_index
 ======================
 
-
-
 bowtie2-build builds a Bowtie index from a set of DNA sequences.
 bowtie2-build outputs a set of 6 files with suffixes .1.bt2, .2.bt2, .3.bt2,
 .4.bt2, .rev.1.bt2, and .rev.2.bt2. In the case of a large index these
@@ -476,9 +461,11 @@ index is built.
 
 http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#the-bowtie2-build-indexer
 
-typical command line::
+typical command line:
 
-bowtie2-build [options]* <reference_in> <bt2_index_base>
+.. code-block:: bash
+
+    bowtie2-build [options]* <reference_in> <bt2_index_base>
 
 **Connections:**
   - Input Connection:
@@ -537,8 +524,6 @@ bowtie2-build [options]* <reference_in> <bt2_index_base>
 bwa_backtrack
 =============
 
-
-
 bwa-backtrack is the bwa algorithm designed for Illumina sequence reads up
 to 100bp. The computation of the alignments is done by running 'bwa aln'
 first, to align the reads, followed by running 'bwa samse' or 'bwa sampe'
@@ -546,16 +531,20 @@ afterwards to generate the final SAM output.
 
 http://bio-bwa.sourceforge.net/
 
-typical command line for single-end data::
+typical command line for single-end data:
 
-bwa aln <bwa-index> <first-read.fastq> > <first-read.sai>
-bwa samse <bwa-index> <first-read.sai> <first-read.fastq> > <sam-output>
+.. code-block:: bash
 
-typical command line for paired-end data::
+    bwa aln <bwa-index> <first-read.fastq> > <first-read.sai>
+    bwa samse <bwa-index> <first-read.sai> <first-read.fastq> > <sam-output>
 
-bwa aln <bwa-index> <first-read.fastq> > <first-read.sai>
-bwa aln <bwa-index> <second-read.fastq> > <second-read.sai>
-bwa sampe <bwa-index> <first-read.sai> <second-read.sai>                   <first-read.fastq> <second-read.fastq> > <sam-output>
+typical command line for paired-end data:
+
+.. code-block:: bash
+
+    bwa aln <bwa-index> <first-read.fastq> > <first-read.sai>
+    bwa aln <bwa-index> <second-read.fastq> > <second-read.sai>
+    bwa sampe <bwa-index> <first-read.sai> <second-read.sai> <first-read.fastq> <second-read.fastq> > <sam-output>
 
 **Connections:**
   - Input Connection:
@@ -605,10 +594,13 @@ bwa sampe <bwa-index> <first-read.sai> <second-read.sai>                   <firs
   - **aln-R** (int, optional) -- Proceed with suboptimal alignments if there are no more than INT equally best hits. This option only affects paired-end mapping. Increasing this threshold helps to improve the pairing accuracy at the cost of speed, especially for short reads (~32bp).
     
   - **aln-b** (bool, optional) -- Specify the input read sequence file is the BAM format. For paired-end data, two ends in a pair must be grouped together and options aln-1 or aln-2 are usually applied to specify which end should be mapped. Typical command lines for mapping pair-end data in the BAM format are:
- bwa aln ref.fa -b1 reads.bam > 1.sai
- bwa aln ref.fa -b2 reads.bam > 2.sai 
- bwa sampe ref.fa 1.sai 2.sai reads.bam reads.bam > aln.sam
-    
+
+    ::
+
+        bwa aln ref.fa -b1 reads.bam > 1.sai
+        bwa aln ref.fa -b2 reads.bam > 2.sai
+        bwa sampe ref.fa 1.sai 2.sai reads.bam reads.bam > aln.sam
+
   - **aln-c** (bool, optional) -- Reverse query but not complement it, which is required for alignment in the color space. (Disabled since 0.6.x)
     
   - **aln-d** (int, optional) -- Disallow a long deletion within INT bp towards the 3'-end [16]
@@ -656,13 +648,13 @@ bwa sampe <bwa-index> <first-read.sai> <second-read.sai>                   <firs
 bwa_generate_index
 ==================
 
-
-
 This step generates the index database from sequences in the FASTA format.
 
-Typical command line::
+Typical command line:
 
-bwa index -p <index-basename> <seqeunce.fasta>
+.. code-block:: bash
+
+    bwa index -p <index-basename> <seqeunce.fasta>
 
 **Connections:**
   - Input Connection:
@@ -699,17 +691,17 @@ bwa index -p <index-basename> <seqeunce.fasta>
 bwa_mem
 =======
 
-
-
 Align 70bp-1Mbp query sequences with the BWA-MEM algorithm. Briefly, the
 algorithm works by seeding alignments with maximal exact matches (MEMs) and
 then extending seeds with the affine-gap Smith-Waterman algorithm (SW).
 
 http://bio-bwa.sourceforge.net/bwa.shtml
 
-Typical command line::
+Typical command line:
 
-bwa mem [options] <bwa-index> <first-read.fastq> [<second-read.fastq>]         > <sam-output>
+.. code-block:: bash
+
+    bwa mem [options] <bwa-index> <first-read.fastq> [<second-read.fastq>] > <sam-output>
 
 **Connections:**
   - Input Connection:
@@ -801,9 +793,9 @@ bwa mem [options] <bwa-index> <first-read.fastq> [<second-read.fastq>]         >
   - **w** (int, optional) -- band width for banded alignment [100]
     
   - **x** (str, optional) -- read type. Setting -x changes multiple parameters unless overriden [null]
-pacbio: -k17 -W40 -r10 -A1 -B1 -O1 -E1 -L0  (PacBio reads to ref)
-ont2d: -k14 -W20 -r10 -A1 -B1 -O1 -E1 -L0  (Oxford Nanopore 2D-reads to ref)
-intractg: -B9 -O16 -L5  (intra-species contigs to ref)
+        pacbio: -k17 -W40 -r10 -A1 -B1 -O1 -E1 -L0  (PacBio reads to ref)
+        ont2d: -k14 -W20 -r10 -A1 -B1 -O1 -E1 -L0  (Oxford Nanopore 2D-reads to ref)
+        intractg: -B9 -O16 -L5  (intra-species contigs to ref)
     
   - **y** (int, optional) -- seed occurrence for the 3rd round seeding [20]
     
@@ -815,8 +807,6 @@ intractg: -B9 -O16 -L5  (intra-species contigs to ref)
 
 chromhmm_binarizebam
 ====================
-
-
 
 This command converts coordinates of aligned reads into binarized data form
 from which a chromatin state model can be learned. The binarization is based
@@ -898,14 +888,10 @@ form using the BinarizeSignal command.
 cutadapt
 ========
 
-
-
 Cutadapt finds and removes adapter sequences, primers, poly-A tails and
 other types of unwanted sequence from your high-throughput sequencing reads.
 
 https://cutadapt.readthedocs.org/en/stable/
-
-
 
 **Connections:**
   - Input Connection:
@@ -966,8 +952,6 @@ https://cutadapt.readthedocs.org/en/stable/
 fastqc
 ======
 
-
-
 The fastqc step  is a wrapper for the fastqc tool. It generates some quality
 metrics for fastq files. For this specific instance only the zip archive is
 preserved.
@@ -1025,14 +1009,10 @@ http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
 fastx_quality_stats
 ===================
 
-
-
 fastx_quality_stats generates a text file containing quality information
 of the input FASTQ data.
 
-Documentation::
-
-http://hannonlab.cshl.edu/fastx_toolkit/
+Documentation: |fastx_toolkit_link|
 
 **Connections:**
   - Input Connection:
@@ -1077,8 +1057,6 @@ http://hannonlab.cshl.edu/fastx_toolkit/
 fix_cutadapt
 ============
 
-
-
 This step takes FASTQ data and removes both reads of a paired-end read, if
 one of them has been completely removed by cutadapt (or any other software).
 
@@ -1121,13 +1099,9 @@ one of them has been completely removed by cutadapt (or any other software).
 htseq_count
 ===========
 
-
-
 The htseq-count script counts the number of reads overlapping a feature.
 Input needs to be a file with aligned sequencing reads and a list of genomic
-features. For more information see::
-
-http://www-huber.embl.de/users/anders/HTSeq/doc/count.html
+features. For more information see: |htseq_link|
 
 **Connections:**
   - Input Connection:
@@ -1185,8 +1159,6 @@ http://www-huber.embl.de/users/anders/HTSeq/doc/count.html
 macs2
 =====
 
-
-
 Model-based Analysis of ChIP-Seq (MACS) is a algorithm, for the identifcation
 of transcript factor binding sites. MACS captures the influence of genome
 complexity to evaluate the significance of enriched ChIP regions, and MACS
@@ -1197,10 +1169,11 @@ the specificity.
 
 https://github.com/taoliu/MACS
 
-typical command line for single-end data::
+typical command line for single-end data:
 
-macs2 callpeak --treatment <aligned-reads> [--control <aligned-reads>]
---name <run-id> --gsize 2.7e9
+.. code-block:: bash
+
+    macs2 callpeak --treatment <aligned-reads> [--control <aligned-reads>] --name <run-id> --gsize 2.7e9
 
 **Connections:**
   - Input Connection:
@@ -1297,8 +1270,6 @@ macs2 callpeak --treatment <aligned-reads> [--control <aligned-reads>]
 merge_fasta_files
 =================
 
-
-
 This step merges all .fasta(.gz) files belonging to a certain sample.
 The output files are gzipped.
 
@@ -1338,8 +1309,6 @@ The output files are gzipped.
 
 merge_fastq_files
 =================
-
-
 
 This step merges all .fastq(.gz) files belonging to a certain sample.
 First and second read files are merged separately. The output files are
@@ -1383,7 +1352,6 @@ gzipped.
 
 narrowpeak_to_bed
 =================
-
 
 **Connections:**
   - Input Connection:
@@ -1430,16 +1398,11 @@ narrowpeak_to_bed
 picard_add_replace_read_groups
 ==============================
 
-
-
 Replace read groups in a BAM file. This tool enables the user to replace all
 read groups in the INPUT file with a single new read group and assign all
 reads to this read group in the OUTPUT BAM file.
 
-Documentation::
-
-https://broadinstitute.github.io/picard/command-line-overview.html#AddOrReplaceReadGroups
-
+Documentation: |picard_add_replace_read_groups_link|
 
 **Connections:**
   - Input Connection:
@@ -1522,8 +1485,6 @@ https://broadinstitute.github.io/picard/command-line-overview.html#AddOrReplaceR
 picard_markduplicates
 =====================
 
-
-
 Identifies duplicate reads.
 This tool locates and tags duplicate reads (both PCR and optical/
 sequencing-driven) in a BAM or SAM file, where duplicate reads are defined
@@ -1545,14 +1506,13 @@ READ_PAIRS_EXAMINED, UNMAPPED_READS, UNPAIRED_READS,
 UNPAIRED_READ_DUPLICATES, READ_PAIR_DUPLICATES, and
 READ_PAIR_OPTICAL_DUPLICATES.
 
-Usage example::
+Usage example:
 
-java -jar picard.jar MarkDuplicates I=input.bam         O=marked_duplicates.bam M=marked_dup_metrics.txt
+.. code-block:: bash
 
-Documentation::
+    java -jar picard.jar MarkDuplicates I=input.bam O=marked_duplicates.bam M=marked_dup_metrics.txt
 
-https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates
-
+Documentation: |picard_mark_duplicates_link|
 
 **Connections:**
   - Input Connection:
@@ -1634,13 +1594,7 @@ https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicate
 picard_merge_sam_bam_files
 ==========================
 
-
-
-
-Documentation::
-
-https://broadinstitute.github.io/picard/command-line-overview.html#MergeSamFiles
-
+Documentation: |picard_merge_sam_files_link|
 
 **Connections:**
   - Input Connection:
@@ -1713,8 +1667,6 @@ https://broadinstitute.github.io/picard/command-line-overview.html#MergeSamFiles
 preseq_complexity_curve
 =======================
 
-
-
 The preseq package is aimed at predicting the yield of distinct reads from a
 genomic library from an initial sequencing experiment. The estimates can then
 be used to examine the utility of further sequencing, optimize the sequencing
@@ -1724,9 +1676,11 @@ c_curve computes the expected yield of distinct reads for experiments smaller
 than the input experiment in a .bed or .bam file through resampling. The full
 set of parameters can be outputed by simply typing the program name. If
 output.txt is the desired output file name and input.bed is the input .bed
-file, then simply type::
+file, then simply type:
 
-preseq c_curve -o output.txt input.sort.bed
+.. code-block:: bash
+
+    preseq c_curve -o output.txt input.sort.bed
 
 **Connections:**
   - Input Connection:
@@ -1770,8 +1724,6 @@ preseq c_curve -o output.txt input.sort.bed
 
 preseq_future_genome_coverage
 =============================
-
-
 
 The preseq package is aimed at predicting the yield of distinct reads from a
 genomic library from an initial sequencing experiment. The estimates can then
@@ -1831,8 +1783,6 @@ read format.
 
 preseq_future_yield
 ===================
-
-
 
 The preseq package is aimed at predicting the yield of distinct reads from a
 genomic library from an initial sequencing experiment. The estimates can then
@@ -1898,14 +1848,13 @@ confidence intervals.
 remove_duplicate_reads_runs
 ===========================
 
-
-
 Duplicates are removed by Picard tools 'MarkDuplicates'.
 
-typical command line::
+typical command line:
 
-MarkDuplicates INPUT=<SAM/BAM> OUTPUT=<SAM/BAM>
-METRICS_FILE=<metrics-out> REMOVE_DUPLICATES=true
+.. code-block:: bash
+
+    MarkDuplicates INPUT=<SAM/BAM> OUTPUT=<SAM/BAM> METRICS_FILE=<metrics-out> REMOVE_DUPLICATES=true
 
 **Connections:**
   - Input Connection:
@@ -1942,8 +1891,6 @@ METRICS_FILE=<metrics-out> REMOVE_DUPLICATES=true
 
 rseqc
 =====
-
-
 
 The RSeQC step can be used to evaluate aligned reads in a BAM file. RSeQC
 does not only report raw sequence-based metrics, but also quality control
@@ -1990,8 +1937,6 @@ metrics like read distribution, gene coverage, and sequencing depth.
 sam_to_sorted_bam
 =================
 
-
-
 The step sam_to_sorted_bam builds on 'samtools sort' to sort SAM files and
 output BAM files.
 
@@ -1999,9 +1944,7 @@ Sort alignments by leftmost coordinates, or by read name when -n is used.
 An appropriate @HD-SO sort order header tag will be added or an existing
 one updated if necessary.
 
-Documentation::
-
-http://www.htslib.org/doc/samtools.html
+Documentation: |samtools_link|
 
 **Connections:**
   - Input Connection:
@@ -2042,8 +1985,6 @@ http://www.htslib.org/doc/samtools.html
 samtools_faidx
 ==============
 
-
-
 Index reference sequence in the FASTA format or extract subsequence from
 indexed reference sequence. If no region is specified, faidx will index the
 file and create <ref.fasta>.fai on the disk. If regions are specified, the
@@ -2082,15 +2023,11 @@ subsequences will be retrieved and printed to stdout in the FASTA format.
 samtools_index
 ==============
 
-
-
 Index a coordinate-sorted BAM or CRAM file for fast random access.
 (Note that this does not work with SAM files even if they are bgzip
 compressed to index such files, use tabix(1) instead.)
 
-Documentation::
-
-http://www.htslib.org/doc/samtools.html
+Documentation: |samtools_link|
 
 **Connections:**
   - Input Connection:
@@ -2135,14 +2072,10 @@ http://www.htslib.org/doc/samtools.html
 samtools_stats
 ==============
 
-
-
 samtools stats collects statistics from BAM files and outputs in a text
 format. The output can be visualized graphically using plot-bamstats.
 
-Documentation::
-
-http://www.htslib.org/doc/samtools.html
+Documentation: |samtools_link|
 
 **Connections:**
   - Input Connection:
@@ -2177,8 +2110,6 @@ http://www.htslib.org/doc/samtools.html
 segemehl
 ========
 
-
-
 segemehl is a software to map short sequencer reads to reference genomes.
 Unlike other methods, segemehl is able to detect not only mismatches but
 also insertions and deletions. Furthermore, segemehl is not limited to a
@@ -2187,22 +2118,24 @@ contaminated reads correctly.
 
 This step creates at first two FIFOs. The first is used to provide the
 genome data for segemehl and the second is used for the output of the
-unmapped reads::
+unmapped reads:
 
-mkfifo genome_fifo unmapped_fifo
-cat <genome-fasta> -o genome_fifo
+.. code-block:: bash
 
-The executed segemehl command is this::
+    mkfifo genome_fifo unmapped_fifo
+    cat <genome-fasta> -o genome_fifo
 
-segemehl -d genome_fifo -i <genome-index-file> -q <read1-fastq>
-[-p <read2-fastq>] -u unmapped_fifo -H 1 -t 11 -s -S -D 0
--o /dev/stdout |  pigz --blocksize 4096 --processes 2 -c
+The executed segemehl command is this:
 
-The unmapped reads are saved via these commands::
+.. code-block:: bash
 
-cat unmapped_fifo | pigz --blocksize 4096 --processes 2 -c >
-<unmapped-fastq>
+    segemehl -d genome_fifo -i <genome-index-file> -q <read1-fastq> [-p <read2-fastq>] -u unmapped_fifo -H 1 -t 11 -s -S -D 0 -o /dev/stdout |  pigz --blocksize 4096 --processes 2 -c
 
+The unmapped reads are saved via these commands:
+
+.. code-block:: bash
+
+    cat unmapped_fifo | pigz --blocksize 4096 --processes 2 -c > <unmapped-fastq>
 
 **Connections:**
   - Input Connection:
@@ -2318,14 +2251,10 @@ cat unmapped_fifo | pigz --blocksize 4096 --processes 2 -c >
 segemehl_generate_index
 =======================
 
-
-
 The step segemehl_generate_index generates a index for given reference
 sequences.
 
-Documentation::
-
-http://www.bioinf.uni-leipzig.de/Software/segemehl/
+Documentation: |segemehl_link|
 
 **Connections:**
   - Input Connection:
@@ -2365,8 +2294,6 @@ http://www.bioinf.uni-leipzig.de/Software/segemehl/
 tophat2
 =======
 
-
-
 TopHat is a fast splice junction mapper for RNA-Seq reads.
 It aligns RNA-Seq reads to mammalian-sized genomes using the ultra
 high-throughput short read aligner Bowtie, and then analyzes the mapping
@@ -2374,11 +2301,11 @@ results to identify splice junctions between exons.
 
 http://tophat.cbcb.umd.edu/
 
-typical command line::
+typical command line:
 
-tophat [options]* <index_base> <reads1_1[,...,readsN_1]>         [reads1_2,...readsN_2]
+.. code-block:: bash
 
-
+    tophat [options]* <index_base> <reads1_1[,...,readsN_1]> [reads1_2,...readsN_2]
 
 **Connections:**
   - Input Connection:
@@ -2441,3 +2368,34 @@ tophat [options]* <index_base> <reads1_1[,...,readsN_1]>         [reads1_2,...re
 
 **CPU Cores:** 6
 
+.. |bowtie2_link| raw:: html
+
+   <a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml" target="_blank">http://bowtie-bio.sourceforge.net/bowtie2/index.shtml</a>
+
+.. |fastx_toolkit_link| raw:: html
+
+   <a href="http://hannonlab.cshl.edu/fastx_toolkit/" target="_blank">http://hannonlab.cshl.edu/fastx_toolkit/</a>
+
+.. |htseq_link| raw:: html
+
+   <a href="http://www-huber.embl.de/users/anders/HTSeq/doc/count.html" target="_blank">http://www-huber.embl.de/users/anders/HTSeq/doc/count.html</a>
+
+.. |picard_add_replace_read_groups_link| raw:: html
+
+   <a href="https://broadinstitute.github.io/picard/command-line-overview.html#AddOrReplaceReadGroups" target="_blank">https://broadinstitute.github.io/picard/command-line-overview.html#AddOrReplaceReadGroups</a>
+
+.. |picard_mark_duplicates_link| raw:: html
+
+   <a href="https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates" target="_blank">https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates</a>
+
+.. |picard_merge_sam_files_link| raw:: html
+
+   <a href="https://broadinstitute.github.io/picard/command-line-overview.html#MergeSamFiles" target="_blank">https://broadinstitute.github.io/picard/command-line-overview.html#MergeSamFiles</a>
+
+.. |samtools_link| raw:: html
+
+   <a href="http://www.htslib.org/doc/samtools.html" target="_blank">http://www.htslib.org/doc/samtools.html</a>
+
+.. |segemehl_link| raw:: html
+
+   <a href="http://www.bioinf.uni-leipzig.de/Software/segemehl/" target="_blank">http://www.bioinf.uni-leipzig.de/Software/segemehl</a>
