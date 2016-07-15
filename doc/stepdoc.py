@@ -24,7 +24,7 @@ def doc_module(module_name, fout):
     if step.__doc__:
         doc = step.__doc__.split("\n")
         for line in doc:
-            fout.write(line.strip() + "\n")
+            fout.write(line.rstrip() + "\n")
         
     # print connections
     fout.write("**Connections:**\n")

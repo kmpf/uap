@@ -424,7 +424,7 @@ http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
 
 typical command line::
 
-bowtie2 [options]* -x <bt2-idx> {-1 <m1> -2 <m2> | -U <r>} -S [<hit>]
+  bowtie2 [options]* -x <bt2-idx> {-1 <m1> -2 <m2> | -U <r>} -S [<hit>]
 
 **Connections:**
   - Input Connection:
