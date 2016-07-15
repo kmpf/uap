@@ -113,7 +113,7 @@ def main():
         fout.write("************\n")
         fout.write("Source steps\n")
         fout.write("************\n\n")
-        modules = glob.glob(os.path.join(abs_path, '../include/sources/*.py')
+        modules = glob.glob(os.path.join(abs_path, '../include/sources/*.py'))
         for m in sorted(modules):
             module_name = os.path.basename(m).replace('.py', '')
             if not '__' in module_name:
@@ -121,7 +121,7 @@ def main():
         fout.write("****************\n")
         fout.write("Processing steps\n")
         fout.write("****************\n\n")
-        modules = glob.glob(os.path.join(abs_path, '../include/steps/*.py')
+        modules = glob.glob(os.path.join(abs_path, '../include/steps/*.py'))
         for m in sorted(modules):
             module_name = os.path.basename(m).replace('.py', '')
             if module_name == 'io_step':
