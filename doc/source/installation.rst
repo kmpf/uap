@@ -18,12 +18,13 @@ Installation of **uap**
 Prerequisites
 *************
 
-The installation requires Python's ``virtualenv`` tool.
-So, please install it if its not already installed.::
+The installation requires Python's |virtual_env_link|. It is a tool to create isolated Python environments. So, please install it if its not already installed.::
 
   $ sudo apt-get install python-virtualenv
   OR
   $ sudo pip install virtualenv
+
+In addition to this |git_link| and |graphviz_link| are also needed.
 
 The **uap** installation **does not** include all necessary tools for the data
 analysis.
@@ -49,12 +50,8 @@ bootstrapping script ``bootstrap.sh``::
 
 The script creates the required Python environment (which will be located in
 ``./python_env/``).
-Afterwards it installs
-`PyYAML <https://pypi.python.org/pypi/PyYAML>`_,
-`NumPy <https://pypi.python.org/pypi/numpy>`_,
-`biopython <https://pypi.python.org/pypi/biopython>`_, and
-`psutil <https://pypi.python.org/pypi/psutil>`_ into the freshly created
-environment.
+Afterwards it installs |py_yaml_link|, |num_py_link|, |bio_python_link| and |psutil_link|
+into the freshly created environment.
 There is no harm in accidentally running this script multiple times.
 
 *********************************
@@ -75,9 +72,10 @@ like the following and replace ``<uap-path>`` with the copied output:
 
     PATH=$PATH:<uap-path>
 
+Finally, make the changes known to your environment by sourcing the changed file:
 
-Finally, make the changes known to your environment by sourcing the changed
-file::
+.. code-block:: bash
+
   $ source ~/.bashrc
   $ source ~/.bash_profile
 
@@ -85,18 +83,30 @@ file::
 
    <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
 
-.. |github_uap_link| raw:: html
+.. |virtual_env_link| raw:: html
 
-   <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
+   <a href="https://pypi.python.org/pypi/virtualenv" target="_blank">virtualenv</a>
 
-.. |github_uap_link| raw:: html
+.. |git_link| raw:: html
 
-   <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
+   <a href="https://git-scm.com/" target="_blank">git</a>
 
-.. |github_uap_link| raw:: html
+.. |graphviz_link| raw:: html
 
-   <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
+   <a href="http://www.graphviz.org/" target="_blank">graphviz</a>
 
-.. |github_uap_link| raw:: html
+.. |py_yaml_link| raw:: html
+ 
+    <a href="https://pypi.python.org/pypi/PyYAML" target="_blank">PyYAML</a>
 
-   <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
+.. |num_py_link| raw:: html
+ 
+    <a href="https://pypi.python.org/pypi/numpy" target="_blank">NumPy</a>
+
+.. |bio_python_link| raw:: html
+ 
+    <a href="https://pypi.python.org/pypi/biopython" target="_blank">biopython</a>
+
+.. |psutil_link| raw:: html
+ 
+    <a href="https://pypi.python.org/pypi/psutil" target="_blank">psutil</a>

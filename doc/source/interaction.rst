@@ -9,12 +9,13 @@
   This document aims to describe how to use **uap** via the command-line.
 
 .. _cli_usage_uap:
+
 #############################
 Command-Line Usage of **uap**
 #############################
 
 **uap** uses Python's |argparse_link|.
-Therefore, **uap** provides help infromation on the command-line::
+Therefore, **uap** provides help information on the command-line::
 
   $ uap -h
   usage: uap [-h] [-v] [--version]
@@ -89,16 +90,18 @@ scripts (well, actually, it's only one):
     has been modified in any way via Git. 
     If yes, processing is stopped immediately unless this flag is specified.
     If you specify the flag, the fact that the repository was dirty will be 
-    recorded in all annotations which are produces *including* a full Git diff.
+    recorded in all annotations which are produces *including* a full Git diff. A shortcut is ``--even``
 
 The subcommands are described in detail below.
 
 .. _ExplanationOfSubcommands:
+
 **************************
 Explanation of Subcommands
 **************************
 
 .. _uap-steps:
+
 steps
 =====
 
@@ -117,6 +120,7 @@ steps::
     --show STEP      Show the details of a specific step.
 
 .. _uap-status:
+
 status
 ======
 
@@ -251,6 +255,7 @@ Source steps can be viewed separately by specifying ``--sources``::
     M_genitalium_genome/download
 
 .. _uap-task-info:
+
 task-info
 =========
 
@@ -258,7 +263,7 @@ The ``task-info`` subcommand writes the commands which were or will be executed
 to the terminal in the form of a semi-functional BASH script.
 Semi-functional means that at the moment output redirections for some commands
 are missing in the BASH script.
-Also included are the ``run info`` informations as already described for the
+Also included are the ``run info`` information as already described for the
 ``status`` subcommand.
 
 An example output showing the download of the *Mycoplasma genitalium* genome::
@@ -299,11 +304,12 @@ An example output showing the download of the *Mycoplasma genitalium* genome::
 
     pigz --decompress --stdout --processes 1 genomes/bacteria/Mycoplasma_genitalium/M_genitalium_genome/download-5dych7Xj/L9PXBmbPKlemghJGNM97JwVuzMdGCA_000027325.1_ASM2732v1_genomic.fna.gz | dd bs=4M of=/home/hubert/develop/uap/example-configurations/genomes/bacteria/Mycoplasma_genitalium/Mycoplasma_genitalium.ASM2732v1.fa
 
-This subcommand allows the user to run parts of the analysis and manually control
+This subcommand allows the user to run parts of the analysis manually without uap and control
 for causes of failure.
 
 
 .. _uap-run-locally:
+
 run-locally
 ===========
 
@@ -311,10 +317,10 @@ The ``run-locally`` subcommand runs all non-finished runs (or a subset)
 sequentially on the local machine. 
 Feel free to cancel this script at any time, it won't put your project in a 
 unstable state.
-However, if the ``run-locally`` subcommand receives a SIGKILL signal, the 
+However, if the ``run-locally`` subcommand receives a |sigkill_link| signal, the 
 currently executing job will continue to run and the corresponding run
 will be reported as ``executing`` by calling ``status`` subcommand for five more
-minutes (SIGTERM should be fine and exit gracefully but *doesn't just yet*).
+minutes (|sigterm_link| should be fine and exit gracefully but *doesn't just yet*).
 After that time, you will be warned that a job is marked as being currently
 run but no activity has been seen for a while, along with further 
 instructions about what to do in such a case (don't worry, it shouldn't 
@@ -367,6 +373,7 @@ This subcommands usage information::
     rename operation has finished that a run is regarded as finished.
     
 .. _uap-submit-to-cluster:
+
 submit-to-cluster
 =================
 
@@ -426,6 +433,7 @@ This subcommand provides usage information::
 
 
 .. _uap-fix-problems:
+
 fix-problems
 ============
 
@@ -473,8 +481,8 @@ volatilize
 
 The ``volatilize`` subcommand is useful to reduce the required disk space of
 your analysis.
-It works only in conjunction with the :ref:`_volatile <uap-volatile>` keyword
-set in the :ref:`configuration file <configuration_of_uap>`.
+It works only in conjunction with the :ref:`volatile` keyword
+set in the :ref:`configuration-of-uap`.
 As already mentioned there, steps marked as ``_volatile`` compute their output
 files as normal but they can be deleted if their dependent steps are finished.
 
@@ -503,6 +511,7 @@ Achtung: Daten werden nicht mehr automatisch volatilisiert, auch wenn es in der
          Config angegeben ist während die Berechnungen laufen.
 
 .. _uap-render:
+
 render
 ======
 
@@ -540,6 +549,7 @@ This subcommand provides usage information::
 
 
 .. _uap-report:
+
 report
 ======
 
@@ -549,4 +559,12 @@ processing in downstream tools e.g. ``R``.
 
 .. |argparse_link| raw:: html
 
-   <a href="https://docs.python.org/2.7/library/argparse.html" target="_blank">argparse</a>.
+   <a href="https://docs.python.org/2.7/library/argparse.html" target="_blank">argparse</a>
+
+.. |sigkill_link| raw:: html
+
+   <a href="https://en.wikipedia.org/wiki/Unix_signal#SIGKILL" target="_blank">SIGKILL</a>
+
+.. |sigterm_link| raw:: html
+
+   <a href="https://en.wikipedia.org/wiki/Unix_signal#SIGTERM" target="_blank">SIGTERM</a>

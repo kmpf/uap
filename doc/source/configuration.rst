@@ -9,6 +9,7 @@
   This document aims to describe how to configure **uap**.
 
 .. _configuration-of-uap:
+
 ###########################
 Analysis Configuration File
 ###########################
@@ -39,6 +40,7 @@ Sections of a Configuration File
 ********************************
 
 .. _config-file-destination-path:
+
 Destination_path Section
 ========================
 
@@ -70,7 +72,7 @@ The ``steps`` section is the core of the analysis file, because it defines when
 steps are executed and how they depend on each other.
 All available steps are described in detail in the steps documentation: 
 :doc:`steps`.
-This section (technically it is a dictionary) contains a key for every step,
+This section contains a key for every step,
 therefore each step must have a unique name [1]_.
 There are two ways to name a step to allow multiple steps of the same type and
 still ensure unique naming:
@@ -91,16 +93,35 @@ still ensure unique naming:
 There are two different types of steps:
 
 .. _config_file_source_steps:
+
 Source Steps
 ------------
 They provide input files for the analysis.
 They might start processes such as downloading files or demultiplexing
 sequence reads.
 But, they do not have dependencies, they can introduce files from outside the
-destination path (see :ref:`config_file_destination_path`), and they are
+destination path (see `Destination_path Section`_), and they are
 usually the first steps of an analysis.
 
+For example if you want to work with fastq files, the first step is to import the required files. For this task the source step fastq_source is the right solution.
+
+A possible step definition could look like this:
+
+.. code-block:: yaml
+
+    steps:
+        input_step (fastq_source):
+        pattern: /Path/to/fastq-files/*.gz
+        group: ([SL]\w+)_R[12]-00[12].fastq.gz
+        sample_id_prefix: MyPrefix
+        first_read: '_R1'
+        second_read: '_R2'
+        paired_end: True
+
+The single keys will be described at :doc:`steps`. For defining the ``group`` key a regular expression is used. If you are not familiar with this you can read about it and test your regular expression at |pythex_link|.
+
 .. _config_file_processing_steps:
+
 Processing Steps
 ----------------
 They depend upon one or more predecessor steps and work with their output
@@ -108,7 +129,7 @@ files.
 Output files of processing steps are automatically named and placed by **uap**.
 Processing steps are usually configurable.
 For a complete list of available options please visit :doc:`steps` or use the
-subcommand :ref:`uap_steps`.
+subcommand :ref:`uap-steps`.
 
 Reserved Keywords for Steps
 ---------------------------
@@ -196,8 +217,8 @@ Reserved Keywords for Steps
             _depends: cutadapt
             _BREAK: true
 
+.. _volatile:
 
-.. _uap-volatile:
 **_volatile:**
   Steps can be marked with ``_volatile: yes``.
   This flag tells **uap** that the output files of the marked step are only
@@ -222,7 +243,6 @@ Reserved Keywords for Steps
         fix_cutadapt:
             _depends: cutadapt
 
-
 If all steps depending on the intermediate step are finished **uap** tells the
 user that he can free disk space.
 The message is output if the :ref:`status <uap-status>` is checked and looks like this::
@@ -234,6 +254,7 @@ If the user executes the :ref:`volatilize <uap-volatilize>` command the output
 files are replaced by placeholder files.
 
 .. _uap_config_tools_section:
+
 Tools Section
 =============
 
@@ -249,8 +270,11 @@ By default, version determination is simply attempted by calling the program
 without command-line arguments.
 
 If a certain argument is required, specify it in ``get_version``. 
-If a tool does not exit with exit code 0, find out which code it is by typing
-``echo $?`` into Bash and specify the exit code in ``exit_code``.
+
+If a tool does not exit with code 0, you can find out which code is it.
+Execute the required command and after this type ``echo $?`` in the same shell.
+The output is the exit code of the last executed command.
+You can use it to specify the exit code in ``exit_code``.
 
 .. code-block:: yaml
 
@@ -285,6 +309,22 @@ The output should look like this:
         {
             eval `/usr/local/modules/3.2.10-1/Modules/$MODULE_VERSION/bin/modulecmd bash $*`
         }
+
+An other possible output is:
+
+.. code-block:: bash
+
+    module () 
+        { 
+            eval $($LMOD_CMD bash "$@");
+            [ $? = 0 ] && eval $(${LMOD_SETTARG_CMD:-:} -s sh)
+        }
+
+In this case you have to look in ``$LMOD_CMD`` for the required path:
+
+.. code-block:: bash
+
+    $ echo $LMOD_CMD
 
 Now you can use this newly gathered information to load a module before use
 and unload it afterwards.
@@ -352,16 +392,20 @@ Ausbauen!!!
 
 .. |uge_link| raw:: html
 
-   <a href="http://www.univa.com/products/" target="_blank">UGE</a>.
+   <a href="http://www.univa.com/products/" target="_blank">UGE</a>
 
 .. |slurm_link| raw:: html
 
-   <a href="http://slurm.schedmd.com/" target="_blank">SLURM</a>.
+   <a href="http://slurm.schedmd.com/" target="_blank">SLURM</a>
 
 .. |yaml_link| raw:: html
 
-   <a href="http://www.yaml.org/" target="_blank">YAML</a>.
+   <a href="http://www.yaml.org/" target="_blank">YAML</a>
 
 .. |pyyaml_link| raw:: html
 
-   <a href="http://pyyaml.org/ticket/128" target="_blank">PyYAML does not complain about duplicate keys</a>.
+   <a href="http://pyyaml.org/ticket/128" target="_blank">PyYAML does not complain about duplicate keys</a>
+
+.. |pythex_link| raw:: html
+
+   <a href="http://pythex.org" target="_blank">pythex.org</a>
