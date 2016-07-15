@@ -12,6 +12,7 @@ import pipeline
 import string
 import yaml
 
+
 def doc_module(module_name, fout):
     step_class = abstract_step.AbstractStep.get_step_class_for_key(module_name)
     step = step_class(None)
@@ -103,7 +104,8 @@ def doc_module(module_name, fout):
     '''
 
 def main():
-    with open('source/steps.rst', 'w') as fout:
+    abs_path = os.path.dirname(os.path.realpath(__file__))
+    with open(os.path.join(abs_path, 'source/steps.rst'), 'w') as fout:
         fout.write("###############\n")
         fout.write("Available steps\n")
         fout.write("###############\n")
