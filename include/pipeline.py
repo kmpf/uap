@@ -44,38 +44,6 @@ class Pipeline(object):
     Possible states a task can be in.
     '''
 
-#{
-#        'slurm':
-#           {'submit': 'sbatch',
-#            'stat': 'squeue',
-#            'template': pipeline_path + '/../submit-scripts/sbatch-template.sh',
-#            'hold_jid': '--dependency=afterany:%s',
-#            'set_job_name': '--job-name=%s',
-#            'set_stderr': '-e',
-#            'set_stdout': '-o',
-#            'parse_job_id': 'Submitted batch job (\d+)'},
-#
-#        'sge':
-#           {'submit': 'qsub',
-#            'stat': 'qstat',
-#            'template': pipeline_path + '/../submit-scripts/qsub-template.sh',
-#            'hold_jid': '-hold_jid',
-#            'set_job_name': '-N',
-#            'set_stderr': '-e',
-#            'set_stdout': '-o',
-#            'parse_job_id': 'Your job (\d+)'},
-#
-#        'uge':
-#           {'submit': 'qsub',
-#            'stat': 'qstat',
-#            'template': pipeline_path + '/../submit-scripts/qsub-template.sh',
-#            'hold_jid': '-hold_jid',
-#            'set_job_name': '-N',
-#            'set_stderr': '-e',
-#            'set_stdout': '-o',
-#            'parse_job_id': 'Your job (\d+)'}
-#}
-
     def __init__(self, **kwargs):
         self.caught_signal = None
         
@@ -104,6 +72,7 @@ class Pipeline(object):
             self.git_hash_tag = subprocess.check_output(command).strip()
         except:
             logger.error("Execution of %s failed." % " ".join(command))
+            raise
             sys.exit(1)
 
         # check if we got passed an 'arguments' parameter
