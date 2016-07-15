@@ -9,6 +9,7 @@
   This document describes how **uap** can be extended with new analysis steps.
 
 .. _extending-uap:
+
 ###############################
 Extending **uap** Functionality
 ###############################
@@ -21,10 +22,10 @@ Implement new steps
 Therefore basic python programming skills are necessary.
 New steps are added to **uap** by placing a single Python file in:
 
-:``include/sources``:
-   for source steps,
-:``include/steps``:
-   for processing steps.
+``include/sources``
+  for source steps
+``include/steps``
+  for processing steps.
 
 Let's get through that file(s) step by step.
 
@@ -218,6 +219,65 @@ you have to check in setup runs for the file type provided by a connection and
 react accordingly. Inspect ``complete_input_run_info`` to find out what your
 step gets as input.
 
+.. _uap_tools:
+
+uap tools
+=========
+
+You will need to run bash commands like cat, pigz or something else in python. 
+In this cases use the uap tool ``exec_group`` (see ``run::new_exec_group()``)
+
+For example you want to separate multiple lines with a specific string out of a
+file in a new output file and in addition to this copy the output file.
+A possible bash way is:
+
+.. code-block:: bash
+
+    $ cat source_file | grep search_string > output_file
+    $ cp output_file new_file
+
+For sure, for this task grep would be sufficient. But for the example we want to use a pipe.
+
+Now the uap way:
+
+.. code-block:: python
+
+    # create an new exec_group object
+    exec_group = run.new_exec_group()
+
+    # create an output file for the pipeline
+    cat_out = run.add_output_file(
+        'file',
+        '%s.txt' % (run_id),
+        [input_path])
+
+    # create a command with cat and grep combined through pipe
+    with exec_group.add_pipeline() as cat_pipe:
+        # create the cat command
+        cat_command = [self.get_tool('cat'), input_path]
+
+        # create the grep command
+        search_string = 'foobar'
+        grep_command = [self.get_tool('grep'), search_string]
+
+        # add commands to the command pipeline
+        cat_pipe.add_command(cat_command)
+        cat_pipe.add_command(grep_command, stdout_path= cat_out)
+
+    # create a copy output file
+    cp_out = run.add_output_file(
+        'file',
+        '%s_copy.txt' % (run_id),
+        [input_path])
+
+    # create copy command
+    cp_command = [self.get_tool('cp'), cat_out, cp_out]
+
+    # add copy command to the pipeline
+    exec_group.add_command(cp_command)
+
+All the single commands will be collected and uap will execute the command list in the specified order.
+
 Best practices
 ==============
 
@@ -233,11 +293,11 @@ steps or modifying existing steps:
   Check for the availability of tools within the constructor ``__init__``.
 
 .. code-block:: python
-  
+
     # make sure tools are available
     self.require_tool('pigz')
     self.require_tool('cutadapt')
-    
+
 * Make sure your disk access is as cluster-friendly as possible (which 
   primarily means using large block sizes and preferably no seek operations). 
   If possible, use ``unix_pipeline`` to wrap your commands in ``pigz``, ``dd``,
@@ -251,7 +311,7 @@ steps or modifying existing steps:
 * Always use ``os.path.join(...)`` when you handle paths.
 * Use bash commands like ``mkfifo`` over python library equivalents like
   ``os.mkfifo()``
-* If you need to decide between possible ways to implement a step, stcik to the
+* If you need to decide between possible ways to implement a step, stick to the
   more flexibel (often more configuration extensive one).
   You don't know what other user might need, so let them decide.
 

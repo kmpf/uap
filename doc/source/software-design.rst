@@ -9,6 +9,7 @@
   This document aims to describe how to use **uap** via the command-line.
 
 .. _software_design:
+
 ###############
 Software Design
 ###############
@@ -17,9 +18,9 @@ Software Design
 The plugins are internally called steps.
 Two different types of steps exist, the source and processing steps.
 Source steps are used to include data from outside the destination path (see
-:ref:`config_file_destination_path`) into the analysis.
-Processing steps are blueprints 
-Each step corresponds to the blueprint of a single data processing. where **uap** itself controls
+:ref:`config-file-destination-path`) into the analysis.
+Processing steps are blueprints. 
+Each step corresponds to the blueprint of a single data processing where **uap** itself controls
 the ordered execution of the plugged in so called steps.
 Steps are organized in a dependency graph (a directed acyclic graph) -- every 
 step may have one or more parent steps, which may in turn have other parent 
@@ -36,6 +37,33 @@ it is through the individual runs of each step that a **uap** wide list of
 actual tasks becomes available.
 Each run may provide a number of output files which depend on output files
 of one or several runs from parent steps.
+
+To make the relationship between tasks, steps and runs more clear, we look at one example from a configuration file:
+
+The status request output of
+
+.. code-block:: bash
+
+    uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
+
+is
+
+.. code-block:: bash
+
+    Waiting tasks
+    -------------
+    [w] bowtie2_index/Mycoplasma_genitalium_index-download
+    [w] bwa_index/Mycoplasma_genitalium_index-download
+    [w] fasta_index/download
+    [w] segemehl_index/Mycoplasma_genitalium_genome-download
+
+    Ready tasks
+    -----------
+    [r] M_genitalium_genome/download
+
+     tasks: 5 total, 4 waiting, 1 ready
+
+Here are 5 tasks listed. The first one is ''bowtie2_index/Mycoplasma_genitalium_index-download''. The first part is the step ''bowtie2_index'' which is defined in the configuration file. The second part is the specific run ''Mycoplasma_genitalium_index-download''.
 
 Source steps define a run for every input sample, and a subsequent step
 may:

@@ -6,14 +6,13 @@
 .. title:: uap -- Universal Analysis Pipeline
 
 .. _uap--index:
+
 #########################################################
 uap -- Robust, Consistent, and Reproducible Data Analysis
 #########################################################
 
-****
-
   **uap** executes, controls and keeps track of the analysis of large data sets.
-  It enables users to perform robust, consistent, and reprodcuible data analysis.
+  It enables users to perform robust, consistent, and reproducible data analysis.
   **uap** encapsulates the usage of (bioinformatic) tools and handles data flow
   and processing during an analysis.
   Users can use predefined or self-made analysis steps to create custom analysis.
@@ -35,8 +34,8 @@ uap -- Robust, Consistent, and Reproducible Data Analysis
 **Supported Platforms:**
 
   **uap** runs natively on Unix-like operating systems.
-  But, it does also support the cluster engines |uge_link|/OGE/SGE and
-  |slurm_link|.
+  But, it does also support the cluster engines 
+  |uge_link|, |oge_link| and |slurm_link|.
 
 *********************
 Important Information
@@ -56,7 +55,7 @@ The recommended workflow to analyse data with **uap** is:
    submit it to the cluster (see
    :ref:`submit-to-cluster <uap-submit-to-cluster>`)
 5. Follow the progress of the analysis (see :ref:`status <uap-status>`)
-6. Share your extensions with others (send a pull request via github)
+6. Optionally: share your extensions with others (send a pull request via github)
 
 A finished analysis leaves the user with:
 
@@ -114,8 +113,7 @@ Usability:
 ==========
 
 * Single configuration file describes entire data analysis work-flow.
-* Single command-line tool to interacts with **uap**.
-  It can be used to execute, monitor, and analyse defined work-flows.
+* Command-line tool to interacts with uap. It can be used to execute, monitor, and analyse defined work-flows.
 
 *****************
 Table of contents
@@ -124,15 +122,14 @@ Table of contents
 .. toctree::
    :maxdepth: 3
 
-   how-to
    installation
+   how-to
    configuration
    interaction
    extension
    software-design
    annotation
    steps
-   troubleshooting
    api
 
 
@@ -140,8 +137,7 @@ Table of contents
 Remarks
 *******
 
-This documentation has been created using |sphinx_link|
-and |rest_link|.
+This documentation has been created using |sphinx_link| and |rest_link|.
 
 ******************
 Indices and tables
@@ -150,3 +146,23 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+.. |uge_link| raw:: html
+ 
+   <a href="http://www.univa.com/products/" target="_blank">UGE</a>
+
+.. |oge_link| raw:: html
+
+   <a href="http://www.univa.com/oracle" target="_blank">OGE/SGE</a>
+
+.. |slurm_link| raw:: html
+      
+   <a href="http://slurm.schedmd.com/" target="_blank">SLURM</a>
+
+.. |sphinx_link| raw:: html
+ 
+    <a href="http://www.sphinx-doc.org/" target="_blank">sphinx</a>
+
+.. |rest_link| raw:: html
+ 
+    <a href="http://docutils.sourceforge.net/rst.html" target="_blank">reStructuredText</a>

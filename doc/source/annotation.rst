@@ -29,7 +29,7 @@ Also, for every output file, a symbolic link to this file is created:
 ``.[output_filename].annotation.yaml``.
 
 Finally, the annotation is rendered via GraphViz, if available.
-Rendering can also be done at a later time using annotations as input.
+Rendering can also be done at a later time using annotations as input. (see :ref:`uap-render`)
 The annotation can be used to determine at a later time what exactly happened.
 Also, annotations may help to identify bottlenecks.
 

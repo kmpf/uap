@@ -708,8 +708,8 @@ class Pipeline(object):
                 except KeyError:
                     logger.error("%s: Missing 'identity_%s' for %s"
                                  "cluster type."
-                                 % (self._cluster_config_path, 
-                                    key, cluster_type) 
+                                 % (self._cluster_config_path,
+                                    key, cluster_type)
                              )
                     sys.exit(1)
             # Now that we know let's test for that cluster    
