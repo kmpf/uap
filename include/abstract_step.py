@@ -11,8 +11,6 @@ steps can introduce files from outside the destination path into the pipeline.
 
 # 1. standard library imports
 import sys
-sys.path.insert(0, './include/steps')
-sys.path.insert(0, './include/sources')
 import copy
 import datetime
 import hashlib
@@ -40,6 +38,10 @@ import misc
 import process_pool
 import pipeline_info
 import run as run_module
+
+abs_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, os.path.join(abs_path, './include/steps'))
+sys.path.insert(0, os.path.join(abs_path, './include/sources'))
 
 logger=getLogger('uap_logger')
 
