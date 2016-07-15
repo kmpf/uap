@@ -41,9 +41,9 @@ def main(args):
     p = pipeline.Pipeline(arguments=args)
         
     task_wish_list = None
-    if len(args.step_task) >= 1:
+    if len(args.run) >= 1:
         task_wish_list = list()
-        for _ in args.step_task:
+        for _ in args.run:
             if '/' in _:
                 task_wish_list.append(_)
             else:
