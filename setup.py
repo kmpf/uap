@@ -31,6 +31,8 @@ subprocess.call(["virtualenv", "python_env"])
 uap_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/python_env/bin/activate_this.py' % uap_path
 
+execfile(activate_this_file, dict(__file__=activate_this_file))
+
 # J: here we require additional python libraries?
 # J: are they checked 
 
