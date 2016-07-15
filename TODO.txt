@@ -139,19 +139,6 @@ Git Repository
 Organisieren eines git Repositories für uap (Jörg/Jana)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 RNASeq Pipeline Meeting 2014/04/29
 ----------------------------------
 
@@ -159,9 +146,6 @@ Sven, Jörg, Kristin, Christoph, Micha
 
 Tasks:
 
-- interactive tool to handle big config files might be helpful <least concern>
-- status.py: add option to skip tool checking, find out why it's so slow (fstat?)
-  <solved>
 - is it possible to watch a processes' stderr while a step is running?
   - preferably not only if you launched in debug mode, but always, like inter-
   cepting write calls to the respective file descriptor

@@ -13,23 +13,23 @@
 Analysis Configuration File
 ###########################
 
-**uap** operates on |yaml_link| files which define data
-analysis.
+**uap** requires a |yaml_link| file which contains all information
+about the data analysis.
 These files are called configuration files.
 
-A configuration file describes a analysis completely.
+A configuration file describes a complete analysis.
 Configurations consist of four sections (let's just call them sections,
 although technically, they are keys):
 
-* ``destination_path`` -- points to the directory where the result files,
-  annotations and temporary files are written to
-* ``email`` -- when submitting jobs on a cluster, messages will be sent to 
-  this email address by the cluster engine (nobody@example.com by default)
+* ``cluster`` -- (optional) only required if a cluster is used for the
+  computation of the analysis
 * ``constants`` -- defines constants for later use (define repeatedly used
   values as constants to increase readability of the following sections)
+* ``destination_path`` -- points to the directory where the result files,
+  annotations and temporary files are written
 * ``steps`` -- defines the source and processing steps and their order 
-* ``tools`` -- defines all tools used in the analysis and how to determine 
-  their versions (for later reference)
+* ``tools`` -- defines all tools used in the analysis, how to determine 
+  their versions, and how to load them on a cluster
 
 If you want to know more about the notation that is used in this file, have a
 closer look at the |yaml_link| definition.
@@ -39,7 +39,8 @@ Sections of a Configuration File
 ********************************
 
 .. _config-file-destination-path:
-Destination_path Section
+
+'destination_path' Section
 ========================
 
 The value of ``destination_path`` is the directory where **uap** is going
@@ -51,20 +52,8 @@ to store the created files.
 
     destination_path: "/path/to/uap/output"
 
-Email Section
-=============
-
-The value of ``email`` is needed if the analysis is executed on a cluster,
-which can use it to inform the person who started **uap** about status
-changes of submitted jobs.
-
-.. code-block:: yaml
-
-    email: "your.name@mail.de"
-
-
-Steps Section
-=============
+'steps' Section
+===============
 
 The ``steps`` section is the core of the analysis file, because it defines when
 steps are executed and how they depend on each other.
