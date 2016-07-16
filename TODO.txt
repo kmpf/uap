@@ -73,8 +73,6 @@ Submit Script in Annotation Datei speichern. (Done)
 Prosa Log nach STDERR mittels logger 
 Evtl. Subcommand fürs zusammensuchen von Ausgabedaten des Runs.
 
-* Invaild state: WAITING -> besser siehe Notizen
-
 Weitere Ideen
 -------------
 

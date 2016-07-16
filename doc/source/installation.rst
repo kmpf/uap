@@ -91,6 +91,10 @@ Finally, make the changes known to your environment by sourcing the changed file
 
    <a href="https://git-scm.com/" target="_blank">git</a>
 
+.. |github_uap_link| raw:: html
+
+   <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
+
 .. |graphviz_link| raw:: html
 
    <a href="http://www.graphviz.org/" target="_blank">graphviz</a>

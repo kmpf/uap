@@ -278,10 +278,16 @@ def main(args):
         if not str(task.get_step()) in quotas.keys():
             step = task.get_step()
             quotas[str(step)] = quotas['default']
+<<<<<<< Updated upstream
             if step._options['_cluster_job_quota']:
                 quotas[str(step)] = step._options['_cluster_job_quota']
 
             print("Set job quota for %s to %s" % (str(step), quotas[str(step)]))
+=======
+            if step.is_option_set_in_config('_cluster_job_quota'):
+                quotas[str(step)] = step.get_option('_cluster_job_quota')
+                
+>>>>>>> Stashed changes
         state = task.get_task_state()
         if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
             print("Skipping %s because it is already %s..." % (str(task), state.lower()))

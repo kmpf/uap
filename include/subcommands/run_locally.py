@@ -49,8 +49,11 @@ def main(args):
         if basic_task_state == p.states.READY:
             task.run()
         else:
-            raise StandardError("Unexpected basic task state for %s: %s" %
-                                (task, basic_task_state))
+            logger.error("Unexpected basic task state for %s: %s\n"
+                         "Expected state to be 'READY'. Probably an upstream "
+                         "run crashed." %
+                         (task, basic_task_state))
+            sys.exit(1)
 
 if __name__ == '__main__':
     try:
