@@ -30,6 +30,9 @@ class MergeFastaFiles(AbstractStep):
         self.add_option('output-fasta-basename', str, optional=True, default="",
                         description="Name used as prefix for FASTA output.")
 
+        # [Options for 'dd':]
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+
     def runs(self, run_ids_connections_files):
         '''
         self.runs() should be a replacement for declare_runs() and execute_runs()
@@ -69,9 +72,11 @@ class MergeFastaFiles(AbstractStep):
                         if is_gzipped:
                             with exec_group.add_pipeline() as unzip_pipe:
                                 # 2.1 command: Read file in 4MB chunks
-                                dd_in = [self.get_tool('dd'),
-                                         'ibs=4M',
-                                         'if=%s' % input_path]
+                                dd_in = [
+                                    self.get_tool('dd'),
+                                    'ibs=%s' % self.get_option('dd-blocksize'),
+                                    'if=%s' % input_path
+                                ]
                                 unzip_pipe.add_command(dd_in)
 
                                 # 2.2 command: Uncompress file to fifo
@@ -81,19 +86,23 @@ class MergeFastaFiles(AbstractStep):
                                 unzip_pipe.add_command(pigz)
 
                                 # 2.3 Write file in 4MB chunks to fifo
-                                dd_out = [self.get_tool('dd'),
-                                          'obs=4M',
-                                          'of=%s' % temp_fifo]
+                                dd_out = [
+                                    self.get_tool('dd'),
+                                    'obs=%s' % self.get_option('dd-blocksize'),
+                                    'of=%s' % temp_fifo
+                                ]
                                 unzip_pipe.add_command(dd_out)
                         
                         elif os.path.splitext(input_path)[1] in\
                              ['.fastq', '.fq', '.fasta', '.fa', '.fna']:
                             # 2.1 command: Read file in 4MB chunks and
                             #              write to fifo in 4MB chunks
-                            dd_in = [self.get_tool('dd'),
-                                     'bs=4M',
-                                     'if=%s' % input_path,
-                                     'of=%s' % temp_fifo]
+                            dd_in = [
+                                self.get_tool('dd'),
+                                'bs=%s' % self.get_option('dd-blocksize'),
+                                'if=%s' % input_path,
+                                'of=%s' % temp_fifo
+                            ]
                             exec_group.add_command(dd_in)
                         else:
                             logger.error("File %s does not end with any "
@@ -121,7 +130,9 @@ class MergeFastaFiles(AbstractStep):
                             "sequence",
                             out_file,
                             input_paths)
-                        dd = [self.get_tool('dd'),
-                              'obs=4M',
-                              'of=%s' % stdout_path]
+                        dd = [
+                            self.get_tool('dd'),
+                            'obs=%s' % self.get_option('dd-blocksize'),
+                            'of=%s' % stdout_path
+                        ]
                         pigz_pipe.add_command(dd)

@@ -151,6 +151,9 @@ class Segemehl(AbstractStep):
                         "maximum size of the inserts (paired end) "
                         "(default:5000)")
 
+        # [Options for 'dd':]
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+
     # self - macht class-funktion draus.
     # run_ids_connections_files - hash : run id -> n connections -> m files
     def runs(self, run_ids_connections_files):
@@ -223,11 +226,14 @@ class Segemehl(AbstractStep):
                     # 2. Create FIFO to write unmapped reads to
                     fifo_path_unmapped = run.add_temporary_file(
                         'segemehl-unmapped-fifo', designation = 'output')
-                    mkfifo_unmapped = [self.get_tool('mkfifo'), fifo_path_unmapped]
+                    mkfifo_unmapped = [
+                        self.get_tool('mkfifo'),
+                        fifo_path_unmapped
+                    ]
                     exec_group.add_command(mkfifo_unmapped)
                     # 3. Read genome and output to FIFO
                     dd_genome = [self.get_tool('dd'),
-                                 'bs=4M',
+                                 'bs=%s' % self.get_option('dd-blocksize'),
                                  'if=%s' % self.get_option('genome'),
                                  'of=%s' % fifo_path_genome]
                     exec_group.add_command(dd_genome)

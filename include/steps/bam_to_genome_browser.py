@@ -47,9 +47,11 @@ class BamToBedgraph(AbstractStep):
         self.add_option('bedtools-genomecov-3', bool,
                         default = False, optional = True)
 
-
         self.add_option('trackline', dict, optional = True)
         self.add_option('trackopts', dict, optional = True)
+
+        # Options for dd
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
 
     def runs(self, run_ids_connections_files):
         def compile_option_list(prefix, options):
@@ -119,7 +121,7 @@ class BamToBedgraph(AbstractStep):
                         with exec_group.add_pipeline() as pipe:
                             # 1. command: Read file in 4MB chunks
                             dd_in = [self.get_tool('dd'),
-                                     'ibs=4M',
+                                     'ibs=%s' % self.get_option('dd-blocksize'),
                                      'if=%s' % input_paths[0]]
                             pipe.add_command(dd_in)
 
@@ -168,7 +170,9 @@ class BamToBedgraph(AbstractStep):
                             # Write BED or BedGraph output to file
                             if self.get_option('output-format') in \
                                ['bed', 'bedGraph']:
-                                dd_out = [self.get_tool('dd'), 'obs=4M']
+                                dd_out = [
+                                    self.get_tool('dd'),
+                                    'obs=%s' % self.get_option('dd-blocksize')]
                                 pipe.add_command(
                                     dd_out,
                                     stdout_path = run.add_output_file(
@@ -201,9 +205,11 @@ class BamToBedgraph(AbstractStep):
 
                             if self.get_option('output-format') in \
                                ['bedGraph', 'bigWig']:
-                                dd_out = [self.get_tool('dd'),
-                                          'bs=4M',
-                                          'if=%s' % big_fifo]
+                                dd_out = [
+                                    self.get_tool('dd'),
+                                    'bs=%s' % self.get_option('dd-blocksize'),
+                                    'if=%s' % big_fifo
+                                ]
 
                                 pipe.add_command(
                                     dd_out,
