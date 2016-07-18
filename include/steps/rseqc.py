@@ -1,3 +1,4 @@
+import os
 import sys
 from logging import getLogger
 from abstract_step import AbstractStep
@@ -37,7 +38,7 @@ class RSeQC(AbstractStep):
             alignments = run_ids_connections_files[run_id]['in/alignments']
 
             with self.declare_run(run_id) as run:
-
+         
                 if len(alignments) != 1:
                     logger.error("Expected exactly one alignment file.")
                     sys.exit(1)
