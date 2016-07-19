@@ -18,16 +18,13 @@ Installation of **uap**
 Prerequisites
 *************
 
-The installation requires Python's |virtual_env_link|. It is a tool to create isolated Python environments. So, please install it if its not already installed.::
+The installation requires |virtual_env_link|, |git_link| and
+|graphviz_link|.
+So, please install it if its not already installed.::
 
-  $ sudo apt-get install python-virtualenv
-  OR
-  $ sudo pip install virtualenv
+  $ sudo apt-get install python-virtualenv git graphviz
 
-In addition to this |git_link| and |graphviz_link| are also needed.
-
-The **uap** installation **does not** include all necessary tools for the data
-analysis.
+**uap** does **NOT** include any tools necessary for the data analysis.
 It is expected that the required tools are **already installed**.
 
 ************************
@@ -50,8 +47,8 @@ bootstrapping script ``bootstrap.sh``::
 
 The script creates the required Python environment (which will be located in
 ``./python_env/``).
-Afterwards it installs |py_yaml_link|, |num_py_link|, |bio_python_link| and |psutil_link|
-into the freshly created environment.
+Afterwards it installs |py_yaml_link|, |num_py_link|, |bio_python_link| and
+|psutil_link| into the freshly created environment.
 There is no harm in accidentally running this script multiple times.
 
 *********************************
@@ -63,21 +60,14 @@ On Unix-type operating systems it is advised to add the installation path to
 your ``$PATH`` variable.
 Therefore change into the **uap** directory and execute::
 
-  $ pwd
-
-Copy the output and add a line to your ``~/.bashrc`` or ``~/.bash_profile``
-like the following and replace ``<uap-path>`` with the copied output:
-
 .. code-block:: bash
 
-    PATH=$PATH:<uap-path>
-
-Finally, make the changes known to your environment by sourcing the changed file:
-
-.. code-block:: bash
-
+  $ echo ""PATH=$PATH:$(pwd)" >> ~/.bashrc 
   $ source ~/.bashrc
+  OR
+  $ echo ""PATH=$PATH:$(pwd)" >> ~/.bash_profile
   $ source ~/.bash_profile
+
 
 .. |github_uap_link| raw:: html
 

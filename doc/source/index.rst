@@ -11,6 +11,8 @@
 uap -- Robust, Consistent, and Reproducible Data Analysis
 #########################################################
 
+**Description:**
+
   **uap** executes, controls and keeps track of the analysis of large data sets.
   It enables users to perform robust, consistent, and reproducible data analysis.
   **uap** encapsulates the usage of (bioinformatic) tools and handles data flow
@@ -18,32 +20,82 @@ uap -- Robust, Consistent, and Reproducible Data Analysis
   Users can use predefined or self-made analysis steps to create custom analysis.
   Analysis steps encapsulate best practice usages for bioinformatic software
   tools.
-  Although **uap**  focuses on the analysis of high-throughput sequencing data
-  it can be extended to handle any analysis.
-  But its plugin architecture allows users to add functionality.
-  This would enable any kind of large data analysis.
+  **uap** focuses on the analysis of high-throughput sequencing (HTS) data.
+  But its plugin architecture allows users to add functionality, such that
+  it can be used for any kind of large data analysis.
 
 **Usage:**
 
-  **uap** is a command-line tool, implemented in Python, and runs under
-  GNU/Linux.
-  It takes a user-defined configuration file, which describes the analysis, as
-  input.
-  **uap** interacts with the analysis via subcommands.
-
+  **uap** is a command-line tool, implemented in Python.
+  It requires a user-defined configuration file, which describes the analysis,
+  as input.
+  
 **Supported Platforms:**
 
-  **uap** runs natively on Unix-like operating systems.
-  But, it does also support the cluster engines 
-  |uge_link|, |oge_link| and |slurm_link|.
+  * Unix-like operating systems.
+  * High Performance Compute (HPC) cluster systems such as |uge_link|,
+    |oge_link| and |slurm_link|.
 
-*********************
-Important Information
-*********************
+**Important Information**
 
-The **uap** installation **does not** include all necessary tools for the data
-analysis.
-It expects that the required tools are **already installed**.
+  **uap** does **NOT** include all tools necessary for the data analysis.
+  It expects that the required tools are **already installed**.
+
+*****************
+Table of contents
+*****************
+
+.. toctree::
+   :maxdepth: 3
+
+   installation
+   how-to
+   configuration
+   interaction
+   extension
+   software-design
+   annotation
+   steps
+   api
+
+
+*******
+Remarks
+*******
+
+This documentation has been created using |sphinx_link| and |rest_link|.
+
+******************
+Indices and tables
+******************
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
+.. |uge_link| raw:: html
+ 
+   <a href="http://www.univa.com/products/" target="_blank">UGE</a>
+
+.. |oge_link| raw:: html
+
+   <a href="http://www.univa.com/oracle" target="_blank">OGE/SGE</a>
+
+.. |slurm_link| raw:: html
+      
+   <a href="http://slurm.schedmd.com/" target="_blank">SLURM</a>
+
+.. |sphinx_link| raw:: html
+ 
+    <a href="http://www.sphinx-doc.org/" target="_blank">sphinx</a>
+
+.. |rest_link| raw:: html
+ 
+    <a href="http://docutils.sourceforge.net/rst.html" target="_blank">reStructuredText</a>
+
+
+
+
 
 The recommended workflow to analyse data with **uap** is:
 
@@ -114,55 +166,3 @@ Usability:
 
 * Single configuration file describes entire data analysis work-flow.
 * Command-line tool to interacts with uap. It can be used to execute, monitor, and analyse defined work-flows.
-
-*****************
-Table of contents
-*****************
-
-.. toctree::
-   :maxdepth: 3
-
-   installation
-   how-to
-   configuration
-   interaction
-   extension
-   software-design
-   annotation
-   steps
-   api
-
-
-*******
-Remarks
-*******
-
-This documentation has been created using |sphinx_link| and |rest_link|.
-
-******************
-Indices and tables
-******************
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-.. |uge_link| raw:: html
- 
-   <a href="http://www.univa.com/products/" target="_blank">UGE</a>
-
-.. |oge_link| raw:: html
-
-   <a href="http://www.univa.com/oracle" target="_blank">OGE/SGE</a>
-
-.. |slurm_link| raw:: html
-      
-   <a href="http://slurm.schedmd.com/" target="_blank">SLURM</a>
-
-.. |sphinx_link| raw:: html
- 
-    <a href="http://www.sphinx-doc.org/" target="_blank">sphinx</a>
-
-.. |rest_link| raw:: html
- 
-    <a href="http://docutils.sourceforge.net/rst.html" target="_blank">reStructuredText</a>

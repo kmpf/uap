@@ -18,22 +18,27 @@ Analysis Configuration File
 analysis.
 These files are called configuration files.
 
-A configuration file describes a analysis completely.
+A configuration file describes a complete analysis.
 Configurations consist of four sections (let's just call them sections,
 although technically, they are keys):
 
-* ``destination_path`` -- points to the directory where the result files,
-  annotations and temporary files are written to
-* ``email`` -- when submitting jobs on a cluster, messages will be sent to 
-  this email address by the cluster engine (nobody@example.com by default)
-* ``constants`` -- defines constants for later use (define repeatedly used
-  values as constants to increase readability of the following sections)
-* ``steps`` -- defines the source and processing steps and their order 
-* ``tools`` -- defines all tools used in the analysis and how to determine 
-  their versions (for later reference)
+**Mandatory Sections**
 
-If you want to know more about the notation that is used in this file, have a
-closer look at the |yaml_link| definition.
+  * ``destination_path`` -- points to the directory where the result files,
+    annotations and temporary files are written to
+  * ``constants`` -- defines constants for later use (define repeatedly used
+    values as constants to increase readability of the following sections)
+  * ``steps`` -- defines the source and processing steps and their order 
+  * ``tools`` -- defines all tools used in the analysis and how to determine 
+    their versions (for later reference)
+
+**Optional Sections**
+
+  * ``cluster`` -- if **uap** is required to run on a HPC cluster some default
+    parameters can be set her
+
+Please refer to the |yaml_link| definition for the correct notation used in
+that file.
 
 ********************************
 Sections of a Configuration File
@@ -41,8 +46,8 @@ Sections of a Configuration File
 
 .. _config-file-destination-path:
 
-Destination_path Section
-========================
+``destination_path`` Section
+============================
 
 The value of ``destination_path`` is the directory where **uap** is going
 to store the created files.
@@ -53,17 +58,7 @@ to store the created files.
 
     destination_path: "/path/to/uap/output"
 
-Email Section
-=============
-
-The value of ``email`` is needed if the analysis is executed on a cluster,
-which can use it to inform the person who started **uap** about status
-changes of submitted jobs.
-
-.. code-block:: yaml
-
-    email: "your.name@mail.de"
-
+.. _config-file-steps:
 
 Steps Section
 =============
@@ -131,10 +126,15 @@ Processing steps are usually configurable.
 For a complete list of available options please visit :doc:`steps` or use the
 subcommand :ref:`uap-steps`.
 
+.. _config_file_keywords:
+
 Reserved Keywords for Steps
 ---------------------------
 
+.. _config_file_depends:
+
 **_depends:**
+
   Dependencies are defined via the ``_depends`` key which may either be ``null``,
   a step name, or a list of step names.
   
@@ -156,7 +156,10 @@ Reserved Keywords for Steps
         fix_cutadapt:
             _depends: cutadapt
 
+.. _config_file_connect:
+
 **_connect:**
+
   Normally steps connected with ``_depends`` do pass data along by defining
   so called connections.
   If the name of an output connection matches the name of an input connection
@@ -196,7 +199,10 @@ Reserved Keywords for Steps
   connected to the input connection ``sequence`` of the ``merge_fasta_files``
   step.
 
+.. _config_file_break:
+
 **_BREAK:**
+
   If you want to cut off entire branches of the step graph, set the ``_BREAK`` 
   flag in a step definition, which will force the step to produce no runs
   (which will in turn give all following steps nothing to do, thereby 
@@ -217,9 +223,10 @@ Reserved Keywords for Steps
             _depends: cutadapt
             _BREAK: true
 
-.. _volatile:
+.. _config_file_volatile:
 
 **_volatile:**
+
   Steps can be marked with ``_volatile: yes``.
   This flag tells **uap** that the output files of the marked step are only
   intermediate results.
@@ -253,7 +260,43 @@ The message is output if the :ref:`status <uap-status>` is checked and looks lik
 If the user executes the :ref:`volatilize <uap-volatilize>` command the output
 files are replaced by placeholder files.
 
-.. _uap_config_tools_section:
+.. _config_file_cluster_submit_options:
+
+**_cluster_submit_options**
+
+    This string contains the entire submit options which will be set in the
+    submit script.
+    This option allows to overwrite the values set in 
+    :ref:`config_file_default_submit_options`.
+
+.. _config_file_cluster_pre_job_command:
+
+**_cluster_pre_job_command**
+
+    This string contains command(s) that are executed **BEFORE uap** is started
+    on the cluster.
+    This option allows to overwrite the values set in 
+    :ref:`config_file_default_pre_job_command`.
+
+.. _config_file_cluster_post_job_command:
+
+**_cluster_post_job_command**
+
+    This string contains command(s) that are executed **AFTER uap** did finish
+    on the cluster.
+    This option allows to overwrite the values set in 
+    :ref:`config_file_default_post_job_command`.
+
+.. _config_file_cluster_job_quota:
+
+**_cluster_job_quota**
+
+    This positive number defines the number of jobs of the same type that can
+    run simultaneously on a cluster.
+    This option allows to overwrite the values set in 
+    :ref:`config_file_default_job_quota`.
+
+.. _uap_config_tools:
 
 Tools Section
 =============
@@ -292,12 +335,16 @@ If you are working on a cluster running |uge_link|
 or |slurm_link| you can also use their module system.
 You need to know what actually happens when you load or unload a module::
 
+.. code-block:: bash
+
   $ module load <module-name>
   $ module unload <module-name>
 
 As far as I know is ``module`` neither a command nor an alias.
 It is a BASH function. So use ``declare -f`` to find out what it is actually
 doing::
+
+.. code-block:: bash
 
   $ declare -f module
 
@@ -347,6 +394,37 @@ A potential ``bedtools`` entry in the ``tools`` section, might look like this.
 .. NOTE:: Use ``python`` instead of ``bash`` for loading modules via **uap**.
           Because the module is loaded from within a python environment and
           not within a BASH shell.
+
+.. _config_file_cluster: 
+
+Cluster Section
+===============
+
+The value of ``cluster`` is needed if the analysis is executed on a cluster,
+
+.. code-block:: yaml
+
+    cluster:
+        default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -m as -M me@example.com -l h_rt=1:00:00 -l h_vmem=2G"
+        default_pre_job_command: "echo 'Started the run!'"
+        default_post_job_command: "echo 'Finished the run!'"
+        default_job_quota: 5
+
+.. _config_file_default_submit_options:
+
+**default_submit_options**
+
+.. _config_file_default_pre_job_command:
+
+**default_pre_job_command**
+
+.. _config_file_default_post_job_command:
+
+**default_post_job_command**
+
+.. _config_file_default_job_quota:
+
+**default_job_quota:**
 
 **********************
 Example Configurations

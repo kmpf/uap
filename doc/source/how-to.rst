@@ -14,28 +14,35 @@
 How-To Use **uap**
 ##################
 
-At first, you need to install uap (see :doc:`installation`).
+At first, you need to install **uap** (see :doc:`installation`).
 
-***************************
-Try Existing Configurations
-***************************
+**************************
+Try Example Configurations
+**************************
 
 After you have done that you need a working configuration file.
-Example configurations are included in **uap**'s installation directory.
+Example configuration files are included in **uap**'s installation directory.
 They are stored inside the ``example-configurations`` folder.
-Go there and try::
+Go there and try them out::
 
+.. code-block:: bash
+
+  $ cd <uap-path>/example-configurations/
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
 
 Start your first **uap** analysis showcasing the controlled indexing of a
 genome (arguably a tiny one)::
 
+.. code-block:: bash
+
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
   [uap] Set log level to ERROR
   [uap][ERROR]: index_mycoplasma_genitalium_ASM2732v1_genome.yaml: Destination path does not exist: genomes/bacteria/Mycoplasma_genitalium/
   
-Oops, the ``destination_path`` does not exist. (see :ref:`config-file-destination-path`)
+Oops, the ``destination_path`` does not exist (see :ref:`config-file-destination-path`).
 Create it and start again::
+
+.. code-block:: bash
 
   $ mkdir genomes/bacteria/Mycoplasma_genitalium/
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
@@ -63,12 +70,16 @@ Go on and try some more example configurations (let's for now assume that all
 tools are installed and configured correctly).
 You want to create indexes of the human genome (hg19)::
 
+.. code-block:: bash
+
   $ uap index_homo_sapiens_hg19_genome.yaml status
   [uap] Set log level to ERROR
   [uap][ERROR]: Output directory (genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes) does not exist. Please create it.
   $ mkdir genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
   $ uap index_homo_sapiens_hg19_genome.yaml run-locally
   <Analysis starts>
+
+You get the idea.
 
 *****************************
 Create Your Own Configuration
@@ -87,20 +98,18 @@ Here is a simple configuration:
 General Structure of Sequencing Analysis
 ========================================
 
-Every analysis of high-throughput sequencing data evolves around some basic
-tasks.
+Every analysis of high-throughput sequencing (HTS) data evolves around some
+basic tasks.
 Irrespective of sequencing RNA or DNA.
 
 1. Get the sequencing reads as input (most likely fastq.gz)
 2. Remove adapter sequences from your sequencing reads
 3. Align the sequencing reads onto the reference genome
 
-The
 After these steps are finished a lot of different analysis could be applied on
 the data. Furtheron example configurations for often used analyses are shown.
-The enumeration of steps show continues as if the basic steps were already
+The enumeration of steps continues as if the basic steps were already
 performed.
-
 
 RNAseq analysis
 ---------------
@@ -142,4 +151,3 @@ Prepare UCSC genome browser tracks
 
 The conversion of sequencing data into an format that can be displayed by the
 UCSC genome browser is needed in almost all sequencing projects.
-
