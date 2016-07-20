@@ -268,9 +268,8 @@ An example **uap** workflow is included in the two configuration files:
 
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
 
-************************
 Create Your Own Workflow
-************************
+========================
 
 You finished to check out the examples?
 Go and try to create your own workflow
