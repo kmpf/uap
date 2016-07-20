@@ -10,11 +10,69 @@
 
 .. _how-to:
 
-##################
-How-To Use **uap**
-##################
+###################
+Quick Start **uap**
+###################
 
 At first, you need to install **uap** (see :doc:`installation`).
+After successfully finishing the installation of **uap** example data and
+analysis can be found in the folder ``example-configurations``.
+
+Let's jump head first into **uap** and have a look at some examples::
+
+.. code-block:: bash
+
+  $ cd <uap-path>/example-configurations/
+  $ ls *.yaml
+  2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml
+  2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml
+  ChIPseq-example-volatile.yaml
+  ChIPseq-example.yaml
+  ChIP_SEQ.yaml
+  download_human_gencode_release.yaml
+  index_homo_sapiens_hg19_genome.yaml
+  index_mycoplasma_genitalium_ASM2732v1_genome.yaml
+  RNAseq-example.yaml
+  RNA_SEQ.yaml
+
+..  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
+
+These example configurations require different amounts of computational
+resources.
+Some example configurations download or work on small datasets and are
+thus feasible for machines with limited resources.
+Others require a very powerful stand-alone machine or a cluster system.
+The examples are marked accordingly in the examples below.
+
+
+Handle Genomic Data
+-------------------
+
+A usual analysis of High-Throughput Sequencing (HTS) data relies on different
+publicly available data.
+Most important is probably the genomic sequence of the species under
+investigation.
+That sequence is required to construct the indices (data structures used by 
+read aligners).
+Other publicly available data sets (such as reference annotations or the
+chromosome sizes) migh be required based on the type of analysis.
+
+
+*2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml*
+    Downloads data published with the paper Barski et al., Cell (2007)
+
+*2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml*
+    Perform some 
+ChIPseq-example-volatile.yaml
+ChIPseq-example.yaml
+ChIP_SEQ.yaml
+download_human_gencode_release.yaml
+index_homo_sapiens_hg19_genome.yaml
+index_mycoplasma_genitalium_ASM2732v1_genome.yaml
+RNAseq-example.yaml
+RNA_SEQ.yaml
+
+
 
 **************************
 Try Example Configurations
