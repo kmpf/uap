@@ -66,9 +66,12 @@ The following configurations showcase how to get/generate that data:
 
 *index_homo_sapiens_hg19_genome.yaml*
     Downloads the *Homo sapiens* genome, generates the indices for
-    |bowtie2_link|, |bwa_link|, |segemehl_link|, and |samtools_link|.
+    |bowtie2_link|, |bwa_link|, and |samtools_link|.
     This workflow requires substantial computational resources due to the
     size of the human genome.
+    The |segemehl_link| index creation is commented out due to its high
+    memory consumption (~50-60 GB).
+    Please make sure to only run it on well equipped machines.
 
 *download_human_gencode_release.yaml*
     Downloads the human Gencode main annotation v24 and a subset for long
@@ -108,6 +111,14 @@ Create it and start again::
   tasks: 5 total, 4 waiting, 1 ready
 
 A list with all runs and their respective state should be displayed.
+A run is always in one of these states:
+
+* ``[r]eady``                                                                                                                                                    
+* ``[w]aiting``                                                                                                                                                  
+* ``[q]ueued``                                                                                                                                                   
+* ``[e]xecuting``                                                                                                                                                
+* ``[f]inished``
+
 If the command still fails, please check that the tools defined in
 ``index_mycoplasma_genitalium_ASM2732v1_genome.yaml`` are available in your
 environment (see :ref:`uap_config_tools_section`).
@@ -118,73 +129,107 @@ the workflow::
 
    $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml run-locally
 
-*2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml*
-    Download data published with the paper Barski et al., Cell (2007)
+**uap** should have created a symbolic link named
+``index_mycoplasma_genitalium_ASM2732v1_genome.yaml-out`` pointing to the 
+``destination_path``.
+The content should look something like that::
 
-*2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml*
-    Perform some 
-ChIPseq-example-volatile.yaml
-ChIPseq-example.yaml
-ChIP_SEQ.yaml
-RNAseq-example.yaml
-RNA_SEQ.yaml
+.. code-block:: bash
 
+    $ tree --charset=ascii
+    .
+    |-- bowtie2_index
+    |   |-- Mycoplasma_genitalium_index-download-cMQPtBxs
+    |   |   |-- Mycoplasma_genitalium_index-download.1.bt2
+    |   |   |-- Mycoplasma_genitalium_index-download.2.bt2
+    |   |   |-- Mycoplasma_genitalium_index-download.3.bt2
+    |   |   |-- Mycoplasma_genitalium_index-download.4.bt2
+    |   |   |-- Mycoplasma_genitalium_index-download.rev.1.bt2
+    |   |   `-- Mycoplasma_genitalium_index-download.rev.2.bt2
+    |   `-- Mycoplasma_genitalium_index-download-ZsvbSjtK
+    |       |-- Mycoplasma_genitalium_index-download.1.bt2
+    |       |-- Mycoplasma_genitalium_index-download.2.bt2
+    |       |-- Mycoplasma_genitalium_index-download.3.bt2
+    |       |-- Mycoplasma_genitalium_index-download.4.bt2
+    |       |-- Mycoplasma_genitalium_index-download.rev.1.bt2
+    |       `-- Mycoplasma_genitalium_index-download.rev.2.bt2
+    |-- bwa_index
+    |   `-- Mycoplasma_genitalium_index-download-XRyj5AnJ
+    |       |-- Mycoplasma_genitalium_index-download.amb
+    |       |-- Mycoplasma_genitalium_index-download.ann
+    |       |-- Mycoplasma_genitalium_index-download.bwt
+    |       |-- Mycoplasma_genitalium_index-download.pac
+    |       `-- Mycoplasma_genitalium_index-download.sa
+    |-- fasta_index
+    |   `-- download-HA439DGO
+    |       `-- Mycoplasma_genitalium.ASM2732v1.fa.fai
+    |-- M_genitalium_genome
+    |   `-- download-5dych7Xj
+    |-- Mycoplasma_genitalium.ASM2732v1.fa
+    |-- segemehl_index
+    |   |-- Mycoplasma_genitalium_genome-download-2UKxxupJ
+    |   |   |-- download-segemehl-generate-index-log.txt
+    |   |   `-- Mycoplasma_genitalium_genome-download.idx
+    |   `-- Mycoplasma_genitalium_genome-download-zgtEpQmV
+    |       |-- download-segemehl-generate-index-log.txt
+    |       `-- Mycoplasma_genitalium_genome-download.idx
+    `-- temp
 
+Congratulation you've finished your first **uap** workflow!
 
-
-The ``[w]`` stands for a waiting status of a task and the ``[r]`` stands for a ready status of a task. (see :doc:`interaction`)
-
-Go on and try some more example configurations (let's for now assume that all
-tools are installed and configured correctly).
-You want to create indexes of the human genome (hg19)::
+Go on and try to run some more workflows.
+Most examples require the human genome so you might turn your head towards the
+``index_homo_sapiens_hg19_genome.yaml`` workflow from her::
 
 .. code-block:: bash
 
   $ uap index_homo_sapiens_hg19_genome.yaml status
   [uap] Set log level to ERROR
   [uap][ERROR]: Output directory (genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes) does not exist. Please create it.
-  $ mkdir genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
+  $ mkdir -p genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
   $ uap index_homo_sapiens_hg19_genome.yaml run-locally
   <Analysis starts>
 
-You get the idea.
+Again you need to create the output folder (you get the idea).
 
-*****************************
-Create Your Own Configuration
-*****************************
 
-Although writing the configuration may seem a bit complicated, the trouble 
-pays off later because further interaction with the pipeline is quite simple.
-The structure and content of the configuration files is very detailed described
-on another page (see :ref:`configuration-of-uap`).
-Here is a simple configuration:
+Sequencing Data Analysis
+------------------------
 
-.. code-block:: yaml
+Now that you possess the genome sequences, indices, and annotations let's have
+a look at some example analysis.
 
-  Insert YAML here!
+General Steps
+^^^^^^^^^^^^^
 
-General Structure of Sequencing Analysis
-========================================
+The analysis of high-throughput sequencing (HTS) data usually start with some
+basic steps.
 
-Every analysis of high-throughput sequencing (HTS) data evolves around some
-basic tasks.
-Irrespective of sequencing RNA or DNA.
+1. Conversion of the raw sequencing data to, most likely, fastq(.gz) files
+2. Removal of adapter sequences from the sequencing reads
+3. Alignment of the sequencing reads onto the reference genome
 
-1. Get the sequencing reads as input (most likely fastq.gz)
-2. Remove adapter sequences from your sequencing reads
-3. Align the sequencing reads onto the reference genome
+These basic steps can be followed up with a lot of different analysis steps.
+The following analysis examples illustrate how to perform the basic as well as
+some more specific steps.
 
-After these steps are finished a lot of different analysis could be applied on
-the data. Furtheron example configurations for often used analyses are shown.
-The enumeration of steps continues as if the basic steps were already
-performed.
+RNAseq Example Workflow
+^^^^^^^^^^^^^^^^^^^^^^^
 
-RNAseq analysis
----------------
-
+``RNAseq-example.yaml``
+    This workflow includes the aforementioned basic steps, followed by the
+    use of |tophat2_link| to map split reads.
+    After mapping |htseq_count_link| is used to count the reads mapping to
+    every exon from the annotation.
+    A |cufflinks_link| step for *de novo* transcript assembly is also included.
+    The usage of **|segemehl_link|** is disabled by default.
+    But it can be enabled and combined with |cufflinks_link| *de novo*
+    transcript assembly employing our **s2c** python script.
+    **This workflow is not going to work, because the initial data set is
+    to small.**
 
 Differential expression
-^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""
 
 RNAseq analysis often aims at the discovery of differentially expressed
 (known) transcripts. Therefore mappped reads for at least two different samples
@@ -195,31 +240,85 @@ have to be available.
 6. Perform statistical analysis, based on counts 
 
 Assemble novel transcripts
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""
 
-As the publicly available annotations, e.g. from GENCODE, are probably not
-complete, the assembly of novel transcripts from RNAseq data is another task one
-would perform to investigate the transcriptome.
+The publicly available annotations, e.g. from GENCODE, might be not
+complete.
+That's why the assembly of novel transcripts from RNAseq data is a common
+task.
 
+ChIPseq Example Workflow
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-ChIPseq analysis
-----------------
+``ChIPseq-example.yaml``
+    This workflow includes the aforementioned basic steps, followed by the
+    use of |bowtie2_link| to map the sequencing reads.
+    After the mapping duplicate reads are removed using |picard_link|.
+    And finally |macs2_link| is used to infer enriched regions aka. peak
+    calling.
+    **This workflow is not going to work, because the initial data set is
+    to small.**
+
+Peak Calling
+""""""""""""
 
 ChIPseq analysis aims at the discovery of genomic loci at which protein(s) of
 interest were bound. The experiment is an enrichment procedure using specific
 antibodies. The enrichment detection is normally performed by so called peak
 calling programs.
 
-4. Get negative control
+4. Duplicate removal
 5. Peak calling
 
+Real-Life Data Set Example
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Prepare UCSC genome browser tracks
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+An example **uap** workflow is included in the two configuration files:
 
-The conversion of sequencing data into an format that can be displayed by the
-UCSC genome browser is needed in almost all sequencing projects.
+* ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml``
+* ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
 
+
+``2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml``
+    Downloads the data published with the paper |Barski_link|.
+
+``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
+    
+
+
+
+
+RNAseq analysis
+---------------
+
+
+
+
+ChIPseq analysis
+----------------
+
+
+
+************************
+Create Your Own Workflow
+************************
+
+You finished to check out the examples?
+Go and try to create your own workflow
+If you are fine with what you saw 
+Although writing the configuration may seem a bit complicated, the trouble 
+pays off later because further interaction with the pipeline is quite simple.
+The structure and content of the configuration files is very detailed described
+on another page (see :ref:`configuration-of-uap`).
+Here is a simple configuration:
+
+.. code-block:: yaml
+
+  Insert YAML here!
+
+
+.. || raw:: html
+   <a href="http://www.ncbi.nlm.nih.gov/pubmed/17512414" target="_blank">Barski <i>et al.</i>, Cell (2007)</a>
 
 .. |bowtie2_link| raw:: html
       
@@ -229,6 +328,18 @@ UCSC genome browser is needed in almost all sequencing projects.
       
    <a href="http://bio-bwa.sourceforge.net/" target="_blank">bwa</a>
 
+.. |cufflinks_link| raw:: html
+   
+   <a href="" target="_blank">cufflinks</a>
+
+.. |htseq_count_link| raw:: html
+      
+   <a href="http://www-huber.embl.de/users/anders/HTSeq/doc/count.html" target="_blank">htseq-count</a>
+
+   .. |picard_link| raw:: html
+      
+   <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard</a>
+
 .. |samtools_link| raw:: html
       
    <a href="http://www.htslib.org/" target="_blank">samtools</a>
@@ -237,3 +348,6 @@ UCSC genome browser is needed in almost all sequencing projects.
       
    <a href="http://www.bioinf.uni-leipzig.de/Software/segemehl/" target="_blank">segemehl</a>
 
+.. |tophat2_link| raw:: html
+      
+   <a href="https://ccb.jhu.edu/software/tophat/index.shtml" target="_blank">tophat2</a>
