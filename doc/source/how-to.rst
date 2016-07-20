@@ -281,7 +281,7 @@ The structure and content of the configuration files is very detailed described
 on another page (see :ref:`configuration-of-uap`).
 
 
-.. || raw:: html
+.. |Barski_link| raw:: html
    <a href="http://www.ncbi.nlm.nih.gov/pubmed/17512414" target="_blank">Barski <i>et al.</i>, Cell (2007)</a>
 
 .. |bowtie2_link| raw:: html

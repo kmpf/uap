@@ -49,8 +49,8 @@ Table of contents
    :maxdepth: 3
 
    introduction
-   installation
    how-to
+   installation
    configuration
    interaction
    extension
