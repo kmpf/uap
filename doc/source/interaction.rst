@@ -10,9 +10,9 @@
 
 .. _cli_usage_uap:
 
-#############################
+*****************************
 Command-Line Usage of **uap**
-#############################
+*****************************
 
 **uap** uses Python's |argparse_link|.
 Therefore, **uap** provides help information on the command-line::
@@ -94,16 +94,15 @@ scripts (well, actually, it's only one):
 
 The subcommands are described in detail below.
 
-.. _ExplanationOfSubcommands:
+.. _subcommands:
 
-**************************
-Explanation of Subcommands
-**************************
+Subcommands
+===========
 
 .. _uap-steps:
 
 steps
-=====
+-----
 
 The ``steps`` subcommand lists all available :ref:`source
 <config_file_source_steps>` and :ref:`processing <config_file_processing_steps>`
@@ -122,7 +121,7 @@ steps::
 .. _uap-status:
 
 status
-======
+------
 
 The ``status`` subcommand lists all runs of an analysis.
 A run is describes the concrete processing of a sample by a step.
@@ -257,7 +256,7 @@ Source steps can be viewed separately by specifying ``--sources``::
 .. _uap-task-info:
 
 task-info
-=========
+---------
 
 The ``task-info`` subcommand writes the commands which were or will be executed
 to the terminal in the form of a semi-functional BASH script.
@@ -311,7 +310,7 @@ for causes of failure.
 .. _uap-run-locally:
 
 run-locally
-===========
+-----------
 
 The ``run-locally`` subcommand runs all non-finished runs (or a subset) 
 sequentially on the local machine. 
@@ -375,7 +374,7 @@ This subcommands usage information::
 .. _uap-submit-to-cluster:
 
 submit-to-cluster
-=================
+-----------------
 
 The ``submit-to-cluster`` subcommand determines which runs still have to be 
 carried out and which supported cluster engine is available.
@@ -435,7 +434,7 @@ This subcommand provides usage information::
 .. _uap-fix-problems:
 
 fix-problems
-============
+------------
 
 The ``fix-problems`` subcommand removes temporary files written by **uap** if
 they are not required anymore.
@@ -477,7 +476,7 @@ You've fixed the problem, haven't you?
 .. _uap-volatilize:
 
 volatilize
-==========
+----------
 
 The ``volatilize`` subcommand is useful to reduce the required disk space of
 your analysis.
@@ -513,7 +512,7 @@ Achtung: Daten werden nicht mehr automatisch volatilisiert, auch wenn es in der
 .. _uap-render:
 
 render
-======
+------
 
 The ``render`` subcommand generates graphs using graphviz.
 The graphs either show the complete analysis or the execution of a single run.
@@ -546,16 +545,6 @@ This subcommand provides usage information::
                       connections.
      --simple         Rendered graphs are simplified.
 
-
-
-.. _uap-report:
-
-report
-======
-
-The ``report`` subcommand is at the moment experimental.
-It might be used to create standardized output to enable easy loading and
-processing in downstream tools e.g. ``R``.
 
 .. |argparse_link| raw:: html
 

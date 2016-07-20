@@ -10,9 +10,9 @@
 
 .. _configuration-of-uap:
 
-###########################
+***************************
 Analysis Configuration File
-###########################
+***************************
 
 **uap** operates on |yaml_link| files which define data
 analysis.
@@ -40,14 +40,13 @@ although technically, they are keys):
 Please refer to the |yaml_link| definition for the correct notation used in
 that file.
 
-********************************
 Sections of a Configuration File
-********************************
+================================
 
 .. _config-file-destination-path:
 
 ``destination_path`` Section
-============================
+----------------------------
 
 The value of ``destination_path`` is the directory where **uap** is going
 to store the created files.
@@ -61,7 +60,7 @@ to store the created files.
 .. _config-file-steps:
 
 Steps Section
-=============
+-------------
 
 The ``steps`` section is the core of the analysis file, because it defines when
 steps are executed and how they depend on each other.
@@ -90,7 +89,7 @@ There are two different types of steps:
 .. _config_file_source_steps:
 
 Source Steps
-------------
+^^^^^^^^^^^^
 They provide input files for the analysis.
 They might start processes such as downloading files or demultiplexing
 sequence reads.
@@ -118,7 +117,8 @@ The single keys will be described at :doc:`steps`. For defining the ``group`` ke
 .. _config_file_processing_steps:
 
 Processing Steps
-----------------
+^^^^^^^^^^^^^^^^
+
 They depend upon one or more predecessor steps and work with their output
 files.
 Output files of processing steps are automatically named and placed by **uap**.
@@ -129,7 +129,7 @@ subcommand :ref:`uap-steps`.
 .. _config_file_keywords:
 
 Reserved Keywords for Steps
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. _config_file_depends:
 
@@ -335,16 +335,12 @@ If you are working on a cluster running |uge_link|
 or |slurm_link| you can also use their module system.
 You need to know what actually happens when you load or unload a module::
 
-.. code-block:: bash
-
   $ module load <module-name>
   $ module unload <module-name>
 
 As far as I know is ``module`` neither a command nor an alias.
 It is a BASH function. So use ``declare -f`` to find out what it is actually
 doing::
-
-.. code-block:: bash
 
   $ declare -f module
 
@@ -367,9 +363,7 @@ An other possible output is:
             [ $? = 0 ] && eval $(${LMOD_SETTARG_CMD:-:} -s sh)
         }
 
-In this case you have to look in ``$LMOD_CMD`` for the required path:
-
-.. code-block:: bash
+In this case you have to look in ``$LMOD_CMD`` for the required path::
 
     $ echo $LMOD_CMD
 
@@ -398,7 +392,7 @@ A potential ``bedtools`` entry in the ``tools`` section, might look like this.
 .. _config_file_cluster: 
 
 Cluster Section
-===============
+---------------
 
 The value of ``cluster`` is needed if the analysis is executed on a cluster,
 
@@ -426,26 +420,21 @@ The value of ``cluster`` is needed if the analysis is executed on a cluster,
 
 **default_job_quota:**
 
-**********************
 Example Configurations
-**********************
+======================
 
 Please check out the example configurations provided inside the ``example-configurations`` folder of **uap**'s installation directory.
 
 
-##########################
+**************************
 Cluster Configuration File
-##########################
+**************************
 
-The cluster configuration file resides at:
-
-.. code-block:: bash
+The cluster configuration file resides at::
 
     $ ls -la $(dirname $(which uap))/cluster/cluster-specific-commands.yaml
 
-This YAML file contains a dictionary per cluster type, that looks like that:
-
-.. code-block:: yaml
+This YAML file contains a dictionary per cluster type, that looks like that::
 
     uge: # Uniq name of the cluster engine
         identity_test: ['qstat', '-help'] # Command to get version information
