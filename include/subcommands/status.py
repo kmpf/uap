@@ -83,9 +83,9 @@ def main(args):
             line = "%s%s%s [%s]" % (''.join(_).replace("─└", "─┴"), step.get_step_name(), original_step_name_label, step.get_run_info_str())
             print(line)
     else:
-        # print all tasks
+        # print all runs
         '''
-        prints a summary of all tasks, indicating whether each taks is
+        prints a summary of all runs, indicating whether each run is
         - ``[r]eady``
         - ``[w]aiting``
         - ``[q]ueued``
@@ -107,7 +107,7 @@ def main(args):
             for status in p.states.order:
                 if not status in tasks_for_status:
                     continue
-                heading = "%s tasks" % string.capwords(status)
+                heading = "%s runs" % string.capwords(status)
                 output.append(heading)
                 output.append('-' * len(heading))
                 if args.summarize:
@@ -131,7 +131,7 @@ def main(args):
                                          task.get_task_state()[0].lower(),
                                          task))
                     output.append('')
-            output.append("tasks: %d total, %s"
+            output.append("runs: %d total, %s"
                           % (len(p.all_tasks_topologically_sorted),
                              ', '.join(["%d %s" % (
                                  len(tasks_for_status[_]),

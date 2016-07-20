@@ -55,44 +55,33 @@ investigation.
 That sequence is required to construct the indices (data structures used by 
 read aligners).
 Other publicly available data sets (such as reference annotations or the
-chromosome sizes) migh be required based on the type of analysis.
+chromosome sizes) migh also be required by the analysis.
+The following configurations showcase how to get/generate that data:
 
+*index_mycoplasma_genitalium_ASM2732v1_genome.yaml*
+    Downloads the *Mycoplasma genitalium* genome, generates the indices for
+    |bowtie2_link|, |bwa_link|, |segemehl_link|, and |samtools_link|.
+    This workflow is quite fast because it uses the very small genome of
+    *Mycoplasma genitalium*.
 
-*2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml*
-    Downloads data published with the paper Barski et al., Cell (2007)
+*index_homo_sapiens_hg19_genome.yaml*
+    Downloads the *Homo sapiens* genome, generates the indices for
+    |bowtie2_link|, |bwa_link|, |segemehl_link|, and |samtools_link|.
+    This workflow requires substantial computational resources due to the
+    size of the human genome.
 
-*2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml*
-    Perform some 
-ChIPseq-example-volatile.yaml
-ChIPseq-example.yaml
-ChIP_SEQ.yaml
-download_human_gencode_release.yaml
-index_homo_sapiens_hg19_genome.yaml
-index_mycoplasma_genitalium_ASM2732v1_genome.yaml
-RNAseq-example.yaml
-RNA_SEQ.yaml
+*download_human_gencode_release.yaml*
+    Downloads the human Gencode main annotation v24 and a subset for long
+    non-coding RNA genes.
+    This workflow only downloads files from the internetand and thus should
+    work on any machine.
 
-
-
-**************************
-Try Example Configurations
-**************************
-
-After you have done that you need a working configuration file.
-Example configuration files are included in **uap**'s installation directory.
-They are stored inside the ``example-configurations`` folder.
-Go there and try them out::
+Let's have a look at the *Mycoplasma genitalium* example workflow by checking
+its :ref:`uap_status`::
 
 .. code-block:: bash
 
   $ cd <uap-path>/example-configurations/
-  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
-
-Start your first **uap** analysis showcasing the controlled indexing of a
-genome (arguably a tiny one)::
-
-.. code-block:: bash
-
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
   [uap] Set log level to ERROR
   [uap][ERROR]: index_mycoplasma_genitalium_ASM2732v1_genome.yaml: Destination path does not exist: genomes/bacteria/Mycoplasma_genitalium/
@@ -102,7 +91,7 @@ Create it and start again::
 
 .. code-block:: bash
 
-  $ mkdir genomes/bacteria/Mycoplasma_genitalium/
+  $ mkdir -p genomes/bacteria/Mycoplasma_genitalium/
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
 
   Waiting tasks
@@ -118,9 +107,30 @@ Create it and start again::
   
   tasks: 5 total, 4 waiting, 1 ready
 
-If you still do get errors, please check that the tools defined in
+A list with all runs and their respective state should be displayed.
+If the command still fails, please check that the tools defined in
 ``index_mycoplasma_genitalium_ASM2732v1_genome.yaml`` are available in your
 environment (see :ref:`uap_config_tools_section`).
+If you really want to download and index the genome tell **uap** to start
+the workflow::
+
+.. code-block:: bash
+
+   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml run-locally
+
+*2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml*
+    Download data published with the paper Barski et al., Cell (2007)
+
+*2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml*
+    Perform some 
+ChIPseq-example-volatile.yaml
+ChIPseq-example.yaml
+ChIP_SEQ.yaml
+RNAseq-example.yaml
+RNA_SEQ.yaml
+
+
+
 
 The ``[w]`` stands for a waiting status of a task and the ``[r]`` stands for a ready status of a task. (see :doc:`interaction`)
 
@@ -209,3 +219,21 @@ Prepare UCSC genome browser tracks
 
 The conversion of sequencing data into an format that can be displayed by the
 UCSC genome browser is needed in almost all sequencing projects.
+
+
+.. |bowtie2_link| raw:: html
+      
+   <a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml" target="_blank">bowtie2</a>
+
+.. |bwa_link| raw:: html
+      
+   <a href="http://bio-bwa.sourceforge.net/" target="_blank">bwa</a>
+
+.. |samtools_link| raw:: html
+      
+   <a href="http://www.htslib.org/" target="_blank">samtools</a>
+
+.. |segemehl_link| raw:: html
+      
+   <a href="http://www.bioinf.uni-leipzig.de/Software/segemehl/" target="_blank">segemehl</a>
+
