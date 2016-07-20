@@ -10,30 +10,26 @@
 
 .. _how-to:
 
-###################
+*******************
 Quick Start **uap**
-###################
+*******************
 
 At first, you need to install **uap** (see :doc:`installation`).
 After successfully finishing the installation of **uap** example data and
 analysis can be found in the folder ``example-configurations``.
 
-Let's jump head first into **uap** and have a look at some examples
-
-.. code_block:: bash
+Let's jump head first into **uap** and have a look at some examples::
 
   $ cd <uap-path>/example-configurations/
   $ ls *.yaml
   2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml
   2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml
-  ChIPseq-example-volatile.yaml
   ChIPseq-example.yaml
-  ChIP_SEQ.yaml
   download_human_gencode_release.yaml
   index_homo_sapiens_hg19_genome.yaml
   index_mycoplasma_genitalium_ASM2732v1_genome.yaml
   RNAseq-example.yaml
-  RNA_SEQ.yaml
+
 
 These example configurations require different amounts of computational
 resources.
@@ -56,13 +52,13 @@ Other publicly available data sets (such as reference annotations or the
 chromosome sizes) migh also be required by the analysis.
 The following configurations showcase how to get/generate that data:
 
-*index_mycoplasma_genitalium_ASM2732v1_genome.yaml*
+``index_mycoplasma_genitalium_ASM2732v1_genome.yaml``
     Downloads the *Mycoplasma genitalium* genome, generates the indices for
     |bowtie2_link|, |bwa_link|, |segemehl_link|, and |samtools_link|.
     This workflow is quite fast because it uses the very small genome of
     *Mycoplasma genitalium*.
 
-*index_homo_sapiens_hg19_genome.yaml*
+``index_homo_sapiens_hg19_genome.yaml``
     Downloads the *Homo sapiens* genome, generates the indices for
     |bowtie2_link|, |bwa_link|, and |samtools_link|.
     This workflow requires substantial computational resources due to the
@@ -71,7 +67,7 @@ The following configurations showcase how to get/generate that data:
     memory consumption (~50-60 GB).
     Please make sure to only run it on well equipped machines.
 
-*download_human_gencode_release.yaml*
+``download_human_gencode_release.yaml``
     Downloads the human Gencode main annotation v24 and a subset for long
     non-coding RNA genes.
     This workflow only downloads files from the internetand and thus should
@@ -283,11 +279,6 @@ Although writing the configuration may seem a bit complicated, the trouble
 pays off later because further interaction with the pipeline is quite simple.
 The structure and content of the configuration files is very detailed described
 on another page (see :ref:`configuration-of-uap`).
-Here is a simple configuration:
-
-.. code-block:: yaml
-
-  Insert YAML here!
 
 
 .. || raw:: html
