@@ -18,7 +18,9 @@ At first, you need to install **uap** (see :doc:`installation`).
 After successfully finishing the installation of **uap** example data and
 analysis can be found in the folder ``example-configurations``.
 
-Let's jump head first into **uap** and have a look at some examples::
+Let's jump head first into **uap** and have a look at some examples
+
+.. code_block:: bash
 
   $ cd <uap-path>/example-configurations/
   $ ls *.yaml
