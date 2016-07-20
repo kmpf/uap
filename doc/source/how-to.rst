@@ -20,8 +20,6 @@ analysis can be found in the folder ``example-configurations``.
 
 Let's jump head first into **uap** and have a look at some examples::
 
-.. code-block:: bash
-
   $ cd <uap-path>/example-configurations/
   $ ls *.yaml
   2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml
@@ -34,8 +32,6 @@ Let's jump head first into **uap** and have a look at some examples::
   index_mycoplasma_genitalium_ASM2732v1_genome.yaml
   RNAseq-example.yaml
   RNA_SEQ.yaml
-
-..  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
 
 These example configurations require different amounts of computational
 resources.
@@ -82,8 +78,6 @@ The following configurations showcase how to get/generate that data:
 Let's have a look at the *Mycoplasma genitalium* example workflow by checking
 its :ref:`uap_status`::
 
-.. code-block:: bash
-
   $ cd <uap-path>/example-configurations/
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
   [uap] Set log level to ERROR
@@ -91,8 +85,6 @@ its :ref:`uap_status`::
   
 Oops, the ``destination_path`` does not exist (see :ref:`config-file-destination-path`).
 Create it and start again::
-
-.. code-block:: bash
 
   $ mkdir -p genomes/bacteria/Mycoplasma_genitalium/
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
@@ -125,16 +117,12 @@ environment (see :ref:`uap_config_tools_section`).
 If you really want to download and index the genome tell **uap** to start
 the workflow::
 
-.. code-block:: bash
-
    $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml run-locally
 
 **uap** should have created a symbolic link named
 ``index_mycoplasma_genitalium_ASM2732v1_genome.yaml-out`` pointing to the 
 ``destination_path``.
 The content should look something like that::
-
-.. code-block:: bash
 
     $ tree --charset=ascii
     .
@@ -180,8 +168,6 @@ Congratulation you've finished your first **uap** workflow!
 Go on and try to run some more workflows.
 Most examples require the human genome so you might turn your head towards the
 ``index_homo_sapiens_hg19_genome.yaml`` workflow from her::
-
-.. code-block:: bash
 
   $ uap index_homo_sapiens_hg19_genome.yaml status
   [uap] Set log level to ERROR
@@ -283,21 +269,6 @@ An example **uap** workflow is included in the two configuration files:
     Downloads the data published with the paper |Barski_link|.
 
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
-    
-
-
-
-
-RNAseq analysis
----------------
-
-
-
-
-ChIPseq analysis
-----------------
-
-
 
 ************************
 Create Your Own Workflow

@@ -5,16 +5,17 @@
   
 .. title:: Introducing **uap**
 
-.. _uap-recommended-workflow:
+*******************
+Introducing **uap**
+*******************
 
 .. _uap-core-aspects:
 
-************
 Core aspects
-************
+============
 
-Robustness:
-===========
+Robustness
+----------
 
 * Data is processed in temporary location.
   If and only if ALL involved processes exited graceful, the output files are
@@ -29,8 +30,8 @@ Robustness:
   Tools are checked for availability, and the entire processing pipeline is
   calculated in advance before jobs are being started or submitted to a cluster.
 
-Consistency:
-============
+Consistency
+-----------
 
 * Steps and files are defined in a directed acyclic graph (DAG).
   The DAG defines dependencies between in- and output files.
@@ -38,24 +39,25 @@ Consistency:
   If a file is newer or an option for a calculation has changed all dependent
   files are marked for recalculation.
 
-Reproducibility:
-================
+Reproducibility
+---------------
 
 * Comprehensive annotations are written to the output directories.
   They allow for later investigation of errors or review of executed commands.
   They contain also versions of used tool, required runtime, memory and CPU
   usage, etc.
 
-Usability:
-==========
+Usability
+---------
 
 * Single configuration file describdes entire processing pipeline.
 * Single command-line tool interacts with the pipeline.
   It can be used to execute, monitor, and analyse the pipeline.
 
-********************
+.. _uap-recommended-workflow:
+
 Recommended Workflow
-********************
+====================
 
 The recommended workflow to analyse data with **uap** is:
 

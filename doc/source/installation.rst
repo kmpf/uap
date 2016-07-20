@@ -60,8 +60,6 @@ On Unix-type operating systems it is advised to add the installation path to
 your ``$PATH`` variable.
 Therefore change into the **uap** directory and execute::
 
-.. code-block:: bash
-
   $ echo ""PATH=$PATH:$(pwd)" >> ~/.bashrc 
   $ source ~/.bashrc
   OR
