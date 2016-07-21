@@ -299,7 +299,7 @@ files are replaced by placeholder files.
     This string contains command(s) that are executed **BEFORE uap** is started
     on the cluster.
     This option allows to overwrite the values set in 
-    :ref:`config_file_default_pre_job_command`.
+    :ref:`default_pre_job_command <config_file_default_pre_job_command>`.
 
 .. _config_file_cluster_post_job_command:
 
@@ -308,7 +308,7 @@ files are replaced by placeholder files.
     This string contains command(s) that are executed **AFTER uap** did finish
     on the cluster.
     This option allows to overwrite the values set in 
-    :ref:`config_file_default_post_job_command`.
+    :ref:`default_post_job_command <config_file_default_post_job_command>`.
 
 .. _config_file_cluster_job_quota:
 
@@ -317,46 +317,68 @@ files are replaced by placeholder files.
     This positive number defines the number of jobs of the same type that can
     run simultaneously on a cluster.
     This option allows to overwrite the values set in 
-    :ref:`config_file_default_job_quota`.
+    :ref:`default_job_quota <config_file_default_job_quota>`.
 
 .. _uap_config_tools:
 
 ``tools``
 ---------
 
-The ``tools`` section must list all programs required for the execution of a
+The ``tools`` section lists all programs required for the execution of a
 particular analysis.
-**uap** uses the information given here to check if a tool is available given
-the current environment.
-This is particularly useful on cluster systems were software might not always
-be loaded.
-Also, **uap** logs the version of each tool used by a step.
-
-By default, version determination is simply attempted by calling the program
-without command-line arguments.
-
-If a certain argument is required, specify it in ``get_version``. 
-
-If a tool does not exit with code 0, you can find out which code is it.
-Execute the required command and after this type ``echo $?`` in the same shell.
-The output is the exit code of the last executed command.
-You can use it to specify the exit code in ``exit_code``.
+An example tool configuration looks like this:
 
 .. code-block:: yaml
 
-    tools:
+   tools:
+
         # you don't have to specify a path if the tool can be found in $PATH
         cat:
             path: cat 
             get_version: --version
+            module_load: 
+
         # you have to specify a path if the tool can not be found in $PATH
         some-tool:
             path: /path/to/some-tool
             get_version: --version
 
-If you are working on a cluster running |uge_link|
-or |slurm_link| you can also use their module system.
-You need to know what actually happens when you load or unload a module::
+       pigz:
+           path: pigz
+           get_version: --version
+           exit_code: 0
+
+
+**uap** uses the ``path``, ``get_version``, and ``exit_code`` information to
+control the availability of a tool.
+This is particularly useful on cluster systems were software can be dynamically
+loaded and unloaded.
+**uap** logs the version of every used tool.
+If ``get_version`` and ``exit_code`` is not set, **uap** tries to determine the
+version by calling the program without command-line arguments.
+``get_version`` is the command line argument (e.g. ``--version``) required to
+get the version information.
+``exit_code`` is the value returned by ``echo $?`` after trying to determine
+the version e.g. by running ``pigz --version``.
+If not set **uap** expects the ``exit_code`` to be 0.
+
+**uap** can use the module system if you are working on a cluster system (e.g.
+|uge_link| or |slurm_link|).
+The configuration for ``pigz`` would change a bit:
+
+.. code-block:: yaml
+
+   tools:
+       
+       pigz:
+           path: pigz
+           get_version: --version
+           exit_code: 0
+           module_load: /path/to/modulecmd python load pigz
+           module_unload: /path/to/modulecmd python unload pigz
+
+As you can see you need to get the ``/path/to/modulecmd``.
+So let's investigate what happens when a module is loaded or unloaded::
 
   $ module load <module-name>
   $ module unload <module-name>
@@ -389,23 +411,23 @@ An other possible output is:
 In this case you have to look in ``$LMOD_CMD`` for the required path::
 
     $ echo $LMOD_CMD
+    /usr/local/modules/3.2.10-1/Modules/$MODULE_VERSION/bin/modulecmd
 
-Now you can use this newly gathered information to load a module before use
-and unload it afterwards.
-You only need to replace ``$MODULE_VERSION`` with the current version of the
-module system you are using and ``bash`` with ``python``.
-A potential ``bedtools`` entry in the ``tools`` section, might look like this.
+You can use this path to assemble the ``module_load`` and ``module_unload``
+options for ``pigz``.
+Just replace the ``$MODULE_VERSION`` with the current version of the module
+system.
 
 .. code-block:: yaml
 
-    tools:
-        ....
-        bedtools:
-            module_load: /usr/local/modules/3.2.10-1/Modules/3.2.10/bin/modulecmd python load bedtools/2.24.0-1
-            module_unload: /usr/local/modules/3.2.10-1/Modules/3.2.10/bin/modulecmd python unload bedtools/2.24.0-1
-            path: bedtools
-            get_version: --version
-            exit_code: 0
+   tools:
+       
+       pigz:
+           path: pigz
+           get_version: --version
+           exit_code: 0
+           module_load: /usr/local/modules/3.2.10-1/Modules/$MODULE_VERSION/bin/modulecmd python load pigz
+           module_unload: /usr/local/modules/3.2.10-1/Modules/$MODULE_VERSION/bin/modulecmd python unload pigz
 
 
 .. NOTE:: Use ``python`` instead of ``bash`` for loading modules via **uap**.
