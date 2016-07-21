@@ -83,7 +83,7 @@ steps are executed and how they depend on each other.
 All available steps are described in detail in the steps documentation: 
 :doc:`steps`.
 The ``steps`` section contains an entry (technically a key) for every step.
-Every step name must be unique.
+Every step name **must** be unique.
 
 .. note::
 
@@ -91,7 +91,6 @@ Every step name must be unique.
    complain about keys with the same name.
    But drops one of the duplicates without giving an error.
 
-therefore each step must have a unique name [1]_.
 There are two ways to name a step to allow multiple steps of the same type and
 still ensure unique naming:
 
@@ -108,7 +107,9 @@ still ensure unique naming:
         clip_adapters (cutadapt):
             ... # options following
             
-There are two different types of steps:
+
+Now let's have a look at the two different types of steps which constitute
+an **``uap``** analaysis.
 
 .. _config_file_source_steps:
 
