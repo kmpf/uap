@@ -109,22 +109,25 @@ still ensure unique naming:
             
 
 Now let's have a look at the two different types of steps which constitute
-an **``uap``** analaysis.
+an **uap** analaysis.
 
 .. _config_file_source_steps:
 
 Source Steps
 ^^^^^^^^^^^^
-They provide input files for the analysis.
-They might start processes such as downloading files or demultiplexing
-sequence reads.
-But, they do not have dependencies, they can introduce files from outside the
-destination path (see `Destination_path Section`_), and they are
-usually the first steps of an analysis.
 
-For example if you want to work with fastq files, the first step is to import the required files. For this task the source step fastq_source is the right solution.
+Source steps are the only steps which are allowed to use or create data
+outside the ``destination_path``.
+Feature of source steps:
 
-A possible step definition could look like this:
+* they provide the input files for the following steps
+* they can start processes e.g. to download files or demultiplex reads
+* they do not depend on previous steps
+* they are the root nodes of the analysis graph
+
+If you want to work with fastq files, you should use the ``fastq_source``
+step to import the required files.
+Such a step definition would look like this:
 
 .. code-block:: yaml
 
@@ -137,19 +140,20 @@ A possible step definition could look like this:
         second_read: '_R2'
         paired_end: True
 
-The single keys will be described at :doc:`steps`. For defining the ``group`` key a regular expression is used. If you are not familiar with this you can read about it and test your regular expression at |pythex_link|.
+The options of the ``fastq_source`` step are described at :doc:`steps`.
+The ``group`` option takes a regular expression (regexp).
+You can test your regular expression at |pythex_link|.
 
 .. _config_file_processing_steps:
 
 Processing Steps
 ^^^^^^^^^^^^^^^^
 
-They depend upon one or more predecessor steps and work with their output
-files.
-Output files of processing steps are automatically named and placed by **uap**.
-Processing steps are usually configurable.
-For a complete list of available options please visit :doc:`steps` or use the
-subcommand :ref:`uap-steps`.
+Processing steps depend upon one or more preceding steps.
+They use their output files and process them.
+Output files of processing steps are automatically named and saved by **uap**.
+A complete list of available options per step can be found at :doc:`steps`
+or by using the subcommand :ref:`uap-steps`.
 
 .. _config_file_keywords:
 
@@ -188,7 +192,7 @@ Reserved Keywords for Steps
   Normally steps connected with ``_depends`` do pass data along by defining
   so called connections.
   If the name of an output connection matches the name of an input connection
-  of its succeeding step data gets passed on automatically.
+  of a succeeding step the data gets passed on automatically.
   But, sometimes the user wants to force the connection of differently named
   connections.
   This can be done with the ``_connect`` keyword.
@@ -277,13 +281,14 @@ Reserved Keywords for Steps
 
 If all steps depending on the intermediate step are finished **uap** tells the
 user that he can free disk space.
-The message is output if the :ref:`status <uap-status>` is checked and looks like this::
+The message is output if the :ref:`status <uap-status>` is checked and looks
+like this::
 
-  Hint: You could save 156.9 GB of disk space by volatilizing 104 output files.
-  Call 'uap <project-config>.yaml volatilize --srsly' to purge the files.
+   Hint: You could save 156.9 GB of disk space by volatilizing 104 output files.
+   Call 'uap <project-config>.yaml volatilize --srsly' to purge the files.
 
-If the user executes the :ref:`volatilize <uap-volatilize>` command the output
-files are replaced by placeholder files.
+**uap** is going to replace the output files by placeholder files if the user
+executes the :ref:`volatilize <uap-volatilize>` command.
 
 .. _config_file_cluster_submit_options:
 
@@ -292,7 +297,7 @@ files are replaced by placeholder files.
     This string contains the entire submit options which will be set in the
     submit script.
     This option allows to overwrite the values set in 
-    :ref:`config_file_default_submit_options`.
+    :ref:`default_submit_options <config_file_default_submit_options>`.
 
 .. _config_file_cluster_pre_job_command:
 
