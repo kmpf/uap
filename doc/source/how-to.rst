@@ -206,7 +206,7 @@ RNAseq Example Workflow
     After mapping |htseq_count_link| is used to count the reads mapping to
     every exon from the annotation.
     A |cufflinks_link| step for *de novo* transcript assembly is also included.
-    The usage of **|segemehl_link|** is disabled by default.
+    The usage of |segemehl_link| is **disabled** by default.
     But it can be enabled and combined with |cufflinks_link| *de novo*
     transcript assembly employing our **s2c** python script.
     **This workflow is not going to work, because the initial data set is
@@ -240,6 +240,7 @@ ChIPseq Example Workflow
     After the mapping duplicate reads are removed using |picard_link|.
     And finally |macs2_link| is used to infer enriched regions aka. peak
     calling.
+
     **This workflow is not going to work, because the initial data set is
     to small.**
 
@@ -267,6 +268,19 @@ An example **uap** workflow is included in the two configuration files:
     Downloads the data published with the paper |Barski_link|.
 
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
+    At first the downloaded FASTQ files are grouped by sample.
+    All files per sample are merged.
+    Sequencing quality is controlled by |fastqc_link| and |fastx_toolkit_link|.
+    Adapter sequences are removed from the reads before they are mapped to 
+    the human genome.
+    Reads are mapped with |bowtie2_link|, |bwa_link|, and |tophat2_link|.
+    Again mapping with |segemhel_link| is disabled by default due to its
+    high resource requirements.
+    Library complexity is estimated using |preseq_link|.
+    Finally enriched regions are detected with |macs2_link|.
+    
+    **This workflow will take some time due to the number of steps and
+    multiple mapping tools used.**
 
 Create Your Own Workflow
 ========================
@@ -281,6 +295,7 @@ on another page (see :ref:`configuration-of-uap`).
 
 
 .. |Barski_link| raw:: html
+
    <a href="http://www.ncbi.nlm.nih.gov/pubmed/17512414" target="_blank">Barski <i>et al.</i>, Cell (2007)</a>
 
 .. |bowtie2_link| raw:: html
@@ -295,13 +310,29 @@ on another page (see :ref:`configuration-of-uap`).
    
    <a href="" target="_blank">cufflinks</a>
 
+.. |fastqc_link| raw:: html
+      
+   <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/" target="_blank">FastQC</a>
+
+.. |fastx_toolkit_link| raw:: html
+      
+   <a href="http://hannonlab.cshl.edu/fastx_toolkit/" target="_blank">FASTX-Toolkit</a>
+
 .. |htseq_count_link| raw:: html
       
    <a href="http://www-huber.embl.de/users/anders/HTSeq/doc/count.html" target="_blank">htseq-count</a>
 
-   .. |picard_link| raw:: html
+.. |macs2_link| raw:: html
+      
+   <a href="https://github.com/taoliu/MACS" target="_blank">MACS2</a>
+
+.. |picard_link| raw:: html
       
    <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard</a>
+
+.. |preseq_link| raw:: html
+      
+   <a href="http://smithlabresearch.org/software/preseq/" target="_blank">preseq</a>
 
 .. |samtools_link| raw:: html
       
