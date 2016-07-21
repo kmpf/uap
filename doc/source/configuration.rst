@@ -45,8 +45,8 @@ Sections of a Configuration File
 
 .. _config-file-destination-path:
 
-``destination_path`` Section
-----------------------------
+``destination_path``
+--------------------
 
 The value of ``destination_path`` is the directory where **uap** is going
 to store the created files.
@@ -55,18 +55,41 @@ to store the created files.
 
 .. code-block:: yaml
 
-    destination_path: "/path/to/uap/output"
+    destination_path: "/path/to/workflow/output"
+
+
+``constants``
+-------------
+
+This section is the place where repeatedly used constants should be defined.
+For instance absolute paths to the genome index files can be defined as
+constant.
+
+.. code-block:: yaml
+
+   - &genome_faidx
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/samtools_faidx/hg19_all_chr_UCSC-download-B7ceRp9K/hg19_all_chr_UCSC-download.fasta.fai
+
+Later on the value can be reused by typing ``*genome_faidx``.
+**There are no restrictions about what can be defined here.**
 
 .. _config-file-steps:
 
-Steps Section
--------------
+``steps``
+---------
 
 The ``steps`` section is the core of the analysis file, because it defines when
 steps are executed and how they depend on each other.
 All available steps are described in detail in the steps documentation: 
 :doc:`steps`.
-This section contains a key for every step,
+The ``steps`` section contains an entry (technically a key) for every step.
+Every step name must be unique.
+.. note::
+
+   Please be aware that the |pyyaml_link|, the YAML parser used by uap, does not
+   complain about keys with the same name.
+   But drops one of the duplicates without giving an error.
+
 therefore each step must have a unique name [1]_.
 There are two ways to name a step to allow multiple steps of the same type and
 still ensure unique naming:
@@ -298,8 +321,8 @@ files are replaced by placeholder files.
 
 .. _uap_config_tools:
 
-Tools Section
-=============
+``tools``
+---------
 
 The ``tools`` section must list all programs required for the execution of a
 particular analysis.
@@ -391,8 +414,8 @@ A potential ``bedtools`` entry in the ``tools`` section, might look like this.
 
 .. _config_file_cluster: 
 
-Cluster Section
----------------
+``cluster``
+-----------
 
 The value of ``cluster`` is needed if the analysis is executed on a cluster,
 
@@ -455,7 +478,7 @@ Ausbauen!!!
 
 
 
-.. [1] |pyyaml_link|
+.. .. [1] |pyyaml_link|
 
 .. |uge_link| raw:: html
 
@@ -471,7 +494,7 @@ Ausbauen!!!
 
 .. |pyyaml_link| raw:: html
 
-   <a href="http://pyyaml.org/ticket/128" target="_blank">PyYAML does not complain about duplicate keys</a>
+   <a href="http://pyyaml.org/ticket/128" target="_blank">PyYAML</a>
 
 .. |pythex_link| raw:: html
 

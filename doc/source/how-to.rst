@@ -70,7 +70,7 @@ The following configurations showcase how to get/generate that data:
 ``download_human_gencode_release.yaml``
     Downloads the human Gencode main annotation v24 and a subset for long
     non-coding RNA genes.
-    This workflow only downloads files from the internetand and thus should
+    This workflow only downloads files from the internet and and thus should
     work on any machine.
 
 Let's have a look at the *Mycoplasma genitalium* example workflow by checking
@@ -209,6 +209,7 @@ RNAseq Example Workflow
     The usage of |segemehl_link| is **disabled** by default.
     But it can be enabled and combined with |cufflinks_link| *de novo*
     transcript assembly employing our **s2c** python script.
+
     **This workflow is not going to work, because the initial data set is
     to small.**
 
@@ -274,7 +275,7 @@ An example **uap** workflow is included in the two configuration files:
     Adapter sequences are removed from the reads before they are mapped to 
     the human genome.
     Reads are mapped with |bowtie2_link|, |bwa_link|, and |tophat2_link|.
-    Again mapping with |segemhel_link| is disabled by default due to its
+    Again mapping with |segemehl_link| is disabled by default due to its
     high resource requirements.
     Library complexity is estimated using |preseq_link|.
     Finally enriched regions are detected with |macs2_link|.
