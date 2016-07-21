@@ -360,7 +360,7 @@ version by calling the program without command-line arguments.
 get the version information.
 ``exit_code`` is the value returned by ``echo $?`` after trying to determine
 the version e.g. by running ``pigz --version``.
-If not set **uap** expects the ``exit_code`` to be 0.
+If not set ``exit_code`` defaults to 0.
 
 **uap** can use the module system if you are working on a cluster system (e.g.
 |uge_link| or |slurm_link|).
@@ -439,7 +439,10 @@ system.
 ``cluster``
 -----------
 
-The value of ``cluster`` is needed if the analysis is executed on a cluster,
+The ``cluster`` section is required only if the analysis is executed on a
+system using a cluster engine like |uge_link| or |slurm_link|.
+This section interacts tightly with the  
+An example ``cluster`` section looks like this:
 
 .. code-block:: yaml
 
@@ -452,6 +455,8 @@ The value of ``cluster`` is needed if the analysis is executed on a cluster,
 .. _config_file_default_submit_options:
 
 **default_submit_options**
+
+    This option holds the default submit options to use in
 
 .. _config_file_default_pre_job_command:
 
@@ -468,8 +473,9 @@ The value of ``cluster`` is needed if the analysis is executed on a cluster,
 Example Configurations
 ======================
 
-Please check out the example configurations provided inside the ``example-configurations`` folder of **uap**'s installation directory.
-
+Example configurations can be found in **uap**'s ``example-configurations``
+folder.
+More information about these examples can be found in :doc:`how-to`.
 
 **************************
 Cluster Configuration File
@@ -479,25 +485,139 @@ The cluster configuration file resides at::
 
     $ ls -la $(dirname $(which uap))/cluster/cluster-specific-commands.yaml
 
-This YAML file contains a dictionary per cluster type, that looks like that::
+This YAML file contains a dictionary for every cluster type.
+An example file is shown here:
 
-    uge: # Uniq name of the cluster engine
-        identity_test: ['qstat', '-help'] # Command to get version information
-        identity_answer: 'UGE' # The output of the above command for that cluster
-        submit: 'qsub' # Command to submit job
-        stat: 'qstat' # Command to check job status
-        template: 'cluster/submit-scripts/qsub-template.sh' # Path to template for submit script (relative to dirname $(which uap))
-        hold_jid: '-hold_jid' # way to define job dependencies
-        hold_jid_separator: ';' # Separator for job dependencies
-        set_job_name: '-N' # Way to set job names
-        set_stderr: '-e' # Way to set path to file for stderr
-        set_stdout: '-o' # Way to set path to file for stdout
-        parse_job_id: 'Your job (\d+)' # Regex to extract Job ID after submission
+.. code-block:: yaml
+
+   # Configuration for a UGE cluster engine
+   uge:
+       # Command to get version information
+       identity_test: ['qstat', '-help']
+       # The expected output of identity_test for this cluster engine
+       identity_answer: 'UGE'
+       # Command to submit job
+       submit: 'qsub'
+       # Command to check job status
+       stat: 'qstat'
+       # Relative path to submit script template
+       # The path has to be relative to:
+       # $ dirname $(which uap)
+       template: 'cluster/submit-scripts/qsub-template.sh' 
+       # way to define job dependencies
+       hold_jid: '-hold_jid'
+       # Separator for job dependencies
+       hold_jid_separator: ';'
+       # Option to set job names
+       set_job_name: '-N'
+       # Option to set path of stderr file
+       set_stderr: '-e'
+       # Option to set path of stdout file
+       set_stdout: '-o'
+       # Regex to extract Job ID after submission
+       parse_job_id: 'Your job (\d+)'
+
+   # Configuration for a SLURM cluster engine
+   slurm:
+       identity_test: ['sbatch', '--version']
+       identity_answer: 'slurm'
+       submit: 'sbatch'
+       stat: 'squeue'
+       template: 'cluster/submit-scripts/sbatch-template.sh'
+       hold_jid: '--dependency=afterany:%s'
+       hold_jid_separator: ':'
+       set_job_name: '--job-name=%s'
+       set_stderr: '-e'
+       set_stdout: '-o'
+       parse_job_id: 'Submitted batch job (\d+)'
 
 
-Ausbauen!!!
+Let's browse over the options which need to be set per cluster engine:
+
+``identity_test:``
+    Command used to determine if **uap** has been started on a system running
+    a cluster engine e.g. ``sbatch --version``.
+
+``identity_answer:``
+    **uap** checks if the output of the ``identity_test`` command starts with
+    this value e.g. ``slurm``.
+    If that is true the cluster type has been detected.
+
+``submit:``
+    Command to submit a job onto the cluster e.g. ``sbatch``.
+
+``stat:`` 
+    Command to check the status of jobs on the cluster e.g. ``squeue``.
+
+``template:``
+    Path to the submit script template which has to be used for this cluster
+    type e.g. ``cluster/submit-scripts/sbatch-template.sh``.
 
 
+``hold_jid:``
+    Option given to the ``submit`` command to define dependencies between
+    jobs e.g. ``--dependency=afterany:%s``.
+    Placeholder ``%s`` gets replaced with the jobs this job depends on if
+    present.
+
+``hold_jid_separator:``
+    Separator used to concatenate multiple jobs for ``hold_jid`` e.g. ``:``.
+
+``set_job_name:``
+    Option given to the ``submit`` command to set the job name e.g. 
+    ``--job-name=%s``.
+    ``%s`` is replaced by the job name if present.
+
+``set_stderr:``
+    Option given to the ``submit`` command to set the name of the stderr file
+    e.g. ``-e``.
+
+``set_stdout:``
+    Option given to the ``submit`` command to set the name of the stdout file
+    e.g. ``-o``.
+
+``parse_job_id:``
+    Python regular expression whose first parenthesized subgroup represents
+    the cluster job ID e.g. ``Submitted batch job (\d+)``.
+
+
+
+Submit Script Template
+======================
+
+The submit script template contains a lot of placeholders which are replaced
+if a job is submitted to the cluster with the actual commands.
+
+The submit script templates reside at::
+
+    $ ls $(dirname $(which uap))/cluster/submit-scripts/*
+    qsub-template.sh
+    sbatch-template.sh
+
+Feel free to add your own templates.
+The templates need to contain the following placeholders:
+
+``#{SUBMIT_OPTIONS}``
+    Will be replaced with the steps ``_cluster_submit_options`` value (see
+    :ref:`_cluster_submit_options <_config_file_cluster_submit_options>`), if
+    present, or the ``default_submit_options`` value.
+
+``#{PRE_JOB_COMMAND}``
+   Will be replaced with the steps ``_cluster_pre_job_command`` value (see
+   :ref:`_cluster_pre_job_command <_config_file_cluster_pre_job_command>`), if
+   present, or the ``default_pre_job_command`` value.
+
+``#{COMMAND}``
+   Will be replaced with ``uap <project-config>.yaml run-locally <run ID>``.
+
+``#{POST_JOB_COMMAND}``
+   Will be replaced with the steps ``_cluster_post_job_command`` value (see
+   :ref:`_cluster_post_job_command <_config_file_cluster_post_job_command>`), if
+   present, or the ``default_post_job_command`` value.
+
+The submit script template is required by
+:ref:`submit-to-cluster <uap-submit-to-cluster>` for job submission to the
+cluster.
 
 
 .. .. [1] |pyyaml_link|
