@@ -18,25 +18,27 @@ Extending **uap** Functionality
 Implement new steps
 *******************
 
-**uap** can be easily extended by implementing new source or processing steps.
-Therefore basic python programming skills are necessary.
-New steps are added to **uap** by placing a single Python file in:
+**uap** can be easily extended by implementing new
+:ref:`source <config_file_source_steps>` or
+:ref:`processing <config_file_processing_steps>` steps.
+That requires basic python programming skills.
+New steps are added to **uap** by placing a single Python file into one of these
+folders in the **uap** installation directory:
 
 ``include/sources``
-  for source steps
+  Place source step files here
 ``include/steps``
-  for processing steps.
+  Place processing step files here
 
-Let's get through that file(s) step by step.
+Let's talk about how to implement such **uap** steps.
+
+.. _extending_import:
 
 Step 1: Import Statements and Logger
 ====================================
 
-Please organize your imports in a similar fashion as shown below.
-Essential imports are ``from logging import getLogger`` and
-``from abstract_step import ...``.
-The former is necessary for getting access to the application wide logger and
-the latter to inherit either from ``AbstractStep`` or ``AbstractSourceStep``.
+At the beginning of every step please import the required modules and create a
+logger object.
 
 .. code-block:: python
 
@@ -45,7 +47,7 @@ the latter to inherit either from ``AbstractStep`` or ``AbstractSourceStep``.
    from logging import getLogger
 
    # Secondly import third party libraries
-   import yaml
+   import <module-you-need>
 
    # Thirdly import local application files
    from abstract_step import AbstractStep # or AbstractSourceStep
@@ -53,23 +55,44 @@ the latter to inherit either from ``AbstractStep`` or ``AbstractSourceStep``.
    # Get application wide logger
    logger = getLogger("uap_logger")
 
-   ..
+
+Essential imports are the ``from logging import getLogger`` and
+``from abstract_step import ...``.
+The former is necessary to get access to the application wide logger and
+the latter to be able to inherit either from ``AbstractStep`` or
+``AbstractSourceStep``.
+
+.. _extending_class_init:
 
 Step 2: Class Definition and Constructor
 ========================================
 
-Each step has to define a class with a constructor and a single
-functions.
+Now you need to define a class (which inherits either from ``AbstractStep`` or
+``AbstractSourceStep``) and its ``__init__`` method.
+
+.. code-block:: python
+
+   # Either inherit from AbstractSourceStep or AbstractStep
+   # class NameOfNewSourceStep(AbstractSourceStep):
+   class HelloWorld(AbstractStep):
+       # Overwrite constructor
+       def __init__(self, pipeline):
+           # Call super classes constructor
+           super(HelloWorld, self).__init__(pipeline)
+
+
+
 The new class needs to be derived from either ``AbstractStep``, for processing
 steps, or ``AbstractSourceStep``, for source steps.
+
 The ``__init__`` method should contain the declarations of:
 
-  * tools used in the step: ``self.require_tool('tool_name')``
+  * Tools used in the step: ``self.require_tool('tool_name')``
   * input and output connection(s): ``self.add_connection('in/*')`` or 
     ``self.add_connection('out/*')``
   * options: ``self.add_option()``
 
-Tools:
+Tools :
   Normally, steps use tools to perform there task.
   Each tool that is going to be used by a step needs to be requested via the
   method ``require_tool('tool_name')``.
