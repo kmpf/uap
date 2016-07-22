@@ -103,10 +103,10 @@ Create it and start again::
 A list with all runs and their respective state should be displayed.
 A run is always in one of these states:
 
-* ``[r]eady``                                                                                                                                                    
-* ``[w]aiting``                                                                                                                                                  
-* ``[q]ueued``                                                                                                                                                   
-* ``[e]xecuting``                                                                                                                                                
+* ``[r]eady``
+* ``[w]aiting``
+* ``[q]ueued``
+* ``[e]xecuting``
 * ``[f]inished``
 
 If the command still fails, please check that the tools defined in
@@ -292,7 +292,7 @@ If you are fine with what you saw
 Although writing the configuration may seem a bit complicated, the trouble 
 pays off later because further interaction with the pipeline is quite simple.
 The structure and content of the configuration files is very detailed described
-on another page (see :ref:`configuration-of-uap`).
+on another page (see :ref:`analysis_configuration`).
 
 
 .. |Barski_link| raw:: html

@@ -17,67 +17,58 @@ Command-Line Usage of **uap**
 **uap** uses Python's |argparse_link|.
 Therefore, **uap** provides help information on the command-line::
 
-  $ uap -h
-  usage: uap [-h] [-v] [--version]
-             [<project-config>.yaml]
-             {fix-problems,render,report,run-locally,status,steps,
-             submit-to-cluster,task-info,volatilize}
-             ...
-  
-  This script starts and controls 'uap' analysis.
-  
-  positional arguments:
-    <project-config>.yaml
-                          Path to YAML file which holds the pipeline
-                          configuration. It has to follow the structure given
-                          in the documentation.
-  
-  optional arguments:
-    -h, --help            show this help message and exit
-    -v, --verbose         Increase output verbosity
-    --version             Display version information.
-  
-  subcommands:
-    Available subcommands.
-  
-    {fix-problems,render,report,run-locally,status,steps,submit-to-cluster,
-    task-info,volatilize}
-      fix-problems        Fixes problematic states by removing stall files.
-      render              Renders DOT-graphs displaying information of the
-                          analysis.
-      report              Generates reports of steps which can do so.
-      run-locally         Executes the analysis on the local machine.
-      status              Displays information about the status of the analysis.
-      steps               Displays information about the steps available in UAP.
-      submit-to-cluster   Submits the jobs created by the seq-pipeline to a
-                          cluster
-      task-info           Displays information about certain source or
-                          processing tasks.
-      volatilize          Saves disk space by volatilizing intermediate results
-  
-  For further information please visit http://uap.readthedocs.org/en/latest/
-  For citation use ...
+    $ uap -h
+    usage: uap [-h] [-v] [--version]
+               [<project-config>.yaml]
+               {fix-problems,render,run-locally,status,steps,submit-to-cluster,run-info,volatilize}
+               ...
+    
+    This script starts and controls 'uap' analysis.
+    
+    positional arguments:
+      <project-config>.yaml
+                            Path to YAML file that contains the pipeline configuration.
+                            The content of that file needs to follow the documentation.
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      -v, --verbose         Increase output verbosity
+      --version             Display version information.
+    
+    subcommands:
+      Available subcommands.
+    
+      {fix-problems,render,run-locally,status,steps,submit-to-cluster,run-info,volatilize}
+        fix-problems        Fixes problematic states by removing stall files.
+        render              Renders DOT-graphs displaying information of the analysis.
+        run-locally         Executes the analysis on the local machine.
+        status              Displays information about the status of the analysis.
+        steps               Displays information about the steps available in uap.
+        submit-to-cluster   Submits the jobs created by uap to a cluster
+        run-info            Displays information about certain source or processing runs.
+        volatilize          Saves disk space by volatilizing intermediate results
+    
+    For further information please visit http://uap.readthedocs.org/en/latest/
+    For citation use ...
 
 Almost all subcommands require a YAML configuration file (see
-:doc:`configuration`) **except** for ``uap steps``, which does not dependent
-on a concrete analysis.
+:ref:`analysis_configuration`) **except** for ``uap steps``, which works
+independent of an analysis configuration file.
 
-Everytime **uap** is started with a :ref:`configuration-of-uap` several things
+Everytime **uap** is started with a 
+:ref:`analysis configuration file <analysis_configuration>` the following actions
 happen:
 
-1. The configuration file is read
-2. The tools given in the :ref:`tools section <uap_config_tools_section>` are
+1. Configuration file is read
+2. Tools given in the :ref:`tools section <uap_config_tools_section>` are
    checked
-3. The input files are checked
-4. The state of all runs are calculated. 
+3. Input files are checked
+4. State of all runs are calculated
 
-If any of these steps fails, **uap** will print an error message with and it
-will crash.
-This may seem a bit harsh, but after all, it's better to fail early than
-to fail late if failing is unavoidable.
+If any of these steps fail, **uap** will exit and print an error message.
 
-**uap** creates a symbolic link, if it does not exist already, pointing to the
-:ref:`destination path <config-file-destination-path>` called
+**uap** will create a symbolic link, if it does not exist already, pointing to
+the :ref:`destination path <config-file-destination-path>` called
 ``<project-config>.yaml-out``.
 The symbolic link is created in the directory containing the
 ``<project-config>.yaml``.
@@ -85,43 +76,48 @@ The symbolic link is created in the directory containing the
 There are a couple of global command line parameters which are valid for all 
 scripts (well, actually, it's only one):
 
-* ``--even-if-dirty``:
-    Before doing anything else, the pipeline checks whether its source code 
-    has been modified in any way via Git. 
-    If yes, processing is stopped immediately unless this flag is specified.
-    If you specify the flag, the fact that the repository was dirty will be 
-    recorded in all annotations which are produces *including* a full Git diff. A shortcut is ``--even``
+``--even-if-dirty`` or short ``--even``:
+    If this parameter appears **uap** will work even if uncommited changes
+    to its source code are detected.
+    **uap** would otherwise immediately stop working.
+    If you specify this flag, the repositories state is recorded in all
+    annotation files created by this process.
+    A full Git diff is *included* as well.
 
-The subcommands are described in detail below.
 
 .. _subcommands:
 
 Subcommands
 ===========
 
+Here an overview of all the available subcommands are given.
+
 .. _uap-steps:
 
-steps
------
+``steps`` Subcommand
+--------------------
 
 The ``steps`` subcommand lists all available :ref:`source
 <config_file_source_steps>` and :ref:`processing <config_file_processing_steps>`
 steps::
 
+  $ uap steps -h
   usage: uap [<project-config>.yaml] steps [-h] [--even-if-dirty] [--show STEP]
   
   This script displays by default a list of all steps the pipeline can use.
   
   optional arguments:
     -h, --help       show this help message and exit
-    --even-if-dirty  Must be set if the local git repository contains uncommited
-                     changes. Otherwise the pipeline will not start.
+    --even-if-dirty  This option must be set if the local git repository
+                     contains uncommited changes.
+                     Otherwise uap will not run.
     --show STEP      Show the details of a specific step.
+  
 
 .. _uap-status:
 
-status
-------
+``status`` Subcommand
+---------------------
 
 The ``status`` subcommand lists all runs of an analysis.
 A run is describes the concrete processing of a sample by a step.
@@ -133,43 +129,37 @@ Here is the help message::
   usage: uap [<project-config>.yaml] status [-h] [--even-if-dirty]
                                             [--cluster CLUSTER] [--summarize]
                                             [--graph] [--sources]
-                                            [-t [TASK [TASK ...]]]
+                                            [-r [RUN [RUN ...]]]
   
-  This script displays by default information about all tasks of the pipeline
-  as configured in '<project-config>.yaml'. But the displayed information can
-  be narrowed down via command line options.
+  This script displays by default information about all runs of the pipeline as
+  configured in '<project-config>.yaml'. But the displayed information can be
+  narrowed down via command line options.
   IMPORTANT: Hints given by this script are just valid if the jobs were
   submitted to the cluster.
   
   optional arguments:
     -h, --help            show this help message and exit
-    --even-if-dirty       Must be set if the local git repository contains
-                          uncommited changes. Otherwise the pipeline will not
-                          start.
-    --cluster CLUSTER     Specify the cluster type (sge, slurm), defaults to
-                          auto.
+    --even-if-dirty       This option must be set if the local git repository
+                          contains uncommited changes.
+                          Otherwise uap will not run.
+    --cluster CLUSTER     Specify the cluster type. Default: [auto].
     --summarize           Displays summarized information of the analysis.
     --graph               Displays the dependency graph of the analysis.
     --sources             Displays only information about the source runs.
-    -t [TASK [TASK ...]], --task [TASK [TASK ...]]
-                          Displays only the named task IDs. Can take multiple
-                          task ID(s) as input. A task ID looks like this
-                          'step_name/run_id'. A list of all task IDs is returned
-                          by running:
-                          $ uap <project-config>.yaml status
-  
+    -r [RUN [RUN ...]], --run [RUN [RUN ...]]
+                          The status of these runs are displayed.
 
 At any time, each run is in one of the following states:
 
-* **waiting** -- the run is waiting for input files to appear, or its input
+* ``[w]aiting`` -- the run is waiting for input files to appear, or its input
   files are not up-to-date regarding their respective dependencies
-* **ready** -- all input files are present and up-to-date regarding their 
+* ``[r]eady`` -- all input files are present and up-to-date regarding their 
   upstream input files (and so on, recursively), the run is ready and can 
   be started
-* **queued** -- the run is currently queued and will be started "soon" 
+* ``[q]ueued`` -- the run is currently queued and will be started "soon" 
   (only available if you use a compute cluster)
-* **executing** -- the run is currently running on this or another machine
-* **finished** -- all output files are in place and up-to-date
+* ``[e]xecuting`` -- the run is currently running on this or another machine
+* ``[f]inished`` -- all output files are in place and up-to-date
 
 
 
@@ -178,56 +168,55 @@ Here is an example output::
     $ uap <project-config>.yaml status
     Waiting tasks
     -------------
-    [w] cufflinks/Sample_COPD_2023
+    [w] fasta_index/download
+    [w] segemehl_index/Mycoplasma_genitalium_genome-download
 
     Ready tasks
     -----------
-    [r] tophat2/Sample_COPD_2023
+    [r] bowtie2_index/Mycoplasma_genitalium_index-download
+    [r] bwa_index/Mycoplasma_genitalium_index-download
 
     Finished tasks
     --------------
-    [f] cutadapt/Sample_COPD_2023-R1
-    [f] cutadapt/Sample_COPD_2023-R2
-    [f] fix_cutadapt/Sample_COPD_2023
+    [f] M_genitalium_genome/download
 
-    tasks: 5 total, 1 waiting, 1 ready, 3 finished
+    tasks: 5 total, 2 waiting, 2 ready, 1 finished
     
 To get a more concise summary, specify ``--summarize``::
 
     $ uap <project-config>.yaml status --summarize
     Waiting tasks
     -------------
-    [w]   1 cufflinks
+    [w]   1 fasta_index
+    [w]   1 segemehl_index
 
     Ready tasks
     -----------
-    [r]   1 tophat2
+    [r]   1 bowtie2_index
+    [r]   1 bwa_index
 
     Finished tasks
     --------------
-    [f]   2 cutadapt
-    [f]   1 fix_cutadapt
+    [f]   1 M_genitalium_genome
 
-    tasks: 5 total, 1 waiting, 1 ready, 3 finished
+    tasks: 5 total, 2 waiting, 2 ready, 1 finished
     
-...or print a fancy ASCII art graph with ``--graph``::
+... or print a fancy ASCII art graph with ``--graph``::
 
     $ uap <project-config>.yaml status --graph
-    samples (1 finished)
-    └─cutadapt (2 finished)
-      └─fix_cutadapt (1 finished)
-        └─tophat2 (1 ready)
-          └─cufflinks (1 waiting)
-
+    M_genitalium_genome (raw_url_source) [1 finished]
+    └─│─│─│─bowtie2_index (bowtie2_generate_index) [1 ready]
+      └─│─│─bwa_index (bwa_generate_index) [1 ready]
+        └─│─fasta_index (samtools_faidx) [1 waiting]
+          └─segemehl_index (segemehl_generate_index) [1 waiting]
 
 Detailed information about a specific task can be obtained by specifying the 
 run ID on the command line::
 
-  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status -t \
-    bowtie2_index/Mycoplasma_genitalium_index-download --even
+  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status -r \
+    bowtie2_index/Mycoplasma_genitalium_index-download
   [uap] Set log level to ERROR
-  output_directory: genomes/bacteria/Mycoplasma_genitalium/bowtie2_index/
-                    Mycoplasma_genitalium_index-download-cMQPtBxs
+  output_directory: genomes/bacteria/Mycoplasma_genitalium/bowtie2_index/Mycoplasma_genitalium_index-download-ZsvbSjtK
   output_files:
     out/bowtie_index:
       Mycoplasma_genitalium_index-download.1.bt2: &id001
@@ -242,10 +231,10 @@ run ID on the command line::
   run_id: Mycoplasma_genitalium_index-download
   state: FINISHED
 
-This data structure is called the "run info" of a certain run and it 
-represents a kind of plan which includes information about which output 
-files will be generated and which input files they depend on -- this is 
-stored in ``output_files``. 
+This is the known data for run
+``bowtie2_index/Mycoplasma_genitalium_index-download``.
+It contains information about the output folder, the output files and the
+input files they depend on as well as the run ID and the run state.
 
 Source steps can be viewed separately by specifying ``--sources``::
 
@@ -253,114 +242,108 @@ Source steps can be viewed separately by specifying ``--sources``::
     [uap] Set log level to ERROR
     M_genitalium_genome/download
 
-.. _uap-task-info:
+.. _uap-run-info:
 
-task-info
----------
+``run-info`` Subcommand
+-----------------------
 
-The ``task-info`` subcommand writes the commands which were or will be executed
-to the terminal in the form of a semi-functional BASH script.
-Semi-functional means that at the moment output redirections for some commands
+The ``run-info`` subcommand displays the commands issued for a given run.
+The output looks like a BASH script, but might not be functional.
+This is due to the fact that output redirections for some commands
 are missing in the BASH script.
-Also included are the ``run info`` information as already described for the
-``status`` subcommand.
+The output includes also the information as shown by the ``status -r <run-ID>``
+subcommand.
 
 An example output showing the download of the *Mycoplasma genitalium* genome::
 
-  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml task-info -t \
-    M_genitalium_genome/download --even
+  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml run-info --even -r M_genitalium_genome/download
+  [uap] Set log level to ERROR
+  #!/usr/bin/env bash
+  
+  # M_genitalium_genome/download -- Report
+  # ======================================
+  #
+  # output_directory: genomes/bacteria/Mycoplasma_genitalium/M_genitalium_genome/download-7RncJ4tr
+  # output_files:
+  #   out/raw:
+  #     genomes/bacteria/Mycoplasma_genitalium/Mycoplasma_genitalium.ASM2732v1.fa: []
+  # private_info: {}
+  # public_info: {}
+  # run_id: download
+  # state: FINISHED
+  # 
+  # M_genitalium_genome/download -- Commands
+  # ========================================
+  
+  # 1. Group of Commands -- 1. Command
+  # ----------------------------------
+  
+  curl ftp://ftp.ncbi.nih.gov/genomes/genbank/bacteria/Mycoplasma_genitalium/latest_assembly_versions/GCA_000027325.1_ASM2732v1/GCA_000027325.1_ASM2732v1_genomic.fna.gz
+  
+  # 2. Group of Commands -- 1. Command
+  # ----------------------------------
+  
+  ../tools/compare_secure_hashes.py --algorithm md5 --secure-hash f02c78b5f9e756031eeaa51531517f24 genomes/bacteria/Mycoplasma_genitalium/M_genitalium_genome/download-7RncJ4tr/L9PXBmbPKlemghJGNM97JwVuzMdGCA_000027325.1_ASM2732v1_genomic.fna.gz
+  
+  # 3. Group of Commands -- 1. Pipeline
+  # -----------------------------------
+  
+  pigz --decompress --stdout --processes 1 genomes/bacteria/Mycoplasma_genitalium/M_genitalium_genome/download-7RncJ4tr/L9PXBmbPKlemghJGNM97JwVuzMdGCA_000027325.1_ASM2732v1_genomic.fna.gz | dd bs=4M of=/home/hubert/develop/uap/example-configurations/genomes/bacteria/Mycoplasma_genitalium/Mycoplasma_genitalium.ASM2732v1.fa
+  
 
-    [uap] Set log level to ERROR
-    #!/usr/bin/env bash
-    
-    # M_genitalium_genome/download -- Report
-    # ======================================
-    #
-    # output_directory: genomes/bacteria/Mycoplasma_genitalium/M_genitalium_genome/download-5dych7Xj
-    # output_files:
-    #   out/raw:
-    #     genomes/bacteria/Mycoplasma_genitalium/Mycoplasma_genitalium.ASM2732v1.fa: []
-    # private_info: {}
-    # public_info: {}
-    # run_id: download
-    # state: FINISHED
-    # 
-    # M_genitalium_genome/download -- Commands
-    # ========================================
-    
-    # 1. Group of Commands -- 1. Command
-    # ----------------------------------
-
-    curl ftp://ftp.ncbi.nih.gov/genomes/genbank/bacteria/Mycoplasma_genitalium/latest_assembly_versions/GCA_000027325.1_ASM2732v1/GCA_000027325.1_ASM2732v1_genomic.fna.gz
-
-    # 2. Group of Commands -- 1. Command
-    # ----------------------------------
-
-    ../tools/compare_secure_hashes.py --algorithm md5 --secure-hash a3e6e5655e4996dc2d49f876be9d1c27 genomes/bacteria/Mycoplasma_genitalium/M_genitalium_genome/download-5dych7Xj/L9PXBmbPKlemghJGNM97JwVuzMdGCA_000027325.1_ASM2732v1_genomic.fna.gz
-
-    # 3. Group of Commands -- 1. Pipeline
-    # -----------------------------------
-
-    pigz --decompress --stdout --processes 1 genomes/bacteria/Mycoplasma_genitalium/M_genitalium_genome/download-5dych7Xj/L9PXBmbPKlemghJGNM97JwVuzMdGCA_000027325.1_ASM2732v1_genomic.fna.gz | dd bs=4M of=/home/hubert/develop/uap/example-configurations/genomes/bacteria/Mycoplasma_genitalium/Mycoplasma_genitalium.ASM2732v1.fa
-
-This subcommand allows the user to run parts of the analysis manually without uap and control
-for causes of failure.
-
+This subcommand enables the user to manually run parts of the analysis without
+**uap**.
+That can be helpful for debugging steps during development.
 
 .. _uap-run-locally:
 
-run-locally
------------
+``run-locally`` Subcommand
+--------------------------
 
-The ``run-locally`` subcommand runs all non-finished runs (or a subset) 
-sequentially on the local machine. 
-Feel free to cancel this script at any time, it won't put your project in a 
+The ``run-locally`` subcommand runs all non-finished runs (or a specified
+subset) sequentially on the local machine. 
+The execution can be cancelled at any time, it won't put your project in a 
 unstable state.
 However, if the ``run-locally`` subcommand receives a |sigkill_link| signal, the 
 currently executing job will continue to run and the corresponding run
 will be reported as ``executing`` by calling ``status`` subcommand for five more
-minutes (|sigterm_link| should be fine and exit gracefully but *doesn't just yet*).
+minutes (|sigterm_link| should be fine and exit gracefully but
+*doesn't just yet*).
 After that time, you will be warned that a job is marked as being currently
 run but no activity has been seen for a while, along with further 
 instructions about what to do in such a case (don't worry, it shouldn't 
 happen by accident).
 
-To execute one or more certain runs, specify the run IDs on the command 
-line. 
-To execute all runs of a certain step, specify the step name on the command 
-line.
+Specify a set of run IDs to execute only those runs.
+Specify the name of a step to execute all ready runs of that step.
 
 This subcommands usage information::
 
-  $ uap <project-config>.yaml run-locally -h
+  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml run-locally -h
   usage: uap [<project-config>.yaml] run-locally [-h] [--even-if-dirty]
-                                               [step_task [step_task ...]]
-
+                                                 [run [run ...]]
+  
   This command  starts 'uap' on the local machine. It can be used to start:
-  * all tasks of the pipeline as configured in <project-config>.yaml
-  * all tasks defined by a specific step in <project-config>.yaml
-  * one or more steps
+   * all runs of the pipeline as configured in <project-config>.yaml
+   * all runs defined by a specific step in <project-config>.yaml
+   * one or more steps
   To start the complete pipeline as configured in <project-config>.yaml execute:
-    $ uap <project-config>.yaml run-locally
+  $ uap <project-config>.yaml run-locally
   To start a specific step execute:
-    $ uap <project-config>.yaml run-locally <step_name>
-  To start a specific task execute:
-    $ uap <project-config>.yaml run-locally <step_name/run_id>
-  The step_name is the name of an entry in the 'steps:' section as defined in
-  '<project-config>.yaml'. A specific task is defined via its task ID
-  'step_name/run_id'. A list of all task IDs is returned by running:
-    $ uap <project-config>.yaml status
-
+  $ uap <project-config>.yaml run-locally <step_name>
+  To start a specific run execute:
+  $ uap <project-config>.yaml run-locally <step/run>
+  The step_name is the name of an entry in the 'steps:' section as defined in '<project-config>.yaml'. A specific run is defined via its run ID 'step/run'. To get a list of all run IDs please run:
+  $ uap <project-config>.yaml status
+  
   positional arguments:
-    step_task        Can take multiple step names as input. A step name is the
-                     name of any entry in the 'steps:' section as defined in
-                     '<config>.yaml'. A list of all task IDs is returned by running:
-                       $ uap <project-config>.yaml status.
-
+    run              These runs are processed on the local machine.
+  
   optional arguments:
     -h, --help       show this help message and exit
-    --even-if-dirty  Must be set if the local git repository contains uncommited
-                     changes. Otherwise the pipeline will not start.
+    --even-if-dirty  This option must be set if the local git repository
+                     contains uncommited changes.
+                     Otherwise uap will not run.
 
 .. NOTE:: Why is it safe to cancel the pipeline? 
     The pipeline is written in a way which expects processes to fail or 
@@ -373,86 +356,81 @@ This subcommands usage information::
     
 .. _uap-submit-to-cluster:
 
-submit-to-cluster
------------------
+``submit-to-cluster`` Subcommand
+--------------------------------
 
-The ``submit-to-cluster`` subcommand determines which runs still have to be 
-carried out and which supported cluster engine is available.
-It then submits the jobs to the cluster if a cluster engine has been found. 
+The ``submit-to-cluster`` subcommand determines which runs still need to be 
+executed and which supported cluster engine is available.
+It submits a job for every run to the cluster if a cluster engine could be
+detected.
 Dependencies are passed to cluster engine in a way that jobs that depend on
 other jobs won't get scheduled until their dependencies have been satisfied. 
-The files ``qsub-template.sh`` and ``sbatch-template.sh`` are used to submit
-jobs.
-Fields with ``#{ }`` are substituted with appropriate values.
+For more information read about the 
+:ref:`cluster configuration <cluster_configuration>` and the
+:ref:`submit script template <submit_template>`.
 Each submitted job calls **uap** with the ``run-locally`` subcommand on the
-cluster nodes.
+executing cluster node.
 
-The file ``quotas.yaml`` can be used to define different quotas for different 
-systems:
-
-.. code-block:: yaml
-
-    "frontend[12]":
-        default: 5
-        cutadapt: 100
-
-In the example above, a default quota of 5 is defined for hosts with a 
-hostname of ``frontend1`` or ``frontend2`` (the name is a regular expression). 
-A quota of 5 means that no more than 5 jobs of one kind will be run in 
-parallel.
-Different quotas can be defined for each step: because ``cutadapt`` is 
-highly I/O-efficient, it has a higher quota.
-
-This subcommand provides usage information::
+Here is the usage information::
     
-  $ uap <project-config>.yaml submit-to-cluster -h
+  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml submit-to-cluster -h
   usage: uap [<project-config>.yaml] submit-to-cluster [-h] [--even-if-dirty]
                                                        [--cluster CLUSTER]
-                                                       [step_task [step_task ...]]
-
-  This script submits all tasks configured in <project-config>.yaml to a
-  SGE/OGE/UGE or SLURM cluster. The list of tasks can be narrowed down by
-  specifying a step name (in which case all runs of this steps will be considered)
-  or individual tasks (step_name/run_id).
-
+                                                       [run [run ...]]
+  
+  This script submits all runs configured in <project-config>.yaml to a cluster.
+  The configuration for the available cluster types is stored at
+  /<path-to-uap>/cluster/cluster-specific-commands.yaml.
+  The list of runs can be narrowed down to specific steps. All runs of the
+  specified step will be submitted to the cluster. Also, individual runs IDs
+  (step/run) can be used for submission.
+  
   positional arguments:
-    step_task          Can take multiple step names as input. A step name is
-                       the name of any entry in the 'steps:' section as defined
-                       in '<project-config>.yaml'. A list of all task IDs is
-                       returned by running:
-                         $ uap <project-config>.yaml status
-
-    optional arguments:
-      -h, --help         show this help message and exit
-      --even-if-dirty    Must be set if the local git repository contains
-                         uncommited changes. Otherwise the pipeline will not
-                         start.
-      --cluster CLUSTER  Specify the cluster type. Choices: [auto, sge, slurm].
-                         Default: [auto].
+    run                Submit only these runs to the cluster.
+  
+  optional arguments:
+    -h, --help         show this help message and exit
+    --even-if-dirty    This option must be set if the local git repository
+                       contains uncommited changes.
+                       Otherwise uap will not run.
+    --cluster CLUSTER  Specify the cluster type. Default: [auto].
 
 
 .. _uap-fix-problems:
 
-fix-problems
-------------
+``fix-problems`` Subcommand
+---------------------------
 
 The ``fix-problems`` subcommand removes temporary files written by **uap** if
 they are not required anymore.
-This subcommand provides usage information::
+
+Here is the usage information::
 
   $ uap <project-config>.yaml fix-problems -h
   usage: uap [<project-config>.yaml] fix-problems [-h] [--even-if-dirty]
                                                   [--cluster CLUSTER]
                                                   [--details] [--srsly]
-
+  
   optional arguments:
     -h, --help         show this help message and exit
-    --even-if-dirty    Must be set if the local git repository contains
-                       uncommited changes. Otherwise the pipeline will not start.
-    --cluster CLUSTER  Specify the cluster type (sge, slurm), defaults to auto.
-    --details          Displays information about problematic files which need
-                       to be deleted to fix problem.
-    --srsly            Deletes problematic files.
+    --even-if-dirty    This option must be set if the local git repository
+                       contains uncommited changes.
+                       Otherwise uap will not run.
+    --cluster CLUSTER  Specify the cluster type. Default: [auto].
+    --details          Displays information about the files causing problems.
+    --srsly            Delete problematic files.
+    usage: uap [<project-config>.yaml] fix-problems [-h] [--even-if-dirty]
+                                                    [--cluster CLUSTER]
+                                                    [--details] [--srsly]
+  
+    optional arguments:
+      -h, --help         show this help message and exit
+      --even-if-dirty    Must be set if the local git repository contains
+                         uncommited changes. Otherwise the pipeline will not start.
+      --cluster CLUSTER  Specify the cluster type (sge, slurm), defaults to auto.
+      --details          Displays information about problematic files which need
+                         to be deleted to fix problem.
+      --srsly            Deletes problematic files.
 
 
 **uap** writes temporary files to indicate if a job is queued or executed.
@@ -475,29 +453,31 @@ You've fixed the problem, haven't you?
 
 .. _uap-volatilize:
 
-volatilize
-----------
+``volatilize`` Subcommand
+-------------------------
 
 The ``volatilize`` subcommand is useful to reduce the required disk space of
 your analysis.
-It works only in conjunction with the :ref:`volatile` keyword
-set in the :ref:`configuration-of-uap`.
+It works only if the :ref:`_volatile <config_file_volatile>` keyword is set in
+the :ref:`analysis configuration file <analysis_configuration>` for.
 As already mentioned there, steps marked as ``_volatile`` compute their output
-files as normal but they can be deleted if their dependent steps are finished.
+files as normal but can be replaced by placeholder files if their dependent
+steps are finished.
 
 This subcommand provides usage information::
 
   $ uap <project-config>.yaml volatilize -h
+
   usage: uap [<project-config>.yaml] volatilize [-h] [--even-if-dirty]
                                                 [--details] [--srsly]
-
-  Save disk space by volatilizing intermediate results. Only steps marked with
-  '_volatile: True' are considered.
-
+  
+  Save disk space by volatilizing intermediate results. Only steps marked with '_volatile: True' are considered.
+  
   optional arguments:
     -h, --help       show this help message and exit
-    --even-if-dirty  Must be set if the local git repository contains uncommited
-                     changes. Otherwise the pipeline will not start.
+    --even-if-dirty  This option must be set if the local git repository
+                     contains uncommited changes.
+                     Otherwise uap will not run.
     --details        Shows which files can be volatilized.
     --srsly          Replaces files marked for volatilization with a placeholder.
 
@@ -506,13 +486,10 @@ are replaced by placeholder files.
 The placeholder files have the same name as the original files suffixed with
 ``.volatile.placeholder.yaml``.
 
-Achtung: Daten werden nicht mehr automatisch volatilisiert, auch wenn es in der
-         Config angegeben ist während die Berechnungen laufen.
-
 .. _uap-render:
 
-render
-------
+``render`` Subcommand
+---------------------
 
 The ``render`` subcommand generates graphs using graphviz.
 The graphs either show the complete analysis or the execution of a single run.
@@ -520,31 +497,32 @@ At the moment ``--simple`` only has an effect in combination with ``--steps``.
 
 This subcommand provides usage information::
 
-   $ uap <project-config>.yaml render -h
-
-   usage: uap [<project-config>.yaml] render [-h] [--even-if-dirty] [--files]
-                                             [--steps] [--simple]
-                                             [step_task [step_task ...]]
-
-   'render' generates DOT-graphs. Without arguments it takes the log file of
-   each task and generates a graph, showing details of the computation.
-
-   positional arguments:
-     step_task        Displays only the named task IDs. Can take multiple task
-                      ID(s) as input. A task ID looks like this
-                      'step_name/run_id'. A list of all task IDs is returned by
-                      running 'uap <project-config>.yaml status'.
-
-   optional arguments:
-     -h, --help       show this help message and exit
-     --even-if-dirty  Must be set if the local git repository contains
-                      uncommited changes. Otherwise the pipeline will not start.
-     --files          Renders a graph showing all files of the analysis.
-                      [Not implemented yet!]
-     --steps          Renders a graph showing all steps of the analysis and their
-                      connections.
-     --simple         Rendered graphs are simplified.
-
+  $ uap <project-config>.yaml render -h
+  usage: uap [<project-config>.yaml] render [-h] [--even-if-dirty] [--files]
+                                            [--steps] [--simple]
+                                            [--orientation {left-to-right,right-to-left,top-to-bottom}]
+                                            [run [run ...]]
+  
+  'render' generates DOT-graphs. Without arguments
+  it takes the annotation file of each run and generates a graph,
+  showing details of the computation.
+  
+  positional arguments:
+    run                   Render only graphs for these runs.
+  
+  optional arguments:
+    -h, --help            show this help message and exit
+    --even-if-dirty       This option must be set if the local git repository
+                          contains uncommited changes.
+                          Otherwise uap will not run.
+    --files               Renders a graph showing all files of the analysis.
+                          [Not implemented yet!]
+    --steps               Renders a graph showing all steps of the analysis and
+                          their connections.
+    --simple              Simplify rendered graphs.
+    --orientation {left-to-right,right-to-left,top-to-bottom}
+                          Defines orientation of the graph.
+                          Default: 'top-to-bottom'
 
 .. |argparse_link| raw:: html
 
