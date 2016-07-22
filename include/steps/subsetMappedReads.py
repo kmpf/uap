@@ -81,7 +81,8 @@ class subsetMappedReads(AbstractStep):
                         # 2. command: Read sam file
                         samtools_view = [
                             self.get_tool('samtools'), 'view',
-                            '-S', '-t', self.get_option('genome-faidx')                       
+                            '-S', '-t', self.get_option('genome-faidx'),
+                            '-'
                         ]
                         pipe.add_command(samtools_view)
 
