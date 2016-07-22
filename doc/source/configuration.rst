@@ -464,7 +464,7 @@ An example ``cluster`` section looks like this:
 **default_submit_options**
 
     This is the default submit options string which replaces the
-    :ref:`#{SUBMIT_OPTIONS} <submit_template_submit_options>` placeholder in
+    :ref:`\#\{SUBMIT_OPTIONS\} <submit_template_submit_options>` placeholder in
     the :ref:`submit script template <submit_template>`.
 
 .. _config_file_default_pre_job_command:
