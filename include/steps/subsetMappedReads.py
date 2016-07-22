@@ -87,8 +87,7 @@ class subsetMappedReads(AbstractStep):
 
                         # 3. extract the first Nreads
                         get_Nreads = [
-                            self.get_tool('head'), '-',
-                            self.get_option('Nreads')
+                            self.get_tool('head'), '-%s' % self.get_option('Nreads')
                         ]
                         pipe.add_command(get_Nreads)
 
