@@ -60,10 +60,6 @@ class subsetMappedReads(AbstractStep):
                 if not self.is_option_set_in_config('Nreads'):
                     logger.error("Required option 'Nreads' not set in your configuration file")
                     sys.exit(1)
-                else:
-                    if not isinstance( self.get_option('Nreads'), ( int, long ) ):
-                        logger.error("The value of your option 'Nreads' in step subsetMappedReads is not a number")
-                        sys.exit(1)
 
                 with run.new_exec_group() as exec_group:
 
