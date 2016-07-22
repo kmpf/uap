@@ -78,7 +78,7 @@ class subsetMappedReads(AbstractStep):
                                     '--stdout']
                             pipe.add_command(pigz)
 
-                        # 2. command: Convert sam to bam
+                        # 2. command: Read sam file
                         samtools_view = [
                             self.get_tool('samtools'), 'view',
                             '-S', '-t', self.get_option('genome-faidx')                       
@@ -91,7 +91,14 @@ class subsetMappedReads(AbstractStep):
                         ]
                         pipe.add_command(get_Nreads)
 
-                        # 4. command: dd
+                        # 4. command: Write sam file
+                        samtools_write = [
+                            self.get_tool('samtools'), 'view',
+                            '-S', '-'
+                        ]
+                        pipe.add_command(samtools_write)
+
+                        # 5. command: dd
                         dd_out = [self.get_tool('dd'), 'obs=4M']
                         pipe.add_command(
                             dd_out,
