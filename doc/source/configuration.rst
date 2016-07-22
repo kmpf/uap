@@ -463,7 +463,9 @@ An example ``cluster`` section looks like this:
 
 **default_submit_options**
 
-    This option holds the default submit options to use in
+    This is the default submit options string which replaces the
+    :ref:`#{SUBMIT_OPTIONS} <submit_template_submit_options>` placeholder in
+    the :ref:`submit script template <submit_template>`.
 
 .. _config_file_default_pre_job_command:
 
@@ -587,7 +589,7 @@ Let's browse over the options which need to be set per cluster engine:
     Python regular expression whose first parenthesized subgroup represents
     the cluster job ID e.g. ``Submitted batch job (\d+)``.
 
-
+.. _submit_template:
 
 Submit Script Template
 ======================
@@ -604,18 +606,26 @@ The submit script templates reside at::
 Feel free to add your own templates.
 The templates need to contain the following placeholders:
 
+.. _submit_template_submit_options:
+
 ``#{SUBMIT_OPTIONS}``
     Will be replaced with the steps ``_cluster_submit_options`` value (see
     :ref:`_cluster_submit_options <_config_file_cluster_submit_options>`), if
     present, or the ``default_submit_options`` value.
+
+.. _submit_template_pre_job_command:
 
 ``#{PRE_JOB_COMMAND}``
    Will be replaced with the steps ``_cluster_pre_job_command`` value (see
    :ref:`_cluster_pre_job_command <_config_file_cluster_pre_job_command>`), if
    present, or the ``default_pre_job_command`` value.
 
+.. _submit_template_command:
+
 ``#{COMMAND}``
    Will be replaced with ``uap <project-config>.yaml run-locally <run ID>``.
+
+.. _submit_template_post_job_command:
 
 ``#{POST_JOB_COMMAND}``
    Will be replaced with the steps ``_cluster_post_job_command`` value (see
