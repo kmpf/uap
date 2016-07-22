@@ -80,7 +80,7 @@ class subsetMappedReads(AbstractStep):
 
                         # 2. command: Read sam file
                         samtools_view = [
-                            self.get_tool('samtools'), 'view',
+                            self.get_tool('samtools'), 'view', '-h'
                             '-S', '-t', self.get_option('genome-faidx'),
                             '-'
                         ]
@@ -94,7 +94,7 @@ class subsetMappedReads(AbstractStep):
 
                         # 4. command: Write sam file
                         samtools_write = [
-                            self.get_tool('samtools'), 'view',
+                            self.get_tool('samtools'), 'view', '-h',
                             '-S', '-'
                         ]
                         pipe.add_command(samtools_write)
