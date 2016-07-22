@@ -8,7 +8,7 @@
 ..
   This document aims to describe how to configure **uap**.
 
-.. _configuration-of-uap:
+.. _analysis_configuration:
 
 ***************************
 Analysis Configuration File
@@ -45,8 +45,8 @@ Sections of a Configuration File
 
 .. _config-file-destination-path:
 
-``destination_path``
---------------------
+``destination_path`` Section
+----------------------------
 
 The value of ``destination_path`` is the directory where **uap** is going
 to store the created files.
@@ -58,8 +58,8 @@ to store the created files.
     destination_path: "/path/to/workflow/output"
 
 
-``constants``
--------------
+``constants`` Section
+---------------------
 
 This section is the place where repeatedly used constants should be defined.
 For instance absolute paths to the genome index files can be defined as
@@ -75,8 +75,8 @@ Later on the value can be reused by typing ``*genome_faidx``.
 
 .. _config-file-steps:
 
-``steps``
----------
+``steps`` Section
+-----------------
 
 The ``steps`` section is the core of the analysis file, because it defines when
 steps are executed and how they depend on each other.
@@ -321,15 +321,15 @@ executes the :ref:`volatilize <uap-volatilize>` command.
 
 **_cluster_job_quota**
 
-    This positive number defines the number of jobs of the same type that can
+    This option defines the number of jobs of the same type that can
     run simultaneously on a cluster.
     This option allows to overwrite the values set in 
     :ref:`default_job_quota <config_file_default_job_quota>`.
 
 .. _uap_config_tools:
 
-``tools``
----------
+``tools`` Section
+-----------------
 
 The ``tools`` section lists all programs required for the execution of a
 particular analysis.
@@ -443,8 +443,8 @@ system.
 
 .. _config_file_cluster: 
 
-``cluster``
------------
+``cluster`` Section
+-------------------
 
 The ``cluster`` section is required only if the analysis is executed on a
 system using a cluster engine like |uge_link| or |slurm_link|.
@@ -464,20 +464,44 @@ An example ``cluster`` section looks like this:
 **default_submit_options**
 
     This is the default submit options string which replaces the
-    :ref:`SUBMIT_OPTIONS <submit_template_submit_options>` placeholder in
+    :ref:`#{SUBMIT_OPTIONS} <submit_template_submit_options>` placeholder in
     the :ref:`submit script template <submit_template>`.
+    It is **mandatory** to set this value.
 
 .. _config_file_default_pre_job_command:
 
 **default_pre_job_command**
 
+    This string contains the default commands which will be executed
+    **BEFORE uap** is started on the cluster.
+    It will replace the
+    :ref:`#{PRE_JOB_COMMAND} <submit_template_pre_job_command>` placeholder in
+    the :ref:`submit script template <submit_template>`.
+    If mutliple commands shall be executed separate those with ``\n``.
+    It is **optional** to set this value.
+
 .. _config_file_default_post_job_command:
 
 **default_post_job_command**
 
+    This string contains the default commands which will be executed
+    **AFTER uap** is started on the cluster.
+    It will replace the
+    :ref:`#{POST_JOB_COMMAND} <submit_template_post_job_command>` placeholder in
+    the :ref:`submit script template <submit_template>`.
+    If mutliple commands shall be executed separate those with ``\n``.
+    It is **optional** to set this value.
+
 .. _config_file_default_job_quota:
 
 **default_job_quota:**
+
+    This option defines the number of jobs of the same type that can
+    run simultaneously on a cluster.
+    The number influences the way **uap** sets the job dependencies of
+    submitted jobs.
+    It is **optional** to set this value, if the value is not provided it is
+    set to *5*.
 
 Example Configurations
 ======================
@@ -485,6 +509,8 @@ Example Configurations
 Example configurations can be found in **uap**'s ``example-configurations``
 folder.
 More information about these examples can be found in :doc:`how-to`.
+
+.. _cluster_configuration:
 
 **************************
 Cluster Configuration File
