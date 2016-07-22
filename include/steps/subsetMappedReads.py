@@ -34,7 +34,7 @@ class subsetMappedReads(AbstractStep):
         self.require_tool('head') # do we really need this to require?
 
         self.add_option('genome-faidx', str, optional = False)
-        self.add_option('Nreads', int, optional=False,
+        self.add_option('Nreads', str, optional=False,
                         description='Number of reads to extract from input file.')
         # any idea to do this fast?
         # - shuffle the number of ALL mapped reads, return the first N
