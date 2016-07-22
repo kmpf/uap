@@ -31,7 +31,7 @@ class subsetMappedReads(AbstractStep):
         self.require_tool('samtools')
         self.require_tool('dd')
         self.require_tool('pigz')
-        self.require_tool('awk') # do we really need this to require?
+        self.require_tool('head') # do we really need this to require?
 
         self.add_option('Nreads', int, optional=False,
                         description='Number of reads to extract from input file.')
