@@ -98,6 +98,6 @@ class subsetMappedReads(AbstractStep):
                             dd_out,
                             stdout_path = run.add_output_file(
                                 'alignments',
-                                '%s.N%s.reads.sam' % run_id % self.get_option('Nreads'),
+                                '%s.N%s.reads.sam' % (run_id, self.get_option('Nreads')),
                                 input_paths)
                         )
