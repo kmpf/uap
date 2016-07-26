@@ -10,23 +10,24 @@
 
 .. _extending-uap:
 
-###############################
-Extending **uap** Functionality
-###############################
+#####################
+Add New Functionality
+#####################
 
 *******************
-Implement new steps
+Implement New Steps
 *******************
 
 **uap** can be easily extended by implementing new
 :ref:`source <config_file_source_steps>` or
 :ref:`processing <config_file_processing_steps>` steps.
-That requires basic python programming skills.
+This requires basic python programming skills.
 New steps are added to **uap** by placing a single Python file into one of these
 folders in the **uap** installation directory:
 
 ``include/sources``
   Place source step files here
+
 ``include/steps``
   Place processing step files here
 
@@ -47,7 +48,7 @@ logger object.
    from logging import getLogger
 
    # Secondly import third party libraries
-   import <module-you-need>
+   import yaml
 
    # Thirdly import local application files
    from abstract_step import AbstractStep # or AbstractSourceStep
@@ -64,183 +65,305 @@ the latter to be able to inherit either from ``AbstractStep`` or
 
 .. _extending_class_init:
 
-Step 2: Class Definition and Constructor
-========================================
+Step 2: Class Definition
+========================
 
 Now you need to define a class (which inherits either from ``AbstractStep`` or
 ``AbstractSourceStep``) and its ``__init__`` method.
 
 .. code-block:: python
 
-   # Either inherit from AbstractSourceStep or AbstractStep
-   # class NameOfNewSourceStep(AbstractSourceStep):
-   class HelloWorld(AbstractStep):
-       # Overwrite constructor
+   class ConcatenateFiles(AbstractStep):
+       # Overwrite initialisation
        def __init__(self, pipeline):
-           # Call super classes constructor
-           super(HelloWorld, self).__init__(pipeline)
+           # Call super classes initialisation
+           super(ConcatenateFiles, self).__init__(pipeline)
 
-
+   ..
 
 The new class needs to be derived from either ``AbstractStep``, for processing
 steps, or ``AbstractSourceStep``, for source steps.
 
-The ``__init__`` method should contain the declarations of:
+Step 3: ``__init__`` Method
+===========================
 
-  * Tools used in the step: ``self.require_tool('tool_name')``
-  * input and output connection(s): ``self.add_connection('in/*')`` or 
-    ``self.add_connection('out/*')``
-  * options: ``self.add_option()``
+The ``__init__`` method is the place where you should declare:
 
-Tools :
-  Normally, steps use tools to perform there task.
+Tools via ``self.require_tool('tool_name')``:
+  Steps usually require tools to perform their task.
   Each tool that is going to be used by a step needs to be requested via the
   method ``require_tool('tool_name')``.
-  When the step is executed  **uap** searches for ``tool_name`` in the tools
-  section of the configuration and uses the information given there to verify
+  **uap** tests the existence of the required tools whenever it constructs the
+  directed acyclic graph (DAG) of the analysis.
+  The test is based on the information provided in the
+  :ref:`tools section <uap_config_tools>` of the
+  :ref:`analysis configuration <analysis_configuration>`.
+  An entry for ``tool_name`` has to exist and to provide information to verify
   the tools accessibility.
 
-Connections:
-  They are defined by the method ``add_connection(...)``.
-  Information is transferred from one step to another via these connections.
-  An output connection (``out/something``) of a predecessor step is
-  automatically connected with an input connection of the same name
-  (``in/something``).
-  Connection names should describe the data itself **NOT** the data type.
-  For instance, use ``in/genome`` over ``in/fasta``.
-  The data type of the input data should be checked in the step anyway to
-  execute the correct corresponding commands.
+Connections via ``add_connection(...)``:
+  Connections are defined by the method ``add_connection(...)``.
+  They are used to transfer data from one step to another.
+  If a step defines an output connection ``out/something`` and a subsequent
+  step defines an input connection named ``in/something``, then the files
+  beloging to ``out/something`` will be available via the connection
+  ``in/something``.
 
-Options:
+  Please name connection in a way that they describe the data itself and
+  **NOT** the data type.
+  For instance, use ``in/genome`` over ``in/fasta``.
+  The data type of the received input data should be checked by the steps
+  to make sure to execute the correct commands.
+
+Options via ``self.add_option()``:
+  Options allow to influence the commands executed by a step.
+  It is advisable to provide as many meaningful options as possible to keep
+  steps flexible.
   Steps can have any number of options.
-  Options are defined by the method ``add_option()``.
-  There are a bunch of parameters which can be set to specify the option.
+  Options are defined via the method ``add_option()``.
+  
+  The ``add_option()`` method allows to specify various information about
+  the option.
+  The method parameters are these:
+
+  1. ``key``
+         name of the option (if possible include the name of the tool
+         this option influences e.g. ``dd-blocksize`` to set ``dd`` blocksize)
+
+  2. ``option_type``
+         The option type has to be one of ``int``, ``float``, ``str``,
+         ``bool``, ``list``, or ``dict``.
+
+  3. ``optional`` (Boolean)
+         Defines if the option is mandatory (``False``) or optional (``True``).
+
+  4. ``choices``
+         List of valid values for the option.
+
+  5. ``default``
+         Defines the default value for the option.
+
+  6. ``description``
+         The description of the functionality of the option.
+         
 
 
 .. code-block:: python
 
    ..
-   # Either inherit from AbstractSourceStep or AbstractStep
-   # class NameOfNewSourceStep(AbstractSourceStep):
-   class NameOfNewProcessingStep(AbstractStep):
-       # Overwrite constructor
-       def __init__(self, pipeline):
-           # Call super classes constructor
-           super(NameOfNewProcessingStep, self).__init__(pipeline)
 
            # Define connections
-           self.add_connection('in/some_incoming_data')
-           self.add_connection('out/some_outgoing_data')
+           self.add_connection('in/text')
+           self.add_connection('out/text')
 
            # Request tools
            self.require_tool('cat')
 
-           # Add options
-           self.add_option('some_option', str, optional=False, 
-                           description='Mandatory option')
+           # Options for workflow
+           self.add_option('concatenate_all_files', bool, optional=False,
+                           default=False, description="Concatenate all files from "
+                           "all runs, if 'True'.")
 
-The single function  ``runs`` is used to plan all jobs based on a list of input
-files or runs and possibly additional information from previous steps.
-The basic scaffold is shown below.
+           # Options for 'cat' (see manpage)
+           self.add_option('show-all', bool, optional=True,
+                           description="Show all characters")
+                           
+           self.add_option('number-nonblank', int, optional=True,
+                           description="number nonempty output lines, "
+                           "overrides --number")
+
+           self.add_option('show-ends', bool, optional=True,
+                           description="display $ at end of each line")
+
+           self.add_option("number", int, optional=True,
+                           description="number all output lines")
+
+           self.add_option("squeeze-blank", bool, optional=True,
+                           description="suppress repeated empty output lines")
+
+           self.add_option("show-tabs", bool, optional=True,
+                           description="display TAB characters as ^I")
+
+           self.add_option("show-nonprinting", bool, optional=True,
+                            description="use ^ and M- notation, except for "
+                            "LFD and TAB")
+
+   ..
+
+Step 4: ``runs`` Method
+=======================
+
+The ``runs`` method is where all the work is done.
+This method gets handed over a dictionary of dictionaries.
+The keys of the first dictionary are the run IDs (often resembling the samples).
+The values of the first dictionary is another dictionary.
+The keys of that second dictionary are the connections e.g. "in/text" and the
+values are the corresponding files belonging to that connection.
+
+Let's inspect all the run IDs, connections, and input files we got from our
+upstream steps.
+And let's tore all files we received in a list for later use.
 
 .. code-block:: python
 
-    import sys
-    from abstract_step import *
-    import pipeline
-    import re
-    import process_pool
-    import yaml
+   ..
+
+       def runs(self, run_ids_connections_files):
+           all_files = list()
+           # Let's inspect the run_ids_connections_files data structure
+           for run_id in run_ids_connections_files.keys():
+               logger.info("Run ID: %s" % run_id)
+               for connection in run_ids_connections_files[run_id].keys():
+                   logger.info("Connection: %s" % connection)
+                   for in_file in run_ids_connections_files[run_id][connection]:
+                       logger.info("Input file: %s" % in_file)
+                       # Collect all files
+                       all_files.append(in_file)
+   
+   ..
+
+It comes in handy to assemble a list with all options for ``cat`` here.
+
+.. code-block:: python
+
+   ..
+
+        # List with options for 'cat'
+        cat_options = ['show-all', 'number-nonblank', 'show-ends', 'number',
+                       'squeeze-blank', 'show-tabs', 'show-nonprinting']
+
+        # Get all options which were set
+        set_options = [option for option in cat_options if \
+                       self.is_option_set_in_config(option)]
+
+        # Compile the list of options
+        cat_option_list = list()
+        for option in set_options:
+            # bool options look different than ...
+            if isinstance(self.get_option(option), bool):
+                if self.get_option(option):
+                    cat_option_list.append('--%s' % option)
+            # ... the rest ...
+            else:
+                cat_option_list.append('--%s' % option)
+                # ... make sure to cast the values to string
+                cat_option_list.append(str(self.get_option(option)))
+                
+   ..
+
+What should happen if we are told to concatenate all files we know?
+We have to create a single run with a new run ID 'all_files'.
+The run consists of a ``exec_group`` that runs the ``cat`` command.
+
+.. note::
+
+   An ``exec_group`` is a list of commands which are executed in one go.
+   You might create multiple **exec_group**'s if you need to make sure a set of
+   commands finished before another set is started.
+   An ``exec_group`` can contain commands and pipelines.
+   They can be added like this:
+
+   .. code-block:: python
+                   
+      # Add a single command
+      exec_group.add_command()
+
+      # Add a pipeline to an exec_group
+      with exec_group.add_pipeline as pipe:
+         ...
+         # Add a command to a pipeline
+         pipe.add_command()
+
+The result of the concatenation is written to an output file.
+The run object needs to know about each output file that is going to be created.
+
+.. note::
+
+   An output file is announced via the run objects ``add_output_file()`` method.
+   The method parameters are:
+
+   1. The name of the out connection e.g. 'text' for 'out/text'
+   2. The name of the output file (best practice is to add the run ID to the
+      file name)
+   3. The input files this output file is based on
+
+.. code-block:: python
+
+   ..
+
+        # Okay let's concatenate all files we get
+        if self.get_option('concatenate_all_files'):
+            run_id = 'all_files'
+
+            # New run named 'all_files' is created here
+            with self.declare_run(run_id) as run:
+
+                # Create an exec
+                with run.new_exec_group() as exec_group:
+                    # Assemble the cat command
+                    cat = [ self.get_tool('cat') ]
+                    # Add the options to the command
+                    cat.extend( cat_option_list )
+                    cat.extend( all_files )
+                    
+                    # Now add the command to the execution group
+                    exec_group.add_command(
+                        cat,
+                        stdout_path = run.add_output_file(
+                            'text',
+                            "%s_concatenated.txt" % run_id,
+                            all_files)
+                    )
+
+   ..
+
+What should happen if all files of an input run have to be concatenated?
+We create a new run for each input run and concatenate all files that
+belong to the input run.
+
+.. code-block:: python
+
+        # Concatenate all files from a runs 'in/text' connection
+        else:
+            # iterate over all run IDs ...
+            for run_id in run_ids_connections_files.keys():
+                input_paths = run_ids_connections_files[run_id]['in/text']
+                # ... and declare a new run for each of them.
+                with self.declare_run(run_id) as run:
+                    with run.new_exec_group() as exec_group:
+                        # Assemble the cat command
+                        cat = [ self.get_tool('cat') ]
+                        # Add the options to the command
+                        cat.extend( cat_option_list )
+                        cat.extend( input_paths )
+                        
+                        # Now add the command to the execution group
+                        exec_group.add_command(
+                            cat,
+                            stdout_path = run.add_output_file(
+                                'text',
+                                "%s_concatenated.txt" % run_id,
+                                input_paths)
+                        )
+
+           ..
+
+Let's explain some vocabulary a bit more in detail:
+
+*run*
+    Smallest computational unit of **uap**.
+    A *run* defines how input file(s) are porcessed to output file(s). 
+
+*connection*
+    They provide the output files of a step as input files for downstream steps.
+    The names of the connections can be arbitrarily chosen, but should **not**
+    describe the file format but more general terms.
+    For example an ``out/alignment`` can provide gzipped SAM or BAM files.
+    So you have to check in the ``runs`` method for the file type provided by a
+    connection and react accordingly.
+
+*exec_group*
     
-    class Macs14(AbstractStep):
-        
-        # the constructor
-        def __init__(self, pipeline):
-            super(Macs14, self).__init__(pipeline)
-
-            # define in and out connections the strings have to start with 'in/'
-            # or 'out/'
-            self.add_connection('in/something')
-            self.add_connection('out/tag1')
-            self.add_connection('out/tag2')
-            ...
-    
-            self.require_tool('cat4m')
-            self.require_tool('pigz')
-            ...
-
-        # all checks of options and input values should be done here
-        def setup_runs(self, complete_input_run_info, connection_info):
-            # a hash containing information about this step
-            output_run_info = {}
-
-            # analyze the complete_input_run_info hash provided by the pipeline
-            for step_name, step_input_info in complete_input_run_info.items():
-                for input_run_id, input_run_info in step_input_info.items():
-                   # assemble your output_run_info
-                   # output_run_info has to look like this
-                   output_run_info:
-                       run_id_1:
-                           "output_files":
-                               tag1:
-                                   output_file_1: [input_file_1, input_file_2, ...]
-                                   output_file_2: [input_file_1, input_file_2, ...]
-                               tag2:
-                                   output_file_3: [input_file_1, input_file_2, ...]
-                                   output_file_4: [input_file_1, input_file_2, ...]
-                           "info":
-                               ...
-                           more:
-                               ...
-                           keys:
-                               ...
-                       run_id_2:
-                           ...
-
-            return output_run_info
-        
-        # called to actually launch the job (run_info is the hash returned from
-        # setup_runs)
-        def execute(self, run_id, run_info):
-    
-            with process_pool.ProcessPool(self) as pool:
-                with pool.Pipeline(pool) as pipeline:
-                    # assemble the steps pipline here
-                    pipeline.append(...)
-                    ...
-                    # finally launch it
-                    pool.launch(...)
-
-The code shown above is the framework for a new step. The most essential part is
-the hash returned by setup_runs(), here called ``output_run_info``.
-
-:``run_id``:
-    It has to be the unique name of a run (obviously, because its a key value).
-    ``output_run_info`` can contain multiple ``run_id`` hashes.
-
-:``"output_files"``:
-    This is the only hash key that has to have a fix name. This is used to link
-    input to output files.
-
-:``tag[12]``:
-    Every ``tag`` has to match ``\w+$`` in the string ``'out/tag'``, which was
-    given to ``self.add_connection('out/tag')``. This can be any string, but it
-    has to match with the last part of the connection string.
-
-:``output_file_\d``:
-    Each ``tag`` has to contain at least one such key. It has to be the name of
-    the output file produced by the connection ``'out/tag'``. The value of this
-    has to be a list of related input files. The list can have any number of
-    entries even zero. Multiple ``output_file_\d`` can rely on the same set of
-    input files.
-
-Also very important is to understand the concept of *connections*. They provide
-input files prior steps created already. The names of the connections can be
-arbitrarily chosen, but should **not** describe the file format but more general
-terms. For example an ``out/alignment`` can provide gzipped SAM or BAM files. So
-you have to check in setup runs for the file type provided by a connection and
-react accordingly. Inspect ``complete_input_run_info`` to find out what your
-step gets as input.
 
 .. _uap_tools:
 

@@ -30,6 +30,8 @@ Robustness
   Tools are checked for availability, and the entire processing pipeline is
   calculated in advance before jobs are being started or submitted to a cluster.
 
+.. _uap-consistency:
+
 Consistency
 -----------
 
