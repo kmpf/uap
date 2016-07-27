@@ -1,10 +1,17 @@
 # This is the uap configuration file.
+
+cluster:
+    default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+    default_pre_job_command: "echo 'Run Started!'"
+    default_post_job_command: "echo 'Rub Finished!'"
+    default_job_quota: 5 
  
 destination_path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19
 
 steps:
     # Download all chromosomal sequences
     hg19_UCSC (raw_url_sources):
+        _cluster_job_quota: 1
         run-download-info:
             chr1:
                 url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr1.fa.gz
