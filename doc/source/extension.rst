@@ -346,8 +346,6 @@ belong to the input run.
                                 input_paths)
                         )
 
-           ..
-
 Let's explain some vocabulary a bit more in detail:
 
 *run*
@@ -367,11 +365,11 @@ Let's explain some vocabulary a bit more in detail:
 
 .. _uap_tools:
 
-uap tools
-=========
+More on Command Execution and Pipelines
+=======================================
 
-You will need to run bash commands like cat, pigz or something else in python. 
-In this cases use the uap tool ``exec_group`` (see ``run::new_exec_group()``)
+You can run commands like ``cat``, ``pigz`` or something else via the
+``exec_group.add_command()`` method (see ``run::new_exec_group()``).
 
 For example you want to separate multiple lines with a specific string out of a
 file in a new output file and in addition to this copy the output file.
@@ -427,38 +425,36 @@ All the single commands will be collected and uap will execute the command list 
 Best practices
 ==============
 
-There are a couple of things which should be kept in mind when implementing new 
-steps or modifying existing steps:
+There are a couple of things you should keep in mind while implementing new 
+steps or modifying existing ones:
 
-* Make sure errors already show up in ``runs``.
+* **NEVER**  remove files!
+  If files need to be removed report the issue and exit **uap** or force the
+  user to call a specific subcommand.
+  Never delete files without permission by the user.
+* Make sure errors already show up in when the steps ``runs()`` method is
+  called the first time.
   So, look out for things that may fail in ``runs``.
   Stick to *fail early, fail often*.
   That way errors show up before submitting jobs to the cluster and wasting 
-  precious cluster waiting time is avoided. 
-* Make sure that the tools you'll need in ``runs`` are available.
-  Check for the availability of tools within the constructor ``__init__``.
-
-.. code-block:: python
-
-    # make sure tools are available
-    self.require_tool('pigz')
-    self.require_tool('cutadapt')
-
+  precious cluster waiting time is avoided.
+* Make sure that all tools which you request inside the ``runs()`` method
+  are also required by the step via ``self.require_tool()``.
+  Use the ``__init__()`` method to request tools.
 * Make sure your disk access is as cluster-friendly as possible (which 
   primarily means using large block sizes and preferably no seek operations). 
-  If possible, use ``unix_pipeline`` to wrap your commands in ``pigz``, ``dd``,
-  or ``cat4m`` with a large block size like 4 MB. 
+  If possible, use pipelines to wrap your commands in ``pigz`` or ``dd``
+  commands.
+  Make the used block size configurable. 
   Although this is not possible in every case (for example when seeking 
   in files is involved), it is straightforward with tools that read a 
   continuous stream from ``stdin`` and write a continuous stream to 
   ``stdout``.
-* **NEVER**  remove files! If files need to be removed report the issue and 
-  exit **uap**. Only the user should delete files.
 * Always use ``os.path.join(...)`` when you handle paths.
 * Use bash commands like ``mkfifo`` over python library equivalents like
-  ``os.mkfifo()``
-* If you need to decide between possible ways to implement a step, stick to the
-  more flexibel (often more configuration extensive one).
+  ``os.mkfifo()``.
+  The ``mkfifo`` command can be hashed while an ``os.mkfifo()`` call can't.
+* Keep your steps as flexible as possible.
   You don't know what other user might need, so let them decide.
 
 **************************************
@@ -476,4 +472,3 @@ folders:
 
 If the Python step file exist at the correct location the step needs to be added
 to the YAML configuration file as described in :doc:`configuration`.
-
