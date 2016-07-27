@@ -15,7 +15,7 @@ class MergeFastaFiles(AbstractStep):
     def __init__(self, pipeline):
         super(MergeFastaFiles, self).__init__(pipeline)
         
-        self.set_cores(12) # muss auch in den Decorator
+        self.set_cores(12)
         
         self.add_connection('in/sequence')
         self.add_connection('out/sequence')
@@ -27,6 +27,9 @@ class MergeFastaFiles(AbstractStep):
 
         self.add_option('compress-output', bool, optional=True, default=True,
                         description="If set to true output is gzipped.")
+        self.add_option('merge-all-sequences', bool, optional=True,
+                        default=False, description="If set to true sequences "
+                        "from all runs are merged")
         self.add_option('output-fasta-basename', str, optional=True, default="",
                         description="Name used as prefix for FASTA output.")
 
@@ -39,14 +42,26 @@ class MergeFastaFiles(AbstractStep):
         All information given here should end up in the step object which is 
         provided to this method.
         '''
+        run_ids = set(run_ids_connections_files.keys())
         for run_id in run_ids_connections_files.keys():
+            input_paths = list()
+
+            # Do everything that's necessary for 'merge-all-sequences'
+            if self.get_option('merge-all-sequences'):
+                run_ids.remove(run_id)
+                input_paths.extend(
+                    run_ids_connections_files[run_id]['in/sequence'])
+                if len(run_ids) > 0: continue
+                run_id = 'all_sequences'
+            else:
+                input_paths = run_ids_connections_files[run_id]['in/sequence']
+
             fasta_basename = run_id
             if self.get_option('output-fasta-basename'):
                 fasta_basename = "%s-%s" % (
                     self.get_option('output-fasta-basename'), run_id)
 
             with self.declare_run(fasta_basename) as run:
-                input_paths = run_ids_connections_files[run_id]['in/sequence']
 
                 if input_paths == [None]:
                     run.add_empty_output_connection("sequence")

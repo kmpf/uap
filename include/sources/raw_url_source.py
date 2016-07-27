@@ -31,10 +31,9 @@ class RawUrlSource(AbstractSourceStep):
         self.add_option('secure-hash', str, optional = True,
                         description = "expected secure hash of downloaded file")
         self.add_option('uncompress', bool, optional = True, default = False,
-                        description = 'Shall the file be uncompressed after '
-                        'downloading')
+                        description = 'File is uncompressed after download')
         self.add_option('url', str, optional = False,
-                        description = "file URL")
+                        description = "Download URL")
         
     def runs(self, run_ids_connections_files):
         # Get file name of downloaded file
@@ -109,7 +108,6 @@ class RawUrlSource(AbstractSourceStep):
                                 '--stdout',
                                 '--processes', '1',
                                 temp_filename]
-                        #                    temp_filename = os.path.splitext(temp_filename)[0]
                         dd_out = [self.get_tool('dd'),
                                   'bs=4M',
                                   'of=%s' % out_file]
