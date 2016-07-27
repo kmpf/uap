@@ -131,7 +131,7 @@ Options via ``self.add_option()``:
          this option influences e.g. ``dd-blocksize`` to set ``dd`` blocksize)
 
   2. ``option_type``
-         The option type has to be one of ``int``, ``float``, ``str``,
+         The option type has to be at least one of ``int``, ``float``, ``str``,
          ``bool``, ``list``, or ``dict``.
 
   3. ``optional`` (Boolean)
