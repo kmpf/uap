@@ -181,7 +181,7 @@ steps:
         _connect:
             in/sequence: hg19_UCSC/raw
         compress-output: no
-        merge-all-sequences: yes
+        merge-all-runs: yes
         output-fasta-basename: hg19_all_chr_UCSC
 
     hg19_bowtie2_index (bowtie2_generate_index):

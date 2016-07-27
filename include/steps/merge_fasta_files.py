@@ -27,7 +27,7 @@ class MergeFastaFiles(AbstractStep):
 
         self.add_option('compress-output', bool, optional=True, default=True,
                         description="If set to true output is gzipped.")
-        self.add_option('merge-all-sequences', bool, optional=True,
+        self.add_option('merge-all-runs', bool, optional=True,
                         default=False, description="If set to true sequences "
                         "from all runs are merged")
         self.add_option('output-fasta-basename', str, optional=True, default="",
@@ -46,8 +46,8 @@ class MergeFastaFiles(AbstractStep):
         for run_id in run_ids_connections_files.keys():
             input_paths = list()
 
-            # Do everything that's necessary for 'merge-all-sequences'
-            if self.get_option('merge-all-sequences'):
+            # Do everything that's necessary for 'merge-all-runs'
+            if self.get_option('merge-all-runs'):
                 run_ids.remove(run_id)
                 input_paths.extend(
                     run_ids_connections_files[run_id]['in/sequence'])
