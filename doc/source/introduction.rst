@@ -56,10 +56,82 @@ Usability
 * Single command-line tool interacts with the pipeline.
   It can be used to execute, monitor, and analyse the pipeline.
 
+
+.. _uap-software-design:
+
+***************
+Software Design
+***************
+
+**uap** is designed as a plugin architecture.
+The plugins are called steps because they resemble steps of the analysis.
+
+.. _uap-software-steps:
+
+Source and Processing Steps: Building Blocks of the Analysis
+============================================================
+
+There are two different types of steps: source and processing steps.
+**Source steps** are used to include data from outside the destination path
+(see :ref:`config-file-destination-path`) into the analysis.
+**Processing steps** are blueprints that describe how to process input to
+output data.
+Processing steps describe what needs to be done on an abstract level.
+**uap** controls the ordered execution of the steps as defined in the
+:ref:`analysis configuration file<analysis_configuration>`.
+
+.. _uap-software-runs:
+
+Runs: Atomic Units of the Analysis
+==================================
+
+Steps define **runs** which represent the concrete commands for a part of the
+analysis.
+You can think of steps as objects and runs as instances like in object-oriented
+programming. 
+A **run** is an atomic unit of the analysis.
+It can only succeed or fail entirely.
+Typically a single run computes data of a single sample.
+Runs compute output files from input files and provide these output files to
+subsequent steps via so called **connections**.
+
+.. _uap-software-connections:
+
+Connections: Propagation of Data
+================================
+
+**Connections** are like tubes that connect steps.
+A step can have any number of connections.
+Run have to assign output file(s) to each connection of the step.
+If a run can not assign files to a connection it has to define it as empty.
+Downstream steps can access the connections to get the information which run
+created which file.
+The names of the connections can be arbitrarily chosen.
+The name should **not** be just the file format of the contained files but
+a description of their content.
+For example an ``out/alignment`` can contain gzipped SAM and/or BAM files.
+That's why the file type is often checked in steps and influences the issued
+commands or set parameters.
+
+.. _uap-software-dag:
+
+Analysis as Directed Acyclic Graph
+==================================
+
+The steps and connections are the building blocks of the analysis graph.
+That graph has to be a directed acyclic graph (DAG).
+This implies that every step has one or more parent steps, which may in turn
+have parents themself.
+The analysis graph is not allowed to contain cycles.
+Steps without parents have to be source steps.
+They provide the initial input data, like for example FASTQ files with raw
+sequencing reads, genome sequences, genome annotations, etc..
+
+
 .. _uap-recommended-workflow:
 
-Recommended Workflow
-====================
+Recommended uap Workflow
+========================
 
 The recommended workflow to analyse data with **uap** is:
 
@@ -85,73 +157,6 @@ A **finished** analysis leaves the user with:
 (see :doc:`annotation`).
   These files are stored in the destination path defined in the configuration
   file.
-
-.. _uap-software-design:
-
-***************
-Software Design
-***************
-
-**uap** is designed as a plugin architecture.
-The plugins are internally called steps.
-Two different types of steps exist, the source and processing steps.
-Source steps are used to include data from outside the destination path (see
-:ref:`config-file-destination-path`) into the analysis.
-Processing steps are blueprints. 
-Each step corresponds to the blueprint of a single data processing where **uap** itself controls
-the ordered execution of the plugged in so called steps.
-Steps are organized in a dependency graph (a directed acyclic graph) -- every 
-step may have one or more parent steps, which may in turn have other parent 
-steps, and so on.
-Steps without parents are usually sources which provide source files, for
-example FASTQ files with the raw sequences obtained from the sequencer,
-genome sequence databases or annotation tracks.
-
-Each step defines a number of runs and each run represents a piece of the
-entire data analysis, typically at the level of a single sample.
-A certain *run* of a certain *step* is called a *task*.
-While the steps only describe what needs to be done on a very abstract level,
-it is through the individual runs of each step that a **uap** wide list of 
-actual tasks becomes available.
-Each run may provide a number of output files which depend on output files
-of one or several runs from parent steps.
-
-To make the relationship between tasks, steps and runs more clear, we look at one example from a configuration file:
-
-The status request output of
-
-.. code-block:: bash
-
-    uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
-
-is
-
-.. code-block:: bash
-
-    Waiting tasks
-    -------------
-    [w] bowtie2_index/Mycoplasma_genitalium_index-download
-    [w] bwa_index/Mycoplasma_genitalium_index-download
-    [w] fasta_index/download
-    [w] segemehl_index/Mycoplasma_genitalium_genome-download
-
-    Ready tasks
-    -----------
-    [r] M_genitalium_genome/download
-
-     tasks: 5 total, 4 waiting, 1 ready
-
-Here are 5 tasks listed. The first one is ''bowtie2_index/Mycoplasma_genitalium_index-download''. The first part is the step ''bowtie2_index'' which is defined in the configuration file. The second part is the specific run ''Mycoplasma_genitalium_index-download''.
-
-Source steps define a run for every input sample, and a subsequent step
-may:
-
-* define the same number of runs, 
-* define more runs (for example when R1 and R2 reads in a paired-end RNASeq 
-  experiment should be treated separately),
-* define fewer runs (usually towards the end of a pipeline, where results are
-  summarized).
-
 
 
 .. |uge_link| raw:: html

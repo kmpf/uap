@@ -63,7 +63,7 @@ The former is necessary to get access to the application wide logger and
 the latter to be able to inherit either from ``AbstractStep`` or
 ``AbstractSourceStep``.
 
-.. _extending_class_init:
+.. _extending_class_def:
 
 Step 2: Class Definition
 ========================
@@ -83,6 +83,8 @@ Now you need to define a class (which inherits either from ``AbstractStep`` or
 
 The new class needs to be derived from either ``AbstractStep``, for processing
 steps, or ``AbstractSourceStep``, for source steps.
+
+.. _extending_class_init:
 
 Step 3: ``__init__`` Method
 ===========================
@@ -190,6 +192,8 @@ Options via ``self.add_option()``:
 
    ..
 
+.. _extending_class_runs:
+
 Step 4: ``runs`` Method
 =======================
 
@@ -251,7 +255,7 @@ It comes in handy to assemble a list with all options for ``cat`` here.
                 
    ..
 
-What should happen if we are told to concatenate all files we know?
+What should happen if we are told to concatenate all files from all input runs?
 We have to create a single run with a new run ID 'all_files'.
 The run consists of a ``exec_group`` that runs the ``cat`` command.
 
@@ -266,26 +270,27 @@ The run consists of a ``exec_group`` that runs the ``cat`` command.
    .. code-block:: python
                    
       # Add a single command
-      exec_group.add_command()
+      exec_group.add_command(...)
 
       # Add a pipeline to an exec_group
       with exec_group.add_pipeline as pipe:
          ...
          # Add a command to a pipeline
-         pipe.add_command()
+         pipe.add_command(...)
 
 The result of the concatenation is written to an output file.
 The run object needs to know about each output file that is going to be created.
 
 .. note::
 
-   An output file is announced via the run objects ``add_output_file()`` method.
+   An output file is announced via the run objects
+   ``add_output_file(tag, out_path, in_paths)`` method.
    The method parameters are:
 
-   1. The name of the out connection e.g. 'text' for 'out/text'
-   2. The name of the output file (best practice is to add the run ID to the
-      file name)
-   3. The input files this output file is based on
+   1. ``tag``: The name of the out connection e.g. 'text' for 'out/text'
+   2. ``out_path``: The name of the output file (best practice is to add the
+      run ID to the file name)
+   3. ``in_paths``: The input files this output file is based on
 
 .. code-block:: python
 
@@ -346,24 +351,56 @@ belong to the input run.
                                 input_paths)
                         )
 
-Let's explain some vocabulary a bit more in detail:
+That's it.
+You created your first **uap** processing step.
+Save the complete file into the ``include/steps`` folder.
+As already mentioned above you can list the source and processing steps via:
 
-*run*
-    Smallest computational unit of **uap**.
-    A *run* defines how input file(s) are porcessed to output file(s). 
+``$ ls -la $(dirname $(which uap))/include/sources``
+  Lists all available source step files
 
-*connection*
-    They provide the output files of a step as input files for downstream steps.
-    The names of the connections can be arbitrarily chosen, but should **not**
-    describe the file format but more general terms.
-    For example an ``out/alignment`` can provide gzipped SAM or BAM files.
-    So you have to check in the ``runs`` method for the file type provided by a
-    connection and react accordingly.
+``$ ls -la $(dirname $(which uap))/include/steps``
+  List all available processing step files
 
-*exec_group*
-    
 
-.. _uap_tools:
+.. _extending_best_practices:
+
+Best practices
+==============
+
+There are a couple of things you should keep in mind while implementing new 
+steps or modifying existing ones:
+
+* **NEVER**  remove files!
+  If files need to be removed report the issue and exit **uap** or force the
+  user to call a specific subcommand.
+  Never delete files without permission by the user.
+* Make sure errors already show up in when the steps ``runs()`` method is
+  called the first time.
+  So, look out for things that may fail in ``runs``.
+  Stick to *fail early, fail often*.
+  That way errors show up before submitting jobs to the cluster and wasting 
+  precious cluster waiting time is avoided.
+* Make sure that all tools which you request inside the ``runs()`` method
+  are also required by the step via ``self.require_tool()``.
+  Use the ``__init__()`` method to request tools.
+* Make sure your disk access is as cluster-friendly as possible (which 
+  primarily means using large block sizes and preferably no seek operations). 
+  If possible, use pipelines to wrap your commands in ``pigz`` or ``dd``
+  commands.
+  Make the used block size configurable. 
+  Although this is not possible in every case (for example when seeking 
+  in files is involved), it is straightforward with tools that read a 
+  continuous stream from ``stdin`` and write a continuous stream to 
+  ``stdout``.
+* Always use ``os.path.join(...)`` to handle paths.
+* Use bash commands like ``mkfifo`` over python library equivalents like
+  ``os.mkfifo()``.
+  The ``mkfifo`` command is hashed while an ``os.mkfifo()`` is not.
+* Keep your steps as flexible as possible.
+  You don't know what other user might need, so let them decide.
+
+
 
 More on Command Execution and Pipelines
 =======================================
@@ -422,40 +459,6 @@ Now the uap way:
 
 All the single commands will be collected and uap will execute the command list in the specified order.
 
-Best practices
-==============
-
-There are a couple of things you should keep in mind while implementing new 
-steps or modifying existing ones:
-
-* **NEVER**  remove files!
-  If files need to be removed report the issue and exit **uap** or force the
-  user to call a specific subcommand.
-  Never delete files without permission by the user.
-* Make sure errors already show up in when the steps ``runs()`` method is
-  called the first time.
-  So, look out for things that may fail in ``runs``.
-  Stick to *fail early, fail often*.
-  That way errors show up before submitting jobs to the cluster and wasting 
-  precious cluster waiting time is avoided.
-* Make sure that all tools which you request inside the ``runs()`` method
-  are also required by the step via ``self.require_tool()``.
-  Use the ``__init__()`` method to request tools.
-* Make sure your disk access is as cluster-friendly as possible (which 
-  primarily means using large block sizes and preferably no seek operations). 
-  If possible, use pipelines to wrap your commands in ``pigz`` or ``dd``
-  commands.
-  Make the used block size configurable. 
-  Although this is not possible in every case (for example when seeking 
-  in files is involved), it is straightforward with tools that read a 
-  continuous stream from ``stdin`` and write a continuous stream to 
-  ``stdout``.
-* Always use ``os.path.join(...)`` when you handle paths.
-* Use bash commands like ``mkfifo`` over python library equivalents like
-  ``os.mkfifo()``.
-  The ``mkfifo`` command can be hashed while an ``os.mkfifo()`` call can't.
-* Keep your steps as flexible as possible.
-  You don't know what other user might need, so let them decide.
 
 **************************************
 Add the new step to your configuration
