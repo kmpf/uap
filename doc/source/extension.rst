@@ -258,7 +258,7 @@ The run consists of a ``exec_group`` that runs the ``cat`` command.
 .. note::
 
    An ``exec_group`` is a list of commands which are executed in one go.
-   You might create multiple **exec_group**'s if you need to make sure a set of
+   You might create multiple ``exec_group``'s if you need to make sure a set of
    commands finished before another set is started.
    An ``exec_group`` can contain commands and pipelines.
    They can be added like this:
