@@ -194,7 +194,6 @@ steps:
         
     bwa_backtrack:
         _depends: fix_cutadapt
-        _cluster_runtime: 48:00:00
         index: *bwa_genome_index
         
 #    segemehl:
