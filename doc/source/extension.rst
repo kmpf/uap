@@ -429,8 +429,9 @@ Check the status of the configured analysis::
 
 .. _extending_best_practices:
 
-Best practices
-==============
+**************
+Best Practices
+**************
 
 There are a couple of things you should keep in mind while implementing new 
 steps or modifying existing ones:

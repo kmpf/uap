@@ -131,8 +131,9 @@ sequencing reads, genome sequences, genome annotations, etc..
 
 .. _uap-recommended-workflow:
 
-Recommended uap Workflow
-========================
+****************************
+Recommended **uap** Workflow
+****************************
 
 The recommended workflow to analyse data with **uap** is:
 
