@@ -31,6 +31,7 @@ class S2C(AbstractStep):
         self.require_tool('samtools')
         self.require_tool('pigz')
         self.require_tool('cat')
+        self.require_tool('dd')
 
         self.add_option('tmp_dir', str, optional=False,
                         description="Temp directory for 'make_segemehl_output_cufflinks_compatible.py'. This can be in the /work/username/ path, since it is only temporary.")
