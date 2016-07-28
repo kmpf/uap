@@ -33,7 +33,9 @@ class S2C(AbstractStep):
         self.require_tool('cat')
 
         self.add_option('tmp_dir', str, optional=False,
-                        description="Temp directory for 'make_segemehl_output_cufflinks_compatible.py'. This can be in the /work/username/ path, since it is only temporary.")
+                        description="Temp directory for 's2c.py'. This can be "
+                        "in the /work/username/ path, since it is only "
+                        "temporary.")
 
     def runs(self, run_ids_connections_files):
 
