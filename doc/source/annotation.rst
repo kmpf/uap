@@ -10,9 +10,9 @@
 
 .. _annotation_files:
 
-################
+****************
 Annotation Files
-################
+****************
 
 The annotation files contain detailed information about every output file.
 Also, the Git SHA1 hash of the **uap** repository at the time of
@@ -29,7 +29,8 @@ Also, for every output file, a symbolic link to this file is created:
 ``.[output_filename].annotation.yaml``.
 
 Finally, the annotation is rendered via GraphViz, if available.
-Rendering can also be done at a later time using annotations as input.
+Rendering can also be done at a later time using annotations as input (see
+**uap**'s :ref:`render<uap-render>` subcommand).
 The annotation can be used to determine at a later time what exactly happened.
 Also, annotations may help to identify bottlenecks.
 

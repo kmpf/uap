@@ -57,6 +57,9 @@ class Cutadapt(AbstractStep):
                         "without spaces of the QNAME field of the FASTQ data is "
                         "kept. This might be necessary for downstream analysis.")
 
+        # [Options for 'dd':]
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+
     def runs(self, run_ids_connections_files):
 
         ## Make sure the adapter type is one of -a, -b or -g 
@@ -116,18 +119,24 @@ class Cutadapt(AbstractStep):
                             if input_path.endswith('fastq.gz'):
                                 with exec_group.add_pipeline() as pigz_pipe:
                                     # 2.1 command: Read file in 4MB chunks
-                                    dd_in = [self.get_tool('dd'),
-                                           'ibs=4M',
-                                           'if=%s' % input_path]
+                                    dd_in = [
+                                        self.get_tool('dd'),
+                                        'ibs=%s' %
+                                        self.get_option('dd-blocksize'),
+                                        'if=%s' % input_path
+                                    ]
                                     # 2.2 command: Uncompress file to fifo
                                     pigz = [self.get_tool('pigz'),
                                             '--decompress',
                                             '--stdout']
                                     # 2.3 command: Write file in 4MB chunks to 
                                     #              fifo
-                                    dd_out = [self.get_tool('dd'),
-                                              'obs=4M',
-                                              'of=%s' % temp_fifo]
+                                    dd_out = [
+                                        self.get_tool('dd'),
+                                        'obs=%s' %
+                                        self.get_option('dd-blocksize'),
+                                        'of=%s' % temp_fifo
+                                    ]
 
                                     pigz_pipe.add_command(dd_in)
                                     pigz_pipe.add_command(pigz)
@@ -136,10 +145,12 @@ class Cutadapt(AbstractStep):
                             elif input_path.endswith('fastq'):
                                 # 2.1 command: Read file in 4MB chunks and
                                 #              write to fifo in 4MB chunks
-                                dd_in = [self.get_tool('dd'),
-                                         'bs=4M',
-                                         'if=%s' % input_path,
-                                         'of=%s' % temp_fifo]
+                                dd_in = [
+                                    self.get_tool('dd'),
+                                    'bs=%s' % self.get_option('dd-blocksize'),
+                                    'if=%s' % input_path,
+                                    'of=%s' % temp_fifo
+                                ]
                                 exec_group.add_command(dd_in)
                             else:
                                 logger.error("File %s does not end with any "
@@ -220,10 +231,11 @@ class Cutadapt(AbstractStep):
                                 (run_id, read_types[read]),
                                 input_paths)
 
-                            dd = [self.get_tool('dd'),
-                                  'obs=4M',
-                                  'of=%s' % clipped_fastq_file]
-
+                            dd = [
+                                self.get_tool('dd'),
+                                'obs=%s' % self.get_option('dd-blocksize'),
+                                'of=%s' % clipped_fastq_file
+                            ]
 
                             cutadapt_pipe.add_command(cutadapt,
                                                       stderr_path =\

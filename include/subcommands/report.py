@@ -27,10 +27,10 @@ def main(args):
     
     task_list = p.all_tasks_topologically_sorted
 
-    if len(args.step_task) >= 1:
+    if len(args.run) >= 1:
         # execute the specified tasks
         task_list = list()
-        for task_id in args.step_task:
+        for task_id in args.run:
             if '/' in task_id:
                 task = p.task_for_task_id[task_id]
                 task_list.append(task)

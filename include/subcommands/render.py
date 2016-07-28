@@ -95,13 +95,13 @@ def main(args):
         render_graph_for_all_steps(p, args)
 
     else:
-#    elif args.step_task:
-#        if len(args.step_task) >= 1:
+#    elif args.run:
+#        if len(args.run) >= 1:
         # Compile a list of all tasks
         task_list = list()
-        # Only use tasks listed in args.step_task
-        if args.step_task and len(args.step_task) >= 1:
-            for task_id in args.step_task:
+        # Only use tasks listed in args.run
+        if args.run and len(args.run) >= 1:
+            for task_id in args.run:
                 if '/' in task_id:
                     task = p.task_for_task_id[task_id]
                     task_list.append(task)

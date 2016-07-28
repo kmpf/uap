@@ -41,9 +41,9 @@ def main(args):
     p = pipeline.Pipeline(arguments=args)
         
     task_wish_list = None
-    if len(args.step_task) >= 1:
+    if len(args.run) >= 1:
         task_wish_list = list()
-        for _ in args.step_task:
+        for _ in args.run:
             if '/' in _:
                 task_wish_list.append(_)
             else:
@@ -82,24 +82,6 @@ def main(args):
     #    in place for steps which have no defined quota)
     # -> during submission, there is a list of N previous job ids in
     #    which every item holds one of the previously submitted tasks
-#     quotas_path = os.path.join(p.get_uap_path(), "cluster/quotas.yaml")
-#     if os.path.exists(quotas_path):
-#         try:
-#             all_quotas = yaml.load(open(quotas_path, 'r'))
-#         except OSError:
-#             logger.error("Couldn't load file %s" % quotas_path)
-#             sys.exit(1)
-#     
-#         hostname = subprocess.check_output(['hostname']).strip()
-#         for key in all_quotas.keys():
-#             if re.match(key, hostname):
-#                 print("Applying quotas for %s." % hostname)
-#                 quotas = all_quotas[key]
-# 
-#         if not 'default' in quotas:
-#             raise StandardError("No default quota defined for this host.")
-
-
 
     quota_jids = {}
     quota_offset = {}
@@ -155,8 +137,6 @@ def main(args):
         else:
             placeholder_values['#{POST_JOB_COMMAND}'] = p.config['cluster']\
                                                         ['default_post_job_command']
-#         placeholder_values['#{MODULE_LOAD}'] = "\n".join(step.get_module_loads().values())
-#         placeholder_values['#{MODULE_UNLOAD}'] = "\n".join(step.get_module_unloads().values())
         
         # Replace placeholders with their values
         for placeholder, value in placeholder_values.items(): 

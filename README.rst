@@ -8,10 +8,10 @@ uap -- Universal Analysis Pipeline
     :scale: 100%
     :target: https://readthedocs.org/projects/uap/
 
-.. |travis| image:: https://travis-ci.org/alexanderscholz/uap.svg?branch=master
+.. |travis| image:: https://travis-ci.org/kmpf/uap.svg?branch=master
     :alt: Travis CI Build Status
     :scale: 100%
-    :target: https://travis-ci.org/alexanderscholz/uap
+    :target: https://travis-ci.org/kmpf/uap
 
 Introduction
 ============
