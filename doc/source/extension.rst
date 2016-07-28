@@ -353,14 +353,78 @@ belong to the input run.
 
 That's it.
 You created your first **uap** processing step.
-Save the complete file into the ``include/steps`` folder.
-As already mentioned above you can list the source and processing steps via:
 
-``$ ls -la $(dirname $(which uap))/include/sources``
-  Lists all available source step files
 
-``$ ls -la $(dirname $(which uap))/include/steps``
-  List all available processing step files
+Step 5: Add the new step to **uap**
+===================================
+
+You have to make the new step known to **uap**.
+Save the complete file into **uap**'s ``include/steps`` folder.
+Processing step files are located at **uap**'s ``include/steps/`` folder
+and source step files at **uap**'s ``include/sources/`` folder.
+
+You can control that your step is correctly "installed" if its included in the
+list of all source and processing steps::
+
+  $ ls -la $(dirname $(which uap))/include/sources
+  ... Lists all available source step files
+
+  $ ls -la $(dirname $(which uap))/include/steps
+  ... Lists all available processing step files
+
+You can also use **uap**'s :ref:`steps <uap-steps>` subcommand to get
+information about installed steps.
+
+If the step file exists at the correct location that step can be used
+in an :ref:`analysis configuration file <analysis_configuration>`.
+
+A potential example YAML file named ``test.yaml`` could look like this:
+
+.. code-block:: yaml
+
+    destination_path: example-out/test/
+    
+    steps:
+        ##################
+        ## Source steps ##
+        ##################
+    
+        raw_file_source:
+            pattern: example-data/text-files/*.txt
+            group: (.*).txt
+    
+        ######################
+        ## Processing steps ##
+        ######################
+    
+        cat:
+            _depends: raw_file_source
+            _connect:
+                in/text:
+                    - raw_file_source/raw
+            concatenate_all_files: False
+    
+    tools:
+        cat:
+            path: cat
+            get_version: '--version'
+            exit_code: 0
+
+You need to create the destination path and some text files matching the
+pattern ``example-data/text-files/*.txt``.
+Also you see the work of the ``_connect`` keyword in play.
+Check the status of the configured analysis::
+
+  $ uap test.yaml status
+  Ready runs
+  ----------
+  [r] cat/Hello_america
+  [r] cat/Hello_asia
+  [r] cat/Hello_europe
+  [r] cat/Hello_world
+  
+  runs: 4 total, 4 ready
+
 
 
 .. _extending_best_practices:
@@ -401,77 +465,12 @@ steps or modifying existing ones:
   You don't know what other user might need, so let them decide.
 
 
+Usage of ``dd`` and ``mkfifo``
+==============================
 
-More on Command Execution and Pipelines
-=======================================
-
-You can run commands like ``cat``, ``pigz`` or something else via the
-``exec_group.add_command()`` method (see ``run::new_exec_group()``).
-
-For example you want to separate multiple lines with a specific string out of a
-file in a new output file and in addition to this copy the output file.
-A possible bash way is:
-
-.. code-block:: bash
-
-    $ cat source_file | grep search_string > output_file
-    $ cp output_file new_file
-
-For sure, for this task grep would be sufficient. But for the example we want to use a pipe.
-
-Now the uap way:
-
-.. code-block:: python
-
-    # create an new exec_group object
-    exec_group = run.new_exec_group()
-
-    # create an output file for the pipeline
-    cat_out = run.add_output_file(
-        'file',
-        '%s.txt' % (run_id),
-        [input_path])
-
-    # create a command with cat and grep combined through pipe
-    with exec_group.add_pipeline() as cat_pipe:
-        # create the cat command
-        cat_command = [self.get_tool('cat'), input_path]
-
-        # create the grep command
-        search_string = 'foobar'
-        grep_command = [self.get_tool('grep'), search_string]
-
-        # add commands to the command pipeline
-        cat_pipe.add_command(cat_command)
-        cat_pipe.add_command(grep_command, stdout_path= cat_out)
-
-    # create a copy output file
-    cp_out = run.add_output_file(
-        'file',
-        '%s_copy.txt' % (run_id),
-        [input_path])
-
-    # create copy command
-    cp_command = [self.get_tool('cp'), cat_out, cp_out]
-
-    # add copy command to the pipeline
-    exec_group.add_command(cp_command)
-
-All the single commands will be collected and uap will execute the command list in the specified order.
-
-
-**************************************
-Add the new step to your configuration
-**************************************
-
-To make a new step known to **uap**, it has to be copied into either of these
-folders:
-
-``include/sources/``
-  for all source steps
-
-``include/steps/``
-  for all processing steps
-
-If the Python step file exist at the correct location the step needs to be added
-to the YAML configuration file as described in :doc:`configuration`.
+**uap** relies often on ``dd`` and FIFOs to process data with fewer
+disk read-write operations.
+Please provide a step option to adjust the ``dd`` blocksize (this option
+is usually called ``dd-blocksize``).
+Create your steps in a way that they perform the least filesystem operations.
+Some systems might be very sensitive to huge numbers of read-write operations.

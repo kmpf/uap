@@ -3,7 +3,7 @@
   80 characters if you can and start each sentence on a new line as it 
   decreases maintenance and makes diffs more readable.
   
-.. title:: Introducing **uap**
+.. title:: Introducing uap
 
 *******************
 Introducing **uap**
@@ -119,6 +119,7 @@ Analysis as Directed Acyclic Graph
 ==================================
 
 The steps and connections are the building blocks of the analysis graph.
+Steps are the nodes and connections are the edges of the ananlysis graph. 
 That graph has to be a directed acyclic graph (DAG).
 This implies that every step has one or more parent steps, which may in turn
 have parents themself.
