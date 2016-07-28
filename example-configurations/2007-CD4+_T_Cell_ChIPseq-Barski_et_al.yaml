@@ -395,8 +395,8 @@ tools:
         get_version: --version
         exit_code: 0
 
-    fix_make_segemehl_output_cufflinks_compatible:
-        path: ../tools/fix_make_segemehl_output_cufflinks_compatible.py
+    fix_s2c:
+        path: ../tools/fix_s2c.py
         exit_code: 1
 
     fix_qnames:
@@ -408,12 +408,8 @@ tools:
         get_version: --version 
         exit_code: 0
 
-    remove_reads_segemehl:
-        path: ../tools/remove_reads_segemehl.py
-        exit_code: 1
-
-    make_segemehl_output_cufflinks_compatible:
-        path: ../tools/make_segemehl_output_cufflinks_compatible.py
+    s2c:
+        path: ['python', '../tools/s2c.py']
         get_version: ''
         exit_code: 2
 

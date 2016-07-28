@@ -179,7 +179,7 @@ tools:
         exit_code: 0
 
     fix_s2c:
-        path: ../tools/fix_make_segemehl_output_cufflinks_compatible.py
+        path: ../tools/fix_s2c.py
         exit_code: 1
 
     fix_qnames:
@@ -187,7 +187,7 @@ tools:
         exit_code: 0
 
     s2c:
-        path: ../tools/make_segemehl_output_cufflinks_compatible.py
+        path: ['python', '../tools/s2c.py']
         exit_code: 2
 
     ##############

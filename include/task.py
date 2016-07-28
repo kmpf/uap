@@ -104,6 +104,7 @@ class Task(object):
         if not self.step.is_volatile():
             return result
         for path_a in self.output_files():
+            if not path_a: continue
             if AbstractStep.fsc.exists(path_a):
                 # now check whether we can volatilize path A
                 path_a_can_be_removed = True
