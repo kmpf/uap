@@ -63,19 +63,14 @@ class S2C(AbstractStep):
                 fix_s2c = [self.get_tool('fix_s2c')] # schreibt .sam nach stdout
                 pigz2 = [self.get_tool('pigz'), '--processes', '2', '--stdout']
 
-                # Write to output file in 4MB chunks
-                stdout_path = run.add_output_file('alignments',
-                                                  '%s-cufflinks-compatible.sam.gz' % run_id, input_paths)
-                dd = [self.get_tool('dd'),
-                      'obs=4M',
-                      'of=%s' % stdout_path]
-                
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as s2c_pipe:
                         s2c_pipe.add_command(cat)
                         s2c_pipe.add_command(pigz)
                         s2c_pipe.add_command(s2c)
                         s2c_pipe.add_command(fix_s2c)
-#                        s2c_pipe.add_command(pigz2, stdout_path= run.add_output_file('alignments', '%s-cufflinks-compatible.sam.gz' % run_id, input_paths))
-                        s2c_pipe.add_command(pigz2)
-                        s2c_pipe.add_command(dd)
+                        s2c_pipe.add_command(pigz2, 
+                                             stdout_path= run.add_output_file(
+                                                 'alignments',
+                                                 '%s-cufflinks-compatible.sam.gz' % run_id,
+                                                 input_paths))
