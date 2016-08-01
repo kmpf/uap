@@ -12,11 +12,10 @@ class subsetMappedReads(AbstractStep):
     '''
     subsetMappedReads selects a provided number of mapped reads from a
     file in .sam or .bam format. Depending on the set options the
-    first N mapped reads or a random selection (not implemented yet)
-    of N mapped reads are returned in .sam format. If the number of
-    requested reads exceeds the number of available mapped reads, all
-    mapped reads are returned.  NOTE: the random version is not yet
-    implemented - don't use it!
+    first N mapped reads and their mates (for paired end sequencing)
+    are returned in .sam format. If the number of requested reads
+    exceeds the number of available mapped reads, all mapped reads are
+    returned. 
     '''
 
     def __init__(self, pipeline):
@@ -35,14 +34,11 @@ class subsetMappedReads(AbstractStep):
 
         self.add_option('genome-faidx', str, optional = False)
         self.add_option('Nreads', str, optional=False,
-                        description='Number of reads to extract from input file.')
-        # any idea to do this fast?
-        # - shuffle the number of ALL mapped reads, return the first N
-        # - generate N (distinct!) random numbers, return the appropriate reads
-        #self.add_option('random', bool, default=False, optional=True,
-                        #description='Select the reads randomly.')
+                        description='Number of reads to extract from input file. ')
+        self.add_option('paired_end', bool, optional = False,
+                        description='The reads are expected to have a mate, due to paired end sequencing.')
 
-    def runs(self, run_ids_connections_files):
+        def runs(self, run_ids_connections_files):
 
         for run_id in run_ids_connections_files.keys():
 
@@ -80,16 +76,24 @@ class subsetMappedReads(AbstractStep):
 
                         # 2. command: Read sam file
                         # extract only reads that were aligned and include only pairs
-                        samtools_view = [
-                            self.get_tool('samtools'), 'view', '-F 0x04 -f 0x02', '-h'
-                            '-S', '-t', self.get_option('genome-faidx'),
-                            '-'
-                        ]
+                        if self.get_option('paired_end'):
+                            samtools_view = [
+                                self.get_tool('samtools'), 'view', '-F 0x04 -f 0x02', '-h'
+                                '-S', '-t', self.get_option('genome-faidx'),
+                                '-'
+                            ]
+                        else:
+                            samtools_view = [
+                                self.get_tool('samtools'), 'view', '-F 0x04', '-h'
+                                '-S', '-t', self.get_option('genome-faidx'),
+                                '-'
+                            ]
+                            
                         pipe.add_command(samtools_view)
 
                         # 3. extract the first Nreads
                         # include mate and the lines for the header of the sam format
-                        N = int(self.get_option('Nreads')) * 2 + 25
+                        N = int(self.get_option('Nreads')) * 2 + 24
                         get_Nreads = [
                             self.get_tool('head'), '-%s' % N
                         ]
