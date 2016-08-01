@@ -89,7 +89,7 @@ class subsetMappedReads(AbstractStep):
 
                         # 3. extract the first Nreads
                         # include mate and the lines for the header of the sam format
-                        N = self.get_option('Nreads') * 2 + 25
+                        N = int(self.get_option('Nreads')) * 2 + 25
                         get_Nreads = [
                             self.get_tool('head'), '-%s' % N
                         ]
