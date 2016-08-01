@@ -79,16 +79,19 @@ class subsetMappedReads(AbstractStep):
                             pipe.add_command(pigz)
 
                         # 2. command: Read sam file
+                        # extract only reads that were aligned and include only pairs
                         samtools_view = [
-                            self.get_tool('samtools'), 'view', '-h'
+                            self.get_tool('samtools'), 'view', '-F 0x04 -f 0x02', '-h'
                             '-S', '-t', self.get_option('genome-faidx'),
                             '-'
                         ]
                         pipe.add_command(samtools_view)
 
                         # 3. extract the first Nreads
+                        # include mate and the lines for the header of the sam format
+                        N = self.get_option('Nreads') * 2 + 25
                         get_Nreads = [
-                            self.get_tool('head'), '-%s' % self.get_option('Nreads')
+                            self.get_tool('head'), '-%s' % N
                         ]
                         pipe.add_command(get_Nreads)
 
