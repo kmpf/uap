@@ -38,7 +38,7 @@ class subsetMappedReads(AbstractStep):
         self.add_option('paired_end', bool, optional = False,
                         description='The reads are expected to have a mate, due to paired end sequencing.')
 
-        def runs(self, run_ids_connections_files):
+    def runs(self, run_ids_connections_files):
 
         for run_id in run_ids_connections_files.keys():
 
