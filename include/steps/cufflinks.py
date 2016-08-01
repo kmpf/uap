@@ -150,7 +150,8 @@ class CuffLinks(AbstractStep):
                  'no-length-correction', 'label', 'min-isoform-fraction', 'pre-mrna-fraction', 'max-intron-length', 'junc-alpha', 
                  'small-anchor-fraction', 'min-frags-per-transfrag', 'overhang-tolerance', 'max-bundle-length', 'max-bundle-frags', 
                  'min-intron-length', 'trim-3-avgcov-thresh', 'trim-3-dropoff-frac', 'max-multiread-fraction', 'overlap-radius', 
-                 'no-faux-reads', '3-overhang-tolerance', 'intron-overhang-tolerance', 'verbose', 'quiet', 'no-update-check']
+                 'no-faux-reads', '3-overhang-tolerance', 'intron-overhang-tolerance', 'verbose', 'no-update-check']
+#                 'no-faux-reads', '3-overhang-tolerance', 'intron-overhang-tolerance', 'verbose', 'quiet', 'no-update-check']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
