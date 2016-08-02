@@ -31,8 +31,7 @@ class subsetMappedReads(AbstractStep):
         self.require_tool('dd')
         self.require_tool('pigz')
         self.require_tool('head')
-        self.require_tool('awk')
-
+        
         self.add_option('genome-faidx', str, optional = False)
         self.add_option('Nreads', str, optional=False,
                         description='Number of reads to extract from input file. ')
@@ -79,7 +78,7 @@ class subsetMappedReads(AbstractStep):
                         # extract only reads that were aligned and include only pairs
                         if self.get_option('paired_end'):
                             samtools_view = [
-                                self.get_tool('samtools'), 'view', '-F 0x04 -f 0x02', '-h'
+                                self.get_tool('samtools'), 'view', '-F 0x04 -f 3', '-h'
                                 '-S', '-t', self.get_option('genome-faidx'),
                                 '-'
                             ]
@@ -106,16 +105,6 @@ class subsetMappedReads(AbstractStep):
                             '-S', '-'
                         ]
                         pipe.add_command(samtools_write)
-
-                        # 5. command: awk, remove * entries from sam
-                        # Otherwise, htseq-count can't progress and returns this error:
-                        # awkError occured when processing SAM input (line 27):
-                        #     ("Malformed SAM line: MRNM == '*' although flag bit &0x0008 cleared", 'line 27')
-                        #     [Exception type: ValueError, raised in _HTSeq.pyx:1323]
-                        awk_tab = [
-                            self.get_tool('awk'), '\'!/\t\*\t/\'', '-'
-                        ]
-                        pipe.add_command(awk_tab)
                         
                         # 5. command: dd
                         dd_out = [self.get_tool('dd'), 'obs=4M']
