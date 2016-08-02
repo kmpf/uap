@@ -62,36 +62,32 @@ class subsetMappedReads(AbstractStep):
 
                     with exec_group.add_pipeline() as pipe:
                         # 1. command: Read file in 4MB chunks
-#                        dd_in = [self.get_tool('dd'),
-#                                 'ibs=4M',
-#                                 'if=%s' % input_paths[0]]
- #                       pipe.add_command(dd_in)
+                        dd_in = [self.get_tool('dd'),
+                                 'ibs=4M',
+                                 'if=%s' % input_paths[0]]
+                        pipe.add_command(dd_in)
 
                         # 1.1 command: Uncompress file to fifo
                         if is_gzipped:
                             pigz = [self.get_tool('pigz'),
                                     '--decompress',
                                     '--processes', str(self.get_cores()),
-                                    '--stdout',
-                                    input_paths[0]
+                                    '--stdout'
                             ]
                             pipe.add_command(pigz)
-                        else:
-                            cat_file = [self.get_tool('cat'), input_paths[0]]
-                            pipe.add_command(cat_file)
 
                         # 2. command: Read sam file
                         # extract only reads that were aligned and include only pairs
                         if self.get_option('paired_end'):
                             samtools_view = [
                                 self.get_tool('samtools'), 'view', '-F 0x04 -f 3', '-h',
-                                '-S', '-t', self.get_option('genome-faidx'),
+                                '-t', self.get_option('genome-faidx'),
                                 '-'
                             ]
                         else:
                             samtools_view = [
                                 self.get_tool('samtools'), 'view', '-F 0x04', '-h',
-                                '-S', '-t', self.get_option('genome-faidx'),
+                                '-t', self.get_option('genome-faidx'),
                                 '-'
                             ]
                         pipe.add_command(samtools_view)
@@ -102,17 +98,14 @@ class subsetMappedReads(AbstractStep):
                         get_Nreads = [
                             self.get_tool('head'), '-%s' % N
                         ]
-                        pipe.add_command(get_Nreads,
-                                         stdout_path = run.add_output_file('alignments',
-                                                      '%s.N%s.reads.sam' % (run_id, self.get_option('Nreads')),
-                                                      input_paths))
+                        pipe.add_command(get_Nreads)
 
                         # 4. command: Write sam file
                         samtools_write = [
                             self.get_tool('samtools'), 'view', '-h',
                             '-S', '-'
                         ]
-#                        pipe.add_command(samtools_write)
+                        pipe.add_command(samtools_write)
                         
                         # 5. command: dd
                         outfile = run.add_output_file('alignments',
@@ -121,7 +114,7 @@ class subsetMappedReads(AbstractStep):
                         dd_out = [self.get_tool('dd'), 'obs=4M',
                                   'of=%s' % outfile
                         ]
-#                        pipe.add_command(dd_out)
+                        pipe.add_command(dd_out)
 
 #                        pipe.add_command(
 #                            dd_out,
