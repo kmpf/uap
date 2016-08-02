@@ -106,6 +106,16 @@ class subsetMappedReads(AbstractStep):
                         ]
                         pipe.add_command(samtools_write)
 
+                        # 5. command: awk, remove * entries from sam
+                        # Otherwise, htseq-count can't progress and returns this error:
+                        # awkError occured when processing SAM input (line 27):
+                        #     ("Malformed SAM line: MRNM == '*' although flag bit &0x0008 cleared", 'line 27')
+                        #     [Exception type: ValueError, raised in _HTSeq.pyx:1323]
+                        awk_tab = [
+                            self.get_tool('awk'), '\'!/\t\*\t/\'', '-'
+                        ]
+                        pipe.add_command(awk_tab)
+                        
                         # 5. command: dd
                         dd_out = [self.get_tool('dd'), 'obs=4M']
                         pipe.add_command(
