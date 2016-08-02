@@ -103,7 +103,7 @@ class subsetMappedReads(AbstractStep):
                         # 4. command: Write sam file
                         samtools_write = [
                             self.get_tool('samtools'), 'view', '-h',
-                            '-S', '-'
+                            '-'
                         ]
                         pipe.add_command(samtools_write)
                         
