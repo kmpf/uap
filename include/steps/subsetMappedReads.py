@@ -78,13 +78,13 @@ class subsetMappedReads(AbstractStep):
                         # extract only reads that were aligned and include only pairs
                         if self.get_option('paired_end'):
                             samtools_view = [
-                                self.get_tool('samtools'), 'view', '-F 0x04 -f 3', '-h'
+                                self.get_tool('samtools'), 'view', '-F 0x04 -f 3', '-h',
                                 '-S', '-t', self.get_option('genome-faidx'),
                                 '-'
                             ]
                         else:
                             samtools_view = [
-                                self.get_tool('samtools'), 'view', '-F 0x04', '-h'
+                                self.get_tool('samtools'), 'view', '-F 0x04', '-h',
                                 '-S', '-t', self.get_option('genome-faidx'),
                                 '-'
                             ]
