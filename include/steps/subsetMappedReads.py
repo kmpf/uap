@@ -70,7 +70,7 @@ class subsetMappedReads(AbstractStep):
                         if is_gzipped:
                             pigz = [self.get_tool('pigz'),
                                     '--decompress',
-                                    '--processes', '1',
+                                    '--processes', str(self.get_cores()),
                                     '--stdout']
                             pipe.add_command(pigz)
 
@@ -88,7 +88,6 @@ class subsetMappedReads(AbstractStep):
                                 '-S', '-t', self.get_option('genome-faidx'),
                                 '-'
                             ]
-                            
                         pipe.add_command(samtools_view)
 
                         # 3. extract the first Nreads
@@ -104,7 +103,7 @@ class subsetMappedReads(AbstractStep):
                             self.get_tool('samtools'), 'view', '-h',
                             '-S', '-'
                         ]
-                        pipe.add_command(samtools_write)
+#                        pipe.add_command(samtools_write)
                         
                         # 5. command: dd
                         dd_out = [self.get_tool('dd'), 'obs=4M']
