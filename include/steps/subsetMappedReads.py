@@ -106,11 +106,18 @@ class subsetMappedReads(AbstractStep):
 #                        pipe.add_command(samtools_write)
                         
                         # 5. command: dd
-                        dd_out = [self.get_tool('dd'), 'obs=4M']
-                        pipe.add_command(
-                            dd_out,
-                            stdout_path = run.add_output_file(
-                                'alignments',
-                                '%s.N%s.reads.sam' % (run_id, self.get_option('Nreads')),
-                                input_paths)
-                        )
+                        outfile = run.add_output_file('alignments',
+                                                      '%s.N%s.reads.sam' % (run_id, self.get_option('Nreads')),
+                                                      input_paths)
+                        dd_out = [self.get_tool('dd'), 'obs=4M',
+                                  'of=%s' % outfile
+                        ]
+                        pipe.add_command(dd_out)
+
+#                        pipe.add_command(
+#                            dd_out,
+#                            stdout_path = run.add_output_file(
+#                                'alignments',
+#                                '%s.N%s.reads.sam' % (run_id, self.get_option('Nreads')),
+#                                input_paths)
+#                        )
