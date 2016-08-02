@@ -31,6 +31,7 @@ class subsetMappedReads(AbstractStep):
         self.require_tool('dd')
         self.require_tool('pigz')
         self.require_tool('head')
+        self.require_tool('cat')
         
         self.add_option('genome-faidx', str, optional = False)
         self.add_option('Nreads', str, optional=False,
@@ -61,9 +62,9 @@ class subsetMappedReads(AbstractStep):
 
                     with exec_group.add_pipeline() as pipe:
                         # 1. command: Read file in 4MB chunks
-                        dd_in = [self.get_tool('dd'),
-                                 'ibs=4M',
-                                 'if=%s' % input_paths[0]]
+#                        dd_in = [self.get_tool('dd'),
+#                                 'ibs=4M',
+#                                 'if=%s' % input_paths[0]]
  #                       pipe.add_command(dd_in)
 
                         # 1.1 command: Uncompress file to fifo
@@ -75,6 +76,9 @@ class subsetMappedReads(AbstractStep):
                                     input_paths[0]
                             ]
                             pipe.add_command(pigz)
+                        else:
+                            cat_file = [self.get_tool('cat'), input_paths[0]]
+                            pipe.add_command(cat_file)
 
                         # 2. command: Read sam file
                         # extract only reads that were aligned and include only pairs
