@@ -62,9 +62,9 @@ class subsetMappedReads(AbstractStep):
 
                     with exec_group.add_pipeline() as pipe:
                         # 1. command: Read file in 4MB chunks
-                        dd_in = [self.get_tool('dd'),
-                                 'ibs=4M',
-                                 'if=%s' % input_paths[0]]
+#                        dd_in = [self.get_tool('dd'),
+#                                 'ibs=4M',
+#                                 'if=%s' % input_paths[0]]
 #                        pipe.add_command(dd_in)
 
                         # 1.1 command: Uncompress file to fifo
@@ -113,19 +113,19 @@ class subsetMappedReads(AbstractStep):
                         )
 
                         # 4. command: Write sam file
-                        samtools_write = [
-                            self.get_tool('samtools'), 'view', '-h',
-                            '-'
-                        ]
+#                        samtools_write = [
+#                            self.get_tool('samtools'), 'view', '-h',
+#                            '-'
+#                        ]
 #                        pipe.add_command(samtools_write)
                         
                         # 5. command: dd
-                        outfile = run.add_output_file('alignments',
-                                                      '%s.N%s.reads.sam' % (run_id, self.get_option('Nreads')),
-                                                      input_paths)
-                        dd_out = [self.get_tool('dd'), 'obs=4M',
-                                  'of=%s' % outfile
-                        ]
+#                        outfile = run.add_output_file('alignments',
+#                                                      '%s.N%s.reads.sam' % (run_id, self.get_option('Nreads')),
+#                                                      input_paths)
+#                        dd_out = [self.get_tool('dd'), 'obs=4M',
+#                                  'of=%s' % outfile
+#                        ]
 #                        pipe.add_command(dd_out)
 
 #                        pipe.add_command(
