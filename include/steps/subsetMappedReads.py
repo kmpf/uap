@@ -99,13 +99,7 @@ class subsetMappedReads(AbstractStep):
                         get_Nreads = [
                             self.get_tool('head'), '-%s' % N
                         ]
-                        pipe.add_command(get_Nreads,
-                                         stdout_path = run.add_output_file(
-                                             'alignments',
-                                             '%s.N%s.reads.sam' % (run_id, self.get_option('Nreads')),
-                                             input_paths
-                                         )
-                        )
+                        pipe.add_command(get_Nreads)
 
                         dd_out = [self.get_tool('dd'), 'obs=4M']
                         pipe.add_command(
