@@ -10,7 +10,7 @@ import pipeline_info
 import command as command_info
 
 '''
-By default, this script displays information about all tasks of the pipeline
+By default, this script displays information about all runs of the pipeline
 configured in 'config.yaml'. But the displayed information can be narrowed 
 down via command line options.
 
@@ -31,7 +31,7 @@ def main(args):
         for task_id in args.run:
             parts = task_id.split('/')
             if len(parts) != 2:
-                raise StandardError("Invalid task ID %s." % task_id)
+                raise StandardError("Invalid run ID %s." % task_id)
             step_name = parts[0]
             run_id = parts[1]
             run = p.steps[step_name].get_run(run_id)
