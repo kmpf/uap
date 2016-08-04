@@ -10,41 +10,6 @@ Zombie-Prozesse? (Don't do)
   Prozess gestoppt wird?
 * qdel von Jobs hinterlässt noch laufende Prozesse (produzierbar auch mit normalen Pipes)
 
-
-Zusammenspiel von <project>.yaml und Submit Script Template (Christoph)
------------------------------------------------------------------------
-
-* in der Project Config kann man folgendes angeben:
-
-cluster:
-    default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -m as -l h_rt=48:00:00 -l h_vmem=4G"
-    default_pre_job_command: "module ..."
-    default_post_job_command: "module ..."
-    default_job_quota: <int>
-
-** Pro Step kann man die default Werte überschreiben:
-
-steps:
-    step_a:
-        _cluster_submit_options: "..."
-        _cluster_pre_job_command: "..."
-        _cluster_post_job_command: "..."
-
-*** die default Werte zu überschreiben
-
-
-!!!
-    Die folgende Idee ist schwer umsetzbar. Einzige Möglichkeit wäre das
-    Tool checking auf den Cluster Nodes abzustellen. Außerdem benötigt man
-    dann zwei module load/unload Kommandos:
-    1. eine Version für das Laden von Modulen in Python
-    2. eine Version für die BASH
-    das bläht die Config auf für wenig bis keinen Mehrwert.
-!!!
-** Pro Tool sollte es die Möglichkeit geben:
-*** ein module load/unload Kommando anzugeben das dann einfach in das
-    Submit Skript Template geschrieben wird
-
 Dokumentation (Alexander + Christoph + Sven)
 --------------------------------------------
 
@@ -136,23 +101,6 @@ Git Repository
 
 Organisieren eines git Repositories für uap (Jörg/Jana)
 
-
-RNASeq Pipeline Meeting 2014/04/29
-----------------------------------
-
-Sven, Jörg, Kristin, Christoph, Micha
-
-Tasks:
-
-- is it possible to watch a processes' stderr while a step is running?
-  - preferably not only if you launched in debug mode, but always, like inter-
-  cepting write calls to the respective file descriptor
-  - or maybe dump each monitored file's 1024 byte tail every once in a while 
-  (this would be easiest and includes stdout and stderr)
-- clean up in/ and out/ names - 'error', 'log', 'stderr' should in some cases
-  become the same thing
-  - we need a well-defined ontology of file types regardless of actual file
-  type, more from the semantic perspective
 
 Problems:
 - if different sources contain identically named samples they are probably gone
