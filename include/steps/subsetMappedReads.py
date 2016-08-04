@@ -62,25 +62,19 @@ class subsetMappedReads(AbstractStep):
 
                     with exec_group.add_pipeline() as pipe:
                         # 1. command: Read file in 4MB chunks
-#                        dd_in = [self.get_tool('dd'),
-#                                 'ibs=4M',
-#                                 'if=%s' % input_paths[0]]
-#                        pipe.add_command(dd_in)
+                        dd_in = [self.get_tool('dd'),
+                                 'ibs=4M',
+                                 'if=%s' % input_paths[0]]
+                        pipe.add_command(dd_in)
 
                         # 1.1 command: Uncompress file to fifo
                         if is_gzipped:
                             pigz = [self.get_tool('pigz'),
                                     '--decompress',
                                     '--processes', str(self.get_cores()),
-                                    '--stdout',
-                                    input_paths[0]
+                                    '--stdout'
                             ]
                             pipe.add_command(pigz)
-                        else:
-                            cat = [self.get_tool('cat'),
-                                   input_paths[0]
-                            ]
-                            pipe.add_command(cat)
 
                         # 2. command: Read sam file
                         # extract only reads that were aligned and include only pairs
@@ -113,26 +107,11 @@ class subsetMappedReads(AbstractStep):
                                          )
                         )
 
-                        # 4. command: Write sam file
-#                        samtools_write = [
-#                            self.get_tool('samtools'), 'view', '-h',
-#                            '-'
-#                        ]
-#                        pipe.add_command(samtools_write)
-                        
-                        # 5. command: dd
-#                        outfile = run.add_output_file('alignments',
-#                                                      '%s.N%s.reads.sam' % (run_id, self.get_option('Nreads')),
-#                                                      input_paths)
-#                        dd_out = [self.get_tool('dd'), 'obs=4M',
-#                                  'of=%s' % outfile
-#                        ]
-#                        pipe.add_command(dd_out)
-
-#                        pipe.add_command(
-#                            dd_out,
-#                            stdout_path = run.add_output_file(
-#                                'alignments',
-#                                '%s.N%s.reads.sam' % (run_id, self.get_option('Nreads')),
-#                                input_paths)
-#                        )
+                        dd_out = [self.get_tool('dd'), 'obs=4M']
+                        pipe.add_command(
+                            dd_out,
+                            stdout_path = run.add_output_file(
+                                'alignments',
+                                '%s.N%s.reads.sam' % (run_id, self.get_option('Nreads')),
+                                input_paths)
+                        )
