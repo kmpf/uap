@@ -22,6 +22,8 @@ import shlex
 sys.path.insert(0, os.path.abspath('../../include'))
 
 sys.path.insert(0, os.path.abspath('../'))
+
+# stepdoc creates steps.rst file automatically
 import stepdoc
 
 stepdoc.main()

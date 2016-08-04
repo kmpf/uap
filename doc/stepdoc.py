@@ -62,24 +62,25 @@ def doc_module(module_name, fout):
     fout.write("\n")
     
     # print options
-    fout.write("**Options:**\n")
-    for key in sorted(step._defined_options.keys()):
-        option = step._defined_options[key]
-        fout.write("  - **%s** (%s, %s)" % (
-            key, 
-            '/'.join([_.__name__ for _ in option['types']]),
-            'optional' if option['optional'] else 'required'
+    if len(step._defined_options) > 0:
+        fout.write("**Options:**\n")
+        for key in sorted(step._defined_options.keys()):
+            option = step._defined_options[key]
+            fout.write("  - **%s** (%s, %s)" % (
+                key, 
+                '/'.join([_.__name__ for _ in option['types']]),
+                'optional' if option['optional'] else 'required'
             ))
-        if option['description']:
-            fout.write(" -- %s" % option['description'])
-        fout.write("\n")
-        fout.write("    \n")
-        if option['default']:
-            fout.write("    - default value: %s\n" % option['default'])
-        if option['choices']:
-            fout.write("    - possible values: %s\n" %
-                       ", ".join(["'%s'" % x for x in option['choices']]) )
-            fout.write("    \n")
+            if option['description']:
+                fout.write(" -- %s" % option['description'])
+                fout.write("\n")
+                fout.write("    \n")
+            if option['default']:
+                fout.write("    - default value: %s\n" % option['default'])
+            if option['choices']:
+                fout.write("    - possible values: %s\n" %
+                           ", ".join(["'%s'" % x for x in option['choices']]) )
+                fout.write("    \n")
 
     # print tools
     if len(step._tools) > 0:
