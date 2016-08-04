@@ -63,10 +63,11 @@ def main():
     # Definition of the final parser
     
     parser = argparse.ArgumentParser(
-        description="This script starts and controls 'uap' analysis.",
-        epilog="For further information please visit "
+        description="This script starts and controls analysis for 'uap'.",
+        epilog="For complete documentation see: "
         "http://uap.readthedocs.org/en/latest/\n"
-        "For citation use ...",
+        "For citation use: ...\n"
+        "For source code see: https://github.com/yigbt/uap",
         formatter_class=argparse.RawTextHelpFormatter
         )
     
