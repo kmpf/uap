@@ -15,6 +15,12 @@ if [[ -n "$missing" ]]; then
     exit 1
 fi
 
+########################################################
+# Create virtual python environment named 'python_env' #
+########################################################
+
+virtualenv python_env
+
 ################################
 # Installation of NumPy on EVE #
 ################################
@@ -34,8 +40,6 @@ unset LDFLAGS_BAK && unset CPPFLAGS_BAK
 # Installation of PyYAML, psutil, BioPython  #
 ##############################################
 
-# Create virtual python environment named 'python_env'
-virtualenv python_env
 # Install required libraries (pyyaml,psutil,biopython) into the virtual python environemnt
 ./python_env/bin/pip install pyyaml psutil biopython 
 ./python_env/bin/easy_install -f http://biopython.org/DIST/ biopython
