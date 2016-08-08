@@ -30,12 +30,12 @@ class CuffMerge(AbstractStep):
 
         self.add_connection('in/features') # ??? 2 assemplies per sample (TH + SM)
         self.add_connection('out/features') # merged.gt
-        self.add_connection('out/assemblies.txt') # input assemblies txt file
+        self.add_connection('out/assemblies') # input assemblies txt file
         self.add_connection('out/log_stderr')
         self.add_connection('out/run_log')
 
         self.require_tool('cuffmerge')
-#        self.require_tool('echo')
+        self.require_tool('printf')
         self.require_tool('mkdir')
         self.require_tool('mv')
 
@@ -80,32 +80,26 @@ class CuffMerge(AbstractStep):
                 with run.new_exec_group() as exec_group:
                     mkdir = [self.get_tool('mkdir'), temp_dir]
                     exec_group.add_command(mkdir)
-                    
-                # write assemblies file and append it to the cuffmerge cmd
-                assemblies_file = run.add_output_file('assemblies.txt',
-                                                      temp_dir % '/%s-cuffmerge-assemblies.txt' % run_id,
-                                                      input_paths
-                                                  )
-                print(assemblies_file)
-                
-                assemblies_fh = open(assemblies_file, "w")
-                assemblies_fh.write('\n'.join(input_paths))
-                assemblies_fh.close()
-                cuffmerge.append(assemblies_file)
+
+                # 2. write assemblies file and append it to the cuffmerge cmd
+                with run.new_exec_group() as exec_group:
+                    assemblies = [self.get_tool('printf'), '\n'.join(input_paths)]
+                    assemblies_file = run.add_output_file('assemblies',
+                                                          '%s-cuffmerge-assemblies.txt' % run_id,
+                                                          input_paths)
+                    exec_group.add_command(assemblies,
+                                           stdout_path = assemblies_file)
+
+                    cuffmerge.append(assemblies_file)
 
                 result_files = {
-                    'merged.gtf': run.add_output_file(
-                        'features',
-                        '%s-merged.gtf' % run_id,
-                        input_paths
-                        ),
-                    'logs/run.log': run.add_output_file(
-                        'run_log',
-                        '%s-run.log' % run_id,
-                        input_paths
-                        ),
-                    'assemblies.txt': assemblies_file
-                    }
+                    'merged.gtf': run.add_output_file('features',
+                                                      '%s-merged.gtf' % run_id,
+                                                      input_paths),
+                    'logs/run.log': run.add_output_file('run_log',
+                                                        '%s-run.log' % run_id,
+                                                        input_paths)
+                }
 
                 # 3. Execute cuffmerge
                 with run.new_exec_group() as exec_group:
