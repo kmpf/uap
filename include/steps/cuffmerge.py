@@ -34,7 +34,7 @@ class CuffMerge(AbstractStep):
         self.add_connection('out/log_stderr')
         self.add_connection('out/run_log')
 
-        self.require_tool('cufflinks')
+        self.require_tool('cuffmerge')
         self.require_tool('printf')
         self.require_tool('mkdir')
         self.require_tool('mv')
