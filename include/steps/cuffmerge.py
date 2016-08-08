@@ -73,6 +73,10 @@ class CuffMerge(AbstractStep):
             with self.declare_run(run_id) as run:
                 input_paths = run_ids_connections_files[run_id]['in/features']
                 temp_dir = run.add_temporary_directory('cuffmerge-out')
+                assemblies_file = run.add_output_file('assemblies.txt',
+                                                      '%s-cuffmerge-assemblies.txt' % run_id,
+                                                      input_paths
+                                                  )
 
                 cuffmerge = [self.get_tool('cuffmerge'),
                              '-o', temp_dir]
@@ -89,11 +93,7 @@ class CuffMerge(AbstractStep):
                         '%s-run.log' % run_id,
                         input_paths
                         ),
-                    'assemblies.txt': run.add_output_file(
-                        'assemblies.txt',
-                        '%s-cuffmerge-assemblies.txt' % run_id,
-                        input_paths
-                        )
+                    'assemblies.txt': assemblies_file
                     }
                 
                 # 1. Create temporary directory for cufflinks in- and output
@@ -107,10 +107,7 @@ class CuffMerge(AbstractStep):
                 with run.new_exec_group() as exec_group:
 
                     manifest = [self.get_tool('printf'), '\n'.join(input_paths)]
-                    exec_group.add_command(manifest, stdout_path = run.add_output_file('assemblies.txt',
-                                                                                       '%s-cuffmerge-assemblies.txt' % run_id,
-                                                                                       input_paths)
-                                           )
+                    exec_group.add_command(manifest, stdout_path = assemblies_file)
                     cufflinks.append(manifest)
                     
                 # 3. Execute cuffmerge
