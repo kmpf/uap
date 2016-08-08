@@ -108,7 +108,7 @@ class CuffMerge(AbstractStep):
 
                     manifest = [self.get_tool('printf'), '\n'.join(input_paths)]
                     exec_group.add_command(manifest, stdout_path = assemblies_file)
-                    cufflinks.append(manifest)
+                    cuffmerge.append(manifest)
                     
                 # 3. Execute cuffmerge
                 with run.new_exec_group() as exec_group:
