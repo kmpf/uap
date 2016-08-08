@@ -30,7 +30,7 @@ class CuffMerge(AbstractStep):
 
         self.add_connection('in/features') # ??? 2 assemplies per sample (TH + SM)
         self.add_connection('out/features') # merged.gt
-        self.add_connection('out/assemblies_txt') # input assemblies txt file
+        self.add_connection('out/assemblies.txt') # input assemblies txt file
         self.add_connection('out/log_stderr')
         self.add_connection('out/run_log')
 
@@ -90,7 +90,7 @@ class CuffMerge(AbstractStep):
                         input_paths
                         ),
                     'assemblies.txt': run.add_output_file(
-                        'assemblies_txt',
+                        'assemblies.txt',
                         '%s-cuffmerge-assemblies.txt' % run_id,
                         input_paths
                         )
