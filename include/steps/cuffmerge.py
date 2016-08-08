@@ -86,7 +86,8 @@ class CuffMerge(AbstractStep):
                                                       temp_dir % '/%s-cuffmerge-assemblies.txt' % run_id,
                                                       input_paths
                                                   )
-                printf "assfile: %s\n" % assemblies_file
+                print(assemblies_file)
+                
                 assemblies_fh = open(assemblies_file, "w")
                 assemblies_fh.write('\n'.join(input_paths))
                 assemblies_fh.close()
