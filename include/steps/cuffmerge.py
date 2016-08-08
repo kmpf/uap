@@ -71,7 +71,6 @@ class CuffMerge(AbstractStep):
                 cuffmerge = [self.get_tool('cuffmerge'),
                              '-o', temp_dir]
                 cuffmerge.extend(option_list)
-                cufflinks.append(manifest)
 
                 result_files = {
                     'merged.gtf': run.add_output_file(
@@ -83,21 +82,30 @@ class CuffMerge(AbstractStep):
                         'run_log',
                         '%s-run.log' % run_id,
                         input_paths
+                        ),
+                    'assemblies.txt': run.add_output_file(
+                        'assemblies_txt',
+                        '%s-cuffmerge-assemblies.txt' % run_id,
+                        input_paths
                         )
                     }
                 
-                # 1. Create Text file "manifest" with a list (one
+                # 1. Create temporary directory for cufflinks in- and output
+                with run.new_exec_group() as exec_group:
+                    mkdir = [self.get_tool('mkdir'), temp_dir]
+                    exec_group.add_command(mkdir)
+                    
+                # 2. Create Text file "manifest" with a list (one
                 # per line) of GTF files that you'd like to merge
                 # together into a single GTF file.
                 with run.new_exec_group() as exec_group:
 
                     manifest = [self.get_tool('printf'), '\n'.join(input_paths)]
-                    exec_group.add_command(manifest, stdout_path=#...
+                    exec_group.add_command(manifest, stdout_path = run.add_output_file('assemblies.txt',
+                                                                                       '%s-cuffmerge-assemblies.txt' % run_id,
+                                                                                       input_paths)
                                            )
-                # 2. Create temporary directory for cufflinks output
-                with run.new_exec_group() as exec_group:
-                    mkdir = [self.get_tool('mkdir'), temp_dir]
-                    exec_group.add_command(mkdir)
+                    cufflinks.append(manifest)
                     
                 # 3. Execute cuffmerge
                 with run.new_exec_group() as exec_group:
