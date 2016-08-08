@@ -35,7 +35,7 @@ class CuffMerge(AbstractStep):
         self.add_connection('out/run_log')
 
         self.require_tool('cuffmerge')
-        self.require_tool('printf')
+#        self.require_tool('echo')
         self.require_tool('mkdir')
         self.require_tool('mv')
 
@@ -101,10 +101,13 @@ class CuffMerge(AbstractStep):
                 # 2. Create Text file "manifest" with a list (one
                 # per line) of GTF files that you'd like to merge
                 # together into a single GTF file.
-                with run.new_exec_group() as exec_group:
-
-                    manifest = [self.get_tool('printf'), '\n'.join(input_paths)]
-                    exec_group.add_command(manifest, stdout_path = assemblies_file)
+               # with run.new_exec_group() as exec_group:
+                    assemblies_fh = open(assemblies_file, "w")
+                    assemblies_fh.write('\n'.join(input_paths))
+                    assemblies_fh.close()
+                    
+                    #manifest = [self.get_tool('printf'), '\n'.join(input_paths)]
+                    #exec_group.add_command(manifest, stdout_path = assemblies_file)
                     cuffmerge.append(assemblies_file)
                     
                 # 3. Execute cuffmerge
