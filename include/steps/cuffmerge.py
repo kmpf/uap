@@ -65,9 +65,6 @@ class CuffMerge(AbstractStep):
                 option_list.append('--%s' % option)
                 option_list.append(str(self.get_option(option)))
 
-        # number of threads is set to number of cores for this step.
-        option_list.append('--num-threads %d' % int(self.get_cores()))
-
         for run_id in run_ids_connections_files.keys():
 
             with self.declare_run(run_id) as run:
@@ -108,7 +105,7 @@ class CuffMerge(AbstractStep):
 
                     manifest = [self.get_tool('printf'), '\n'.join(input_paths)]
                     exec_group.add_command(manifest, stdout_path = assemblies_file)
-                    cuffmerge.append(manifest)
+                    cuffmerge.append(assemblies_file)
                     
                 # 3. Execute cuffmerge
                 with run.new_exec_group() as exec_group:
