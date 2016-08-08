@@ -44,6 +44,9 @@ class CuffMerge(AbstractStep):
                         description='A "reference" annotation GTF. The input assemblies are merged together with the reference GTF and included in the final output.')
         self.add_option('ref-sequence', str, optional=True,
                         description='This argument should point to the genomic DNA sequences for the reference. If a directory, it should contain one fasta file per contig. If a multifasta file, all contigs should be present.')
+        self.add_option('num-threads', int, optional=True,
+                        description='Use this many threads to merge assemblies.',
+                        default = self.get_cores())
 
     def runs(self, run_ids_connections_files):
         
@@ -61,6 +64,9 @@ class CuffMerge(AbstractStep):
             else:
                 option_list.append('--%s' % option)
                 option_list.append(str(self.get_option(option)))
+
+        # number of threads is set to number of cores for this step.
+        option_list.append('--num-threads %d' % int(self.get_cores()))
 
         for run_id in run_ids_connections_files.keys():
 
