@@ -52,7 +52,7 @@ Reproducibility
 Usability
 ---------
 
-* Single configuration file describdes entire processing pipeline.
+* Single configuration file describes entire processing pipeline.
 * Single command-line tool interacts with the pipeline.
   It can be used to execute, monitor, and analyse the pipeline.
 
@@ -119,7 +119,7 @@ Analysis as Directed Acyclic Graph
 ==================================
 
 The steps and connections are the building blocks of the analysis graph.
-Steps are the nodes and connections are the edges of the ananlysis graph. 
+Steps are the nodes and connections are the edges of the analysis graph.
 That graph has to be a directed acyclic graph (DAG).
 This implies that every step has one or more parent steps, which may in turn
 have parents themself.
