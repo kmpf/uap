@@ -83,8 +83,6 @@ def main(args):
                     args.logfile.write(R1s[key2]) # log the dismissal of this read pair
                     args.logfile.write(lineBR) 
                     discardsM += 1
-                    break
-
                 del R1s[key2] # delete R1 from hash
             else: # no R1 found, so this is it
                 R1s[key1] = lineBR

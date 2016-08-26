@@ -88,7 +88,8 @@ class discardLargeSplitsAndPairs (AbstractStep):
                                        '--N_splits', self.get_option('N_splits'),
                                        '--M_mates', self.get_option('M_mates'),
                                        '--logfile', logfile,
-                                       '--statsfile', statsfile
+                                       '--statsfile', statsfile,
+                                       '-', '-'
                                        ]
                         # execute cmd                              
                         pipe.add_command(discard_cmd, stdout_path = outfile)
