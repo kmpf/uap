@@ -39,6 +39,7 @@ def main(args):
     otherN     = 0
     discardsN  = 0
     discardsM  = 0
+    
     for line in args.infile:
 
         lineBR = line # line incl. linebreak
@@ -94,11 +95,23 @@ def main(args):
 
     # print the final info into stats file
     args.statsfile.write('# of processed reads:       %10d\n' % (readlinesN))
-    args.statsfile.write('# of mapped read pairs:     %10d\t (%5.2f%% of the reads)\n' % (matesN, 100.0/readlinesN * matesN * 2))
-    args.statsfile.write('# of split reads:           %10d\t (%5.2f%% of the reads)\n' % (splitsN, 100.0/readlinesN * splitsN))
-    args.statsfile.write('# of other reads:           %10d\t (%5.2f%% of the reads)\n' % (otherN, 100.0/readlinesN * otherN))
-    args.statsfile.write('# of discarded split reads: %10d\t (%5.2f%% of the split reads)\n' % (discardsN, 100.0/splitsN*discardsN))
-    args.statsfile.write('# of discarded read pairs:  %10d\t (%5.2f%% of the read pairs)\n' % (discardsM, 100.0/matesN*discardsM))
+    if readlinesN > 0:
+        args.statsfile.write('# of mapped read pairs:     %10d\t (%5.2f%% of the reads)\n' % (matesN, 100.0/readlinesN * matesN * 2))
+        args.statsfile.write('# of split reads:           %10d\t (%5.2f%% of the reads)\n' % (splitsN, 100.0/readlinesN * splitsN))
+        args.statsfile.write('# of other reads:           %10d\t (%5.2f%% of the reads)\n' % (otherN, 100.0/readlinesN * otherN))
+    else:
+        args.statsfile.write('# of mapped read pairs:     %10d\t (%5.2f%% of the reads)\n' % (0, 0.0))
+        args.statsfile.write('# of split reads:           %10d\t (%5.2f%% of the reads)\n' % (0, 0.0))
+        args.statsfile.write('# of other reads:           %10d\t (%5.2f%% of the reads)\n' % (0, 0.0))
+        
+    if splitsN > 0:
+        args.statsfile.write('# of discarded split reads: %10d\t (%5.2f%% of the split reads)\n' % (discardsN, 100.0/splitsN*discardsN))
+    else:
+                args.statsfile.write('# of discarded split reads: %10d\t (%5.2f%% of the split reads)\n' % (0, 0.0))
+    if matesN > 0:
+        args.statsfile.write('# of discarded read pairs:  %10d\t (%5.2f%% of the read pairs)\n' % (discardsM, 100.0/matesN*discardsM))
+    else:
+                args.statsfile.write('# of discarded read pairs:  %10d\t (%5.2f%% of the read pairs)\n' % (0, 0.0))
     
 if __name__ == '__main__':
     args = read_arguments()
