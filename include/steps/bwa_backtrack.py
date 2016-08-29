@@ -243,7 +243,7 @@ class BwaBacktrack(AbstractStep):
                 # paired end reads
                 if is_paired_end and len(sr_input) != 1:
                     logger.error(
-                        "Expected single input file for seconnd read.")
+                        "Expected single input file for second read.")
                     sys.exit(1)
                 input_paths = fr_input # single element list
                 if is_paired_end:
