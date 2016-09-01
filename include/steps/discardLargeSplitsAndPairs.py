@@ -32,6 +32,7 @@ class discardLargeSplitsAndPairs (AbstractStep):
 
         self.require_tool('dd')
         self.require_tool('pigz')
+        self.require_tool('samtools')
         self.require_tool('discardLargeSplitsAndPairs')
         
         self.add_option('N_splits', str, optional = False,
@@ -72,6 +73,12 @@ class discardLargeSplitsAndPairs (AbstractStep):
                             ]
                             pipe.add_command(pigz)
 
+                        # 1.2 call samtools to handle also .bam files
+                        samtools_view = [self.get_tool('samtools'),
+                                         'view', '-h', '-'
+                        ]
+                        pipe.add_command(samtools_view)
+                            
                         # 2. command: Process sam file
                         # create the names of the out connections
                         logfile = run.add_output_file('log',

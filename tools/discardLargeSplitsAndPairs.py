@@ -35,7 +35,12 @@ def main(args):
 
     readlinesN = 0
     matesN     = 0
-    splitsN    = 0
+    singleN        = 0 # number of single reads
+    pairedN        = 0 # number of read pairs
+    splitsSingleN  = 0 # number of single reads that are split reads
+    splitsPairedN  = 0 # number of paired split reads (R1 or R2 of a pair is a split read)
+    splitsSingleNd = 0 # number of discarded single split reads
+    splitsPairedNd = 0 # number of discarded paired split reads
     otherN     = 0
     discardsN  = 0
     discardsM  = 0
@@ -57,16 +62,62 @@ def main(args):
         # Read lines
         readlinesN += 1
 
+        if '*' == x[6]: # this is a single read
+            singleN += 1
+            if 'N' in x[5]: # this is a single read that is a split read
+                splitsSingleN += 1
+                y = re.search('(\d+)N', x[5])
+                # if skipped region in range
+                if int(y.group(1)) <= args.N_splits:
+                    args.outfile.write(lineBR) # write R it to outfile
+                else: # otherwise
+                    args.logfile.write(lineBR) # log its dismissal
+                    splitsSingleNd += 1
+            else: # this is not a split read
+                args.outfile.write(lineBR)
+
+        elif '=' == x[6]: # this read is part of a mate pair
+            value1 = int(x[8]) # TLEN for R1
+            value2 = int(x[8]) * (-1) # TLEN for R2
+            key1 = '%s_%s_%s_%d' % (x[0], x[3], x[7], value1) # uniq identification of a read
+            # if this is R2 we need to switch POS and RNEXT and *(-1) TLEN
+            key2 = '%s_%s_%s_%d' % (x[0], x[7], x[3], value2)
+            if key2 in R1s.keys(): # mate found, process read pair
+                pairedN += 1
+                
+            else: # no R1 found, so this is it
+                R1s[key1] = lineBR
+                # if TLEN too large
+                if abs(value1) > args.M_mates: # log the dismissal of this read pair
+                    args.logfile.write(R1s[key2])
+                    args.logfile.write(lineBR) 
+                    splitsPairedNd += 1
+                else: # TLEN is in range
+                    if 'N' in x[5]: # this is a paired read that is a split read
+                        splitsPairedN +=1
+                    else: # nope, R2 is not a split read, check R1
+                        # split the line from R1 again and check if it is a split read
+                        
+        else: # this read is neither single read nor part of mate pair.. just keep it
+            otherN += 1
+            args.outfile.write(lineBR)
+        
+        ############################ old part
         # 1. if split read
         if 'N' in x[5]:
-            splitsN += 1
-            y = re.search('(\d+)N', x[5])
-            # if skipped region in range
-            if int(y.group(1)) <= args.N_splits:
-                args.outfile.write(lineBR) # write it to outfile
-            else: # otherwise
-                args.logfile.write(lineBR) # log its dismissal
-                discardsN += 1
+            # is this split read part of a mate pair?
+            if '=' == x[6]: # yes
+
+            else: # no
+                splitsN += 1
+                y = re.search('(\d+)N', x[5])
+                # if skipped region in range
+                if int(y.group(1)) <= args.N_splits:
+                    args.outfile.write(lineBR) # write it to outfile
+                else: # otherwise
+                    args.logfile.write(lineBR) # log its dismissal
+                    discardsN += 1
+                    
         # 2. if read 1 of mate pair
         elif '=' == x[6]: # this read is part of a read pair
             value1 = int(x[8]) # TLEN for R1
