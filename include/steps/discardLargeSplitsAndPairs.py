@@ -87,9 +87,6 @@ class discardLargeSplitsAndPairs (AbstractStep):
                         statsfile = run.add_output_file('stats',
                                                         '%s.statistics.txt' % run_id,
                                                         input_paths)
-                        outfile = run.add_output_file('alignments',
-                                                      '%s.reduced.sam' % run_id,
-                                                      input_paths)
                         # construct cmd
                         discard_cmd = [self.get_tool('discardLargeSplitsAndPairs'),
                                        '--N_splits', self.get_option('N_splits'),
@@ -99,6 +96,14 @@ class discardLargeSplitsAndPairs (AbstractStep):
                                        '-', '-']
                         # execute cmd                              
                         pipe.add_command(discard_cmd,
+                                         stdout_path = outfile)
+
+
+                        dd_out = [self.get_tool('dd'), 'obs=4M']
+                        outfile = run.add_output_file('alignments',
+                                                      '%s.reduced.sam' % run_id,
+                                                      input_paths)
+                        pipe.add_command(dd_out,
                                          stdout_path = outfile)
 
                         # 3. gzip the outfile again
