@@ -93,10 +93,9 @@ class discardLargeSplitsAndPairs (AbstractStep):
                                        '--M_mates', self.get_option('M_mates'),
                                        '--statsfile', statsfile,
                                        '--logfile', logfile,
-                                       '-', '-']
+                                       '-'] #, '-']
                         # execute cmd                              
-                        pipe.add_command(discard_cmd,
-                                         stdout_path = outfile)
+                        pipe.add_command(discard_cmd)
 
 
                         dd_out = [self.get_tool('dd'), 'obs=4M']
