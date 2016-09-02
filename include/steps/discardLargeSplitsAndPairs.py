@@ -87,21 +87,26 @@ class discardLargeSplitsAndPairs (AbstractStep):
                         statsfile = run.add_output_file('stats',
                                                         '%s.statistics.txt' % run_id,
                                                         input_paths)
+                        outfile = run.add_output_file('alignments',
+                                                      '%s.reduced.sam' % run_id,
+                                                      input_paths)
                         # construct cmd
                         discard_cmd = [self.get_tool('discardLargeSplitsAndPairs'),
                                        '--N_splits', self.get_option('N_splits'),
                                        '--M_mates', self.get_option('M_mates'),
                                        '--statsfile', statsfile,
-                                       '-', '-']
+                                       '-'] #, '-']
                         # execute cmd                              
-                        pipe.add_command(discard_cmd, stderr_path = logfile)
+                        pipe.add_command(discard_cmd,
+                                         stderr_path = logfile,
+                                         stdout_path = outfile)
 
                         # 3. gzip the outfile again
-                        pigz2 = [self.get_tool('pigz'),
-                                 '--processes', str(self.get_cores()),
-                                 '--stdout']
-                        outfile = run.add_output_file('alignments',
-                                                      '%s.reduced.sam.gz' % run_id,
-                                                      input_paths)
-                        pipe.add_command(pigz2, stdout_path = outfile)
+                        #pigz2 = [self.get_tool('pigz'),
+                        #         '--processes', str(self.get_cores()),
+                        #         '--stdout']
+                        #outfile = run.add_output_file('alignments',
+                        #                              '%s.reduced.sam.gz' % run_id,
+                        #                              input_paths)
+                        #pipe.add_command(pigz2, stdout_path = outfile)
                         
