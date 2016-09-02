@@ -95,10 +95,10 @@ class discardLargeSplitsAndPairs (AbstractStep):
                                        '--N_splits', self.get_option('N_splits'),
                                        '--M_mates', self.get_option('M_mates'),
                                        '--statsfile', statsfile,
-                                       '-'] #, '-']
+                                       '--logfile', logfile,
+                                       '-', '-']
                         # execute cmd                              
                         pipe.add_command(discard_cmd,
-                                         stderr_path = logfile,
                                          stdout_path = outfile)
 
                         # 3. gzip the outfile again
