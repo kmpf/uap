@@ -31,7 +31,7 @@ class CuffMerge(AbstractStep):
         # all .gft assemblies from all samples that have been produced with cufflinks
         self.add_connection('in/features')
         # merged assembly 'merged.gft'
-        self.add_connection('out/features') # merged.gt
+        self.add_connection('out/features') # merged.gtf
         self.add_connection('out/assemblies') # input assemblies txt file
         self.add_connection('out/log_stderr')
         self.add_connection('out/run_log')
