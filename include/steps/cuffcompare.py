@@ -54,7 +54,7 @@ class CuffCompare(AbstractStep):
                     raise StandardError("Expected exactly one feature file.")
 
                 in_file = input_paths[0]
-                cuffcompare_out_directory = self.get_temporary_path('cuffcompare-out')
+                cuffcompare_out_directory = run.add_temporary_directory('%s.cuffcompare-out' % run_id)
 
                 #features_file = run.add_output_file('features',
                 #                                        '%s.combined.gtf' % run_id,
@@ -82,12 +82,13 @@ class CuffCompare(AbstractStep):
                         os.mkdir(cuffcompare_out_directory)
                     except OSError:
                         pass
-                        os.chdir(cuffcompare_out_directory)
+                    
+                    os.chdir(cuffcompare_out_directory)
                         
-                        pool.launch(cuffcompare,
-                                    stderr_path = log_err_file
-                                    #stderr_path = run.get_single_output_file_for_annotation('log_stderr')
-                        )
+                    pool.launch(cuffcompare,
+                                stderr_path = log_err_file
+                                #stderr_path = run.get_single_output_file_for_annotation('log_stderr')
+                    )
 
                 try:
                     os.rename(os.path.join(cuffcompare_out_directory, '%s.combined.gtf' % run_id),
