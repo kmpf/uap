@@ -1,5 +1,14 @@
 # This is an example configuration for the analysis of RNAseq data
 
+cluster:
+    # example for SLURM grid engine
+    # default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+    # example for UGE/SGE respectively OGS
+    # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+    default_pre_job_command: "echo 'Run Started!'"
+    default_post_job_command: "echo 'Rub Finished!'"
+    default_job_quota: 5
+
 destination_path: example-out/RNA-Seq/
 
 constants:
