@@ -117,6 +117,9 @@ Connections via ``add_connection(...)``:
   The data type of the received input data should be checked by the steps
   to make sure to execute the correct commands.
 
+  **TODO**: Reanimate the constraints feature. It would often save some lines
+  of code to be able to define constraints on the connections.
+
 Options via ``self.add_option()``:
   Options allow to influence the commands executed by a step.
   It is advisable to provide as many meaningful options as possible to keep

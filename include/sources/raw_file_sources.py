@@ -28,11 +28,14 @@ class RawFileSources(AbstractSourceStep):
                 "``/home/test/fastq/Sample_*.fastq.gz``.")
         
         self.add_option('group', str, 
-            description = "A regular expression which is applied to found files, and which is "
+            description = "**This is a LEGACY step.** Do NOT use it, better "
+                "use the ``raw_file_source`` step. A regular expression "
+                "which is applied to found files, and which is "
                 "used to determine the sample name from the file name. For example, "
                 "``(Sample_\d+)_R[12].fastq.gz``, when applied to a file called "
-                "``Sample_1_R1.fastq.gz``, would result in a sample name of ``Sample_1``. "
-                "You can specify multiple capture groups in the regular expression.")
+                "``Sample_1_R1.fastq.gz``, would result in a sample name of "
+                "``Sample_1``. You can specify multiple capture groups "
+                "in the regular expression.")
         
         self.add_option('paired_end', bool, description = "Specify whether the samples are paired end or not.")
         
