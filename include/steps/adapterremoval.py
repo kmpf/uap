@@ -206,11 +206,16 @@ class AdapterRemoval(AbstractStep):
                     mv_exec_group  = run.new_exec_group()
 
                     for i in out_connections: 
+                        if not self.is_option_set_in_config('collapse'):
+                            if i == 'collapsed' or i ==  'collapsed.truncated':
+                                continue
+                                
                         if i == 'settings':
                             run.add_output_file(i, run_id +   '.' + i ,  [r1,r2])
                         else:
                             iswanted    = run.add_output_file(i, run_id +    '.' + i + '.fastq.gz' ,  [r1,r2])
                             isproduced  = run.get_output_directory_du_jour_placeholder() + '/' + run_id + '.' + i + '.gz' 
+
                             mv_exec_group.add_command([self.get_tool('mv'), isproduced , iswanted])
 
                     ar_exec_group.add_command(ar, stdout_path=log_stdout, stderr_path=log_stderr)
