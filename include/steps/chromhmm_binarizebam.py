@@ -21,7 +21,7 @@ class ChromHmmBinarizeBam(AbstractStep):
     def __init__(self, pipeline):
         super(ChromHmmBinarizeBam, self).__init__(pipeline)
 
-        self.set_cores(8)
+        self.set_cores(4)
         
         self.add_connection('in/alignments')
         self.add_connection('out/cellmarkfiletable')
