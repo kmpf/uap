@@ -32,6 +32,8 @@ class ChromHmmBinarizeBam(AbstractStep):
         self.require_tool('mkdir')
         self.require_tool('printf')
         self.require_tool('tar')
+        self.require_tool('ls')
+        self.require_tool('xargs')
         
         self.add_option('chrom_sizes_file', str, optional = False,
                         descritpion = "File containing chromosome size "
@@ -294,6 +296,10 @@ class ChromHmmBinarizeBam(AbstractStep):
                         stdout_path = cmft_path
                     )
 
+                    # Create directory for ChromHMM *_binary.txt files
+                    binary_dir = run.add_temporary_directory('binary-files')
+                    mkdir = [self.get_tool('mkdir'), binary_dir]
+
                 # Assemble the ChromHMM BinarizeBam command
                 with run.new_exec_group() as binarizebam:
                     chromhmm = [ self.get_tool('ChromHMM'),
@@ -303,28 +309,38 @@ class ChromHmmBinarizeBam(AbstractStep):
                         self.get_option('chrom_sizes_file'),
                         bam_dir,
                         cmft_path,
-                        self.get_output_directory_du_jour_placeholder()
+                        binary_dir
                     ])
                     binarizebam.add_command(chromhmm)
 
                 # Need to tar the created <cell>_<chrom>_binary.txt files,
                 # because it is impossible to know in advance which files will
                 # be created by ChromHMM
-                with run.new_exec_group() as packbinarized:
-                    binary_files = os.path.join(
-                        self.get_output_directory_du_jour_placeholder(),
-                        '*_binary.txt')
-                    tar = [self.get_tool('tar'),
-                           '--create',
-                           '--gzip',
-                           '--remove-files',
-                           '--verbose',
-                           binary_files,
-                           '--file',
-                           run.add_output_file(
-                               'chromhmm_binarization',
-                               '%s_binary_files.tar.gz' % run_id,
-                               input_files)
-                       ]
+                with run.new_exec_group() as pack_binary:
+                    with pack_binary.add_pipeline() as pack_binary_pipe:
+                        binary_files = os.path.join(
+                            run.get_output_directory_du_jour_placeholder(),
+                            '*_binary.txt')
+                        # List content of directory with *_binary.txt files
+                        ls = [self.get_tool('ls'), '-1', binary_dir]
+                        # Pipe ls output
+                        pack_binary_pipe.add_command(ls)
+                        # Call xargs to call tar (circumventing glob pattern)
+                        xargs = [self.get_tool('xargs'),
+                                 '--delimiter', '\n',
+                                 self.get_tool('tar'),
+                                 '--create',
+                                 '--directory',
+                                 binary_dir,
+                                 '--gzip',
+                                 '--remove-files',
+                                 '--verbose',
+                                 '--file',
+                                 run.add_output_file(
+                                     'chromhmm_binarization',
+                                     '%s_binary_files.tar.gz' % run_id,
+                                     input_files)
+                             ]
+                        pack_binary_pipe.add_command(xargs)
 
 
