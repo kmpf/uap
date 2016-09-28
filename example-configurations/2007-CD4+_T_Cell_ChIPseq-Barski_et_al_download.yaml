@@ -1,5 +1,5 @@
 # This is the uap configuration file.
- 
+
 destination_path: example-out/2007-Barski_et_al_download
 
 constants:
@@ -392,11 +392,11 @@ tools:
     ##################
 
     # URL: http://zlib.net/pigz/
-    pigz: 
+    pigz:
         path: pigz
         get_version: --version
         exit_code: 0
-                
+
     ##################
     # Internal Tools #
     ##################

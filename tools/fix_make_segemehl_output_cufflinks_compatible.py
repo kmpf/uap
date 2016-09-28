@@ -34,7 +34,7 @@ def read_samline(line):
     for optEntry in optional_fields:
         (optID, optDEF, optVal) = optEntry.split(':')
         samdict[optID] = [optVal, optDEF]
-     
+
     return samdict
 
 
@@ -48,63 +48,63 @@ def make_samline(samdict):
         if key not in keylist:
             opt_keys.append(key)
 
-    opt_keys.sort()        
+    opt_keys.sort()
 
     pre_line =[]
     for i in keylist:
         pre_line.append(samdict[i])
-        
+
     for i in opt_keys:
         opt = ':'.join([i,samdict[i][1],samdict[i][0]])
         pre_line.append(opt)
 
-    
+
     samline= "\t".join(str(v) for v in pre_line)
 
-    
+
     return samline
-    
+
 
 
 def collect(sam_hits, samdict,ID):
     if ID == None:
         ID = samdict['qname']
-        
+
     if ID ==  samdict['qname']:
         sam_hits.append(samdict)
         process_switch = 0
-    else: 
+    else:
         process_switch = 1
         ID = samdict['qname']
-     
+
     return sam_hits, samdict, ID, process_switch
-     
+
 
 
 
 def pre_process_sam_hits(sam_hits):
-    #see if paired end or single and no mixture, multiple 
-    
-    
+    #see if paired end or single and no mixture, multiple
+
+
     for samdict in sam_hits:
         if 'XI' not in samdict:
             sys.stderr.write("Samline entry without XI entry")
             pp.pprint(samdict)
             exit(1)
-            
+
          #sort all segemehl entries by XI
-        sam_hits = sorted(sam_hits, key=lambda k: int(k['XI'][0])) 
+        sam_hits = sorted(sam_hits, key=lambda k: int(k['XI'][0]))
 
         temporary_list =[]
         for samdict in sam_hits:
             temporary_list.append(samdict['XI'][0])
         counter_list = Counter(temporary_list)
 
-          
+
         info   = dict()
         info['counter_list'] = counter_list
         info['single'], info['paired'], info['NH']  = 0,  0, 0
-        
+
 
         for XI, how_often in sorted(counter_list.items()):
             info['NH'] += 1
@@ -135,16 +135,16 @@ def pre_process_sam_hits(sam_hits):
 
 def process_sam_hits(info, sam_hits):
     return_list = []
-    
+
     if info['type'] == 'single':
         for samdict in sam_hits:
-            #set clear and set multiple flag ### for now just removing 
+            #set clear and set multiple flag ### for now just removing
             if info['NH'] > 1:
                "temp"
                # samdict['flag'] = setBit(samdict['flag'],8)
-            else: 
+            else:
                 samdict['flag'] = clearBit(samdict['flag'],8)
-            #if  paired set mate unmapped 
+            #if  paired set mate unmapped
             samdict['flag'] = test_set_flag(samdict['flag'], 0, 0, 3)
             return_list.append(samdict)
 
@@ -165,11 +165,11 @@ def process_sam_hits(info, sam_hits):
                "temp"
                # samdict_A['flag'] = setBit(samdict_A['flag'],8)
                # samdict_B['flag'] = setBit(samdict_B['flag'],8)
-            else: 
+            else:
                 samdict_A['flag'] = clearBit(samdict_A['flag'],8)
                 samdict_B['flag'] = clearBit(samdict_B['flag'],8)
 
-            #set mate info    
+            #set mate info
 
                 #not fail safe assuming there are no unmapped ones
                 #fix later should not happen in segemehl
@@ -182,9 +182,9 @@ def process_sam_hits(info, sam_hits):
 
             samdict_A['mpos'] = samdict_B['pos']
             samdict_B['mpos'] = samdict_A['pos']
-            
 
-            #if mate reverse set mat reverse flag in my info 
+
+            #if mate reverse set mat reverse flag in my info
             if  testBit(samdict_B['flag'],4) > 0:
                 samdict_A['flag'] = setBit(samdict_A['flag'],5)
 
@@ -207,10 +207,10 @@ def process_sam_hits(info, sam_hits):
 
 def test_set_flag(flag, bit_to_check, response, bit_to_set):
     if testBit(flag, bit_to_check) > response:
-        flag = setBit(flag,bit_to_set) 
+        flag = setBit(flag,bit_to_set)
     return flag
-                        
-  
+
+
 
 # testBit() returns a nonzero result, 2**offset, if the bit at 'offset' is one.
 
@@ -236,8 +236,8 @@ def toggleBit(int_type, offset):
     mask = 1 << offset
     return(int_type ^ mask)
 
- 
-            
+
+
 def output(sam_hits, outfile):
     for samdict in sam_hits:
         samline = make_samline(samdict)
@@ -251,7 +251,7 @@ def main(args):
     # print(args)
     out = args.outfile
     sam_hits =[]
-    
+
     for line in args.infile:
         if line[0] == '@':
             args.outfile.write(line)
@@ -262,8 +262,8 @@ def main(args):
 
         # take all reads same name
         (sam_hits, samdict, ID, process_switch) =  collect(sam_hits, samdict, ID)
-        
-        #new readname  encountered start processeing  
+
+        #new readname  encountered start processeing
         if process_switch ==  1 :
             #look at XI paires and determine if only paired or single are in the collection
             info, sam_hits = pre_process_sam_hits(sam_hits)
@@ -275,7 +275,7 @@ def main(args):
             sam_hits.append(samdict)
 
 
-    #last block after while iteration        
+    #last block after while iteration
     info, sam_hits = pre_process_sam_hits(sam_hits)
     sam_hits = process_sam_hits(info, sam_hits)
     output(sam_hits, args.outfile);

@@ -20,7 +20,7 @@ import tempfile
 import argparse
 
 from Bio import SeqIO
- 
+
 
 parser = argparse.ArgumentParser(description='python script for parsing the output of segemehl (remapper/realigner) into a cufflinks-compatible output')
 parser.add_argument("-s", "--sam", dest='my_sam', required=True,type=argparse.FileType('r'), help="specifies the path to directory where the segemehl.sam input file is located (when piping in with samtools than just use - as argument )")
@@ -36,13 +36,13 @@ if(args.my_outdir):
     outPath=os.path.abspath(args.my_outdir)
 else:
     outPath=os.path.abspath(".")
-os.chdir(outPath) 
+os.chdir(outPath)
 strandSpecific=False
 if(args.my_genome):
     refGenome=args.my_genome
 else:
     strandSpecific=True
-    
+
 
 myXSunsure=0
 normalReads=0
@@ -155,12 +155,12 @@ def getmapping(fragmentList):
             if(int(fragmentList[i][XI_index][5:])==j):
                 mapping.append(fragmentList[i])
         #test wegen realigner:
-        if mapping:   
+        if mapping:
             mappingList.append(updateXQs(mapping))
         #else:
             #counter(ein drittel oder so) wie oft eigenltich best only zwischen einem split und einem normalen read mapping (multiple hits) ueberprueft werden muesste
-                
-        
+
+
     if(len(mappingList)>1):
         return bestOnly(mappingList)
     else:
@@ -255,7 +255,7 @@ def processLines(eingabe):
     NH=''
     XI= None
     XI_seen = None
-#    pdb.set_trace() 
+#    pdb.set_trace()
     for i in range(11,(len(eingabe[0]))):
         if "NH:i" in eingabe[0][i]:
             NH=str(eingabe[0][i])
@@ -303,7 +303,7 @@ def processLines(eingabe):
                     if(subseq=="CTAC"or subseq=="CTGC" or subseq=="GTAT"):
                         xaIsSet=True
                         xaSet=False
-                
+
         laenge= getGenomicLength(eingabe[i][5])
         newNucSeq+=eingabe[i][9]
         if(qualityIsSet):

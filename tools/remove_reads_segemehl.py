@@ -24,7 +24,7 @@ class Filter:
         if len(self.lines) > 0:
             if CHECK_QNAMES and self.current_qname in self.seen_qnames:
                 raise StandardError("Input is not sorted by qname. KA-BLAM.")
-                
+
             if len(self.lines) <= 2:
                 skip = False
                 if len(self.lines) == 2:
@@ -34,7 +34,7 @@ class Filter:
                 if not skip:
                     if CHECK_QNAMES:
                         self.seen_qnames.add(self.current_qname)
-     
+
                     for line in self.lines:
                         fixed_line = line
                         if len(self.lines) == 1:
@@ -44,7 +44,7 @@ class Filter:
                                 flags |= 0x8
                             line_array[1] = str(flags)
                             fixed_line = "\t".join(line_array)
-                            
+
                         self.destination.write(fixed_line)
                     self.wcount += len(self.lines)
             else:
@@ -61,22 +61,22 @@ class Filter:
                 continue
 
             self.rcount += 1
-                
+
             line_array = line.split('\t')
             flags = int(line_array[1])
-            
+
             if (flags & 0x100) != 0:
                 continue
-                
+
             qname = line_array[0]
-                
+
             if qname != self.current_qname:
                 self.handle()
-                
+
             self.current_qname = qname
             self.lines.append(line)
             self.flags_or |= flags
-            
+
         self.handle()
         self.wpercent = self.wcount * 100.0 / self.rcount
         keys = ['rcount', 'wcount', 'wpercent', 'discard_gt_2', 'discard_40_80']
@@ -86,6 +86,6 @@ class Filter:
 def main():
     filter = Filter(sys.stdin, sys.stdout)
     filter.run()
-        
+
 if __name__ == '__main__':
     main()

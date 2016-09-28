@@ -5,7 +5,7 @@ constants:
     - &genome_faidx genomes/bacteria/Mycoplasma_genitalium/samtools_faidx/M_genitalium_genome-download-e6f7QENG/M_genitalium_genome-download.fasta.fai
     - &segemehl_genome_index genomes/bacteria/Mycoplasma_genitalium/segemehl_index/Mycoplasma_genitalium_genome-download-zgtEpQmV/Mycoplasma_genitalium_genome-download.idx
     - &bowtie2_genome_index genomes/bacteria/Mycoplasma_genitalium/bowtie2_index/Mycoplasma_genitalium_index-download-cMQPtBxs/Mycoplasma_genitalium_index-download
-    - &bwa_genome_index 
+    - &bwa_genome_index
 
     - control: &bg_vs_ab
             Replicate1_CellType1_Condition2:
@@ -181,7 +181,7 @@ steps:
 
     picard_markduplicates:
         _depends: sort_bowtie2
-         # PROGRAM_RECORD_ID: 
+         # PROGRAM_RECORD_ID:
          # PROGRAM_GROUP_VERSION:
          # PROGRAM_GROUP_COMMAND_LINE:
          # PROGRAM_GROUP_NAME:
@@ -206,7 +206,7 @@ steps:
         verbose: 0
         # read-length:
         # shift:
-        # qvalue: 
+        # qvalue:
         # pvalue:
         # to-large:
         # down-sample:
@@ -225,10 +225,10 @@ steps:
         _depends: samtools_index
         output-format: bigWig
         chromosome-sizes: example-data/mycoGeni.chrom.sizes
-        # bedtools-bamtobed-tag: 
-        # bedtools-bamtobed-color: 
+        # bedtools-bamtobed-tag:
+        # bedtools-bamtobed-color:
         bedtools-genomecov-report-zero-coverage: no
-        # bedtools-genomecov-max: 
+        # bedtools-genomecov-max:
         bedtools-genomecov-split: yes
         # bedtools-genomecov-strand: '+' # '-'
         # bedtools-genomecov-scale: 0.5

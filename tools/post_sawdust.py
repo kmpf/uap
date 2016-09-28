@@ -7,7 +7,7 @@ import argparse
 from argparse import RawTextHelpFormatter
 import pprint
 import yaml
-from collections import OrderedDict 
+from collections import OrderedDict
 import numpy
 from Bio import SeqIO
 
@@ -25,35 +25,35 @@ def read_arguments():
 
     parser.add_argument('--logfile', nargs='?', type=argparse.FileType('w'),
                     default=sys.stderr, help ="Read count metrics file:  default=stderr ")
-        
+
     parser.add_argument('--outfile-splits', nargs='?', type=argparse.FileType('w'),
                     default=None, help ="Write not joinable split reads(i.e wrong chr etc)  in a separate file")
-    
+
     parser.add_argument('--distance',  type=int,
                     default=200000, help ="Maximum distance between two fragments in a split read")
 
     parser.add_argument('--filter-snp-calling',   action='store_const', const ='tunred_on',
                     default=None, help ="Filters out reads for snp calling, no multiple, no diff chr")
 
-    parser.add_argument('--genome', 
+    parser.add_argument('--genome',
                     default=None, help ="Fasta file, like: hg19.fa Only necessary for unstranded RNA Libraries")
-        
-    parser.add_argument('--read-type', choices=['single', 'paired'], 
+
+    parser.add_argument('--read-type', choices=['single', 'paired'],
                     default='paired', help ="single or paired end default=paired")
 
     parser.add_argument('--library-type', choices=['fr-unstranded', 'fr-firststrand', 'fr-secondstrand'],
                         default=None, help ="See tophat manual.")
 
-    parser.add_argument('--seq-type', choices=['RNA', 'DNA'], 
+    parser.add_argument('--seq-type', choices=['RNA', 'DNA'],
                     default='RNA', help ="Specifies the molecule you sequenced commonly referred to as RNA- or DNA-seq")
- 
+
 
     return parser.parse_args()
 
 
 
 def eval_arguments(args):
-    
+
     if args.seq_type is None:
         pass
         raise StandardError( 'Argument --seq-type is {0}; argument is required; choices: DNA, RNA'.format(args.seq_type))
@@ -63,8 +63,8 @@ def eval_arguments(args):
         if args.library_type is None:
             my_choices = 'fr-unstranded', 'fr-firststrand', 'fr-secondstrand'
             raise StandardError( 'Argument --library-type is {0}; argument is required; choices: {1}'.format(args.library_type, my_choices))
-  
-      
+
+
     if (args.library_type == 'fr-unstranded' and args.seq_type == 'RNA'):
         if args.genome is None:
             raise StandardError( 'Argument --genome is {0}; please specify fasta file '.format(args.genome))
@@ -73,10 +73,10 @@ def eval_arguments(args):
         handle.close()
 
 
-## called from main                     
+## called from main
 def init_metrics():
     """Returns a dict like thingy for counting"""
-    #new test add 
+    #new test add
     metrics = []
 
     indict =     OrderedDict()
@@ -88,8 +88,8 @@ def init_metrics():
     indict['sub_multiple']  = {}
     indict['sub_multiple']['r1']  = 0
     indict['sub_multiple']['r2']  = 0
-   
-    
+
+
     indict['unique']  = 0
     indict['sub_unique']  = {}
     indict['sub_unique']['r1']  = 0
@@ -117,27 +117,27 @@ def init_metrics():
     metrics.append(indict)
     metrics.append(outdict)
     return metrics
-     
+
 
 
 
 def collect(sam_hits, samdict,ID):
     if ID == None:
         ID = samdict['qname']
-        
+
     if ID ==  samdict['qname']:
         sam_hits.append(samdict)
         process_switch = 0
-    else: 
+    else:
         process_switch = 1
         ID = samdict['qname']
-     
+
     return sam_hits, samdict, ID, process_switch
-     
 
-        
 
-    
+
+
+
 def group_sam_hits_by_mappings(sam_hits):
     """
     Returns  a dictionary with:
@@ -146,10 +146,10 @@ def group_sam_hits_by_mappings(sam_hits):
         dict->mappingnumber->[1] = list
 
         0 = first read, 1 = second read
-        
+
     """
 
-    #see if paired end or single and no mixture, multiple 
+    #see if paired end or single and no mixture, multiple
 
     aln_dict = dict()
 
@@ -157,14 +157,14 @@ def group_sam_hits_by_mappings(sam_hits):
         if 'XI' not in samdict['opt']:
             #pp.pprint(samdict)
             raise StandardError('XI flag missing')
-        
+
         XI_val = samdict['opt']['XI'][0]
 
         if XI_val not in aln_dict:
             for i in [0,1]:
                 aln_dict.setdefault(XI_val, {})[i]= []
 
-        
+
 
         if args.read_type == 'single':
             samdict['flag'] = setBit(samdict['flag'],6)
@@ -217,7 +217,7 @@ def correct_flags_and_mate_information(aln_dict):
                 suitable.append(XI)
                 single_read_placement[XI] = 1
 
-             
+
 
     for i in suitable:
         template = aln_dict[i]
@@ -228,9 +228,9 @@ def correct_flags_and_mate_information(aln_dict):
             samdict = samdict_set_NH(samdict, NH)
             samdict = samdict_set_mapq(samdict)
             samdict = add_XS_field(samdict, [])
-            
+
             aln_dict[i][single_read_placement[i]][0] = samdict
-            
+
         if args.read_type == 'paired':
             #one read maps the other is unmapped
             if i in single_read_placement.keys():
@@ -241,7 +241,7 @@ def correct_flags_and_mate_information(aln_dict):
                 samdict = samdict_set_mate_unmapped(samdict)
                 aln_dict[i][single_read_placement[i]][0] = samdict
                 samdict = add_XS_field(samdict, [])
-                
+
             else:
 
                 samdicts = [template[0][0], template[1][0] ]
@@ -259,13 +259,13 @@ def correct_flags_and_mate_information(aln_dict):
     return aln_dict
 
 
-    
+
 def collect_metrics (aln_dict, metrics):
     """
     Counts number of templates: example:
     This section needs a major overhaul, to many if and elses
     """
-    
+
     indict   = metrics[0]
     outdict  = metrics[1]
 
@@ -276,23 +276,23 @@ def collect_metrics (aln_dict, metrics):
     XI_len = len(XI)
 
     suitable = aln_dict['suitable']
-    
+
 
     if XI_len == 0:
         raise StandardError ("Jesus Christ empty aln dict should not rise from the dead!")
-    
+
     first  = aln_dict[0][0]
     second = aln_dict[0][1]
 
-    
-    indict['templates']  += 1  
+
+    indict['templates']  += 1
     if XI_len > 1:
         indict['multiple']  += 1
         if len(first) > 0:
             indict['sub_multiple']['r1'] += 1
         if len(second) > 0:
             indict['sub_multiple']['r2'] += 1
-        
+
         if len(suitable) > 0 :
             outdict['templates']  += 1
             outdict['multiple']  += 1
@@ -306,49 +306,49 @@ def collect_metrics (aln_dict, metrics):
         if len(suitable) > 0:
             outdict['unique'] += 1
             outdict['templates']  += 1
-        
+
         if len(first) > 0:
             indict['sub_unique']['r1'] += 1
-            split_type = is_split(first) 
+            split_type = is_split(first)
 
             if (split_type):
                 indict['sub_unique']['splits'] += 1
                 indict['sub_unique']['split_types'][split_type] += 1
-        
+
             if len(suitable) > 0:
                 outdict['sub_unique']['r1'] += 1
 
             if (split_type == 'OK'):
                 outdict['sub_unique']['splits'] += 1
-               
-            
+
+
         if len(second) > 0:
             indict['sub_unique']['r2'] += 1
 
-            split_type = is_split(second) 
+            split_type = is_split(second)
             if (split_type):
                 indict['sub_unique']['splits'] += 1
                 indict['sub_unique']['split_types'][split_type] += 1
-        
+
             if len(suitable) > 0:
                 outdict['sub_unique']['r2'] += 1
 
             if (split_type == 'OK'):
                 outdict['sub_unique']['splits'] += 1
-            
-                                
+
+
     return (aln_dict, [indict, outdict])
 
 
 
-    
+
 def output(aln_dict):
-    single_read_placement =  aln_dict['single_read_placement'] 
+    single_read_placement =  aln_dict['single_read_placement']
     suitable = aln_dict['suitable']
 
     if  len(suitable) == 0:
         return
-        
+
     for i in suitable:
         template = aln_dict[i]
         tlist = [0,1]
@@ -369,7 +369,7 @@ def output_splits(aln_dict):
     XI.remove('single_read_placement')
     XI_len = len(XI)
 
-    
+
     for entry in  XI:
         template = aln_dict[entry]
         for i in [0,1]:
@@ -379,9 +379,9 @@ def output_splits(aln_dict):
                     sam_line = make_sam_line(samdict)
                     sys.stderr.write(sam_line)
                     args.outfile_splits.write(sam_line +'\n')
-                    
 
-## called by functions used in main                     
+
+## called by functions used in main
 
 
 def read_sam_line(line):
@@ -414,17 +414,17 @@ def make_sam_line(samdict):
     """
     Takes a samdict and glues all the variables together to produce a SAM line
     """
-    
+
     keylist = 'qname, flag, rname, pos, mapq, cigar, mrnm, mpos, isize, seq, qual'.split(', ')
     pre_line =[]
 
-    #quick fix for single 
+    #quick fix for single
     if args.read_type == 'single':
         samdict['flag'] = clearBit(samdict['flag'],6)
 
     for key in keylist:
         pre_line.append(samdict[key])
-        
+
     opt_dict = samdict['opt']
     for key in sorted(opt_dict.iterkeys()):
         tlist = [ key,
@@ -442,8 +442,8 @@ def make_sam_line(samdict):
 
 
 def check_split_read(list_of_fragments):
-    ''' 
-    Takes a list of samdicts returns info dict with combinatorial status  
+    '''
+    Takes a list of samdicts returns info dict with combinatorial status
     Insures that the fragment of split reads can be combined into one SAM line.
     The following checks are carried out:
 
@@ -453,11 +453,11 @@ def check_split_read(list_of_fragments):
 	- No overlap between fragments
 	- No switchorder within fragments
     '''
-    
+
     info= dict()
     info['type'] = 'OK'
 
-    
+
     ### run checks
     #### all frags should be on the same chr
     tlist =[]
@@ -473,13 +473,13 @@ def check_split_read(list_of_fragments):
         tlist =[]
         for samdict in list_of_fragments:
             tlist.append(testBit(samdict['flag'],4))
-           
+
         if not all_same(tlist):
             info['type'] = 'not_same_strand'
-        
-    #### all frags should be in args.distance 
-    #### all frags should not overlap with each other                 
-    list_of_fragments_by_pos= sorted(list_of_fragments, key=lambda k: k['pos']) 
+
+    #### all frags should be in args.distance
+    #### all frags should not overlap with each other
+    list_of_fragments_by_pos= sorted(list_of_fragments, key=lambda k: k['pos'])
     if info['type'] == 'OK':
         tlist_start =[]
         tlist_end   =[]
@@ -492,30 +492,30 @@ def check_split_read(list_of_fragments):
         tlist_end.pop()
 
         for start, end in zip(tlist_start, tlist_end):
-            diff = start - end 
+            diff = start - end
             if  diff > args.distance:
                 info['type'] = 'max_dist_breached'
                 break
             if  diff <= 0 :
                 info['type'] = 'fragment_overlap'
-                
-    #### all frags should be in the right order 
+
+    #### all frags should be in the right order
     if info['type'] == 'OK':
 
         tlist =[]
         for samdict in list_of_fragments_by_pos:
             tlist.append(samdict['opt']['XQ'][0])
-          
+
         samdict = list_of_fragments_by_pos[0]
         some_number = testBit(samdict['flag'],4)
-                
+
         if some_number > 0:
             tlist.reverse()
-         
+
         if not is_sorted(tlist):
             info['type'] = 'order_switch'
 
-    return info 
+    return info
 
 
 def combinde_md_field(new_samdict, samdict):
@@ -540,34 +540,34 @@ def combinde_md_field(new_samdict, samdict):
         raise StandardError('No integer found in MD: {0} of previous Fragment \nreadname: {1}'.format(md_pf, new_samdict['qname']))
 
     # get last match through iterator
-    last_match_pf = None 
+    last_match_pf = None
     for last_match_pf in pattern_pf:
-        pass 
+        pass
 
-    #is last match really at the end 
+    #is last match really at the end
     if last_match_pf.end() != len(md_pf):
         raise StandardError('No integer found at  end of MD: {0} of previous Fragment \nreadname: {1}'.format(md_pf, new_samdict['qname']))
-                        
+
     pattern_nf = prog.match(md_nf)
     if pattern_nf == None:
         raise StandardError('No integer found in MD: {0} of next Fragment \nreadname: {1}'.format(md_nf, samdict['qname']))
-            
+
     if pattern_nf.start() > 0:
         raise StandardError('MD: {0} of next Fragment starts not with integer in \nreadname: {1}'.format(md_nf, samdict['qname']))
 
     ## now go through the cases
     # keeping remains of md prev and next
-    remainder_pf  = md_pf[0:last_match_pf.start()] 
-    remainder_nf  = md_nf[pattern_nf.end():] 
+    remainder_pf  = md_pf[0:last_match_pf.start()]
+    remainder_nf  = md_nf[pattern_nf.end():]
     #for convienence
     pf = int( last_match_pf.group() )
     nf = int( pattern_nf.group() )
-    
+
     #pp.pprint(['pf',md_pf, remainder_pf, pf])
     #pp.pprint(['nf',md_nf, remainder_nf, nf])
 
-    
-    #case both have matches 
+
+    #case both have matches
     if (pf > 0 and  nf > 0  ):
         tmatch = str(pf + nf)
         md_new =   ''.join([remainder_pf, tmatch, remainder_nf])
@@ -598,7 +598,7 @@ def combine_split_reads(list_of_fragments, info):
             samdict.setdefault('opt',{})['YS'] = [info['type'], 'Z']
         return list_of_fragments
     else:
-        list_of_fragments_by_pos= sorted(list_of_fragments, key=lambda k: k['pos']) 
+        list_of_fragments_by_pos= sorted(list_of_fragments, key=lambda k: k['pos'])
         new_samdict = list_of_fragments_by_pos[0]
 
         #need to set
@@ -634,39 +634,39 @@ def combine_split_reads(list_of_fragments, info):
 
                 subseq=str(record_dict[rname].seq[spliceA_start:spliceA_end])
                 subseq+=str(record_dict[rname].seq[spliceB_start:spliceB_end])
-                
+
                     #splice sites are found on the plus strand so transcript comes from +
                 if(subseq=="GTAG"or subseq=="GCAG" or subseq=="ATAC"):
                     XS_list.append('+')
-                        
+
                     #splice sites are found on the minus strand so transcript comes from -
                 elif(subseq=="CTAC"or subseq=="CTGC" or subseq=="GTAT"):
                     XS_list.append('-')
-                    #not a common splice site used so making no inferences    
+                    #not a common splice site used so making no inferences
                 else:
                     XS_list.append('dunno')
 
-                        
+
             mapq.append( samdict['mapq'])
             #### MD fields suck  ....
             new_samdict['opt']['MD'][0] = combinde_md_field(new_samdict, samdict)
 
-        
+
         new_samdict = clean_dict(new_samdict)
-        
+
 
         new_samdict = add_XS_field (new_samdict, XS_list)
-        
+
         mapq_mean = numpy.mean(mapq)
         new_samdict['mapq'] = int(numpy.floor(mapq_mean))
         new_samdict.setdefault('opt',{})['YS'] = [info['type'], 'Z']
         #print('samdict')
 
-      
 
-        
+
+
         return [new_samdict]
-    
+
 
 def add_XS_field (samdict, XS_list):
 
@@ -697,18 +697,18 @@ def add_XS_field (samdict, XS_list):
             pass
         else:
             samdict.setdefault('opt',{})['XS'] = [XS_list[0], 'A']
-        
+
     elif (args.library_type == 'fr-firststrand' and args.seq_type == 'RNA'):
         #by definition
         # first read reverse -> comes from +
         # first read not reverse -> comes from -
         # second read reverse -> comes from -
         # second not read reverse -> comes from +
-        
+
         samdict.setdefault('opt',{})['XS'] = [XS_val, 'A']
-        
- 
-        
+
+
+
     elif (args.library_type == 'fr-secondstrand' and args.seq_type == 'RNA'):
         #by definition
         # first read reverse -> comes from -
@@ -716,16 +716,16 @@ def add_XS_field (samdict, XS_list):
         # second read reverse -> comes from +
         # second not read reverse -> comes from -
         # since its the opposite outcome of fr-firstrand +/- are swapped
-        
+
         samdict.setdefault('opt',{})['XS'] = [XS_dict[XS_val], 'A']
 
 
-        
+
     else:
         pass
     return samdict
 
-        
+
 def clean_dict(samdict):
     """
     Removes unecessary private TAGS mostly split read specific.
@@ -737,14 +737,14 @@ def clean_dict(samdict):
     for tag in tags:
         if tag in samdict['opt']:
             del samdict['opt'][tag]
-  
-            
+
+
     return samdict
-          
 
 
-            
-    
+
+
+
 def samdict_set_mate_unmapped(samdict):
     samdict['flag'] = setBit(samdict['flag'],3)
     samdict['mrnm'] = '*'
@@ -753,13 +753,13 @@ def samdict_set_mate_unmapped(samdict):
     return samdict
 
 
-                
+
 def samdict_set_pe_mate(samdict_A, samdict_B):
     """
     Sets:
-   
+
         - mate reference name
-        - mate pos 
+        - mate pos
     	- insertion size
 	- proper pair (same chr && reverse read behind not reverse read)
 
@@ -784,23 +784,23 @@ def samdict_set_pe_mate(samdict_A, samdict_B):
 
         seq_length = get_genomic_sequence_length(tdict['right']['cigar'])
         isize = tdict['right']['isize'] + seq_length -  tdict['left']['isize']
-        
+
         tdict['right']['isize'] = isize
         tdict['left']['isize']  = isize *(-1)
-        
+
     else:
         samdict_A['mrnm'] = samdict_B['rname']
         samdict_B['mrnm'] = samdict_A['rname']
 
         samdict_A['isize'] = 0
         samdict_B['isize'] = 0
-        
+
     samdict_A['mpos'] = samdict_B['pos']
     samdict_B['mpos'] = samdict_A['pos']
-        
-    
-    
-    #if mate reverse set mate reverse flag in my info 
+
+
+
+    #if mate reverse set mate reverse flag in my info
     if  testBit(samdict_B['flag'],4) > 0:
         samdict_A['flag'] = setBit(samdict_A['flag'],5)
 
@@ -835,7 +835,7 @@ def samdict_set_pe_mate(samdict_A, samdict_B):
 
 def get_genomic_sequence_length(cigar):
     """
-    Returns sequence length in genomic space by 
+    Returns sequence length in genomic space by
     doing the cigar opeartions.
     Does not catch malformed cigarlines
     """
@@ -856,14 +856,14 @@ def get_genomic_sequence_length(cigar):
     return seq_length
 
 
- 
+
 def first_or_second_read(flag):
     """returns 0 if its first sequenced read and 1 for the second sequenced read """
 
 
 
-    
-    fst = testBit(flag,6) 
+
+    fst = testBit(flag,6)
     snd = testBit(flag,7)
 
     if (fst > 0 and snd == 0):
@@ -878,13 +878,13 @@ def first_or_second_read(flag):
 def read_orientation(flag):
     """returns 0 if sense/+ and 1 for reversed """
 
-    orient = testBit(flag,4) 
+    orient = testBit(flag,4)
     if (orient  > 0):
         return 1
     else:
         return 0
 
-    
+
 
 def samdict_set_mapq(samdict):
     NH = samdict['NH']
@@ -892,21 +892,21 @@ def samdict_set_mapq(samdict):
         samdict['mapq'] = 50
     elif (NH == 2):
         samdict['mapq'] = 5
-    else: 
+    else:
         samdict['mapq'] = 0
-            
-    return samdict
-    
 
-        
+    return samdict
+
+
+
 def samdict_set_NH(samdict, NH):
-    
+
     samdict['flag'] = clearBit(samdict['flag'],8)
     samdict['NH'] = NH
 
     if (NH > 1):
         samdict['flag'] = setBit(samdict['flag'],8)
-            
+
     return samdict
 
 
@@ -921,15 +921,15 @@ def is_sorted(lst, key=lambda x, y: x < y):
 
 def test_set_flag(flag, bit_to_check, response, bit_to_set):
     if testBit(flag, bit_to_check) > response:
-        flag = setBit(flag,bit_to_set) 
+        flag = setBit(flag,bit_to_set)
     return flag
-                        
-  
+
+
 def all_same(items):
     """
     tests if all items in alist are the same
     http://stackoverflow.com/a/3787983
-    """ 
+    """
     return all(x == items[0] for x in items)
 
 
@@ -964,11 +964,11 @@ def is_split(samdicts):
         return   samdict['opt']['YS'][0]
     else:
         return None
-    
+
 
 def output_metrics (metrics):
     args.logfile.write( yaml.dump(metrics, default_flow_style=None))
-    
+
 
 
 def check_sort_order_sam_file(lst):
@@ -980,7 +980,7 @@ def check_sort_order_sam_file(lst):
     #    pp.pprint(lst)
     #    pp.pprint(sorted(lst))
     #    raise StandardError('SAM file not sorted by name:\n\t fst: {0}\n\t snd: {1} entry'.format(lst[0], lst[1]))
-   
+
 
 
 
@@ -990,7 +990,7 @@ def filter_for_snp_calling(aln_dict):
     XI.remove('suitable')
     XI.remove('single_read_placement')
     NH = len(XI)
-    if NH > 1: 
+    if NH > 1:
         aln_dict['suitable'] = []
         return aln_dict
 
@@ -1001,24 +1001,24 @@ def filter_for_snp_calling(aln_dict):
     n_fst= len(fst)
     n_snd= len(snd)
 
-    if n_fst == n_snd: 
+    if n_fst == n_snd:
         if fst[0]['mrnm'] != '=':
             aln_dict['suitable'] = []
             return aln_dict
 
 
     return aln_dict
-    
-    
 
-    
+
+
+
 def main(args):
     ID = None
     # print(args)
     out = args.outfile
     sam_hits =[]
     metrics = init_metrics()
-        
+
     for line in args.infile:
         #in case the SAM header is piped
         if line[0] == '@':
@@ -1029,32 +1029,32 @@ def main(args):
 
         #take all reads same name and put them into a list "sam_hits"
         (sam_hits, samdict, ID, process_switch) =  collect(sam_hits, samdict, ID)
-            
-        
-        
-        #new readname  encountered start processesing  
+
+
+
+        #new readname  encountered start processesing
         if process_switch ==  1 :
             #check_sort_order_sam_file([sam_hits[0]['qname'],ID])
             #look at XI paires and determine if only paired or single are in the collection
             aln_dict = group_sam_hits_by_mappings(sam_hits)
             aln_dict = process_split_reads(aln_dict)
             aln_dict = correct_flags_and_mate_information(aln_dict)
-            
+
             if (args.filter_snp_calling):
                 aln_dict = filter_for_snp_calling(aln_dict)
             aln_dict, metrics  = collect_metrics(aln_dict, metrics)
             #pp.pprint((aln_dict))
-            
-            
+
+
             output(aln_dict)
-           
+
             if (args.outfile_splits):
                 output_splits(aln_dict)
             aln_dict = []
             sam_hits = []
             sam_hits.append(samdict)
 
-    #last block after while iteration        
+    #last block after while iteration
     aln_dict = group_sam_hits_by_mappings(sam_hits)
     aln_dict = process_split_reads(aln_dict)
     aln_dict = correct_flags_and_mate_information(aln_dict)
@@ -1066,7 +1066,7 @@ def main(args):
     if (args.outfile_splits):
         output_splits(aln_dict)
     output_metrics(metrics)
-    
+
 if __name__ == '__main__':
     args = read_arguments()
     eval_arguments(args)

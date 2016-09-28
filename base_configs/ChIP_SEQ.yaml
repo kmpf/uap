@@ -6,7 +6,7 @@ constants:
     - &genome /data/bioinf/Data/Indices/hg19/hg19.fa
     - &genome_index /data/bioinf/Data/Indices/hg19/hg19.fa.fai
     - &segemehl_genome_index /data/bioinf/Data/Indices/hg19/hg19.idx
-    - &bowtie2_genome_index /data/bioinf/genomes/data/animalia/chordata/mammalia/rodentia/homo_sapiens/hg19/indices/hg19 
+    - &bowtie2_genome_index /data/bioinf/genomes/data/animalia/chordata/mammalia/rodentia/homo_sapiens/hg19/indices/hg19
 
 
 steps:
@@ -20,7 +20,7 @@ steps:
 
     # Adapters are:
     # R1 sequence of the TruSeq/ScriptSeq index adapter
-    # R2 reverse complement sequence of the TruSeq/ScriptSeq universal adapter 
+    # R2 reverse complement sequence of the TruSeq/ScriptSeq universal adapter
     cutadapt:
         _depends: [fc1, fc2]
         adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC((INDEX))ATCTCGTATGCCGTCTTCTGCTTG
@@ -85,7 +85,7 @@ steps:
     rm_dup_bedgraph2bigwig (bedgraph_to_bigwig):
         _depends: rm_dup_bed2bedgraph
         genome: *genome_index
-   
+
 
 tools:
     bedtools:
@@ -123,7 +123,7 @@ tools:
         exit_code: 1
     mate_pair_strand_switch:
         path: ['./python_env/bin/python', './tools/mate_pair_strand_switch.py']
-        get_version: '--version' 
+        get_version: '--version'
         exit_code: 0
     pigz:
         path: pigz

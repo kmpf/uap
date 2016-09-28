@@ -1,5 +1,5 @@
 # This is the uap configuration file.
- 
+
 destination_path: genomes/bacteria/Mycoplasma_genitalium/
 
 constants:
@@ -16,25 +16,25 @@ steps:
 
     bowtie2_index (bowtie2_generate_index):
         _depends: M_genitalium_genome
-        _connect: 
+        _connect:
             in/reference_sequence: M_genitalium_genome/raw
         index-basename: Mycoplasma_genitalium_index
 
     segemehl_index (segemehl_generate_index):
         _depends: M_genitalium_genome
-        _connect: 
+        _connect:
             in/reference_sequence: M_genitalium_genome/raw
         index-basename: Mycoplasma_genitalium_genome
 
     bwa_index (bwa_generate_index):
         _depends: M_genitalium_genome
-        _connect: 
+        _connect:
             in/reference_sequence: M_genitalium_genome/raw
         index-basename: Mycoplasma_genitalium_index
 
     fasta_index (samtools_faidx):
         _depends: M_genitalium_genome
-        _connect: 
+        _connect:
             in/sequence: M_genitalium_genome/raw
 
 tools:
@@ -47,7 +47,7 @@ tools:
         path: bwa
         get_version: ''
         exit_code: 1
-        
+
     # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
     bowtie2-build:
         path: bowtie2-build
@@ -55,7 +55,7 @@ tools:
         exit_code: 0
 
     # URL: http://zlib.net/pigz/
-    pigz: 
+    pigz:
         path: pigz
         get_version: --version
         exit_code: 0
@@ -66,12 +66,12 @@ tools:
         get_version: --version
         exit_code: 0
 
-    # URL: 
+    # URL:
     segemehl:
         path: segemehl.x
         get_version: ''
         exit_code: 255
-                
+
     ##################
     # Internal Tools #
     ##################
@@ -109,7 +109,7 @@ tools:
         path: mkdir
         get_version: --version
         exit_code: 0
-        
+
     mkfifo:
         path: mkfifo
         get_version: --version

@@ -16,12 +16,12 @@ class PipelineInfo(object):
 
     def add_command(self, command, stdout_path=None, stderr_path=None):
         command = command_info.CommandInfo(
-            self, command,  stdout_path = stdout_path, 
+            self, command,  stdout_path = stdout_path,
             stderr_path = stderr_path
         )
         self._commands.append(command)
         return command
-        
+
     def get_commands(self):
         return self._commands
 

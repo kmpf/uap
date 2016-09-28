@@ -43,51 +43,51 @@ import run as run_module
 logger=getLogger('uap_logger')
 
 class AbstractStep(object):
-    
+
     fsc = fscache.FSCache()
-    
+
     PING_TIMEOUT = 300
     PING_RENEW = 30
     VOLATILE_SUFFIX = '.volatile.placeholder.yaml'
     UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK', '_connect','_cluster' ]
 
-    
+
     states = misc.Enum(['DEFAULT', 'DECLARING', 'EXECUTING'])
 
     def __init__(self, pipeline):
-        
+
         self._pipeline = pipeline
-        
+
         self.dependencies = list()
         '''
         All steps this step depends on.
         '''
-        
+
         self._options = dict()
         '''
         Options as specified in the configuration.
         '''
-        
+
         self._step_name = self.__module__
         '''
-        By default, this is the name of the module. Can be overridden 
+        By default, this is the name of the module. Can be overridden
         to allow for multiple steps of the same kind.
         '''
-        
+
         self._runs = None
         '''
         Cached run information. ``declare_runs`` is only called once, the
         post-processed run objects are stored in here.
         '''
-        
+
         self._temp_directory = None
         '''
         The temporary output directory the step is using. Only set when
         the step is being run.
         '''
-        
+
         self._pipeline_log = dict()
-        
+
         self._cores = 1
         self._connections = set()
         self._connection_restrictions = dict()
@@ -98,29 +98,29 @@ class AbstractStep(object):
         self._tools = dict()
 
         self._defined_options = dict()
-        
+
         self.needs_parents = False
 
         self.children_step_names = set()
-        
+
         self.finalized = False
-        
+
         self._state = AbstractStep.states.DEFAULT
 
     def finalize(self):
         '''Finalizes the step.
-        
+
         The intention is to make further changes to the step
         impossible, but apparently, it's checked nowhere at the moment.
         '''
         if self.finalized:
             return
-        
+
         for parent_step in self.dependencies:
             parent_step.finalize()
-            
+
         self.finalized = True
-        
+
     def _reset(self):
         self._pipeline_log = dict()
 
@@ -130,7 +130,7 @@ class AbstractStep(object):
     def declare_run(self, run_id):
         '''
         Declare a run. Use it like this::
-        
+
             with self.declare_run(run_id) as run:
                 # add output files and information to the run here
         '''
@@ -146,7 +146,7 @@ class AbstractStep(object):
 
     def add_run(self, run):
         self._runs[run.get_run_id()] = run
-    
+
     def get_run(self, run_id):
         '''
         Returns a single run object for run_id or None.
@@ -186,7 +186,7 @@ class AbstractStep(object):
         the default values set in self.add_option().
         '''
         self._options = dict()
-        
+
         # set options
         for key, value in options.items():
             if key[0] == '_':
@@ -198,25 +198,25 @@ class AbstractStep(object):
             else:
                 if not key in self._defined_options:
                     logger.error(
-                        "Unknown option in %s (%s): %s." % 
+                        "Unknown option in %s (%s): %s." %
                         (self.get_step_name(), self.get_step_type(), key))
                     sys.exit(1)
                 if type(value) not in self._defined_options[key]['types']:
                     logger.error(
                         "Invalid type for option %s - it's %s and should be "
-                        "one of %s." % (key, type(value), 
+                        "one of %s." % (key, type(value),
                                         self._defined_options[key]['types']))
                     sys.exit(1)
                 if self._defined_options[key]['choices'] != None and \
                    value not in self._defined_options[key]['choices']:
                     logger.error(
                         "Invalid value '%s' specified for option %s - "
-                        "possible values are %s." % 
+                        "possible values are %s." %
                         (value, key, self._defined_options[key]['choices']))
                     sys.exit(1)
                 self._options[key] = value
 
-        # set default values for unset options and make sure all required 
+        # set default values for unset options and make sure all required
         # options have been set
         for key, info in self._defined_options.items():
             if key not in self._options:
@@ -228,7 +228,7 @@ class AbstractStep(object):
                         sys.exit(1)
                 else:
                     self._options[key] = value
-                
+
         if not '_volatile' in self._options:
             self._options['_volatile'] = False
 
@@ -244,7 +244,7 @@ class AbstractStep(object):
         """
         if key not in self._defined_options:
             logger.error(
-                "Cannot query undefined option %s in step %s." % 
+                "Cannot query undefined option %s in step %s." %
                 (key, self.__module__))
             sys.exit(1)
         return self._options[key]
@@ -256,7 +256,7 @@ class AbstractStep(object):
         """
         if key not in self._defined_options:
             logger.error(
-                "Cannot query undefined option %s in step %s." % 
+                "Cannot query undefined option %s in step %s." %
                 (key, self.get_step_name()))
             sys.exit(1)
         return key in self._options
@@ -276,7 +276,7 @@ class AbstractStep(object):
             sys.exit(1)
         self.dependencies.append(parent)
         parent.children_step_names.add(str(self))
-        
+
     def get_dependencies(self):
         return self.dependencies
 
@@ -293,7 +293,7 @@ class AbstractStep(object):
                 sys.exit(1)
             else:
                 extension_list.append(ext)
-        
+
         ext_in_filename = list()
         file_parts = os.path.basename(filepath).split(".")
         for ext in extension_list:
@@ -319,7 +319,7 @@ class AbstractStep(object):
         # fetch all incoming run IDs which produce reads...
 
         self.runs( self.get_run_ids_in_connections_input_files() )
-        
+
     def runs(self, run_ids_connections_files):
         '''
         Abstract method this must be implemented by actual step.
@@ -328,7 +328,7 @@ class AbstractStep(object):
         method.
         '''
         raise NotImplementedError()
-        
+
     def execute(self, run_id, run):
         # get run_info objects
         with self.get_run(run_id) as run:
@@ -371,13 +371,13 @@ class AbstractStep(object):
             # return no runs and thus cut off further processing
             if '_BREAK' in self._options and self._options['_BREAK']:
                 return dict()
-                
+
             self._runs = dict()
-            
+
             self._state = AbstractStep.states.DECLARING
             self.declare_runs()
             self._state = AbstractStep.states.DEFAULT
-            
+
             # define file dependencies
             for run_id in self._runs.keys():
                 pipeline = self.get_pipeline()
@@ -416,7 +416,7 @@ class AbstractStep(object):
         '''
         Returns this steps name.
 
-        Returns the step name which is initially equal to the step type 
+        Returns the step name which is initially equal to the step type
         (== module name)  but can be changed via set_step_name() or via
         the YAML configuration.
         '''
@@ -434,53 +434,53 @@ class AbstractStep(object):
 
         Determine the basic run state of a run, which is, at any time, one of
         **waiting**, **ready**, or **finished**.
-        
+
         These states are determined from the current configuration and the
         timestamps of result files present in the file system. In addition to
         these three basic states, there are two additional states which are
         less reliable (see *get_run_state()*).
         '''
-        
+
         def volatile_path_good(volatile_path, recurse = True):
             '''
             This function receives a volatile path and tries to load the
             placeholder YAML data structure. It then checks all downstream
             paths, which may in turn be volatile placeholder files.
             '''
-            
+
             # reconstruct original path from volatile placeholder path
             path = volatile_path[:-len(AbstractStep.VOLATILE_SUFFIX)]
-            
+
             if AbstractStep.fsc.exists(path):
                 # the original file still exists, ignore volatile placeholder
                 return False
-            
+
             if not path in self.get_pipeline().task_id_for_output_file:
                 # there is no task which creates the output file
                 return False
-            
+
             task_id = self.get_pipeline().task_id_for_output_file[path]
-            
+
             task = self.get_pipeline().task_for_task_id[task_id]
 #            if not task.step.options['_volatile']:
             if not task.step._options['_volatile']:
                 # the task is not declared volatile
                 return False
-            
+
             if not AbstractStep.fsc.exists(volatile_path):
                 # the volatile placeholder does not exist
                 return False
-            
+
             if not recurse:
                 return True
-            
+
             try:
                 # try to parse the YAML contents
                 info = AbstractStep.fsc.load_yaml_from_file(volatile_path)
             except yaml.scanner.ScannerError:
                 # error scanning YAML
                 return False
-            
+
             # now check whether all downstream files are in place and up-to-date
             # also check whether all downstream files as defined in
             # file_dependencies_reverse are covered
@@ -489,10 +489,10 @@ class AbstractStep(object):
             if path in self.get_pipeline().file_dependencies_reverse:
                 uncovered_files = self.get_pipeline().\
                                   file_dependencies_reverse[path]
-                
+
             for downstream_path, downstream_info in info['downstream'].items():
                 if downstream_path in self.get_pipeline().task_id_for_output_file:
-                    # only check this downstream file if there's a task which 
+                    # only check this downstream file if there's a task which
                     # creates it, otherwise, it may be a file which is no more
                     # used
                     pv_downstream_path = change_to_volatile_if_need_be(
@@ -504,14 +504,14 @@ class AbstractStep(object):
                         return False
                     if downstream_path in uncovered_files:
                         uncovered_files.remove(downstream_path)
-                
+
             if len(uncovered_files) > 0:
                 # there are still files defined which are not covered by the
                 # placeholder
                 return False
-                
+
             return True
-        
+
         def change_to_volatile_if_need_be(path, recurse = True):
             """
             Changes the file path to volatile path if necessary."""
@@ -537,13 +537,13 @@ class AbstractStep(object):
             """
             pv_outpath = outpath
             pv_inpaths = list()
-            
+
             if outpath in self.get_pipeline().task_id_for_output_file:
                 pv_outpath = change_to_volatile_if_need_be(outpath)
-                
+
             for inpath in inpaths:
                 pv_inpaths.append(change_to_volatile_if_need_be(inpath))
-                
+
             if not AbstractStep.fsc.exists(pv_outpath):
                 return False
             for pv_inpath in pv_inpaths:
@@ -553,7 +553,7 @@ class AbstractStep(object):
                    AbstractStep.fsc.getmtime(pv_outpath):
                     return False
             return True
-            
+
         def up_to_dateness_level(path, level = 0):
             result = level
             if path != None:
@@ -574,8 +574,8 @@ class AbstractStep(object):
         - if it's ready, it might be executing or queued -> check execute and
           queue ping
         - if it's waiting, it might be queued -> check queue ping
-        
-        the ping works like this (this example is for execute, same goes for 
+
+        the ping works like this (this example is for execute, same goes for
         queued):
           - there's a ping file for every task ( = step + run)
           - it contains information about when, how, where the job was started
@@ -586,13 +586,13 @@ class AbstractStep(object):
             if the controlling script receives SIGKILL
           - if its timestamp is no more than 5 minutes old, it is regarded as
             currently executing
-          - otherwise, a warning is printed because the ping file is probably 
+          - otherwise, a warning is printed because the ping file is probably
             stale (no automatic cleanup is performed, manual intervention is
             necessary)
           - warning: this requires all involved systems or the file system to
             be time-synchronized
         """
-        
+
         run_info = self.get_runs()
         max_level = 0
         for tag, output_files in run_info[run_id].get_output_files_abspath().items():
@@ -613,21 +613,21 @@ class AbstractStep(object):
         '''
         Returns run state of a run.
 
-        Determine the run state (that is, not *basic* but *extended* run state) 
+        Determine the run state (that is, not *basic* but *extended* run state)
         of a run, building on the value returned by *get_run_state_basic()*.
-        
+
         If a run is **ready**, this will:
           - return **executing** if an up-to-date *executing ping file* is found
           - otherwise return **queued** if a *queued ping file* is found
 
         If a run is **waiting**, this will:
           - return **queued** if a *queued ping file* is found
-          
-        Otherwise, it will just return the value obtained from 
+
+        Otherwise, it will just return the value obtained from
         *get_run_state_basic()*.
-        
-        Attention: The status indicators **executing** and **queued** may be 
-        temporarily wrong due to the possiblity of having out-of-date ping files 
+
+        Attention: The status indicators **executing** and **queued** may be
+        temporarily wrong due to the possiblity of having out-of-date ping files
         lying around.
         '''
         run = self.get_run(run_id)
@@ -646,7 +646,7 @@ class AbstractStep(object):
             if AbstractStep.fsc.exists( run.get_queued_ping_file() ):
                 return self.get_pipeline().states.QUEUED
         return run_state
-        
+
     def run(self, run_id):
         '''
         Create a temporary output directory and execute a run. After the run
@@ -661,16 +661,16 @@ class AbstractStep(object):
         # create the output directory if it doesn't exist yet
         if not os.path.isdir(run.get_output_directory()):
             os.makedirs(run.get_output_directory())
-    
+
         # now write the run ping file
         executing_ping_path = run.get_executing_ping_file()
-        
+
         if os.path.exists(executing_ping_path):
             logger.error("%s/%s seems to be already running, exiting..."
                          % (self, run_id))
             sys.exit(1)
         queued_ping_path = run.get_queued_ping_file()
-        
+
         # create a temporary directory for the output files
         temp_directory = run.get_temp_output_directory()
         os.makedirs(temp_directory)
@@ -682,26 +682,26 @@ class AbstractStep(object):
                 # add the real output path
                 if output_path != None and input_paths != None:
                     known_paths[output_path] = {
-                        'type': 'output', 
-                        'designation': 'output', 
-                        'label': os.path.basename(output_path), 
+                        'type': 'output',
+                        'designation': 'output',
+                        'label': os.path.basename(output_path),
                         'type': 'step_file'}
                     # ...and also add the temporary output path
                     known_paths[
                         os.path.join(temp_directory, os.path.basename(
                             output_path))] = {
-                        'type': 'output', 
-                        'designation': 'output', 
-                        'label': "%s\\n(%s)" % 
-                                (os.path.basename(output_path), tag), 
-                        'type': 'step_file', 
+                        'type': 'output',
+                        'designation': 'output',
+                        'label': "%s\\n(%s)" %
+                                (os.path.basename(output_path), tag),
+                        'type': 'step_file',
                         'real_path': output_path}
                     for input_path in input_paths:
                         if input_path != None:
                             known_paths[input_path] = {
-                                'type': 'input', 
-                                'designation': 'input', 
-                                'label': os.path.basename(input_path), 
+                                'type': 'input',
+                                'designation': 'input',
+                                'label': os.path.basename(input_path),
                                 'type': 'step_file'}
 
         # now write the run ping file
@@ -711,10 +711,10 @@ class AbstractStep(object):
         executing_ping_info['pid'] = os.getpid()
         executing_ping_info['cwd'] = os.getcwd()
         executing_ping_info['temp_directory'] = run.get_temp_output_directory()
-        
+
         with open(executing_ping_path, 'w') as f:
             f.write(yaml.dump(executing_ping_info, default_flow_style = False))
-            
+
         executing_ping_pid = os.fork()
         if executing_ping_pid == 0:
             try:
@@ -727,11 +727,11 @@ class AbstractStep(object):
                     os.utime(executing_ping_path, None)
             finally:
                 os._exit(0)
-            
+
         self.start_time = datetime.datetime.now()
         self.get_pipeline().notify(
-            "[INFO] [%s] starting %s/%s on %s" % 
-            (self.get_pipeline().config['id'], str(self), run_id, 
+            "[INFO] [%s] starting %s/%s on %s" %
+            (self.get_pipeline().config['id'], str(self), run_id,
              socket.gethostname()))
         caught_exception = None
         self._state = AbstractStep.states.EXECUTING
@@ -757,22 +757,22 @@ class AbstractStep(object):
                 run.get_temp_output_directory())[:6]
             if os.path.exists(executing_ping_path):
                 try:
-                    os.rename(executing_ping_path, 
+                    os.rename(executing_ping_path,
                               executing_ping_path + '.' + ping_file_suffix)
                 except OSError:
                     pass
             # remove the queued ping file
             if os.path.exists(queued_ping_path):
                 try:
-                    os.rename(queued_ping_path, 
+                    os.rename(queued_ping_path,
                               queued_ping_path + '.' + ping_file_suffix)
                 except OSError:
                     pass
-                
+
         # TODO: Clean this up. Re-think exceptions and task state transisitions.
-        
+
         self.end_time = datetime.datetime.now()
-        
+
         if (not self.get_pipeline().caught_signal) and (caught_exception is None):
             # if we're here, we can assume the step has finished successfully
             # now rename the output files (move from temp directory to
@@ -790,11 +790,11 @@ class AbstractStep(object):
                     #    source step)
                     if out_file != None and not '/' in out_file:
                         source_path = os.path.join(
-                            run.get_temp_output_directory(), 
+                            run.get_temp_output_directory(),
                             os.path.basename(out_file)
                         )
                         destination_path = os.path.join(
-                            run.get_output_directory(), 
+                            run.get_output_directory(),
                             os.path.basename(out_file))
                         # first, delete a possibly existing volatile placeholder
                         # file
@@ -803,7 +803,7 @@ class AbstractStep(object):
                         if os.path.exists(destination_path_volatile):
                             logger.info("Now deleting: %s" % destination_path_volatile)
                             os.unlink(destination_path_volatile)
-                        # TODO: if the destination path already exists, this 
+                        # TODO: if the destination path already exists, this
                         # will overwrite the file.
                         # CK: Hmm, that's a feature, isn't it?
                         if os.path.exists(source_path):
@@ -817,17 +817,17 @@ class AbstractStep(object):
                                         known_paths[path]['type'] = 'step_file'
                         else:
                             caught_exception = (
-                                None, 
+                                None,
                                 StandardError(
                                     "The step failed to produce an announced "
-                                    "output file: %s." % 
-                                    os.path.basename(out_file)), 
+                                    "output file: %s." %
+                                    os.path.basename(out_file)),
                                 None)
 
         for path, path_info in known_paths.items():
             if os.path.exists(path):
                 known_paths[path]['size'] = os.path.getsize(path)
-                
+
         run.add_known_paths(known_paths)
         annotation_path, annotation_str = run.write_annotation_file(
             run.get_output_directory() \
@@ -841,7 +841,7 @@ class AbstractStep(object):
         if self.get_pipeline().caught_signal is not None or \
            caught_exception is not None:
             message = "[BAD] %s/%s failed on %s after %s\n" % \
-                      (str(self), run_id, socket.gethostname(), 
+                      (str(self), run_id, socket.gethostname(),
                        misc.duration_to_str(self.end_time - self.start_time))
             message += "\nHere are the details:\n" + annotation_str
             attachment = None
@@ -858,8 +858,8 @@ class AbstractStep(object):
                 for out_path in run._output_files[tag].keys():
                     if out_path != None:
                         destination_path = os.path.join(
-                            run.get_output_directory(), 
-                            '.' + os.path.basename(out_path) + 
+                            run.get_output_directory(),
+                            '.' + os.path.basename(out_path) +
                             '.annotation.yaml')
                         # overwrite the symbolic link if it already exists
                         if os.path.exists(destination_path):
@@ -867,7 +867,7 @@ class AbstractStep(object):
                             os.unlink(destination_path)
                         oldwd = os.getcwd()
                         os.chdir(os.path.dirname(destination_path))
-                        os.symlink(os.path.basename(annotation_path), 
+                        os.symlink(os.path.basename(annotation_path),
                                    os.path.basename(destination_path))
                         os.chdir(oldwd)
 
@@ -876,16 +876,16 @@ class AbstractStep(object):
                 os.rmdir(temp_directory)
             except OSError:
                 pass
-            
+
             # step has completed successfully, now determine how many jobs are
             # still left but first invalidate the FS cache because things have
             # changed by now...
             AbstractStep.fsc = fscache.FSCache()
-            
+
             remaining_task_info = self.get_run_info_str()
-            
+
             message = "[OK] %s/%s successfully finished on %s after %s\n" % \
-                      (str(self), run_id, socket.gethostname(), 
+                      (str(self), run_id, socket.gethostname(),
                        misc.duration_to_str(self.end_time - self.start_time))
             message += str(self) + ': ' + remaining_task_info + "\n"
             attachment = None
@@ -894,7 +894,7 @@ class AbstractStep(object):
                 attachment['name'] = 'details.png'
                 attachment['data'] = open(annotation_path + '.png').read()
             self.get_pipeline().notify(message, attachment)
-            
+
             # and now... check whether we have any volatile parents. If we find
             # one, determine for each of its output files A whether all output
             # files B which depend on A are already in place and whether the
@@ -914,10 +914,10 @@ class AbstractStep(object):
                     task = self.get_pipeline().task_for_task_id[task_id]
                     if task.step._options['_volatile'] == True:
                         candidate_tasks.add(task)
-                    
+
             for task in candidate_tasks:
                 task.volatilize_if_possible(srsly = True)
-                                
+
             self._reset()
 
     def reports(self, run_id, out_connection_output_files):
@@ -941,7 +941,7 @@ class AbstractStep(object):
         for out_connection in run.get_out_connections():
             out_connection_output_files[out_connection] = run.\
                 get_output_files_abspath_for_out_connection(out_connection)
-            
+
         try:
             self.reports(run_id, out_connection_output_files)
         except NotImplementedError as e:
@@ -996,7 +996,7 @@ class AbstractStep(object):
                          "self.require_tool('%s')" % (key, key))
             sys.exit(1)
         return self._tools[key]
-    
+
     def get_module_unloads(self):
         """
         Return dictionary with module unload commands to execute before
@@ -1022,7 +1022,7 @@ class AbstractStep(object):
             count[state] += 1
         return ', '.join(["%d %s" % (count[_], _.lower()) \
                           for _ in self.get_pipeline().states.order if _ in count])
-    
+
     def append_pipeline_log(self, log):
         if len(self._pipeline_log) == 0:
             self._pipeline_log = log
@@ -1041,17 +1041,17 @@ class AbstractStep(object):
                                     self._pipeline_log[k][k2][_] = log[k][k2][_]
                         else:
                             self._pipeline_log[k][k2].update(log[k][k2])
-                            
+
                 else:
                     if log[k].__class__ == list:
                         self._pipeline_log[k].extend(log[k])
                     else:
                         self._pipeline_log[k].update(log[k])
-    
+
 
     def __str__(self):
-        return self._step_name  
-        
+        return self._step_name
+
     @classmethod
     def get_step_class_for_key(cls, key):
         """
@@ -1068,11 +1068,11 @@ class AbstractStep(object):
         # of io_step. There's probably a better solution, but I think it doesn't
         # hurt, either. Here goes the awkward line:
 
-        
+
         check_classes = [AbstractSourceStep, AbstractStep]
         for index, c in enumerate(check_classes):
 
-            classes = [_ for _ in inspect.getmembers(__import__(key), 
+            classes = [_ for _ in inspect.getmembers(__import__(key),
                                                      inspect.isclass) \
                        if c in _[1].__bases__]
 
@@ -1123,7 +1123,7 @@ class AbstractStep(object):
         self._connections.add(connection)
         if constraints is not None:
             self._connection_restrictions[connection] = constraints
-        
+
     def get_in_connections(self):
         """
         Return all in-connections for this step
@@ -1148,7 +1148,7 @@ class AbstractStep(object):
 
     def require_tool(self, tool):
         """
-        Declare that this step requires an external tool. Query it later with 
+        Declare that this step requires an external tool. Query it later with
         *get_tool()*.
         """
         if self.get_pipeline() is not None:
@@ -1181,7 +1181,7 @@ class AbstractStep(object):
             kwargs['optional'] = False
         for _ in ['default', 'label', 'description', 'group', 'tools',
                   'choices']:
-            if not _ in kwargs: 
+            if not _ in kwargs:
                 kwargs[_] = None
 
         if key[0] == '_':
@@ -1213,12 +1213,12 @@ class AbstractStep(object):
 
         info = dict()
         info['types'] = option_types
-        for _ in ['optional', 'default', 'label', 'description', 'group', 
+        for _ in ['optional', 'default', 'label', 'description', 'group',
                   'tools', 'choices']:
             info[_] = kwargs[_]
 
         self._defined_options[key] = info
-        
+
     def find_upstream_info_for_input_paths_as_set(self, input_paths,
                                                   key, expected = 1):
         task_ids = set()
@@ -1234,18 +1234,18 @@ class AbstractStep(object):
             	results.add(run.get_public_info(key))
             results |= self.find_upstream_info_for_input_paths_as_set(
                 task.input_files(), key, None)
-        
+
         if expected is not None:
             if len(results) != expected:
                 logger.error(
-                    "Unable to determine upstream %s info from %s." % 
+                    "Unable to determine upstream %s info from %s." %
                     (key, self))
                 sys.exit(1)
         return results
-        
+
     def find_upstream_info_for_input_paths(self, input_paths, key):
         """
-        Find a piece of public information in all upstream steps. If the 
+        Find a piece of public information in all upstream steps. If the
         information is not found or defined in more than one upstream step,
         this will crash.
         """
@@ -1259,17 +1259,17 @@ class AbstractStep(object):
         '''
         Return a dictionary with all run IDs of the current step, their
         out connections, and the files that belong to them::
-        
+
            run_id_1:
                in_connection_1: [input_path_1, input_path_2, ...]
                in_connection_2: ...
            run_id_2: ...
 
         Format of ``in_connection``: ``in/<connection>``. Input paths are
-        absolute.        
+        absolute.
         '''
         run_ids_connections_files = dict()
-        
+
         for run in self.get_runs():
             run_id = run.get_run_id()
             run_ids_connections_files[run_id] = dict()
@@ -1278,13 +1278,13 @@ class AbstractStep(object):
                     .get_output_files_for_out_connection(out_connection)
 
         return run_ids_connections_files
-                                                                    
+
 
     def get_run_ids_in_connections_input_files(self):
         '''
         Return a dictionary with all run IDs from parent steps, the
         in connections they provide data for, and the names of the files::
-        
+
            run_id_1:
                in_connection_1: [input_path_1, input_path_2, ...]
                in_connection_2: ...
@@ -1316,13 +1316,13 @@ class AbstractStep(object):
                 # Workaround: Set empty connections
                 if '_connect' in self._options:
                     for _con_in, parent_out_connection_to_bend in \
-                        self._options['_connect'].items(): 
+                        self._options['_connect'].items():
 
                         if parent_out_connection_to_bend == 'empty':
                             run_ids_connections_files[parent_run_id]\
                                 [_con_in] = [None]
 
-                            logger.debug("Found connection %s which is declared empty" % 
+                            logger.debug("Found connection %s which is declared empty" %
                                          (_con_in))
 
                 # ... and each connection
@@ -1339,7 +1339,7 @@ class AbstractStep(object):
 
                     if '_connect' in self._options:
                         for _con_in, parent_out_connection_to_bend in \
-                            self._options['_connect'].items(): 
+                            self._options['_connect'].items():
 
                             if isinstance(parent_out_connection_to_bend, list):
                                 pass
@@ -1351,7 +1351,7 @@ class AbstractStep(object):
                                     logger.debug("Found %s to connect to  %s" %
                                                  (parent_out_connection_to_bend,_con_in))
                                     in_connection = _con_in
-                        
+
                     if in_connection not in \
                        list( run_ids_connections_files[parent_run_id].keys() ):
                         run_ids_connections_files[parent_run_id]\
@@ -1417,7 +1417,7 @@ class AbstractStep(object):
             'min_files_per_run': None,
             'max_files_per_run': None,
         }
-        
+
         def update_min_max(key, value):
             for mkey in ['min', 'max']:
                 key2 = '%s_%s' % (mkey, key)
@@ -1425,7 +1425,7 @@ class AbstractStep(object):
                     result['counts'][key2] = value
                 result['counts'][key2] = (min if mkey == 'min' else max)\
                                          (result['counts'][key2], value)
-            
+
         result['runs'] = dict()
         for step_name, step_info in self.get_input_runs().items():
             if allowed_steps is not None:
@@ -1450,12 +1450,12 @@ class AbstractStep(object):
                                                      [step_name])
                         update_min_max('files_per_step_and_run',
                                        files_per_step_and_run)
-                        
+
                         files_per_run = 0
                         for _ in result['runs'][run_id].values():
                             files_per_run += len(_)
                         update_min_max('files_per_run', files_per_run)
-                    
+
         # check constraints, if any
         if in_key in self._connection_restrictions:
             for k, v in self._connection_restrictions[in_key].items():
@@ -1467,17 +1467,17 @@ class AbstractStep(object):
                     sys.exit(1)
 
         return result
-     
+
 
 class AbstractSourceStep(AbstractStep):
     """
     A subclass all source steps inherit from and which distinguishes source
-    steps from all real processing steps because they do not yield any tasks, 
+    steps from all real processing steps because they do not yield any tasks,
     because their "output files" are in fact files which are already there.
-    
+
     Note that the name might be a bit misleading because this class only
-    applies to source steps which 'serve' existing files. A step which has 
-    no input but produces input data for other steps and actually has to do 
+    applies to source steps which 'serve' existing files. A step which has
+    no input but produces input data for other steps and actually has to do
     something for it, on the other hand, would be a normal AbstractStep
     subclass because it produces tasks.
     """

@@ -22,7 +22,7 @@ class Task(object):
 
     def get_pipeline(self):
         '''
-        Returns the pipeline this task belongs to. 
+        Returns the pipeline this task belongs to.
         '''
         return self.pipeline
 
@@ -73,7 +73,7 @@ class Task(object):
             print("Skipping task: %s its not finished yet." % self)
             return
         self.step.generate_report(self.run_id)
-        
+
 
     def input_files(self):
         '''
@@ -109,7 +109,7 @@ class Task(object):
                        [self.pipeline.task_id_for_output_file[path]])
 
         return list(result)
-    
+
     def volatilize_if_possible(self, srsly = False):
         result = set()
         if not self.step._options['_volatile']:
@@ -132,7 +132,7 @@ class Task(object):
                            self.pipeline.states.FINISHED:
                             path_a_can_be_removed = False
                             break
-                    
+
                 if path_a_can_be_removed:
                     result.add(path_a)
                     if srsly:
@@ -153,11 +153,11 @@ class Task(object):
                                 downstream_info = yaml.load(open(path_b + AbstractStep.VOLATILE_SUFFIX, 'r'))
                                 info['downstream'][path_b]['size'] = downstream_info['self']['size']
                                 info['downstream'][path_b]['mtime'] = downstream_info['self']['mtime']
-                            
+
                         path_a_volatile = path_a + AbstractStep.VOLATILE_SUFFIX
                         with open(path_a_volatile, 'w') as f:
                             f.write(yaml.dump(info, default_flow_style = False))
-                        
+
                         os.utime(path_a_volatile, (os.path.getatime(path_a), os.path.getmtime(path_a)))
                         os.unlink(path_a)
         return result

@@ -9,13 +9,13 @@ import sys
 def main():
 
     # Definition of the argument parser
-    
+
     parser = argparse.ArgumentParser(
         description="This script is able to repair non-standard QNAMEs in FASTQ"
         " or SAM files.",
         formatter_class=argparse.RawTextHelpFormatter
         )
-    
+
     parser.add_argument(
         "input_file", nargs='?', type=argparse.FileType('r'), default=sys.stdin,
         help="Name of input file where QNAMES need to be "
@@ -27,7 +27,7 @@ def main():
         help="Name of output file to which corrected data is written to. "
         "Reads by default from STDOUT.",
     )
-    
+
     parser.add_argument(
         "-f", "--filetype", type=str, choices=['FASTQ', 'SAM'], default='FASTQ',
         help="File type of the provided input data. Can be 'FASTQ' or 'SAM'."
@@ -42,7 +42,7 @@ def main():
             lines = []
             for _ in range(4):
                 lines.append(args.input_file.readline())
-            if (len(lines[0]) == 0):                                                                                                         
+            if (len(lines[0]) == 0):
                 break
             lines[0] = lines[0].split(' ')[0]
             if lines[0][-1] != "\n":
