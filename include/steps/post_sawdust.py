@@ -9,13 +9,13 @@ class Post_Sawdust(AbstractStep):
     '''
     bla bla
     '''
-    
-    
+
+
     def __init__(self, pipeline):
         super(Post_Sawdust, self).__init__(pipeline)
-        
+
         self.set_cores(2)
-        
+
         self.add_connection(
             'in/alignments',
             constraints = {'min_files_per_run': 1, 'max_files_per_run': 1}
@@ -29,18 +29,18 @@ class Post_Sawdust(AbstractStep):
         self.add_option('seq_type', str, choices = ['RNA', 'DNA'],  optional=False)
         self.add_option('read_type', str, choices = ['single' ,'paired'], optional=False)
 
-        
+
         self.require_tool('post_sawdust')
         self.require_tool('samtools')
         self.require_tool('cat')
         self.require_tool('pigz')
-        
+
 
 
     def runs(self, run_ids_connections_files):
         # Compile the list of options
 
-    
+
         for run_id in run_ids_connections_files.keys():
             # Check input files
             alignments = run_ids_connections_files[run_id]['in/alignments'][0]
@@ -62,7 +62,7 @@ class Post_Sawdust(AbstractStep):
 
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as pipe:
-                        samtools_front = [self.get_tool('samtools'), 'view', '-h', alignments] 
+                        samtools_front = [self.get_tool('samtools'), 'view', '-h', alignments]
                         pipe.add_command(samtools_front)
 
                         post_sawdust = [ self.get_tool('post_sawdust'),
@@ -70,7 +70,7 @@ class Post_Sawdust(AbstractStep):
                                          '--seq-type', self.get_option('seq_type'),
                                          '--read-type',self.get_option('read_type')]
                         pipe.add_command(post_sawdust, stderr_path=log_stderr)
-                        
+
                         samtools_end = [self.get_tool('samtools'), 'view', '-Shb', '-']
 
                         pipe.add_command(samtools_end, stdout_path=stdout_path)

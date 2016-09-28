@@ -17,9 +17,9 @@ class FastxQualityStats(AbstractStep):
 
     def __init__(self, pipeline):
         super(FastxQualityStats, self).__init__(pipeline)
-        
+
         self.set_cores(4)
-        
+
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/first_read_quality_stats')
@@ -27,7 +27,7 @@ class FastxQualityStats(AbstractStep):
 
         self.add_option('new_output_format', bool, default= True, optional=True)
         self.add_option('quality', int, default=33, optional=True)
-        
+
         self.require_tool('cat')
         self.require_tool('dd')
         self.require_tool('mkfifo')
@@ -57,7 +57,7 @@ class FastxQualityStats(AbstractStep):
                 for read in read_types:
                     connection = 'in/%s' % read
                     input_paths = run_ids_connections_files[run_id][connection]
-                    
+
                     # Check for empty connections
                     if input_paths == [None]:
                         run.add_empty_output_connection(
@@ -88,7 +88,7 @@ class FastxQualityStats(AbstractStep):
                                     dd_out = [self.get_tool('dd'),
                                               'obs=4M',
                                               'of=%s' % temp_fifo]
-                                
+
                                     unzip_pipe.add_command(dd_in)
                                     unzip_pipe.add_command(pigz)
                                     unzip_pipe.add_command(dd_out)

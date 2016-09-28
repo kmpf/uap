@@ -18,14 +18,14 @@ class SamtoolsIndex(AbstractStep):
 
     def __init__(self, pipeline):
         super(SamtoolsIndex, self).__init__(pipeline)
-        
+
         self.set_cores(4)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
         self.add_connection('out/indices')
         self.add_connection('out/index_stats')
-        
+
         self.require_tool('ln')
         self.require_tool('samtools')
 
@@ -33,7 +33,7 @@ class SamtoolsIndex(AbstractStep):
                         optional = False)
 
     def runs(self, run_ids_connections_files):
-                
+
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 input_paths = run_ids_connections_files[run_id]["in/alignments"]
@@ -64,7 +64,7 @@ class SamtoolsIndex(AbstractStep):
                         bam_link = run.add_output_file('alignments', base,
                                                        input_paths)
                         ln.append(bam_link)
-                            
+
                         index_exgr.add_command(ln)
                         # 2. command: Index bam file
                         samtools_index = [self.get_tool('samtools'), 'index']

@@ -12,14 +12,14 @@ class FixCutadapt(AbstractStep):
     '''
     def __init__(self, pipeline):
         super(FixCutadapt, self).__init__(pipeline)
-        
+
         self.set_cores(4)
 
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/first_read')
         self.add_connection('out/second_read')
-        
+
         self.require_tool('cat')
         self.require_tool('dd')
         self.require_tool('fix_cutadapt')
@@ -95,7 +95,7 @@ class FixCutadapt(AbstractStep):
                             sys.exit(1)
                 # 3. Start fix_cutadapt
                 fix_cutadapt = [self.get_tool('fix_cutadapt'),
-                                temp_fifos["first_read_in"], 
+                                temp_fifos["first_read_in"],
                                 temp_fifos["first_read_out"] ]
                 if temp_fifos["second_read_in"] != None and \
                    temp_fifos["second_read_out"] != None:
@@ -103,9 +103,9 @@ class FixCutadapt(AbstractStep):
                         '--R2-in', temp_fifos["second_read_in"],
                         '--R2-out', temp_fifos["second_read_out"]
                     ])
-                    
+
                 exec_group.add_command(fix_cutadapt)
-                
+
                 # 4. Read data from first_read fifo
                 with exec_group.add_pipeline() as fr_pigz_pipe:
                     # 4.1  command: Read from first_read fifos
@@ -113,8 +113,8 @@ class FixCutadapt(AbstractStep):
                            temp_fifos["first_read_out"]]
                     # 4.2 Gzip output file
                     pigz = [self.get_tool('pigz'),
-                            '--blocksize', '4096', 
-                            '--processes', '2', 
+                            '--blocksize', '4096',
+                            '--processes', '2',
                             '--stdout']
                     # 4.3 command: Write to output file in 4MB chunks
                     fr_stdout_path = run.add_output_file(
@@ -125,7 +125,7 @@ class FixCutadapt(AbstractStep):
                     dd = [self.get_tool('dd'),
                           'obs=4M',
                           'of=%s' % fr_stdout_path]
-                            
+
                     fr_pigz_pipe.add_command(cat)
                     fr_pigz_pipe.add_command(pigz)
                     fr_pigz_pipe.add_command(dd)
@@ -139,8 +139,8 @@ class FixCutadapt(AbstractStep):
                                temp_fifos["second_read_out"]]
                         # 4.2 Gzip output file
                         pigz = [self.get_tool('pigz'),
-                                '--blocksize', '4096', 
-                                '--processes', '2', 
+                                '--blocksize', '4096',
+                                '--processes', '2',
                                 '--stdout']
                         # 4.3 command: Write to output file in 4MB chunks
                         sr_stdout_path = run.add_output_file(
@@ -151,7 +151,7 @@ class FixCutadapt(AbstractStep):
                         dd = [self.get_tool('dd'),
                               'obs=4M',
                               'of=%s' % sr_stdout_path]
-                            
+
                         sr_pigz_pipe.add_command(cat)
                         sr_pigz_pipe.add_command(pigz)
                         sr_pigz_pipe.add_command(dd)

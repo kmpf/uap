@@ -8,7 +8,7 @@ import yaml
 import pipeline
 
 '''
-This script 
+This script
 '''
 
 logger = logging.getLogger("uap_logger")
@@ -16,6 +16,6 @@ logger = logging.getLogger("uap_logger")
 def main(args):
     p = pipeline.Pipeline(arguments=args)
     p.check_volatile_files(details = args.details, srsly = args.srsly)
-        
+
 if __name__ == '__main__':
     main(args)

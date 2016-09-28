@@ -11,7 +11,7 @@ import command as command_info
 
 '''
 By default, this script displays information about all tasks of the pipeline
-configured in 'config.yaml'. But the displayed information can be narrowed 
+configured in 'config.yaml'. But the displayed information can be narrowed
 down via command line options.
 
 '''
@@ -57,7 +57,7 @@ def main(args):
                 for poc in exec_group.get_pipes_and_commands():
                     # for each pipe or command (poc)
                     # check if it is a pipeline ...
-                    
+
                     if isinstance(poc, pipeline_info.PipelineInfo):
                         pipe_header = goc_header + " -- %d. Pipeline" % pipe_count
                         print("# " + pipe_header)

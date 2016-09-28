@@ -15,19 +15,19 @@ class Cutadapt(AbstractStep):
 
 
     '''
-    
+
     def __init__(self, pipeline):
         super(Cutadapt, self).__init__(pipeline)
-        
+
         self.set_cores(4)
-        
+
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/first_read')
         self.add_connection('out/second_read')
         self.add_connection('out/log_first_read')
         self.add_connection('out/log_second_read')
-        
+
         self.require_tool('cat')
         self.require_tool('cutadapt')
         self.require_tool('dd')
@@ -62,7 +62,7 @@ class Cutadapt(AbstractStep):
 
     def runs(self, run_ids_connections_files):
 
-        ## Make sure the adapter type is one of -a, -b or -g 
+        ## Make sure the adapter type is one of -a, -b or -g
         if self.is_option_set_in_config('adapter-type'):
             if not self.get_option('adapter-type') in set(['-a','-b','-g', '']):
                 logger.error("Option 'adapter-type' must be either '-a', "
@@ -73,7 +73,7 @@ class Cutadapt(AbstractStep):
         paired_end_info = dict()
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
-                for read in read_types:                
+                for read in read_types:
                     connection = 'in/%s' % read
                     input_paths = run_ids_connections_files[run_id][connection]
 
@@ -83,11 +83,11 @@ class Cutadapt(AbstractStep):
                     else:
                         paired_end_info[run_id] = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
                         # make sure that adapter-R1/adapter-R2 or adapter-file are
-                        # correctly set 
-                        # this kind of mutual exclusive option checking is a bit 
+                        # correctly set
+                        # this kind of mutual exclusive option checking is a bit
                         # tedious, so we do it here.
                         if paired_end_info[run_id]:
-                            if ( not self.is_option_set_in_config('adapter-R2') and 
+                            if ( not self.is_option_set_in_config('adapter-R2') and
                                  not self.is_option_set_in_config('adapter-file') ):
                                 logger.error(
                                     "Option 'adapter-R2' or 'adapter-file' "
@@ -133,7 +133,7 @@ class Cutadapt(AbstractStep):
                                     pigz = [self.get_tool('pigz'),
                                             '--decompress',
                                             '--stdout']
-                                    # 2.3 command: Write file in 4MB chunks to 
+                                    # 2.3 command: Write file in 4MB chunks to
                                     #              fifo
                                     dd_out = [self.get_tool('dd'),
                                               'obs=4M',
@@ -168,28 +168,28 @@ class Cutadapt(AbstractStep):
                                 cutadapt_pipe.add_command(fix_qnames)
 
                             # Let's get the correct adapter sequences or
-                            # adapter sequence fasta file 
+                            # adapter sequence fasta file
                             adapter = None
                             # Do we have adapter sequences as input?
                             if self.is_option_set_in_config('adapter-%s' \
                                                             % read_types[read]):
-                                # Get adapter sequence 
+                                # Get adapter sequence
                                 adapter = self.get_option(
                                     'adapter-%s' % read_types[read])
-                            
+
                                 # add index to adapter sequence if necessary
                                 if '((INDEX))' in adapter:
                                     index = self.find_upstream_info_for_input_paths(
                                         input_paths,
                                         'index-%s' % read_types[read])
                                     adapter = adapter.replace('((INDEX))', index)
-                            
+
                                 # create reverse complement if necessary
                                 if self.get_option('use_reverse_complement'):
                                     complements = string.maketrans('acgtACGT',
                                                                    'tgcaTGCA')
                                     adapter = adapter.translate(complements)[::-1]
-                                
+
                                 # make sure the adapter is looking good
 #                                if re.search('^[ACGT]+$', adapter) == None:
 #                                    logger.error("Unable to come up with a "
@@ -215,7 +215,7 @@ class Cutadapt(AbstractStep):
                             if self.get_option('adapter-type') == '':
                                 cutadapt.extend(['-'])
                             else:
-                                cutadapt.extend([self.get_option('adapter-type'), 
+                                cutadapt.extend([self.get_option('adapter-type'),
                                                  adapter, '-'])
 
 

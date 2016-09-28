@@ -53,7 +53,7 @@ class Bcl2FastqSource(AbstractSourceStep):
 
     def runs(self, run_ids_connections_files):
         '''
-        
+
         '''
         input_dir = self.get_option('input-dir')
         if not os.path.isdir(input_dir):
@@ -107,7 +107,7 @@ class Bcl2FastqSource(AbstractSourceStep):
                         os.path.join(input_dir, 'Data', 'Intensities',
                                      'BaseCalls')
                     ]
-                
+
                     configureBcl2Fastq.extend(option_list)
 
                     configureBcl2Fastq.extend(
@@ -151,4 +151,4 @@ class Bcl2FastqSource(AbstractSourceStep):
                         mv_command = mv_exec_group.add_command(mv)
                         run.add_public_info("bcl2fastq-output-folder",
                                             output_unaligned_dir)
-                        
+

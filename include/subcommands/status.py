@@ -13,7 +13,7 @@ import pipeline
 
 '''
 By default, this script displays information about all tasks of the pipeline
-configured in 'config.yaml'. But the displayed information can be narrowed 
+configured in 'config.yaml'. But the displayed information can be narrowed
 down via command line options.
 
 '''
@@ -39,7 +39,7 @@ def main(args):
             report = p.steps[step_name].get_run(run_id).as_dict()
             report['state'] = p.steps[step_name].get_run_state(run_id)
             print(yaml.dump(report, default_flow_style = False))
-        
+
     elif args.graph:
         step_order = p.topological_step_order
         indents = [0 for _ in step_order]
@@ -141,7 +141,7 @@ def main(args):
     # now check ping files and print some warnings and instructions if
     # something's fishy
     p.check_ping_files(print_more_warnings = True if args.verbose > 0 else False)
-    
+
     # Now check whether we can volatilize files, but don't do it.
     p.check_volatile_files()
-    
+

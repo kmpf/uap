@@ -19,13 +19,13 @@ class S2C(AbstractStep):
     '''
     def __init__(self, pipeline):
         super(S2C, self).__init__(pipeline)
-        
+
         self.set_cores(6)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
         self.add_connection('out/log')
-        
+
         self.require_tool('s2c')
         self.require_tool('fix_s2c')
         self.require_tool('samtools')
@@ -54,7 +54,7 @@ class S2C(AbstractStep):
                         #not accessible
                         logger.error("Directory %s not accessible." % self.get_option('tmp_dir'))
                         sys.exit(1)
-                
+
                 alignments_path = input_paths[0]
                 cat = [self.get_tool('cat'), alignments_path]
                 pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']

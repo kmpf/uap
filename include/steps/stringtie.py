@@ -16,19 +16,19 @@ class Stringtie(AbstractStep):
         super(Stringtie, self).__init__(pipeline)
 
         self.set_cores(12)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/assembling')
         self.add_connection('out/gene_abund')
         self.add_connection('out/cov_refs')
         self.add_connection('out/log_stderr')
-        
+
         self.require_tool('mkdir')
         self.require_tool('mv')
         self.require_tool('stringtie')
 
         self.add_option('G', str, optional=False,
-                        description="use reference transcript annotation to guide assembly") 
+                        description="use reference transcript annotation to guide assembly")
         self.add_option('v', bool, optional=True,
                         description='Turns on verbose mode, printing bundle processing details')
         self.add_option('p', int, optional=True,
@@ -39,11 +39,11 @@ class Stringtie(AbstractStep):
                         description='Sets <label> as the prefix for the name of the output transcripts. Default: STRG')
         self.add_option('f', float, optional=True,
                         description='Sets the minimum isoform abundance of the predicted transcripts as a fraction of the most abundant transcript assembled at a given locus. Lower abundance transcripts are often artifacts of incompletely spliced precursors of processed transcripts. Default: 0.1')
-        
-        
+
+
     def runs(self, run_ids_connections_files):
-        
-        options=['G', 'v','p', 'm', 'l', 'f']      
+
+        options=['G', 'v','p', 'm', 'l', 'f']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -56,14 +56,14 @@ class Stringtie(AbstractStep):
             else:
                 option_list.append( '-%s' % option )
                 option_list.append( str(self.get_option(option)) )
-                
-                
+
+
         for run_id in run_ids_connections_files.keys():
 
              with self.declare_run(run_id) as run:
                 alignments  = run_ids_connections_files[run_id]['in/alignments'][0]
                 input_paths = alignments
-                
+
 
                 assembling = run.add_output_file(
                     'assembling',
@@ -91,7 +91,7 @@ class Stringtie(AbstractStep):
                         "The path %s provided to option 'G' is not a file."
                         % self.get_option('G') )
                     sys.exit(1)
-                
+
                 # check, if only a single input file is provided
                 len_input = run_ids_connections_files[run_id]['in/alignments']
                 if len(len_input) != 1:

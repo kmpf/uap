@@ -21,11 +21,11 @@ class ChromHmmBinarizeBam(AbstractStep):
         super(ChromHmmBinarizeBam, self).__init__(pipeline)
 
         self.set_cores(8)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
         self.add_connection('out/metrics')
-        
+
         self.require_tool('ChromHMM')
         self.require_tool('echo')
         self.require_tool('ln')
@@ -128,7 +128,7 @@ class ChromHmmBinarizeBam(AbstractStep):
                     # necessary for cell-mark-file table
                     linked_controls = list()
                     linked_treatments = list()
-                    
+
                     # Create links to all input paths in temp_dir
                     with run.new_exec_group() as exec_group:
                         for files, links in [[control_files, linked_controls], \
@@ -139,15 +139,15 @@ class ChromHmmBinarizeBam(AbstractStep):
                                     suffix = f_basename)
                                 ln = [self.get_tool('ln'), '-s', f, temp_f]
                                 exec_group.add_command(ln)
-                            
+
                                 # Save basename of created link
                                 links.append(os.path.basename(temp_f))
 
                         logger.error("Controls: %s" %
                                      ", ".join(linked_controls))
-                        logger.error("Treatments: %s" % 
+                        logger.error("Treatments: %s" %
                                      ", ".join(linked_treatments))
-                        
+
                         # Create the table file
                         cell_mark_file_content = str()
                         for lt in linked_treatments:

@@ -1,6 +1,6 @@
 ..
   This is the documentation for rnaseq-pipeline. Please keep lines under
-  80 characters if you can and start each sentence on a new line as it 
+  80 characters if you can and start each sentence on a new line as it
   decreases maintenance and makes diffs more readable.
 
 .. title:: Installation of uap
@@ -32,11 +32,11 @@ Download the software from |github_uap_link| like this::
 
   $ git clone https://github.com/kmpf/uap.git
 
-*****************************    
+*****************************
 Setting Up Python Environment
 *****************************
 
-After cloning the repository, change into the created directory and run the 
+After cloning the repository, change into the created directory and run the
 bootstrapping script ``bootstrap.sh``::
 
   $ cd uap

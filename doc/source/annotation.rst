@@ -21,8 +21,8 @@ Annotation contains information about inter-process streams and output files,
 including SHA1 checksums, file sizes, and line counts as well.
 
 
-Upon successful completion of a task, an extensive YAML-formatted annotation 
-is placed next to the output files in a file called 
+Upon successful completion of a task, an extensive YAML-formatted annotation
+is placed next to the output files in a file called
 ``.[task_id]-annotation.yaml``.
 Also, for every output file, a symbolic link to this file is created:
 ``.[output_filename].annotation.yaml``.

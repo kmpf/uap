@@ -13,13 +13,13 @@ class HtSeqCount(AbstractStep):
 
     http://www-huber.embl.de/users/anders/HTSeq/doc/count.html
     '''
-    
-    
+
+
     def __init__(self, pipeline):
         super(HtSeqCount, self).__init__(pipeline)
-        
+
         self.set_cores(2)
-        
+
         self.add_connection(
             'in/alignments',
             constraints = {'min_files_per_run': 1, 'max_files_per_run': 1}
@@ -29,7 +29,7 @@ class HtSeqCount(AbstractStep):
             constraints = {'total_files': 1}
         )
         self.add_connection('out/counts')
-        
+
         self.require_tool('dd')
         self.require_tool('pigz')
         self.require_tool('htseq-count')
@@ -64,9 +64,9 @@ class HtSeqCount(AbstractStep):
             else:
                 option_list.append(
                     '--%s=%s' % (option, str(self.get_option(option))))
-    
 
-        
+
+
         for run_id in run_ids_connections_files.keys():
             if run_id == '':
                 continue
@@ -110,7 +110,7 @@ class HtSeqCount(AbstractStep):
                                  'ibs=4M',
                                  'if=%s' % alignments_path]
                         pipe.add_command(dd_in)
-                        
+
                         if is_gzipped:
                             # 2. Uncompress file to STDOUT
                             pigz = [self.get_tool('pigz'),

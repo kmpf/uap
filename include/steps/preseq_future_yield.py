@@ -19,12 +19,12 @@ class PreseqFutureYield(AbstractStep):
 
     def __init__(self, pipeline):
         super(PreseqFutureYield, self).__init__(pipeline)
-        
+
         self.set_cores(4)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/future_yield')
-        
+
         self.require_tool('preseq')
 
         # lc_extrap specific options

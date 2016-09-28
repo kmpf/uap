@@ -18,7 +18,7 @@ class BwaMem(AbstractStep):
         bwa mem [options] <bwa-index> <first-read.fastq> [<second-read.fastq>] \
         > <sam-output>
     '''
-    
+
     def __init__(self, pipeline):
         super(BwaMem, self).__init__(pipeline)
         self.set_cores(6)
@@ -54,7 +54,7 @@ class BwaMem(AbstractStep):
         self.add_option('c', int, optional = True,
                         description = "skip seeds with more than INT "
                         "occurrences [500]")
-        self.add_option('D', float, optional = True, 
+        self.add_option('D', float, optional = True,
                         description = "drop chains shorter than FLOAT fraction "
                         "of the longest overlapping chain [0.50]")
         self.add_option('W', int, optional = True,
@@ -63,7 +63,7 @@ class BwaMem(AbstractStep):
         self.add_option('m', int, optional = True,
                         description = "perform at most INT rounds of mate "
                         "rescues for each read [50]")
-        self.add_option('S', bool, optional = True, 
+        self.add_option('S', bool, optional = True,
                         description = "skip mate rescue")
         self.add_option('P', bool, optional = True,
                         description = "skip pairing; mate rescue performed "
@@ -169,12 +169,12 @@ class BwaMem(AbstractStep):
                 sr_input = run_ids_connections_files[run_id]['in/second_read']
 
                 input_paths = [ y for x in [fr_input, sr_input] \
-                               for y in x if y !=None ]                    
+                               for y in x if y !=None ]
 
                 # Do we have paired end data and is it exactly one ?
                 is_paired_end = False if sr_input == [None] else True
-                
-                # Fail if we have don't have exactly one file or 
+
+                # Fail if we have don't have exactly one file or
                 # an empty connection
                 if len(fr_input) != 1 or fr_input == [None]:
                     logger.error("Expected single input file for first read.")
@@ -211,7 +211,7 @@ class BwaMem(AbstractStep):
                               'if=%s' % input_path,
                               'of=%s' % temp_fifo]
                         exec_group.add_command(dd)
-                        
+
                         return (exec_group, temp_fifo)
 
                     # Temporary fifos
@@ -219,7 +219,7 @@ class BwaMem(AbstractStep):
 
                     exec_group, temp_fr_fifo = prepare_input(
                             fr_input[0], exec_group)
-                    # And if we handle paired end data 
+                    # And if we handle paired end data
                     if is_paired_end:
                         exec_group, temp_sr_fifo = prepare_input(
                             sr_input[0], exec_group)

@@ -35,7 +35,7 @@ class RawUrlSource(AbstractSourceStep):
                         'downloading')
         self.add_option('url', str, optional = False,
                         description = "file URL")
-        
+
     def runs(self, run_ids_connections_files):
         # Get file name of downloaded file
         url_filename = os.path.basename(
@@ -87,7 +87,7 @@ class RawUrlSource(AbstractSourceStep):
                 # 1. download file
                 curl = [self.get_tool('curl'), self.get_option('url')]
                 curl_exec_group.add_command(curl, stdout_path = temp_filename)
-            
+
             if self.is_option_set_in_config('hashing-algorithm') and \
                self.is_option_set_in_config('secure-hash'):
                 with run.new_exec_group() as check_exec_group:

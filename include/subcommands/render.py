@@ -17,8 +17,8 @@ import yaml
 import pipeline
 import misc
 '''
-This script uses graphviz to produce graphs that display information about the 
-tasks processed by the pipeline. 
+This script uses graphviz to produce graphs that display information about the
+tasks processed by the pipeline.
 '''
 
 logger = getLogger("uap_logger")
@@ -129,7 +129,7 @@ def render_graph_for_all_steps(p, args):
     configuration_path = p.get_config_filepath()
     if args.simple:
         svg_file = configuration_path.replace('.yaml', '.simple.svg')
-        png_file = configuration_path.replace('.yaml', '.simple.png')        
+        png_file = configuration_path.replace('.yaml', '.simple.png')
     else:
         svg_file = configuration_path.replace('.yaml', '.svg')
         png_file = configuration_path.replace('.yaml', '.png')
@@ -137,9 +137,9 @@ def render_graph_for_all_steps(p, args):
     dot = subprocess.Popen(['dot', '-Tsvg'],
                            stdin = subprocess.PIPE,
                            stdout = subprocess.PIPE)
-    
+
     f = dot.stdin
-    
+
     f.write("digraph {\n")
     f.write("  rankdir = TB;\n")
     f.write("  splines = true;\n")
@@ -155,7 +155,7 @@ def render_graph_for_all_steps(p, args):
                 finished_runs += 1
 
         f.write("subgraph cluster_%s {\n" % step_name)
-        
+
         label = step_name
         if step_name != step.__module__:
             label = "%s\\n(%s)" % (step_name, step.__module__)
@@ -181,21 +181,21 @@ def render_graph_for_all_steps(p, args):
                     f.write("    %s -> %s;\n" % (connection_key, step_name))
                 else:
                     f.write("    %s -> %s;\n" % (step_name, connection_key))
-                
+
         f.write("  graph[style=dashed];\n")
         f.write("}\n")
-            
+
     for step_name, step in p.steps.items():
         for other_step in step.dependencies:
             if args.simple:
                 f.write("    %s -> %s;\n"
                         % (other_step.get_step_name(), step_name))
             else:
-            
+
                 for in_key in step._connections:
                     if in_key[0:3] != 'in/':
                         continue
-                
+
                     out_key = in_key.replace('in/', 'out/')
                     allowed_steps = None
                     if '_connect' in step.get_options():
@@ -212,7 +212,7 @@ def render_graph_for_all_steps(p, args):
                             else:
                                 raise StandardError("Invalid _connect value: %s"
                                                     % yaml.dump(declaration))
-                        
+
                     for real_outkey in other_step._connections:
                         if real_outkey[0:4] != 'out/':
                             continue
@@ -228,7 +228,7 @@ def render_graph_for_all_steps(p, args):
                                     % (other_connection_key, connection_key))
 
     f.write("}\n")
-    
+
     dot.stdin.close()
 
     svg = dot.stdout.read()
@@ -257,11 +257,11 @@ def render_single_annotation(annotation_path):
         gv = create_dot_file_from_annotations([log])
         with open(dot_file, 'w') as f:
             f.write(gv)
-        
+
         dot = subprocess.Popen(['dot', '-Tsvg', '-o%s' % svg_file, dot_file],
                                stdin = subprocess.PIPE,
                                stdout = subprocess.PIPE)
-            
+
         dot = subprocess.Popen(['dot', '-Tpng', '-o%s' % png_file, dot_file],
                                stdin = subprocess.PIPE,
                                stdout = subprocess.PIPE)
@@ -290,7 +290,7 @@ def create_dot_file_from_annotations(logs):
             "style = filled];\n")
     f.write("    edge [fontname = Helvetica, fontsize = 12];\n")
     f.write("\n")
-    
+
     f.write("    // nodes\n")
     f.write("\n")
 
@@ -307,52 +307,52 @@ def create_dot_file_from_annotations(logs):
             f.write(" [%s]" % ', '.join(['%s = "%s"' % (k, node_info[k]) \
                                          for k in node_info.keys()]))
         f.write(";\n")
-            
+
     f.write("\n")
-        
+
     f.write("    // edges\n")
     f.write("\n")
     for edge_pair in hash['edges'].keys():
         if edge_pair[0] in hash['nodes'] and edge_pair[1] in hash['nodes']:
             f.write("    _%s -> _%s;\n" % (edge_pair[0], edge_pair[1]))
-        
+
     f.write("\n")
-        
-        
+
+
     if len(hash['graph_labels']) == 1:
-        f.write("    graph [label=\"%s\"];\n" % 
+        f.write("    graph [label=\"%s\"];\n" %
                 hash['graph_labels'].values()[0])
     f.write("}\n")
-        
+
     result = f.getvalue()
     f.close()
     return result
-        
+
 def create_hash_from_annotation(log):
-        
+
     def pid_hash(pid, suffix = ''):
-        hashtag = "%s/%s/%d/%s" % (log['step']['name'], 
-                                   log['run']['run_id'], 
+        hashtag = "%s/%s/%d/%s" % (log['step']['name'],
+                                   log['run']['run_id'],
                                    pid, suffix)
         return misc.str_to_sha1(hashtag)
-        
+
     def file_hash(path):
         if path in log['step']['known_paths']:
             if 'real_path' in log['step']['known_paths'][path]:
                 path = log['step']['known_paths'][path]['real_path']
         return misc.str_to_sha1(path)
-        
-        
+
+
     pipe_hash = dict()
     pipe_hash['nodes'] = dict()
     pipe_hash['edges'] = dict()
     pipe_hash['clusters'] = dict()
     pipe_hash['graph_labels'] = dict()
-        
+
     def add_file_node(path):
         if not path in log['step']['known_paths']:
             return
-                
+
         if 'real_path' in log['step']['known_paths'][path]:
             path = log['step']['known_paths'][path]['real_path']
         label = os.path.basename(path)
@@ -372,7 +372,7 @@ def create_hash_from_annotation(log):
             'label': label,
             'fillcolor': color
         }
-            
+
     for proc_info in log['pipeline_log']['processes']:
         pid = proc_info['pid']
         # Set name and label variable
@@ -382,7 +382,7 @@ def create_hash_from_annotation(log):
         except KeyError:
             name = '(unknown)'
             label = "PID %d" % pid
-            
+
         try:
             # Add file nodes for every file in hints
             for path in proc_info['hints']['writes']:
@@ -411,7 +411,7 @@ def create_hash_from_annotation(log):
                 for known_path in log['step']['known_paths'].keys():
                     # Check if arg contains a known path ...
                     if known_path in arg:
-                        # ... if so add this file to the graph 
+                        # ... if so add this file to the graph
                         add_file_node(known_path)
                         # Is the process able to in-/output files?
                         if name in ['cat', 'dd', 'mkdir', 'mkfifo']:
@@ -456,10 +456,10 @@ def create_hash_from_annotation(log):
                             arg = "%s[...]" % arg[:16]
                 stripped_args.append(arg.replace('\t', '\\t').replace(
                     '\\', '\\\\'))
-                
+
             tw = textwrap.TextWrapper(
-                width = 50, 
-                break_long_words = False, 
+                width = 50,
+                break_long_words = False,
                 break_on_hyphens = False)
             label = "%s" % ("\\n".join(tw.wrap(' '.join(stripped_args))))
 
@@ -482,7 +482,7 @@ def create_hash_from_annotation(log):
                 color = "#d5291a"
             if 'signal' in proc_info:
                 label = "%s\\n(received %s%s)" % (
-                    label, 
+                    label,
                     'friendly ' \
                     if pid in log['pipeline_log']['ok_to_fail'] else '',
                     proc_info['signal_name'] if 'signal_name' in \
@@ -493,7 +493,7 @@ def create_hash_from_annotation(log):
                         label, proc_info['exit_code'])
             else:
                 label = "%s\\n(no exit code)" % label
-                    
+
         if 'max' in log['pipeline_log']['process_watcher']:
             if pid in log['pipeline_log']['process_watcher']['max']:
                 label += "\\n%1.1f%% CPU, %s RAM (%1.1f%%)" % (
@@ -504,13 +504,13 @@ def create_hash_from_annotation(log):
                         ['rss']),
                     log['pipeline_log']['process_watcher']['max'][pid]\
                     ['memory_percent'])
-                
+
         pipe_hash['nodes'][pid_hash(pid)] = {
             'label': label,
             'fillcolor': color,
             'start_time': proc_info['start_time']
         }
-            
+
         for which in ['stdout', 'stderr']:
             key = "%s_copy" % which
             if key in proc_info:
@@ -525,7 +525,7 @@ def create_hash_from_annotation(log):
                 if ('length' in proc_info[key]) and \
                    (proc_info[key]['length'] > 0):
                     speed = float(proc_info[key]['length']) / (
-                        proc_info[key]['end_time'] - 
+                        proc_info[key]['end_time'] -
                         proc_info[key]['start_time']).total_seconds()
                     speed_label = "%s/s" % misc.bytes_to_str(speed)
                     size_label = "%s / %s lines (%s)" % (
@@ -533,7 +533,7 @@ def create_hash_from_annotation(log):
                         "{:,}".format(proc_info[key]['lines']),
                         speed_label)
                 label = "%s\\n%s" % (which, size_label)
-                
+
                 something_went_wrong = False
                 if 'signal' in proc_info[key]:
                     something_went_wrong = True
@@ -548,11 +548,11 @@ def create_hash_from_annotation(log):
                         color = "#d5291a"
                     if 'signal' in proc_info[key]:
                         label = "%s\\n(received %s%s)" % (
-                            label, 
+                            label,
                             "friendly " if pid in \
                             log['pipeline_log']['ok_to_fail'] else '',
                             proc_info[key]['signal_name'] if 'signal_name'\
-                            in proc_info[key] else 'signal %d' % 
+                            in proc_info[key] else 'signal %d' %
                             proc_info[key]['signal'])
                     elif 'exit_code' in proc_info[key]:
                         if proc_info[key]['exit_code'] != 0:
@@ -600,7 +600,7 @@ def create_hash_from_annotation(log):
     for node in pipe_hash['nodes'].keys():
         if not node in step_file_nodes:
             pipe_hash['clusters'][cluster_hash]['group'].append(node)
-                
+
     start_time = log['start_time']
     end_time = log['end_time']
     duration = end_time - start_time
@@ -615,7 +615,7 @@ def create_hash_from_annotation(log):
             log['pipeline_log']['process_watcher']['max']['sum']['cpu_percent'],
             log['step']['cores'],
             misc.bytes_to_str(log['pipeline_log']['process_watcher']['max']\
-                              ['sum']['rss']), 
+                              ['sum']['rss']),
             log['pipeline_log']['process_watcher']['max']['sum']['memory_percent'])
         pipe_hash['graph_labels'][task_name] += text
     if 'signal' in log:

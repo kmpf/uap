@@ -16,12 +16,12 @@ class SamtoolsStats(AbstractStep):
 
     def __init__(self, pipeline):
         super(SamtoolsStats, self).__init__(pipeline)
-        
+
         self.set_cores(1)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/stats')
-                
+
         self.require_tool('dd')
         self.require_tool('samtools')
         self.require_tool('pigz')

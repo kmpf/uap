@@ -10,7 +10,7 @@ class RemoveDuplicates(AbstractStep):
     Duplicates are removed by Picard tools 'MarkDuplicates'.
 
     typical command line::
-        
+
         MarkDuplicates INPUT=<SAM/BAM> OUTPUT=<SAM/BAM>
                        METRICS_FILE=<metrics-out> REMOVE_DUPLICATES=true
     '''
@@ -19,11 +19,11 @@ class RemoveDuplicates(AbstractStep):
         super(RemoveDuplicates, self).__init__(pipeline)
 
         self.set_cores(12)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
         self.add_connection('out/metrics')
-        
+
         self.require_tool('MarkDuplicates')
 
 
@@ -53,7 +53,7 @@ class RemoveDuplicates(AbstractStep):
                                 'metrics',
                                 '%s-rm-dup-metrics.txt' % run_id,
                                 input_path),
-                            'REMOVE_DUPLICATES=true'                
+                            'REMOVE_DUPLICATES=true'
                         ]
                         exec_group.add_command(
                             mark_duplicates,

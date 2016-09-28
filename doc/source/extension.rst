@@ -64,7 +64,7 @@ steps, or ``AbstractSourceStep``, for source steps.
 The ``__init__`` method should contain the declarations of:
 
   * tools used in the step: ``self.require_tool('tool_name')``
-  * input and output connection(s): ``self.add_connection('in/*')`` or 
+  * input and output connection(s): ``self.add_connection('in/*')`` or
     ``self.add_connection('out/*')``
   * options: ``self.add_option()``
 
@@ -112,7 +112,7 @@ Options:
            self.require_tool('cat')
 
            # Add options
-           self.add_option('some_option', str, optional=False, 
+           self.add_option('some_option', str, optional=False,
                            description='Mandatory option')
 
 The single function  ``runs`` is used to plan all jobs based on a list of input
@@ -127,9 +127,9 @@ The basic scaffold is shown below.
     import re
     import process_pool
     import yaml
-    
+
     class Macs14(AbstractStep):
-        
+
         # the constructor
         def __init__(self, pipeline):
             super(Macs14, self).__init__(pipeline)
@@ -140,7 +140,7 @@ The basic scaffold is shown below.
             self.add_connection('out/tag1')
             self.add_connection('out/tag2')
             ...
-    
+
             self.require_tool('cat4m')
             self.require_tool('pigz')
             ...
@@ -174,11 +174,11 @@ The basic scaffold is shown below.
                            ...
 
             return output_run_info
-        
+
         # called to actually launch the job (run_info is the hash returned from
         # setup_runs)
         def execute(self, run_id, run_info):
-    
+
             with process_pool.ProcessPool(self) as pool:
                 with pool.Pipeline(pool) as pipeline:
                     # assemble the steps pipline here
@@ -221,32 +221,32 @@ step gets as input.
 Best practices
 ==============
 
-There are a couple of things which should be kept in mind when implementing new 
+There are a couple of things which should be kept in mind when implementing new
 steps or modifying existing steps:
 
 * Make sure errors already show up in ``runs``.
   So, look out for things that may fail in ``runs``.
   Stick to *fail early, fail often*.
-  That way errors show up before submitting jobs to the cluster and wasting 
-  precious cluster waiting time is avoided. 
+  That way errors show up before submitting jobs to the cluster and wasting
+  precious cluster waiting time is avoided.
 * Make sure that the tools you'll need in ``runs`` are available.
   Check for the availability of tools within the constructor ``__init__``.
 
 .. code-block:: python
-  
+
     # make sure tools are available
     self.require_tool('pigz')
     self.require_tool('cutadapt')
-    
-* Make sure your disk access is as cluster-friendly as possible (which 
-  primarily means using large block sizes and preferably no seek operations). 
+
+* Make sure your disk access is as cluster-friendly as possible (which
+  primarily means using large block sizes and preferably no seek operations).
   If possible, use ``unix_pipeline`` to wrap your commands in ``pigz``, ``dd``,
-  or ``cat4m`` with a large block size like 4 MB. 
-  Although this is not possible in every case (for example when seeking 
-  in files is involved), it is straightforward with tools that read a 
-  continuous stream from ``stdin`` and write a continuous stream to 
+  or ``cat4m`` with a large block size like 4 MB.
+  Although this is not possible in every case (for example when seeking
+  in files is involved), it is straightforward with tools that read a
+  continuous stream from ``stdin`` and write a continuous stream to
   ``stdout``.
-* **NEVER**  remove files! If files need to be removed report the issue and 
+* **NEVER**  remove files! If files need to be removed report the issue and
   exit **uap**. Only the user should delete files.
 * Always use ``os.path.join(...)`` when you handle paths.
 * Use bash commands like ``mkfifo`` over python library equivalents like

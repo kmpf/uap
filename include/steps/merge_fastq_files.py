@@ -11,17 +11,17 @@ class MergeFastqFiles(AbstractStep):
     First and second read files are merged separately. The output files are
     gzipped.
     '''
-    
+
     def __init__(self, pipeline):
         super(MergeFastqFiles, self).__init__(pipeline)
-        
+
         self.set_cores(12) # muss auch in den Decorator
-        
+
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/first_read')
         self.add_connection('out/second_read')
-        
+
         self.require_tool('cat')
         self.require_tool('dd')
         self.require_tool('mkfifo')
@@ -74,7 +74,7 @@ class MergeFastqFiles(AbstractStep):
                                     dd_out = [self.get_tool('dd'),
                                               'obs=4M',
                                               'of=%s' % temp_fifo]
-                                
+
                                     unzip_pipe.add_command(dd_in)
                                     unzip_pipe.add_command(pigz)
                                     unzip_pipe.add_command(dd_out)

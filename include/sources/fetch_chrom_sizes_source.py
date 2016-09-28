@@ -24,7 +24,7 @@ class FetchChromSizesSource(AbstractSourceStep):
 
     def runs(self, run_ids_connections_files):
         '''
-        
+
         '''
         output_dir = self.get_option('path')
         if not os.path.exists(output_dir):
@@ -58,7 +58,7 @@ class FetchChromSizesSource(AbstractSourceStep):
                     fetch_chrom_sizes,
                     stdout_path = temp_filename
                 )
-                
+
                 cp = [self.get_tool('cp'), '--update', temp_filename, out_file]
                 exec_group.add_command(cp)
 

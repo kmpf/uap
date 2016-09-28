@@ -1,6 +1,6 @@
 ..
   This is the documentation for uap. Please keep lines under
-  80 characters if you can and start each sentence on a new line as it 
+  80 characters if you can and start each sentence on a new line as it
   decreases maintenance and makes diffs more readable.
 
 .. title:: Configuration of uap
@@ -23,12 +23,12 @@ although technically, they are keys):
 
 * ``destination_path`` -- points to the directory where the result files,
   annotations and temporary files are written to
-* ``email`` -- when submitting jobs on a cluster, messages will be sent to 
+* ``email`` -- when submitting jobs on a cluster, messages will be sent to
   this email address by the cluster engine (nobody@example.com by default)
 * ``constants`` -- defines constants for later use (define repeatedly used
   values as constants to increase readability of the following sections)
-* ``steps`` -- defines the source and processing steps and their order 
-* ``tools`` -- defines all tools used in the analysis and how to determine 
+* ``steps`` -- defines the source and processing steps and their order
+* ``tools`` -- defines all tools used in the analysis and how to determine
   their versions (for later reference)
 
 If you want to know more about the notation that is used in this file, have a
@@ -68,7 +68,7 @@ Steps Section
 
 The ``steps`` section is the core of the analysis file, because it defines when
 steps are executed and how they depend on each other.
-All available steps are described in detail in the steps documentation: 
+All available steps are described in detail in the steps documentation:
 :doc:`steps`.
 This section (technically it is a dictionary) contains a key for every step,
 therefore each step must have a unique name [1]_.
@@ -82,12 +82,12 @@ still ensure unique naming:
         # called 'cutadapt'
         cutadapt:
             ... # options following
-            
+
         # here, we also insert a cutadapt step, but we give it a different name:
         # 'clip_adapters'
         clip_adapters (cutadapt):
             ... # options following
-            
+
 There are two different types of steps:
 
 .. _config_file_source_steps:
@@ -116,21 +116,21 @@ Reserved Keywords for Steps
 **_depends:**
   Dependencies are defined via the ``_depends`` key which may either be ``null``,
   a step name, or a list of step names.
-  
+
 .. code-block:: yaml
 
     steps:
         # the source step which depends on nothing
         fastq_source:
             # ...
-            
+
         run_folder_source:
             # ...
 
         # the first processing step, which depends on the source step
         cutadapt:
             _depends: [fastq_source, run_folder_source]
-        
+
         # the second processing step, which depends on the cutadapt step
         fix_cutadapt:
             _depends: cutadapt
@@ -176,21 +176,21 @@ Reserved Keywords for Steps
   step.
 
 **_BREAK:**
-  If you want to cut off entire branches of the step graph, set the ``_BREAK`` 
+  If you want to cut off entire branches of the step graph, set the ``_BREAK``
   flag in a step definition, which will force the step to produce no runs
-  (which will in turn give all following steps nothing to do, thereby 
+  (which will in turn give all following steps nothing to do, thereby
   effectively disabling these steps):
-        
+
 
 .. code-block:: yaml
 
     steps:
         fastq_source:
             # ...
-            
+
         cutadapt:
             _depends: fastq_source
-        
+
         # this step and all following steps will not be executed
         fix_cutadapt:
             _depends: cutadapt
@@ -202,14 +202,14 @@ Reserved Keywords for Steps
   Steps can be marked with ``_volatile: yes``.
   This flag tells **uap** that the output files of the marked step are only
   intermediate results.
-  
+
 .. code-block:: yaml
 
     steps:
         # the source step which depends on nothing
         fastq_source:
             # ...
-            
+
         # this steps output can be deleted if all depending steps are finished
         cutadapt:
             _depends: fastq_source
@@ -248,7 +248,7 @@ Also, **uap** logs the version of each tool used by a step.
 By default, version determination is simply attempted by calling the program
 without command-line arguments.
 
-If a certain argument is required, specify it in ``get_version``. 
+If a certain argument is required, specify it in ``get_version``.
 If a tool does not exit with exit code 0, find out which code it is by typing
 ``echo $?`` into Bash and specify the exit code in ``exit_code``.
 
@@ -257,7 +257,7 @@ If a tool does not exit with exit code 0, find out which code it is by typing
     tools:
         # you don't have to specify a path if the tool can be found in $PATH
         cat:
-            path: cat 
+            path: cat
             get_version: --version
         # you have to specify a path if the tool can not be found in $PATH
         some-tool:

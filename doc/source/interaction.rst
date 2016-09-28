@@ -22,23 +22,23 @@ Therefore, **uap** provides help infromation on the command-line::
              {fix-problems,render,report,run-locally,status,steps,
              submit-to-cluster,task-info,volatilize}
              ...
-  
+
   This script starts and controls 'uap' analysis.
-  
+
   positional arguments:
     <project-config>.yaml
                           Path to YAML file which holds the pipeline
                           configuration. It has to follow the structure given
                           in the documentation.
-  
+
   optional arguments:
     -h, --help            show this help message and exit
     -v, --verbose         Increase output verbosity
     --version             Display version information.
-  
+
   subcommands:
     Available subcommands.
-  
+
     {fix-problems,render,report,run-locally,status,steps,submit-to-cluster,
     task-info,volatilize}
       fix-problems        Fixes problematic states by removing stall files.
@@ -53,7 +53,7 @@ Therefore, **uap** provides help infromation on the command-line::
       task-info           Displays information about certain source or
                           processing tasks.
       volatilize          Saves disk space by volatilizing intermediate results
-  
+
   For further information please visit http://uap.readthedocs.org/en/latest/
   For citation use ...
 
@@ -68,7 +68,7 @@ happen:
 2. The tools given in the :ref:`tools section <uap_config_tools_section>` are
    checked
 3. The input files are checked
-4. The state of all runs are calculated. 
+4. The state of all runs are calculated.
 
 If any of these steps fails, **uap** will print an error message with and it
 will crash.
@@ -81,14 +81,14 @@ to fail late if failing is unavoidable.
 The symbolic link is created in the directory containing the
 ``<project-config>.yaml``.
 
-There are a couple of global command line parameters which are valid for all 
+There are a couple of global command line parameters which are valid for all
 scripts (well, actually, it's only one):
 
 * ``--even-if-dirty``:
-    Before doing anything else, the pipeline checks whether its source code 
-    has been modified in any way via Git. 
+    Before doing anything else, the pipeline checks whether its source code
+    has been modified in any way via Git.
     If yes, processing is stopped immediately unless this flag is specified.
-    If you specify the flag, the fact that the repository was dirty will be 
+    If you specify the flag, the fact that the repository was dirty will be
     recorded in all annotations which are produces *including* a full Git diff.
 
 The subcommands are described in detail below.
@@ -107,9 +107,9 @@ The ``steps`` subcommand lists all available :ref:`source
 steps::
 
   usage: uap [<project-config>.yaml] steps [-h] [--even-if-dirty] [--show STEP]
-  
+
   This script displays by default a list of all steps the pipeline can use.
-  
+
   optional arguments:
     -h, --help       show this help message and exit
     --even-if-dirty  Must be set if the local git repository contains uncommited
@@ -131,13 +131,13 @@ Here is the help message::
                                             [--cluster CLUSTER] [--summarize]
                                             [--graph] [--sources]
                                             [-t [TASK [TASK ...]]]
-  
+
   This script displays by default information about all tasks of the pipeline
   as configured in '<project-config>.yaml'. But the displayed information can
   be narrowed down via command line options.
   IMPORTANT: Hints given by this script are just valid if the jobs were
   submitted to the cluster.
-  
+
   optional arguments:
     -h, --help            show this help message and exit
     --even-if-dirty       Must be set if the local git repository contains
@@ -154,16 +154,16 @@ Here is the help message::
                           'step_name/run_id'. A list of all task IDs is returned
                           by running:
                           $ uap <project-config>.yaml status
-  
+
 
 At any time, each run is in one of the following states:
 
 * **waiting** -- the run is waiting for input files to appear, or its input
   files are not up-to-date regarding their respective dependencies
-* **ready** -- all input files are present and up-to-date regarding their 
-  upstream input files (and so on, recursively), the run is ready and can 
+* **ready** -- all input files are present and up-to-date regarding their
+  upstream input files (and so on, recursively), the run is ready and can
   be started
-* **queued** -- the run is currently queued and will be started "soon" 
+* **queued** -- the run is currently queued and will be started "soon"
   (only available if you use a compute cluster)
 * **executing** -- the run is currently running on this or another machine
 * **finished** -- all output files are in place and up-to-date
@@ -188,7 +188,7 @@ Here is an example output::
     [f] fix_cutadapt/Sample_COPD_2023
 
     tasks: 5 total, 1 waiting, 1 ready, 3 finished
-    
+
 To get a more concise summary, specify ``--summarize``::
 
     $ uap <project-config>.yaml status --summarize
@@ -206,7 +206,7 @@ To get a more concise summary, specify ``--summarize``::
     [f]   1 fix_cutadapt
 
     tasks: 5 total, 1 waiting, 1 ready, 3 finished
-    
+
 ...or print a fancy ASCII art graph with ``--graph``::
 
     $ uap <project-config>.yaml status --graph
@@ -217,7 +217,7 @@ To get a more concise summary, specify ``--summarize``::
           └─cufflinks (1 waiting)
 
 
-Detailed information about a specific task can be obtained by specifying the 
+Detailed information about a specific task can be obtained by specifying the
 run ID on the command line::
 
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status -t \
@@ -239,10 +239,10 @@ run ID on the command line::
   run_id: Mycoplasma_genitalium_index-download
   state: FINISHED
 
-This data structure is called the "run info" of a certain run and it 
-represents a kind of plan which includes information about which output 
-files will be generated and which input files they depend on -- this is 
-stored in ``output_files``. 
+This data structure is called the "run info" of a certain run and it
+represents a kind of plan which includes information about which output
+files will be generated and which input files they depend on -- this is
+stored in ``output_files``.
 
 Source steps can be viewed separately by specifying ``--sources``::
 
@@ -268,7 +268,7 @@ An example output showing the download of the *Mycoplasma genitalium* genome::
 
     [uap] Set log level to ERROR
     #!/usr/bin/env bash
-    
+
     # M_genitalium_genome/download -- Report
     # ======================================
     #
@@ -280,10 +280,10 @@ An example output showing the download of the *Mycoplasma genitalium* genome::
     # public_info: {}
     # run_id: download
     # state: FINISHED
-    # 
+    #
     # M_genitalium_genome/download -- Commands
     # ========================================
-    
+
     # 1. Group of Commands -- 1. Command
     # ----------------------------------
 
@@ -307,22 +307,22 @@ for causes of failure.
 run-locally
 ===========
 
-The ``run-locally`` subcommand runs all non-finished runs (or a subset) 
-sequentially on the local machine. 
-Feel free to cancel this script at any time, it won't put your project in a 
+The ``run-locally`` subcommand runs all non-finished runs (or a subset)
+sequentially on the local machine.
+Feel free to cancel this script at any time, it won't put your project in a
 unstable state.
-However, if the ``run-locally`` subcommand receives a SIGKILL signal, the 
+However, if the ``run-locally`` subcommand receives a SIGKILL signal, the
 currently executing job will continue to run and the corresponding run
 will be reported as ``executing`` by calling ``status`` subcommand for five more
 minutes (SIGTERM should be fine and exit gracefully but *doesn't just yet*).
 After that time, you will be warned that a job is marked as being currently
-run but no activity has been seen for a while, along with further 
-instructions about what to do in such a case (don't worry, it shouldn't 
+run but no activity has been seen for a while, along with further
+instructions about what to do in such a case (don't worry, it shouldn't
 happen by accident).
 
-To execute one or more certain runs, specify the run IDs on the command 
-line. 
-To execute all runs of a certain step, specify the step name on the command 
+To execute one or more certain runs, specify the run IDs on the command
+line.
+To execute all runs of a certain step, specify the step name on the command
 line.
 
 This subcommands usage information::
@@ -357,31 +357,31 @@ This subcommands usage information::
     --even-if-dirty  Must be set if the local git repository contains uncommited
                      changes. Otherwise the pipeline will not start.
 
-.. NOTE:: Why is it safe to cancel the pipeline? 
-    The pipeline is written in a way which expects processes to fail or 
-    cluster jobs to disappear without notice. 
-    This problem is mitigated by a design which relies on file presence and 
-    file timestamps to determine whether a run is finished or not. 
-    Output files are automatically written to temporary locations and later 
-    moved to their real target directory, and it is not until the last file 
+.. NOTE:: Why is it safe to cancel the pipeline?
+    The pipeline is written in a way which expects processes to fail or
+    cluster jobs to disappear without notice.
+    This problem is mitigated by a design which relies on file presence and
+    file timestamps to determine whether a run is finished or not.
+    Output files are automatically written to temporary locations and later
+    moved to their real target directory, and it is not until the last file
     rename operation has finished that a run is regarded as finished.
-    
+
 .. _uap-submit-to-cluster:
 submit-to-cluster
 =================
 
-The ``submit-to-cluster`` subcommand determines which runs still have to be 
+The ``submit-to-cluster`` subcommand determines which runs still have to be
 carried out and which supported cluster engine is available.
-It then submits the jobs to the cluster if a cluster engine has been found. 
+It then submits the jobs to the cluster if a cluster engine has been found.
 Dependencies are passed to cluster engine in a way that jobs that depend on
-other jobs won't get scheduled until their dependencies have been satisfied. 
+other jobs won't get scheduled until their dependencies have been satisfied.
 The files ``qsub-template.sh`` and ``sbatch-template.sh`` are used to submit
 jobs.
 Fields with ``#{ }`` are substituted with appropriate values.
 Each submitted job calls **uap** with the ``run-locally`` subcommand on the
 cluster nodes.
 
-The file ``quotas.yaml`` can be used to define different quotas for different 
+The file ``quotas.yaml`` can be used to define different quotas for different
 systems:
 
 .. code-block:: yaml
@@ -390,15 +390,15 @@ systems:
         default: 5
         cutadapt: 100
 
-In the example above, a default quota of 5 is defined for hosts with a 
-hostname of ``frontend1`` or ``frontend2`` (the name is a regular expression). 
-A quota of 5 means that no more than 5 jobs of one kind will be run in 
+In the example above, a default quota of 5 is defined for hosts with a
+hostname of ``frontend1`` or ``frontend2`` (the name is a regular expression).
+A quota of 5 means that no more than 5 jobs of one kind will be run in
 parallel.
-Different quotas can be defined for each step: because ``cutadapt`` is 
+Different quotas can be defined for each step: because ``cutadapt`` is
 highly I/O-efficient, it has a higher quota.
 
 This subcommand provides usage information::
-    
+
   $ uap <project-config>.yaml submit-to-cluster -h
   usage: uap [<project-config>.yaml] submit-to-cluster [-h] [--even-if-dirty]
                                                        [--cluster CLUSTER]

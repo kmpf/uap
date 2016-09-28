@@ -13,7 +13,7 @@ class BwaGenerateIndex(AbstractStep):
 
         bwa index -p <index-basename> <seqeunce.fasta>
     '''
-    
+
     def __init__(self, pipeline):
         super(BwaGenerateIndex, self).__init__(pipeline)
         self.set_cores(6)
@@ -48,7 +48,7 @@ class BwaGenerateIndex(AbstractStep):
                             "Reference sequence is not a single file.")
                         sys.exit(1)
                     bwa_index = [self.get_tool('bwa'), 'index']
-                    # Add index_basename 
+                    # Add index_basename
                     bwa_index.extend(
                         ['-p', os.path.join(
                             run.get_output_directory_du_jour_placeholder(),

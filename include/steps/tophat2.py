@@ -13,7 +13,7 @@ class TopHat2(AbstractStep):
     results to identify splice junctions between exons.
 
     http://tophat.cbcb.umd.edu/
-    
+
     typical command line::
 
         tophat [options]* <index_base> <reads1_1[,...,readsN_1]> \
@@ -21,11 +21,11 @@ class TopHat2(AbstractStep):
 
 
     '''
-    
+
     def __init__(self, pipeline):
         super(TopHat2, self).__init__(pipeline)
         self.set_cores(6)
-        
+
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/alignments')
@@ -93,17 +93,17 @@ class TopHat2(AbstractStep):
                         '--library-type', self.get_option('library_type'),
                         '--output-dir', temp_out_dir,
                         '-p', str(self.get_cores()),
-                        self.get_option('index'), 
+                        self.get_option('index'),
                         ','.join(fr_input)
                     ]
-                    
+
                     if is_paired_end:
                         tophat2.append(','.join(sr_input))
 
                     exec_group.add_command(
                         tophat2,
                         stderr_path = run.add_output_file(
-                            'log_stderr', 
+                            'log_stderr',
                             '%s-tophat2-log_stderr.txt' % run_id, input_paths)
                     )
 
@@ -118,31 +118,31 @@ class TopHat2(AbstractStep):
                     # Define output files
                     tophat2_files = {
                         'accepted_hits.bam' : run.add_output_file(
-                            'alignments', 
+                            'alignments',
                             '%s-tophat2-accepted.bam' % run_id,
                             input_paths),
                         'unmapped.bam' : run.add_output_file(
-                            'unmapped', 
+                            'unmapped',
                             '%s-tophat2-unmapped.bam' % run_id,
                             input_paths),
                         'insertions.bed' : run.add_output_file(
-                            'insertions', 
+                            'insertions',
                             '%s-tophat2-insertions.bed' % run_id,
                             input_paths),
                         'deletions.bed' : run.add_output_file(
-                            'deletions', 
+                            'deletions',
                             '%s-tophat2-deletions.bed' % run_id,
                             input_paths),
                         'junctions.bed' : run.add_output_file(
-                            'junctions', 
+                            'junctions',
                             '%s-tophat2-junctions.bed' % run_id,
                             input_paths),
                         'prep_reads.info' : run.add_output_file(
-                            'prep_reads', 
+                            'prep_reads',
                             '%s-tophat2-prep_reads.info' % run_id,
                             input_paths),
                         'align_summary.txt' : run.add_output_file(
-                            'align_summary', 
+                            'align_summary',
                             '%s-tophat2-align_summary.txt' % run_id,
                             input_paths)
                     }

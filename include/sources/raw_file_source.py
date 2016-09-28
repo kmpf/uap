@@ -16,7 +16,7 @@ class RawFileSource(AbstractSourceStep):
             "``/home/test/fastq/Sample_*.fastq.gz``.")
 
         self.add_option(
-            'group', str, optional = True, 
+            'group', str, optional = True,
             description = "A regular expression which is applied to found "
             "files, and which is used to determine the sample name from the "
             "file name. For example, `(Sample_\d+)_R[12].fastq.gz``, when "
@@ -26,7 +26,7 @@ class RawFileSource(AbstractSourceStep):
 
         self.add_option('sample_id_prefix', str, optional = True )
 
-        self.add_option('sample_to_files_map', dict, str, 
+        self.add_option('sample_to_files_map', dict, str,
                         description = "A listing of sample names and their "
                         "associated files. This must be provided as a YAML "
                         "dictionary.", optional = True)
@@ -38,30 +38,30 @@ class RawFileSource(AbstractSourceStep):
         if self.is_option_set_in_config('group') and \
            self.is_option_set_in_config('pattern'):
             regex = re.compile(self.get_option('group'))
-            
+
             # find files matching the 'group' pattern in all files matching 'pattern'
             for path in glob.glob(os.path.abspath(self.get_option('pattern'))):
                 match = regex.match(os.path.basename(path))
                 if match == None:
                     raise StandardError("Couldn't match regex /%s/ to file %s."
                         % (self.get_option('group'), os.path.basename(path)))
-            
+
                 sample_id_parts = []
                 if self.is_option_set_in_config('sample_id_prefix'):
                     sample_id_parts.append(self.get_option('sample_id_prefix'))
-                
+
                 sample_id_parts += list(match.groups())
                 sample_id = '_'.join(sample_id_parts)
                 if not sample_id in found_files:
                     found_files[sample_id] = list()
                 found_files[sample_id].append(path)
-                
+
         elif self.is_option_set_in_config('sample_to_files_map'):
             for run_id, paths in self.get_option('sample_to_files_map').items():
                 for path in paths:
                     if not os.path.isfile(path):
                         raise StandardError("[raw_file_source]: %s is no file. "
-                                            "Please provide correct path." 
+                                            "Please provide correct path."
                                             % path)
                 if not run_id in found_files:
                     found_files[run_id] = list()

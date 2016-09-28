@@ -16,18 +16,18 @@ class BwaBacktrack(AbstractStep):
     http://bio-bwa.sourceforge.net/
 
     typical command line for single-end data::
-    
+
         bwa aln <bwa-index> <first-read.fastq> > <first-read.sai>
         bwa samse <bwa-index> <first-read.sai> <first-read.fastq> > <sam-output>
 
     typical command line for paired-end data::
 
         bwa aln <bwa-index> <first-read.fastq> > <first-read.sai>
-        bwa aln <bwa-index> <second-read.fastq> > <second-read.sai>        
+        bwa aln <bwa-index> <second-read.fastq> > <second-read.sai>
         bwa sampe <bwa-index> <first-read.sai> <second-read.sai> \
                   <first-read.fastq> <second-read.fastq> > <sam-output>
     '''
-    
+
     def __init__(self, pipeline):
         super(BwaBacktrack, self).__init__(pipeline)
         self.set_cores(8)
@@ -49,7 +49,7 @@ class BwaBacktrack(AbstractStep):
         self.require_tool('bwa')
 
         # Options for the programs bwa aln/samse/sampe
-        self.add_option('index', str, optional=False, 
+        self.add_option('index', str, optional=False,
                         description="Path to BWA index")
         ## [Options for 'bwa aln':]
         self.add_option('aln-n', float, optional = True,
@@ -76,7 +76,7 @@ class BwaBacktrack(AbstractStep):
                         "ranged from 25 to 35 for '-k 2'. [inf]")
         self.add_option('aln-k', int, optional = True,
                         description = "Maximum edit distance in the seed [2]")
-        self.add_option('aln-t', int, optional = True, default = 6, 
+        self.add_option('aln-t', int, optional = True, default = 6,
                         description = "Number of threads (multi-threading mode) "
                         "[1]")
         self.add_option('aln-M', int, optional = True,
@@ -85,7 +85,7 @@ class BwaBacktrack(AbstractStep):
                         "(bestScore-misMsc). [3]")
         self.add_option('aln-O', int, optional = True,
                         description = "Gap open penalty [11]")
-        self.add_option('aln-E', int, optional = True, 
+        self.add_option('aln-E', int, optional = True,
                         description = "Gap extension penalty [4]")
         self.add_option('aln-R', int, optional = True,
                         description = "Proceed with suboptimal alignments if "
@@ -226,12 +226,12 @@ class BwaBacktrack(AbstractStep):
                 sr_input = run_ids_connections_files[run_id]['in/second_read']
 
                 input_paths = [ y for x in [fr_input, sr_input] \
-                               for y in x if y !=None ]                    
+                               for y in x if y !=None ]
 
                 # Do we have paired end data and is it exactly one ?
                 is_paired_end = False if sr_input == [None] else True
-                
-                # Fail if we don't have exactly one first read file or 
+
+                # Fail if we don't have exactly one first read file or
                 # an empty connection
                 if len(fr_input) != 1 or fr_input == [None]:
                     logger.error("Expected single input file for first read.")
@@ -297,7 +297,7 @@ class BwaBacktrack(AbstractStep):
                             dd = [
                                 self.get_tool('dd'),
                                 'obs=4M',
-                                'of=%s' % temp_file                                
+                                'of=%s' % temp_file
                             ]
                             bwa_aln_pipe.add_command(dd)
 
@@ -305,10 +305,10 @@ class BwaBacktrack(AbstractStep):
 
                 temp_fr_sai, temp_sr_sai = (str(), str())
                 temp_fr_sai = execute_bwa_aln(fr_input[0])
-                # And if we handle paired end data 
+                # And if we handle paired end data
                 if is_paired_end:
                     temp_sr_sai = execute_bwa_aln(sr_input[0])
-                    
+
                 # Convert the created SAI files to SAM
                 with run.new_exec_group() as exec_group:
                     fr_sai_fifo, sr_sai_fifo = (str(), str())
