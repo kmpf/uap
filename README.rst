@@ -3,7 +3,7 @@ uap -- Universal Analysis Pipeline
 
 |docs|
 
-.. |docs| image:: https://readthedocs.org/projects/uap/badge/?version=latest 
+.. |docs| image:: https://readthedocs.org/projects/uap/badge/?version=latest
     :alt: Documentation Status
     :scale: 100%
     :target: https://readthedocs.org/projects/uap/
