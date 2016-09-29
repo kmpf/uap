@@ -53,6 +53,7 @@ class Post_CufflinksSuite(AbstractStep):
         self.add_option('filter_by_class', bool,
                         description='Remove gtf if any class is found in class_code field, requieres class_list',
                         default=False)
+        # transport hyphenations to the final program call
         self.add_option('filter_by_class_and_gene_name', bool,
                         description='Combines remove-by-class and remove-by-gene-name',
                         default=False)
@@ -60,7 +61,8 @@ class Post_CufflinksSuite(AbstractStep):
     def runs(self, run_ids_connections_files):
         
         # compile list of options
-        options=['ref-gtf', 'ref-sequence', 'num-threads']
+        options=['run_id','remove_gencode','remove_unstranded','gene_name','remove_by_gene_name',
+                 'class_list','filter_by_class','filter_by_class_and_gene_name']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -77,18 +79,18 @@ class Post_CufflinksSuite(AbstractStep):
         run_id = self.get_option('run_id')
         with self.declare_run(run_id) as run:
             input_paths = run_ids_connections_files[run_id]['in/features']
-            outfile = run.add_ouptut_file('features', '%s-novel.gtf' % run_id, input_paths)
-            logfile = run.add_output_file('log_stderr', '%s-log_stderr.txt' % run_id, input_path)
+            outfile = run.add_output_file('features', '%s-novel.gtf' % run_id, input_paths)
+            logfile = run.add_output_file('log_stderr', '%s-log_stderr.txt' % run_id, input_paths)
 
 
             # 1. create pipeline
             with run.new_exec_group() as as_exec_group:
 
-                cat = [self.get_tool('cat'), input_paths]
+                cat = [self.get_tool('cat'), input_paths[0]]
                 post_cufflinks_merge = [self.get_tool('post_cufflinks_merge')]
                 post_cufflinks_merge.extend(option_list)
                 
-                with exec_group.add_pipeline() as pipe:
+                with as_exec_group.add_pipeline() as pipe:
                     pipe.add_command(cat)
                     pipe.add_command(post_cufflinks_merge,
                                      stdout_path=outfile,

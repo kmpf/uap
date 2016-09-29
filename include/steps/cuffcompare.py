@@ -36,6 +36,7 @@ class CuffCompare(AbstractStep):
         self.add_connection('out/log_stderr')
 
         self.require_tool('cuffcompare')
+#        self.require_tool('cd')
 
         self.add_option('ref-gtf', str, optional=True,
                         description='A "reference" annotation GTF. The input assemblies are merged together with the reference GTF and included in the final output.')
@@ -54,91 +55,26 @@ class CuffCompare(AbstractStep):
                     raise StandardError("Expected exactly one feature file.")
 
                 in_file = input_paths[0]
-                cuffcompare_out_directory = run.add_temporary_directory('%s.cuffcompare-out' % run_id)
 
-                #features_file = run.add_output_file('features',
-                #                                        '%s.combined.gtf' % run_id,
-                #                                    input_paths)
-                #loci_file     = run.add_output_file('loci',
-                #                                    '%s.loci' % run_id,
-                #                                    input_paths)
-                #stats_file    = run.add_output_file('stats',
-                #                                    '%s.stats' % run_id,
-                #                                    input_paths)
-                #tracking_file = run.add_output_file('tracking',
-                #                                    '%s.tracking' % run_id,
-                #                                    input_paths)
+                features_file = run.add_output_file('features',
+                                                    '%s.combined.gtf' % run_id,
+                                                    input_paths)
+                loci_file     = run.add_output_file('loci',
+                                                    '%s.loci' % run_id,
+                                                    input_paths)
+                stats_file    = run.add_output_file('stats',
+                                                    '%s.stats' % run_id,
+                                                    input_paths)
+                tracking_file = run.add_output_file('tracking',
+                                                    '%s.tracking' % run_id,
+                                                    input_paths)
                 log_err_file  = run.add_output_file('log_stderr',
                                                     '%s-cuffcompare-log_stderr.txt' % run_id,
                                                     input_paths)
-
-                with process_pool.ProcessPool(self) as pool:
-                    cuffcompare = [self.get_tool('cuffcompare'), '-R', '-o', run_id,
-                                   '-r', str(self.get_option('ref-gtf')),
-                                   in_file]
-                    print(cuffcompare)
-
-                    try:
-                        os.mkdir(cuffcompare_out_directory)
-                    except OSError:
-                        pass
-                    
-                    os.chdir(cuffcompare_out_directory)
-                        
-                    pool.launch(cuffcompare,
-                                stderr_path = log_err_file
-                                #stderr_path = run.get_single_output_file_for_annotation('log_stderr')
-                    )
-
-                try:
-                    os.rename(os.path.join(cuffcompare_out_directory, '%s.combined.gtf' % run_id),
-                              run.get_single_output_file_for_annotation('features'))
-                except OSError:
-                    raise StandardError('No file: %s' % os.path.join(cuffcompare_out_directory,
-                                                                     '%s.combined.gtf' % run_id))
-
-                try:
-                    os.rename(os.path.join(cuffcompare_out_directory, '%s.loci' % run_id), 
-                              run.get_single_output_file_for_annotation('loci'))
-                except OSError:
-                    raise StandardError('No file: %s' % os.path.join(cuffcompare_out_directory, 
-                                                                     '%s.loci' % run_id))
-                                                                    
-                try:
-                    os.rename(os.path.join(cuffcompare_out_directory, '%s.stats' % run_id), 
-                              run.get_single_output_file_for_annotation('stats'))
-                except OSError:
-                    raise StandardError('No file: %s' % os.path.join(cuffcompare_out_directory, 
-                                                                     '%s.stats' % run_id))
                 
-                try:
-                    os.rename(os.path.join(cuffcompare_out_directory, '%s.tracking' % run_id), 
-                              run.get_single_output_file_for_annotation('tracking'))
-                except OSError:
-                    raise StandardError('No file: %s' % os.path.join(cuffcompare_out_directory, 
-                                                                     '%s.tracking' % run_id))
+                cuffcompare = [self.get_tool('cuffcompare'), '-R', '-o', run_id,
+                               '-r', str(self.get_option('ref-gtf')),
+                               in_file]
 
-                        
-#                with run.new_exec_group() as cc_exec_group:
-#
-#                    features_file = run.add_output_file('features',
-#                                                        '%s.combined.gtf' % run_id,
-#                                                        input_paths)
-#                    loci_file     = run.add_output_file('loci',
-#                                                        '%s.loci' % run_id,
-#                                                        input_paths)
-#                    stats_file    = run.add_output_file('stats',
-#                                                        '%s.stats' % run_id,
-#                                                        input_paths)
-#                    tracking_file = run.add_output_file('tracking',
-#                                                        '%s.tracking' % run_id,
-#                                                        input_paths)
-#                    log_err_file  = run.add_output_file('log_stderr',
-#                                                        '%s-cuffcompare-log_stderr.txt' % run_id,
-#                                                        input_paths)
-#
-#                    cuffcompare = [self.get_tool('cuffcompare'), '-R', '-o', run_id,
-#                                   '-r', str(self.get_option('ref-gtf')),
-#                                   input_paths[0]]
-#
-#                    cc_exec_group.add_command(cuffcompare, stderr_path = log_err_file)
+                with run.new_exec_group() as cc_exec_group:
+                    cc_exec_group.add_command(cuffcompare)
