@@ -633,11 +633,12 @@ class Run(object):
     def remove_temporary_paths(self):
         '''
         Everything stored in self._temp_paths is examined and deleted if
-        possible. Also, self._known_paths 'type' info is updated here.
+        possible. The list elements are removed in LIFO order.
+        Also, self._known_paths 'type' info is updated here.
         NOTE: Included additional stat checks to detect FIFOs as well as other
         special files.
         '''
-        for _ in self.get_temp_paths():
+        for _ in self.get_temp_paths()[::-1]:
             # Check file type
             pathmode = os.stat(_).st_mode
             isdir = False if stat.S_ISDIR(pathmode) == 0 else True
