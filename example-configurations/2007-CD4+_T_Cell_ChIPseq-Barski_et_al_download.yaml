@@ -1,4 +1,13 @@
 # This is the uap configuration file.
+
+cluster:
+    # example for SLURM grid engine
+    # default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+    # example for UGE/SGE respectively OGS
+    # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+    default_pre_job_command: "echo 'Run Started!'"
+    default_post_job_command: "echo 'Run Finished!'"
+    default_job_quota: 5
  
 destination_path: example-out/2007-Barski_et_al_download
 
