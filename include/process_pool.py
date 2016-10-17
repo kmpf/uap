@@ -363,6 +363,8 @@ class ProcessPool(object):
         # launch the process and always pipe stdout and stderr because we
         # want to watch both streams, regardless of whether stdout should 
         # be passed on to another process
+        old_cwd = os.getcwd()
+        os.chdir(self.get_run().get_temp_output_directory())
         proc = subprocess.Popen(
             args,
             stdin = use_stdin,
@@ -371,6 +373,7 @@ class ProcessPool(object):
             preexec_fn = restore_sigpipe_handler,
             close_fds = True
         )
+        os.chdir(old_cwd)
         pid = proc.pid
         self.popen_procs[pid] = proc
 
