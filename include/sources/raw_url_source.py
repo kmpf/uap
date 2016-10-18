@@ -15,7 +15,7 @@ class RawUrlSource(AbstractSourceStep):
 
         self.require_tool('compare_secure_hashes')
         self.require_tool('cp')
-        self.require_tool('wget')
+        self.require_tool('curl')
         self.require_tool('dd')
         self.require_tool('mkdir')
         self.require_tool('pigz')
@@ -82,10 +82,12 @@ class RawUrlSource(AbstractSourceStep):
             out_file = run.add_output_file('raw', final_abspath, [] )
 
             temp_filename = run.add_temporary_file(suffix = url_filename)
-            with run.new_exec_group() as wget_exec_group:
+            with run.new_exec_group() as curl_exec_group:
                 # 1. download file
-                wget = [self.get_tool('wget'), self.get_option('url')]
-                wget_exec_group.add_command(wget, stdout_path = temp_filename)
+                curl = [self.get_tool('curl'),
+                        '--output', temp_filename,
+                        self.get_option('url')]
+                curl_exec_group.add_command(curl)#, stdout_path = temp_filename)
             
             if self.is_option_set_in_config('hashing-algorithm') and \
                self.is_option_set_in_config('secure-hash'):
