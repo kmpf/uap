@@ -229,6 +229,9 @@ class ProcessPool(object):
         return self
         
     def __exit__(self, type, value, traceback):
+        # old_cwd = os.getcwd()
+        # os.chdir(self.get_run().get_temp_output_directory())
+
         # Lastly we have to add the post_command commands for execution
         post_commands = self.get_run().get_step().get_post_commands().values()
         if len(post_commands) > 0:
@@ -265,7 +268,8 @@ class ProcessPool(object):
             self.get_run().remove_temporary_paths()
         
         ProcessPool.current_instance = None
-    
+        # os.chdir(old_cwd)
+
     def launch(self, args, stdout_path = None, stderr_path = None, hints = {}):
         '''
         Launch a process. Arguments, including the program itself, are passed in
@@ -363,8 +367,6 @@ class ProcessPool(object):
         # launch the process and always pipe stdout and stderr because we
         # want to watch both streams, regardless of whether stdout should 
         # be passed on to another process
-        old_cwd = os.getcwd()
-        os.chdir(self.get_run().get_temp_output_directory())
         proc = subprocess.Popen(
             args,
             stdin = use_stdin,
@@ -373,7 +375,6 @@ class ProcessPool(object):
             preexec_fn = restore_sigpipe_handler,
             close_fds = True
         )
-        os.chdir(old_cwd)
         pid = proc.pid
         self.popen_procs[pid] = proc
 
@@ -411,7 +412,6 @@ class ProcessPool(object):
             if sink_path is not None:
                 self.proc_details[listener_pid]['sink'] = os.path.basename(sink_path)
                 self.proc_details[listener_pid]['sink_full_path'] = sink_path
-
         if keep_stdout_open:
             os.close(pipe[1])
             return pipe[0], pid
