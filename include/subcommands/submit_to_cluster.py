@@ -196,9 +196,10 @@ def main(args):
             print("Skipping %s because it is already executing." % str(task))
             really_submit_this = False
         if really_submit_this:
-            sys.stdout.write("Submitting task " + str(task) + " with " +
-                             str(task.step._cores) + " cores => ")
-            
+            print("Submitting task %s with %s cores"
+                  % (str(task), str(task.step._cores)))
+            print("Submit command: %s" % " ".join(submit_script_args))
+            print("=>")
             # Store submit script in the run_output_dir
             submit_script_path = task.get_run().get_submit_script_file()
             with open(submit_script_path, 'w') as f:

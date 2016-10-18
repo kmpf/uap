@@ -84,8 +84,10 @@ class RawUrlSource(AbstractSourceStep):
             temp_filename = run.add_temporary_file(suffix = url_filename)
             with run.new_exec_group() as curl_exec_group:
                 # 1. download file
-                curl = [self.get_tool('curl'), self.get_option('url')]
-                curl_exec_group.add_command(curl, stdout_path = temp_filename)
+                curl = [self.get_tool('curl'),
+                        '--output', temp_filename,
+                        self.get_option('url')]
+                curl_exec_group.add_command(curl)#, stdout_path = temp_filename)
             
             if self.is_option_set_in_config('hashing-algorithm') and \
                self.is_option_set_in_config('secure-hash'):

@@ -1,0 +1,134 @@
+# write short description
+
+cluster:
+    # example for SLURM grid engine
+    default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+    # example for UGE/SGE respectively OGS
+    # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+    default_pre_job_command: "echo 'Run Started!'"
+    default_post_job_command: "echo 'Run Finished!'"
+    default_job_quota: 5
+ 
+destination_path: example-out/new_step/
+
+steps:
+    ##################
+    ## Source steps ##
+    ##################
+
+    fetch_sra_file (raw_url_source):                                                                                                                                                                
+        url: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX378/SRX378989/SRR1032214/SRR1032214.sra
+        path: example-out/new_step/sra_data
+        uncompress: no
+
+    fetch_gencode_file (raw_url_source):
+        url: ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_17/gencode.v17.annotation.gtf.gz
+        path: example-out/new_step/gencode_data
+        uncompress: yes
+
+    fetch_chromosome_file (raw_url_source):
+        url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr21.fa.gz
+        path: example-out/new_step/chromosome_data
+        uncompress: yes
+        hashing-algorithm: md5
+        secure-hash: 26cdd5a3a539b63930752604feb2912b
+
+    ######################
+    ## Processing steps ##
+    ######################
+
+    # fastq-dump -X 10000000 -I --split-files SRR1032214.sra
+    extract_sra_data (fastq_dump):
+        _depends: fetch_sra_file
+        _connect:
+            in/sra_file: XXX
+
+    # bowtie2-build -f chr21.fa chr21
+    build_bowtie2_index (bowtie2_generate_index):
+        _depends: extract_sra_data
+        _connect: 
+           in/reference_sequence: extract_sra_data/sequence
+        index-basename: bowtie2_index
+ 
+    # tophat2 --library-type fr-firststrand -G gencode/gencode.v17.annotation.gtf ./chr/chr21 SRR1032214_1.fastq SRR1032214_2.fastq
+    tophat (tophat2):
+        _depends: build_bowtie2_index
+        library_type: fr-firststrand
+        index: *bowtie2_index
+
+    # cufflinks –g gencode.v17.annotation.gtf -o cufflinks_output tophat_output/accepted_hits.bam
+    cufflinks_tophat2 (cufflinks):
+        _depends: tophat
+        library-type: 
+        mask-file: 
+
+tools:
+    ##################
+    # External Tools #
+    ##################
+
+    # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
+    bowtie2:
+        path: bowtie2
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://cufflinks.cbcb.umd.edu/
+    cufflinks:
+        path: cufflinks
+        get_version: --version
+        exit_code: 1
+
+    # URL: https://trace.ncbi.nlm.nih.gov/Traces/sra/sra.cgi?view=toolkit_doc&f=fastq-dump
+    # from sra-toolkit
+    fastq-dump:
+        path: fastq-dump
+        get_version: '--version'
+        exit_code: 0
+
+
+    # URL: http://zlib.net/pigz/
+    pigz: 
+        path: pigz
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://ccb.jhu.edu/software/tophat/index.shtml
+    tophat2:
+        path: tophat2
+        get_version: --version
+        exit_code: 0
+
+    ##################
+    # Internal Tools #
+    ##################
+
+    compare_secure_hashes:
+        path: ../tools/compare_secure_hashes.py
+        get_version: --version
+        exit_code: 0
+
+    ##############
+    # Unix Tools #
+    ##############
+
+    cp:
+        path: cp
+        get_version: --version
+        exit_code: 0
+
+    curl:
+        path: curl
+        get_version: --version
+        exit_code: 0
+
+    dd:
+        path: dd
+        get_version: --version
+        exit_code: 0
+
+    mkdir:
+        path: mkdir
+        get_version: --version
+        exit_code: 0
+

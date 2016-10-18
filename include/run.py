@@ -140,7 +140,8 @@ class Run(object):
             step = self.get_step()
             placeholder = self.get_output_directory_du_jour_placeholder()
             temp_out_dir = self.get_output_directory_du_jour()
-            
+            # if not temp_out_dir:
+            #     placeholder += os.sep
             value = None
             ret_value = func(self, *args, **kwargs)
             # If currently calling AbstractStep.runs() do nothing
@@ -211,8 +212,10 @@ class Run(object):
             return self.get_output_directory()
         elif self.get_step()._state == abst.AbstractStep.states.EXECUTING:
             return self.get_temp_output_directory()
+            # return ""
         else:
             return None
+            # return ""
 
     def get_temp_output_directory(self):
         '''

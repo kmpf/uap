@@ -1,50 +1,59 @@
 # This is the uap configuration file.
 
+cluster:
+    # example for SLURM grid engine
+    # default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+    # example for UGE/SGE respectively OGS
+    # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+    default_pre_job_command: "echo 'Run Started!'"
+    default_post_job_command: "echo 'Run Finished!'"
+    default_job_quota: 5
+
 destination_path: example-out/2007-Barski_et_al
 
 constants:
     # 1.  Genome information:
     # 1.1 Complete sequence (FASTA)
     - &genome
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_UCSC_complete_genome/hg19_all_chr_UCSC-download-RwaETA3q/hg19_all_chr_UCSC-download.fasta
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_UCSC_complete_genome/hg19_all_chr_UCSC-all_sequences-Tc5RkRKM/hg19_all_chr_UCSC-all_sequences.fasta
 
     # 1.2 FASTA index
     - &genome_faidx
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/samtools_faidx/hg19_all_chr_UCSC-download-B7ceRp9K/hg19_all_chr_UCSC-download.fasta.fai
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_samtools_faidx/hg19_all_chr_UCSC-all_sequences-v08iKi37/hg19_all_chr_UCSC-all_sequences.fasta.fai
 
     # 2.  Mapping indices:
     # 2.1 Bowtie2
-    - &bowtie2_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bowtie2_index/bowtie2_index-hg19_all_chr_UCSC-download-yVv5kTxk/bowtie2_index-hg19_all_chr_UCSC-download
+    - &bowtie2_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bowtie2_index/bowtie2_index-hg19_all_chr_UCSC-all_sequences-4bnBZlNy/bowtie2_index-hg19_all_chr_UCSC-all_sequences
     ## 2. BWA
     - &bwa_genome_index
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bwa_index/bwa_index-hg19_all_chr_UCSC-download-bUVhXHo5/bwa_index-hg19_all_chr_UCSC-download
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bwa_index/bwa_index-hg19_all_chr_UCSC-all_sequences-XR2WAVGR/bwa_index-hg19_all_chr_UCSC-all_sequences
     ## 3. Segemehl
 #    - &segemehl_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_segemehl_index/segemehl_index-hg19_all_chr_UCSC-download-s8p1Hh3g/segemehl_index-hg19_all_chr_UCSC-download.idx
     ## Control vs. Treatment information needed for MACS2
     - control: &control-treatment-hash
             None:
-               - CTCF
-               - H2A.Z
-               - H2BK5me1
-               - H3K27me1
-               - H3K27me2
+               # - CTCF
+               # - H2A.Z
+               # - H2BK5me1
+               # - H3K27me1
+               # - H3K27me2
                - H3K27me3
-               - H3K36me1
+               # - H3K36me1
                - H3K36me3
                - H3K4me1
                - H3K4me2
                - H3K4me3
-               - H3K79me1
-               - H3K79me2
-               - H3K79me3
-               - H3K9me1
-               - H3K9me2
-               - H3K9me3
-               - H3R2me1
-               - H3R2me2
-               - H4K20me1
-               - H4K20me3
-               - H4R3me2
+               # - H3K79me1
+               # - H3K79me2
+               # - H3K79me3
+               # - H3K9me1
+               # - H3K9me2
+               # - H3K9me3
+               # - H3R2me1
+               # - H3R2me2
+               # - H4K20me1
+               # - H4K20me3
+               # - H4R3me2
                - Pol_II
 
 steps:
@@ -54,34 +63,34 @@ steps:
 
     fastq_source:
         sample_to_files_map:
-            CTCF:
-               - example-out/2007-Barski_et_al_download/SRR001460.fastq
-            H2A.Z:
-               - example-out/2007-Barski_et_al_download/SRR001442.fastq
-               - example-out/2007-Barski_et_al_download/SRR001459.fastq
-            H2BK5me1:
-               - example-out/2007-Barski_et_al_download/SRR001401.fastq
-               - example-out/2007-Barski_et_al_download/SRR001412.fastq
-               - example-out/2007-Barski_et_al_download/SRR001413.fastq
-            H3K27me1:
-               - example-out/2007-Barski_et_al_download/SRR001438.fastq
-               - example-out/2007-Barski_et_al_download/SRR001448.fastq
-               - example-out/2007-Barski_et_al_download/SRR001463.fastq
-               - example-out/2007-Barski_et_al_download/SRR001464.fastq
-            H3K27me2:
-               - example-out/2007-Barski_et_al_download/SRR001433.fastq
-               - example-out/2007-Barski_et_al_download/SRR001434.fastq
-               - example-out/2007-Barski_et_al_download/SRR001435.fastq
-               - example-out/2007-Barski_et_al_download/SRR001436.fastq
+            # CTCF:
+            #    - example-out/2007-Barski_et_al_download/SRR001460.fastq
+            # H2A.Z:
+            #    - example-out/2007-Barski_et_al_download/SRR001442.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001459.fastq
+            # H2BK5me1:
+            #    - example-out/2007-Barski_et_al_download/SRR001401.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001412.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001413.fastq
+            # H3K27me1:
+            #    - example-out/2007-Barski_et_al_download/SRR001438.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001448.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001463.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001464.fastq
+            # H3K27me2:
+            #    - example-out/2007-Barski_et_al_download/SRR001433.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001434.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001435.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001436.fastq
             H3K27me3:
                - example-out/2007-Barski_et_al_download/SRR001426.fastq
                - example-out/2007-Barski_et_al_download/SRR001427.fastq
                - example-out/2007-Barski_et_al_download/SRR001428.fastq
                - example-out/2007-Barski_et_al_download/SRR001429.fastq
-            H3K36me1:
-               - example-out/2007-Barski_et_al_download/SRR001397.fastq
-               - example-out/2007-Barski_et_al_download/SRR001406.fastq
-               - example-out/2007-Barski_et_al_download/SRR001407.fastq
+            # H3K36me1:
+            #    - example-out/2007-Barski_et_al_download/SRR001397.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001406.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001407.fastq
             H3K36me3:
                - example-out/2007-Barski_et_al_download/SRR001392.fastq
                - example-out/2007-Barski_et_al_download/SRR001393.fastq
@@ -104,50 +113,50 @@ steps:
                - example-out/2007-Barski_et_al_download/SRR001430.fastq
                - example-out/2007-Barski_et_al_download/SRR001431.fastq
                - example-out/2007-Barski_et_al_download/SRR001432.fastq
-            H3K79me1:
-               - example-out/2007-Barski_et_al_download/SRR001398.fastq
-               - example-out/2007-Barski_et_al_download/SRR001408.fastq
-               - example-out/2007-Barski_et_al_download/SRR001409.fastq
-            H3K79me2:
-               - example-out/2007-Barski_et_al_download/SRR001410.fastq
-            H3K79me3:
-               - example-out/2007-Barski_et_al_download/SRR001441.fastq
-               - example-out/2007-Barski_et_al_download/SRR001457.fastq
-               - example-out/2007-Barski_et_al_download/SRR001458.fastq
-            H3K9me1:
-               - example-out/2007-Barski_et_al_download/SRR001399.fastq
-               - example-out/2007-Barski_et_al_download/SRR001400.fastq
-               - example-out/2007-Barski_et_al_download/SRR001454.fastq
-               - example-out/2007-Barski_et_al_download/SRR001467.fastq
-            H3K9me2:
-               - example-out/2007-Barski_et_al_download/SRR001440.fastq
-               - example-out/2007-Barski_et_al_download/SRR001455.fastq
-               - example-out/2007-Barski_et_al_download/SRR001456.fastq
-            H3K9me3:
-               - example-out/2007-Barski_et_al_download/SRR001422.fastq
-               - example-out/2007-Barski_et_al_download/SRR001423.fastq
-               - example-out/2007-Barski_et_al_download/SRR001424.fastq
-               - example-out/2007-Barski_et_al_download/SRR001425.fastq
-            H3R2me1:
-               - example-out/2007-Barski_et_al_download/SRR001395.fastq
-               - example-out/2007-Barski_et_al_download/SRR001396.fastq
-               - example-out/2007-Barski_et_al_download/SRR001453.fastq
-            H3R2me2:
-               - example-out/2007-Barski_et_al_download/SRR001411.fastq
-               - example-out/2007-Barski_et_al_download/SRR001443.fastq
-            H4K20me1:
-               - example-out/2007-Barski_et_al_download/SRR001402.fastq
-               - example-out/2007-Barski_et_al_download/SRR001403.fastq
-               - example-out/2007-Barski_et_al_download/SRR001452.fastq
-            H4K20me3:
-               - example-out/2007-Barski_et_al_download/SRR001404.fastq
-               - example-out/2007-Barski_et_al_download/SRR001405.fastq
-               - example-out/2007-Barski_et_al_download/SRR001451.fastq
-            H4R3me2:
-               - example-out/2007-Barski_et_al_download/SRR001415.fastq
-               - example-out/2007-Barski_et_al_download/SRR001416.fastq
-               - example-out/2007-Barski_et_al_download/SRR001417.fastq
-               - example-out/2007-Barski_et_al_download/SRR001418.fastq
+            # H3K79me1:
+            #    - example-out/2007-Barski_et_al_download/SRR001398.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001408.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001409.fastq
+            # H3K79me2:
+            #    - example-out/2007-Barski_et_al_download/SRR001410.fastq
+            # H3K79me3:
+            #    - example-out/2007-Barski_et_al_download/SRR001441.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001457.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001458.fastq
+            # H3K9me1:
+            #    - example-out/2007-Barski_et_al_download/SRR001399.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001400.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001454.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001467.fastq
+            # H3K9me2:
+            #    - example-out/2007-Barski_et_al_download/SRR001440.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001455.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001456.fastq
+            # H3K9me3:
+            #    - example-out/2007-Barski_et_al_download/SRR001422.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001423.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001424.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001425.fastq
+            # H3R2me1:
+            #    - example-out/2007-Barski_et_al_download/SRR001395.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001396.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001453.fastq
+            # H3R2me2:
+            #    - example-out/2007-Barski_et_al_download/SRR001411.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001443.fastq
+            # H4K20me1:
+            #    - example-out/2007-Barski_et_al_download/SRR001402.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001403.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001452.fastq
+            # H4K20me3:
+            #    - example-out/2007-Barski_et_al_download/SRR001404.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001405.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001451.fastq
+            # H4R3me2:
+            #    - example-out/2007-Barski_et_al_download/SRR001415.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001416.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001417.fastq
+            #    - example-out/2007-Barski_et_al_download/SRR001418.fastq
             Pol_II:
                - example-out/2007-Barski_et_al_download/SRR001437.fastq
                - example-out/2007-Barski_et_al_download/SRR001447.fastq
