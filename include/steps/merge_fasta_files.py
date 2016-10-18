@@ -15,7 +15,7 @@ class MergeFastaFiles(AbstractStep):
     def __init__(self, pipeline):
         super(MergeFastaFiles, self).__init__(pipeline)
         
-        self.set_cores(12)
+        self.set_cores(4)
         
         self.add_connection('in/sequence')
         self.add_connection('out/sequence')

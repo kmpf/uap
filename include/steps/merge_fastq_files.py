@@ -15,7 +15,7 @@ class MergeFastqFiles(AbstractStep):
     def __init__(self, pipeline):
         super(MergeFastqFiles, self).__init__(pipeline)
         
-        self.set_cores(12) # muss auch in den Decorator
+        self.set_cores(4) # muss auch in den Decorator
         
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
