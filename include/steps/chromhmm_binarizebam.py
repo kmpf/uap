@@ -163,9 +163,8 @@ class ChromHmmBinarizeBam(AbstractStep):
         option_list = list()
         for option in set_options:
             if isinstance(self.get_option(option), bool):
+                # Only set option if it is True
                 if self.get_option(option):
-                    option_list.append('-%s' % option)
-                else:
                     option_list.append('-%s' % option)
             else:
                 option_list.append('-%s' % option)
@@ -318,9 +317,6 @@ class ChromHmmBinarizeBam(AbstractStep):
                 # be created by ChromHMM
                 with run.new_exec_group() as pack_binary:
                     with pack_binary.add_pipeline() as pack_binary_pipe:
-                        binary_files = os.path.join(
-                            run.get_output_directory_du_jour_placeholder(),
-                            '*_binary.txt')
                         # List content of directory with *_binary.txt files
                         ls = [self.get_tool('ls'), '-1', binary_dir]
                         # Pipe ls output
@@ -342,5 +338,3 @@ class ChromHmmBinarizeBam(AbstractStep):
                                      input_files)
                              ]
                         pack_binary_pipe.add_command(xargs)
-
-
