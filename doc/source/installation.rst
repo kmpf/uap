@@ -69,7 +69,7 @@ Therefore change into the **uap** directory and execute::
 
 .. |github_uap_link| raw:: html
 
-   <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
+   <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>
 
 .. |virtual_env_link| raw:: html
 
@@ -78,10 +78,6 @@ Therefore change into the **uap** directory and execute::
 .. |git_link| raw:: html
 
    <a href="https://git-scm.com/" target="_blank">git</a>
-
-.. |github_uap_link| raw:: html
-
-   <a href="https://github.com/kmpf/uap" target="_blank">uap's github repository</a>.
 
 .. |graphviz_link| raw:: html
 
