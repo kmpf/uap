@@ -1,5 +1,7 @@
 import os
 from logging import getLogger
+import tarfile
+
 from abstract_step import AbstractStep
 
 logger = getLogger('uap_logger')
@@ -7,13 +9,13 @@ logger = getLogger('uap_logger')
 class ChromHmmLearnModel(AbstractStep):
     '''
     This command takes a directory with a set of binarized data files and learns
-    a chromatin state model. Binarized data files have ‘_binary’ in the file
+    a chromatin state model. Binarized data files have "_binary" in the file
     name. The format for the binarized data files are that the first line
     contains the name of the cell separated by a tab with the name of the
     chromosome. The second line contains in tab delimited form the name of each
     mark. The remaining lines correspond to consecutive bins on the chromosome.
     The remaining lines in tab delimited form corresponding to each mark, with a
-    ‘1’ for a present call or ‘0’ for an absent call and a ‘2’ if the data is
+    "1" for a present call or "0" for an absent call and a "2" if the data is
     considered missing at that interval for the mark.
     '''
 
@@ -24,11 +26,14 @@ class ChromHmmLearnModel(AbstractStep):
         
         self.add_connection('in/cellmarkfiletable')
         self.add_connection('in/chromhmm_binarization')
-        self.add_connection('out/')
+        self.add_connection('out/chromhmm_model')
         
         self.require_tool('ChromHMM')
-        self.require_tool('echo')
-        self.require_tool('ln')
+        self.require_tool('ls')
+        self.require_tool('mkdir')
+        self.require_tool('rm')
+        self.require_tool('tar')
+        self.require_tool('xargs')
         
         # ChromHMM LearnModel Required Parameters
         self.add_option('numstates', int, optional = False,
@@ -92,7 +97,7 @@ class ChromHmmLearnModel(AbstractStep):
                         description = "This specifies the method for parameter "
                         "initialization method. 'information' is the default "
                         "method described in (Ernst and Kellis, Nature Methods "
-                        "2012). 'random' – randomly initializes the parameters "
+                        "2012). 'random' - randomly initializes the parameters "
                         "from a uniform distribution. 'load' loads the "
                         "parameters specified in '-m modelinitialfile' and "
                         "smooths them based on the value of the "
@@ -132,40 +137,6 @@ class ChromHmmLearnModel(AbstractStep):
                         "enrichment files are not printed. If -nobed is "
                         "requested then enrichment file writing is also "
                         "suppressed.")
-        # [-p maxprocessors]
-        self.add_option('p', int, optional = True,
-                        description = "If this option is present then ChromHMM "
-                        "will attempt to train a model using multiple "
-                        "processors in parallel. ChromHMM will create multiple "
-                        "threads up to the number of processors specified by "
-                        "maxprocessors. If maxprocessors is set to 0, then the "
-                        "number of threads will just be limited by the number "
-                        "of processors available. Note that each additional "
-                        "processor used will require additional memory. If "
-                        "this option is specified ChromHMM will use a standard "
-                        "Baum-Welch training algorithm opposed to the default "
-                        "incremental expectation-maximization algorithm.")
-#        # [-printposterior]
-#        self.add_option('printposterior', bool, optional = True,
-#                        description = "If this flag is present the posterior "
-#                        "probabilities over state assignments are also printed "
-#                        "in a file. These files end with ‘_posterior.txt’. One "
-#                        "file is generated per cell type and chromosome. The "
-#                        "first line of these files specify the chromosome and "
-#                        "cell type, followed by a header line for each column, "
-#                        "and then the posterior probabilities one per line. By "
-#                        "default these files are not printed.")
-#        # [-printstatebyline]
-#        self.add_option('printstatebyline', bool, optional = True,
-#                        description = "If this flag is present the state "
-#                        "assignment are printed to a file one per line. These "
-#                        "files end with ‘_maxstate.txt’. One file is generated "
-#                        "per cell type and chromosome. The first line "
-#                        "specifies the cell type and chromosome and the second "
-#                        "line says MaxState and the state ordering methods. "
-#                        "The remaining lines have the state assignments. By "
-#                        "default these files are not printed.")
-
         # [-r maxiterations]
         self.add_option('r', int, optional = True,
                         description = "This option specifies the maximum "
@@ -222,9 +193,10 @@ class ChromHmmLearnModel(AbstractStep):
 
     def runs(self, run_ids_connections_files):
 
-        options = ['b', 'd', 'e', 'h', 'holdcolumnorder', 'init', 'm', 'nobed',
-                   'nobrowser', 'noenrich', 'r', 's', 'stateordering', 't',
-                   'x', 'z']
+        options = ['b', 'color', 'd', 'e', 'h', 'holdcolumnorder', 'init', 'l',
+                   'm', 'nobed', 'nobrowser', 'noenrich',
+                   # 'printposterior', 'printstatebyline',
+                   'r', 's', 'stateordering', 't', 'x', 'z']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -232,42 +204,103 @@ class ChromHmmLearnModel(AbstractStep):
         option_list = list()
         for option in set_options:
             if isinstance(self.get_option(option), bool):
+                # Only set option if it is True
                 if self.get_option(option):
-                    option_list.append('-%s' % option)
-                else:
                     option_list.append('-%s' % option)
             else:
                 option_list.append('-%s' % option)
                 option_list.append(str(self.get_option(option)))
 
-
-        # TODO: 1. Extract the binary files into a directory
-        # TODO: 2. 
-
-        # We need to assemble the ChromHMM command that's all!
         for run_id in run_ids_connections_files.keys():
+            # The input_paths should be a single tar.gz file
             input_paths = run_ids_connections_files[run_id]\
                           ['in/chromhmm_binarization']
-            # Every file in input_paths should be in the same directory but
-            # let's check:
-            input_dir = input_paths[0]
-            for f in input_paths[1:]:
-                if not input_dir == os.path.dirname(f):
-                    logger.error("Two binarization files from the same run ID"
-                                 "are not in the same directory: %s and %s" %
-                                 (input_paths[0], f))
-                    sys.exit(1)
+            # Test the input_paths (at least a bit)
+            if len(input_paths) != 1 or not input_paths[0].endswith('.tar.gz'):
+                logger.error("Expected single tar.gz file via "
+                             "'in/chromhmm_binarization' for run %s, but got "
+                             "this %s" % (run_id, ", ".join(input_paths)))
+                sys.exit(1)
+
+
+            # read tar file and get names of included files
+#            with tarfile.open(name = input_paths[0], mode = 'r:gz') as tar:
+#                tar.list()
 
             with self.declare_run(run_id) as run:
-                chromhmm = [self.get_tool('ChromHMM'),
-                            'LearnModel']
-                chromhmm.extend(option_list)
-                chromhmm.append(input_dir)
-                chromhmm.append(run.get_output_directory_du_jour_placeholder())
-                chromhmm.append(self.get_option('numstates'))
-                chromhmm.append(self.get_option('assembly'))
-                
-                run.add_output_file(
-                    '',
-                    ,
-                    input_paths)
+                with run.new_exec_group() as pre_chromhmm:
+                    # 1. Extract the binary files into a directory
+                    # 1.1 Get name of temporary input directory
+                    input_dir =  run.add_temporary_directory(
+                        '%s_binary_files' % run_id)
+                    # 1.2 Create temporary input directory
+                    mkdir = [self.get_tool('mkdir'), input_dir]
+                    pre_chromhmm.add_command(mkdir)
+                    # 1.3 Extract the binary files into temporary input directory
+                    tar = [self.get_tool('tar'),
+                           '--extract',
+                           '--gzip',
+                           '--verbose',
+                           '--directory',
+                           input_dir,
+                           '--file',
+                           input_paths[0] ]
+                    pre_chromhmm.add_command(tar)
+                    # 1.4 Get name of temporary output directory
+                    output_dir = run.add_temporary_directory(
+                        '%s_chromhmm_model' % run_id)
+                    # 1.5 Create temporary output directory
+                    mkdir = [self.get_tool('mkdir'), output_dir]
+                    pre_chromhmm.add_command(mkdir)
+
+                with run.new_exec_group() as learnmodel:
+                    # 2. Assemble ChromHMM LearnModel command
+                    chromhmm = [self.get_tool('ChromHMM'),
+                                'LearnModel']
+                    chromhmm.extend(option_list)
+                    chromhmm.append(input_dir)
+                    chromhmm.append(output_dir)
+                    chromhmm.append(str(self.get_option('numstates')))
+                    chromhmm.append(self.get_option('assembly'))
+                    learnmodel.add_command(chromhmm)
+
+                with run.new_exec_group() as pack_model:
+                    # 3. Pack the output files of ChromHMM LearnModel
+                    with pack_model.add_pipeline() as pack_model_pipe:
+                        # 3.1 List content of output directory
+                        ls = [self.get_tool('ls'), '-1', output_dir]
+                        # 3.2 Pipe ls output
+                        pack_model_pipe.add_command(ls)
+                        # 3.3 Use xargs to call tar (circumventing glob pattern)
+                        xargs = [self.get_tool('xargs'),
+                                 '--delimiter', '\n',
+                                 self.get_tool('tar'),
+                                 '--create',
+                                 '--directory',
+                                 output_dir,
+                                 '--gzip',
+                                 '--remove-files',
+                                 '--verbose',
+                                 '--file',
+                                 run.add_output_file(
+                                     'chromhmm_model',
+                                     '%s_model_files.tar.gz' % run_id,
+                                     input_paths)]
+                        pack_model_pipe.add_command(xargs)
+
+                with run.new_exec_group() as rm_binary_files:
+                    # 4. Remove the unpacked binary files
+                    with rm_binary_files.add_pipeline() as rm_binary_pipe:
+                        # 4.1 List content of output directory
+                        ls = [self.get_tool('ls'), '-1', input_dir]
+                        # 4.2 Pipe ls output
+                        rm_binary_pipe.add_command(ls)
+                        # 4.3 Use xargs to call tar (circumventing glob pattern)
+                        xargs = [self.get_tool('xargs'),
+                                 '--delimiter', '\n',
+                                 '-I', '*',
+                                 self.get_tool('rm'),
+                                 '--verbose',
+                                 os.path.join(input_dir, '*')
+                        ]
+                        rm_binary_pipe.add_command(xargs)
