@@ -1,6 +1,10 @@
 #!/usr/bin/python
 #post_cufflinks_merge.py
 
+# test it with
+# $ tools/post_cufflinks_merge.py /data/bioinf/projects/data/2015_mouseTcells_BBP/cuffcompare_segemehl_local/magic.combined.gtf 
+
+
 import sys
 import re
 import argparse
@@ -48,7 +52,6 @@ def read_arguments():
 
     parser.add_argument('--filter-by-class-and-gene-name',  action='store_true',
                         default=False, help ="combines remove-by-class and remove-by-gene-name")
-    
 
     return parser.parse_args()
 

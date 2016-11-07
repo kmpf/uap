@@ -136,11 +136,6 @@ class CuffLinks(AbstractStep):
         self.add_option('no-update-check', bool, optional=True, 
                         description='do not contact server to check for update availability')
 
-        #temp_dir = run.get_output_directory_du_jour_placeholder()
-
-        #self.add_option('tmp_dir', str, optional=False,
-         #               description="Temp directory for 'make_segemehl_output_cufflinks_compatible.py'. This can be in the /work/username/ path, since it is only temporary.")
-
     def runs(self, run_ids_connections_files):
         
         # Compile the list of options

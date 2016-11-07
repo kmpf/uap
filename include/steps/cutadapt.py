@@ -57,6 +57,9 @@ class Cutadapt(AbstractStep):
                         "without spaces of the QNAME field of the FASTQ data is "
                         "kept. This might be necessary for downstream analysis.")
 
+        # [Options for 'dd':]
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+
     def runs(self, run_ids_connections_files):
 
         ## Make sure the adapter type is one of -a, -b or -g 
@@ -90,13 +93,6 @@ class Cutadapt(AbstractStep):
                                     % run_id)
                                 sys.exit(1)
                                 
-#                            elif ( self.is_option_set_in_config('adapter-R2') and
-#                                   self.is_option_set_in_config('adapter-file') ):
-#                                logger.error(
-#                                    "Option 'adapter-R2' and 'adapter-file' "
-#                                    "are both set but are mutually exclusive!"
-#                                )
-#                                sys.exit(1)
                         if ( self.is_option_set_in_config('adapter-file') and
                              self.is_option_set_in_config('adapter-R1') ):
                             logger.error(
@@ -123,18 +119,24 @@ class Cutadapt(AbstractStep):
                             if input_path.endswith('fastq.gz'):
                                 with exec_group.add_pipeline() as pigz_pipe:
                                     # 2.1 command: Read file in 4MB chunks
-                                    dd_in = [self.get_tool('dd'),
-                                           'ibs=4M',
-                                           'if=%s' % input_path]
+                                    dd_in = [
+                                        self.get_tool('dd'),
+                                        'ibs=%s' %
+                                        self.get_option('dd-blocksize'),
+                                        'if=%s' % input_path
+                                    ]
                                     # 2.2 command: Uncompress file to fifo
                                     pigz = [self.get_tool('pigz'),
                                             '--decompress',
                                             '--stdout']
                                     # 2.3 command: Write file in 4MB chunks to 
                                     #              fifo
-                                    dd_out = [self.get_tool('dd'),
-                                              'obs=4M',
-                                              'of=%s' % temp_fifo]
+                                    dd_out = [
+                                        self.get_tool('dd'),
+                                        'obs=%s' %
+                                        self.get_option('dd-blocksize'),
+                                        'of=%s' % temp_fifo
+                                    ]
 
                                     pigz_pipe.add_command(dd_in)
                                     pigz_pipe.add_command(pigz)
@@ -143,10 +145,12 @@ class Cutadapt(AbstractStep):
                             elif input_path.endswith('fastq'):
                                 # 2.1 command: Read file in 4MB chunks and
                                 #              write to fifo in 4MB chunks
-                                dd_in = [self.get_tool('dd'),
-                                         'bs=4M',
-                                         'if=%s' % input_path,
-                                         'of=%s' % temp_fifo]
+                                dd_in = [
+                                    self.get_tool('dd'),
+                                    'bs=%s' % self.get_option('dd-blocksize'),
+                                    'if=%s' % input_path,
+                                    'of=%s' % temp_fifo
+                                ]
                                 exec_group.add_command(dd_in)
                             else:
                                 logger.error("File %s does not end with any "
@@ -227,93 +231,14 @@ class Cutadapt(AbstractStep):
                                 (run_id, read_types[read]),
                                 input_paths)
 
-                            dd = [self.get_tool('dd'),
-                                  'obs=4M',
-                                  'of=%s' % clipped_fastq_file]
-
+                            dd = [
+                                self.get_tool('dd'),
+                                'obs=%s' % self.get_option('dd-blocksize'),
+                                'of=%s' % clipped_fastq_file
+                            ]
 
                             cutadapt_pipe.add_command(cutadapt,
                                                       stderr_path =\
                                                       cutadapt_log_file)
                             cutadapt_pipe.add_command(pigz)
                             cutadapt_pipe.add_command(dd)
-
-    def reports(self, run_ids_connection_files):
-
-        # Imports are done here to prevent them from causing errors while
-        # analysis is done
-        import matplotlib.pyplot as plt
-        import numpy as np
-        import csv
-
-        table_header = ['length\tcount\texpect\tmax.err\terror counts']
-
-        run_id_read_data = dict()
-
-        for run_id in run_ids_connection_files:
-            run_id_read_data[run_id] = dict()
-            logs = ['log_first_read', 'log_second_read']
-            for log in [l for l in logs \
-                        if run_ids_connection_files[run_id][l] != [] ]:
-
-                run_id_read_data[run_id][log] = dict()
-                for log_file in run_ids_connection_files[run_id][log]:
-                    base, ext = os.path.splitext( os.path.basename(log_file) )
-                    tables = dict()
-                    found_table = 0
-                    record = False
-                    with open(log_file, 'r') as f:
-                        for line in f:
-                            line = line.rstrip()
-                            if line in table_header:
-                                found_table += 1
-                                tables[found_table] = list()
-                                record = True
-                                if record and line == '':
-                                    record = False
-                                    if record:
-                                        tables[found_table].append(line)
-
-                    # Plot a graph for every table found
-                    data = dict()
-                    for table_nr in tables.keys():
-                        data[table_nr] = {
-                            'length': list(),
-                            'count': list(),
-                            'expect': list(),
-                            'max_error': list(),
-                            'error_counts': list()
-                        }
-                        reader = csv.DictReader(tables[table_nr], delimiter='\t')
-                        for row in reader:
-                            data[table_nr]['length'].append( row['length'] )
-                            data[table_nr]['count'].append( row['count'] )
-                            data[table_nr]['expect'].append( row['expect'] )
-                            data[table_nr]['max_error'].append( row['max.err'] )
-                            data[table_nr]['error_counts'].append(
-                                row['error counts'] )
-
-                    run_id_read_data[run_id][log][log_file] = data
-
-        # Plot the data in one immense figure
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        for run_id, log in run_id_read_data.items():
-            for log_file, data in run_id_read_data[run_id][log].items():
-                for nr in data.keys():
-                    ax.plot
-                    print(data)
-                    plt.plot(
-                        data['length'],
-                        data['count'],
-                        'ro',
-                        data['length'],
-                        data['expect'],
-                        'b--')
-
-                    plt.xlim(0, float(data['length'][-1]) + 1)
-                    plt.ylim(0.01, float(max(data['expect'][0], data['count'])) + 100 )
-                    plt.yscale('log')
-                    print('Trying to save report to %s.png' % base)
-                    plt.savefig('%s-%s.png' % (base, table_nr))
-                    plt.close()

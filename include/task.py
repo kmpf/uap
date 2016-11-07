@@ -64,17 +64,6 @@ class Task(object):
             sys.exit(1)
         self.step.run(self.run_id)
 
-    def generate_report(self):
-        '''
-        Generate the report for the task. Skip this if task is not finished yet.
-        '''
-        task_state = self.get_task_state()
-        if task_state != self.pipeline.states.FINISHED:
-            print("Skipping task: %s its not finished yet." % self)
-            return
-        self.step.generate_report(self.run_id)
-        
-
     def input_files(self):
         '''
         Return a list of input files required by this task.
@@ -112,9 +101,10 @@ class Task(object):
     
     def volatilize_if_possible(self, srsly = False):
         result = set()
-        if not self.step._options['_volatile']:
-            return set()
-        for path_a in self.pipeline.output_files_for_task_id[str(self)]:
+        if not self.step.is_volatile():
+            return result
+        for path_a in self.output_files():
+            if not path_a: continue
             if AbstractStep.fsc.exists(path_a):
                 # now check whether we can volatilize path A
                 path_a_can_be_removed = True

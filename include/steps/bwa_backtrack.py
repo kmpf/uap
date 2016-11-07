@@ -177,6 +177,9 @@ class BwaBacktrack(AbstractStep):
                         description = "Specify the read group in a format like "
                         "'@RG\tID:foo\tSM:bar'. [null]")
 
+        # [Options for 'dd':]
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+
     def runs(self, run_ids_connections_files):
 
         # Check if index is valid
@@ -240,7 +243,7 @@ class BwaBacktrack(AbstractStep):
                 # paired end reads
                 if is_paired_end and len(sr_input) != 1:
                     logger.error(
-                        "Expected single input file for seconnd read.")
+                        "Expected single input file for second read.")
                     sys.exit(1)
                 input_paths = fr_input # single element list
                 if is_paired_end:
@@ -265,7 +268,7 @@ class BwaBacktrack(AbstractStep):
                     exec_group.add_command(mkfifo)
                     # 2. Output input to FIFO
                     dd = [self.get_tool('dd'),
-                          'bs=4M',
+                          'bs=%s' % self.get_option('dd-blocksize'),
                           'if=%s' % input_path,
                           'of=%s' % temp_fifo]
                     exec_group.add_command(dd)
@@ -296,7 +299,7 @@ class BwaBacktrack(AbstractStep):
                             )
                             dd = [
                                 self.get_tool('dd'),
-                                'obs=4M',
+                                'obs=%s' % self.get_option('dd-blocksize'),
                                 'of=%s' % temp_file                                
                             ]
                             bwa_aln_pipe.add_command(dd)
@@ -350,7 +353,7 @@ class BwaBacktrack(AbstractStep):
                             # 3. Write 'bwa sampe' output to file
                             dd = [
                                 self.get_tool('dd'),
-                                'obs=4M',
+                                'obs=%s' % self.get_option('dd-blocksize'),
                                 'of=%s' %
                                 run.add_output_file(
                                     'alignments',
@@ -380,7 +383,7 @@ class BwaBacktrack(AbstractStep):
                             # 3. Write 'bwa samse' output to file
                             dd = [
                                 self.get_tool('dd'),
-                                'obs=4M',
+                                'obs=%s' % self.get_option('dd-blocksize'),
                                 'of=%s' %
                                 run.add_output_file(
                                     'alignments',

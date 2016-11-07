@@ -32,7 +32,8 @@ On-the-fly steps:
     
     Here's an example:
     
-    .. graphviz::
+.. graphviz::
+
         digraph foo {
             rankdir=LR;
             splines=true;

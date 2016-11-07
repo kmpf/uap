@@ -37,7 +37,8 @@ class HtSeqCount(AbstractStep):
 
         # Path to external feature file if necessary
         self.add_option('feature-file', str, optional = True)
-        # Options for htseq-count
+
+        # [Options for 'htseq-count':]
         self.add_option('order', str, choices = ['name', 'pos'],
                         optional = False)
         self.add_option('stranded', str, choices = ['yes', 'no', 'reverse'],
@@ -48,6 +49,9 @@ class HtSeqCount(AbstractStep):
         self.add_option('mode', str, choices = ['union', 'intersection-strict',\
                                                 'intersection-nonempty'],
                         default = 'union', optional = True)
+
+        # [Options for 'dd':]
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
 
     def runs(self, run_ids_connections_files):
         # Compile the list of options
@@ -103,7 +107,7 @@ class HtSeqCount(AbstractStep):
                     with exec_group.add_pipeline() as pipe:
                         # 1. Read alignment file in 4MB chunks
                         dd_in = [self.get_tool('dd'),
-                                 'ibs=4M',
+                                 'ibs=%s' % self.get_option('dd-blocksize'),
                                  'if=%s' % alignments_path]
                         pipe.add_command(dd_in)
                         

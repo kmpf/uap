@@ -1,0 +1,89 @@
+# This is the uap configuration file.
+
+cluster:
+    # example for SLURM grid engine
+    # default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+    # example for UGE/SGE respectively OGS
+    # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+    # default_pre_job_command: "echo 'Run Started!'"
+    # default_post_job_command: "echo 'Run Finished!'"
+    # default_job_quota: 5
+ 
+destination_path: example-out/2014-Mercer_et_al_download
+
+constants:
+    - &some_constant some_value
+
+steps:
+    # Download the actual sequencing data
+    SRR1032214_1_download (raw_url_source):
+        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/004/SRR1032214/SRR1032214_1.fastq.gz
+        path: example-out/2014-Mercer_et_al_download
+        uncompress: yes
+
+    SRR1032214_2_download (raw_url_source):
+        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/004/SRR1032214/SRR1032214_2.fastq.gz
+        path: example-out/2014-Mercer_et_al_download
+        uncompress: yes
+
+    # Download supplementary files
+    # (see https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM1267958)
+    GSM1267958_LncRNAdesign_probes_download (raw_url_source):
+        url: https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM1267958&format=file&file=GSM1267958%5FLncRNAdesign%5Fprobes%2Ebed%2Egz
+        path: example-out/2014-Mercer_et_al_download
+        uncompress: yes
+
+    GSM1267958_README_gtf_download (raw_url_source):
+        url: https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM1267958&format=file&file=GSM1267958%5FREADME%5Fgtf%2Etxt%2Egz
+        path: example-out/2014-Mercer_et_al_download
+        uncompress: yes
+
+    GSM1267958_captured_transcripts_noERCC_download (raw_url_source):
+        url: https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM1267958&format=file&file=GSM1267958%5Fcaptured%5Ftranscripts%5FnoERCC%2Egtf%2Egz
+        path: example-out/2014-Mercer_et_al_download
+        uncompress: yes
+
+        
+tools:
+    ##################
+    # External Tools #
+    ##################
+
+    # URL: http://zlib.net/pigz/
+    pigz: 
+        path: pigz
+        get_version: --version
+        exit_code: 0
+                
+    ##################
+    # Internal Tools #
+    ##################
+
+    compare_secure_hashes:
+        path: ../tools/compare_secure_hashes.py
+        get_version: --version
+        exit_code: 0
+
+    ##############
+    # Unix Tools #
+    ##############
+
+    cp:
+        path: cp
+        get_version: --version
+        exit_code: 0
+
+    curl:
+        path: curl
+        get_version: --version
+        exit_code: 0
+
+    dd:
+        path: dd
+        get_version: --version
+        exit_code: 0
+
+    mkdir:
+        path: mkdir
+        get_version: --version
+        exit_code: 0

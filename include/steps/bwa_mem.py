@@ -132,6 +132,10 @@ class BwaMem(AbstractStep):
         self.add_option('M', str, optional = True,
                         description = "mark shorter split hits as secondary")
 
+
+        # [Options for 'dd':]
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+
     def runs(self, run_ids_connections_files):
 
         # Check if index is valid
@@ -207,7 +211,7 @@ class BwaMem(AbstractStep):
                         mkfifo = [self.get_tool('mkfifo'), temp_fifo]
                         exec_group.add_command(mkfifo)
                         dd = [self.get_tool('dd'),
-                              'bs=4M',
+                              'bs=%s' % self.get_option('dd-blocksize'),
                               'if=%s' % input_path,
                               'of=%s' % temp_fifo]
                         exec_group.add_command(dd)
@@ -246,7 +250,7 @@ class BwaMem(AbstractStep):
                         # Write bowtie2 output to file
                         dd = [
                             self.get_tool('dd'),
-                            'obs=4M',
+                            'obs=%s' % self.get_option('dd-blocksize'),
                             'of=%s' %
                             run.add_output_file(
                                 'alignments',

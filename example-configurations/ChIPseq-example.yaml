@@ -1,21 +1,30 @@
 # This is an example configuration for the analysis of ChIPseq data
 
+cluster:
+    # example for SLURM grid engine
+    # default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+    # example for UGE/SGE respectively OGS
+    # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+    default_pre_job_command: "echo 'Run Started!'"
+    default_post_job_command: "echo 'Run Finished!'"
+    default_job_quota: 5
+
 destination_path: example-out/ChIP-Seq/
 
 constants:
     # 1.  Genome Information:
     # 1.1 Complete Sequence (FASTA)
     - &genome
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_UCSC_complete_genome/hg19_all_chr_UCSC-download-RwaETA3q/hg19_all_chr_UCSC-download.fasta
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_UCSC_complete_genome/hg19_all_chr_UCSC-all_sequences-Tc5RkRKM/hg19_all_chr_UCSC-all_sequences.fasta
 
     # 1.2 FASTA index
     - &genome_faidx 
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_samtools_faidx/hg19_all_chr_UCSC-download-B7ceRp9K/hg19_all_chr_UCSC-download.fasta.fai
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_samtools_faidx/hg19_all_chr_UCSC-all_sequences-v08iKi37/hg19_all_chr_UCSC-all_sequences.fasta.fai
 
     # 2.  Mapping Indices:
     # 2.1 Bowtie2
     - &bowtie2_genome_index
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bowtie2_index/bowtie2_index-hg19_all_chr_UCSC-download-yVv5kTxk/bowtie2_index-hg19_all_chr_UCSC-download
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bowtie2_index/bowtie2_index-hg19_all_chr_UCSC-all_sequences-4bnBZlNy/bowtie2_index-hg19_all_chr_UCSC-all_sequences
 
     # 3.  Peak Calling 
     # 3.1 Control vs. Treatment Information (for MACS2)
@@ -161,10 +170,6 @@ tools:
     fix_qnames:
         path: './../tools/fix_qnames.py'
 
-    remove_reads_segemehl:
-        path: './../tools/remove_reads_segemehl.py'
-        exit_code: 1
-
     ##############
     # Unix Tools #
     ##############
@@ -174,24 +179,10 @@ tools:
         get_version: '--version'
         exit_code: 0
 
-    curl:
-        path: curl
-        get_version: '--version'
-        exit_code: 0
-
     dd:
         path: dd
         get_version: '--version'
         exit_code: 0
-
-    head:
-        path: head
-        get_version: '--version'
-        exit_code: 0
-
-    grep:
-        path: grep
-        get_version: '--version'
 
     mkdir:
         path: mkdir
@@ -207,23 +198,3 @@ tools:
         path: mv
         get_version: '--version'
         exit_code: 0
-
-    sort:
-        path: 'sort'
-        get_version: '--version'
-        exit_code: 0
-
-    sha1sum:
-        path: sha1sum
-        get_version: '--version'
-        exit_code: 0
-
-    tar:
-        path: tar
-        get_version: '--version'
-        exit_code: 0
-
-    wc:
-        path: 'wc'
-        get_version: '--version'
-

@@ -71,7 +71,9 @@ class CuffCompare(AbstractStep):
                 log_err_file  = run.add_output_file('log_stderr',
                                                     '%s-cuffcompare-log_stderr.txt' % run_id,
                                                     input_paths)
-                
+
+                # replace cuffcompare with 'touch', check if the
+                # outputfiles are still in the main dir
                 cuffcompare = [self.get_tool('cuffcompare'), '-R', '-o', run_id,
                                '-r', str(self.get_option('ref-gtf')),
                                in_file]

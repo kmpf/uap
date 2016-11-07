@@ -1,31 +1,24 @@
-#!/usr/bin/env python
 
 # Gero Doose gero@bioinf.uni-leipzig.de
-# python script for parsing the output of segemehl into a cufflinks-compatible output.
+# python script for parsing the output of segemehl into a (tophat-like) cufflinks-compatible output.
 # Usage: reads the segemehl /remapper/ realigner-output-file (SAM format) either from stdin or from a file given as the first script argument
 # Usage: writes the output to stout
 # Example: python s2c.py -s mymap.sam -g hg19.fa > mymap_cufflinks_compatible.sam
 # Example:  samtools view -h mymap.bam | python s2c.py -s - -g hg19.fa | samtools view -Sb - | samtools sort - mymap_cufflinks_compatible_sorted.bam
 
 from __future__ import division
-import os
-seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
-activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
-execfile(activate_this_file, dict(__file__=activate_this_file))
-import pdb
 import sys
 import subprocess
 import re
 import tempfile
 import argparse
-
+import os
 from Bio import SeqIO
  
-
-parser = argparse.ArgumentParser(description='python script for parsing the output of segemehl (remapper/realigner) into a cufflinks-compatible output')
+parser = argparse.ArgumentParser(description='python script for parsing the output of segemehl (remapper/realigner) into a cufflinks-compatible (tophat-like) output.     Usage: reads the segemehl-output-file (SAM format) either from stdin or from a file given as the first script argument.    Writes the output to stout.   Example1: python s2c.py -s mymap.sam -g ref_genome.fa > mymap_cufflinks_compatible.sam   Example2:  samtools view -h mymap.bam | python s2c.py -s - -g ref_genome.fa | samtools view -Sb - | samtools sort - mymap_cufflinks_compatible_sorted.bam')
 parser.add_argument("-s", "--sam", dest='my_sam', required=True,type=argparse.FileType('r'), help="specifies the path to directory where the segemehl.sam input file is located (when piping in with samtools than just use - as argument )")
 parser.add_argument("-g", "--genome", dest='my_genome', help="in case the protocol is not strand specific: specifies the path to the genome")
-parser.add_argument("-d", "--maxDist", dest='my_maxDist', help="specifies the maximal distance of a splice junction. junctions with disctance higher than this value are classified as fusions (default is 200.000nt)")
+parser.add_argument("-d", "--maxDist", dest='my_maxDist',type=int, help="specifies the maximal distance of a splice junction. junctions with disctance higher than this value are classified as fusions (default is 200.000nt)")
 parser.add_argument("-o", "--outdir", dest='my_outdir', help="specifies the path to ouput directory (temp files are also created in this directory) (default is '.')")
 args = parser.parse_args()
 if(args.my_maxDist):
@@ -154,13 +147,8 @@ def getmapping(fragmentList):
                     XI_index=k
             if(int(fragmentList[i][XI_index][5:])==j):
                 mapping.append(fragmentList[i])
-        #test wegen realigner:
         if mapping:   
             mappingList.append(updateXQs(mapping))
-        #else:
-            #counter(ein drittel oder so) wie oft eigenltich best only zwischen einem split und einem normalen read mapping (multiple hits) ueberprueft werden muesste
-                
-        
     if(len(mappingList)>1):
         return bestOnly(mappingList)
     else:
@@ -185,32 +173,25 @@ def isFusion(eingabe):
             if "XQ:i" in myline[i]:
                 XQ_index=i
         if(abgehts):
-            if((int(myline[1]) >= 64 and int(myline[1]) & 64)  != (int(mylastLine[1]) >= 64 and int(mylastLine[1]) & 64)):
-                sys.stderr.write('error zwei reads sollen zu einem gemacht werden ob wohl sie doch verschiedene maits sind \n')
-                sys.stderr.write(myline[0]+'\t'+myline[1]+'\n'+mylastLine[0]+'\t'+mylastLine[1]+'\n\n')
             #chromosom switch
             if(myline[2]!=mylastLine[2]):
                 bWrongChr=True
-            else:
+            #max dist?
+            elif(int(myline[3])-(int(mylastLine[3])+getGenomicLength(mylastLine[5])) >= myMaxDist):
+                bWrongDist=True
                 #strand switch
-                if((int(myline[1]) >= 16 and int(myline[1]) & 16)  != (int(mylastLine[1]) >= 16 and int(mylastLine[1]) & 16)):
-                    bWrongStrand=True
-                else:
-                    #max dist?
-                    if(int(myline[3])-(int(mylastLine[3])+getGenomicLength(mylastLine[5])) >= myMaxDist):
-                        bWrongDist=True
-                    else:
-                        #overlap?
-                        if(int(mylastLine[3])+ getGenomicLength(mylastLine[5]) >= int(myline[3])):
-                            bWrongOverlapp=True
-                        else:
-                            # order switch ?
-                            if((int(myline[1]) >= 16 and int(myline[1]) & 16)):
-                                if((int(myline[XQ_index][5:]) != int(mylastLine[XQ_index_last][5:])-1)):
-                                    wrongOrderCounterPerRead+=1
-                            else:
-                                if((int(myline[XQ_index][5:]) != int(mylastLine[XQ_index_last][5:])+1)):
-                                    wrongOrderCounterPerRead+=1
+            elif((int(myline[1]) >= 16 and int(myline[1]) & 16)  != (int(mylastLine[1]) >= 16 and int(mylastLine[1]) & 16)):
+                bWrongStrand=True
+            #overlap?
+            elif(int(mylastLine[3])+ getGenomicLength(mylastLine[5]) > int(myline[3])):
+                bWrongOverlapp=True
+            # order switch ?
+            elif((int(myline[1]) >= 16 and int(myline[1]) & 16)):
+                if((int(myline[XQ_index][5:]) != int(mylastLine[XQ_index_last][5:])-1)):
+                    wrongOrderCounterPerRead+=1
+            else:
+                if((int(myline[XQ_index][5:]) != int(mylastLine[XQ_index_last][5:])+1)):
+                    wrongOrderCounterPerRead+=1
 
         abgehts =True
         mylastLine=myline
@@ -238,10 +219,6 @@ def isFusion(eingabe):
                         if(wrongOrderCounterPerRead==1):
                             fusion=True
                             wrongOrder+=1
-                            #if(int(eingabe[len(eingabe)-1][3]) +getGenomicLength(eingabe[0][5]) <  int(eingabe[0][3]) + myMaxDist):
-                                #wrongOrder+=1
-                            #else:
-                                #wrongOrderLarge+=1
     if(fusion):
         if(len(eingabe)>2):
             fusionsMore+=1
@@ -253,20 +230,16 @@ def processLines(eingabe):
     xaSet=False
     xaIsSet=False
     NH=''
-    XI= None
-    XI_seen = None
-#    pdb.set_trace() 
+    XI=''
+    XA=''
     for i in range(11,(len(eingabe[0]))):
         if "NH:i" in eingabe[0][i]:
             NH=str(eingabe[0][i])
-
         if "XI:i" in eingabe[0][i]:
             XI=str(eingabe[0][i])
-            if XI_seen is None:
-                XI_seen = XI
-            if XI_seen != XI:
-                sys.stderr.write("different XI in split read should not happen, diying horribly")
-                exit(1)
+        if "XA:Z" in eingabe[0][i]:
+            XA=str(eingabe[0][i])
+            
     newLine=[]
     laenge=0
     newCigar=''
@@ -297,6 +270,7 @@ def processLines(eingabe):
                 if(not xaIsSet):
                     subseq=str(record_dict[eingabe[0][2]].seq[(startOld+laenge)-1:startOld+laenge+1])
                     subseq+=str(record_dict[eingabe[0][2]].seq[int(eingabe[i][3])-3:int(eingabe[i][3])-1])
+                    subseq=subseq.upper()
                     if(subseq=="GTAG"or subseq=="GCAG" or subseq=="ATAC"):
                         xaIsSet=True
                         xaSet=True
@@ -310,7 +284,6 @@ def processLines(eingabe):
             newQualityString+=eingabe[i][10]
         newCigar+=eingabe[i][5]
         startOld=int(eingabe[i][3])
-        #MD string (und NMi)
         if(i==0):
             NMi=int(eingabe[i][NM_index][5:])
             md1=eingabe[i][MD_index][5:]
@@ -354,6 +327,7 @@ def processLines(eingabe):
     newLine.append(newMD)
     newLine.append(NH)
     newLine.append(XI)
+    newLine.append(XA)
     if(strandSpecific):
         if( int(eingabe[0][1])>= 16 and int(eingabe[0][1]) & 16):
             newLine.append('XS:A:-')
@@ -380,10 +354,7 @@ mytempName = temp.name
 temp_mate = tempfile.NamedTemporaryFile(dir=outPath)
 mytemp_mateName = temp_mate.name
 sys.stderr.write('collect all split reads.  \n')
-#for line in fileinput.input():
-#for line in open(args.my_sam,'r'):
 for line in args.my_sam:
-
     splitRead=False
     columns = line.strip().split('\t')
     if(columns[0][:1]=="@"):
@@ -420,8 +391,10 @@ for line in args.my_sam:
 temp.flush()
 temp.seek(0)
 temp2 = tempfile.TemporaryFile(dir=outPath)
-#p=subprocess.Popen(['sort', '-t','\t','-k', '1,1', '-k', '4,4n',mytempName],stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-p=subprocess.Popen(['sort', '-t','\t','-k', '1,1', '-k', '4,4n', '-T', outPath, mytempName],stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+p=subprocess.Popen(
+    ['sort', '-t','\t','-k', '1,1', '-k', '4,4n', '-T', outPath, mytempName],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE)
 temp2.write(p.communicate()[0])
 temp.close()
 temp2.flush()
@@ -437,9 +410,6 @@ if not strandSpecific:
     record_dict = SeqIO.to_dict(SeqIO.parse(handle, "fasta"))
     handle.close()
 sys.stderr.write('process the sorted split reads.  \n')
-
-
-
 for line in temp2.readlines():
     columns = line.strip().split('\t')
     if(losgehts):
@@ -454,9 +424,7 @@ for line in temp2.readlines():
                     transcriptsMore+=1
                 fusion=isFusion(listofmappings[i])
                 if(not fusion):
-
                     processedLine=processLines(listofmappings[i])
-
                     for fields in processedLine:
                         sys.stdout.write(fields)
                         if(not fields==processedLine[len(processedLine)-1]):
@@ -464,8 +432,6 @@ for line in temp2.readlines():
                     sys.stdout.write("\n")
                 else:
                     fusiontranscripts+=1
-                    #hier die fusions in ein file reinhauen oder einen zweiten outstream den man pipen kann.
-
             listToMerge = []
             listToMerge.append(columns)
             fusion=False
@@ -475,7 +441,6 @@ for line in temp2.readlines():
         fusion=False
     lastLine = columns
     losgehts=True
-#den letzten split read bearbeiten
 if(len(listToMerge)>0):
     listofmappings = []
     listofmappings=getmapping(listToMerge)
@@ -485,7 +450,6 @@ if(len(listToMerge)>0):
             transcriptsMore+=1
         fusion=isFusion(listofmappings[i])
         if(not fusion):
-
             processedLine=processLines(listofmappings[i])
             for fields in processedLine:
                 sys.stdout.write(fields)
@@ -494,16 +458,15 @@ if(len(listToMerge)>0):
             sys.stdout.write("\n")
         else:
             fusiontranscripts+=1
-            #hier die fusions in ein file reinhauen oder einen zweiten outstream den man pipen kann.
 temp2.close()
 
 temp_mate.flush()
 temp_mate.seek(0)
 temp2_mate = tempfile.TemporaryFile(dir=outPath)
-sys.stderr.write('s2c - just before sorting of mate file  \n')
-## This might be dangerous as unix sort is used without specifiying a temp directory
-#p_mate=subprocess.Popen(['sort', '-t','\t','-k', '1,1', '-k', '4,4n',mytemp_mateName],stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-p_mate=subprocess.Popen(['sort', '-t','\t','-k', '1,1', '-k', '4,4n', '-T', outPath, mytemp_mateName],stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+p_mate=subprocess.Popen(
+    ['sort', '-t','\t','-k', '1,1', '-k', '4,4n', '-T', outPath, mytemp_mateName],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE)
 temp2_mate.write(p_mate.communicate()[0])
 sys.stderr.write('s2c - after sorting of mate file  \n')
 temp_mate.close()
@@ -535,7 +498,6 @@ for line in temp2_mate.readlines():
                     sys.stdout.write("\n")
                 else:
                     fusiontranscripts+=1
-                    #hier die fusions in ein file reinhauen oder einen zweiten outstream den man pipen kann.
             listToMerge = []
             listToMerge.append(columns)
             fusion=False
@@ -545,7 +507,6 @@ for line in temp2_mate.readlines():
         fusion=False
     lastLine = columns
     losgehts=True
-#den letzten split read bearbeiten
 if(len(listToMerge)>0):
     listofmappings = []
     listofmappings=getmapping(listToMerge)
@@ -563,30 +524,28 @@ if(len(listToMerge)>0):
             sys.stdout.write("\n")
         else:
             fusiontranscripts+=1
-            #hier die fusions in ein file reinhauen oder einen zweiten outstream den man pipen kann.
 temp2_mate.close()
 
 sys.stderr.write('all done.  \n')
-if not strandSpecific:
-    sys.stderr.write('split reads not at canonical motives:\t'+str(myXSunsure)+'\tratio to all split reads: '+str(myXSunsure/transcripts)+'\n')
 sys.stderr.write('removed mappings to retain bestOnly philosophy: '+str(bestOnlyCounter)+'\n')
 sys.stderr.write('read mappings (total)            :\t'+str(transcripts+normalReads)+'\n')
 sys.stderr.write('read mappings (one fragment)     :\t'+str(normalReads)+'\n')
 sys.stderr.write('split reads (total)              :\t'+str(transcripts)+'\tratio to all reads\t'+str(transcripts/(transcripts+normalReads))+'\n')
 if(transcripts>0):
+    if not strandSpecific:
+        sys.stderr.write('split reads not at canonical motives:\t'+str(myXSunsure)+'\tratio to all split reads: '+str(myXSunsure/transcripts)+'\n')
     sys.stderr.write('split reads >2 fragments         :\t'+str(transcriptsMore)+'\tratio to all reads\t'+str(transcriptsMore/(transcripts+normalReads))+'\tratio to all split reads\t'+str(transcriptsMore/(transcripts))+'\n')
     sys.stderr.write('fusion split reads               :\t'+str(fusiontranscripts)+'\tratio to all reads\t'+str(fusiontranscripts/(transcripts+normalReads))+'\tratio to all split reads\t'+str(fusiontranscripts/(transcripts))+'\n')
     if(fusiontranscripts>0):
         sys.stderr.write('fusion split reads > 2 fragments :\t'+str(fusionsMore)+'\tratio to all reads\t'+str(fusionsMore/(transcripts+normalReads))+'\tratio to all split reads\t'+str(fusionsMore/(transcripts))+'\tratio to all fusions\t'+str(fusionsMore/(fusiontranscripts))+'\n')
         sys.stderr.write('  chromosom switch               :\t'+str(wrongChr)+'\tratio to all split reads\t'+str(wrongChr/transcripts)+'\tratio to all fusion reads\t'+str(wrongChr/fusiontranscripts)+'\n')
-        sys.stderr.write('  strand switch                  :\t'+str(wrongStrand)+'\tratio to all split reads\t'+str(wrongStrand/transcripts)+'\tratio to all fusion reads\t'+str(wrongStrand/fusiontranscripts)+'\n')
         sys.stderr.write('  fragment dist > '+str(myMaxDist)+'         :\t'+str(wrongDist)+'\tratio to all split reads\t'+str(wrongDist/transcripts)+'\tratio to all fusion reads\t'+str(wrongDist/fusiontranscripts)+'\n')
+        sys.stderr.write('  strand switch                  :\t'+str(wrongStrand)+'\tratio to all split reads\t'+str(wrongStrand/transcripts)+'\tratio to all fusion reads\t'+str(wrongStrand/fusiontranscripts)+'\n')
         sys.stderr.write('  fragment overlapp              :\t'+str(wrongOverlapp)+'\tratio to all split reads\t'+str(wrongOverlapp/transcripts)+'\tratio to all fusion reads\t'+str(wrongOverlapp/fusiontranscripts)+'\n')
         sys.stderr.write('  circular order switch          :\t'+str(wrongOrder)+'\tratio to all split reads\t'+str(wrongOrder/transcripts)+'\tratio to all fusion reads\t'+str(wrongOrder/fusiontranscripts)+'\n')
         sys.stderr.write('  non-circular order switch      :\t'+str(multiOrder)+'\tratio to all split reads\t'+str(multiOrder/transcripts)+'\tratio to all fusion reads\t'+str(multiOrder/fusiontranscripts)+'\n')
 sys.stdout.flush()
 sys.stdout.close()
-
 
 
 # Gero Doose gero@bioinf.uni-leipzig.de
@@ -595,6 +554,3 @@ sys.stdout.close()
 # Usage: writes the output to stout
 # Example: python s2c.py -s mymap.sam -g hg19.fa > mymap_cufflinks_compatible.sam
 # Example:  samtools view -h mymap.bam | python s2c.py -s - -g hg19.fa | samtools view -Sb - | samtools sort - mymap_cufflinks_compatible_sorted.bam
-
-
-
