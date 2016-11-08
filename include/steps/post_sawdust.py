@@ -28,6 +28,7 @@ class Post_Sawdust(AbstractStep):
         self.add_option('library_type', str, choices = ['fr-unstranded', 'fr-firststrand', 'fr-secondstrand'], optional=False)
         self.add_option('seq_type', str, choices = ['RNA', 'DNA'],  optional=False)
         self.add_option('read_type', str, choices = ['single' ,'paired'], optional=False)
+        self.add_option('split_ident', str,  default=' ', optional=False)
 
         
         self.require_tool('post_sawdust')
@@ -68,7 +69,8 @@ class Post_Sawdust(AbstractStep):
                         post_sawdust = [ self.get_tool('post_sawdust'),
                                          '--library-type', self.get_option('library_type'),
                                          '--seq-type', self.get_option('seq_type'),
-                                         '--read-type',self.get_option('read_type')]
+                                         '--read-type',self.get_option('read_type'),
+                                         '--split-identifier-by', self.get_option('split_ident')]
                         pipe.add_command(post_sawdust, stderr_path=log_stderr)
                         
                         samtools_end = [self.get_tool('samtools'), 'view', '-Shb', '-']

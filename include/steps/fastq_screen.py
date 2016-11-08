@@ -31,6 +31,7 @@ class FastqScreen(AbstractStep):
         self.add_option('config', str , optional=False)
         self.add_option('cores', int, default=cores)
         self.add_option('nohits', bool, default=False)
+        self.add_option('subset', int, default=False)
 
         self.require_tool('fastq_screen')
         self.require_tool('bowtie2')
@@ -71,6 +72,9 @@ class FastqScreen(AbstractStep):
 
                             prefix  = "%s%s.fastq.gz" % (run_id,read_types[read])
                             fastq_screen.extend(['--optional_name', prefix])
+
+                            if self.get_option('subset'): 
+                                fastq_screen.extend(['--subset', str(self.get_option('subset'))])
 
                             if self.get_option('nohits'): 
                                 nohits      = run.add_output_file("first_read", 
