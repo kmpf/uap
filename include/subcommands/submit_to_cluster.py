@@ -28,7 +28,7 @@ This task wish list is now processed one by one (in topological order):
 - if it's waiting, there is at least one parent task which is not yet finished
 - determine all parent tasks which are not finished yet, for each parent:
   - if it's running or queued, determine its job_id from the queued-ping file
-  - if it's ready or waiting, we must skip this task because it should have been 
+  - if it's ready or waiting, we must skip this task because it should have been
     enqueued a couple of iterations ago (this is because a selection has been
     made and there are unfinished, non-running, unqueued dependencies)
   - now add all these collected job_ids to the submission via -hold_jid
@@ -43,11 +43,11 @@ def _batch_options_from_config(options, key):
         if '_cluster' in options.keys():
             if key in options['_cluster'].keys():
                 return options['_cluster'][key]
-        return None 
+        return None
 
 def main(args):
     p = pipeline.Pipeline(arguments=args)
-        
+
     task_wish_list = None
     if len(args.step_task) >= 1:
         task_wish_list = list()
@@ -68,7 +68,7 @@ def main(args):
             if not str(task) in task_wish_list:
                 continue
         tasks_left.append(task)
-                
+
     print("Now attempting to submit %d jobs..." % len(tasks_left))
 
     quotas = dict()
@@ -84,7 +84,7 @@ def main(args):
     quotas_path = args.uap_path + "/quotas.yaml"
 
     if os.path.exists(quotas_path):
-        
+
         all_quotas = yaml.load(open(quotas_path, 'r'))
         hostname = subprocess.check_output(['hostname']).strip()
         for key in all_quotas.keys():
@@ -117,9 +117,9 @@ def main(args):
         submit_script = copy.copy(template)
         submit_script = submit_script.replace("#{CORES}", str(task.step._cores))
         email = 'nobody@example.com'
-        
 
-                
+
+
         if 'email' in p.config:
             email = p.config['email']
         submit_script = submit_script.replace("#{EMAIL}", email)
@@ -137,7 +137,7 @@ def main(args):
 
         submit_script_args = [p.cc('submit')]
         submit_script_args += p.ccla('set_job_name', short_task_id)
-            
+
         submit_script_args.append(p.cc('set_stderr'))
         submit_script_args.append(
             os.path.join(task.get_run().get_output_directory(),
@@ -152,12 +152,12 @@ def main(args):
             res =  _batch_options_from_config(task.step._options, 'mem')
             if (res):
                 submit_script_args += p.ccla('mem', res)
-                
+
                 # days-hours:minutes:seconds 2-08:00:00
             res =  _batch_options_from_config(task.step._options, 'time')
             if (res):
                 submit_script_args += p.ccla('time', res)
-                
+
             res =  _batch_options_from_config(task.step._options, 'exclusive')
             if (res):
                 submit_script_args.append( p.cc('exclusive'))
@@ -165,12 +165,12 @@ def main(args):
             res =  _batch_options_from_config(task.step._options, 'queue')
             if (res):
                 submit_script_args += p.ccla('queue', res)
-                    
+
             res =  _batch_options_from_config(task.step._options, 'nice')
             if (res):
                 submit_script_args += p.ccla('nice', res)
 
-        
+
 
         if p.cluster_type == 'sge' or p.cluster_type == 'uge':
 
@@ -192,9 +192,9 @@ def main(args):
                 submit_script_args += p.ccla('s_rt', res)
 
 
-        
 
-        
+
+
 
 
 
@@ -244,7 +244,7 @@ def main(args):
 
             if job_id == None or len(job_id) == 0:
                 raise StandardError("Error: We couldn't parse a job_id from this:\n" + response)
-            
+
             queued_ping_info = dict()
             queued_ping_info['step'] = str(task.step)
             queued_ping_info['run_id'] = task.run_id
@@ -259,7 +259,7 @@ def main(args):
             print("%s (%s)" % (job_id, short_task_id))
             if len(dependent_tasks) > 0:
                 print(" - with dependent tasks: " + ', '.join(dependent_tasks))
-                
+
             abstract_step.AbstractStep.fsc = fscache.FSCache()
 
     for task in tasks_left:
@@ -282,7 +282,7 @@ def main(args):
                         parent_info = yaml.load(open(parent_queued_ping_path))
                         parent_job_ids.append(parent_info['job_id'])
                     except:
-                        print("Couldn't determine job_id of %s while trying to load %s." % 
+                        print("Couldn't determine job_id of %s while trying to load %s." %
                             (parent_task, parent_queued_ping_path))
                         raise
                 elif parent_state in [p.states.READY, p.states.WAITING]:

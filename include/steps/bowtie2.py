@@ -17,12 +17,12 @@ class Bowtie2(AbstractStep):
     gapped, local, and paired-end alignment modes.
 
     http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
-    
+
     typical command line::
 
         bowtie2 [options]* -x <bt2-idx> {-1 <m1> -2 <m2> | -U <r>} -S [<hit>]
     '''
-    
+
     def __init__(self, pipeline):
         super(Bowtie2, self).__init__(pipeline)
         self.set_cores(6)
@@ -42,7 +42,7 @@ class Bowtie2(AbstractStep):
         self.add_option('index', str, optional=False,
                         description="Path to bowtie2 index (not containing file "
                         "suffixes).")
-                        
+
         self.add_option('cores', int, default=6)
         # Bowtie2 has so many options that I'm avoiding to add them all now,
         # but it might be necessary later on.
@@ -61,9 +61,9 @@ class Bowtie2(AbstractStep):
                 fr_input = run_ids_connections_files[run_id]['in/first_read']
                 sr_input = run_ids_connections_files[run_id]['in/second_read']
 
-                
+
                 input_paths = [ y for x in [fr_input, sr_input] \
-                               for y in x if y !=None ]                    
+                               for y in x if y !=None ]
 
                 # Do we have paired end data and is it exactly one ?
                 is_paired_end = True
@@ -75,7 +75,7 @@ class Bowtie2(AbstractStep):
                     # Lists of fifos
                     fr_temp_fifos = list()
                     sr_temp_fifos = list()
-                    # 1. 
+                    # 1.
 
                     def prepare_input(input_path, exec_group, temp_fifos):
                         # Create temporary fifo
@@ -87,9 +87,9 @@ class Bowtie2(AbstractStep):
                         temp_fifos.append(temp_fifo)
                         # Is input gzipped fasta?
                         is_fastq_gz = False
-                        
 
-                        
+
+
                         for suff  in ['fq.gz', 'fastq.gz','.gz']:
                             if input_path.endswith(suff):
                                 is_fastq_gz = True
@@ -124,7 +124,7 @@ class Bowtie2(AbstractStep):
                     for input_path in fr_input:
                         exec_group, fr_temp_fifos = prepare_input(
                             input_path, exec_group, fr_temp_fifos)
-                    # And if we handle paired end data 
+                    # And if we handle paired end data
                     if is_paired_end:
                         for input_path in sr_input:
                             exec_group, sr_temp_fifos = prepare_input(
@@ -144,7 +144,7 @@ class Bowtie2(AbstractStep):
                                 '-2', ','.join(sr_temp_fifos)])
                         else:
                             bowtie2.extend(['-U', ','.join(fr_temp_fifos)])
-                
+
                         log_stderr = run.add_output_file(
                                 'log_stderr',
                                 '%s-bowtie2-log_stderr.txt' % run_id,
@@ -156,7 +156,7 @@ class Bowtie2(AbstractStep):
                                 input_paths)
                         bowtie2.extend(['--met-file', metrics])
                         bowtie2_pipe.add_command(bowtie2, stderr_path=log_stderr)
-                        
+
                         # Compress bowtie2 output
                         pigz = [self.get_tool('pigz'),
                                 '--stdout']

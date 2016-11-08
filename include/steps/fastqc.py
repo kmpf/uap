@@ -13,12 +13,12 @@ class Fastqc(AbstractStep):
 
     http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
     '''
-    
+
     def __init__(self, pipeline):
         super(Fastqc, self).__init__(pipeline)
-        
+
         self.set_cores(1) # muss auch in den Decorator
-        
+
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/first_read_fastqc_report')
@@ -27,7 +27,7 @@ class Fastqc(AbstractStep):
         self.add_connection('out/second_read_fastqc_report')
         self.add_connection('out/second_read_fastqc_report_webpage')
         self.add_connection('out/second_read_log_stderr')
-        
+
         # require_tool evtl. in abstract_step verstecken
         self.require_tool('fastqc')
         self.require_tool('mkdir')
@@ -36,7 +36,7 @@ class Fastqc(AbstractStep):
     def runs(self, run_ids_connections_files):
         '''
         self.runs() should be a replacement for declare_runs() and execute_runs()
-        All information given here should end up in the step object which is 
+        All information given here should end up in the step object which is
         provided to this method.
         '''
         read_types = {'first_read': '_R1', 'second_read': '_R2'}

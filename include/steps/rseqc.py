@@ -14,14 +14,14 @@ class RSeQC(AbstractStep):
 
     def __init__(self, pipeline):
         super(RSeQC, self).__init__(pipeline)
-        
+
         self.set_cores(1)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/bam_stat')
 	self.add_connection('out/infer_experiment')
 	self.add_connection('out/read_distribution')
-                
+
         self.require_tool('cat')
         self.require_tool('bam_stat.py')
 	self.require_tool('infer_experiment.py')
@@ -30,15 +30,15 @@ class RSeQC(AbstractStep):
 	self.add_option('reference', str, optional=False, description=
                         "Reference gene model in bed fomat. [required]"
         )
-        
+
     def runs(self, run_ids_connections_files):
-        
+
         for run_id  in run_ids_connections_files.keys():
 
             alignments = run_ids_connections_files[run_id]['in/alignments']
 
             with self.declare_run(run_id) as run:
-         
+
                 if len(alignments) != 1:
                     logger.error("Expected exactly one alignment file.")
                     sys.exit(1)

@@ -26,18 +26,18 @@ They are stored inside the ``example-configurations`` folder inside the
 Go there and try::
 
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
-  
+
   Waiting tasks
   -------------
   [w] bowtie2_index/Mycoplasma_genitalium_index-download
   [w] bwa_index/Mycoplasma_genitalium_index-download
   [w] fasta_index/download
   [w] segemehl_index/Mycoplasma_genitalium_genome-download
-  
+
   Ready tasks
   -----------
   [r] M_genitalium_genome/download
-  
+
   tasks: 5 total, 4 waiting, 1 ready
 
 
@@ -47,7 +47,7 @@ genome (arguably a tiny one)::
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
   [uap] Set log level to ERROR
   [uap][ERROR]: index_mycoplasma_genitalium_ASM2732v1_genome.yaml: Destination path does not exist: genomes/bacteria/Mycoplasma_genitalium/
-  
+
 Oops, the :ref:`config_file_destination_path` does not exist.
 Create it and start again::
 
@@ -60,11 +60,11 @@ Create it and start again::
   [w] bwa_index/Mycoplasma_genitalium_index-download
   [w] fasta_index/download
   [w] segemehl_index/Mycoplasma_genitalium_genome-download
-  
+
   Ready tasks
   -----------
   [r] M_genitalium_genome/download
-  
+
   tasks: 5 total, 4 waiting, 1 ready
 
 If you still do get errors, please check that the tools defined in
@@ -86,7 +86,7 @@ You want to create indexes of the human genome (hg19)::
 Create Your Own Configuration
 *****************************
 
-Although writing the configuration may seem a bit complicated, the trouble 
+Although writing the configuration may seem a bit complicated, the trouble
 pays off later because further interaction with the pipeline is quite simple.
 The structure and content of the configuration files is very detailed described
 on another page (see :ref:`configuration_of_uap`).
@@ -127,7 +127,7 @@ have to be available.
 
 4. Get annotation set (for e.g. genes, transcripts, ...)
 5. Count the number of reads overlapping the annotation
-6. Perform statistical analysis, based on counts 
+6. Perform statistical analysis, based on counts
 
 Assemble novel transcripts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

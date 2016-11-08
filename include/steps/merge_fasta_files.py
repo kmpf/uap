@@ -10,12 +10,12 @@ class MergeFastaFiles(AbstractStep):
     This step merges all .fasta(.gz) files belonging to a certain sample.
     The output files are gzipped.
     '''
-    
+
     def __init__(self, pipeline):
         super(MergeFastaFiles, self).__init__(pipeline)
-        
+
         self.set_cores(12) # muss auch in den Decorator
-        
+
         self.add_connection('in/sequence')
         self.add_connection('out/sequence')
 
@@ -32,7 +32,7 @@ class MergeFastaFiles(AbstractStep):
     def runs(self, run_ids_connections_files):
         '''
         self.runs() should be a replacement for declare_runs() and execute_runs()
-        All information given here should end up in the step object which is 
+        All information given here should end up in the step object which is
         provided to this method.
         '''
         for run_id in run_ids_connections_files.keys():
@@ -84,7 +84,7 @@ class MergeFastaFiles(AbstractStep):
                                           'obs=4M',
                                           'of=%s' % temp_fifo]
                                 unzip_pipe.add_command(dd_out)
-                        
+
                         elif os.path.splitext(input_path)[1] in\
                              ['.fastq', '.fq', '.fasta', '.fa', '.fna']:
                             # 2.1 command: Read file in 4MB chunks and

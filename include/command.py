@@ -36,7 +36,7 @@ class CommandInfo(object):
             # Collect info to replace du_jour placeholder with temp_out_dir
             placeholder = run_info.get_output_directory_du_jour_placeholder()
             temp_out_dir = run_info.get_output_directory_du_jour()
-            
+
             command = None
             ret_value = func(self, *args)
             if isinstance(ret_value, list):

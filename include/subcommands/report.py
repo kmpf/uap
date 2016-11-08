@@ -20,11 +20,11 @@ def main(args):
         print("Catching %s!" % process_pool.ProcessPool.SIGNAL_NAMES[signum])
         p.caught_signal = signum
         process_pool.ProcessPool.kill()
-        
+
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
 
-    
+
     task_list = p.all_tasks_topologically_sorted
 
     if len(args.step_task) >= 1:
@@ -38,7 +38,7 @@ def main(args):
                 for task in p.all_tasks_topologically_sorted:
                     if str(task)[0:len(task_id)] == task_id:
                         task_list.append(task)
-            
+
     # try to generate reports for all tasks
     for task in task_list:
         basic_task_state = task.get_task_state_basic()

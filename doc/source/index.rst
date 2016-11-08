@@ -1,8 +1,8 @@
 ..
   This is the documentation for uap. Please keep lines under
-  80 characters if you can and start each sentence on a new line as it 
+  80 characters if you can and start each sentence on a new line as it
   decreases maintenance and makes diffs more readable.
-  
+
 .. title:: uap -- Universal Analysis Pipeline
 
 .. _uap--index:

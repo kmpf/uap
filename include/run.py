@@ -23,10 +23,10 @@ class Run(object):
     '''
     The Run class is a helper class which represents a run in a step. Declare
     runs inside AbstractStep.runs() via::
-    
+
         with self.new_run(run_id) as run:
             # declare output files, private and public info here
-            
+
     After that, use the available methods to configure the run.
     The run has typically no information about input connections only about
     input files.
@@ -84,7 +84,7 @@ class Run(object):
         eg = exec_group.ExecGroup(self)
         self._exec_groups.append(eg)
         return eg
-        
+
     def get_exec_groups(self):
         return self._exec_groups
 
@@ -93,7 +93,7 @@ class Run(object):
 
     def set_run_id(self, run_id):
         self._run_id = run_id
-        
+
     def get_run_id(self):
         return self._run_id
 
@@ -130,7 +130,7 @@ class Run(object):
             step = self.get_step()
             placeholder = self.get_output_directory_du_jour_placeholder()
             temp_out_dir = self.get_output_directory_du_jour()
-            
+
             value = None
             ret_value = func(self, *args, **kwargs)
             # If currently calling AbstractStep.runs() do nothing
@@ -182,7 +182,7 @@ class Run(object):
         needs to be replaced by the actual temp directory inside the
         abstract_step.execute() method
         '''
-        return("<%s-output-directory-du-jour>" %  
+        return("<%s-output-directory-du-jour>" %
                str(self.get_step().__class__.__name__))
 
     def get_output_directory_du_jour(self):
@@ -220,7 +220,7 @@ class Run(object):
                 if not os.path.exists(path):
                     self._temp_directory = path
                     return self._temp_directory
-        
+
         return self._temp_directory
 
     def get_execution_hashtag(self):
@@ -265,7 +265,7 @@ class Run(object):
         Returns the final output directory.
         '''
         return os.path.join(
-            self.get_step().get_pipeline().config['destination_path'], 
+            self.get_step().get_pipeline().config['destination_path'],
             self.get_step().get_step_name(),
             '%s-%s' % (self.get_run_id(), self.get_execution_hashtag())
         )
@@ -276,7 +276,7 @@ class Run(object):
 
         Determine the basic run state of a run, which is, at any time, one of
         **waiting**, **ready**, or **finished**.
-        
+
         These states are determined from the current configuration and the
         timestamps of result files present in the file system. In addition to
         these three basic states, there are two additional states which are
@@ -289,41 +289,41 @@ class Run(object):
             placeholder YAML data structure. It then checks all downstream
             paths, which may in turn be volatile placeholder files.
             '''
-            
+
             # reconstruct original path from volatile placeholder path
             path = volatile_path[:-len(AbstractStep.VOLATILE_SUFFIX)]
-            
+
             if AbstractStep.fsc.exists(path):
                 # the original file still exists, ignore volatile placeholder
                 return False
-            
+
             if not path in self.get_step().get_pipeline()\
                                           .task_id_for_output_file:
                 # there is no task which creates the output file
                 return False
-            
+
             task_id = self.get_step().get_pipeline().task_id_for_output_file[path]
-            
+
             task = self.get_step().get_pipeline().task_for_task_id[task_id]
 #            if not task.step.options['_volatile']:
             if not task.step._options['_volatile']:
                 # the task is not declared volatile
                 return False
-            
+
             if not AbstractStep.fsc.exists(volatile_path):
                 # the volatile placeholder does not exist
                 return False
-            
+
             if not recurse:
                 return True
-            
+
             try:
                 # try to parse the YAML contents
                 info = AbstractStep.fsc.load_yaml_from_file(volatile_path)
             except yaml.scanner.ScannerError:
                 # error scanning YAML
                 return False
-            
+
             # now check whether all downstream files are in place and up-to-date
             # also check whether all downstream files as defined in
             # file_dependencies_reverse are covered
@@ -332,11 +332,11 @@ class Run(object):
             if path in self.get_step().get_pipeline().file_dependencies_reverse:
                 uncovered_files = self.get_step().get_pipeline()\
                                                  .file_dependencies_reverse[path]
-                
+
             for downstream_path, downstream_info in info['downstream'].items():
                 if downstream_path in self.get_step().get_pipeline()\
                                                      .task_id_for_output_file:
-                    # only check this downstream file if there's a task which 
+                    # only check this downstream file if there's a task which
                     # creates it, otherwise, it may be a file which is no more
                     # used
                     pv_downstream_path = change_to_volatile_if_need_be(
@@ -348,14 +348,14 @@ class Run(object):
                         return False
                     if downstream_path in uncovered_files:
                         uncovered_files.remove(downstream_path)
-                
+
             if len(uncovered_files) > 0:
                 # there are still files defined which are not covered by the
                 # placeholder
                 return False
-                
+
             return True
-        
+
         def change_to_volatile_if_need_be(path, recurse = True):
             '''
             Changes the file path to volatile path if necessary.
@@ -381,13 +381,13 @@ class Run(object):
             '''
             pv_outpath = outpath
             pv_inpaths = list()
-            
+
             if outpath in self.get_step().get_pipeline().task_id_for_output_file:
                 pv_outpath = change_to_volatile_if_need_be(outpath)
-                
+
             for inpath in inpaths:
                 pv_inpaths.append(change_to_volatile_if_need_be(inpath))
-                
+
             if not AbstractStep.fsc.exists(pv_outpath):
                 return False
             for pv_inpath in pv_inpaths:
@@ -397,7 +397,7 @@ class Run(object):
                    AbstractStep.fsc.getmtime(pv_outpath):
                     return False
             return True
-            
+
         def up_to_dateness_level(path, level = 0):
             result = level
             if path != None:
@@ -418,8 +418,8 @@ class Run(object):
         - if it's ready, it might be executing or queued -> check execute and
           queue ping
         - if it's waiting, it might be queued -> check queue ping
-        
-        the ping works like this (this example is for execute, same goes for 
+
+        the ping works like this (this example is for execute, same goes for
         queued):
           - there's a ping file for every task ( = step + run)
           - it contains information about when, how, where the job was started
@@ -430,13 +430,13 @@ class Run(object):
             if the controlling script receives SIGKILL
           - if its timestamp is no more than 5 minutes old, it is regarded as
             currently executing
-          - otherwise, a warning is printed because the ping file is probably 
+          - otherwise, a warning is printed because the ping file is probably
             stale (no automatic cleanup is performed, manual intervention is
             necessary)
           - warning: this requires all involved systems or the file system to
             be time-synchronized
         '''
-        
+
         run_info = self.get_runs()
         max_level = 0
         for tag, output_files in self.get_output_files_abspath()\
@@ -461,7 +461,7 @@ class Run(object):
         Add private information to a run. Use this to store data which you will
         need when the run is executed. As opposed to public information,
         private information is not visible to subsequent steps.
-        
+
         You can store paths to input files here, but not paths to output files as
         their expected location is not defined until we're in
         *AbstractStep.execute*
@@ -477,8 +477,8 @@ class Run(object):
 
     def add_public_info(self, key, value):
         '''
-        Add public information to a run. For example, a FASTQ reader may store 
-        the index barcode here for subsequent steps to query via 
+        Add public information to a run. For example, a FASTQ reader may store
+        the index barcode here for subsequent steps to query via
         ``AbstractStep.find_upstream_info()``.
         '''
         if key in self._public_info and value != self._public_info[key]:
@@ -509,21 +509,21 @@ class Run(object):
     def add_output_file(self, tag, out_path, in_paths):
         '''
         Add an output file to this run. Output file names must be unique across
-        all runs defined by a step, so it may be a good idea to include the 
+        all runs defined by a step, so it may be a good idea to include the
         run_id into the output filename.
         - *tag*: You must specify the connection annotation which must have been
                  previously declared via *AbstractStep.add_connection("out/...")*,
                  but this doesn't have to be done in the step constructor, it's
                  also possible in *declare_runs()* right before this method is
                  called.
-        - *out_path*: The output file path, without a directory. The pipeline 
-                      assigns directories for you (this parameter must not 
+        - *out_path*: The output file path, without a directory. The pipeline
+                      assigns directories for you (this parameter must not
                       contain a slash).
         - *in_paths*: A list of input files this output file depends on. It is
                       **crucial** to get this right, so that the pipeline can
                       determine which steps are up-to-date at any given time.
-                      You have to specify absolute paths here, including a 
-                      directory, and you can obtain them via 
+                      You have to specify absolute paths here, including a
+                      directory, and you can obtain them via
                       *AbstractStep.run_ids_and_input_files_for_connection*
                       and related functions.
         '''
@@ -596,7 +596,7 @@ class Run(object):
                 break
             else:
                 count += 1
-        
+
 
         logger.info("Temporary file (#%s): %s" %
               (len(self._temp_paths) + 1, temp_name) )
@@ -725,9 +725,9 @@ class Run(object):
 
     def get_output_files_abspath(self):
         '''
-        Return a dictionary of all defined output files, grouped by connection 
+        Return a dictionary of all defined output files, grouped by connection
         annotation::
-        
+
            annotation_1:
                out_path_1: [in_path_1, in_path_2, ...]
                out_path_2: ...
@@ -770,7 +770,7 @@ class Run(object):
         the same number of specified tags. If you have two 'alignment' output
         files and they are called *out-a.txt* and *out-b.txt*, you can use this
         function like this:
-        
+
         - *tags*: ['a', 'b']
         - result: {'a': 'out-a.txt', 'b': 'out-b.txt'}
         '''
@@ -829,7 +829,7 @@ class Run(object):
         Write the YAML annotation after a successful or failed run. The
         annotation can later be used to render the process graph.
         '''
-        
+
         # now write the annotation
         log = {}
         log['pid'] = os.getpid()
@@ -858,11 +858,11 @@ class Run(object):
 
         annotation_yaml = yaml.dump(log, default_flow_style = False)
         annotation_path = os.path.join(
-            path, ".%s-annotation-%s.yaml" % 
+            path, ".%s-annotation-%s.yaml" %
             (self.get_run_id(), misc.str_to_sha1_b62(annotation_yaml)[:6]))
 
         # overwrite the annotation if it already exists
         with open(annotation_path, 'w') as f:
             f.write(annotation_yaml)
-            
+
         return annotation_path, annotation_yaml

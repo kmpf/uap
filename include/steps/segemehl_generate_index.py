@@ -19,7 +19,7 @@ class SegemehlGenerateIndex(AbstractStep):
         super(SegemehlGenerateIndex, self).__init__(pipeline)
 
         self.set_cores(4)
-        
+
         self.add_connection('in/reference_sequence')
         self.add_connection('out/segemehl_index')
         self.add_connection('out/log')
@@ -60,10 +60,10 @@ class SegemehlGenerateIndex(AbstractStep):
                         # Is the reference gzipped?
                         root, ext = os.path.splitext(os.path.basename(seq_file))
                         is_gzipped = True if ext in ['.gz', '.gzip'] else False
-                        
+
                         # Create FIFO for input file
                         seq_fifo = run.add_temporary_file(
-                            '%s-fifo' % 
+                            '%s-fifo' %
                             os.path.basename(seq_file),
                             suffix = '.fa',
                             designation = 'input')
@@ -74,7 +74,7 @@ class SegemehlGenerateIndex(AbstractStep):
                             seq_fifo
                         ]
                         exec_group.add_command(mkfifo_seq)
-                        
+
                         # Feed reference sequence to seq_fifo
                         dd_refseq = [
                             self.get_tool('dd'),

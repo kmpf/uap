@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-# Run this tool in two stages: 
+# Run this tool in two stages:
 #
 # 1. Collect data: ./monitor-disk-io.py [command]
 # 2. Print statistics: ./monitor-disk-io.py
 # 3. $$$
 #
-# The first command will run strace and write the output to 
+# The first command will run strace and write the output to
 # _monitor_disk_io/strace-out.txt. The second call (without any arguments)
 # will parse that file and try to find out which file every read, write,
 # and seek corresponds to.
@@ -31,9 +31,9 @@ proc_files = {}
 
 if not os.path.exists('_monitor_disk_io'):
     os.mkdir('_monitor_disk_io')
-    
+
 if len(sys.argv) > 1:
-    pigz = subprocess.Popen("pigz -p 2 -b 4096 -c > _monitor_disk_io/strace-out.txt.gz", 
+    pigz = subprocess.Popen("pigz -p 2 -b 4096 -c > _monitor_disk_io/strace-out.txt.gz",
                             stdin = subprocess.PIPE, shell = True)
     args = ["strace", "-f", "-o", '/dev/stderr']
     args.extend(sys.argv[1:])
@@ -45,7 +45,7 @@ if len(sys.argv) > 1:
     pigz.wait()
     exit(0)
 
-pigz = subprocess.Popen("pigz -p 1 -d -c _monitor_disk_io/strace-out.txt.gz", 
+pigz = subprocess.Popen("pigz -p 1 -d -c _monitor_disk_io/strace-out.txt.gz",
                         stdout = subprocess.PIPE, shell = True)
 strace_out = pigz.stdout
 

@@ -13,15 +13,15 @@ class Bowtie2GenerateIndex(AbstractStep):
     suffixes will have a bt2l termination. These files together constitute the
     index: they are all that is needed to align reads to that reference.
     The original sequence FASTA files are no longer used by Bowtie 2 once the
-    index is built.    
- 
+    index is built.
+
     http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#the-bowtie2-build-indexer
-    
+
     typical command line::
 
         bowtie2-build [options]* <reference_in> <bt2_index_base>
     '''
-    
+
     def __init__(self, pipeline):
         super(Bowtie2GenerateIndex, self).__init__(pipeline)
         self.set_cores(6)
@@ -137,7 +137,7 @@ class Bowtie2GenerateIndex(AbstractStep):
                                   ['in/reference_sequence']
 
                     temp_files = list()
-                    
+
                     for input_path in input_paths:
                         # Is input gzipped fasta?
                         is_fasta_gz = False
@@ -172,14 +172,14 @@ class Bowtie2GenerateIndex(AbstractStep):
                                           'obs=4M',
                                           'of=%s' % temp_file]
                                 temp_files.append(temp_file)
-                                
+
                                 unzip_pipe.add_command(dd_in)
                                 unzip_pipe.add_command(pigz)
                                 unzip_pipe.add_command(dd_out)
                         elif is_fasta:
                             dd = [self.get_tool('dd'),
                                   'bs=4M',
-                                  'if=%s' % input_path, 
+                                  'if=%s' % input_path,
                                   'of=%s' % temp_file]
                             temp_files.append(input_path)
                             exec_group.add_command(dd)

@@ -12,7 +12,7 @@ def main():
         'and removes reads or read pairs if at least one read is empty.',
         prog = 'fix_cutadapt',
         formatter_class=argparse.RawTextHelpFormatter)
-    
+
     parser.add_argument('--version',
                         action='version',
                         version='%(prog)s 0.01')
@@ -37,7 +37,7 @@ def main():
                         help="This file or fifo contains the " +
                         "second set of reads.")
 
-    args = parser.parse_args()        
+    args = parser.parse_args()
 
     fin1 = open(args.r1_in, 'r')
     fin2 = None
@@ -72,7 +72,7 @@ def main():
         fin2.close()
         fout1.close()
         fout2.close()
-        
+
     else:
         while True:
             lines1 = []
@@ -88,6 +88,6 @@ def main():
             sys.stderr.write("Read %d entries, wrote %d entries.\n" % (rcount, wcount))
 
     sys.stderr.write("Read %d entries, wrote %d entries.\n" % (rcount, wcount))
-        
+
 if __name__ == '__main__':
     main()

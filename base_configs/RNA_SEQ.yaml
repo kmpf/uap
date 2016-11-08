@@ -7,7 +7,7 @@ notify: http://nhcham.org:13380/9j84dr9384dh92s9   # Sven
 constants:
     - &genome /data/bioinf/Data/Indices/hg19/hg19.fa
     - &segemehl_genome_index /data/bioinf/Data/Indices/hg19/hg19.idx
-    - &bowtie2_genome_index /data/bioinf/genomes/data/animalia/chordata/mammalia/rodentia/homo_sapiens/hg19/indices/hg19 
+    - &bowtie2_genome_index /data/bioinf/genomes/data/animalia/chordata/mammalia/rodentia/homo_sapiens/hg19/indices/hg19
 
 
 #    - &genome /gpfs1/data/bioinf/projects/data/rna-seq-devel/test_files/mtGenome/chrM.fa
@@ -21,7 +21,7 @@ steps:
         group: (R\d{3})-R[12].fastq.gz
         paired_end: yes
         indices:
-            R334: TTAGGC 
+            R334: TTAGGC
             R389: CAGATC
 
 
@@ -76,7 +76,7 @@ steps:
          sort_by_name: false
          genome: *genome
 
-    cufflinks:    
+    cufflinks:
         _depends: sort_by_chr_post_sawdust
         library_type: fr-secondstrand
         use_mask: /home/puppel/pca-retro/rnaseq-pipeline/cufflinks-mask-rRNA-tRNA-chrM.gtf
@@ -94,8 +94,8 @@ steps:
         remove_unstranded: False
 
     merge_gencode_novel_workaround:
-        _depends: 
-            - post_cufflinks_merge 
+        _depends:
+            - post_cufflinks_merge
         reference: /data/bioinf/databases/proteom_databases/code/gencode/v18/data/gencode.v18.annotation.gtf
 
     count_genes (htseq_count):

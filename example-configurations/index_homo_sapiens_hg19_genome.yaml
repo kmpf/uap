@@ -1,5 +1,5 @@
 # This is the uap configuration file.
- 
+
 destination_path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19
 
 steps:
@@ -254,11 +254,11 @@ steps:
 
     hg19_bowtie2_index (bowtie2_generate_index):
         _depends: hg19_UCSC_complete_genome
-        _connect: 
+        _connect:
             in/reference_sequence: hg19_UCSC_complete_genome/sequence
         index-basename: bowtie2_index
 
-#    ## !ATTENTION! 
+#    ## !ATTENTION!
 #    ## only enable if your machine possesses enough memory (~60GB)
 #    ## otherwise this step is likely to crash
 #    hg19_segemehl_index (segemehl_generate_index):
@@ -290,7 +290,7 @@ tools:
         path: bwa
         get_version: ''
         exit_code: 1
-        
+
     # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
     bowtie2-build:
         path: bowtie2-build
@@ -304,7 +304,7 @@ tools:
         exit_code: 255
 
     # URL: http://zlib.net/pigz/
-    pigz: 
+    pigz:
         path: pigz
         get_version: --version
         exit_code: 0
@@ -320,7 +320,7 @@ tools:
 #        path: segemehl.x
 #        get_version: ''
 #        exit_code: 255
-                
+
     ##################
     # Internal Tools #
     ##################
@@ -358,7 +358,7 @@ tools:
         path: mkdir
         get_version: --version
         exit_code: 0
-        
+
     mkfifo:
         path: mkfifo
         get_version: --version

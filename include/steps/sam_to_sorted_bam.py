@@ -8,7 +8,7 @@ logger=getLogger('uap_logger')
 class SamToSortedBam(AbstractStep):
     '''
     The step sam_to_sorted_bam builds on 'samtools sort' to sort SAM files and
-    output BAM files. 
+    output BAM files.
 
     Sort alignments by leftmost coordinates, or by read name when -n is used.
     An appropriate @HD-SO sort order header tag will be added or an existing
@@ -21,12 +21,12 @@ class SamToSortedBam(AbstractStep):
 
     def __init__(self, pipeline):
         super(SamToSortedBam, self).__init__(pipeline)
-        
+
         self.set_cores(8)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
-        
+
         self.require_tool('dd')
         self.require_tool('samtools')
         self.require_tool('pigz')
@@ -38,7 +38,7 @@ class SamToSortedBam(AbstractStep):
                         'this directory.')
 
     def runs(self, run_ids_connections_files):
-        
+
         for run_id in run_ids_connections_files.keys():
 
             with self.declare_run(run_id) as run:
@@ -61,7 +61,7 @@ class SamToSortedBam(AbstractStep):
                         #not accessible
                         logger.error("Directory %s not accessible." % self.get_option('temp-sort-dir'))
                         sys.exit(1)
-                
+
 
                     with run.new_exec_group() as exec_group:
 
@@ -100,7 +100,7 @@ class SamToSortedBam(AbstractStep):
                                 ['-T',
                                  os.path.join(
                                     self.get_option('temp-sort-dir'),
-                                     run_id), 
+                                     run_id),
                                  '-',
                                  '-@', '6']
                             )

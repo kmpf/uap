@@ -21,15 +21,15 @@ class PicardAddOrReplaceReadGroups(AbstractStep):
         super(PicardAddOrReplaceReadGroups, self).__init__(pipeline)
 
         self.set_cores(6)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
-        
+
         self.require_tool('picard-tools')
 
         # [Standard Picard Options:]
 
-        self.add_option('TMP_DIR', str, optional = True, 
+        self.add_option('TMP_DIR', str, optional = True,
                         description='A file. Default value: null. This option '
                         'may be specified 0 or more times.')
         self.add_option('VERBOSITY', str, optional=True,

@@ -14,7 +14,7 @@ class Macs2(AbstractStep):
     information of both sequencing tag position and orientation. MACS can be
     easily used for ChIP-Seq data alone, or with control sample data to increase
     the specificity.
-    
+
     https://github.com/taoliu/MACS
 
     typical command line for single-end data::
@@ -25,7 +25,7 @@ class Macs2(AbstractStep):
 
     def __init__(self, pipeline):
         super(Macs2, self).__init__(pipeline)
-        
+
         self.set_cores(4)
 
         self.add_connection('in/alignments')
@@ -52,7 +52,7 @@ class Macs2(AbstractStep):
         self.add_option('control', dict, optional=False)
         self.add_option('format', str, default='AUTO',
                         choices=['AUTO', 'ELAND', 'ELANDMULTI', 'ELANDMULTIPET',
-                                 'ELANDEXPORT', 'BED', 'SAM', 'BAM', 'BAMPE', 
+                                 'ELANDEXPORT', 'BED', 'SAM', 'BAM', 'BAMPE',
                                  'BOWTIE'])
         self.add_option('gsize', str, default='2.7e9')
         self.add_option('keep-dup', int, optional=True)
@@ -199,7 +199,7 @@ class Macs2(AbstractStep):
                         macs2 = [self.get_tool('macs2'), 'callpeak']
                         macs2.append('--treatment')
                         macs2.extend(treatments[tr])
-                        ## Append control information 
+                        ## Append control information
                         if control_files:
                             macs2.append('--control')
                             macs2.extend(control_files)

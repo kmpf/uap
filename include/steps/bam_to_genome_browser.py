@@ -9,14 +9,14 @@ class BamToBedgraph(AbstractStep):
 
     def __init__(self, pipeline):
         super(BamToBedgraph, self).__init__(pipeline)
-        
+
         self.set_cores(8)
-        
+
         self.add_connection('in/alignments',
                             constraints = {'min_files_per_run': 1,
                                            'max_files_per_run': 1})
         self.add_connection('out/alignments')
-        
+
         self.require_tool('dd')
         self.require_tool('pigz')
         self.require_tool('mkfifo')
@@ -132,7 +132,7 @@ class BamToBedgraph(AbstractStep):
                                 pipe.add_command(pigz)
 
                             output_file = str()
-                            
+
                             # BAM -> BED
                             # (necessary for bed, bigBed)
                             if self.get_option('output-format') in \
@@ -164,7 +164,7 @@ class BamToBedgraph(AbstractStep):
                                 pipe.add_command(genomecov)
                                 # Set output file name here for dd_out
                                 output_file = '%s.bg' % root
-                                    
+
                             # Write BED or BedGraph output to file
                             if self.get_option('output-format') in \
                                ['bed', 'bedGraph']:
@@ -187,7 +187,7 @@ class BamToBedgraph(AbstractStep):
                                 ]
                                 output_file = '%s.bb' % root
                                 pipe.add_command(bed_to_bigbed)
-                            
+
                             # BedGraph -> BigWig
                             if self.get_option('output-format') in ['bigWig']:
                                 bedgraph_to_bigwig = [

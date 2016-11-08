@@ -23,12 +23,12 @@ class PreseqComplexityCurve(AbstractStep):
 
     def __init__(self, pipeline):
         super(PreseqComplexityCurve, self).__init__(pipeline)
-        
+
         self.set_cores(4)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/complexity_curve')
-        
+
         self.require_tool('preseq')
 
         # c_curve specific options

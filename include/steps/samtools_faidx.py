@@ -15,17 +15,17 @@ class SamtoolsFaidx(AbstractStep):
 
     def __init__(self, pipeline):
         super(SamtoolsFaidx, self).__init__(pipeline)
-        
+
         self.set_cores(4)
-        
+
         self.add_connection('in/sequence')
         self.add_connection('out/indices')
-        
+
         self.require_tool('samtools')
         self.require_tool('mv')
-        
+
     def runs(self, run_ids_connections_files):
-        
+
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 input_paths = run_ids_connections_files[run_id]['in/sequence']

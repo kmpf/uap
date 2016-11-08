@@ -9,7 +9,7 @@ constants:
     - &genome_faidx genomes/bacteria/Mycoplasma_genitalium/samtools_faidx/M_genitalium_genome-download-e6f7QENG/M_genitalium_genome-download.fasta.fai
     - &segemehl_genome_index genomes/bacteria/Mycoplasma_genitalium/segemehl_index/Mycoplasma_genitalium_genome-download-zgtEpQmV/Mycoplasma_genitalium_genome-download.idx
     - &bowtie2_genome_index genomes/bacteria/Mycoplasma_genitalium/bowtie2_index/Mycoplasma_genitalium_index-download-cMQPtBxs/Mycoplasma_genitalium_index-download
-    - &bwa_genome_index 
+    - &bwa_genome_index
 
 steps:
     ##################
@@ -23,7 +23,7 @@ steps:
 #    gencode (raw_url_source):
 #        url: ftp://ftp.sanger.ac.uk/pub/gencode/release_15/gencode.v15.annotation.gtf.gz
 #        sha1: 9b272fde8bca544e6cd8621ddeec55aa09cf7a05
-#        
+#
 #    gencode_genes_only (grep):
 #        _depends: gencode
 #        pattern: "\tgene\t"

@@ -21,11 +21,11 @@ class Enum(set):
 def assign_strings(paths, tags):
     '''
     Assign N strings (path names, for example) to N tags. Example:
-    
+
     - paths = ['RIB0000794-cutadapt-R1.fastq.gz', 'RIB0000794-cutadapt-R2.fastq.gz']
     - tags = ['R1', 'R2']
     - result = { 'R1': 'RIB0000794-cutadapt-R1.fastq.gz', 'R2': 'RIB0000794-cutadapt-R2.fastq.gz' }
-      
+
     If this is not possible without ambiguities, a StandardError is thrown.
     Attention: The number of paths must be equal to the number of tags, a 1:1 relation
     is returned, if possible.
@@ -74,11 +74,11 @@ def assign_strings(paths, tags):
                     if result_candidate:
                         results[json.dumps(result_candidate, sort_keys = True)] = result_candidate
                     offset = index + 1
-                    
+
     if len(results) != 1:
         logger.error("Unable to find an unambiguous mapping.")
         sys.exit(1)
-    
+
     return results[results.keys()[0]]
 
 def assign_string(s, tags):
@@ -98,13 +98,13 @@ def assign_string(s, tags):
 def natsorted(l):
     '''
     Return a 'naturally sorted' permutation of l.
-    
+
     Credits: http://www.codinghorror.com/blog/2007/12/sorting-for-humans-natural-sort-order.html
     '''
     convert = lambda text: int(text) if text.isdigit() else text
     alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
     return sorted(l, key=alphanum_key)
-    
+
 def str_to_sha1(s):
     return hashlib.sha1(s).hexdigest()
 
@@ -122,8 +122,8 @@ def str_to_sha1_b62(s):
         result += alphabet[digit]
         number //= base
     return result
-        
-    
+
+
 def bytes_to_str(num):
     '''
     Convert a number representing a number of bytes into a human-readable string such as "4.7 GB"

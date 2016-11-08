@@ -7,7 +7,7 @@ destination_path: data/out/RNAseq/
 constants:
     - &genome /data/bioinf/Data/Indices/hg19/hg19.fa
     - &segemehl_genome_index /data/bioinf/Data/Indices/hg19/hg19.idx
-    - &bowtie2_genome_index /data/bioinf/genomes/data/animalia/chordata/mammalia/rodentia/homo_sapiens/hg19/indices/hg19 
+    - &bowtie2_genome_index /data/bioinf/genomes/data/animalia/chordata/mammalia/rodentia/homo_sapiens/hg19/indices/hg19
 
 steps:
 #    read_annotation (raw_file_source):
@@ -17,7 +17,7 @@ steps:
     gencode (raw_url_source):
         url: ftp://ftp.sanger.ac.uk/pub/gencode/release_15/gencode.v15.annotation.gtf.gz
         sha1: 9b272fde8bca544e6cd8621ddeec55aa09cf7a05
-        
+
     gencode_genes_only (grep):
         _depends: gencode
         pattern: "\tgene\t"
@@ -64,7 +64,7 @@ steps:
 
 #    call_peaks (macs14):
 #        _depends: read_annotation
-#        _connect: 
+#        _connect:
 #            in/annotation: raw
 
 #tools:

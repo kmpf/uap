@@ -27,7 +27,7 @@ class PicardMarkDuplicates(AbstractStep):
     READ_PAIRS_EXAMINED, UNMAPPED_READS, UNPAIRED_READS,
     UNPAIRED_READ_DUPLICATES, READ_PAIR_DUPLICATES, and
     READ_PAIR_OPTICAL_DUPLICATES.
-    
+
     Usage example::
 
         java -jar picard.jar MarkDuplicates I=input.bam \
@@ -43,16 +43,16 @@ class PicardMarkDuplicates(AbstractStep):
         super(PicardMarkDuplicates, self).__init__(pipeline)
 
         self.set_cores(12)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
         self.add_connection('out/metrics')
-        
+
         self.require_tool('picard-tools')
 
         # [Standard Picard Options:]
 
-        self.add_option('TMP_DIR', str, optional = True, 
+        self.add_option('TMP_DIR', str, optional = True,
                         description='A file. Default value: null. This option '
                         'may be specified 0 or more times.')
         self.add_option('VERBOSITY', str, optional=True,
@@ -176,7 +176,7 @@ class PicardMarkDuplicates(AbstractStep):
                             'INPUT=%s' % input_paths[0],
                             'OUTPUT=%s' % alignments,
                             'METRICS_FILE=%s' % metrics,
-                            'REMOVE_DUPLICATES=true'                
+                            'REMOVE_DUPLICATES=true'
                         ]
                         mark_duplicates.extend(option_list)
                         exec_group.add_command(mark_duplicates)

@@ -19,12 +19,12 @@ class PreseqFutureGenomeCoverage(AbstractStep):
 
     def __init__(self, pipeline):
         super(PreseqFutureGenomeCoverage, self).__init__(pipeline)
-        
+
         self.set_cores(4)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/future_genome_coverage')
-        
+
         self.require_tool('preseq')
 
         # gc_extrap specific options
