@@ -1,13 +1,13 @@
 # This is the uap configuration file.
 
-cluster:
-    # example for SLURM grid engine
-    # default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
-    # example for UGE/SGE respectively OGS
-    # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
-    # default_pre_job_command: "echo 'Run Started!'"
-    # default_post_job_command: "echo 'Run Finished!'"
-    # default_job_quota: 5
+# cluster:
+#     example for SLURM grid engine
+#     default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+#     example for UGE/SGE respectively OGS
+#     default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+#     default_pre_job_command: "echo 'Run Started!'"
+#     default_post_job_command: "echo 'Run Finished!'"
+#     default_job_quota: 5
  
 destination_path: example-out/2014-Mercer_et_al_download
 
@@ -29,21 +29,20 @@ steps:
     # Download supplementary files
     # (see https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM1267958)
     GSM1267958_LncRNAdesign_probes_download (raw_url_source):
-        url: https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM1267958&format=file&file=GSM1267958%5FLncRNAdesign%5Fprobes%2Ebed%2Egz
+        url: ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1267nnn/GSM1267958/suppl/GSM1267958_LncRNAdesign_probes.bed.gz
         path: example-out/2014-Mercer_et_al_download
         uncompress: yes
 
     GSM1267958_README_gtf_download (raw_url_source):
-        url: https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM1267958&format=file&file=GSM1267958%5FREADME%5Fgtf%2Etxt%2Egz
+        url: ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1267nnn/GSM1267958/suppl/GSM1267958_README_gtf.txt.gz
         path: example-out/2014-Mercer_et_al_download
         uncompress: yes
 
     GSM1267958_captured_transcripts_noERCC_download (raw_url_source):
-        url: https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM1267958&format=file&file=GSM1267958%5Fcaptured%5Ftranscripts%5FnoERCC%2Egtf%2Egz
+        url: ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1267nnn/GSM1267958/suppl/GSM1267958_captured_transcripts_noERCC.gtf.gz
         path: example-out/2014-Mercer_et_al_download
         uncompress: yes
 
-        
 tools:
     ##################
     # External Tools #
