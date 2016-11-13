@@ -1,13 +1,13 @@
 # This is an example configuration for the analysis of RNAseq data
 
-cluster:
-    # example for SLURM grid engine
-    # default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
-    # example for UGE/SGE respectively OGS
-    # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
-    # default_pre_job_command: "echo 'Run Started!'"
-    # default_post_job_command: "echo 'Rub Finished!'"
-    # default_job_quota: 5
+# cluster:
+#     example for SLURM grid engine
+#     default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+#     example for UGE/SGE respectively OGS
+#     default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+#     default_pre_job_command: "echo 'Run Started!'"
+#     default_post_job_command: "echo 'Rub Finished!'"
+#     default_job_quota: 5
 
 destination_path: example-out/2014-Mercer_et_al
 
@@ -40,11 +40,13 @@ steps:
     ## Source step ##
     #################
     fastq_source:
-        capture_RNA:
-            - example-out/2014-Mercer_et_al_download/SRR1032214_1.fastq
-            - example-out/2014-Mercer_et_al_download/SRR1032214_2.fastq
+        sample_to_files_map:
+            capture_RNA:
+                - example-out/2014-Mercer_et_al_download/SRR1032214_1.fastq
+                - example-out/2014-Mercer_et_al_download/SRR1032214_2.fastq
         paired_end: no
         first_read: _1.fastq
+        second_read: _2.fastq
 
     fastqc:
       _depends: fastq_source
@@ -52,20 +54,8 @@ steps:
     fastx_quality_stats:
       _depends: fastq_source
 
-    cutadapt:
-        _depends: merge_fastq_files
-        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
-        fix_qnames: true
-
-    cutadapt_fastqc (fastqc):
-      _depends: cutadapt
-
-    fix_cutadapt:
-        _depends: cutadapt
-        _volatile: true
-
     tophat2:
-        _depends: fix_cutadapt
+        _depends: fastq_source
         library_type: fr-secondstrand
         index: *bowtie2_genome_index
 
