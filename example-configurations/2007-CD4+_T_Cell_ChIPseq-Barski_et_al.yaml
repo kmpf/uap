@@ -348,12 +348,6 @@ tools:
     # External Tools #
     ##################
 
-    # URL: https://github.com/arq5x/bedtools2
-    bedtools:
-        path: bedtools
-        get_version: --version
-        exit_code: 0
-
     # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
     bowtie2:
         path: bowtie2
@@ -426,12 +420,6 @@ tools:
         path: tophat2
         get_version: --version
         exit_code: 0
-
-    # URL: https://github.com/ENCODE-DCC/kentUtils
-    bedGraphToBigWig:
-        path: bedGraphToBigWig
-        get_version: ''
-        exit_code: 255
 
     ##################
     # Internal Tools #
