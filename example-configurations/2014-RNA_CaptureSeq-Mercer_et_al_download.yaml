@@ -1,4 +1,13 @@
-# This is the uap configuration file.
+# This configuration downloads the sequencing data analysed in:
+# Targeted sequencing for gene discovery and quantification using RNA CaptureSeq
+# Mercer et al., Nature protocols, 2014
+
+################################################################################
+## Cluster Section                                                            ##
+## =====================                                                      ##
+##                                                                            ##
+## - uncomment/adapt as required                                              ##
+################################################################################
 
 # cluster:
 #     example for SLURM grid engine
@@ -8,11 +17,15 @@
 #     default_pre_job_command: "echo 'Run Started!'"
 #     default_post_job_command: "echo 'Run Finished!'"
 #     default_job_quota: 5
- 
+
 destination_path: example-out/2014-Mercer_et_al_download
 
-constants:
-    - &some_constant some_value
+################################################################################
+## Destination Path Section                                                   ##
+## ========================                                                   ##
+##                                                                            ##
+## - directory where analysis results get stored                              ##
+################################################################################
 
 steps:
     # Download the actual sequencing data
@@ -42,6 +55,14 @@ steps:
         url: ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1267nnn/GSM1267958/suppl/GSM1267958_captured_transcripts_noERCC.gtf.gz
         path: example-out/2014-Mercer_et_al_download
         uncompress: yes
+
+################################################################################
+## Tools Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define used tools here                                                   ##
+## - for module system usage see documentation                                ##
+################################################################################
 
 tools:
     ##################

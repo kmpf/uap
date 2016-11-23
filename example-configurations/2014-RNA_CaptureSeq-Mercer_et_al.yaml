@@ -3,36 +3,36 @@
 # Mercer et al., Nature Protocols, 2014
 
 ################################################################################
-## Cluster Configuration                                                      ##
-## =====================                                                      ##
+## Cluster Section                                                            ##
+## ===============                                                            ##
 ##                                                                            ##
-## - example for SLURM grid engine                                            ##
-## - uncomment if required                                                    ##
+## - uncomment/adapt as required                                              ##
 ################################################################################
 
 # cluster:
+#     # example for SLURM grid engine
 #     default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
-#     example for UGE/SGE respectively OGS
+#     # example for UGE/SGE respectively OGS
 #     default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
 #     default_pre_job_command: "echo 'Run Started!'"
-#     default_post_job_command: "echo 'Rub Finished!'"
+#     default_post_job_command: "echo 'Run Finished!'"
 #     default_job_quota: 5
 
-###################################################
-## Destination Path Section                      ##
-## ========================                      ##
-##                                               ##
-## - directory where analysis results get stored ##
-###################################################
+################################################################################
+## Destination Path Section                                                   ##
+## ========================                                                   ##
+##                                                                            ##
+## - directory where analysis results get stored                              ##
+################################################################################
 
 destination_path: example-out/2014-Mercer_et_al
 
-###########################################
-## Constants Section                     ##
-## =================                     ##
-##                                       ##
-## - define constants for later use here ##
-###########################################
+################################################################################
+## Constants Section                                                          ##
+## =================                                                          ##
+##                                                                            ##
+## - define constants for later use here                                      ##
+################################################################################
 
 constants:
     # 1.  Genome Information:
@@ -58,12 +58,12 @@ constants:
     - &gencode_v24_annotation_gtf
         genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode/gencode.v24.annotation.gtf
 
-##################################
-## Steps Section
-## =============
-##
-## - define analysis steps here
-##################################
+################################################################################
+## Steps Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define analysis steps here                                               ##
+################################################################################
 
 steps:
     #################
@@ -137,12 +137,13 @@ steps:
         library-type: fr-secondstrand
         mask-file: *gencode_v24_annotation_gtf
 
-##############################
-## Tools Section            ##
-## =============
-## 
-## - define used tools here ##
-##############################
+################################################################################
+## Tools Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define used tools here                                                   ##
+## - for module system usage see documentation                                ##
+################################################################################
 
 tools:
     ##################
