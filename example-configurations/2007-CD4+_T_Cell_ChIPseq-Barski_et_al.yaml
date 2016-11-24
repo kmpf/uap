@@ -409,11 +409,11 @@ tools:
         get_version: ''
         exit_code: 1
 
-    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
-    segemehl:
-        path: segemehl.x
-        get_version: ''
-        exit_code: 255
+#    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
+#    segemehl:
+#        path: segemehl.x
+#        get_version: ''
+#        exit_code: 255
 
     # URL: http://ccb.jhu.edu/software/tophat/index.shtml
     tophat2:

@@ -200,14 +200,14 @@ steps:
             in/reference_sequence: hg19_UCSC_complete_genome/sequence
         index-basename: bowtie2_index
 
-    ## !ATTENTION! 
-    ## only enable if your machine possesses enough RAM (~60GB)
-    ## otherwise this step is going to crash
-    hg19_segemehl_index (segemehl_generate_index):
-        _depends: hg19_UCSC_complete_genome
-        _connect:
-            in/reference_sequence: hg19_UCSC_complete_genome/sequence
-        index-basename: segemehl_index
+#    ## !ATTENTION! 
+#    ## only enable if your machine possesses enough RAM (~60GB)
+#    ## otherwise this step is going to crash
+#    hg19_segemehl_index (segemehl_generate_index):
+#        _depends: hg19_UCSC_complete_genome
+#        _connect:
+#            in/reference_sequence: hg19_UCSC_complete_genome/sequence
+#        index-basename: segemehl_index
 
     hg19_bwa_index (bwa_generate_index):
         _depends: hg19_UCSC_complete_genome
@@ -257,11 +257,11 @@ tools:
         get_version: --version
         exit_code: 0
 
-    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
-    segemehl:
-        path: segemehl.x
-        get_version: ''
-        exit_code: 255
+#    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
+#    segemehl:
+#        path: segemehl.x
+#        get_version: ''
+#        exit_code: 255
                 
     ##################
     # Internal Tools #
