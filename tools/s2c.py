@@ -468,6 +468,7 @@ p_mate=subprocess.Popen(
     stdin=subprocess.PIPE,
     stdout=subprocess.PIPE)
 temp2_mate.write(p_mate.communicate()[0])
+sys.stderr.write('s2c - after sorting of mate file  \n')
 temp_mate.close()
 temp2_mate.flush()
 temp2_mate.seek(0)
