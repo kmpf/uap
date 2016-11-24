@@ -1,15 +1,38 @@
-# This is the uap configuration file.
+# This configuration analyses data published in:
+# High-Resolution Profiling of Histone Methylations in the Human Genome
+# Barski et al., Cell, 2007
 
-cluster:
-    # example for SLURM grid engine
-    # default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
-    # example for UGE/SGE respectively OGS
-    # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
-    default_pre_job_command: "echo 'Run Started!'"
-    default_post_job_command: "echo 'Run Finished!'"
-    default_job_quota: 5
+################################################################################
+## Cluster Section                                                            ##
+## ===============                                                            ##
+##                                                                            ##
+## - uncomment/adapt as required                                              ##
+################################################################################
+
+# cluster:
+#     # example for SLURM grid engine
+#     default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+#     # example for UGE/SGE respectively OGS
+#     default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+#     default_pre_job_command: "echo 'Run Started!'"
+#     default_post_job_command: "echo 'Run Finished!'"
+#     default_job_quota: 5
+
+################################################################################
+## Destination Path Section                                                   ##
+## ========================                                                   ##
+##                                                                            ##
+## - directory where analysis results get stored                              ##
+################################################################################
 
 destination_path: example-out/2007-Barski_et_al
+
+################################################################################
+## Constants Section                                                          ##
+## =================                                                          ##
+##                                                                            ##
+## - define constants for later use here                                      ##
+################################################################################
 
 constants:
     # 1.  Genome information:
@@ -55,6 +78,13 @@ constants:
                # - H4K20me3
                # - H4R3me2
                - Pol_II
+
+################################################################################
+## Steps Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define analysis steps here                                               ##
+################################################################################
 
 steps:
     ##################
@@ -305,16 +335,18 @@ steps:
         broad: yes
         control: *control-treatment-hash
 
+################################################################################
+## Tools Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define used tools here                                                   ##
+## - for module system usage see documentation                                ##
+################################################################################
+
 tools:
     ##################
     # External Tools #
     ##################
-
-    # URL: https://github.com/arq5x/bedtools2
-    bedtools:
-        path: bedtools
-        get_version: --version
-        exit_code: 0
 
     # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
     bowtie2:
@@ -377,23 +409,17 @@ tools:
         get_version: ''
         exit_code: 1
 
-    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
-    segemehl:
-        path: segemehl.x
-        get_version: ''
-        exit_code: 255
+#    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
+#    segemehl:
+#        path: segemehl.x
+#        get_version: ''
+#        exit_code: 255
 
     # URL: http://ccb.jhu.edu/software/tophat/index.shtml
     tophat2:
         path: tophat2
         get_version: --version
         exit_code: 0
-
-    # URL: https://github.com/ENCODE-DCC/kentUtils
-    bedGraphToBigWig:
-        path: bedGraphToBigWig
-        get_version: ''
-        exit_code: 255
 
     ##################
     # Internal Tools #

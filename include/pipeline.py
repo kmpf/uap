@@ -527,9 +527,9 @@ class Pipeline(object):
             if exit_code != expected_exit_code:
                 logger.error(
                     "%s: Tool check failed for %s: %s - exit code is: %d "
-                    "(expected %d)"
+                    "(expected %d) (response %s)"
                     % (self.get_config_filepath(), tool_id, ' '.join(command),
-                       exit_code, expected_exit_code)
+                       exit_code, expected_exit_code, tool_check_info['response'])
                 )
                 sys.exit(1)
             # Execute clean-up command (if configured)
