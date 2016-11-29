@@ -32,6 +32,6 @@ class CopyFile(AbstractStep):
                         out_file = run.add_output_file('copied',
                                                        file_name,
                                                        input_paths)
-                        cp = [self.get_tool('cp'), '--update',
+                        cp = [self.get_tool('cp'),
                               input_file, out_file]
                         cp_exec_group.add_command(cp)

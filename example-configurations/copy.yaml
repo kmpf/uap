@@ -1,8 +1,5 @@
 destination_path: example-out/copy_step
 
-constans:
-    - &to_copy example-out/copy_step/hg19_UCSC_complete_genome/hg19_chr21-22-download-t1TuBs2f/hg19_chr21-22-download.fasta
-
 steps:
     hg19_UCSC_chr21 (raw_url_source):
         url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr21.fa.gz
@@ -34,14 +31,8 @@ steps:
 
     copy_test (copy_file):
         _depends: [hg19_UCSC_complete_genome]
-        #_depends: [hg19_UCSC_chr21, hg19_UCSC_chr22]
-        #_depends: [hg19_UCSC_complete_genome, hg19_UCSC_chr22]
         _connect:
             in/sequence: [single_file]
-            #in/sequence: [hg19_UCSC_chr21/raw]
-            #in/sequence: [hg19_UCSC_chr22/raw]
-            #in/sequence: [hg19_UCSC_chr21/raw, hg19_UCSC_chr22/raw]
-            #in/sequence: [single_file, hg19_UCSC_chr22/raw]
 
 tools:
     ##################
