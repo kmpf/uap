@@ -57,7 +57,7 @@ class SraFastqDump (AbstractStep):
     '''
 
     def __init__(self, pipeline):
-        super (sra_fastq_dump, self).__init__(pipeline)
+        super (SraFastqDump, self).__init__(pipeline)
         # set # of cores for cluster, it is ignored if run locally
         self.set_cores(10)
 
