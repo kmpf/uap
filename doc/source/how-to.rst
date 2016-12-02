@@ -15,7 +15,7 @@ Quick Start **uap**
 *******************
 
 At first, you need to install **uap** (see :doc:`installation`).
-After successfully finishing the installation of **uap** example data and
+After successfully finishing the installation of **uap** example
 analysis can be found in the folder ``example-configurations``.
 
 Let's jump head first into **uap** and have a look at some examples::
@@ -24,14 +24,14 @@ Let's jump head first into **uap** and have a look at some examples::
   $ ls *.yaml
   2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml
   2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml
-  ChIPseq-example.yaml
+  2014-RNA_CaptureSeq-Mercer_et_al_download.yaml
+  2014-RNA_CaptureSeq-Mercer_et_al.yaml
   download_human_gencode_release.yaml
   index_homo_sapiens_hg19_genome.yaml
   index_mycoplasma_genitalium_ASM2732v1_genome.yaml
-  RNAseq-example.yaml
 
 
-These example configurations require different amounts of computational
+These example configurations differ in their usage of computational
 resources.
 Some example configurations download or work on small datasets and are
 thus feasible for machines with limited resources.
@@ -49,8 +49,8 @@ investigation.
 That sequence is required to construct the indices (data structures used by 
 read aligners).
 Other publicly available data sets (such as reference annotations or the
-chromosome sizes) migh also be required by the analysis.
-The following configurations showcase how to get/generate that data:
+chromosome sizes) might also be required for an analysis.
+The following configurations showcase how to get or generate that data:
 
 ``index_mycoplasma_genitalium_ASM2732v1_genome.yaml``
     Downloads the *Mycoplasma genitalium* genome, generates the indices for
@@ -175,7 +175,11 @@ Most examples require the human genome so you might turn your head towards the
   <Analysis starts>
 
 Again you need to create the output folder (you get the idea).
-
+Be aware that by default only the smallest chromosome, chromsome 21, is
+downloaded and indexed.
+This reduces required memory and computation time.
+You can uncomment the download steps for the other chromosomes and the index
+for the complete genome will be created.
 
 Sequencing Data Analysis
 ------------------------
@@ -197,15 +201,39 @@ These basic steps can be followed up with a lot of different analysis steps.
 The following analysis examples illustrate how to perform the basic as well as
 some more specific steps.
 
-RNAseq Example Workflow
-^^^^^^^^^^^^^^^^^^^^^^^
+RNAseq Example -- Reanalysing Data from |Mercer_link|
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``RNAseq-example.yaml``
-    This workflow includes the aforementioned basic steps, followed by the
-    use of |tophat2_link| to map split reads.
-    After mapping |htseq_count_link| is used to count the reads mapping to
-    every exon from the annotation.
-    A |cufflinks_link| step for *de novo* transcript assembly is also included.
+RNAseq analysis often aims at the discovery of differentially expressed
+(known) transcripts. Therefore mappped reads for at least two different samples
+have to be available.
+
+A. Differential Expression Analysis
+
+   4. Get annotation set (for e.g. genes, transcripts, ...)
+   5. Count the number of reads overlapping the annotation
+   6. Perform statistical analysis, based on counts 
+
+Another common analysis performed with RNAseq data is the identification of
+novel tarnscripts. This approach is useful to identify tissue-specific
+transcipts.
+      
+B. *De novo* Transcript Assembly
+   
+   4. Apply transcript assembly tool on mapped reads
+
+      
+``2014-RNA_CaptureSeq-Mercer_et_al_download.yaml``
+    Downloads the data published in the paper |Mercer_link|.
+
+``2014-RNA_CaptureSeq-Mercer_et_al.yaml``
+    The downloaded FASTQ files get analysed by |fastqc_link| and
+    |fastx_toolkit_link|.
+    The reads are afterwards mapped to the human genome with |tophat2_link|.
+    The mapped reads are afterwards sorted by position using |samtools_link|.
+    |htseq_count_link| is used to count the mapped reads for every exon of
+    the annotation.
+    |cufflinks_link| is used to perform *de novo* transcript assembly.
     The usage of |segemehl_link| is **disabled** by default.
     But it can be enabled and combined with |cufflinks_link| *de novo*
     transcript assembly employing our **s2c** python script.
@@ -213,61 +241,24 @@ RNAseq Example Workflow
     **This workflow is not going to work, because the initial data set is
     to small.**
 
-Differential expression
-"""""""""""""""""""""""
-
-RNAseq analysis often aims at the discovery of differentially expressed
-(known) transcripts. Therefore mappped reads for at least two different samples
-have to be available.
-
-4. Get annotation set (for e.g. genes, transcripts, ...)
-5. Count the number of reads overlapping the annotation
-6. Perform statistical analysis, based on counts 
-
-Assemble novel transcripts
-""""""""""""""""""""""""""
-
-The publicly available annotations, e.g. from GENCODE, might be not
-complete.
-That's why the assembly of novel transcripts from RNAseq data is a common
-task.
-
-ChIPseq Example Workflow
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-``ChIPseq-example.yaml``
-    This workflow includes the aforementioned basic steps, followed by the
-    use of |bowtie2_link| to map the sequencing reads.
-    After the mapping duplicate reads are removed using |picard_link|.
-    And finally |macs2_link| is used to infer enriched regions aka. peak
-    calling.
-
-    **This workflow is not going to work, because the initial data set is
-    to small.**
-
-Peak Calling
-""""""""""""
+ChIPseq Example -- Reanalysing Data from |Barski_link|
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ChIPseq analysis aims at the discovery of genomic loci at which protein(s) of
 interest were bound. The experiment is an enrichment procedure using specific
 antibodies. The enrichment detection is normally performed by so called peak
-calling programs.
+calling programs. The data is prone to duplicate reads from PCR due to relatively
+low amounts of input DNA. So these steps follow the basic ones:
 
 4. Duplicate removal
 5. Peak calling
 
-Real-Life Data Set Example
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-An example **uap** workflow is included in the two configuration files:
-
-* ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml``
-* ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
-
+The analysis of data published in the paper |Barski_link| is contained in these
+files:
 
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml``
-    Downloads the data published with the paper |Barski_link|.
-
+    Downloads the data published in the paper |Barski_link|.
+    
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
     At first the downloaded FASTQ files are grouped by sample.
     All files per sample are merged.
@@ -278,6 +269,7 @@ An example **uap** workflow is included in the two configuration files:
     Again mapping with |segemehl_link| is disabled by default due to its
     high resource requirements.
     Library complexity is estimated using |preseq_link|.
+    After the mapping duplicate reads are removed using |picard_link|.
     Finally enriched regions are detected with |macs2_link|.
     
     **This workflow will take some time due to the number of steps and
@@ -327,6 +319,10 @@ on another page (see :ref:`analysis_configuration`).
       
    <a href="https://github.com/taoliu/MACS" target="_blank">MACS2</a>
 
+.. |Mercer_link| raw:: html
+
+   <a href="https://www.ncbi.nlm.nih.gov/pubmed/24705597" target="_blank">Mercer <i>et al.</i>, Nature Protoc. (2014)</a>
+   
 .. |picard_link| raw:: html
       
    <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard</a>
