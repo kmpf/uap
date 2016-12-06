@@ -699,12 +699,6 @@ class Run(object):
         self._output_files[out_connection] = dict()
         return out_connection
 
-    def get_input_files_for_output_file(self, output_file):
-        for connection in self.get_out_connections():
-            if output_file in \
-               self.get_output_files_for_out_connection(connection):
-                return self._output_files[connection][output_file]
-
     def get_input_files_for_output_file_abspath(self, output_file):
         for connection in self.get_out_connections():
             if abspath_output_file in \
