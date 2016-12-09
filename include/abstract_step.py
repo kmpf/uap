@@ -161,12 +161,12 @@ class AbstractStep(object):
         else:
             return None
 
-    def get_runs(self):
-        '''
-        Returns all run objects of the step.
-        '''
-        for run in self._runs:
-            yield self._runs[run]
+#     def get_runs(self):
+#         '''
+#         Returns all run objects of the step.
+#         '''
+#         for run in self._runs:
+#             yield self._runs[run]
 
     def set_step_name(self, step_name):
         '''
