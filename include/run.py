@@ -59,6 +59,7 @@ class Run(object):
            annotation_2: ...
 
         '''
+        self._annotation_path = str()
         self._ping_files = {
             'run': None,
             'queued': None
@@ -134,6 +135,9 @@ class Run(object):
             )
         return self._submit_script
 
+    def is_source(self):
+        return True if isinstance(self._step, abst.AbstractSourceStep) else False
+    
     def replace_output_dir_du_jour(func):
         def inner(self, *args, **kwargs):
             # Collect info to replace du_jour placeholder with temp_out_dir
@@ -717,10 +721,10 @@ class Run(object):
 
     def get_input_files_for_output_file_abspath(self, output_file):
         for connection in self.get_out_connections():
-            if abspath_output_file in \
+            if output_file in \
                self.get_output_files_abspath_for_out_connection(connection):
                 return self.get_output_files_abspath()[connection]\
-                    [abspath_output_file]
+                    [output_file]
 
     def get_output_files_for_out_connection(self, out_connection):
         return list( self._output_files[out_connection].keys() )
@@ -874,12 +878,12 @@ class Run(object):
             log['signal'] = self.get_step().get_pipeline().caught_signal
 
         annotation_yaml = yaml.dump(log, default_flow_style = False)
-        annotation_path = os.path.join(
+        self._annotation_path = os.path.join(
             path, ".%s-annotation-%s.yaml" % 
             (self.get_run_id(), misc.str_to_sha1_b62(annotation_yaml)[:6]))
-
+        
         # overwrite the annotation if it already exists
-        with open(annotation_path, 'w') as f:
+        with open(self._annotation_path, 'w') as f:
             f.write(annotation_yaml)
             
         return annotation_path, annotation_yaml
