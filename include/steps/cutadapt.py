@@ -59,7 +59,8 @@ class Cutadapt(AbstractStep):
         self.add_option('m', int, default = 1)
         self.add_option('q', int, default = None, optional =True)
         self.add_option('u', int, default = None, optional =True)
-
+        self.add_option('noadapter', bool,  default=False, optional=True)
+ 
     def runs(self, run_ids_connections_files):
 
         ## Make sure the adapter type is one of -a, -b or -g
@@ -76,16 +77,18 @@ class Cutadapt(AbstractStep):
                 for read in read_types:
                     connection = 'in/%s' % read
                     input_paths = run_ids_connections_files[run_id][connection]
-
                     if input_paths == [None]:
                         run.add_empty_output_connection("%s" % read)
                         run.add_empty_output_connection("log_%s" % read)
                     else:
-                        paired_end_info[run_id] = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
+                        #paired_end_info[run_id] = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
+                        paired_end_info[run_id] = None
+                        #print paired_end_info
                         # make sure that adapter-R1/adapter-R2 or adapter-file are
                         # correctly set
                         # this kind of mutual exclusive option checking is a bit
                         # tedious, so we do it here.
+                        
                         if paired_end_info[run_id]:
                             if ( not self.is_option_set_in_config('adapter-R2') and
                                  not self.is_option_set_in_config('adapter-file') ):
@@ -255,82 +258,3 @@ class Cutadapt(AbstractStep):
                             cutadapt_pipe.add_command(pigz)
                             cutadapt_pipe.add_command(dd)
 
-    def reports(self, run_ids_connection_files):
-
-        # Imports are done here to prevent them from causing errors while
-        # analysis is done
-        import matplotlib.pyplot as plt
-        import numpy as np
-        import csv
-
-        table_header = ['length\tcount\texpect\tmax.err\terror counts']
-
-        run_id_read_data = dict()
-
-        for run_id in run_ids_connection_files:
-            run_id_read_data[run_id] = dict()
-            logs = ['log_first_read', 'log_second_read']
-            for log in [l for l in logs \
-                        if run_ids_connection_files[run_id][l] != [] ]:
-
-                run_id_read_data[run_id][log] = dict()
-                for log_file in run_ids_connection_files[run_id][log]:
-                    base, ext = os.path.splitext( os.path.basename(log_file) )
-                    tables = dict()
-                    found_table = 0
-                    record = False
-                    with open(log_file, 'r') as f:
-                        for line in f:
-                            line = line.rstrip()
-                            if line in table_header:
-                                found_table += 1
-                                tables[found_table] = list()
-                                record = True
-                                if record and line == '':
-                                    record = False
-                                    if record:
-                                        tables[found_table].append(line)
-
-                    # Plot a graph for every table found
-                    data = dict()
-                    for table_nr in tables.keys():
-                        data[table_nr] = {
-                            'length': list(),
-                            'count': list(),
-                            'expect': list(),
-                            'max_error': list(),
-                            'error_counts': list()
-                        }
-                        reader = csv.DictReader(tables[table_nr], delimiter='\t')
-                        for row in reader:
-                            data[table_nr]['length'].append( row['length'] )
-                            data[table_nr]['count'].append( row['count'] )
-                            data[table_nr]['expect'].append( row['expect'] )
-                            data[table_nr]['max_error'].append( row['max.err'] )
-                            data[table_nr]['error_counts'].append(
-                                row['error counts'] )
-
-                    run_id_read_data[run_id][log][log_file] = data
-
-        # Plot the data in one immense figure
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        for run_id, log in run_id_read_data.items():
-            for log_file, data in run_id_read_data[run_id][log].items():
-                for nr in data.keys():
-                    ax.plot
-                    print(data)
-                    plt.plot(
-                        data['length'],
-                        data['count'],
-                        'ro',
-                        data['length'],
-                        data['expect'],
-                        'b--')
-
-                    plt.xlim(0, float(data['length'][-1]) + 1)
-                    plt.ylim(0.01, float(max(data['expect'][0], data['count'])) + 100 )
-                    plt.yscale('log')
-                    print('Trying to save report to %s.png' % base)
-                    plt.savefig('%s-%s.png' % (base, table_nr))
-                    plt.close()
