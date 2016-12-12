@@ -125,7 +125,7 @@ class Bcl2FastqSource(AbstractSourceStep):
                     # Create new execution group for make
                     make_exec_group = run.new_exec_group()
                     # Assemble make command
-                    make = [self.get_tool('make'), '-C', temp_output_dir, '-j', self.get_cores()]
+                    make = [self.get_tool('make'), '-C', temp_output_dir, '-j', str(self.get_cores())]
                     # Add make command to execution group
                     make_exec_group.add_command(
                         make,
