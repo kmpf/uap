@@ -59,7 +59,7 @@ class Run(object):
            annotation_2: ...
 
         '''
-        self._annotation_path = str()
+
         self._ping_files = {
             'run': None,
             'queued': None
@@ -111,6 +111,20 @@ class Run(object):
             logger.error("Connection %s not declared for step %s" %
                          (connection, self.get_step()))
             sys.exit(1)
+
+    @property
+    def annotation_file(self):
+        afl = glob.glob( os.path.join(
+            self.get_output_directory(),
+            ".%s-annotation-*.yaml" % self.get_run_id()))
+        if not afl:
+            print(self.get_output_directory())
+            return ""
+        elif len(afl) != 1:
+            raise StandardError("Found multiple annotation files: %s" %
+                                ", ".join(afl))
+        elif os.path.isfile(afl[0]):
+            return afl[0]
 
     def _get_ping_file(self, key):
         if self._ping_files[key] == None:
@@ -878,12 +892,12 @@ class Run(object):
             log['signal'] = self.get_step().get_pipeline().caught_signal
 
         annotation_yaml = yaml.dump(log, default_flow_style = False)
-        self._annotation_path = os.path.join(
+        annotation_path = os.path.join(
             path, ".%s-annotation-%s.yaml" % 
             (self.get_run_id(), misc.str_to_sha1_b62(annotation_yaml)[:6]))
-        
+
         # overwrite the annotation if it already exists
-        with open(self._annotation_path, 'w') as f:
+        with open(annotation_path, 'w') as f:
             f.write(annotation_yaml)
             
         return annotation_path, annotation_yaml
