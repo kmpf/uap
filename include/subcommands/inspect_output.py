@@ -197,8 +197,6 @@ def main(args):
 
         # Add annotation YAML files to lists of known files
         afl = os.path.abspath(run.annotation_file)
-        print("%s (%s)" % (afl, "Exists" if os.path.isfile(afl) else \
-                           run.get_step().get_step_name()))
         if os.path.isfile(afl):
             annotation_files.append(UapAnnotationFile(run, afl))
     
@@ -229,7 +227,6 @@ def main(args):
         for in_file in input_files:
             if not os.path.isabs(in_file):
                 in_file_abspath = os.path.abspath(in_file)
-                print("Upstream File: %s" % in_file_abspath)
                 # Add UapDataFile to upstream_files list
                 upstream_files.append(
                     data_files[in_file_abspath] )
