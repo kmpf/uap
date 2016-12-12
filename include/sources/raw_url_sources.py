@@ -17,7 +17,6 @@ class RawUrlSource(AbstractSourceStep):
         self.require_tool('cp')
         self.require_tool('curl')
         self.require_tool('dd')
-        self.require_tool('mkdir')
         self.require_tool('pigz')
 
         self.add_option('run-download-info', dict, optional = False,
@@ -111,16 +110,11 @@ class RawUrlSource(AbstractSourceStep):
 
             with self.declare_run(files) as run:
                 # Test if path exists
-                if os.path.exists(path):
-                    # Fail if it is not a directory
-                    if not os.path.isdir(path):
-                        raise StandardError(
-                            "Path %s already exists but is not a directory" % path)
-                else:
-                    # Create the directory
-                    with run.new_exec_group() as mkdir_exec_group:
-                        mkdir = [self.get_tool('mkdir'), '-p', path]
-                        mkdir_exec_group.add_command(mkdir)
+                if not os.path.isdir(path):
+                    logger.error('Output directory (%s) does not exist. Please '
+                                 'create it.' % path)
+                    sys.exit(1)
+
                 out_file = run.add_output_file('raw', final_abspath, [] )
 
                 temp_filename = run.add_temporary_file(suffix = url_filename)
