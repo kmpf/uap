@@ -1,15 +1,38 @@
-# This is an example configuration for the analysis of RNAseq data
+# This configuration repeats the analysis published in:
+# Targeted sequencing for gene discovery and quantification using RNA CaptureSeq,
+# Mercer et al., Nature Protocols, 2014
 
-cluster:
-    # example for SLURM grid engine
-    # default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
-    # example for UGE/SGE respectively OGS
-    # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
-    default_pre_job_command: "echo 'Run Started!'"
-    default_post_job_command: "echo 'Rub Finished!'"
-    default_job_quota: 5
+################################################################################
+## Cluster Section                                                            ##
+## ===============                                                            ##
+##                                                                            ##
+## - uncomment/adapt as required                                              ##
+################################################################################
 
-destination_path: example-out/RNA-Seq/
+# cluster:
+#     # example for SLURM grid engine
+#     default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+#     # example for UGE/SGE respectively OGS
+#     default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+#     default_pre_job_command: "echo 'Run Started!'"
+#     default_post_job_command: "echo 'Run Finished!'"
+#     default_job_quota: 5
+
+################################################################################
+## Destination Path Section                                                   ##
+## ========================                                                   ##
+##                                                                            ##
+## - directory where analysis results get stored                              ##
+################################################################################
+
+destination_path: example-out/2014-Mercer_et_al
+
+################################################################################
+## Constants Section                                                          ##
+## =================                                                          ##
+##                                                                            ##
+## - define constants for later use here                                      ##
+################################################################################
 
 constants:
     # 1.  Genome Information:
@@ -26,98 +49,101 @@ constants:
     - &bowtie2_genome_index
         genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bowtie2_index/bowtie2_index-hg19_all_chr_UCSC-all_sequences-4bnBZlNy/bowtie2_index-hg19_all_chr_UCSC-all_sequences
 
-    # 2.2 Segemehl
-    - &segemehl_genome_index
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_segemehl_index/segemehl_index-hg19_all_chr_UCSC-download-s8p1Hh3g/segemehl_index-hg19_all_chr_UCSC-download.idx
+#    # 2.2 Segemehl
+#    - &segemehl_genome_index
+#        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_segemehl_index/segemehl_index-hg19_all_chr_UCSC-all_sequences-dbEMdEVV/segemehl_index-hg19_all_chr_UCSC-all_sequences.idx
 
     # 3.  Gencode Annotation:
     # 3.1 Version 24
     - &gencode_v24_annotation_gtf
         genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode/gencode.v24.annotation.gtf
 
+################################################################################
+## Steps Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define analysis steps here                                               ##
+################################################################################
+
 steps:
-    fc (run_folder_source):
-        path: example-data/IlluminaRunFolder/RNA-Seq/
+    #################
+    ## Source step ##
+    #################
+    fastq_source:
+        sample_to_files_map:
+            capture_RNA:
+                - example-out/2014-Mercer_et_al_download/SRR1032214_1.fastq
+                - example-out/2014-Mercer_et_al_download/SRR1032214_2.fastq
         paired_end: no
+        first_read: _1.fastq
+        second_read: _2.fastq
 
-    merge_fastq_files:
-      _depends: fc
-
-    fastqc_runs (fastqc):
-      _depends: merge_fastq_files
+    fastqc:
+      _depends: fastq_source
 
     fastx_quality_stats:
-      _depends: merge_fastq_files
-
-    cutadapt:
-        _depends: merge_fastq_files
-        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
-        fix_qnames: true
-
-    cutadapt_fastqc (fastqc):
-      _depends: cutadapt
-
-    cutadapt_fastx_quality_stats (fastx_quality_stats):
-      _depends: cutadapt
-
-    fix_cutadapt:
-        _depends: cutadapt
-        _volatile: true
+      _depends: fastq_source
 
     tophat2:
-        _depends: fix_cutadapt
+        _depends: fastq_source
         library_type: fr-secondstrand
         index: *bowtie2_genome_index
 
-    sam_to_sorted_bam_tophat2 (sam_to_sorted_bam):
+    sort_tophat2_by_pos (sam_to_sorted_bam):
         _depends: tophat2
         genome-faidx: *genome_faidx
-        sort-by-name: true
         temp-sort-dir: '/tmp/'
 
     count_genes_tophat2 (htseq_count):
-        _depends: sam_to_sorted_bam_tophat2
+        _depends: sort_tophat2_by_pos
         feature-file: *gencode_v24_annotation_gtf
-        order: name
+        order: pos
         stranded: 'yes'
         mode: intersection-strict
         type: exon
         idattr: gene_id
 
     cufflinks_tophat2 (cufflinks):
-        _depends: sam_to_sorted_bam_tophat2
+        _depends: sort_tophat2_by_pos
         library-type: fr-secondstrand
         mask-file: *gencode_v24_annotation_gtf
 
 # Uncomment the following steps if you created the segemehl genome index
 #    segemehl:
-#        _depends: fix_cutadapt
+#        _depends: fastq_source
 #        genome: *genome
 #        index: *segemehl_genome_index
-
+#
 #    s2c:
 #        _depends: segemehl
 #        tmp_dir: /tmp/
-
-#    sam_to_sorted_bam_segemehl (sam_to_sorted_bam):
+#
+#    sort_segemehl_by_pos (sam_to_sorted_bam):
 #        _depends: s2c
 #        genome-faidx: *genome_faidx
 #        temp-sort-dir: /tmp/
-
+#
 #    count_genes_segemehl (htseq_count):
-#        _depends: sam_to_sorted_bam_segemehl
+#        _depends: sort_segemehl_by_pos
 #        feature-file: *gencode_v24_annotation_gtf
-#        order: name
+#        order: pos
 #        stranded: 'yes'
 #        mode: intersection-strict
 #        type: exon
 #        idattr: gene_id
-
+#
 #    cufflinks_segemehl (cufflinks):
-#        _depends: sam_to_sorted_bam_segemehl
+#        _depends: sort_segemehl_by_pos
 #        library-type: fr-secondstrand
 #        mask-file: *gencode_v24_annotation_gtf
 
+################################################################################
+## Tools Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define used tools here                                                   ##
+## - for module system usage see documentation                                ##
+################################################################################
 
 tools:
     ##################
