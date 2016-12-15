@@ -26,7 +26,7 @@ class AdapterRemoval(AbstractStep):
 
     "Pipeline specific "input and output expected to be gzipped"
     '''
-    
+
     def __init__(self, pipeline):
         super(AdapterRemoval, self).__init__(pipeline)
 
@@ -43,7 +43,7 @@ class AdapterRemoval(AbstractStep):
         self.add_connection('out/settings')
         self.add_connection('out/log_stderr')
         self.add_connection('out/log_stdout')
-        
+
         self.require_tool('adapterremoval')
         self.require_tool('pwd')
         self.require_tool('mv')
@@ -53,12 +53,12 @@ class AdapterRemoval(AbstractStep):
                         description="workaround to specify cores for grid engine and threads ie")
 
         self.add_option('treatAs', str, optional = False, default=None,
-                        choices=['paired', 'single'],  
+                        choices=['paired', 'single'],
                         description="Pipeline specific: Sets how input is fastq files are treated: paired \
                         R1 and R2 in one command, single r1 and r2 get clipped independently if none r2 just empty")
 
 
-        self.add_option('qualitybase', str, optional = True, default=None, 
+        self.add_option('qualitybase', str, optional = True, default=None,
                         choices=['33', '64', 'solexa'],  description="Quality  \
                         base used to encode Phred scores in input; either 33, 64, or solexa \
                                        [current: 33]")
@@ -111,15 +111,21 @@ class AdapterRemoval(AbstractStep):
 
 
         self.add_option('collapse', bool, default = None, optional=True,
-                        description=" When set, paired ended read alignments of --minalignmentlength or more bases are                                                                                                        combined into a single consensus sequence, representing the complete insert,                                                                                                         and written to either basename.collapsed or basename.collapsed.truncated (if                                                                                                         trimmed due to low-quality bases following collapse); for single-ended reads,                                                                                                        putative complete inserts are identified as having at least                                                                                                                           --minalignmentlength bases overlap with the adapter sequence, and are written                                                                                                         to the the same files [current:off]")
-  
+                        description="When set, paired ended read alignments of --minalignmentlength or more bases are\
+                                    combined into a single consensus sequence, representing the complete insert,\
+                                    and written to either basename.collapsed or basename.collapsed.truncated\
+                                    (if trimmed due to low-quality bases following collapse);\
+                                    for single-ended reads, putative complete inserts are identified as having at least\
+                                    --minalignmentlength bases overlap with the adapter sequence, and are written\
+                                    to the the same files [current:off]")
+
         self.add_option('minalignmentlength', bool, default = None, optional=True,
                     description="If --collapse is set, paired reads must overlap at least this number of bases to \
                                        be collapsed, and single-ended reads must overlap at least this number of \
                                        bases with the adapter to be considered complete template molecules [current: \
                                        11]")
 
-        self.add_option('minadapteroverlap', bool, default = None, optional=True ,    
+        self.add_option('minadapteroverlap', bool, default = None, optional=True ,
                       description="In single-end mode, reads are only trimmed if the overlap between read and the \
                                        adapter is at least X bases long, not counting ambiguous nucleotides (N); this \
                                        is independant of the --minalignmentlength when using --collapse, allowing a \
@@ -130,91 +136,92 @@ class AdapterRemoval(AbstractStep):
         self.add_option('seed', int, default = 22595, optional =True)
         self.add_option('threads', int, default = 1, optional =True)
 
-
     def runs(self, run_ids_connections_files):
         self.set_cores(self.get_option('cores'))
-        #        read_types = {'first_read': 'R1', 'second_read': 'R2'}
-
+        # read_types = {'first_read': 'R1', 'second_read': 'R2'}
 
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 #set everything empty 
                 out_connections =['collapsed', 'collapsed.truncated',
-                                  'discarded', 'pair1.truncated', 
+                                  'discarded', 'pair1.truncated',
                                   'pair2.truncated', 'singleton.truncated',
                                   'settings']
-
 
                 if self.get_option('treatAs') == 'paired':
                     #implement expect only 1 file or iterator 
                     #or should we 
                     r1 = run_ids_connections_files[run_id]['in/first_read'][0]
                     r2 = run_ids_connections_files[run_id]['in/second_read'][0]
-            
-                    
+
                     ar_exec_group = run.new_exec_group()
                     ar = [self.get_tool('adapterremoval')]
                     ar.extend(['--file1', r1, '--file2', r2, ])
-                    ar.extend(['--adapter1', self.get_option('adapter1')]) 
+                    ar.extend(['--adapter1', self.get_option('adapter1')])
                     ar.extend(['--adapter2', self.get_option('adapter2')])
-                    ar.extend(['--basename', run.get_output_directory_du_jour_placeholder() + '/' + run_id ] )
+                    ar.extend(['--basename', run.get_output_directory_du_jour_placeholder() + '/' + run_id ])
+
+                    # @todo: gzip optional?
                     ar.extend(['--gzip'] )
 
                     if self.is_option_set_in_config('threads'):
                         ar.extend(['--threads',  str(self.get_option('threads'))])
+
                     if self.is_option_set_in_config('qualitybase'):
                         ar.extend(['--qualitybase',  str(self.get_option('threads'))])
+
                     if self.is_option_set_in_config('collapse'):
                         ar.extend(['--collapse'])
+
                     if self.is_option_set_in_config('mm'):
-                        ar.extend(['--mm',  str(self.get_option('mm'))]) 
+                        ar.extend(['--mm',  str(self.get_option('mm'))])
 
                     if self.is_option_set_in_config('maxns'):
-                        ar.extend(['--maxns',  str(self.get_option('maxns'))]) 
+                        ar.extend(['--maxns',  str(self.get_option('maxns'))])
 
                     if self.is_option_set_in_config('shift'):
-                        ar.extend(['--shift',  str(self.get_option('shift'))]) 
+                        ar.extend(['--shift',  str(self.get_option('shift'))])
 
                     if self.is_option_set_in_config('trimns'):
-                        ar.extend(['--trimns']) 
+                        ar.extend(['--trimns'])
 
                     if self.is_option_set_in_config('trimqualities'):
-                        ar.extend(['--trimqualities']) 
+                        ar.extend(['--trimqualities'])
 
                     if self.is_option_set_in_config('minquality'):
-                        ar.extend(['--minquality',  str(self.get_option('minquality'))]) 
+                        ar.extend(['--minquality',  str(self.get_option('minquality'))])
 
                     if self.is_option_set_in_config('minlength'):
-                        ar.extend(['--minlength',  str(self.get_option('minlength'))]) 
+                        ar.extend(['--minlength',  str(self.get_option('minlength'))])
 
                     if self.is_option_set_in_config('maxlength'):
-                        ar.extend(['--maxlength',  str(self.get_option('maxlength'))]) 
+                        ar.extend(['--maxlength',  str(self.get_option('maxlength'))])
 
                     if self.is_option_set_in_config('minalignmentlength'):
-                        ar.extend(['--minalignmentlength',  str(self.get_option('minalignmentlength'))]) 
+                        ar.extend(['--minalignmentlength',  str(self.get_option('minalignmentlength'))])
 
                     if self.is_option_set_in_config('minadapteroverlap'):
-                        ar.extend(['--minadapteroverlap',  str(self.get_option('minadapteroverlap'))]) 
- 
+                        ar.extend(['--minadapteroverlap',  str(self.get_option('minadapteroverlap'))])
+
                     if self.is_option_set_in_config('seed'):
-                        ar.extend(['--seed',  str(self.get_option('seed'))]) 
+                        ar.extend(['--seed',  str(self.get_option('seed'))])
 
 
                     log_stdout = run.add_output_file("log_stdout", "%s-adapterremoval-log_stderr.txt" % (run_id), [r1,r2])
                     log_stderr = run.add_output_file("log_stderr", "%s-adapterremoval-log_stdout.txt" % (run_id), [r1,r2])
-                    
+
                     mv_exec_group  = run.new_exec_group()
 
-                    for i in out_connections: 
+                    for i in out_connections:
                         if not self.is_option_set_in_config('collapse'):
                             if i == 'collapsed' or i ==  'collapsed.truncated':
                                 continue
-                                
+
                         if i == 'settings':
                             run.add_output_file(i, run_id +   '.' + i ,  [r1,r2])
                         else:
                             iswanted    = run.add_output_file(i, run_id +    '.' + i + '.fastq.gz' ,  [r1,r2])
-                            isproduced  = run.get_output_directory_du_jour_placeholder() + '/' + run_id + '.' + i + '.gz' 
+                            isproduced  = run.get_output_directory_du_jour_placeholder() + '/' + run_id + '.' + i + '.gz'
 
                             mv_exec_group.add_command([self.get_tool('mv'), isproduced , iswanted])
 
@@ -230,8 +237,6 @@ class AdapterRemoval(AbstractStep):
                 else:
                     logger.error("Howdy Jon Doe you are not supposed to be ever \
                                  in this else clause; Jessus fu....g christ")
-                    
-                    sys.exit(1)
 
-                
+                    sys.exit(1)
 
