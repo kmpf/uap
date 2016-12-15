@@ -40,7 +40,12 @@ class RawFileSource(AbstractSourceStep):
             regex = re.compile(self.get_option('group'))
 
             # find files matching the 'group' pattern in all files matching 'pattern'
-            for path in glob.glob(os.path.abspath(self.get_option('pattern'))):
+            glob_result = glob.glob(os.path.abspath(self.get_option('pattern')))
+            if not glob_result:
+                raise StandardError("Couldn't find files with pattern '%s'."
+                    % os.path.abspath(self.get_option('pattern')))
+
+            for path in glob_result:
                 match = regex.match(os.path.basename(path))
                 if match == None:
                     raise StandardError("Couldn't match regex /%s/ to file %s."
