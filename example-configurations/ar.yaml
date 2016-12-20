@@ -1,0 +1,43 @@
+destination_path: example-out/ar_paired_test
+
+steps:
+    read_example_data (fastq_source):
+        pattern: ../../adapterremovals/repo/examples/sample_*.fq
+        group: (sample_1)_r[12].fq
+        first_read: '_r1'
+        second_read: '_r2'
+        paired_end: True
+
+    AR (adapterremoval):
+        _depends: [read_example_data]
+        cores: 1
+        treatAs: paired
+        adapter1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNATCTCGTATGCCGTCTTCTGCTTG
+        adapter2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+        #      needs to be commented out there is no False flag 
+        #      collapse: False
+        trimns: True
+        trimqualities: True
+        #minquality: 20
+        #threads: 10
+        #minlength: 20
+
+tools:
+    adapterremoval:
+        path: 'AdapterRemoval'
+        get_version: '--version'
+        module_load: /mnt/fhgfs_ribdata/tools/lmod/7.1.4/libexec/lmod python load AdapterRemoval
+        module_unload: /mnt/fhgfs_ribdata/tools/lmod/7.1.4/libexec/lmod python unload AdapterRemoval
+
+    pwd:
+        path: 'pwd'
+        get_version: '--version'
+
+    mv:
+        path: 'mv'
+        get_version: '--version'
+
+    cp:
+        path: 'cp'
+        get_version: '--version'
+        exit_code: 0

@@ -37,6 +37,7 @@ class AdapterRemoval(AbstractStep):
         self.add_connection('out/collapsed')
         self.add_connection('out/collapsed.truncated')
         self.add_connection('out/discarded')
+        self.add_connection('out/truncated')
         self.add_connection('out/pair1.truncated')
         self.add_connection('out/pair2.truncated')
         self.add_connection('out/singleton.truncated')
@@ -137,106 +138,107 @@ class AdapterRemoval(AbstractStep):
         self.add_option('threads', int, default = 1, optional =True)
 
     def runs(self, run_ids_connections_files):
+
+        self.__treat_as_paired = True if self.get_option('treatAs') == 'paired' else False
+
         self.set_cores(self.get_option('cores'))
         # read_types = {'first_read': 'R1', 'second_read': 'R2'}
 
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
-                #set everything empty 
+                #set everything empty
                 out_connections =['collapsed', 'collapsed.truncated',
-                                  'discarded', 'pair1.truncated',
-                                  'pair2.truncated', 'singleton.truncated',
-                                  'settings']
+                                  'discarded', 'settings']
 
-                if self.get_option('treatAs') == 'paired':
-                    #implement expect only 1 file or iterator 
-                    #or should we 
-                    r1 = run_ids_connections_files[run_id]['in/first_read'][0]
+                if self.__treat_as_paired:
+                    out_connections.extend(['pair1.truncated', 'pair2.truncated', 'singleton.truncated'])
+                else:
+                    out_connections.append('truncated')
+
+                r1 = run_ids_connections_files[run_id]['in/first_read'][0]
+                if self.__treat_as_paired:
                     r2 = run_ids_connections_files[run_id]['in/second_read'][0]
 
-                    ar_exec_group = run.new_exec_group()
-                    ar = [self.get_tool('adapterremoval')]
-                    ar.extend(['--file1', r1, '--file2', r2, ])
-                    ar.extend(['--adapter1', self.get_option('adapter1')])
+                ar_exec_group = run.new_exec_group()
+                ar = [self.get_tool('adapterremoval')]
+                ar.extend(['--file1', r1, ])
+
+                if self.__treat_as_paired:
+                    ar.extend(['--file2', r2, ])
+
+                ar.extend(['--adapter1', self.get_option('adapter1')])
+
+                if self.__treat_as_paired:
                     ar.extend(['--adapter2', self.get_option('adapter2')])
-                    ar.extend(['--basename', run.get_output_directory_du_jour_placeholder() + '/' + run_id ])
 
-                    # @todo: gzip optional?
-                    ar.extend(['--gzip'] )
+                ar.extend(['--basename', run.get_output_directory_du_jour_placeholder() + '/' + run_id ])
 
-                    if self.is_option_set_in_config('threads'):
-                        ar.extend(['--threads',  str(self.get_option('threads'))])
+                # @todo: gzip optional?
+                ar.extend(['--gzip'] )
 
-                    if self.is_option_set_in_config('qualitybase'):
-                        ar.extend(['--qualitybase',  str(self.get_option('threads'))])
+                if self.is_option_set_in_config('threads'):
+                    ar.extend(['--threads',  str(self.get_option('threads'))])
 
-                    if self.is_option_set_in_config('collapse'):
-                        ar.extend(['--collapse'])
+                if self.is_option_set_in_config('qualitybase'):
+                    ar.extend(['--qualitybase',  str(self.get_option('threads'))])
 
-                    if self.is_option_set_in_config('mm'):
-                        ar.extend(['--mm',  str(self.get_option('mm'))])
+                if self.is_option_set_in_config('collapse'):
+                    ar.extend(['--collapse'])
 
-                    if self.is_option_set_in_config('maxns'):
-                        ar.extend(['--maxns',  str(self.get_option('maxns'))])
+                if self.is_option_set_in_config('mm'):
+                    ar.extend(['--mm',  str(self.get_option('mm'))])
 
-                    if self.is_option_set_in_config('shift'):
-                        ar.extend(['--shift',  str(self.get_option('shift'))])
+                if self.is_option_set_in_config('maxns'):
+                    ar.extend(['--maxns',  str(self.get_option('maxns'))])
 
-                    if self.is_option_set_in_config('trimns'):
-                        ar.extend(['--trimns'])
+                if self.is_option_set_in_config('shift'):
+                    ar.extend(['--shift',  str(self.get_option('shift'))])
 
-                    if self.is_option_set_in_config('trimqualities'):
-                        ar.extend(['--trimqualities'])
+                if self.is_option_set_in_config('trimns'):
+                    ar.extend(['--trimns'])
 
-                    if self.is_option_set_in_config('minquality'):
-                        ar.extend(['--minquality',  str(self.get_option('minquality'))])
+                if self.is_option_set_in_config('trimqualities'):
+                    ar.extend(['--trimqualities'])
 
-                    if self.is_option_set_in_config('minlength'):
-                        ar.extend(['--minlength',  str(self.get_option('minlength'))])
+                if self.is_option_set_in_config('minquality'):
+                    ar.extend(['--minquality',  str(self.get_option('minquality'))])
 
-                    if self.is_option_set_in_config('maxlength'):
-                        ar.extend(['--maxlength',  str(self.get_option('maxlength'))])
+                if self.is_option_set_in_config('minlength'):
+                    ar.extend(['--minlength',  str(self.get_option('minlength'))])
 
-                    if self.is_option_set_in_config('minalignmentlength'):
-                        ar.extend(['--minalignmentlength',  str(self.get_option('minalignmentlength'))])
+                if self.is_option_set_in_config('maxlength'):
+                    ar.extend(['--maxlength',  str(self.get_option('maxlength'))])
 
-                    if self.is_option_set_in_config('minadapteroverlap'):
-                        ar.extend(['--minadapteroverlap',  str(self.get_option('minadapteroverlap'))])
+                if self.is_option_set_in_config('minalignmentlength'):
+                    ar.extend(['--minalignmentlength',  str(self.get_option('minalignmentlength'))])
 
-                    if self.is_option_set_in_config('seed'):
-                        ar.extend(['--seed',  str(self.get_option('seed'))])
+                if self.is_option_set_in_config('minadapteroverlap'):
+                    ar.extend(['--minadapteroverlap',  str(self.get_option('minadapteroverlap'))])
 
+                if self.is_option_set_in_config('seed'):
+                    ar.extend(['--seed',  str(self.get_option('seed'))])
 
-                    log_stdout = run.add_output_file("log_stdout", "%s-adapterremoval-log_stderr.txt" % (run_id), [r1,r2])
-                    log_stderr = run.add_output_file("log_stderr", "%s-adapterremoval-log_stdout.txt" % (run_id), [r1,r2])
+                output_fileset = [r1]
+                if self.__treat_as_paired:
+                    output_fileset.append(r2)
 
-                    mv_exec_group  = run.new_exec_group()
+                log_stdout = run.add_output_file("log_stdout", "%s-adapterremoval-log_stderr.txt" % (run_id), output_fileset)
+                log_stderr = run.add_output_file("log_stderr", "%s-adapterremoval-log_stdout.txt" % (run_id), output_fileset)
 
-                    for i in out_connections:
-                        if not self.is_option_set_in_config('collapse'):
-                            if i == 'collapsed' or i ==  'collapsed.truncated':
-                                continue
+                mv_exec_group  = run.new_exec_group()
 
-                        if i == 'settings':
-                            run.add_output_file(i, run_id +   '.' + i ,  [r1,r2])
-                        else:
-                            iswanted    = run.add_output_file(i, run_id +    '.' + i + '.fastq.gz' ,  [r1,r2])
-                            isproduced  = run.get_output_directory_du_jour_placeholder() + '/' + run_id + '.' + i + '.gz'
+                for connection in out_connections:
+                    if not self.is_option_set_in_config('collapse'):
+                        if connection == 'collapsed' or connection == 'collapsed.truncated':
+                            continue
 
-                            mv_exec_group.add_command([self.get_tool('mv'), isproduced , iswanted])
+                    if connection == 'settings':
+                        run.add_output_file(connection, run_id + '.' + connection, output_fileset)
+                    else:
+                        iswanted    = run.add_output_file(connection, run_id + '.' + connection + '.fastq.gz', output_fileset)
+                        isproduced  = run.get_output_directory_du_jour_placeholder() + '/' + run_id + '.' + connection + '.gz'
 
-                    ar_exec_group.add_command(ar, stdout_path=log_stdout, stderr_path=log_stderr)
+                        mv_exec_group.add_command([self.get_tool('mv'), isproduced , iswanted])
 
-
-
-
-                # XXX todo single implementation 
-                elif self.get_option('treatAs') == 'single':
-                    print ("not implemented yet")
-                    sys.exit(1)
-                else:
-                    logger.error("Howdy Jon Doe you are not supposed to be ever \
-                                 in this else clause; Jessus fu....g christ")
-
-                    sys.exit(1)
+                ar_exec_group.add_command(ar, stdout_path=log_stdout, stderr_path=log_stderr)
 
