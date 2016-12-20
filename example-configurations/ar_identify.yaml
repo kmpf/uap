@@ -1,0 +1,34 @@
+destination_path: example-out/ar_identify
+
+steps:
+    read_example_data (fastq_source):
+        pattern: ../../adapterremovals/repo/examples/sample_*.fq
+        group: (sample_1)_r[12].fq
+        first_read: '_r1'
+        second_read: '_r2'
+        paired_end: True
+
+    AR (identify_adapters):
+        _depends: [read_example_data]
+        #cores: 1
+
+
+tools:
+    adapterremoval:
+        path: 'AdapterRemoval'
+        get_version: '--version'
+        module_load: /mnt/fhgfs_ribdata/tools/lmod/7.1.4/libexec/lmod python load AdapterRemoval
+        module_unload: /mnt/fhgfs_ribdata/tools/lmod/7.1.4/libexec/lmod python unload AdapterRemoval
+
+    pwd:
+        path: 'pwd'
+        get_version: '--version'
+
+    mv:
+        path: 'mv'
+        get_version: '--version'
+
+    cp:
+        path: 'cp'
+        get_version: '--version'
+        exit_code: 0
