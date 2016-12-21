@@ -248,10 +248,10 @@ class AdapterRemoval(AbstractStep):
                     output_fileset.append(r2)
 
                 stderr_file = "%s-adapterremoval-log_stderr.txt" % (run_id)
-                log_stdout = run.add_output_file("log_stdout",
+                log_stderr= run.add_output_file("log_stderr",
                                                  stderr_file, output_fileset)
                 stdout_file = "%s-adapterremoval-log_stdout.txt" % (run_id)
-                log_stderr = run.add_output_file("log_stderr",
+                log_stdout = run.add_output_file("log_stdout",
                                                  stdout_file, output_fileset)
 
                 mv_exec_group = run.new_exec_group()
