@@ -8,7 +8,7 @@ steps:
         second_read: '_r2'
         paired_end: True
 
-    AR (identify_adapters):
+    AR (identify_adapters_new):
         _depends: [read_example_data]
         #cores: 1
 
