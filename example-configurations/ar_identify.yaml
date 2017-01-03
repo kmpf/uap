@@ -10,8 +10,6 @@ steps:
 
     AR (identify_adapters):
         _depends: [read_example_data]
-        #cores: 1
-
 
 tools:
     adapterremoval:

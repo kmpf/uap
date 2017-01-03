@@ -45,10 +45,10 @@ class IdentifyAdapters(AbstractStep):
                 ar.extend(['--file1', r1, '--file2', r2])
 
                 stderr_file = "%s-adapterremoval-log_stderr.txt" % (run_id)
-                log_stdout = run.add_output_file("log_stdout",
+                log_stderr = run.add_output_file("log_stderr",
                                                  stderr_file, [r1, r2])
                 stdout_file = "%s-adapterremoval-log_stdout.txt" % (run_id)
-                log_stderr = run.add_output_file("log_stderr",
+                log_stdout = run.add_output_file("log_stdout",
                                                  stdout_file, [r1, r2])
 
                 ar_exec_group.add_command(ar, stdout_path=log_stdout,
