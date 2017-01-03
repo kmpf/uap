@@ -71,12 +71,6 @@ class AdapterRemoval(AbstractStep):
                         mate 2 reads [current: \
                         AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT]")
 
-
-#        self.add_option('use_reverse_complement', bool, default = None,
-#                        description="The reverse complement of adapter \
-#                        sequences 'adapter-R1' and 'adapter-R2' are used for \
-#                        adapter clipping.")
-
         self.add_option('mm', int, default=None, optional=True,
                         description="Max error-rate when aligning reads \
                         and/or adapters. If > 1, the max error-rate is set \
@@ -116,7 +110,7 @@ class AdapterRemoval(AbstractStep):
                         description="Reads longer than this length are \
                         discarded following trimming [current: 4294967295]")
 
-        self.add_option('collapse', bool, default=None, optional=True,
+        self.add_option('collapse', bool, default=None, optional=False,
                         description="When set, paired ended read alignments \
                         of --minalignmentlength or more bases are combined \
                         into a single consensus sequence, representing the \
@@ -192,7 +186,6 @@ class AdapterRemoval(AbstractStep):
                 basename = run.get_output_directory_du_jour_placeholder() + '/' + run_id
                 ar.extend(['--basename', basename])
 
-                # @todo: gzip optional?
                 ar.extend(['--gzip'])
 
                 if self.is_option_set_in_config('threads'):
@@ -202,7 +195,7 @@ class AdapterRemoval(AbstractStep):
                     ar.extend(['--qualitybase',
                                str(self.get_option('threads'))])
 
-                if self.is_option_set_in_config('collapse'):
+                if self.get_option('collapse') is True:
                     ar.extend(['--collapse'])
 
                 if self.is_option_set_in_config('mm'):
@@ -241,14 +234,14 @@ class AdapterRemoval(AbstractStep):
                                str(self.get_option('minadapteroverlap'))])
 
                 if self.is_option_set_in_config('seed'):
-                    ar.extend(['--seed',  str(self.get_option('seed'))])
+                    ar.extend(['--seed', str(self.get_option('seed'))])
 
                 output_fileset = [r1]
                 if self.__treat_as_paired:
                     output_fileset.append(r2)
 
                 stderr_file = "%s-adapterremoval-log_stderr.txt" % (run_id)
-                log_stderr= run.add_output_file("log_stderr",
+                log_stderr = run.add_output_file("log_stderr",
                                                  stderr_file, output_fileset)
                 stdout_file = "%s-adapterremoval-log_stdout.txt" % (run_id)
                 log_stdout = run.add_output_file("log_stdout",
@@ -257,7 +250,7 @@ class AdapterRemoval(AbstractStep):
                 mv_exec_group = run.new_exec_group()
 
                 for connection in out_connections:
-                    if not self.is_option_set_in_config('collapse'):
+                    if self.get_option('collapse') is False:
                         if connection == 'collapsed' or \
                            connection == 'collapsed.truncated':
                             continue

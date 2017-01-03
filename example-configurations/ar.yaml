@@ -14,8 +14,7 @@ steps:
         treatAs: paired
         adapter1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNATCTCGTATGCCGTCTTCTGCTTG
         adapter2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
-        #      needs to be commented out there is no False flag 
-        #      collapse: False
+        collapse: False
         trimns: True
         trimqualities: True
         #minquality: 20
