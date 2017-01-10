@@ -156,13 +156,6 @@ class AbstractStep(object):
         else:
             return None
 
-    def get_runs(self):
-        '''
-        Returns all run objects of the step.
-        '''
-        for run in self._runs:
-            yield self._runs[run]
-
     def set_step_name(self, step_name):
         '''
         Change the step name.
@@ -171,12 +164,6 @@ class AbstractStep(object):
         is used in case we need multiple steps of the same kind.
         '''
         self._step_name = step_name
-
-    def get_step_name(self):
-        '''
-        Return the steps name
-        '''
-        return self._step_name
 
     def set_options(self, options):
         '''
