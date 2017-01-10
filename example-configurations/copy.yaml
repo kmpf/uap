@@ -1,0 +1,85 @@
+destination_path: example-out/copy_step
+
+steps:
+    hg19_UCSC_chr21 (raw_url_source):
+        url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr21.fa.gz
+        hashing-algorithm: md5
+        secure-hash: 26cdd5a3a539b63930752604feb2912b
+        path: example-out/copy_step_data
+        filename: chr21.fa
+        uncompress: yes
+
+    hg19_UCSC_chr22 (raw_url_source):
+        url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr22.fa.gz
+        hashing-algorithm: md5
+        secure-hash: 2baab477ebcc5a0f4163608ec93e4744
+        path: example-out/copy_step_data
+        filename: chr22.fa
+        uncompress: yes
+
+    # Merge downloaded sequences into single fasta file
+    hg19_UCSC_complete_genome (merge_fasta_files):
+        _depends:
+            - hg19_UCSC_chr21
+            - hg19_UCSC_chr22
+        _connect:
+            in/sequence:
+                - hg19_UCSC_chr21/raw
+                - hg19_UCSC_chr22/raw
+        compress-output: no
+        output-fasta-basename: hg19_chr21-22
+
+    copy_test (copy_file):
+        _depends: [hg19_UCSC_complete_genome]
+        _connect:
+            in/sequence: [single_file]
+
+tools:
+    ##################
+    # External Tools #
+    ##################
+    pigz:
+        path: pigz
+        get_version: --version
+        exit_code: 0
+
+    ##################
+    # Internal Tools #
+    ##################
+    compare_secure_hashes:
+        path: ../tools/compare_secure_hashes.py
+        get_version: --version
+        exit_code: 0
+
+    ##############
+    # Unix Tools #
+    ##############
+    cp:
+        path: cp
+        get_version: --version
+        exit_code: 0
+
+    curl:
+        path: curl
+        get_version: --version
+        exit_code: 0
+
+    dd:
+        path: dd
+        get_version: --version
+        exit_code: 0
+
+    mkdir:
+        path: mkdir
+        get_version: --version
+        exit_code: 0
+
+    cat:
+        path: cat
+        get_version: --version
+        exit_code: 0
+
+    mkfifo:
+        path: mkfifo
+        get_version: --version
+        exit_code: 0
