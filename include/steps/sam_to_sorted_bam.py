@@ -37,6 +37,9 @@ class SamToSortedBam(AbstractStep):
                         description = 'Intermediate sort files are stored into'
                         'this directory.')
 
+        # [Options for 'dd':]
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+
     def runs(self, run_ids_connections_files):
         
         for run_id in run_ids_connections_files.keys():
@@ -67,9 +70,11 @@ class SamToSortedBam(AbstractStep):
 
                         with exec_group.add_pipeline() as pipe:
                             # 1. command: Read file in 4MB chunks
-                            dd_in = [self.get_tool('dd'),
-                                     'ibs=4M',
-                                     'if=%s' % input_paths[0]]
+                            dd_in = [
+                                self.get_tool('dd'),
+                                'ibs=%s' % self.get_option('dd-blocksize'),
+                                'if=%s' % input_paths[0]
+                            ]
                             pipe.add_command(dd_in)
 
                             # 1.1 command: Uncompress file to fifo
@@ -107,7 +112,10 @@ class SamToSortedBam(AbstractStep):
                             pipe.add_command(samtools_sort)
 
                             # 4. command: dd
-                            dd_out = [self.get_tool('dd'), 'obs=4M']
+                            dd_out = [
+                                self.get_tool('dd'),
+                                'obs=%s' % self.get_option('dd-blocksize')
+                            ]
                             pipe.add_command(
                                 dd_out,
                                 stdout_path = run.add_output_file(

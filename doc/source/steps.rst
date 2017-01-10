@@ -424,7 +424,7 @@ http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
 
 typical command line::
 
-bowtie2 [options]* -x <bt2-idx> {-1 <m1> -2 <m2> | -U <r>} -S [<hit>]
+  bowtie2 [options]* -x <bt2-idx> {-1 <m1> -2 <m2> | -U <r>} -S [<hit>]
 
 **Connections:**
   - Input Connection:
@@ -893,6 +893,147 @@ form using the BinarizeSignal command.
 
 **CPU Cores:** 8
 
+.. index:: cufflinks
+
+cufflinks
+=========
+
+
+
+CuffLinks is part of the 'Cufflinks suite of tools' for
+differential expr. analysis of RNA-Seq data and their
+visualisation. This step applies the cufflinks tool which
+assembles transcriptomes from RNA-Seq data and quantifies their
+expression and produces .gtf files with these annotations.
+For details on cufflinks we refer to the author's webpage:
+
+http://cole-trapnell-lab.github.io/cufflinks/
+
+
+**Connections:**
+  - Input Connection:
+    
+    - 'in/alignments'
+  - Output Connection:
+    
+    - 'out/features'
+    - 'out/genes-fpkm'
+    - 'out/isoforms_fpkm'
+    - 'out/log_stderr'
+    - 'out/skipped'
+
+.. graphviz::
+
+   digraph foo {
+      rankdir = LR;
+      splines = true;
+      graph [fontname = Helvetica, fontsize = 12, size = "14, 11", nodesep = 0.2, ranksep = 0.3];
+      node [fontname = Helvetica, fontsize = 12, shape = rect];
+      edge [fontname = Helvetica, fontsize = 12];
+      cufflinks [style=filled, fillcolor="#fce94f"];
+      in_0 [label="alignments"];
+      in_0 -> cufflinks;
+      out_1 [label="features"];
+      cufflinks -> out_1;
+      out_2 [label="genes-fpkm"];
+      cufflinks -> out_2;
+      out_3 [label="isoforms_fpkm"];
+      cufflinks -> out_3;
+      out_4 [label="log_stderr"];
+      cufflinks -> out_4;
+      out_5 [label="skipped"];
+      cufflinks -> out_5;
+   }    
+
+**Options:**
+  - **3-overhang-tolerance** (int, optional) -- overhang allowed on 3' end when merging with reference
+    
+  - **GTF** (bool, optional) -- quantitate against reference transcript annotations
+    
+  - **GTF-guide** (bool, optional) -- use reference transcript annotation to guide assembly
+    
+  - **compatible-hits-norm** (bool, optional) -- count hits compatible with reference RNAs only
+    
+  - **frag-bias-correct** (str, optional) -- use bias correction - reference fasta required
+    
+  - **frag-len-mean** (int, optional) -- average fragment length (unpaired reads only)
+    
+  - **frag-len-std-dev** (int, optional) -- fragment length std deviation (unpaired reads only)
+    
+  - **intron-overhang-tolerance** (int, optional) -- overhang allowed inside reference intron when merging
+    
+  - **junc-alpha** (float, optional) -- alpha for junction binomial test filter
+    
+  - **label** (str, optional) -- assembled transcripts have this ID prefix
+    
+  - **library-norm-method** (str, optional) -- Method used to normalize library sizes
+    
+    - possible values: 'classic-fpkm'
+    
+  - **library-type** (str, required) -- library prep used for input reads
+    
+    - possible values: 'ff-firststrand', 'ff-secondstrand', 'ff-unstranded', 'fr-firststrand', 'fr-secondstrand', 'fr-unstranded', 'transfrags'
+    
+  - **mask-file** (str, optional) -- ignore all alignment within transcripts in this file
+    
+  - **max-bundle-frags** (int, optional) -- maximum fragments allowed in a bundle before skipping
+    
+  - **max-bundle-length** (int, optional) -- maximum genomic length allowed for a given bundle
+    
+  - **max-frag-multihits** (str, optional) -- Maximum number of alignments allowed per fragment
+    
+  - **max-intron-length** (int, optional) -- ignore alignments with gaps longer than this
+    
+  - **max-mle-iterations** (int, optional) -- maximum iterations allowed for MLE calculation
+    
+  - **max-multiread-fraction** (float, optional) -- maximum fraction of allowed multireads per transcript
+    
+  - **min-frags-per-transfrag** (int, optional) -- minimum number of fragments needed for new transfrags
+    
+  - **min-intron-length** (int, optional) -- minimum intron size allowed in genome
+    
+  - **min-isoform-fraction** (float, optional) -- suppress transcripts below this abundance level
+    
+  - **multi-read-correct** (bool, optional) -- use 'rescue method' for multi-reads (more accurate)
+    
+  - **no-effective-length-correction** (bool, optional) -- No effective length correction
+    
+  - **no-faux-reads** (bool, optional) -- disable tiling by faux reads
+    
+  - **no-length-correction** (bool, optional) -- No length correction
+    
+  - **no-update-check** (bool, optional) -- do not contact server to check for update availability
+    
+  - **num-frag-assign-draws** (int, optional) -- Number of fragment assignment samples per generation
+    
+  - **num-frag-count-draws** (int, optional) -- Number of fragment generation samples
+    
+  - **num-threads** (int, optional) -- number of threads used during analysis
+    
+  - **overhang-tolerance** (int, optional) -- number of terminal exon bp to tolerate in introns
+    
+  - **overlap-radius** (int, optional) -- maximum gap size to fill between transfrags (in bp)
+    
+  - **pre-mrna-fraction** (float, optional) -- suppress intra-intronic transcripts below this level
+    
+  - **quiet** (bool, optional) -- log-friendly quiet processing (no progress bar)
+    
+  - **seed** (int, optional) -- value of random number generator seed
+    
+  - **small-anchor-fraction** (float, optional) -- percent read overhang taken as 'suspiciously small'
+    
+  - **total-hits-norm** (bool, optional) -- count all hits for normalization
+    
+  - **trim-3-avgcov-thresh** (int, optional) -- minimum avg coverage required to attempt 3' trimming
+    
+  - **trim-3-dropoff-frac** (float, optional) -- fraction of avg coverage below which to trim 3' end
+    
+  - **verbose** (bool, optional) -- log-friendly verbose processing (no progress bar)
+    
+**Required tools:** cufflinks, mkdir, mv
+
+**CPU Cores:** 6
+
 .. index:: cutadapt
 
 cutadapt
@@ -1250,17 +1391,23 @@ macs2 callpeak --treatment <aligned-reads> [--control <aligned-reads>]
    }    
 
 **Options:**
+  - **bdg** (bool, optional)
+    
   - **broad** (bool, optional)
     
   - **broad-cutoff** (float, optional)
     
   - **buffer-size** (int, optional)
     
+  - **bw** (int, optional)
+    
   - **call-summits** (bool, optional)
     
   - **control** (dict, required)
     
   - **down-sample** (bool, optional)
+    
+  - **extsize** (int, optional)
     
   - **format** (str, required)
     
@@ -1271,6 +1418,12 @@ macs2 callpeak --treatment <aligned-reads> [--control <aligned-reads>]
   - **keep-dup** (int, optional)
     
   - **llocal** (str, optional)
+    
+  - **mfold** (str, optional)
+    
+  - **nolambda** (bool, optional)
+    
+  - **nomodel** (bool, optional)
     
   - **pvalue** (float, optional)
     
@@ -1985,6 +2138,54 @@ metrics like read distribution, gene coverage, and sequencing depth.
 
 **CPU Cores:** 1
 
+.. index:: s2c
+
+s2c
+===
+
+
+
+s2c formats the output of segemehl mapping to be compatible with
+the cufflinks suite of tools for differential expr. analysis of
+RNA-Seq data and their visualisation.
+For details on cufflinks we refer to the author's webpage:
+
+http://cole-trapnell-lab.github.io/cufflinks/
+
+
+**Connections:**
+  - Input Connection:
+    
+    - 'in/alignments'
+  - Output Connection:
+    
+    - 'out/alignments'
+    - 'out/log'
+
+.. graphviz::
+
+   digraph foo {
+      rankdir = LR;
+      splines = true;
+      graph [fontname = Helvetica, fontsize = 12, size = "14, 11", nodesep = 0.2, ranksep = 0.3];
+      node [fontname = Helvetica, fontsize = 12, shape = rect];
+      edge [fontname = Helvetica, fontsize = 12];
+      s2c [style=filled, fillcolor="#fce94f"];
+      in_0 [label="alignments"];
+      in_0 -> s2c;
+      out_1 [label="alignments"];
+      s2c -> out_1;
+      out_2 [label="log"];
+      s2c -> out_2;
+   }    
+
+**Options:**
+  - **tmp_dir** (str, required) -- Temp directory for 'make_segemehl_output_cufflinks_compatible.py'. This can be in the /work/username/ path, since it is only temporary.
+    
+**Required tools:** cat, fix_s2c, pigz, s2c, samtools
+
+**CPU Cores:** 6
+
 .. index:: sam_to_sorted_bam
 
 sam_to_sorted_bam
@@ -2031,7 +2232,7 @@ http://www.htslib.org/doc/samtools.html
     
   - **sort-by-name** (bool, required)
     
-  - **temp-sort-directory** (str, required) -- Intermediate sort files are stored intothis directory.
+  - **temp-sort-dir** (str, required) -- Intermediate sort files are stored intothis directory.
     
 **Required tools:** dd, pigz, samtools
 
@@ -2309,9 +2510,11 @@ cat unmapped_fifo | pigz --blocksize 4096 --processes 2 -c >
     
   - **splits** (bool, optional) -- detect split/spliced reads (default:none)
     
+  - **threads** (int, optional) -- start <n> threads (default:10)
+    
 **Required tools:** cat, dd, fix_qnames, mkfifo, pigz, segemehl
 
-**CPU Cores:** 12
+**CPU Cores:** 10
 
 .. index:: segemehl_generate_index
 

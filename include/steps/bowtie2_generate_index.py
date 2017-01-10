@@ -109,6 +109,9 @@ class Bowtie2GenerateIndex(AbstractStep):
                         "reference sequences (cumulative across sequences) and "
                         "ignore the rest.")
 
+        # Options for dd
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+
     def runs(self, run_ids_connections_files):
         # Compile the list of options
         options = ['large-index', 'noauto', 'packed', 'bmax', 'bmaxdivn', 'dcv',
@@ -160,27 +163,32 @@ class Bowtie2GenerateIndex(AbstractStep):
                         if is_fasta_gz:
                             with exec_group.add_pipeline() as unzip_pipe:
                                 # 2.1 command: Read file in 4MB chunks
-                                dd_in = [self.get_tool('dd'),
-                                         'ibs=4M',
-                                         'if=%s' % input_path]
+                                dd_in = [
+                                    self.get_tool('dd'),
+                                    'ibs=%s' % self.get_option('dd-blocksize'),
+                                    'if=%s' % input_path
+                                ]
                                 # 2.2 command: Uncompress data
                                 pigz = [self.get_tool('pigz'),
                                         '--decompress',
                                         '--stdout']
                                 # 2.3 Write file in 4MB chunks to fifo
-                                dd_out = [self.get_tool('dd'),
-                                          'obs=4M',
-                                          'of=%s' % temp_file]
+                                dd_out = [
+                                    self.get_tool('dd'),
+                                    'obs=%s' % self.get_option('dd-blocksize'),
+                                    'of=%s' % temp_file]
                                 temp_files.append(temp_file)
                                 
                                 unzip_pipe.add_command(dd_in)
                                 unzip_pipe.add_command(pigz)
                                 unzip_pipe.add_command(dd_out)
                         elif is_fasta:
-                            dd = [self.get_tool('dd'),
-                                  'bs=4M',
-                                  'if=%s' % input_path, 
-                                  'of=%s' % temp_file]
+                            dd = [
+                                self.get_tool('dd'),
+                                'bs=%s' % self.get_option('dd-blocksize'),
+                                'if=%s' % input_path, 
+                                'of=%s' % temp_file
+                            ]
                             temp_files.append(input_path)
                             exec_group.add_command(dd)
                         else:

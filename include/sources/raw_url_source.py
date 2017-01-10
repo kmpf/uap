@@ -31,10 +31,9 @@ class RawUrlSource(AbstractSourceStep):
         self.add_option('secure-hash', str, optional = True,
                         description = "expected secure hash of downloaded file")
         self.add_option('uncompress', bool, optional = True, default = False,
-                        description = 'Shall the file be uncompressed after '
-                        'downloading')
+                        description = 'File is uncompressed after download')
         self.add_option('url', str, optional = False,
-                        description = "file URL")
+                        description = "Download URL")
         
     def runs(self, run_ids_connections_files):
         # Get file name of downloaded file
@@ -85,8 +84,10 @@ class RawUrlSource(AbstractSourceStep):
             temp_filename = run.add_temporary_file(suffix = url_filename)
             with run.new_exec_group() as curl_exec_group:
                 # 1. download file
-                curl = [self.get_tool('curl'), self.get_option('url')]
-                curl_exec_group.add_command(curl, stdout_path = temp_filename)
+                curl = [self.get_tool('curl'),
+                        '--output', temp_filename,
+                        self.get_option('url')]
+                curl_exec_group.add_command(curl)#, stdout_path = temp_filename)
             
             if self.is_option_set_in_config('hashing-algorithm') and \
                self.is_option_set_in_config('secure-hash'):
@@ -109,7 +110,6 @@ class RawUrlSource(AbstractSourceStep):
                                 '--stdout',
                                 '--processes', '1',
                                 temp_filename]
-                        #                    temp_filename = os.path.splitext(temp_filename)[0]
                         dd_out = [self.get_tool('dd'),
                                   'bs=4M',
                                   'of=%s' % out_file]

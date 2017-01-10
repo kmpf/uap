@@ -21,8 +21,6 @@ class BwaGenerateIndex(AbstractStep):
         self.add_connection('in/reference_sequence')
         self.add_connection('out/bwa_index')
 
-        self.require_tool('dd')
-        self.require_tool('pigz')
         self.require_tool('bwa')
 
         self.add_option('index-basename', str, optional = False,

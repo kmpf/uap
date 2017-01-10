@@ -1,5 +1,14 @@
 # This is the uap configuration file.
- 
+
+cluster:
+    # example for SLURM grid engine
+    # default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+    # example for UGE/SGE respectively OGS
+    # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+    default_pre_job_command: "echo 'Run Started!'"
+    default_post_job_command: "echo 'Run Finished!'"
+    default_job_quota: 5
+
 destination_path: genomes/bacteria/Mycoplasma_genitalium/
 
 constants:
@@ -9,7 +18,7 @@ steps:
     M_genitalium_genome (raw_url_source):
         url: ftp://ftp.ncbi.nih.gov/genomes/genbank/bacteria/Mycoplasma_genitalium/latest_assembly_versions/GCA_000027325.1_ASM2732v1/GCA_000027325.1_ASM2732v1_genomic.fna.gz
         hashing-algorithm: md5
-        secure-hash: a3e6e5655e4996dc2d49f876be9d1c27
+        secure-hash: f02c78b5f9e756031eeaa51531517f24
         path: genomes/bacteria/Mycoplasma_genitalium/
         filename: 'Mycoplasma_genitalium.ASM2732v1.fa'
         uncompress: yes

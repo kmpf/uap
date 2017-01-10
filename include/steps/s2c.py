@@ -31,9 +31,12 @@ class S2C(AbstractStep):
         self.require_tool('samtools')
         self.require_tool('pigz')
         self.require_tool('cat')
+        self.require_tool('dd')
 
         self.add_option('tmp_dir', str, optional=False,
-                        description="Temp directory for 'make_segemehl_output_cufflinks_compatible.py'. This can be in the /work/username/ path, since it is only temporary.")
+                        description="Temp directory for 's2c.py'. This can be "
+                        "in the /work/username/ path, since it is only "
+                        "temporary.")
 
     def runs(self, run_ids_connections_files):
 
@@ -57,10 +60,12 @@ class S2C(AbstractStep):
                 
                 alignments_path = input_paths[0]
                 cat = [self.get_tool('cat'), alignments_path]
-                pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+#                pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']
+                pigz = [self.get_tool('pigz'), '--decompress', '--processes', str(self.get_cores()), '--stdout']
                 s2c = [self.get_tool('s2c'), '-s', '/dev/stdin', '-o', self.get_option('tmp_dir')]
                 fix_s2c = [self.get_tool('fix_s2c')] # schreibt .sam nach stdout
-                pigz2 = [self.get_tool('pigz'), '--processes', '2', '--stdout']
+#                pigz2 = [self.get_tool('pigz'), '--processes', '2', '--stdout']
+                pigz2 = [self.get_tool('pigz'), '--processes', str(self.get_cores()), '--stdout']
 
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as s2c_pipe:
@@ -68,4 +73,8 @@ class S2C(AbstractStep):
                         s2c_pipe.add_command(pigz)
                         s2c_pipe.add_command(s2c)
                         s2c_pipe.add_command(fix_s2c)
-                        s2c_pipe.add_command(pigz2, stdout_path= run.add_output_file('alignments', '%s-cufflinks-compatible.sam.gz' % run_id, input_paths))
+                        s2c_pipe.add_command(pigz2, 
+                                             stdout_path= run.add_output_file(
+                                                 'alignments',
+                                                 '%s-cufflinks-compatible.sam.gz' % run_id,
+                                                 input_paths))

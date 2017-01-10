@@ -12,6 +12,7 @@ import pipeline
 import string
 import yaml
 
+
 def doc_module(module_name, fout):
     step_class = abstract_step.AbstractStep.get_step_class_for_key(module_name)
     step = step_class(None)
@@ -23,7 +24,7 @@ def doc_module(module_name, fout):
     if step.__doc__:
         doc = step.__doc__.split("\n")
         for line in doc:
-            fout.write(line.strip() + "\n")
+            fout.write(line.rstrip() + "\n")
         
     # print connections
     fout.write("**Connections:**\n")
@@ -61,23 +62,26 @@ def doc_module(module_name, fout):
     fout.write("\n")
     
     # print options
-    fout.write("**Options:**\n")
-    for key in sorted(step._defined_options.keys()):
-        option = step._defined_options[key]
-        fout.write("  - **%s** (%s, %s)" % (
-            key, 
-            '/'.join([_.__name__ for _ in option['types']]),
-            'optional' if option['optional'] else 'required'
+    if len(step._defined_options) > 0:
+        fout.write("**Options:**\n")
+        for key in sorted(step._defined_options.keys()):
+            option = step._defined_options[key]
+            fout.write("  - **%s** (%s, %s)" % (
+                key, 
+                '/'.join([_.__name__ for _ in option['types']]),
+                'optional' if option['optional'] else 'required'
             ))
-        if option['description']:
-            fout.write(" -- %s" % option['description'])
-        fout.write("\n")
-        fout.write("    \n")
-        if option['choices']:
-            fout.write("    - possible values: %s\n" %
-                       ", ".join(["'%s'" % x for x in option['choices']]) )
-            fout.write("    \n")
-            
+            if option['description']:
+                fout.write(" -- %s" % option['description'])
+                fout.write("\n")
+                fout.write("    \n")
+            if option['default']:
+                fout.write("    - default value: %s\n" % option['default'])
+            if option['choices']:
+                fout.write("    - possible values: %s\n" %
+                           ", ".join(["'%s'" % x for x in option['choices']]) )
+                fout.write("    \n")
+
     # print tools
     if len(step._tools) > 0:
         fout.write("**Required tools:** %s\n" % ', '.join(sorted(step._tools.keys())))
@@ -103,7 +107,8 @@ def doc_module(module_name, fout):
     '''
 
 def main():
-    with open('source/steps.rst', 'w') as fout:
+    abs_path = os.path.dirname(os.path.realpath(__file__))
+    with open(os.path.join(abs_path, 'source/steps.rst'), 'w') as fout:
         fout.write("###############\n")
         fout.write("Available steps\n")
         fout.write("###############\n")
@@ -111,7 +116,7 @@ def main():
         fout.write("************\n")
         fout.write("Source steps\n")
         fout.write("************\n\n")
-        modules = glob.glob('../include/sources/*.py')
+        modules = glob.glob(os.path.join(abs_path, '../include/sources/*.py'))
         for m in sorted(modules):
             module_name = os.path.basename(m).replace('.py', '')
             if not '__' in module_name:
@@ -119,7 +124,7 @@ def main():
         fout.write("****************\n")
         fout.write("Processing steps\n")
         fout.write("****************\n\n")
-        modules = glob.glob('../include/steps/*.py')
+        modules = glob.glob(os.path.join(abs_path, '../include/steps/*.py'))
         for m in sorted(modules):
             module_name = os.path.basename(m).replace('.py', '')
             if module_name == 'io_step':

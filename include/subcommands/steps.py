@@ -62,12 +62,20 @@ def main(args):
                 for k in node.keywords:
                     try:
                         print("      |_ %s=%s " % (k.arg, k.value.id))
+                        continue
                     except:
                         pass
                     try:
                         print("      |_ %s=%s " % (k.arg, k.value.s))
+                        continue
                     except:
                         pass
+                    try:
+                        print("      |_ %s=%s " % (k.arg, ", ".join(
+                            [x.s for x in k.value.elts])))
+                    except:
+                        pass
+                        
 
             self.generic_visit(node)
 

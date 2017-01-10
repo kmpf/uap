@@ -36,7 +36,7 @@ class Segemehl(AbstractStep):
     def __init__(self, pipeline):
         super(Segemehl, self).__init__(pipeline)
 
-        self.set_cores(12) # set # of cores for cluster, it is ignored if run locally
+        self.set_cores(10) # set # of cores for cluster, it is ignored if run locally
 
         # connections - indentifier for in/output
         #             - expects list, maybe empty or 'none', e.g. if only first_read info available
@@ -77,6 +77,8 @@ class Segemehl(AbstractStep):
                         description="minimum size of queries (default:12)")
         self.add_option('silent', bool, default=True, optional=True,
                         description="shut up!")
+        self.add_option('threads', int, default=10, optional=True,
+                        description="start <n> threads (default:10)")
         self.add_option('brief', bool, default=False, optional=True,
                         description="brief output")
         ## [SEEDPARAMS]
@@ -148,6 +150,9 @@ class Segemehl(AbstractStep):
         self.add_option('maxinsertsize', int, optional=True, description=
                         "maximum size of the inserts (paired end) "
                         "(default:5000)")
+
+        # [Options for 'dd':]
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
 
     # self - macht class-funktion draus.
     # run_ids_connections_files - hash : run id -> n connections -> m files
@@ -221,11 +226,14 @@ class Segemehl(AbstractStep):
                     # 2. Create FIFO to write unmapped reads to
                     fifo_path_unmapped = run.add_temporary_file(
                         'segemehl-unmapped-fifo', designation = 'output')
-                    mkfifo_unmapped = [self.get_tool('mkfifo'), fifo_path_unmapped]
+                    mkfifo_unmapped = [
+                        self.get_tool('mkfifo'),
+                        fifo_path_unmapped
+                    ]
                     exec_group.add_command(mkfifo_unmapped)
                     # 3. Read genome and output to FIFO
                     dd_genome = [self.get_tool('dd'),
-                                 'bs=4M',
+                                 'bs=%s' % self.get_option('dd-blocksize'),
                                  'if=%s' % self.get_option('genome'),
                                  'of=%s' % fifo_path_genome]
                     exec_group.add_command(dd_genome)
@@ -237,7 +245,7 @@ class Segemehl(AbstractStep):
                             '--database', fifo_path_genome,
                             '--index', self.get_option('index'),
                             '--nomatchfilename', fifo_path_unmapped,
-                            '--threads', '10',
+                            '--threads', str(self.get_option('threads')),
                             '--query', fr_input[0]
                         ]
                         if is_paired_end:

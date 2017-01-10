@@ -229,6 +229,9 @@ class ProcessPool(object):
         return self
         
     def __exit__(self, type, value, traceback):
+        # old_cwd = os.getcwd()
+        # os.chdir(self.get_run().get_temp_output_directory())
+
         # Lastly we have to add the post_command commands for execution
         post_commands = self.get_run().get_step().get_post_commands().values()
         if len(post_commands) > 0:
@@ -265,7 +268,8 @@ class ProcessPool(object):
             self.get_run().remove_temporary_paths()
         
         ProcessPool.current_instance = None
-    
+        # os.chdir(old_cwd)
+
     def launch(self, args, stdout_path = None, stderr_path = None, hints = {}):
         '''
         Launch a process. Arguments, including the program itself, are passed in
@@ -408,7 +412,6 @@ class ProcessPool(object):
             if sink_path is not None:
                 self.proc_details[listener_pid]['sink'] = os.path.basename(sink_path)
                 self.proc_details[listener_pid]['sink_full_path'] = sink_path
-
         if keep_stdout_open:
             os.close(pipe[1])
             return pipe[0], pid
@@ -524,6 +527,7 @@ class ProcessPool(object):
         watcher_pid = self._launch_process_watcher(watcher_report_path)
         ProcessPool.process_watcher_pid = watcher_pid
         something_went_wrong = False
+        pid = None
         while True:
             if len(self.running_procs) == 0:
                 break
@@ -670,8 +674,9 @@ class ProcessPool(object):
                 raise
                 
         if something_went_wrong:
-            self.log("Pipeline crashed.")
-            logger.error("Pipeline crashed.")
+            log = "Pipeline crashed. PID: %s" % pid
+            self.log(log)
+            logger.error(log)
             sys.exit(1)
 
     def _launch_process_watcher(self, watcher_report_path):

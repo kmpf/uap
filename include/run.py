@@ -63,6 +63,7 @@ class Run(object):
             'run': None,
             'queued': None
         }
+        self._submit_script = None
         self._exec_groups = list()
         self._temp_paths = list()
         '''
@@ -124,13 +125,23 @@ class Run(object):
     def get_queued_ping_file(self):
         return self._get_ping_file('queued')
 
+    def get_submit_script_file(self):
+        if self._submit_script == None:
+            self._submit_script = os.path.join(
+                self.get_output_directory(),
+                ".submit-%s-%s.sh" % (self.get_step().get_step_name(),
+                                      self.get_run_id())
+            )
+        return self._submit_script
+
     def replace_output_dir_du_jour(func):
         def inner(self, *args, **kwargs):
             # Collect info to replace du_jour placeholder with temp_out_dir
             step = self.get_step()
             placeholder = self.get_output_directory_du_jour_placeholder()
             temp_out_dir = self.get_output_directory_du_jour()
-            
+            # if not temp_out_dir:
+            #     placeholder += os.sep
             value = None
             ret_value = func(self, *args, **kwargs)
             # If currently calling AbstractStep.runs() do nothing
@@ -189,21 +200,22 @@ class Run(object):
         '''
         Returns the state-dependent output directory of the step.
 
-
         Returns this steps output directory according to its current
         state:
-            - if we are currently calling a step's declare_runs()
-              method, this will return None
-            - if we are currently calling a step's execute() method,
-              this will return the temporary directory
-            - otherwise, it will return the real output directory
+        - if we are currently calling a step's declare_runs()
+        method, this will return None
+        - if we are currently calling a step's execute() method,
+        this will return the temporary directory
+        - otherwise, it will return the real output directory
         '''
         if self.get_step()._state == abst.AbstractStep.states.DEFAULT:
             return self.get_output_directory()
         elif self.get_step()._state == abst.AbstractStep.states.EXECUTING:
             return self.get_temp_output_directory()
+            # return ""
         else:
             return None
+            # return ""
 
     def get_temp_output_directory(self):
         '''
@@ -509,23 +521,20 @@ class Run(object):
     def add_output_file(self, tag, out_path, in_paths):
         '''
         Add an output file to this run. Output file names must be unique across
-        all runs defined by a step, so it may be a good idea to include the 
+        all runs defined by a step, so it may be a good idea to include the
         run_id into the output filename.
+
         - *tag*: You must specify the connection annotation which must have been
-                 previously declared via *AbstractStep.add_connection("out/...")*,
-                 but this doesn't have to be done in the step constructor, it's
-                 also possible in *declare_runs()* right before this method is
-                 called.
-        - *out_path*: The output file path, without a directory. The pipeline 
-                      assigns directories for you (this parameter must not 
-                      contain a slash).
+            previously declared via *AbstractStep.add_connection("out/...")*,
+            but this doesn't have to be done in the step constructor, it's
+            also possible in *declare_runs()* right before this method is called.
+        - *out_path*: The output file path, without a directory. The pipeline
+            assigns directories for you (this parameter must not contain a slash).
         - *in_paths*: A list of input files this output file depends on. It is
-                      **crucial** to get this right, so that the pipeline can
-                      determine which steps are up-to-date at any given time.
-                      You have to specify absolute paths here, including a 
-                      directory, and you can obtain them via 
-                      *AbstractStep.run_ids_and_input_files_for_connection*
-                      and related functions.
+            **crucial** to get this right, so that the pipeline can determine which
+            steps are up-to-date at any given time. You have to specify absolute
+            paths here, including a directory, and you can obtain them via
+            *AbstractStep.run_ids_and_input_files_for_connection* and related functions.
         '''
         head, tail = os.path.split(out_path)
 
@@ -627,11 +636,12 @@ class Run(object):
     def remove_temporary_paths(self):
         '''
         Everything stored in self._temp_paths is examined and deleted if
-        possible. Also, self._known_paths 'type' info is updated here.
+        possible. The list elements are removed in LIFO order.
+        Also, self._known_paths 'type' info is updated here.
         NOTE: Included additional stat checks to detect FIFOs as well as other
         special files.
         '''
-        for _ in self.get_temp_paths():
+        for _ in self.get_temp_paths()[::-1]:
             # Check file type
             pathmode = os.stat(_).st_mode
             isdir = False if stat.S_ISDIR(pathmode) == 0 else True
@@ -836,12 +846,19 @@ class Run(object):
         log['step'] = {}
         log['step']['options'] = self.get_step().get_options()
         log['step']['name'] = self.get_step().get_step_name()
-        log['step']['known_paths'] = self.get_known_paths()
         log['step']['cores'] = self.get_step()._cores
         log['run'] = {}
         log['run']['run_info'] = self.as_dict()
         log['run']['run_id'] = self.get_run_id()
         log['run']['temp_directory'] = self.get_temp_output_directory()
+        # if a submit script was used ...
+        if os.path.exists(self.get_submit_script_file()):
+            # ... read it and store it ...
+            with open(self.get_submit_script_file(), 'r') as f:
+                log['run']['submit_script'] = f.read()
+            # ... finally delete it
+            os.unlink(self.get_submit_script_file())
+        log['run']['known_paths'] = self.get_known_paths()
         log['config'] = self.get_step().get_pipeline().config
         log['git_hash_tag'] = self.get_step().get_pipeline().git_hash_tag
         log['tool_versions'] = {}

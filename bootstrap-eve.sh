@@ -15,24 +15,39 @@ if [[ -n "$missing" ]]; then
     exit 1
 fi
 
-# J: create virtual python environment named 'python_env'
-virtualenv python_env
-# J: use this python to install required libraries (pyyaml,psutil,biopython)
-./python_env/bin/pip install pyyaml psutil biopython 
-./python_env/bin/easy_install -f http://biopython.org/DIST/ biopython
+########################################################
+# Create virtual python environment named 'python_env' #
+########################################################
 
+virtualenv python_env
+
+################################
 # Installation of NumPy on EVE #
-# J: Why is the installation of NumPy so different?
+################################
+
 # Backup LDFLAGS and CPPFLAGS values 
 export LDFLAGS_BAK=$LDFLAGS && export CPPFLAGS_BAK=$CPPFLAGS
 # unset environment variables
 unset LDFLAGS && unset CPPFLAGS
+# Install numpy
 ./python_env/bin/pip install numpy
+# Reset LDFLAGS and CPPFLAGS values
 export LDFLAGS=$LDFLAGS_BAK && export CPPFLAGS=$CPPFLAGS_BAK
+# Remove backup variables
 unset LDFLAGS_BAK && unset CPPFLAGS_BAK
 
+##############################################
+# Installation of PyYAML, psutil, BioPython  #
+##############################################
+
+# Install required libraries (pyyaml,psutil,biopython) into the virtual python environemnt
+./python_env/bin/pip install pyyaml psutil biopython 
+./python_env/bin/easy_install -f http://biopython.org/DIST/ biopython
+
+##############################
+# Installation of matplotlib #
+##############################
+
+# matplotlib requires freetype
 module load freetype/2.5.5-1
 ./python_env/bin/pip install matplotlib
-
-git submodule update --init --recursive
-
