@@ -193,7 +193,7 @@ class AdapterRemoval(AbstractStep):
 
                 if self.is_option_set_in_config('qualitybase'):
                     ar.extend(['--qualitybase',
-                               str(self.get_option('--qualitybase'))])
+                               str(self.get_option('qualitybase'))])
 
                 if self.get_option('collapse') is True:
                     ar.extend(['--collapse'])
