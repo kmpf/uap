@@ -11,6 +11,10 @@
 uap -- Robust, Consistent, and Reproducible Data Analysis
 #########################################################
 
+**Authors:**
+
+Christoph Kämpf, Michael Specht, Sven-Holger Puppel, Gero Doose, Kristin Reiche, Jana Hertel, Jörg Hackermüller
+
 **Description:**
 
   **uap** executes, controls and keeps track of the analysis of large data sets.
