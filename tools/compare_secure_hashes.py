@@ -15,7 +15,7 @@ def main():
         'renamed and a error message is output.',
         prog = 'compare_checksums.py',
         formatter_class = argparse.RawTextHelpFormatter)
-
+    
     parser.add_argument('--version',
                         action = 'version',
                         version = '%(prog)s 0.01'
@@ -45,7 +45,7 @@ def main():
     # get arguments and call the appropriate function
     args = parser.parse_args()
 
-
+    
     computed_hash_value = hashfile(args.file_to_hash,
                                    getattr(hashlib, args.hash_alg)()
                                )
@@ -68,7 +68,7 @@ def main():
         os.rename(file_to_hash_abspath, file_to_hash_new_path)
         sys.exit("Mismatching secure hashes! File %s was renamed to %s" %
                  (file_to_hash_abspath, file_to_hash_new_path) )
-
+        
 # Copied from http://stackoverflow.com/questions/3431825/generating-a-md5-checksum-of-a-file
 def hashfile(file_handle, hasher, blocksize=65536):
     buf = file_handle.read(blocksize)
