@@ -1,5 +1,0 @@
-FCID,Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator,SampleProject
-C0UTRACXX,1,Replicate1_CellType1_Condition2,hg19,GTGGCC,Replicate1_CellType1_Condition2,N,PE,user,A
-C0UTRACXX,3,Replicate1_CellType1_Condition2,hg19,GTGGCC,Replicate1_CellType1_Condition2,N,PE,user,A
-C0UTRACXX,6,Replicate1_CellType1_Condition2,hg19,GTGGCC,Replicate1_CellType1_Condition2,N,PE,user,A
-C0UTRACXX,8,Replicate1_CellType1_Condition2,hg19,GTGGCC,Replicate1_CellType1_Condition2,N,PE,user,A
