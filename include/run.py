@@ -63,6 +63,7 @@ class Run(object):
             'run': None,
             'queued': None
         }
+        self._submit_script = None
         self._exec_groups = list()
         self._temp_paths = list()
         '''
@@ -123,6 +124,15 @@ class Run(object):
 
     def get_queued_ping_file(self):
         return self._get_ping_file('queued')
+
+    def get_submit_script_file(self):
+        if self._submit_script == None:
+            self._submit_script = os.path.join(
+                self.get_output_directory(),
+                ".submit-%s-%s.sh" % (self.get_step().get_step_name(),
+                                      self.get_run_id())
+            )
+        return self._submit_script
 
     def replace_output_dir_du_jour(func):
         def inner(self, *args, **kwargs):
@@ -627,11 +637,12 @@ class Run(object):
     def remove_temporary_paths(self):
         '''
         Everything stored in self._temp_paths is examined and deleted if
-        possible. Also, self._known_paths 'type' info is updated here.
+        possible. The list elements are removed in LIFO order.
+        Also, self._known_paths 'type' info is updated here.
         NOTE: Included additional stat checks to detect FIFOs as well as other
         special files.
         '''
-        for _ in self.get_temp_paths():
+        for _ in self.get_temp_paths()[::-1]:
             # Check file type
             pathmode = os.stat(_).st_mode
             isdir = False if stat.S_ISDIR(pathmode) == 0 else True
@@ -698,6 +709,12 @@ class Run(object):
             out_connection = 'out/' + out_connection
         self._output_files[out_connection] = dict()
         return out_connection
+
+    def get_input_files_for_output_file(self, output_file):
+        for connection in self.get_out_connections():
+            if output_file in \
+                self.get_output_files_for_out_connection(connection):
+                    return self._output_files[connection][output_file]
 
     def get_input_files_for_output_file_abspath(self, output_file):
         for connection in self.get_out_connections():
@@ -836,6 +853,14 @@ class Run(object):
         log['run']['run_info'] = self.as_dict()
         log['run']['run_id'] = self.get_run_id()
         log['run']['temp_directory'] = self.get_temp_output_directory()
+        # if a submit script was used ...
+        if os.path.exists(self.get_submit_script_file()):
+            # ... read it and store it ...
+            with open(self.get_submit_script_file(), 'r') as f:
+                log['run']['submit_script'] = f.read()
+            # ... finally delete it
+            os.unlink(self.get_submit_script_file())
+        log['run']['known_paths'] = self.get_known_paths()
         log['config'] = self.get_step().get_pipeline().config
         log['git_hash_tag'] = self.get_step().get_pipeline().git_hash_tag
         log['tool_versions'] = {}
