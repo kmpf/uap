@@ -77,6 +77,8 @@ class Segemehl(AbstractStep):
                         description="minimum size of queries (default:12)")
         self.add_option('silent', bool, default=True, optional=True,
                         description="shut up!")
+        self.add_option('threads', int, default=10, optional=True,
+                        description="start <n> threads (default:10)")
         self.add_option('brief', bool, default=False, optional=True,
                         description="brief output")
         ## [SEEDPARAMS]
@@ -237,7 +239,7 @@ class Segemehl(AbstractStep):
                             '--database', fifo_path_genome,
                             '--index', self.get_option('index'),
                             '--nomatchfilename', fifo_path_unmapped,
-                            '--threads', '10',
+                            '--threads', str(self.get_option('threads')),
                             '--query', fr_input[0]
                         ]
                         if is_paired_end:
