@@ -44,56 +44,6 @@ class Pipeline(object):
     Possible states a task can be in.
     '''
 
-    pipeline_path = os.path.dirname(os.path.realpath(__file__))
-    '''
-    Absolute path to this very file. It is used to circumvent path issues.
-    '''
-
-    cluster_config = {
-        'slurm':
-           {'submit': 'sbatch',
-            'stat': 'squeue',
-            'template': pipeline_path + '/../submit-scripts/sbatch-template.sh',
-            'hold_jid': '--dependency=afterany:%s',
-            'set_job_name': '--job-name=%s',
-            'set_stderr': '-e',
-            'set_stdout': '-o',
-            'parse_job_id': 'Submitted batch job (\d+)',
-            'mem': '--mem=%s',
-            'time': '--time=%s',
-            'nice': '--nice=%s',
-            'exclusive': '--exclusive' ,
-            'queue': '--partition=%s'},
-
-        'sge':
-           {'submit': 'qsub',
-            'stat': 'qstat',
-            'template': pipeline_path + '/../submit-scripts/qsub-template.sh',
-            'hold_jid': '-hold_jid',
-            'set_job_name': '-N',
-            'set_stderr': '-e',
-            'set_stdout': '-o',
-            'parse_job_id': 'Your job (\d+)',
-            'h_vmem': ['-l', 'h_vmem=%s' ],
-            'h_rt': ['-l', 'h_rt=%s' ],
-            's_rt': ['-l', 's_rt=%s'],
-            'queue': '-q'},
-
-        'uge':
-           {'submit': 'qsub',
-            'stat': 'qstat',
-            'template': pipeline_path + '/../submit-scripts/qsub-template.sh',
-            'hold_jid': '-hold_jid',
-            'set_job_name': '-N',
-            'set_stderr': '-e',
-            'set_stdout': '-o',
-            'parse_job_id': 'Your job (\d+)'}
-    }
-
-    '''
-    Cluster-related configuration for every cluster system supported.
-    '''
-
     def __init__(self, **kwargs):
         self.caught_signal = None
 
@@ -122,12 +72,28 @@ class Pipeline(object):
             self.git_hash_tag = subprocess.check_output(command).strip()
         except:
             logger.error("Execution of %s failed." % " ".join(command))
+            raise
             sys.exit(1)
+
         # check if we got passed an 'arguments' parameter
         # this parameter should contain a argparse.Namespace object
         args = None
         if 'arguments' in kwargs:
             args = kwargs['arguments']
+
+        self._uap_path = args.uap_path
+        '''
+        Absolute path to the directory of the uap executable.
+        It is used to circumvent path issues.
+        '''
+
+        self._cluster_config_path = os.path.join(
+            self._uap_path, 'cluster/cluster-specific-commands.yaml')
+        with open(self._cluster_config_path, 'r') as cluster_config_file:
+            self._cluster_config = yaml.load( cluster_config_file )
+        '''
+        Cluster-related configuration for every cluster system supported.
+        '''
 
         if self.git_hash_tag.endswith('-dirty'):
             if not args.even_if_dirty:
@@ -188,7 +154,7 @@ class Pipeline(object):
         '''
         This dict stores file dependencies within this pipeline, but regardless
         of step, output file tag or run ID. This dict has, for all input
-        files required pipeline, a set of output files which are generated
+        files required by the pipeline, a set of output files which are generated
         using this input file.
         '''
 
@@ -251,8 +217,14 @@ class Pipeline(object):
         self.tool_versions = {}
         self.check_tools()
 
+    def get_uap_path(self):
+        return self._uap_path
+
     def get_config_filepath(self):
         return self._config_filepath
+
+    def get_cluster_config(self):
+        return self._cluster_config
 
     def get_steps(self):
         return self.steps
@@ -287,7 +259,18 @@ class Pipeline(object):
         if not os.path.exists("%s-out" % self.config['id']):
             os.symlink(self.config['destination_path'], '%s-out' % self.config['id'])
 
+        if not 'cluster' in self.config:
+            self.config['cluster'] = dict()
+
+        for i in ['default_submit_options', 'default_pre_job_command',
+                  'default_post_job_command']:
+            if i not in self.config['cluster']:
+                self.config['cluster'][i] = ''
+
         self.build_steps()
+
+    def get_config(self):
+        return self.config
 
     def build_steps(self):
         self.steps = {}
@@ -301,7 +284,7 @@ class Pipeline(object):
         for step_key, step_description in self.config['steps'].items():
 
             # the step keys in the configuration may be either:
-            # - MODULE_NAME
+            # - MODULE_NAME 
             # - DIFFERENT_STEP_NAME\s+\(MODULE_NAME\)
             step_name = None
             module_name = None
@@ -448,6 +431,7 @@ class Pipeline(object):
             if type(command) is str:
                 command = command.split()
             self.check_command(command)
+            logger.info("Executing command: %s" % " ".join(command))
             try:
                 proc = subprocess.Popen(
                     command,
@@ -543,9 +527,9 @@ class Pipeline(object):
             if exit_code != expected_exit_code:
                 logger.error(
                     "%s: Tool check failed for %s: %s - exit code is: %d "
-                    "(expected %d)"
+                    "(expected %d) (response %s)"
                     % (self.get_config_filepath(), tool_id, ' '.join(command),
-                       exit_code, expected_exit_code)
+                       exit_code, expected_exit_code, tool_check_info['response'])
                 )
                 sys.exit(1)
             # Execute clean-up command (if configured)
@@ -590,8 +574,9 @@ class Pipeline(object):
         check_queue = True
 
         try:
-            stat_output = subprocess.check_output([self.cc('stat')],
-                                                  stderr = subprocess.STDOUT)
+            stat_output = subprocess.check_output(
+                [self.get_cluster_command('stat')],
+                stderr = subprocess.STDOUT)
         except (KeyError, OSError, subprocess.CalledProcessError):
             # we don't have a stat tool here, if subprocess.CalledProcessError
             # is raised
@@ -599,7 +584,7 @@ class Pipeline(object):
 
         if print_more_warnings and not check_queue:
             try:
-                ce = self.cc('stat')
+                ce = self.get_cluster_command('stat')
             except KeyError:
                 ce = "a cluster engine"
             print("Attention, we cannot check stale queued ping files because "
@@ -706,60 +691,55 @@ class Pipeline(object):
                   % self.get_config_filepath())
 
     def autodetect_cluster_type(self):
-        try:
-            if ( subprocess.check_output( ["sbatch", "--version"])[:6] == "slurm "):
-                return "slurm"
-        except OSError:
-            pass
-
-        try:
-            if ( subprocess.check_output(["qstat", "-help"] )[:4] == "SGE "):
-                return "sge"
-        except OSError:
-            pass
-
-        try:
-            if ( subprocess.check_output(["qstat", "-help"] )[:4] == "UGE "):
-                return "uge"
-        except OSError:
-            pass
-
+        cluster_config = self.get_cluster_config()
+        # Let's see if we can successfully run a cluster identity test
+        # Test all configured cluster types
+        for cluster_type in cluster_config.keys():
+            # Do we have an identity test command
+            identity = dict()
+            for key in ['test', 'answer']:
+                try:
+                    identity[key] = cluster_config[cluster_type]\
+                                        ['identity_%s' % key]
+                except KeyError:
+                    logger.error("%s: Missing 'identity_%s' for %s"
+                                 "cluster type."
+                                 % (self._cluster_config_path,
+                                    key, cluster_type)
+                             )
+                    sys.exit(1)
+            # Now that we know let's test for that cluster    
+            try:
+                if (subprocess.check_output( identity['test'] )
+                    .startswith(identity['answer']) ):
+                    return cluster_type
+            except OSError:
+                pass
         return None
 
     def get_cluster_type(self):
         return self.cluster_type
 
     def set_cluster_type(self, cluster_type):
-        if not cluster_type in Pipeline.cluster_config:
-            print("Unknown cluster type: %s (choose one of %s)." % (
-                cluster_type, ', '.join(Pipeline.self.cluster_config.keys())))
-            exit(1)
+        if not cluster_type in self.get_cluster_config():
+            logger.info("No cluster type detected.")
+            self.cluster_type = None
         self.cluster_type = cluster_type
 
     '''
     Shorthand to retrieve a cluster-type-dependent command or filename
     (cc == cluster command).
     '''
-    def cc(self, key):
-        return Pipeline.cluster_config[self.cluster_type][key]
+    def get_cluster_command(self, key):
+        return self.get_cluster_config()[self.get_cluster_type()][key]
 
     '''
     Shorthand to retrieve a cluster-type-dependent command line part (this is a
     list)
     '''
-    def ccla(self, key, value):
-        result = Pipeline.cluster_config[self.cluster_type][key]
-        if isinstance(result, list):
-            resl =[]
-            for i in result:
-                if '%s' in i:
-                    resl.append(i % value)
-                else:
-                    resl.append(i)
-            return resl
-
+    def get_cluster_command_cli_option(self, key, value):
+        result = self.get_cluster_config()[self.get_cluster_type()][key]
         if '%s' in result:
             return [result % value]
         else:
             return [result, value]
-
