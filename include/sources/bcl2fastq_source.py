@@ -11,6 +11,8 @@ class Bcl2FastqSource(AbstractSourceStep):
     def __init__(self, pipeline):
         super(Bcl2FastqSource, self).__init__(pipeline)
 
+        self.set_cores(10) # set # of cores for cluster, it is ignored if run locally
+
         self.add_connection('out/configureBcl2Fastq_log_stderr')
         self.add_connection('out/make_log_stderr')
         self.add_connection('out/sample_sheet')
@@ -53,7 +55,7 @@ class Bcl2FastqSource(AbstractSourceStep):
 
     def runs(self, run_ids_connections_files):
         '''
-
+        
         '''
         input_dir = self.get_option('input-dir')
         if not os.path.isdir(input_dir):
@@ -107,7 +109,7 @@ class Bcl2FastqSource(AbstractSourceStep):
                         os.path.join(input_dir, 'Data', 'Intensities',
                                      'BaseCalls')
                     ]
-
+                
                     configureBcl2Fastq.extend(option_list)
 
                     configureBcl2Fastq.extend(
@@ -123,7 +125,7 @@ class Bcl2FastqSource(AbstractSourceStep):
                     # Create new execution group for make
                     make_exec_group = run.new_exec_group()
                     # Assemble make command
-                    make = [self.get_tool('make'), '-C', temp_output_dir]
+                    make = [self.get_tool('make'), '-C', temp_output_dir, '-j', str(self.get_cores())]
                     # Add make command to execution group
                     make_exec_group.add_command(
                         make,
@@ -151,4 +153,4 @@ class Bcl2FastqSource(AbstractSourceStep):
                         mv_command = mv_exec_group.add_command(mv)
                         run.add_public_info("bcl2fastq-output-folder",
                                             output_unaligned_dir)
-
+                        
