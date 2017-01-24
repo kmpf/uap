@@ -13,7 +13,7 @@ import pipeline
 
 '''
 By default, this script displays information about all tasks of the pipeline
-configured in 'config.yaml'. But the displayed information can be narrowed
+configured in 'config.yaml'. But the displayed information can be narrowed 
 down via command line options.
 
 '''
@@ -28,9 +28,9 @@ def main(args):
         # print all sources (i. e. instances of AbstractSourceStep)
         p.print_source_runs()
 
-    elif len( args.task ) >= 1:
+    elif len( args.run ) >= 1:
         # print run infos of one or more specific tasks
-        for task_id in args.task:
+        for task_id in args.run:
             parts = task_id.split('/')
             if len(parts) != 2:
                 raise StandardError("Invalid task ID %s." % task_id)
@@ -39,7 +39,7 @@ def main(args):
             report = p.steps[step_name].get_run(run_id).as_dict()
             report['state'] = p.steps[step_name].get_run_state(run_id)
             print(yaml.dump(report, default_flow_style = False))
-
+        
     elif args.graph:
         step_order = p.topological_step_order
         indents = [0 for _ in step_order]
@@ -83,9 +83,9 @@ def main(args):
             line = "%s%s%s [%s]" % (''.join(_).replace("─└", "─┴"), step.get_step_name(), original_step_name_label, step.get_run_info_str())
             print(line)
     else:
-        # print all tasks
+        # print all runs
         '''
-        prints a summary of all tasks, indicating whether each taks is
+        prints a summary of all runs, indicating whether each run is
         - ``[r]eady``
         - ``[w]aiting``
         - ``[q]ueued``
@@ -107,7 +107,7 @@ def main(args):
             for status in p.states.order:
                 if not status in tasks_for_status:
                     continue
-                heading = "%s tasks" % string.capwords(status)
+                heading = "%s runs" % string.capwords(status)
                 output.append(heading)
                 output.append('-' * len(heading))
                 if args.summarize:
@@ -131,7 +131,7 @@ def main(args):
                                          task.get_task_state()[0].lower(),
                                          task))
                     output.append('')
-            output.append("tasks: %d total, %s"
+            output.append("runs: %d total, %s"
                           % (len(p.all_tasks_topologically_sorted),
                              ', '.join(["%d %s" % (
                                  len(tasks_for_status[_]),
@@ -141,7 +141,7 @@ def main(args):
     # now check ping files and print some warnings and instructions if
     # something's fishy
     p.check_ping_files(print_more_warnings = True if args.verbose > 0 else False)
-
+    
     # Now check whether we can volatilize files, but don't do it.
     p.check_volatile_files()
-
+    

@@ -10,8 +10,8 @@ import pipeline_info
 import command as command_info
 
 '''
-By default, this script displays information about all tasks of the pipeline
-configured in 'config.yaml'. But the displayed information can be narrowed
+By default, this script displays information about all runs of the pipeline
+configured in 'config.yaml'. But the displayed information can be narrowed 
 down via command line options.
 
 '''
@@ -26,12 +26,12 @@ def main(args):
         # print all sources (i. e. instances of AbstractSourceStep)
         p.print_source_runs()
 
-    elif len( args.task ) >= 1:
+    elif len( args.run ) >= 1:
         # print run infos of one or more specific tasks
-        for task_id in args.task:
+        for task_id in args.run:
             parts = task_id.split('/')
             if len(parts) != 2:
-                raise StandardError("Invalid task ID %s." % task_id)
+                raise StandardError("Invalid run ID %s." % task_id)
             step_name = parts[0]
             run_id = parts[1]
             run = p.steps[step_name].get_run(run_id)
@@ -57,7 +57,7 @@ def main(args):
                 for poc in exec_group.get_pipes_and_commands():
                     # for each pipe or command (poc)
                     # check if it is a pipeline ...
-
+                    
                     if isinstance(poc, pipeline_info.PipelineInfo):
                         pipe_header = goc_header + " -- %d. Pipeline" % pipe_count
                         print("# " + pipe_header)

@@ -43,7 +43,7 @@ def main(args):
                     print("  - '%s'" % s.s)
 
             self.generic_visit(node)
-
+            
     # Define Class to return all 'self.add_option' calls
     class AddOptionLister(ast.NodeVisitor):
         def visit_Call(self, node):
@@ -62,12 +62,20 @@ def main(args):
                 for k in node.keywords:
                     try:
                         print("      |_ %s=%s " % (k.arg, k.value.id))
+                        continue
                     except:
                         pass
                     try:
                         print("      |_ %s=%s " % (k.arg, k.value.s))
+                        continue
                     except:
                         pass
+                    try:
+                        print("      |_ %s=%s " % (k.arg, ", ".join(
+                            [x.s for x in k.value.elts])))
+                    except:
+                        pass
+                        
 
             self.generic_visit(node)
 
@@ -75,17 +83,17 @@ def main(args):
         '''
         Check if given key belongs to a loadable class
         '''
-        #been there
+        #been there 
         if state == True:
-            return False
+            return False 
 
-        res = False
+        res = False 
         for name, cl in inspect.getmembers(__import__(key), inspect.isclass):
                 if  cl.__module__ == key:
                     if issubclass(cl, step_type):
                         res = True
         return res
-
+        
 
     steps_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -102,30 +110,30 @@ def main(args):
                            '../steps/%s.py' % args.step
 
                 step_file = os.path.join(steps_path, step_file)
-
+                
                 if not os.path.exists(step_file):
                     logger.error("Step file %s does not exists." %
                                  step_file)
                     sys.exit(1)
-
+                
                 with open(step_file) as f:
                     fc = f.read()
-
+                    
                 tree = ast.parse(fc)
-
+                    
                 step = AbstractStep.get_step_class_for_key(args.step)
                 print("Step: %s" % args.step)
                 print("* General Information:")
                 print(step.__doc__)
                 print("* Provided Connections:")
-                AddConnectionLister().visit(tree)
+                AddConnectionLister().visit(tree)                
                 print("* Required Tools:")
                 RequireToolLister().visit(tree)
                 print("* Available Options:")
                 AddOptionLister().visit(tree)
                 #print(ast.dump(tree) )
                 #print(rt.body[0].value.args)
-
+                
         if not is_step:
             logger.error("'%s' is neither a source nor a processing step"
                          % args.step)
