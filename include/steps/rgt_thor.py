@@ -13,7 +13,7 @@ class RgtThor(AbstractStep):
     p-value calculation in an integrated framework. For differential peak
     calling without replicates use ODIN.
 
-    More information please refer to:
+    For more information please refer to:
 
     Allhoff, M., Sere K., Freitas, J., Zenke, M.,  Costa, I.G. (2016),
     Differential Peak Calling of ChIP-seq Signals with Replicates with THOR,
@@ -182,7 +182,7 @@ class RgtThor(AbstractStep):
                     # Write config_file to disk using printf
                     config_path = run.add_output_file(
                         'thor_config',
-                        '%s_thor.config' % run_id,
+                        'thor_%s.config' % run_id,
                         input_files
                     )
                     config_string = ""
@@ -216,8 +216,8 @@ class RgtThor(AbstractStep):
                         input_files
                     )
                     ## - THOR created BigWig files
-                    for (rep, suf) in {'rep1': 's1', 'rep2': 's2'}:
-                        for i in len(config_content[rep]):
+                    for (rep, suf) in {'rep1': 's1', 'rep2': 's2'}.iteritems():
+                        for i in range(len(config_content[rep])):
                             run.add_output_file(
                                 'chip_seq_bigwig',
                                 '%s-%s-rep%s.bw' % (run_id, suf, i),
