@@ -109,6 +109,9 @@ class Bowtie2GenerateIndex(AbstractStep):
                         "reference sequences (cumulative across sequences) and "
                         "ignore the rest.")
 
+        # Options for dd
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+
     def runs(self, run_ids_connections_files):
         # Compile the list of options
         options = ['large-index', 'noauto', 'packed', 'bmax', 'bmaxdivn', 'dcv',
@@ -159,17 +162,17 @@ class Bowtie2GenerateIndex(AbstractStep):
                         # 2. Output files to fifo
                         if is_fasta_gz:
                             with exec_group.add_pipeline() as unzip_pipe:
-                                # 2.1 command: Read file in 4MB chunks
+                                # 2.1 command: Read file in chunks
                                 dd_in = [self.get_tool('dd'),
-                                         'ibs=4M',
+                                         'ibs=%s' % self.get_option('dd-blocksize'),
                                          'if=%s' % input_path]
                                 # 2.2 command: Uncompress data
                                 pigz = [self.get_tool('pigz'),
                                         '--decompress',
                                         '--stdout']
-                                # 2.3 Write file in 4MB chunks to fifo
+                                # 2.3 Write file chunks to fifo
                                 dd_out = [self.get_tool('dd'),
-                                          'obs=4M',
+                                          'obs=%s' % self.get_option('dd-blocksize'),
                                           'of=%s' % temp_file]
                                 temp_files.append(temp_file)
 
@@ -178,7 +181,7 @@ class Bowtie2GenerateIndex(AbstractStep):
                                 unzip_pipe.add_command(dd_out)
                         elif is_fasta:
                             dd = [self.get_tool('dd'),
-                                  'bs=4M',
+                                  'bs=%s' % self.get_option('dd-blocksize'),
                                   'if=%s' % input_path,
                                   'of=%s' % temp_file]
                             temp_files.append(input_path)

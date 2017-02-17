@@ -28,6 +28,9 @@ class FastxQualityStats(AbstractStep):
         self.add_option('new_output_format', bool, default= True, optional=True)
         self.add_option('quality', int, default=33, optional=True)
 
+        # Options for dd
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+
         self.require_tool('cat')
         self.require_tool('dd')
         self.require_tool('mkfifo')
@@ -78,7 +81,7 @@ class FastxQualityStats(AbstractStep):
                                 with exec_group.add_pipeline() as unzip_pipe:
                                     # 2.1 command: Read file in 4MB chunks
                                     dd_in = [self.get_tool('dd'),
-                                           'ibs=4M',
+                                           'ibs=%s' % self.get_option('dd-blocksize'),
                                            'if=%s' % input_path]
                                     # 2.2 command: Uncompress file to fifo
                                     pigz = [self.get_tool('pigz'),
@@ -86,7 +89,7 @@ class FastxQualityStats(AbstractStep):
                                             '--stdout']
                                     # 2.3 Write file in 4MB chunks to fifo
                                     dd_out = [self.get_tool('dd'),
-                                              'obs=4M',
+                                              'obs=%s' % self.get_option('dd-blocksize'),
                                               'of=%s' % temp_fifo]
 
                                     unzip_pipe.add_command(dd_in)
@@ -96,7 +99,7 @@ class FastxQualityStats(AbstractStep):
                                 # 2.1 command: Read file in 4MB chunks and
                                 #              write to fifo in 4MB chunks
                                 dd_in = [self.get_tool('dd'),
-                                         'bs=4M',
+                                         'bs=%s' % self.get_option('dd-blocksize'),
                                          'if=%s' % input_path,
                                          'of=%s' % temp_fifo]
                                 exec_group.add_command(dd_in)

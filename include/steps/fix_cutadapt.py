@@ -20,6 +20,9 @@ class FixCutadapt(AbstractStep):
         self.add_connection('out/first_read')
         self.add_connection('out/second_read')
 
+        # Options for dd
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+
         self.require_tool('cat')
         self.require_tool('dd')
         self.require_tool('fix_cutadapt')
@@ -64,27 +67,27 @@ class FixCutadapt(AbstractStep):
                         # 2. Output files to fifo
                         if input_paths[0].endswith('fastq.gz'):
                             with exec_group.add_pipeline() as unzip_pipe:
-                                # 2.1 command: Read file in 4MB chunks
+                                # 2.1 command: Read file in chunks
                                 dd_in = [self.get_tool('dd'),
-                                         'ibs=4M',
+                                         'ibs=%s' % self.get_option('dd-blocksize'),
                                          'if=%s' % input_paths[0]]
                                 # 2.2 command: Uncompress file to fifo
                                 pigz = [self.get_tool('pigz'),
                                         '--decompress',
                                         '--stdout']
-                                # 2.3 Write file in 4MB chunks to fifo
+                                # 2.3 Write file in chunks to fifo
                                 dd_out = [self.get_tool('dd'),
-                                          'obs=4M',
+                                          'obs=%s' % self.get_option('dd-blocksize'),
                                           'of=%s' % temp_fifos["%s_in" % read] ]
 
                                 unzip_pipe.add_command(dd_in)
                                 unzip_pipe.add_command(pigz)
                                 unzip_pipe.add_command(dd_out)
                         elif input_paths[0].endswith('fastq'):
-                            # 2.1 command: Read file in 4MB chunks and
-                            #              write to fifo in 4MB chunks
+                            # 2.1 command: Read file in chunks and
+                            #              write to fifo in chunks
                             dd_in = [self.get_tool('dd'),
-                                     'bs=4M',
+                                     'bs=%s' % self.get_option('dd-blocksize'),
                                      'if=%s' % input_paths[0],
                                      'of=%s' % temp_fifos["%s_in" % read] ]
                             exec_group.add_command(dd_in)
@@ -116,14 +119,14 @@ class FixCutadapt(AbstractStep):
                             '--blocksize', '4096',
                             '--processes', '2',
                             '--stdout']
-                    # 4.3 command: Write to output file in 4MB chunks
+                    # 4.3 command: Write to output file in chunks
                     fr_stdout_path = run.add_output_file(
                         "first_read",
                         "%s%s.fastq.gz" %
                         (run_id, read_types["first_read"]),
                         run_ids_connections_files[run_id]["in/first_read"])
                     dd = [self.get_tool('dd'),
-                          'obs=4M',
+                          'obs=%s' % self.get_option('dd-blocksize'),
                           'of=%s' % fr_stdout_path]
 
                     fr_pigz_pipe.add_command(cat)
@@ -142,14 +145,14 @@ class FixCutadapt(AbstractStep):
                                 '--blocksize', '4096',
                                 '--processes', '2',
                                 '--stdout']
-                        # 4.3 command: Write to output file in 4MB chunks
+                        # 4.3 command: Write to output file in chunks
                         sr_stdout_path = run.add_output_file(
                             "second_read",
                             "%s%s.fastq.gz" %
                             (run_id, read_types["second_read"]),
                             run_ids_connections_files[run_id]["in/second_read"])
                         dd = [self.get_tool('dd'),
-                              'obs=4M',
+                              'obs=%s' % self.get_option('dd-blocksize'),
                               'of=%s' % sr_stdout_path]
 
                         sr_pigz_pipe.add_command(cat)

@@ -49,6 +49,9 @@ class HtSeqCount(AbstractStep):
                                                 'intersection-nonempty'],
                         default = 'union', optional = True)
 
+        # Options for dd
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+
     def runs(self, run_ids_connections_files):
         # Compile the list of options
         options = ['order', 'stranded', 'a', 'type', 'idattr', 'mode']
@@ -107,7 +110,7 @@ class HtSeqCount(AbstractStep):
                     with exec_group.add_pipeline() as pipe:
                         # 1. Read alignment file in 4MB chunks
                         dd_in = [self.get_tool('dd'),
-                                 'ibs=4M',
+                                 'ibs=%s' % self.get_option('dd-blocksize'),
                                  'if=%s' % alignments_path]
                         pipe.add_command(dd_in)
 

@@ -47,6 +47,9 @@ class Bowtie2(AbstractStep):
         # Bowtie2 has so many options that I'm avoiding to add them all now,
         # but it might be necessary later on.
 
+        # Options for dd
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+
     def runs(self, run_ids_connections_files):
         self.set_cores(self.get_option('cores'))
 
@@ -99,7 +102,7 @@ class Bowtie2(AbstractStep):
                             with exec_group.add_pipeline() as unzip_pipe:
                                 # 2.1 command: Read file in 4MB chunks
                                 dd_in = [self.get_tool('dd'),
-                                      'bs=4M',
+                                      'bs=%s' % self.get_option('dd-blocksize'),
                                       'if=%s' % input_path]
                                 unzip_pipe.add_command(dd_in)
                                 # 2.2 command: Uncompress data
@@ -109,12 +112,12 @@ class Bowtie2(AbstractStep):
                                 unzip_pipe.add_command(pigz)
                                 # 2.3 Write file in 4MB chunks to fifo
                                 dd_out = [self.get_tool('dd'),
-                                          'obs=4M',
+                                          'obs=%s' % self.get_option('dd-blocksize'),
                                           'of=%s' % temp_fifo]
                                 unzip_pipe.add_command(dd_out)
                         else:
                             dd = [self.get_tool('dd'),
-                                  'bs=4M',
+                                  'bs=%s' % self.get_option('dd-blocksize'),
                                   'if=%s' % input_path,
                                   'of=%s' % temp_fifo]
                             exec_group.add_command(dd)
@@ -164,7 +167,7 @@ class Bowtie2(AbstractStep):
                         # Write bowtie2 output to file
                         dd = [
                             self.get_tool('dd'),
-                            'obs=4M',
+                            'obs=%s' % self.get_option('dd-blocksize'),
                             'of=%s' %
                             run.add_output_file(
                                 'alignments',

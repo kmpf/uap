@@ -60,7 +60,10 @@ class Cutadapt(AbstractStep):
         self.add_option('q', int, default = None, optional =True)
         self.add_option('u', int, default = None, optional =True)
         self.add_option('noadapter', bool,  default=False, optional=True)
- 
+
+        # Options for dd
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+
     def runs(self, run_ids_connections_files):
 
         ## Make sure the adapter type is one of -a, -b or -g
@@ -88,7 +91,7 @@ class Cutadapt(AbstractStep):
                         # correctly set
                         # this kind of mutual exclusive option checking is a bit
                         # tedious, so we do it here.
-                        
+
                         if paired_end_info[run_id]:
                             if ( not self.is_option_set_in_config('adapter-R2') and
                                  not self.is_option_set_in_config('adapter-file') ):
@@ -130,7 +133,7 @@ class Cutadapt(AbstractStep):
                                 with exec_group.add_pipeline() as pigz_pipe:
                                     # 2.1 command: Read file in 4MB chunks
                                     dd_in = [self.get_tool('dd'),
-                                           'ibs=4M',
+                                           'ibs=%s' % self.get_option('dd-blocksize'),
                                            'if=%s' % input_path]
                                     # 2.2 command: Uncompress file to fifo
                                     pigz = [self.get_tool('pigz'),
@@ -139,7 +142,7 @@ class Cutadapt(AbstractStep):
                                     # 2.3 command: Write file in 4MB chunks to
                                     #              fifo
                                     dd_out = [self.get_tool('dd'),
-                                              'obs=4M',
+                                              'obs=%s' % self.get_option('dd-blocksize'),
                                               'of=%s' % temp_fifo]
 
                                     pigz_pipe.add_command(dd_in)
@@ -150,7 +153,7 @@ class Cutadapt(AbstractStep):
                                 # 2.1 command: Read file in 4MB chunks and
                                 #              write to fifo in 4MB chunks
                                 dd_in = [self.get_tool('dd'),
-                                         'bs=4M',
+                                         'bs=%s' % self.get_option('dd-blocksize'),
                                          'if=%s' % input_path,
                                          'of=%s' % temp_fifo]
                                 exec_group.add_command(dd_in)
@@ -248,7 +251,7 @@ class Cutadapt(AbstractStep):
                                 input_paths)
 
                             dd = [self.get_tool('dd'),
-                                  'obs=4M',
+                                  'obs=%s' % self.get_option('dd-blocksize'),
                                   'of=%s' % clipped_fastq_file]
 
 

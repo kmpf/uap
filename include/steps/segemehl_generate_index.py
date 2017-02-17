@@ -32,6 +32,9 @@ class SegemehlGenerateIndex(AbstractStep):
         self.add_option('index-basename', str, optional=False, description=
                         "Basename for created segemehl index.")
 
+        # Options for dd
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+
     def runs(self, run_ids_connections_files):
 
 
@@ -78,7 +81,7 @@ class SegemehlGenerateIndex(AbstractStep):
                         # Feed reference sequence to seq_fifo
                         dd_refseq = [
                             self.get_tool('dd'),
-                            'bs=4M',
+                            'bs=%s' % self.get_option('dd-blocksize'),
                             'if=%s' % seq_file
                         ]
 
@@ -91,7 +94,7 @@ class SegemehlGenerateIndex(AbstractStep):
                                     '--stdout']
 
                                 dd_out = [self.get_tool('dd'),
-                                          'bs=4M',
+                                          'bs=%s' % self.get_option('dd-blocksize'),
                                           'of=%s' % seq_fifo]
                                 pipe.add_command(dd_refseq)
                                 pipe.add_command(pigz)
@@ -127,7 +130,7 @@ class SegemehlGenerateIndex(AbstractStep):
 
                     # Read index from index_fifo
                     dd_index = [self.get_tool('dd'),
-                                'bs=4M',
+                                'bs=%s' % self.get_option('dd-blocksize'),
                                 'if=%s' % index_fifo]
                     exec_group.add_command(
                         dd_index,
