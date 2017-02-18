@@ -55,8 +55,8 @@ constants:
 
     # 3.  Gencode Annotation:
     # 3.1 Version 24
-    - &gencode_v24_annotation_gtf
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode/gencode.v24.annotation.gtf
+    - &gencode_v19_annotation_gtf
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode/gencode.v19.annotation.gtf
 
 ################################################################################
 ## Steps Section                                                              ##
@@ -96,7 +96,7 @@ steps:
 
     count_genes_tophat2 (htseq_count):
         _depends: sort_tophat2_by_pos
-        feature-file: *gencode_v24_annotation_gtf
+        feature-file: *gencode_v19_annotation_gtf
         order: pos
         stranded: 'yes'
         mode: intersection-strict
@@ -106,7 +106,7 @@ steps:
     cufflinks_tophat2 (cufflinks):
         _depends: sort_tophat2_by_pos
         library-type: fr-secondstrand
-        mask-file: *gencode_v24_annotation_gtf
+        mask-file: *gencode_v19_annotation_gtf
 
 # Uncomment the following steps if you created the segemehl genome index
 #    segemehl:
@@ -125,7 +125,7 @@ steps:
 #
 #    count_genes_segemehl (htseq_count):
 #        _depends: sort_segemehl_by_pos
-#        feature-file: *gencode_v24_annotation_gtf
+#        feature-file: *gencode_v19_annotation_gtf
 #        order: pos
 #        stranded: 'yes'
 #        mode: intersection-strict
@@ -135,7 +135,7 @@ steps:
 #    cufflinks_segemehl (cufflinks):
 #        _depends: sort_segemehl_by_pos
 #        library-type: fr-secondstrand
-#        mask-file: *gencode_v24_annotation_gtf
+#        mask-file: *gencode_v19_annotation_gtf
 
 ################################################################################
 ## Tools Section                                                              ##
