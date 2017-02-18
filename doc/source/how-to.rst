@@ -35,9 +35,15 @@ These example configurations differ in their usage of computational
 resources.
 Some example configurations download or work on small datasets and are
 thus feasible for machines with limited resources.
-Others require a very powerful stand-alone machine or a cluster system.
-The examples are marked accordingly in the examples below.
+Most examples can be extended by uncommenting additional steps.
+This might change their computational requirements in such a way that a
+very powerful stand-alone machine or a cluster system is required.
+The examples are marked accordingly in the sections below.
 
+.. NOTE:: Before **computing an example on a cluster**, you need to uncomment
+          the :ref:`config_file_cluster` and adapt the settings as required.
+          Please check also if the :ref:`cluster_configuration` fits your
+          cluster system.
 
 Handle Genomic Data
 -------------------
