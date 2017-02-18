@@ -92,7 +92,7 @@ The following configurations showcase how to get or generate that data:
     This workflow only downloads files from the internet and and thus should
     work on any machine.
 
-    :Memory consumption: depending on your machine
+    :Max. memory: depending on your machine
     :Disk usage: ~1,2 GB
     :Run time: depends on your internet connection
 
