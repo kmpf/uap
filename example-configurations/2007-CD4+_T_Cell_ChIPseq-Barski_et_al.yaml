@@ -387,9 +387,15 @@ tools:
 
     # URL: http://broadinstitute.github.io/picard/
     picard-tools:
+        ## Settings below work for picard-tools installed via apt-get/aptitude
         path: picard-tools
         get_version: --version
         exit_code: 0
+        ## Settings below work if path to Picard JAR file is changed and
+        ## lines are uncommented (lines above have to be commented out)
+        # path: ['java', '-jar', '/path/to/picard.jar']
+        # get_version: --version
+        # exit_code: 1
 
     # URL: http://zlib.net/pigz/
     pigz: 
