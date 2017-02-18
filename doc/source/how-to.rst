@@ -53,13 +53,23 @@ chromosome sizes) might also be required for an analysis.
 The following configurations showcase how to get or generate that data:
 
 ``index_mycoplasma_genitalium_ASM2732v1_genome.yaml``
+
+    :Disk usage: ~20 MB
+    :Memory consumption: ~0,5 GB
+    :Run time: minutes 
+
     Downloads the *Mycoplasma genitalium* genome, generates the indices for
     |bowtie2_link|, |bwa_link|, |segemehl_link|, and |samtools_link|.
     This workflow is quite fast because it uses the very small genome of
     *Mycoplasma genitalium*.
 
 ``index_homo_sapiens_hg19_genome.yaml``
-    Downloads the *Homo sapiens* genome, generates the indices for
+
+    :Disk usage: ~240 MB
+    :Memory consumption: ~2 GB
+    :Run time: several minutes
+
+    Downloads the *Homo sapiens* genome (chromosome 21), generates the indices for
     |bowtie2_link|, |bwa_link|, and |samtools_link|.
     This workflow requires substantial computational resources due to the
     size of the human genome.
@@ -68,6 +78,11 @@ The following configurations showcase how to get or generate that data:
     Please make sure to only run it on well equipped machines.
 
 ``download_human_gencode_release.yaml``
+
+    :Disk usage: ~1,2 GB
+    :Memory consumption: depending on your machine
+    :Run time: depends on your internet connection
+
     Downloads the human Gencode main annotation v24 and a subset for long
     non-coding RNA genes.
     This workflow only downloads files from the internet and and thus should
@@ -257,9 +272,19 @@ The analysis of data published in the paper |Barski_link| is contained in these
 files:
 
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml``
+
+    :Disk usage: ~50 GB
+    :Memory consumption: ~? GB
+    :Run time: some hours (depending on your internet connection)
+
     Downloads the data published in the paper |Barski_link|.
     
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
+
+    :Disk usage: ~ GB
+    :Memory consumption: ~? GB
+    :Run time: ~1 day
+
     At first the downloaded FASTQ files are grouped by sample.
     All files per sample are merged.
     Sequencing quality is controlled by |fastqc_link| and |fastx_toolkit_link|.
