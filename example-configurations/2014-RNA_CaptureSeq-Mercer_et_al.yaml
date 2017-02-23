@@ -183,8 +183,8 @@ tools:
     # URL: http://www.htslib.org/
     samtools:
         path: samtools
-        get_version: ''
-        exit_code: 1
+        get_version: '--version'
+        exit_code: 0
 
 #    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
 #    segemehl: 
