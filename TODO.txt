@@ -1,70 +1,107 @@
-RNASeq Pipeline Meeting 2014/04/29
-----------------------------------
+========================
+TODOs für die uap v0.0.2
+========================
 
-Sven, Jörg, Kristin, Christoph, Micha
+Zombie-Prozesse? (Don't do)
+---------------------------
 
-Tasks:
+* uap scheint Prozesse zu erzeugen die weiterlaufen nachdem der Hauptprozesse
+  getötet wurde. Warum werden die Kinderprozesse nicht gestoppt wenn der Eltern
+  Prozess gestoppt wird?
+* qdel von Jobs hinterlässt noch laufende Prozesse (produzierbar auch mit normalen Pipes)
 
-- implement SLURM support <moved to AG>
-- interactive tool to handle big config files might be helpful <least concern>
-- add more options to steps with default values which may be adjusted by users
-  (for example cufflinks), also add corresponding command line switches
-- don't hard-code CPU & RAM requirements, both should be configurable per step
-  - also define global CPU & RAM limits in the configuration
-- don't hard-code modules, define which modules are required for which tool in
-  the config
-- status.py: add option to skip tool checking, find out why it's so slow (fstat?)
-  <solved>
-- are multiple output files per out/ connection possible?
-  <yes>
-- add ''-joined process args string to YAML log file to facilitate manual re-runs
-  <should be output by option to status.py>
-- is it possible to watch a processes' stderr while a step is running?
-  - preferably not only if you launched in debug mode, but always, like inter-
-  cepting write calls to the respective file descriptor
-  - or maybe dump each monitored file's 1024 byte tail every once in a while 
-  (this would be easiest and includes stdout and stderr)
-- clean up in/ and out/ names - 'error', 'log', 'stderr' should in some cases
-  become the same thing
-  - we need a well-defined ontology of file types regardless of actual file
-  type, more from the semantic perspective
-- fix quoting in result graph rendering (when " appears in a command line, the 
-  dot file gets messed up)
-- add a random suffix to SGE's stdout and stderr log filenames
-- information about created public_info should be better documented
-  <documentation per step should be generally better>
+Dokumentation (Alexander + Christoph + Sven)
+--------------------------------------------
+
+Es wäre super wenn wir eine FAQ Seite für die häufigsten
+Fehlermeldungen haben würden (für Alexander aber auch alle anderen).
+Die Doku des fastq_source Steps sollte ein Beispiel für ein YAML
+dictionary enthalten.
+Generell muss die Doku auf fehlenden Inhalt Kontroll gelesen werden.
+--even-if-dirty Zweck beschreiben 
+
+Docker (Alexander/Christoph) (Geringste Prio)
+---------------------------------------------
+
+Docker Support einbauen mittels Dockerfiles. Sitze ich gerade dran (Christoph).
+
+Pfadangaben für Dateien die aus uap geladen werden (Sven)
+---------------------------------------------------------
+
+absolute Pfadangaben für alle open() calls.
+Dateien und Verzeichnisse werden in Abhängigkeit vom Ort, von dem die uap ausgeführt wird, geschrieben... absoluten Dateipfad erzeugen und benutzen?
+
+Debugging (???)
+---------------
+
+Submit Script in Annotation Datei speichern. (Done)
+Prosa Log nach STDERR mittels logger 
+Evtl. Subcommand fürs zusammensuchen von Ausgabedaten des Runs.
+
+Weitere Ideen
+-------------
+
+* Verteilen von uap über PyPI (Python Package Repos)
+
+
+Mailinglist/GitHub Issue Tracker
+--------------------------------
+
+* Vorbereiten das wir für Fehlermeldungen erreichbar sind
+
+Documentation
+=============
+
+* FAQ für häufig Fehler
+* Problem: steps.rst wird dynamisch durch stepdoc.py erzeugt
+* Lösung: conf.py erweitern mit stepdoc.py damit die Doku automatisch aktualisiert wird?
+** funktioniert nicht. immer manuell ausführen?
+** nicht alle Inhalte sind dann perfekt formatiert, manuelle Bearbeitungen gehen nach dem neu erzeugen verloren
+* Verwendung von AbstractStep::runs() beschreiben in Doku anstatt von self.declare_run() und execute()
+** http://uap.readthedocs.io/en/latest/extension.html
+* Bemerkung zur scheinbar sporadischen Verwendung von fifos, dd usw? Tool abhängige Nutzung von FIFOs
+* narrowpeak_to_bed fehlt als Datei in Repository (ist noch bei mit lokal)
+
+Examples
+--------
+
+* abändern der Beispiele für neue Version
+* zwei Klassen von Beispielen (mit ungefährer CPU-/Speicher-/Dauer-Abschätzung)
+** kleine (weniger rechenintensive) Beispiele
+** richtige (rechenintensive/speicherhungrige) Beispiele 
+
+Logging
+=======
+
+* Fehlermeldungen kürzen
+** "Pipeline crashed"
+* Stacktrace nur anzeigen wenn log-level auf z.B. debug
+
+Fehler
+======
+
+Fehler mit .yaml-out dokumentieren
+
+Steps
+=====
+
+* hg19 download reparieren (index_homo_sapiens) einen Download Step erstellen
+  für mehrere Dateien/Runs
+* add_option(dd-blocksize) wo nötig
+** dd blocksize default-mäßig auf Linux default 256k -> als add_option in jeden Schritt der dd nutzt
+
+Umbenennungen/Aufräumen
+-----------------------
+
+* tools/ Verzeichnis aufräumen. Welche Dateien von dort werden noch benötigt?
+* Verzeichnis "old_steps" unter include/steps: Löschen? Merken des commits im Wiki und dann löschen
+
+Git Repository
+==============
+
+Organisieren eines git Repositories für uap (Jörg/Jana)
+
 
 Problems:
 - if different sources contain identically named samples they are probably gone
   overwrite there output files handled wrong
-  
-Sequencing Workflows
-====================
-
-Reference Genome
-----------------
-
-* Genome Resequencing
-** Variant Calling
-
-* Methylome
-** Specific alignment (Bisulfite converted bases)
-** Methylation calling
-
-* Transcriptome
-** De-novo transcript assembly
-** Counts per annotation
-** Differential expression
-
-* ChIP-seq
-** aggregate to peaks
-** peak calling (foreground vs background)
-
-Non-reference Genome
---------------------
-
-* Genome
-** Genome Assembly
-
-* Transcriptome
-** Assemble Transcripts

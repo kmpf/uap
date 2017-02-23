@@ -524,6 +524,7 @@ class ProcessPool(object):
         watcher_pid = self._launch_process_watcher(watcher_report_path)
         ProcessPool.process_watcher_pid = watcher_pid
         something_went_wrong = False
+        pid = None
         while True:
             if len(self.running_procs) == 0:
                 break
@@ -670,8 +671,9 @@ class ProcessPool(object):
                 raise
 
         if something_went_wrong:
-            self.log("Pipeline crashed.")
-            logger.error("Pipeline crashed.")
+            log = "Pipeline crashed. PID: %s" % pid
+            self.log(log)
+            logger.error(log)
             sys.exit(1)
 
     def _launch_process_watcher(self, watcher_report_path):

@@ -11,10 +11,9 @@ steps can introduce files from outside the destination path into the pipeline.
 
 # 1. standard library imports
 import sys
-sys.path.insert(0, './include/steps')
-sys.path.insert(0, './include/sources')
 import copy
 import datetime
+import hashlib
 import inspect
 from logging import getLogger
 import os
@@ -40,6 +39,9 @@ import process_pool
 import pipeline_info
 import run as run_module
 
+abs_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, os.path.join(abs_path, 'steps'))
+sys.path.insert(0, os.path.join(abs_path, 'sources'))
 logger=getLogger('uap_logger')
 
 class AbstractStep(object):
@@ -49,8 +51,9 @@ class AbstractStep(object):
     PING_TIMEOUT = 300
     PING_RENEW = 30
     VOLATILE_SUFFIX = '.volatile.placeholder.yaml'
-    UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK', '_connect','_cluster' ]
-
+    UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK', '_connect',
+                          '_cluster_submit_options', '_cluster_pre_job_command',
+                          '_cluster_post_job_command', '_cluster_job_quota']
 
     states = misc.Enum(['DEFAULT', 'DECLARING', 'EXECUTING'])
 
@@ -219,6 +222,11 @@ class AbstractStep(object):
         if not '_volatile' in self._options:
             self._options['_volatile'] = False
 
+        for i in ['_cluster_submit_options', '_cluster_pre_job_command',
+                  '_cluster_post_job_command', '_cluster_job_quota']:
+            if not i in self._options:
+                self._options[i] = ''
+
     def get_options(self):
         '''
         Returns a dictionary of all given options
@@ -247,6 +255,9 @@ class AbstractStep(object):
                 (key, self.get_step_name()))
             sys.exit(1)
         return key in self._options
+
+    def is_volatile(self):
+        return self._options['_volatile']
 
     def add_dependency(self, parent):
         '''
@@ -298,13 +309,7 @@ class AbstractStep(object):
         return input_runs
 
     def declare_runs(self):
-        # Was muss hier alles passieren damit es funktioniert?
-        # * es muessen alle runs definiert werden
-        # * pro run muessen alle public/private Infos gesetzt werden
-        # * es MUESSEN die Output Dateien den Connections zugeordnet werden
-
         # fetch all incoming run IDs which produce reads...
-
         self.runs( self.get_run_ids_in_connections_input_files() )
 
     def runs(self, run_ids_connections_files):
@@ -433,6 +438,8 @@ class AbstractStep(object):
             This function receives a volatile path and tries to load the
             placeholder YAML data structure. It then checks all downstream
             paths, which may in turn be volatile placeholder files.
+            It then checks all upstream paths, which may in turn be volatile
+            placeholder files.
             '''
 
             # reconstruct original path from volatile placeholder path
@@ -449,8 +456,7 @@ class AbstractStep(object):
             task_id = self.get_pipeline().task_id_for_output_file[path]
 
             task = self.get_pipeline().task_for_task_id[task_id]
-#            if not task.step.options['_volatile']:
-            if not task.step._options['_volatile']:
+            if not task.step.is_volatile():
                 # the task is not declared volatile
                 return False
 
@@ -491,6 +497,9 @@ class AbstractStep(object):
                         return False
                     if downstream_path in uncovered_files:
                         uncovered_files.remove(downstream_path)
+                    if pv_downstream_path.endswith(AbstractStep.VOLATILE_SUFFIX):
+                        if not volatile_path_good(pv_downstream_path, recurse):
+                            return False
 
             if len(uncovered_files) > 0:
                 # there are still files defined which are not covered by the
@@ -511,8 +520,7 @@ class AbstractStep(object):
                 return path
 
         def is_path_up_to_date(outpath, inpaths):
-            """Checks if
-
+            """
             First, replace paths with volatile paths if the step is marked
             as volatile and the real path is missing.
             But, only consider volatile placeholders if all child tasks
@@ -536,6 +544,7 @@ class AbstractStep(object):
             for pv_inpath in pv_inpaths:
                 if not AbstractStep.fsc.exists(pv_inpath):
                     return False
+                # Check that inpath was last modified before outpath
                 if AbstractStep.fsc.getmtime(pv_inpath) > \
                    AbstractStep.fsc.getmtime(pv_outpath):
                     return False
@@ -794,9 +803,22 @@ class AbstractStep(object):
                         # will overwrite the file.
                         # CK: Hmm, that's a feature, isn't it?
                         if os.path.exists(source_path):
+                            # Calculate SHA1 hash for output files
+                            sha1sum = str()
+                            try:
+                                with open(source_path, 'rb') as f:
+                                    sha1sum = hashlib.sha1(f.read()).hexdigest()
+                            except:
+                                logger.error("Error while calculating SHA1sum "
+                                             "of %s" % source_path)
+                                raise
+
                             os.rename(source_path, destination_path)
                             for path in [source_path, destination_path]:
                                 if path in known_paths.keys():
+                                    if known_paths[path]['designation'] == \
+                                       'output':
+                                       known_paths[path]['sha1'] = sha1sum
                                     if known_paths[path]['type'] != \
                                        'step_file':
                                         logger.debug("Set %s 'type' info to "
@@ -812,6 +834,7 @@ class AbstractStep(object):
                                 None)
 
         for path, path_info in known_paths.items():
+            # Get the file size
             if os.path.exists(path):
                 known_paths[path]['size'] = os.path.getsize(path)
 
@@ -836,6 +859,7 @@ class AbstractStep(object):
                 attachment = dict()
                 attachment['name'] = 'details.png'
                 attachment['data'] = open(annotation_path + '.png').read()
+            # todo as: remove the following line?
             self.get_pipeline().notify(message, attachment)
             if caught_exception is not None:
                 raise caught_exception[1], None, caught_exception[2]
@@ -1151,7 +1175,7 @@ class AbstractStep(object):
             if 'module_load' in self.get_pipeline().config['tools'][tool]:
                 self._module_load[tool] = self.get_pipeline().config['tools'][tool]\
                                           ['module_load']
-            if 'module_load' in self.get_pipeline().config['tools'][tool]:
+            if 'module_unload' in self.get_pipeline().config['tools'][tool]:
                 self._module_unload[tool] = self.get_pipeline().config['tools'][tool]\
                                             ['module_unload']
             if 'post_command' in self.get_pipeline().config['tools'][tool]:

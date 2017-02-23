@@ -1,12 +1,17 @@
 uap -- Universal Analysis Pipeline
 ==================================
 
-|docs|
+|docs| |travis|
 
-.. |docs| image:: https://readthedocs.org/projects/uap/badge/?version=latest
+.. |docs| image:: https://readthedocs.org/projects/izi-uap/badge/?version=latest
     :alt: Documentation Status
     :scale: 100%
-    :target: https://readthedocs.org/projects/uap/
+    :target: http://izi-uap.readthedocs.io/en/latest/?badge=latest
+
+.. |travis| image:: https://travis-ci.org/alexanderscholz/uap.svg?branch=master
+    :alt: Travis CI Build Status
+    :scale: 100%
+    :target: https://travis-ci.org/alexanderscholz/uap
 
 Introduction
 ============
@@ -26,4 +31,4 @@ allows for a variety of other applications.
 Documentation
 =============
 
-The documentation of **uap** is available at `Read the Docs <http://uap.readthedocs.org/en/latest/index.html>`_.
+The documentation of **uap** is available at `Read the Docs <http://izi-uap.readthedocs.io/en/latest/?badge=latest>`_.

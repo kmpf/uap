@@ -77,6 +77,8 @@ class Segemehl(AbstractStep):
                         description="minimum size of queries (default:12)")
         self.add_option('silent', bool, default=True, optional=True,
                         description="shut up!")
+        self.add_option('threads', int, default=10, optional=True,
+                        description="start <n> threads (default:10)")
         self.add_option('brief', bool, default=False, optional=True,
                         description="brief output")
         ## [SEEDPARAMS]
@@ -148,6 +150,9 @@ class Segemehl(AbstractStep):
         self.add_option('maxinsertsize', int, optional=True, description=
                         "maximum size of the inserts (paired end) "
                         "(default:5000)")
+
+        # Options for dd
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
 
     # self - macht class-funktion draus.
     # run_ids_connections_files - hash : run id -> n connections -> m files
@@ -225,7 +230,7 @@ class Segemehl(AbstractStep):
                     exec_group.add_command(mkfifo_unmapped)
                     # 3. Read genome and output to FIFO
                     dd_genome = [self.get_tool('dd'),
-                                 'bs=4M',
+                                 'bs=%s' % self.get_option('dd-blocksize'),
                                  'if=%s' % self.get_option('genome'),
                                  'of=%s' % fifo_path_genome]
                     exec_group.add_command(dd_genome)
@@ -237,7 +242,7 @@ class Segemehl(AbstractStep):
                             '--database', fifo_path_genome,
                             '--index', self.get_option('index'),
                             '--nomatchfilename', fifo_path_unmapped,
-                            '--threads', '10',
+                            '--threads', str(self.get_option('threads')),
                             '--query', fr_input[0]
                         ]
                         if is_paired_end:

@@ -1,0 +1,51 @@
+slurm:
+    identity_test: ['sbatch', '--version']
+    identity_answer: 'slurm'
+    submit: 'sbatch'
+    stat: 'squeue'
+    template: 'cluster/submit-scripts/sbatch-template.sh'
+    hold_jid: '--dependency=afterany:%s'
+    hold_jid_separator: ':'
+    set_job_name: '--job-name=%s'
+    set_stderr: '-e'
+    set_stdout: '-o'
+    parse_job_id: 'Submitted batch job (\d+)'
+
+sge:
+    identity_test: ['qstat', '-help']
+    identity_answer: 'SGE'
+    submit: qsub
+    stat: qstat
+    template: 'cluster/submit-scripts/qsub-template.sh'
+    hold_jid: '-hold_jid'
+    hold_jid_separator: ';'
+    set_job_name: '-N'
+    set_stderr: '-e'
+    set_stdout: '-o'
+    parse_job_id: 'Your job (\d+)'
+
+uge:
+    identity_test: ['qstat', '-help']
+    identity_answer: 'UGE'
+    submit: 'qsub'
+    stat: 'qstat'
+    template: 'cluster/submit-scripts/qsub-template.sh'
+    hold_jid: '-hold_jid'
+    hold_jid_separator: ';'
+    set_job_name: '-N'
+    set_stderr: '-e'
+    set_stdout: '-o'
+    parse_job_id: 'Your job (\d+)'
+
+oge:
+    identity_test: ['qstat', '-help']
+    identity_answer: 'OGS'
+    submit: 'qsub'
+    stat: 'qstat'
+    template: 'cluster/submit-scripts/qsub-template.sh'
+    hold_jid: '-hold_jid'
+    hold_jid_separator: ';'
+    set_job_name: '-N'
+    set_stderr: '-e'
+    set_stdout: '-o'
+    parse_job_id: 'Your job (\d+)'

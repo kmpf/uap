@@ -37,21 +37,13 @@ This task wish list is now processed one by one (in topological order):
 
 logger = logging.getLogger("uap_logger")
 
-
-def _batch_options_from_config(options, key):
-        #test if _batch is set
-        if '_cluster' in options.keys():
-            if key in options['_cluster'].keys():
-                return options['_cluster'][key]
-        return None
-
 def main(args):
     p = pipeline.Pipeline(arguments=args)
 
     task_wish_list = None
-    if len(args.step_task) >= 1:
+    if len(args.run) >= 1:
         task_wish_list = list()
-        for _ in args.step_task:
+        for _ in args.run:
             if '/' in _:
                 task_wish_list.append(_)
             else:
@@ -61,7 +53,13 @@ def main(args):
 
     tasks_left = []
 
-    template = open(p.cc('template'), 'r').read()
+    template_path = os.path.join(p.get_uap_path(),
+                                 p.get_cluster_command('template'))
+    try:
+        template = open(template_path, 'r').read()
+    except OSError:
+        logger.error("Couldn't open %s." % template_path)
+        sys.exit(1)
 
     for task in p.all_tasks_topologically_sorted:
         if task_wish_list is not None:
@@ -72,37 +70,31 @@ def main(args):
     print("Now attempting to submit %d jobs..." % len(tasks_left))
 
     quotas = dict()
-    quotas['default'] = 105
 
+    try:
+        quotas['default'] = p.config['cluster']['default_job_quota']
+        print("Set default quota to %s" % quotas['default'])
+    except:
+        print("No default quota defined in %s. Set default quota to '5'." %
+              p.get_config_filepath())
+        quotas['default'] = 5
     # read quotas
-    # -> for every step, a quota can be defined (with a default quota in place for steps
-    #    which have no defined quota)
-    # -> during submitting, there is a list of N previous job ids in which every item
-    #    holds one of the previously submitted tasks
-
-
-    quotas_path = args.uap_path + "/quotas.yaml"
-
-    if os.path.exists(quotas_path):
-
-        all_quotas = yaml.load(open(quotas_path, 'r'))
-        hostname = subprocess.check_output(['hostname']).strip()
-        for key in all_quotas.keys():
-
-            if re.match(key, hostname):
-                print("Applying quotas for " + hostname + ".")
-                quotas = all_quotas[key]
-
-#  useless becaus defined above
-#    if not 'default' in quotas:
-#        raise StandardError("No default quota defined for this host.")
+    # -> for every step, a quota can be defined (with a default quota
+    #    in place for steps which have no defined quota)
+    # -> during submission, there is a list of N previous job ids in
+    #    which every item holds one of the previously submitted tasks
 
     quota_jids = {}
     quota_offset = {}
 
     def submit_task(task, dependent_tasks_in = []):
+        '''
+        This method reads and modifies the necessary submit script for a given
+        task. It applies job quotas. Finally, it starts the submit command.
+        '''
         dependent_tasks = copy.copy(dependent_tasks_in)
 
+        step = task.step
         step_name = task.step.get_step_name()
         step_type = task.step.get_step_type()
         if not step_name in quota_jids:
@@ -114,15 +106,47 @@ def main(args):
         if quota_predecessor:
             dependent_tasks.append(quota_predecessor)
 
+        ##########################
+        # Assemble submit script #
+        ##########################
+
         submit_script = copy.copy(template)
+        # Here we need to replace the place holders with the stuff defined
+        # in our config file
+        #
+
+        # Get the values for the placeholders:
+        # SUBMIT_OPTIONS
+        placeholder_values = dict()
+        if step._options['_cluster_submit_options']:
+            placeholder_values['#{SUBMIT_OPTIONS}'] = step._options[
+                '_cluster_submit_options']
+        else:
+            placeholder_values['#{SUBMIT_OPTIONS}'] = p.config['cluster']\
+                                                      ['default_submit_options']
+        # PRE_JOB_COMMAND
+        if step._options['_cluster_pre_job_command']:
+            placeholder_values['#{PRE_JOB_COMMAND}'] = step._options[
+            '_cluster_pre_job_command']
+        else:
+            placeholder_values['#{PRE_JOB_COMMAND}'] = p.config['cluster']\
+                                                       ['default_pre_job_command']
+        # POST_JOB_COMMAND
+        if step._options['_cluster_post_job_command']:
+            placeholder_values['#{POST_JOB_COMMAND}'] = step._options[
+                '_cluster_post_job_command']
+        else:
+            placeholder_values['#{POST_JOB_COMMAND}'] = p.config['cluster']\
+                                                        ['default_post_job_command']
+
+        # Replace placeholders with their values
+        for placeholder, value in placeholder_values.items():
+            submit_script = submit_script.replace(placeholder, value)
+
         submit_script = submit_script.replace("#{CORES}", str(task.step._cores))
-        email = 'nobody@example.com'
 
+        # todo: set email address
 
-
-        if 'email' in p.config:
-            email = p.config['email']
-        submit_script = submit_script.replace("#{EMAIL}", email)
         config_file_path = args.config.name
         command = ['uap', config_file_path, 'run-locally']
         if args.even_if_dirty:
@@ -131,85 +155,42 @@ def main(args):
 
         submit_script = submit_script.replace("#{COMMAND}", ' '.join(command))
 
-        long_task_id_with_run_id = '%s_%s' % (str(task.step), task.run_id)
+        # create the output directory if it doesn't exist yet
+        # this is necessary here because otherwise, qsub will complain
+        run_output_dir = task.get_run().get_output_directory()
+        if not os.path.isdir(run_output_dir):
+            os.makedirs(run_output_dir)
+
+        ###########################
+        # Assemble submit command #
+        ###########################
+        now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        long_task_id_with_run_id = '%s_%s_%s' % (str(task.step),
+                                                 task.run_id, now)
         long_task_id = str(task.step)
         short_task_id = long_task_id[0:15]
 
-        submit_script_args = [p.cc('submit')]
-        submit_script_args += p.ccla('set_job_name', short_task_id)
+        submit_script_args = [p.get_cluster_command('submit')]
+        submit_script_args += p.get_cluster_command_cli_option(
+            'set_job_name', short_task_id)
 
-        submit_script_args.append(p.cc('set_stderr'))
+        submit_script_args.append(p.get_cluster_command('set_stderr'))
         submit_script_args.append(
             os.path.join(task.get_run().get_output_directory(),
                          '.' + long_task_id_with_run_id + '.stderr'))
-        submit_script_args.append(p.cc('set_stdout'))
+        submit_script_args.append(p.get_cluster_command('set_stdout'))
         submit_script_args.append(
             os.path.join(task.get_run().get_output_directory(),
                          '.' + long_task_id_with_run_id + '.stdout'))
 
-
-        if p.cluster_type == 'slurm':
-            res =  _batch_options_from_config(task.step._options, 'mem')
-            if (res):
-                submit_script_args += p.ccla('mem', res)
-
-                # days-hours:minutes:seconds 2-08:00:00
-            res =  _batch_options_from_config(task.step._options, 'time')
-            if (res):
-                submit_script_args += p.ccla('time', res)
-
-            res =  _batch_options_from_config(task.step._options, 'exclusive')
-            if (res):
-                submit_script_args.append( p.cc('exclusive'))
-
-            res =  _batch_options_from_config(task.step._options, 'queue')
-            if (res):
-                submit_script_args += p.ccla('queue', res)
-
-            res =  _batch_options_from_config(task.step._options, 'nice')
-            if (res):
-                submit_script_args += p.ccla('nice', res)
-
-
-
-        if p.cluster_type == 'sge' or p.cluster_type == 'uge':
-
-            res =  _batch_options_from_config(task.step._options, 'h_vmem')
-            if (res):
-                submit_script_args += p.ccla('h_vmem', res)
-
-            res =  _batch_options_from_config(task.step._options, 'queue')
-            if (res):
-                submit_script_args += p.ccla('queue', res)
-
-
-            res =  _batch_options_from_config(task.step._options, 'h_rt')
-            if (res):
-                submit_script_args += p.ccla('h_rt', res)
-
-            res =  _batch_options_from_config(task.step._options, 's_rt')
-            if (res):
-                submit_script_args += p.ccla('s_rt', res)
-
-
-
-
-
-
-
-
-
-
-        # create the output directory if it doesn't exist yet
-        # this is necessary here because otherwise, qsub will complain
-        if not os.path.isdir(task.get_run().get_output_directory()):
-            os.makedirs(task.get_run().get_output_directory())
-
         if len(dependent_tasks) > 0:
-            submit_script_args += p.ccla(
+            submit_script_args += p.get_cluster_command_cli_option(
                 'hold_jid',
-                (':' if p.cluster_type == 'slurm' else ',').join(dependent_tasks))
+                p.get_cluster_command('hold_jid_separator').join(dependent_tasks))
 
+        ########################################
+        # Submit the run if everything is fine #
+        ########################################
         really_submit_this = True
         if task_wish_list:
             if not str(task) in task_wish_list:
@@ -218,8 +199,15 @@ def main(args):
             print("Skipping %s because it is already executing." % str(task))
             really_submit_this = False
         if really_submit_this:
-            sys.stdout.write("Submitting task " + str(task) + " with " +
-                             str(task.step._cores) + " cores => ")
+            print("Submitting task %s with %s cores"
+                  % (str(task), str(task.step._cores)))
+            print("Submit command: %s" % " ".join(submit_script_args))
+            print("=>")
+            # Store submit script in the run_output_dir
+            submit_script_path = task.get_run().get_submit_script_file()
+            with open(submit_script_path, 'w') as f:
+                f.write(submit_script)
+
             process = None
             try:
                 process = subprocess.Popen(
@@ -229,9 +217,10 @@ def main(args):
                     stdout = subprocess.PIPE)
             except OSError as e:
                 if e.errno == os.errno.ENOENT:
-                    raise StandardError("Unable to launch %s. Maybe " +
+                    raise StandardError("Unable to launch %s. Maybe " %
+                                        p.get_cluster_command('submit') +
                                         "you are not executing this script on " +
-                                        "the cluster" % p.cc('submit'))
+                                        "the cluster")
                 else:
                     raise e
             process.stdin.write(submit_script)
@@ -239,8 +228,8 @@ def main(args):
             process.wait()
             response = process.stdout.read()
             print("GOT A RESPONSE: %s" % response)
-            job_id = re.search(p.cc('parse_job_id'), response).group(1)
-
+            job_id = re.search(
+                p.get_cluster_command('parse_job_id'), response).group(1)
 
             if job_id == None or len(job_id) == 0:
                 raise StandardError("Error: We couldn't parse a job_id from this:\n" + response)
@@ -262,7 +251,17 @@ def main(args):
 
             abstract_step.AbstractStep.fsc = fscache.FSCache()
 
+    # After defining submit_task() let's walk through tasks_left 
+
     for task in tasks_left:
+        # Update quotas dict for current step if necessary
+        if not str(task.get_step()) in quotas.keys():
+            step = task.get_step()
+            quotas[str(step)] = quotas['default']
+            if step._options['_cluster_job_quota']:
+                quotas[str(step)] = step._options['_cluster_job_quota']
+
+            print("Set job quota for %s to %s" % (str(step), quotas[str(step)]))
         state = task.get_task_state()
         if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
             print("Skipping %s because it is already %s..." % (str(task), state.lower()))
