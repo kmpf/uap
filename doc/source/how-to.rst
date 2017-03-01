@@ -149,7 +149,7 @@ A run is always in one of these states:
 
 If the command still fails, please check that the tools defined in
 ``index_mycoplasma_genitalium_ASM2732v1_genome.yaml`` are available in your
-environment (see :ref:`config_file_tools` section`).
+environment (see :ref:`config_file_tools`).
 If you really want to download and index the genome tell **uap** to start
 the workflow::
 
