@@ -39,7 +39,8 @@ Christoph Kämpf, Michael Specht, Sven-Holger Puppel, Gero Doose, Kristin Reiche
   * Unix-like operating systems.
   * High Performance Compute (HPC) cluster systems such as |uge_link|,
     |oge_link| and |slurm_link|.
-
+  * see :doc:`platforms` for detailed information
+    
 **Important Information**
 
   **uap** does **NOT** include all tools necessary for the data analysis.
@@ -59,6 +60,7 @@ Table of contents
    interaction
    extension
    software-design
+   platforms
    annotation
    steps
    api

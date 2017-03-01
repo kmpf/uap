@@ -52,6 +52,8 @@ Other publicly available data sets (such as reference annotations or the
 chromosome sizes) might also be required for an analysis.
 The following configurations showcase how to get or generate that data:
 
+.. _example_index_mycoplasma:
+
 ``index_mycoplasma_genitalium_ASM2732v1_genome.yaml``
 
     :Disk usage: ~20 MB
@@ -63,6 +65,8 @@ The following configurations showcase how to get or generate that data:
     This workflow is quite fast because it uses the very small genome of
     *Mycoplasma genitalium*.
 
+.. _example_index_hg19:
+    
 ``index_homo_sapiens_hg19_genome.yaml``
 
     :Disk usage: ~240 MB
@@ -77,6 +81,8 @@ The following configurations showcase how to get or generate that data:
     memory consumption (~50-60 GB).
     Please make sure to only run it on well equipped machines.
 
+.. _example_download_gencode:
+    
 ``download_human_gencode_release.yaml``
 
     :Disk usage: ~1,2 GB
@@ -126,7 +132,7 @@ A run is always in one of these states:
 
 If the command still fails, please check that the tools defined in
 ``index_mycoplasma_genitalium_ASM2732v1_genome.yaml`` are available in your
-environment (see :ref:`uap_config_tools_section`).
+environment (see :ref:`config_file_tools` section`).
 If you really want to download and index the genome tell **uap** to start
 the workflow::
 
@@ -237,10 +243,13 @@ B. *De novo* Transcript Assembly
    
    4. Apply transcript assembly tool on mapped reads
 
+.. _example_mercer_download:
       
 ``2014-RNA_CaptureSeq-Mercer_et_al_download.yaml``
     Downloads the data published in the paper |Mercer_link|.
 
+.. _example_mercer:
+    
 ``2014-RNA_CaptureSeq-Mercer_et_al.yaml``
     The downloaded FASTQ files get analysed by |fastqc_link| and
     |fastx_toolkit_link|.
@@ -271,6 +280,8 @@ low amounts of input DNA. So these steps follow the basic ones:
 The analysis of data published in the paper |Barski_link| is contained in these
 files:
 
+.. _example_barski_download:
+
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml``
 
     :Disk usage: ~50 GB
@@ -278,6 +289,8 @@ files:
     :Run time: some hours (depending on your internet connection)
 
     Downloads the data published in the paper |Barski_link|.
+
+.. _example_barski:
     
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
 

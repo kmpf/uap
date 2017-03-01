@@ -326,7 +326,7 @@ executes the :ref:`volatilize <uap-volatilize>` command.
     This option allows to overwrite the values set in 
     :ref:`default_job_quota <config_file_default_job_quota>`.
 
-.. _uap_config_tools:
+.. _config_file_tools:
 
 ``tools`` Section
 -----------------
