@@ -13,6 +13,12 @@ uap -- Universal Analysis Pipeline
     :scale: 100%
     :target: https://travis-ci.org/yigbt/uap
 
+Authors
+============
+
+Christoph Kämpf, Michael Specht, Sven-Holger Puppel, Gero Doose, Kristin Reiche, Jana Hertel, Jörg Hackermüller
+
+
 Introduction
 ============
 

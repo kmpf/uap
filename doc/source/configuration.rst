@@ -153,7 +153,7 @@ Processing steps depend upon one or more preceding steps.
 They use their output files and process them.
 Output files of processing steps are automatically named and saved by **uap**.
 A complete list of available options per step can be found at :doc:`steps`
-or by using the subcommand :ref:`uap-steps`.
+or by using the :ref:`uap-steps`.
 
 .. _config_file_keywords:
 
@@ -326,7 +326,7 @@ executes the :ref:`volatilize <uap-volatilize>` command.
     This option allows to overwrite the values set in 
     :ref:`default_job_quota <config_file_default_job_quota>`.
 
-.. _uap_config_tools:
+.. _config_file_tools:
 
 ``tools`` Section
 -----------------

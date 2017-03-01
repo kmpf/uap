@@ -13,7 +13,7 @@ class RgtThor(AbstractStep):
     p-value calculation in an integrated framework. For differential peak
     calling without replicates use ODIN.
 
-    More information please refer to:
+    For more information please refer to:
 
     Allhoff, M., Sere K., Freitas, J., Zenke, M.,  Costa, I.G. (2016),
     Differential Peak Calling of ChIP-seq Signals with Replicates with THOR,
@@ -32,7 +32,7 @@ class RgtThor(AbstractStep):
         self.add_connection('out/thor_config')
         self.add_connection('out/thor_setup_info')
         self.add_connection('out/chip_seq_bigwig')
-        self.add_connection('out/diff_peaks_thor_bed')
+        self.add_connection('out/diff_peaks_bed')
         self.add_connection('out/diff_narrow_peaks')
         
         self.require_tool('rgt-THOR')
@@ -69,9 +69,6 @@ class RgtThor(AbstractStep):
                         description = "Merge peaks which have a distance less "
                         "than the estimated mean fragment size (recommended "
                         "for histone data).")
-        self.add_option('name', str, optional = True,
-                        description = "Experiment's name and prefix for all "
-                        "files that are created.")
         self.add_option('no-correction', bool, optional = True,
                         description = "Do not use multiple test correction for "
                         "p-values (Benjamini/Hochberg).")
@@ -98,7 +95,7 @@ class RgtThor(AbstractStep):
     def runs(self, run_ids_connections_files):
 
         options = ['binsize', 'deadzones', 'factors-inputs',
-                   'housekeeping-genes', 'merge', 'name', 'no-correction',
+                   'housekeeping-genes', 'merge', 'no-correction',
                    'no-gc-content', 'pvalue', 'report',
                    'save-input', 'scaling-factors', 'step']
 
@@ -185,7 +182,7 @@ class RgtThor(AbstractStep):
                     # Write config_file to disk using printf
                     config_path = run.add_output_file(
                         'thor_config',
-                        '%s_thor.config' % run_id,
+                        'thor_%s.config' % run_id,
                         input_files
                     )
                     config_string = ""
@@ -205,7 +202,8 @@ class RgtThor(AbstractStep):
                 with run.new_exec_group() as rgt_thor_eg:
                     rgt_thor = [ self.get_tool('rgt-THOR'),
                                  '--output-dir',
-                                 run.get_output_directory_du_jour_placeholder()]
+                                 run.get_output_directory_du_jour_placeholder(),
+                                 '--name', run_id ]
                     rgt_thor.extend(option_list)
                     rgt_thor.append(config_path)
                     rgt_thor_eg.add_command(rgt_thor)
@@ -214,25 +212,39 @@ class RgtThor(AbstractStep):
                     ## - THOR setup info 
                     run.add_output_file(
                         'thor_setup_info',
-                        '%s_setup.info' % run_id,
+                        '%s-setup.info' % run_id,
                         input_files
                     )
-#                    ## - THOR created BigWig files
-#                    run.add_output_file(
-#                        'chip_seq_bigwig',
-#                        '%s',
-#                        input_files
-#                    )
-#                    ## - THOR created BED file of differential peaks
-#                    run.add_output_file(
-#                        '',
-#                        
-#                        input_files
-#                    )
-#                    ## - THOR created Narrow Peak file
-#                    run.add_output_file(
-#                        '',
-#                        
-#                        input_files
-#                    )
-#
+                    ## - THOR created BigWig files
+                    for (rep, suf) in {'rep1': 's1', 'rep2': 's2'}.iteritems():
+                        for i in range(len(config_content[rep])):
+                            run.add_output_file(
+                                'chip_seq_bigwig',
+                                '%s-%s-rep%s.bw' % (run_id, suf, i),
+                                input_files
+                            )
+                            
+                    ## - Differential peaks BED file
+                    run.add_output_file(
+                        'diff_peaks_bed',
+                        '%s-diffpeaks.bed' % run_id,
+                        input_files
+                    )
+                    ## - Uncorrected (?) differential peaks BED file
+                    run.add_output_file(
+                        'diff_peaks_bed',
+                        '%s-uncor-diffpeaks.bed' % run_id,
+                        input_files
+                    )
+                    ## - Differential narrow peaks file
+                    run.add_output_file(
+                        'diff_narrow_peaks',
+                        '%s-diffpeaks.narrowPeak' % run_id,
+                        input_files
+                    )
+                    ## - Uncorrected (?) differential narrow peaks file
+                    run.add_output_file(
+                        'diff_narrow_peaks',
+                        '%s-uncor-diffpeaks.narrowPeak' % run_id,
+                        input_files
+                    )
