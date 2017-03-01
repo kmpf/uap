@@ -110,6 +110,8 @@ class AbstractStep(object):
         
         self._state = AbstractStep.states.DEFAULT
 
+
+
     def finalize(self):
         '''Finalizes the step.
         

@@ -38,7 +38,7 @@ class Cutadapt(AbstractStep):
         # Options for cutadapt
         self.add_option('adapter-type', str, optional = True, default='-a',
                         choices=['-a', '-g', '-b'],
-                        description="")
+                        description="a: 3' adapter, b: 3' or 5' adapter, g: 5' adapter")
         self.add_option('adapter-R1', str, optional = True,
                         description="Adapter sequence to be clipped off of the"
                         "first read.")

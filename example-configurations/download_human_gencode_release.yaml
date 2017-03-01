@@ -1,30 +1,67 @@
-# This is the uap configuration file.
+# This configuration downloads the GENCODE annotation.
 
-cluster:
-    # example for SLURM grid engine
-    # default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
-    # example for UGE/SGE respectively OGS
-    # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
-    default_pre_job_command: "echo 'Run Started!'"
-    default_post_job_command: "echo 'Run Finished!'"
-    default_job_quota: 5
+################################################################################
+## Cluster Section                                                            ##
+## ===============                                                            ##
+##                                                                            ##
+## - uncomment/adapt as required                                              ##
+################################################################################
+
+# cluster:
+#     # example for SLURM grid engine
+#     # default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+#     # example for UGE/SGE respectively OGS
+#     # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+#     default_pre_job_command: "echo 'Run Started!'"
+#     default_post_job_command: "echo 'Run Finished!'"
+#     default_job_quota: 5
+
+################################################################################
+## Destination Path Section                                                   ##
+## ========================                                                   ##
+##                                                                            ##
+## - directory where analysis results get stored                              ##
+################################################################################
 
 destination_path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode
 
+################################################################################
+## Steps Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define analysis steps here                                               ##
+################################################################################
+
 steps:
-    gencode_v24_annotation (raw_url_source):
-        url: ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_24/gencode.v24.annotation.gtf.gz
+    ##################
+    ## Source steps ##
+    ##################
+
+    gencode_v19_annotation (raw_url_source):
+        url: ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_19/gencode.v19.annotation.gtf.gz
         path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode
-        filename: gencode.v24.annotation.gtf
+        filename: gencode.v19.annotation.gtf
         uncompress: yes
 
-    gencode_v24_long_noncoding_RNAs (raw_url_source):
-        url: ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_24/gencode.v24.long_noncoding_RNAs.gtf.gz
+    gencode_v19_long_noncoding_RNAs (raw_url_source):
+        url: ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_19/gencode.v19.long_noncoding_RNAs.gtf.gz
         path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode
-        filename: gencode.v24.long_noncoding_RNAs.gtf
+        filename: gencode.v19.long_noncoding_RNAs.gtf
         uncompress: yes
+
+################################################################################
+## Tools Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define used tools here                                                   ##
+## - for module system usage see documentation                                ##
+################################################################################
 
 tools:
+    ##################
+    # External Tools #
+    ##################
+
     curl:
         path: curl
         get_version: --version
@@ -43,6 +80,10 @@ tools:
         path: ../tools/compare_secure_hashes.py
         get_version: --version
         exit_code: 0
+
+    ##############
+    # Unix Tools #
+    ##############
 
     cp:
         path: cp

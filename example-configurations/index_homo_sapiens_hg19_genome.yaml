@@ -1,17 +1,43 @@
-# This is the uap configuration file.
+# This configuration downloads the sequence of chromosome 21 and creates
+# bowtie2, BWA, and fasta indices.
 
-cluster:
-    # example for SLURM grid engine
-    # default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
-    # example for UGE/SGE respectively OGS
-    # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
-    # default_pre_job_command: "echo 'Run Started!'"
-    # default_post_job_command: "echo 'Run Finished!'"
-    # default_job_quota: 5
+################################################################################
+## Cluster Section                                                            ##
+## ===============                                                            ##
+##                                                                            ##
+## - uncomment/adapt as required                                              ##
+################################################################################
+
+# cluster:
+#     example for SLURM grid engine
+#     default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+#     example for UGE/SGE respectively OGS
+#     default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+#     default_pre_job_command: "echo 'Run Started!'"
+#     default_post_job_command: "echo 'Run Finished!'"
+#     default_job_quota: 5
+
+################################################################################
+## Destination Path Section                                                   ##
+## ========================                                                   ##
+##                                                                            ##
+## - directory where analysis results get stored                              ##
+################################################################################
 
 destination_path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19
 
+################################################################################
+## Steps Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define analysis steps here                                               ##
+################################################################################
+
 steps:
+    ##################
+    ## Source steps ##
+    ##################
+
     # Download all chromosomal sequences
     hg19_UCSC (raw_url_sources):
         _cluster_job_quota: 1
@@ -185,6 +211,10 @@ steps:
             #    filename: chrY.fa
             #    uncompress: yes
 
+    ######################
+    ## Processing steps ##
+    ######################
+
     # Merge downloaded sequences into single fasta file
     hg19_UCSC_complete_genome (merge_fasta_files):
         _depends: hg19_UCSC
@@ -222,6 +252,14 @@ steps:
         ucsc-database: hg19
         path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
 
+################################################################################
+## Tools Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define used tools here                                                   ##
+## - for module system usage see documentation                                ##
+################################################################################
+
 tools:
     ##################
     # External Tools #
@@ -252,6 +290,7 @@ tools:
         exit_code: 0
 
     # URL: http://www.htslib.org/
+    # NOTE: uap requires samtools version 1.0 or greater
     samtools:
         path: samtools
         get_version: --version

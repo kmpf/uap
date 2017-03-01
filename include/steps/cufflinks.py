@@ -129,8 +129,10 @@ class CuffLinks(AbstractStep):
         # [Advanced Program Behavior Options:]
         self.add_option('verbose', bool, optional=True, 
                         description='log-friendly verbose processing (no progress bar)')
-        self.add_option('quiet', bool, optional=True, 
-                        description='log-friendly quiet processing (no progress bar)')
+        # In uap we set this option to TRUE per default, since we only need this info within a log file
+        # it suppresses the progress
+        #self.add_option('quiet', bool, optional=True, 
+        #                description='log-friendly quiet processing (no progress bar)')
         self.add_option('no-update-check', bool, optional=True, 
                         description='do not contact server to check for update availability')
 
@@ -143,7 +145,8 @@ class CuffLinks(AbstractStep):
                  'no-length-correction', 'label', 'min-isoform-fraction', 'pre-mrna-fraction', 'max-intron-length', 'junc-alpha', 
                  'small-anchor-fraction', 'min-frags-per-transfrag', 'overhang-tolerance', 'max-bundle-length', 'max-bundle-frags', 
                  'min-intron-length', 'trim-3-avgcov-thresh', 'trim-3-dropoff-frac', 'max-multiread-fraction', 'overlap-radius', 
-                 'no-faux-reads', '3-overhang-tolerance', 'intron-overhang-tolerance', 'verbose', 'quiet', 'no-update-check']
+                 'no-faux-reads', '3-overhang-tolerance', 'intron-overhang-tolerance', 'verbose', 'no-update-check']
+#                 'no-faux-reads', '3-overhang-tolerance', 'intron-overhang-tolerance', 'verbose', 'quiet', 'no-update-check']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -180,7 +183,7 @@ class CuffLinks(AbstractStep):
 #                    logger.error("Directory %s not accessible." % tmp_dir)
 #                    sys.exit(1)
 
-                cufflinks = [self.get_tool('cufflinks'),'-o', temp_dir]
+                cufflinks = [self.get_tool('cufflinks'),'-o', temp_dir, '-q']
                 cufflinks.extend(option_list)
                 cufflinks.append(input_paths[0])
 

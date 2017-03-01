@@ -57,7 +57,7 @@ class SraFastqDump (AbstractStep):
     '''
 
     def __init__(self, pipeline):
-        super (sra_fastq_dump, self).__init__(pipeline)
+        super (SraFastqDump, self).__init__(pipeline)
         # set # of cores for cluster, it is ignored if run locally
         self.set_cores(10)
 
@@ -133,7 +133,7 @@ class SraFastqDump (AbstractStep):
                         'file specific name (ex:"chr1" or "1"). "from" and '
                         '"to" are 1-based coordinates. <name[:from-to]>')
 
-        self.add_option('matepair-distance' str, optional=True,
+        self.add_option('matepair-distance', str, optional=True,
                         description='Filter by distance beiween matepairs. '
                         'Use "unknown" to find matepairs split between the '
                         'references. Use from-to to limit matepair distance '
@@ -198,7 +198,7 @@ class SraFastqDump (AbstractStep):
 
         self.add_option('verbose', bool, optional=True,
                         description='Increase the verbosity level of the '
-                        'program. Use multiple times for more verbosity'.)
+                        'program. Use multiple times for more verbosity.')
 
         self.add_option('ncbi_error_report', str, optional=True,
                         description='Control program execution environment '
@@ -259,7 +259,7 @@ class SraFastqDump (AbstractStep):
                     raise StandardError("Expected exactly one sra file, but "
                                         "got this %s" % input_paths)
 
-                with run.new_exec_group() as exec_group
+                with run.new_exec_group() as exec_group:
                     # 1. Create FIFO for reading sra file
                     fifo_path_sra=run.add_temporary_file (
                         'sra-fifo', designation='input')

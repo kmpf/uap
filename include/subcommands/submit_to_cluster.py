@@ -70,6 +70,7 @@ def main(args):
     print("Now attempting to submit %d jobs..." % len(tasks_left))
 
     quotas = dict()
+
     try:
         quotas['default'] = p.config['cluster']['default_job_quota']
         print("Set default quota to %s" % quotas['default'])
