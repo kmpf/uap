@@ -290,6 +290,7 @@ tools:
         exit_code: 0
 
     # URL: http://www.htslib.org/
+    # NOTE: uap requires samtools version 1.0 or greater
     samtools:
         path: samtools
         get_version: --version

@@ -63,6 +63,8 @@ Other publicly available data sets (such as reference annotations or the
 chromosome sizes) might also be required for an analysis.
 The following configurations showcase how to get or generate that data:
 
+.. _example_index_mycoplasma:
+
 ``index_mycoplasma_genitalium_ASM2732v1_genome.yaml``
     Downloads the *Mycoplasma genitalium* genome, generates the indices for
     |bowtie2_link|, |bwa_link|, |segemehl_link|, and |samtools_link|.
@@ -72,6 +74,9 @@ The following configurations showcase how to get or generate that data:
     :Max. memory: ~0,5 GB
     :Disk usage: ~20 MB
     :Run time: minutes 
+
+
+.. _example_index_hg19:    
 
 ``index_homo_sapiens_hg19_genome.yaml``
     Downloads chromosome 21 of the *Homo sapiens* genome, generates the indices
@@ -86,13 +91,23 @@ The following configurations showcase how to get or generate that data:
     :Disk usage: ~240 MB
     :Run time: several minutes
 
+    Downloads the *Homo sapiens* genome (chromosome 21), generates the indices for
+    |bowtie2_link|, |bwa_link|, and |samtools_link|.
+    This workflow requires substantial computational resources due to the
+    size of the human genome.
+    The |segemehl_link| index creation is commented out due to its high
+    memory consumption (~50-60 GB).
+    Please make sure to only run it on well equipped machines.
+
+.. _example_download_gencode:
+    
 ``download_human_gencode_release.yaml``
     Downloads the human Gencode main annotation v19 and a subset for long
     non-coding RNA genes.
     This workflow only downloads files from the internet and and thus should
     work on any machine.
 
-    :Max. memory: depending on your machine
+    :Max. memory: depends on your machine
     :Disk usage: ~1,2 GB
     :Run time: depends on your internet connection
 
@@ -134,7 +149,7 @@ A run is always in one of these states:
 
 If the command still fails, please check that the tools defined in
 ``index_mycoplasma_genitalium_ASM2732v1_genome.yaml`` are available in your
-environment (see :ref:`uap_config_tools_section`).
+environment (see :ref:`config_file_tools`).
 If you really want to download and index the genome tell **uap** to start
 the workflow::
 
@@ -245,6 +260,7 @@ B. *De novo* Transcript Assembly
    
    4. Apply transcript assembly tool on mapped reads
 
+.. _example_mercer_download:
       
 ``2014-RNA_CaptureSeq-Mercer_et_al_download.yaml``
     Downloads the data published in the paper |Mercer_link|.
@@ -252,6 +268,8 @@ B. *De novo* Transcript Assembly
     :Max. memory: ~? GB
     :Disk usage: ~ GB
     :Run time: minutes (depending on your internet connection)
+
+.. _example_mercer:
 
 ``2014-RNA_CaptureSeq-Mercer_et_al.yaml``
     The downloaded FASTQ files get analysed by |fastqc_link| and
@@ -290,12 +308,18 @@ low amounts of input DNA. So these steps follow the basic ones:
 The analysis of data published in the paper |Barski_link| is contained in these
 files:
 
+.. _example_barski_download:
+
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml``
     Downloads the data published in the paper |Barski_link|.
 
     :Max. memory: ~? GB
     :Disk usage: ~50 GB
     :Run time: some hours (depending on your internet connection)
+
+    Downloads the data published in the paper |Barski_link|.
+
+.. _example_barski:
     
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
     At first the downloaded FASTQ files are grouped by sample.
