@@ -13,8 +13,8 @@ class deepToolsBamCompare(AbstractStep):
     a summary value is reported. This value can be the ratio of the number of
     reads per bin, the log2 of the ratio, or the difference. This tool can
     normalize the number of reads in each BAM file using the SES method proposed
-    by Diaz et al. (2012) “Normalization, bias correction, and peak calling for
-    ChIP-seq”. Statistical Applications in Genetics and Molecular Biology, 11(3).
+    by Diaz et al. (2012) "Normalization, bias correction, and peak calling for
+    ChIP-seq". Statistical Applications in Genetics and Molecular Biology, 11(3).
     Normalization based on read counts is also available. The output is either a
     bedgraph or bigWig file containing the bin location and the resulting
     comparison value. By default, if reads are paired, the fragment length
@@ -37,22 +37,24 @@ class deepToolsBamCompare(AbstractStep):
         self.set_cores(10)
 
         self.add_connection('in/alignments')
-        self.add_connection('out/bigwig')
+        self.add_connection('out/ucsc-tracks')
 
         self.require_tool('bamCompare')
 
-        self.add_option('bed-file', list, optional=True, description='BED file '
-                        'that contains all regions that should be considered '
-                        'for the coverage analysis. If this option is set '
-                        '"multiBamSummary" is executed with "BED-file" '
-                        'subcommand, otherwise with "bins" subcommand.')
-        self.add_option('samples', dict, optional=False,
-                        description='Dictionary with IDs of new runs as keys '
-                        'and lists of sample names as values. For each '
-                        'sample name a sorted, indexed BAM file is expected '
-                        'to be the input from upstream steps.')
-        
+        # Required options:
+        self.add_option('samples', list, optional=False,
+                        description='List of lists with two elements. '
+                        'Each element has to be the name of a run. Each run '
+                        'has to provide a SINGLE BAM file. Both BAM files are '
+                        'compared using deepTools bamCompare command.')
+
         # Options for bamCompare
+        ## Output options:
+        self.add_option('outFileFormat', str, optional=False,
+                        choices=["bigwig", "bedgraph"],
+                        description='Output file type. Either "bigwig" or '
+                        '"bedgraph". (default: "bigwig")')
+
         ## Optional arguments:
         self.add_option('scaleFactorsMethod', str, optional=True,
                         choices=['readCount', 'SES'],
@@ -100,40 +102,12 @@ class deepToolsBamCompare(AbstractStep):
         self.add_option('binSize', int, optional=True, description='Size of '
                         'the bins, in bases, for the output of the '
                         'bigwig/bedgraph file. (default: 50)')
-        # Options for multiBamSummary BED-file subcommand
-        ## GTF/BED12 options:
-        self.add_option('metagene', bool, optional=True,
-                        description="When either a BED12 or GTF file are used "
-                        "to provide regions, perform the computation on the "
-                        "merged exons, rather than using the genomic interval "
-                        "defined by the 5-prime and 3-prime most transcript "
-                        "bound (i.e., columns 2 and 3 of a BED file). If a "
-                        "BED3 or BED6 file is used as input, then columns 2 "
-                        "and 3 are used as an exon. (default: False)")
-        self.add_option('transcriptID', str, optional=True,
-                        description="When a GTF file is used to provide "
-                        "regions, only entries with this value as their "
-                        "feature (column 2) will be processed as transcripts. "
-                        "(default: transcript)")
-        self.add_option('exonID', str, optional=True,
-                        description="When a GTF file is used to provide "
-                        "regions, only entries with this value as their "
-                        "feature (column 2) will be processed as exons. CDS "
-                        "would be another common value for this. "
-                        "(default: exon)")
-        self.add_option('transcript_id_designator', str, optional=True,
-                        description="Each region has an ID (e.g., ACTB) "
-                        "assigned to it, which for BED files is either column "
-                        "4 (if it exists) or the interval bounds. For GTF "
-                        "files this is instead stored in the last column as a "
-                        "key:value pair (e.g., as 'transcript_id \"ACTB\"', "
-                        "for a key of transcript_id and a value of ACTB). In "
-                        "some cases it can be convenient to use a different "
-                        "identifier. To do so, set this to the desired key. "
-                        "(default: transcript_id)")
-
-        # Common options for bins and BED-file subcommand
-        ## Optional arguments:
+        self.add_option('region', str, optional=True, description='Region of '
+                        'the genome to limit the operation to - this is useful '
+                        'when testing parameters to reduce the computing time. '
+                        'The format is chr:start:end, for example --region '
+                        'chr10 or --region chr10:456700:891000. '
+                        '(default: None)')
         self.add_option('blackListFileName', str, optional=True,
                         description="A BED or GTF file containing regions that "
                         "should be excluded from all analyses. Currently this "
@@ -144,16 +118,63 @@ class deepToolsBamCompare(AbstractStep):
                         "still be considered. Please note that you should "
                         "adjust the effective genome size, if relevant. "
                         "(default: None)")
-        self.add_option('region', str, optional=True, description='Region of '
-                        'the genome to limit the operation to - this is useful '
-                        'when testing parameters to reduce the computing time. '
-                        'The format is chr:start:end, for example --region '
-                        'chr10 or --region chr10:456700:891000. '
+        ## Read coverage normalization options:
+        self.add_option('normalizeTo1x', str, optional=True,
+                        description='Report read coverage normalized to 1x '
+                        'sequencing depth (also known as Reads Per Genomic '
+                        'Content (RPGC)). Sequencing depth is defined as: '
+                        '(total number of mapped reads * fragment length) / '
+                        'effective genome size. The scaling factor used is the '
+                        'inverse of the sequencing depth computed for the '
+                        'sample to match the 1x coverage. To use this option, '
+                        'the effective genome size has to be indicated after '
+                        'the option. The effective genome size is the portion '
+                        'of the genome that is mappable. Large fractions of '
+                        'the genome are stretches of NNNN that should be '
+                        'discarded. Also, if repetitive regions were not '
+                        'included in the mapping of reads, the effective genome '
+                        'size needs to be adjusted accordingly. Common values '
+                        'are: mm9:2,150,570,000; hg19:2,451,960,000; '
+                        'dm3:121,400,000 and ce10:93,260,000. See Table 2 of '
+                        'http://www.plosone.org/article/info:doi/10.1371'
+                        '/journal.pone.0030377 or http://www.nature.com/nbt'
+                        '/journal/v27/n1/fig_tab/nbt.1518_T1.html for several '
+                        'effective genome sizes. (default: None)')
+        self.add_option('normalizeUsingRPKM', bool, optional=True,
+                        description='Use Reads Per Kilobase per Million reads '
+                        'to normalize the number of reads per bin. The formula '
+                        'is: RPKM (per bin) = number of reads per bin / '
+                        '( number of mapped reads (in millions) * bin length '
+                        '(kb) ). Each read is considered independently,if you '
+                        'want to only count either of the mate pairs in '
+                        'paired-end data, use the --samFlag option. (default: '
+                        'False)')
+        self.add_option('ignoreForNormalization', list, optional=True,
+                        description='A list of space-delimited chromosome '
+                        'names containing those chromosomes that should be '
+                        'excluded for computing the normalization. This is '
+                        'useful when considering samples with unequal coverage '
+                        'across chromosomes, like male samples. An usage '
+                        'examples is --ignoreForNormalization chrX chrM. '
                         '(default: None)')
-        ## Output optional options:
-        self.add_option('outRawCounts', bool, optional=True,
-                        description='Save the counts per region to a '
-                        'tab-delimited file. (default: False)')
+        self.add_option('skipNonCoveredRegions', bool, optional=True,
+                        description='This parameter determines if non-covered '
+                        'regions (regions without overlapping reads) in a BAM '
+                        'file should be skipped. The default is to treat those '
+                        'regions as having a value of zero. The decision to '
+                        'skip non-covered regions depends on the interpretation '
+                        'of the data. Non-covered regions may represent, for '
+                        'example, repetitive regions that should be skipped. '
+                        '(default: False)')
+        self.add_option('smoothLength', int, optional=True,
+                        description='The smooth length defines a window, larger '
+                        'than the binSize, to average the number of reads. For '
+                        'example, if the --binSize is set to 20 and the '
+                        '--smoothLength is set to 60, then, for each bin, the '
+                        'average of the bin and its left and right neighbors is '
+                        'considered. Any value smaller than --binSize will be '
+                        'ignored and no smoothing will be applied. (default: '
+                        'None)')
         ## Read processing options:
         self.add_option('extendReads', int, optional=True,
                         description='This parameter allows the extension of '
@@ -220,28 +241,18 @@ class deepToolsBamCompare(AbstractStep):
     def runs(self, run_ids_connections_files):
         # Compile the list of options
         ## List of options common for bin and BED-file subcommand
-        common_options = ['outRawCounts', 'extendReads', 'ignoreDuplicates',
-                          'minMappingQuality', 'centerReads', 'samFlagInclude',
-                          'samFlagExclude', 'minFragmentLength',
-                          'maxFragmentLength', 'region', 'blackListFileName']
-        ## List of options for bin subcommand only
-        bins_options = ['binSize', 'distanceBetweenBins']
-        ## List of options for BED-file subcommand only
-        bed_file_options = ['metagene', 'transcriptID',
-                            'exonID', 'transcript_id_designator']
+        options=['outFileFormat', 'scaleFactorsMethod', 'sampleLength',
+                 'numberOfSamples', 'scaleFactors', 'ratio',
+                 'pseudocount', 'binSize', 'region', 'blackListFileName',
+                 'normalizeTo1x', 'normalizeUsingRPKM',
+                 'ignoreForNormalization', 'skipNonCoveredRegions',
+                 'smoothLength',
+                 'extendReads', 'ignoreDuplicates', 'minMappingQuality',
+                 'centerReads', 'samFlagInclude', 'samFlagExclude',
+                 'minFragmentLength', 'maxFragmentLength']
 
-        set_options = [option for option in common_options if \
+        set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
-
-        if self.is_option_set_in_config('bed-file'):
-            subcommand = 'BED-file'
-            set_options = [option for option in bed_file_options if \
-                           self.is_option_set_in_config(option)]
-        else:
-            subcommand = 'bins'
-            set_options = [option for option in bins_options if \
-                           self.is_option_set_in_config(option)]
-
         option_list = list()
         for option in set_options:
             if isinstance(self.get_option(option), bool):
@@ -251,64 +262,52 @@ class deepToolsBamCompare(AbstractStep):
                 option_list.append( '--%s' % option )
                 option_list.append( str(self.get_option(option)) )
 
-        runIds_samples = self.get_option('samples')
+        # List of sample lists = losl
+        losl = self.get_option('samples')
 
-        for run_id, samples in runIds_samples.iteritems():
-            if not isinstance(run_id, str):
-                logger.error("Not a string run ID (%s) for samples (%s)"
-                             % (run_id, ", ".join(samples)))
+        run_id = str()
+        input_paths = list()
+        # Test the user input and connection data for validity
+        for samples in losl:
+            if len(samples) != 2:
+                logger.error("Expected exactly two samples. Received %s (%s)"
+                             % (len(samples), ", ".join(samples)))
                 sys.exit(1)
-            if not isinstance(samples, list):
-                logger.error("Not a list of samples. Type: %s, Value: %s"
-                             % (type(samples), samples))
-                sys.exit(1)
-
-            input_paths = list()
-            labels = list()
             for sample in samples:
                 try:
-                    bam_files = run_ids_connections_files[sample]['in/alignments']
-                except KeyError:
-                    logger.error("No input sample named %s" % sample)
+                    files=run_ids_connections_files[sample]['in/alignments']
+                except KeyError as e:
+                    logger.error('No files found for sample %s and connection '
+                    '"in/alignments". Please check your configuration.')
                     sys.exit(1)
-
-                for i in range(len(bam_files)):
-                    if not bam_files[i].endswith(".bam"):
-                        logger.error("Not a BAM file: %s" % bam_files[i])
-                        sys.exit(1)
-                    input_paths.append(bam_files[i])
-                    if i > 0:
-                        labels.append("%s-%s" % (sample, i))
-                    else:
-                        labels.append(sample)
-
-
+                if not len(files) == 1 or not files[0].endswith('.bam'):
+                    logger.error("Expected exactly one BAM file, got %s"
+                                 % ", ".join(files))
+                    sys.exit(1)
+                # Add found BAM file to input paths
+                input_paths.append(files[0])
+            # Assemble new run name from input sample names
+            run_id = "%s-%s" % (samples[0], samples[1])
+            
+            # Start defining the run here:
             with self.declare_run(run_id) as run:
+                # Add output file here:
+                outfile = str()
+                if self.get_option('outFileFormat') == "bigwig":
+                    outfile = run.add_output_file(
+                        'ucsc-tracks', '%s.bw' % run_id, input_paths)
+                elif self.get_option('outFileFormat') == "bedgraph":
+                    outfile = run.add_output_file(
+                        'ucsc-tracks', '%s.bg' % run_id, input_paths)
                 # Let's compile the command
                 with run.new_exec_group() as bam_compare_eg:
-                    # 1. multiBamSummary command
+                    # 1. bamCompare command
                     bam_compare = [
-                        self.get_tool('multiBamSummary'),
-                        '--bamfile1',
-                        '--bamfile2',
-                        '--outFileName',
-                        run.add_output_file(
-                            'bigwig',
-                            '%s.bw' % run_id,
-                            input_paths
-                        )
+                        self.get_tool('bamCompare'),
+                        '--bamfile1', input_paths[0],
+                        '--bamfile2', input_paths[1],
+                        '--outFileName', outfile
                     ]
-                    bam_compare.extend(input_paths)
-                    ## Append output file format
-                    bam_compare.append('--outFileFormat')
-                    bam_compare.append('bigwig')
-                    ## Append list of BED files for BED-file subcommand
-                    if subcommand == "BED-file":
-                        bam_compare.append('--BED')
-                        bam_compare.extend(self.get_option('bed-file'))
-                    ## Append list of labels
-                    bam_compare.append('--labels')
-                    bam_compare.extend(labels)
                     ## Append number of processors
                     bam_compare.extend(['--numberOfProcessors',
                                               str(self.get_cores())])
