@@ -34,7 +34,7 @@ class deepToolsPlotFingerprint(AbstractStep):
                         'Each element has to be the name of a run. Each run '
                         'has to provide a SINGLE BAM file. All BAM files are '
                         'plotted and counted using deepTools plotFingerprint '
-                        ' command.')
+                        'command.')
 
         # Output options:
         self.add_option('plotFileFormat', str, optional=False,
@@ -120,8 +120,8 @@ class deepToolsPlotFingerprint(AbstractStep):
                         description="If set, then regions with zero overlapping "
                         "reads for *all* given BAM files are ignored. This will "
                         "result in a reduced number of read counts than that "
-                        "specified in --numberOfSamples
-                        (default: False)")
+                        "specified in --numberOfSamples "
+                        "(default: False)")
         self.add_option("outQualityMetrics", str, optional=True,
                         description="Quality metrics can optionally be output "
                         "to this file. The file will have one row per input BAM "
@@ -131,14 +131,14 @@ class deepToolsPlotFingerprint(AbstractStep):
                         "/content/feature/plotFingerprint_QC_metrics.html. "
                         "(default: None)")
         self.add_option("JSDsample", str, optional=True,
-                        "Reference sample against which to compute the Jensen-"
-                        "Shannon distance and the CHANCE statistics. If this "
-                        "is not specified, then these will not be calculated. "
-                        "If --outQualityMetrics is not specified then this will "
-                        "be ignored. The Jensen-Shannon implementation is based "
-                        "on code from Sitanshu Gakkhar at BCGSC. The CHANCE "
-                        "implementation is based on code from Matthias Haimel. "
-                        "(default: None)")
+                        description='Reference sample against which to compute '
+                        'the Jensen-Shannon distance and the CHANCE statistics. '
+                        'If this is not specified, then these will not be '
+                        'calculated. If --outQualityMetrics is not specified '
+                        'then this will be ignored. The Jensen-Shannon '
+                        'implementation is based on code from Sitanshu Gakkhar '
+                        'at BCGSC. The CHANCE implementation is based on code '
+                        'from Matthias Haimel. (default: None)')
         self.add_option('region', str, optional=True, description='Region of '
                         'the genome to limit the operation to - this is useful '
                         'when testing parameters to reduce the computing time. '
@@ -213,10 +213,10 @@ class deepToolsPlotFingerprint(AbstractStep):
                         self.get_tool("plotFingerprint"),
                         '--plotFile', plotfile,
                         '--outRawCounts', countsfile,
-                        '--numberOfProcessors', self.get_cores(),
+                        '--numberOfProcessors', str(self.get_cores()),
                         '--bamfiles']
                     plot_fingerprint.extend(input_paths)
-                    plot_fingerprint.append('labels')
+                    plot_fingerprint.append('--labels')
                     plot_fingerprint.extend(labels)
                     
                     plot_fingerprint.extend(option_list)
