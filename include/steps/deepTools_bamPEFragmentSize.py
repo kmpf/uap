@@ -53,6 +53,7 @@ class deepToolsBamPEFragmentSize(AbstractStep):
                         description='The maximum fragment length in the '
                         'histogram. A value of 0 (the default) indicates to '
                         'use twice the mean fragment length')
+
         self.add_option('logScale', bool, optional=True,
                         description='Plot on the log scale')
         self.add_option('binSize', int, optional=True,
@@ -80,12 +81,10 @@ class deepToolsBamPEFragmentSize(AbstractStep):
 
     def runs(self, run_ids_connections_files):
         # Compile the list of options
-        options = ['samplesLabel', 'maxFragmentLength',
-                   'binSize', 'distanceBetweenBins',
-                   'blackListFileName']
+        options = ['histogram', 'maxFragmentLength', 'logScale', 'binSize',
+                   'distanceBetweenBins', 'blackListFileName']
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
-
         option_list = list()
         for option in set_options:
             if isinstance(self.get_option(option), bool):
