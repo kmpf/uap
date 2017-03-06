@@ -395,7 +395,19 @@ files:
         * |samtools_link|
         * |segemehl_link|
         * |tophat2_link|
-          
+
+.. hint:: The usage of |picard_link| can differ a lot between systems.
+          On Ubuntu systems it can be called like this::
+
+            $ picard-tools --version
+
+          If you use it as recommended at |picard_link|, it is called like this::
+
+            $ java -jar /path/to/picard.jar -h
+
+          Please check how to use it on your system and adjust the example
+          configuration accordingly (see :ref:`config_file_tools`).
+            
 .. NOTE:: Before computing ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
           please make sure that, the following examples were executed:
 
