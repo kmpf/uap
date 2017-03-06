@@ -79,6 +79,7 @@ The following configurations showcase how to get or generate that data:
 
         * |bwa_link|
         * |bowtie2_link|
+        * |curl_link|
         * |pigz_link|
         * |samtools_link|
         * |segemehl_link|
@@ -111,6 +112,7 @@ The following configurations showcase how to get or generate that data:
 
         * |bwa_link|
         * |bowtie2_link|
+        * |curl_link|
         * |fetchChromsizes_link|
         * |pigz_link|
         * |samtools_link|
@@ -132,6 +134,7 @@ The following configurations showcase how to get or generate that data:
 
         * |bwa_link|
         * |bowtie2_link|
+        * |curl_link|
         * |fetchChromsizes_link|
         * |pigz_link|
         * |samtools_link|
@@ -296,6 +299,7 @@ B. *De novo* Transcript Assembly
 
     Required tools:
 
+        * |curl_link|
         * |pigz_link|
 
 .. _example_mercer:
@@ -360,8 +364,9 @@ files:
 
     Required tools:
 
+        * |curl_link|
         * |pigz_link|
-    
+
 .. _example_barski:
     
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
@@ -430,6 +435,10 @@ on another page (see :ref:`analysis_configuration`).
    
    <a href="http://cufflinks.cbcb.umd.edu/" target="_blank">cufflinks</a>
 
+.. |curl_link| raw:: html
+   
+   <a href="https://curl.haxx.se/" target="_blank">curl</a>
+   
 .. |cutadapt_link| raw:: html
    
    <a href="https://github.com/marcelm/cutadapt" target="_blank">cutadapt</a>
