@@ -75,6 +75,13 @@ The following configurations showcase how to get or generate that data:
     :Disk usage: ~20 MB
     :Run time: minutes 
 
+    Required tools:
+
+        * |bwa_link|
+        * |bowtie2_link|
+        * |pigz_link|
+        * |samtools_link|
+        * |segemehl_link|
 
 .. _example_index_hg19:    
 
@@ -91,14 +98,24 @@ The following configurations showcase how to get or generate that data:
     :Disk usage: ~240 MB
     :Run time: several minutes
 
-    Downloads the *Homo sapiens* genome (chromosome 21), generates the indices for
-    |bowtie2_link|, |bwa_link|, and |samtools_link|.
+    Downloads *Homo sapiens* chromosome 21, generates the indices for
+    |bowtie2_link|, |bwa_link|, and |samtools_link| (and |segemehl_link| if
+    you uncomment it).
     This workflow requires substantial computational resources due to the
     size of the human genome.
     The |segemehl_link| index creation is commented out due to its high
-    memory consumption (~50-60 GB).
+    memory consumption.
     Please make sure to only run it on well equipped machines.
 
+    Required tools:
+
+        * |bwa_link|
+        * |bowtie2_link|
+        * |fetchChromsizes_link|
+        * |pigz_link|
+        * |samtools_link|
+        * |segemehl_link| (if uncommented)
+    
 .. _example_download_gencode:
     
 ``download_human_gencode_release.yaml``
@@ -111,6 +128,14 @@ The following configurations showcase how to get or generate that data:
     :Disk usage: ~1,2 GB
     :Run time: depends on your internet connection
 
+    Required tools:
+
+        * |bwa_link|
+        * |bowtie2_link|
+        * |fetchChromsizes_link|
+        * |pigz_link|
+        * |samtools_link|
+               
 Let's have a look at the *Mycoplasma genitalium* example workflow by checking
 its :ref:`uap_status`::
 
@@ -269,6 +294,10 @@ B. *De novo* Transcript Assembly
     :Disk usage: ~ GB
     :Run time: minutes (depending on your internet connection)
 
+    Required tools:
+
+        * |pigz_link|
+
 .. _example_mercer:
 
 ``2014-RNA_CaptureSeq-Mercer_et_al.yaml``
@@ -287,6 +316,16 @@ B. *De novo* Transcript Assembly
     :Disk usage: ~ GB
     :Run time: several hours
 
+        * |cufflinks_link|
+        * |cutadapt_link|
+        * |fastqc_link|
+        * |fastx_toolkit_link|
+        * |htseq_count_link|
+        * |pigz_link|
+        * |samtools_link|
+        * |segemehl_link| (if uncommented)
+        * |tophat2_link|
+               
 .. NOTE:: Before computing ``2014-RNA_CaptureSeq-Mercer_et_al.yaml``
           please make sure that, the following examples were executed:
 
@@ -314,11 +353,15 @@ files:
     Downloads the data published in the paper |Barski_link|.
 
     :Max. memory: ~? GB
-    :Disk usage: ~50 GB
-    :Run time: some hours (depending on your internet connection)
+    :Disk usage: ~17 GB
+    :Run time: depends on your internet connection
 
     Downloads the data published in the paper |Barski_link|.
 
+    Required tools:
+
+        * |pigz_link|
+    
 .. _example_barski:
     
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
@@ -338,9 +381,21 @@ files:
     :Disk usage: ~ GB
     :Run time: ~1 day
 
-    **This workflow will take some time due to the number of steps and
-    multiple mapping tools used.**
+    Required tools:
 
+        * |bowtie2_link|
+        * |bwa_link|
+        * |cutadapt_link|
+        * |fastqc_link|
+        * |fastx_toolkit_link|
+        * |macs2_link|
+        * |picard_link|
+        * |pigz_link|
+        * |preseq_link|
+        * |samtools_link|
+        * |segemehl_link|
+        * |tophat2_link|
+          
 .. NOTE:: Before computing ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
           please make sure that, the following examples were executed:
 
@@ -373,7 +428,12 @@ on another page (see :ref:`analysis_configuration`).
 
 .. |cufflinks_link| raw:: html
    
-   <a href="" target="_blank">cufflinks</a>
+   <a href="http://cufflinks.cbcb.umd.edu/" target="_blank">cufflinks</a>
+
+.. |cutadapt_link| raw:: html
+   
+   <a href="https://github.com/marcelm/cutadapt" target="_blank">cutadapt</a>
+
 
 .. |fastqc_link| raw:: html
       
@@ -382,6 +442,10 @@ on another page (see :ref:`analysis_configuration`).
 .. |fastx_toolkit_link| raw:: html
       
    <a href="http://hannonlab.cshl.edu/fastx_toolkit/" target="_blank">FASTX-Toolkit</a>
+
+.. |fetchChromsizes_link| raw:: html
+
+   <a href="http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/fetchChromSizes" target="_blank">fetchChromSizes</a>
 
 .. |htseq_count_link| raw:: html
       
@@ -398,6 +462,10 @@ on another page (see :ref:`analysis_configuration`).
 .. |picard_link| raw:: html
       
    <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard</a>
+
+.. |pigz_link| raw:: html
+
+   <a href="http://zlib.net/pigz/" target=_blank">pigz</a>
 
 .. |preseq_link| raw:: html
       

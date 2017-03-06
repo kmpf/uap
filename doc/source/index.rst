@@ -13,7 +13,8 @@ uap -- Robust, Consistent, and Reproducible Data Analysis
 
 **Authors:**
 
-Christoph Kämpf, Michael Specht, Sven-Holger Puppel, Gero Doose, Kristin Reiche, Jana Hertel, Jörg Hackermüller
+Christoph Kämpf, Michael Specht, Sven-Holger Puppel, Alexander Scholz,
+Gero Doose, Kristin Reiche, Jana Hertel, Jörg Hackermüller
 
 **Description:**
 
