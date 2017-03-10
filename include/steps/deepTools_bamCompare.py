@@ -119,7 +119,7 @@ class deepToolsBamCompare(AbstractStep):
                         "adjust the effective genome size, if relevant. "
                         "(default: None)")
         ## Read coverage normalization options:
-        self.add_option('normalizeTo1x', str, optional=True,
+        self.add_option('normalizeTo1x', int, optional=True,
                         description='Report read coverage normalized to 1x '
                         'sequencing depth (also known as Reads Per Genomic '
                         'Content (RPGC)). Sequencing depth is defined as: '
@@ -265,14 +265,14 @@ class deepToolsBamCompare(AbstractStep):
         # List of sample lists = losl
         losl = self.get_option('samples')
 
-        run_id = str()
-        input_paths = list()
         # Test the user input and connection data for validity
         for samples in losl:
             if len(samples) != 2:
                 logger.error("Expected exactly two samples. Received %s (%s)"
                              % (len(samples), ", ".join(samples)))
                 sys.exit(1)
+            
+            input_paths = list()
             for sample in samples:
                 try:
                     files=run_ids_connections_files[sample]['in/alignments']
