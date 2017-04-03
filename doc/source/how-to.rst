@@ -294,7 +294,7 @@ B. *De novo* Transcript Assembly
     Downloads the data published in the paper |Mercer_link|.
 
     :Max. memory: ~? GB
-    :Disk usage: ~ GB
+    :Disk usage: ~12 GB
     :Run time: minutes (depending on your internet connection)
 
     Required tools:
@@ -317,7 +317,7 @@ B. *De novo* Transcript Assembly
     transcript assembly employing our **s2c** python script.
 
     :Max. memory: ~? GB
-    :Disk usage: ~ GB
+    :Disk usage: ~3 GB
     :Run time: several hours
 
         * |cufflinks_link|
@@ -383,8 +383,8 @@ files:
     Finally enriched regions are detected with |macs2_link|.
 
     :Max. memory: ~? GB
-    :Disk usage: ~ GB
-    :Run time: ~1 day
+    :Disk usage: ~51 GB
+    :Run time: ~several hours (on a cluster), ~1 day (on a single machine)
 
     Required tools:
 
