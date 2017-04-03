@@ -23,6 +23,7 @@ class SamToFastq(AbstractStep):
         self.require_tool('pigz')
 
         self.add_option('F', int, optional = True)
+        self.add_option('addF', int, optional = True)
         self.add_option('f', int, optional = True)
 
 
@@ -68,6 +69,10 @@ class SamToFastq(AbstractStep):
 
                             if self.is_option_set_in_config('F'):
                                 samtools.extend(['-F', str(self.get_option('F'))])
+
+
+                            if self.is_option_set_in_config('addF'):
+                                samtools.extend(['-F', str(self.get_option('addF'))])
                                 
                             samtools.append('-')    
                             pipe.add_command(samtools)

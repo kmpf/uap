@@ -29,6 +29,7 @@ class Post_Sawdust(AbstractStep):
         self.add_option('seq_type', str, choices = ['RNA', 'DNA'],  optional=False)
         self.add_option('read_type', str, choices = ['single' ,'paired'], optional=False)
         self.add_option('split_ident', str,  default=' ', optional=False)
+        self.add_option('prf', bool,  default=False, optional=True)
 
 
         self.require_tool('post_sawdust')
@@ -71,8 +72,12 @@ class Post_Sawdust(AbstractStep):
                                          '--seq-type', self.get_option('seq_type'),
                                          '--read-type',self.get_option('read_type'),
                                          '--split-identifier-by', self.get_option('split_ident')]
-                        pipe.add_command(post_sawdust, stderr_path=log_stderr)
 
+                        if self.get_option('prf'):
+                            post_sawdust.append('--prf')    
+
+                        pipe.add_command(post_sawdust, stderr_path=log_stderr)
+                        
                         samtools_end = [self.get_tool('samtools'), 'view', '-Shb', '-']
 
                         pipe.add_command(samtools_end, stdout_path=stdout_path)
