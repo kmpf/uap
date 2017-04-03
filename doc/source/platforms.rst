@@ -20,9 +20,9 @@ configurations on.
 +=========+============+============+==============+===============+
 |         | |uge_link| | |oge_link| | |slurm_link| | local machine |
 +---------+------------+------------+--------------+---------------+
-| Cent OS | |check|    | |check|    | untested     | untested      |
+| Cent OS | |check|    | untested   | untested     | |check|       |
 +---------+------------+------------+--------------+---------------+
-| Fedora  | untested   | |check|    | untested     | untested      |
+| Fedora  | untested   | |check|    | untested     | |check|       |
 +---------+------------+------------+--------------+---------------+
 | Ubuntu  | untested   | untested   | |check|      | |check|       |
 +=========+============+============+==============+===============+
@@ -30,9 +30,9 @@ configurations on.
 +=========+============+============+==============+===============+
 |         | |uge_link| | |oge_link| | |slurm_link| | local machine |
 +---------+------------+------------+--------------+---------------+
-| Cent OS | |check|    | |check|    | untested     | untested      |
+| Cent OS | |check|    | untested   | untested     | |check|       |
 +---------+------------+------------+--------------+---------------+
-| Fedora  | untested   | |check|    | untested     | untested      |
+| Fedora  | untested   | |check|    | untested     | |check|       |
 +---------+------------+------------+--------------+---------------+
 | Ubuntu  | untested   | untested   | |check|      | |check|       |
 +=========+============+============+==============+===============+
@@ -40,9 +40,9 @@ configurations on.
 +=========+============+============+==============+===============+
 |         | |uge_link| | |oge_link| | |slurm_link| | local machine |
 +---------+------------+------------+--------------+---------------+
-| Cent OS | |check|    | |check|    | untested     | untested      |
+| Cent OS | |check|    | untested   | untested     | |check|       |
 +---------+------------+------------+--------------+---------------+
-| Fedora  | untested   | |check|    | untested     | untested      |
+| Fedora  | untested   | |check|    | untested     | |check|       |
 +---------+------------+------------+--------------+---------------+
 | Ubuntu  | untested   | untested   | |check|      | |check|       |
 +=========+============+============+==============+===============+
@@ -50,9 +50,9 @@ configurations on.
 +=========+============+============+==============+===============+
 |         | |uge_link| | |oge_link| | |slurm_link| | local machine |
 +---------+------------+------------+--------------+---------------+
-| Cent OS | |check|    | |check|    | untested     | untested      |
+| Cent OS | |check|    | untested   | untested     | |check|       |
 +---------+------------+------------+--------------+---------------+
-| Fedora  | untested   | |check|    | untested     | untested      |
+| Fedora  | untested   | |check|    | untested     | |check|       |
 +---------+------------+------------+--------------+---------------+
 | Ubuntu  | untested   | untested   | |check|      | |check|       |
 +=========+============+============+==============+===============+
@@ -60,9 +60,9 @@ configurations on.
 +=========+============+============+==============+===============+
 |         | |uge_link| | |oge_link| | |slurm_link| | local machine |
 +---------+------------+------------+--------------+---------------+
-| Cent OS | |check|    | |check|    | untested     | untested      |
+| Cent OS | |check|    | untested   | untested     | |check|       |
 +---------+------------+------------+--------------+---------------+
-| Fedora  | untested   | |check|    | untested     | untested      |
+| Fedora  | untested   | |check|    | untested     | |check|       |
 +---------+------------+------------+--------------+---------------+
 | Ubuntu  | untested   | untested   | |check|      | |check|       |
 +=========+============+============+==============+===============+
@@ -70,9 +70,9 @@ configurations on.
 +=========+============+============+==============+===============+
 |         | |uge_link| | |oge_link| | |slurm_link| | local machine |
 +---------+------------+------------+--------------+---------------+
-| Cent OS | |check|    | |check|    | untested     | untested      |
+| Cent OS | |check|    | untested   | untested     | |check|       |
 +---------+------------+------------+--------------+---------------+
-| Fedora  | untested   | |check|    | untested     | untested      |
+| Fedora  | untested   | untested   | untested     | untested      |
 +---------+------------+------------+--------------+---------------+
 | Ubuntu  | untested   | untested   | |check|      | |check|       |
 +=========+============+============+==============+===============+
@@ -80,9 +80,9 @@ configurations on.
 +=========+============+============+==============+===============+
 |         | |uge_link| | |oge_link| | |slurm_link| | local machine |
 +---------+------------+------------+--------------+---------------+
-| Cent OS | |check|    | |check|    | untested     | untested      |
+| Cent OS | |check|    | untested   | untested     | |check|       |
 +---------+------------+------------+--------------+---------------+
-| Fedora  | untested   | |check|    | untested     | untested      |
+| Fedora  | untested   | untested   | untested     | untested      |
 +---------+------------+------------+--------------+---------------+
 | Ubuntu  | untested   | untested   | |check|      | |check|       |
 +---------+------------+------------+--------------+---------------+
