@@ -3,7 +3,8 @@ import sys
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class RSeQC(AbstractStep):
     '''
@@ -19,21 +20,21 @@ class RSeQC(AbstractStep):
 
         self.add_connection('in/alignments')
         self.add_connection('out/bam_stat')
-	self.add_connection('out/infer_experiment')
-	self.add_connection('out/read_distribution')
+        self.add_connection('out/infer_experiment')
+        self.add_connection('out/read_distribution')
 
         self.require_tool('cat')
         self.require_tool('bam_stat.py')
-	self.require_tool('infer_experiment.py')
-	self.require_tool('read_distribution.py')
+        self.require_tool('infer_experiment.py')
+        self.require_tool('read_distribution.py')
 
-	self.add_option('reference', str, optional=False, description=
-                        "Reference gene model in bed fomat. [required]"
-        )
+        self.add_option('reference', str, optional=False,
+                        description="Reference gene model in bed fomat. "
+                        "[required]")
 
     def runs(self, run_ids_connections_files):
 
-        for run_id  in run_ids_connections_files.keys():
+        for run_id in run_ids_connections_files.keys():
 
             alignments = run_ids_connections_files[run_id]['in/alignments']
 
@@ -52,7 +53,7 @@ class RSeQC(AbstractStep):
                     ]
                     exec_group.add_command(
                         bam_stat,
-                        stderr_path = run.add_output_file(
+                        stderr_path=run.add_output_file(
                             'bam_stat', basename + '.bam_stats.txt', alignments
                         )
                     )
@@ -65,7 +66,7 @@ class RSeQC(AbstractStep):
                     ]
                     exec_group.add_command(
                         infer_experiment,
-                        stdout_path = run.add_output_file(
+                        stdout_path=run.add_output_file(
                             'infer_experiment',
                             basename + '.infer_experiment.txt', alignments
                         )
@@ -79,7 +80,7 @@ class RSeQC(AbstractStep):
                     ]
                     exec_group.add_command(
                         read_distribution,
-                        stdout_path = run.add_output_file(
+                        stdout_path=run.add_output_file(
                             'read_distribution',
                             basename + '.read_distribution.txt', alignments
                         )
