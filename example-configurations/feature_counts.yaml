@@ -1,7 +1,3 @@
-# This configuration repeats the analysis published in:
-# Targeted sequencing for gene discovery and quantification using RNA CaptureSeq,
-# Mercer et al., Nature Protocols, 2014
-
 ################################################################################
 ## Cluster Section                                                            ##
 ## ===============                                                            ##
@@ -93,6 +89,7 @@ steps:
         _depends: tophat2
         genome-faidx: *genome_faidx
         temp-sort-dir: '/tmp/'
+        _cluster_submit_options: '--mem=60G'
 
     #count_genes_tophat2 (htseq_count):
     #    _depends: sort_tophat2_by_pos
@@ -102,6 +99,9 @@ steps:
     #    mode: intersection-strict
     #    type: exon
     #    idattr: gene_id
+
+    #fc (feature_counts):
+    #    _depends: sort_tophat2_by_pos
 
     #cufflinks_tophat2 (cufflinks):
     #    _depends: sort_tophat2_by_pos
@@ -169,10 +169,10 @@ tools:
         exit_code: 0
 
     # URL: http://www-huber.embl.de/users/anders/HTSeq/doc/count.html
-    htseq-count:
-        path: htseq-count
-        get_version: -h
-        exit_code: 0
+    #htseq-count:
+    #    path: htseq-count
+    #    get_version: -h
+    #    exit_code: 0
 
     # URL: http://zlib.net/pigz/
     pigz:
