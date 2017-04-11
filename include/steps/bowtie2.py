@@ -70,7 +70,7 @@ class Bowtie2(AbstractStep):
                 if sr_input == None:
                     is_paired_end = False
                 else:
-                    input_paths.extend(sr_input)
+                    input_paths.append(sr_input)
 
 
                 # bowtie2 is run in this exec group
@@ -102,11 +102,12 @@ class Bowtie2(AbstractStep):
                         bowtie2.extend(['--met-file', metrics])
 
                         if self.is_option_set_in_config('unaligned'):
-                            unaligned = run.add_output_file(
-                                'unaligned',
-                                '%s-bowtie2-unlagined.fastq' % run_id,
-                            input_paths)
-                            bowtie2.extend(['--un', unaligned])
+                            if self.get_option('unaligned'):
+                                unaligned = run.add_output_file(
+                                    'unaligned',
+                                    '%s-bowtie2-unlagined.fastq' % run_id,
+                                    input_paths)
+                                bowtie2.extend(['--un', unaligned])
 
                             
                             
