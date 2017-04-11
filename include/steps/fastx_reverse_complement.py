@@ -34,7 +34,7 @@ class FastxReverseComplement(AbstractStep):
             if self.is_option_set_in_config('prefix'):
                new_run_id = self.get_option('prefix') + '_' + run_id
 
-            with self.declare_run(run_id) as run:
+            with self.declare_run(new_run_id) as run:
                 input_paths = run_ids_connections_files[run_id]['in/fastx']
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
@@ -69,10 +69,9 @@ class FastxReverseComplement(AbstractStep):
                                    
 
                         # 1. Run  fastx  for input file
-                        fastx_eg = run.new_exec_group()
                         fastx_revcom = [self.get_tool('fastx_reverse_complement')]
                         # gzip 
                         fastx_revcom.extend(['-z'])
-                        fastx_eg.add_command(fastx_revcom,  stdout_path=out )
+                        pipe.add_command(fastx_revcom,  stdout_path=out )
                         
 
