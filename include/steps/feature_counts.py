@@ -1,3 +1,4 @@
+import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
@@ -13,11 +14,23 @@ class FeatureCounts(AbstractStep):
         super(FeatureCounts, self).__init__(pipeline)
 
         # in-connections
+        self.add_connection(
+            'in/alignments',
+            #constraints={'min_files_per_run': 1, 'max_files_per_run': 1}
+        )
+        self.add_connection(
+            'in/feature-file',
+            #constraints={'total_files': 1}
+        )
 
         # out-connections
+        self.add_connection('out/counts')
+        self.add_connection('out/summary')
+        self.add_connection('out/log_stdout')
+        self.add_connection('out/log_stderr')
 
         # tools
-        self.require_tool('feature_count')
+        self.require_tool('feature_counts')
 
         # required parameters
         self.add_option('a', str, optional=False, description="Give the name \
@@ -33,8 +46,15 @@ class FeatureCounts(AbstractStep):
                         identifiers. Please refer to the users guide for more \
                         details.")
 
+        self.add_option('t', str, optional=False, default=None,
+                        description="Specify the feature type. Only rows \
+                        which have the matched feature type in the provided \
+                        GTF annotation file will be included for read \
+                        counting. `exon' by default.")
+
+
         # optional parameters
-        self.add_option('A', bool, optional=True, default=False,
+        self.add_option('A', str, optional=True, default=None,
                         description="Specify the name of a file including \
                         aliases of chromosome names. The file should be a \
                         comma delimited text file that includes two columns. \
@@ -44,19 +64,13 @@ class FeatureCounts(AbstractStep):
                         contain header lines. Names included in this file are \
                         case sensitive.")
 
-        self.add_option('F', bool, optional=True, default=False,
+        self.add_option('F', str, optional=True, default=None,
                         description="Specify the format of the annotation \
                         file. Acceptable formats include `GTF' and `SAF'. \
                         `GTF' by default. Please refer to the users guide \
                         for SAF annotation format.")
 
-        self.add_option('t', bool, optional=True, default=False,
-                        description="Specify the feature type. Only rows \
-                        which have the matched feature type in the provided \
-                        GTF annotation file will be included for read \
-                        counting. `exon' by default.")
-
-        self.add_option('g', bool, optional=True, default=False,
+        self.add_option('g', str, optional=True, default=None,
                         description="Specify the attribute type used to group \
                         features (eg. exons) into meta-features (eg. genes), \
                         when GTF annotation is provided. `gene_id' by \
@@ -76,7 +90,7 @@ class FeatureCounts(AbstractStep):
                         more than one matched meta-feature (or feature if \
                         -f is specified).")
 
-        self.add_option('s', int, optional=True, default=0,
+        self.add_option('s', int, optional=True, default=None,
                         description="Indicate if strand-specific read \
                         counting should be performed. It has three possible \
                         values:  0 (unstranded), 1 (stranded) and 2 \
@@ -89,13 +103,13 @@ class FeatureCounts(AbstractStep):
                         reported mapping locations). The program uses the \
                         `NH' tag to find multi-mapping reads.")
 
-        self.add_option('Q', int, optional=True, default=0,
+        self.add_option('Q', int, optional=True, default=None,
                         description="The minimum mapping quality score a read \
                         must satisfy in order to be counted. For paired-end \
                         reads, at least one end should satisfy this criteria. \
                         0 by default.")
 
-        self.add_option('T', int, optional=True, default=1,
+        self.add_option('T', int, optional=True, default=None,
                         description="Number of the threads. 1 by default.")
 
         self.add_option('R', bool, optional=True, default=False,
@@ -118,15 +132,15 @@ class FeatureCounts(AbstractStep):
                         will be counted no matter they are from multi-mapping \
                         reads or not ('-M' is ignored).")
 
-        self.add_option('readExtension5', int, optional=True, default=0,
+        self.add_option('readExtension5', int, optional=True, default=None,
                         description="Reads are extended upstream by <int> \
                         bases from their 5' end. 0 by default.")
 
-        self.add_option('readExtension3', int, optional=True, default=0,
+        self.add_option('readExtension3', int, optional=True, default=None,
                         description="Reads are extended upstream by <int> \
                         bases from their 3' end. 0 by default.")
 
-        self.add_option('minReadOverlap', int, optional=True, default=1,
+        self.add_option('minReadOverlap', int, optional=True, default=None,
                         description="Specify the minimum number of overlapped \
                         bases required to assign a read to a feature. 1 by \
                         default. Negative values are permitted, indicating a \
@@ -139,7 +153,7 @@ class FeatureCounts(AbstractStep):
                         An example of split alignments is the exon-spanning \
                         reads in RNA-seq data.")
 
-        self.add_option('read2pos', int, optional=True, default=0,
+        self.add_option('read2pos', int, optional=True, default=None,
                         description="The read is reduced to its 5' most base \
                         or 3' most base. Read summarization is then performed \
                         based on the single base which the read is reduced to.\
@@ -168,11 +182,11 @@ class FeatureCounts(AbstractStep):
                         is specified. The distance thresholds should be \
                         specified using -d and -D options.")
 
-        self.add_option('d', int, optional=True, default=50,
+        self.add_option('d', int, optional=True, default=None,
                         description="Minimum fragment/template length, \
                         50 by default.")
 
-        self.add_option('D', int, optional=True, default=600,
+        self.add_option('D', int, optional=True, default=None,
                         description="Maximum fragment/template length, \
                         600 by default.")
 
@@ -190,4 +204,119 @@ class FeatureCounts(AbstractStep):
                         paired-end read data.")
 
     def runs(self, run_ids_connections_files):
-        print('Test')
+        for run_id in run_ids_connections_files.keys():
+            with self.declare_run(run_id) as run:
+                alignments = run_ids_connections_files[run_id]['in/alignments']
+                input_paths = alignments
+                feature_path = str
+
+                # try to get feature file from in_connection or option parameter
+                try:
+                    feature_path = run_ids_connections_files[run_id]['in/feature-file'][0]
+                except KeyError:
+                    if self.is_option_set_in_config('a'):
+                        feature_path = self.get_option('a')
+                    else:
+                        logger.error(
+                            "No feature file could be found for '%s'" % run_id)
+                        sys.exit(1)
+                    if not os.path.isfile(feature_path):
+                        logger.error("Feature file '%s' is not a file."
+                            % feature_path)
+                        sys.exit(1)
+
+                fc_exec_group = run.new_exec_group()
+                fc = [self.get_tool('feature_counts')]
+
+                if self.is_option_set_in_config('A'):
+                    fc.extend(['-A', str(self.get_option('A'))])
+
+                if self.is_option_set_in_config('F'):
+                    fc.extend(['-F', str(self.get_option('F'))])
+
+                if self.is_option_set_in_config('t'):
+                    fc.extend(['-t', str(self.get_option('t'))])
+
+                if self.is_option_set_in_config('g'):
+                    fc.extend(['-g', str(self.get_option('g'))])
+
+                if self.get_option('f') is True:
+                    fc.extend(['-f'])
+
+                if self.get_option('O') is True:
+                    fc.extend(['-O'])
+
+                if self.is_option_set_in_config('s'):
+                    fc.extend(['-s', str(self.get_option('s'))])
+
+                if self.get_option('M') is True:
+                    fc.extend(['-M'])
+
+                if self.is_option_set_in_config('Q'):
+                    fc.extend(['-Q', str(self.get_option('Q'))])
+
+                if self.is_option_set_in_config('T'):
+                    fc.extend(['-T', str(self.get_option('T'))])
+
+                if self.get_option('R') is True:
+                    fc.extend(['-R'])
+
+                if self.get_option('primary') is True:
+                    fc.extend(['--primary'])
+
+                if self.is_option_set_in_config('readExtension5'):
+                    fc.extend(['--readExtension5', str(self.get_option('readExtension5'))])
+
+                if self.is_option_set_in_config('readExtension3'):
+                    fc.extend(['--readExtension3', str(self.get_option('readExtension3'))])
+
+                if self.is_option_set_in_config('minReadOverlap'):
+                    fc.extend(['--minReadOverlap', str(self.get_option('minReadOverlap'))])
+
+                if self.get_option('countSplitAlignmentsOnly') is True:
+                    fc.extend(['--countSplitAlignmentsOnly'])
+
+                if self.is_option_set_in_config('minReadOverlap'):
+                    fc.extend(['--minReadOverlap', str(self.get_option('minReadOverlap'))])
+
+                if self.get_option('ignoreDup') is True:
+                    fc.extend(['--ignoreDup'])
+
+                if self.get_option('p') is True:
+                    fc.extend(['-p'])
+
+                if self.get_option('P') is True:
+                    fc.extend(['-P'])
+
+                if self.is_option_set_in_config('d'):
+                    fc.extend(['-d', str(self.get_option('d'))])
+
+                if self.is_option_set_in_config('D'):
+                    fc.extend(['-D', str(self.get_option('D'))])
+
+                if self.get_option('B') is True:
+                    fc.extend(['-B'])
+
+                if self.get_option('C') is True:
+                    fc.extend(['-C'])
+
+                fc.extend(['-a', feature_path])
+
+                basename = run.get_output_directory_du_jour_placeholder() + '/' + run_id + '.' + self.get_option('o')
+                fc.extend(['-o', basename])
+
+                fc.extend(input_paths)
+
+                stderr_file = "%s-featureCounts_stderr.txt" % (run_id)
+                log_stderr = run.add_output_file("log_stderr",
+                                                 stderr_file, input_paths)
+                stdout_file = "%s-featureCounts-log_stdout.txt" % (run_id)
+                log_stdout = run.add_output_file("log_stdout",
+                                                 stdout_file, input_paths)
+
+                run.add_output_file('counts', run_id + '.counts.txt', input_paths)
+                run.add_output_file('summary', run_id + '.counts.txt.summary', input_paths)
+                fc_exec_group = run.new_exec_group()
+                fc_exec_group.add_command(fc, stdout_path=log_stdout,
+                                          stderr_path=log_stderr)
+
