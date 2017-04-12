@@ -52,7 +52,6 @@ class FeatureCounts(AbstractStep):
                         GTF annotation file will be included for read \
                         counting. `exon' by default.")
 
-
         # optional parameters
         self.add_option('A', str, optional=True, default=None,
                         description="Specify the name of a file including \
@@ -210,7 +209,7 @@ class FeatureCounts(AbstractStep):
                 input_paths = alignments
                 feature_path = str
 
-                # try to get feature file from in_connection or option parameter
+                # try to get feature file from in_connection or option
                 try:
                     feature_path = run_ids_connections_files[run_id]['in/feature-file'][0]
                 except KeyError:
@@ -219,11 +218,11 @@ class FeatureCounts(AbstractStep):
                     else:
                         logger.error(
                             "No feature file could be found for '%s'" % run_id)
-                        sys.exit(1)
+                        exit(1)
                     if not os.path.isfile(feature_path):
                         logger.error("Feature file '%s' is not a file."
-                            % feature_path)
-                        sys.exit(1)
+                                     % feature_path)
+                        exit(1)
 
                 fc_exec_group = run.new_exec_group()
                 fc = [self.get_tool('feature_counts')]
@@ -265,19 +264,23 @@ class FeatureCounts(AbstractStep):
                     fc.extend(['--primary'])
 
                 if self.is_option_set_in_config('readExtension5'):
-                    fc.extend(['--readExtension5', str(self.get_option('readExtension5'))])
+                    fc.extend(['--readExtension5',
+                               str(self.get_option('readExtension5'))])
 
                 if self.is_option_set_in_config('readExtension3'):
-                    fc.extend(['--readExtension3', str(self.get_option('readExtension3'))])
+                    fc.extend(['--readExtension3',
+                               str(self.get_option('readExtension3'))])
 
                 if self.is_option_set_in_config('minReadOverlap'):
-                    fc.extend(['--minReadOverlap', str(self.get_option('minReadOverlap'))])
+                    fc.extend(['--minReadOverlap',
+                               str(self.get_option('minReadOverlap'))])
 
                 if self.get_option('countSplitAlignmentsOnly') is True:
                     fc.extend(['--countSplitAlignmentsOnly'])
 
                 if self.is_option_set_in_config('minReadOverlap'):
-                    fc.extend(['--minReadOverlap', str(self.get_option('minReadOverlap'))])
+                    fc.extend(['--minReadOverlap',
+                               str(self.get_option('minReadOverlap'))])
 
                 if self.get_option('ignoreDup') is True:
                     fc.extend(['--ignoreDup'])
@@ -302,7 +305,8 @@ class FeatureCounts(AbstractStep):
 
                 fc.extend(['-a', feature_path])
 
-                basename = run.get_output_directory_du_jour_placeholder() + '/' + run_id + '.' + self.get_option('o')
+                basename = run.get_output_directory_du_jour_placeholder() + \
+                    '/' + run_id + '.' + self.get_option('o')
                 fc.extend(['-o', basename])
 
                 fc.extend(input_paths)
@@ -310,13 +314,16 @@ class FeatureCounts(AbstractStep):
                 stderr_file = "%s-featureCounts_stderr.txt" % (run_id)
                 log_stderr = run.add_output_file("log_stderr",
                                                  stderr_file, input_paths)
-                stdout_file = "%s-featureCounts-log_stdout.txt" % (run_id)
+                stdout_file = "%s-featureCounts_stdout.txt" % (run_id)
                 log_stdout = run.add_output_file("log_stdout",
                                                  stdout_file, input_paths)
 
-                run.add_output_file('counts', run_id + '.counts.txt', input_paths)
-                run.add_output_file('summary', run_id + '.counts.txt.summary', input_paths)
+                run.add_output_file('counts',
+                                    run_id + '.counts.txt',
+                                    input_paths)
+                run.add_output_file('summary',
+                                    run_id + '.counts.txt.summary',
+                                    input_paths)
                 fc_exec_group = run.new_exec_group()
                 fc_exec_group.add_command(fc, stdout_path=log_stdout,
                                           stderr_path=log_stderr)
-
