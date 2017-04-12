@@ -19,14 +19,18 @@ class RSeQC(AbstractStep):
         self.set_cores(1)
 
         self.add_connection('in/alignments')
+
         self.add_connection('out/bam_stat')
         self.add_connection('out/infer_experiment')
         self.add_connection('out/read_distribution')
+        self.add_connection('out/geneBody_coverage')
+        self.add_connection('out/log.txt')
 
         self.require_tool('cat')
         self.require_tool('bam_stat.py')
         self.require_tool('infer_experiment.py')
         self.require_tool('read_distribution.py')
+        self.require_tool('geneBody_coverage.py')
 
         self.add_option('reference', str, optional=False,
                         description="Reference gene model in bed fomat. "
@@ -86,20 +90,22 @@ class RSeQC(AbstractStep):
                         )
                     )
 
-                #with run.new_exec_group() as exec_group:
-                #    gene_body_coverage = [
-                #        self.get_tool('gene_body_coverage.py'),
-                #        '-i', alignments[0],
-                #        '-r', self.get_option('reference')
-                #        # todo: -o?
-                #    ]
-                    #exec_group.add_command(
-                    #    gene_body_coverage,
-                    #    stdout_path=run.add_output_file(
-                    #        'gene_body_coverage',
-                    #        basename + '.gene_body_coverage.txt', alignments
-                    #    )
-                    #)
+                with run.new_exec_group() as exec_group:
+                    geneBody_coverage = [
+                        self.get_tool('geneBody_coverage.py'),
+                        '-i', alignments[0],
+                        '-r', self.get_option('reference'),
+                        '-o', 'Test'
+                    ]
+                    gbc_file = run_id + '.' +  'geneBody_coverage.log'
+                    run.add_output_file('log.txt', gbc_file, alignments)
+                    exec_group.add_command(
+                        geneBody_coverage,
+                        stdout_path=run.add_output_file(
+                            'geneBody_coverage',
+                            basename + '.geneBody_coverage.pdf', alignments
+                        )
+                    )
 
                # with run.new_exec_group() as exec_group:
                #     inner_distance = [
