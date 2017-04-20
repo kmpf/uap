@@ -387,9 +387,15 @@ tools:
 
     # URL: http://broadinstitute.github.io/picard/
     picard-tools:
+        ## Settings below work for picard-tools installed via apt-get/aptitude
         path: picard-tools
         get_version: --version
         exit_code: 0
+        ## Settings below work if path to Picard JAR file is changed and
+        ## lines are uncommented (lines above have to be commented out)
+        # path: ['java', '-jar', '/path/to/picard.jar']
+        # get_version: --version
+        # exit_code: 1
 
     # URL: http://zlib.net/pigz/
     pigz: 
@@ -404,10 +410,11 @@ tools:
         exit_code: 0
     
     # URL: http://www.htslib.org/
+    # NOTE: uap requires samtools version 1.0 or greater
     samtools:
         path: samtools
-        get_version: ''
-        exit_code: 1
+        get_version: '--version'
+        exit_code: 0
 
 #    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
 #    segemehl:
