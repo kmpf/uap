@@ -31,7 +31,6 @@ class RSeQC(AbstractStep):
         self.add_connection('out/geneBody_coverage.pdf')
         self.add_connection('out/geneBody_coverage_stdout')
         self.add_connection('out/geneBody_coverage_stderr')
-        self.add_connection('out/log')
 
         self.add_connection('out/inner_distance_freq')
         self.add_connection('out/inner_distance_plot')
@@ -66,7 +65,7 @@ class RSeQC(AbstractStep):
         self.add_connection('out/gc_stderr')
 
         self.require_tool('cat')
-        #self.require_tool('cd')
+        self.require_tool('rm')
         self.require_tool('bam_stat.py')
         self.require_tool('infer_experiment.py')
         self.require_tool('read_distribution.py')
@@ -136,44 +135,31 @@ class RSeQC(AbstractStep):
                         )
                     )
                 out = run.get_output_directory_du_jour_placeholder() + '/' + run_id
-                #with run.new_exec_group() as exec_group:
-                    # we have to change the working directory because 
-                    # geneBody_coverage write a .log file to the current dir
-                #    current_dir = os.getcwd()
-
-                #    exec_group.add_command([self.get_tool('cd'), out])
-                    #os.chdir(out)
-
-                #    geneBody_coverage = [
-                #        self.get_tool('geneBody_coverage.py'),
-                #        '-i', alignments[0],
-                #        '-r', self.get_option('reference'),
-                #        '-o', out
-                #    ]
-                #    gbc_txt = run_id + '.geneBodyCoverage.txt'
-                #    run.add_output_file('geneBody_coverage.txt', gbc_txt, alignments)
-                #    gbc_r = run_id + '.geneBodyCoverage.r'
-                #    run.add_output_file('geneBody_coverage.r', gbc_r, alignments)
-                #    gbc_pdf = run_id + '.geneBodyCoverage.curves.pdf'
-                #    run.add_output_file('geneBody_coverage.pdf', gbc_pdf, alignments)
-                #    gbc_log = run_id + '.log.txt'
-                #    run.add_output_file('log', gbc_log, alignments)
-
-                #    stdout_file = "%s-geneBody_coverage_stdout.txt" % (run_id)
-                #    log_stdout = run.add_output_file("geneBody_coverage_stdout",
-                #                                     stdout_file, alignments)
-                #    stderr_file = "%s-geneBody_coverage_stderr.txt" % (run_id)
-                #    log_stderr = run.add_output_file("geneBody_coverage_stderr",
-                #                                     stderr_file, alignments)
-                    # todo: add log.txt
-                #    exec_group.add_command(geneBody_coverage,
-                #        stdout_path=log_stdout, stderr_path=log_stderr
-                #    )
-
-                    # change dir back to normal working dir
-                #    exec_group.add_command([self.get_tool('cd'), current_dir])
-
                 with run.new_exec_group() as exec_group:
+                    current_dir = os.getcwd()
+
+                    geneBody_coverage = [
+                        self.get_tool('geneBody_coverage.py'),
+                        '-i', alignments[0],
+                        '-r', self.get_option('reference'),
+                        '-o', out
+                    ]
+                    gbc_txt = run_id + '.geneBodyCoverage.txt'
+                    run.add_output_file('geneBody_coverage.txt', gbc_txt, alignments)
+                    gbc_r = run_id + '.geneBodyCoverage.r'
+                    run.add_output_file('geneBody_coverage.r', gbc_r, alignments)
+                    gbc_pdf = run_id + '.geneBodyCoverage.curves.pdf'
+                    run.add_output_file('geneBody_coverage.pdf', gbc_pdf, alignments)
+
+                    stdout_file = "%s-geneBody_coverage_stdout.txt" % (run_id)
+                    log_stdout = run.add_output_file("geneBody_coverage_stdout",
+                                                     stdout_file, alignments)
+                    stderr_file = "%s-geneBody_coverage_stderr.txt" % (run_id)
+                    log_stderr = run.add_output_file("geneBody_coverage_stderr",
+                                                     stderr_file, alignments)
+                    exec_group.add_command(geneBody_coverage,
+                        stdout_path=log_stdout, stderr_path=log_stderr
+                    )
                     inner_distance = [
                         self.get_tool('inner_distance.py'),
                         '-i', alignments[0],
@@ -298,3 +284,11 @@ class RSeQC(AbstractStep):
                     exec_group.add_command(read_gc,
                         stdout_path=log_stdout, stderr_path=log_stderr
                     )
+
+                # remove log.txt which is created by geneBody_coverage.py
+                # in the current working directory
+                current_dir = os.getcwd()
+                file_del = current_dir + '/' + 'log.txt'
+                eg = run.new_exec_group()
+                eg.add_command([self.get_tool('rm'), file_del])
+
