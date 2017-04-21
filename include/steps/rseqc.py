@@ -18,7 +18,10 @@ class RSeQC(AbstractStep):
 
         self.set_cores(4)
 
-        self.add_connection('in/alignments')
+        self.add_connection(
+            'in/alignments',
+            constraints={'min_files_per_run': 1, 'max_files_per_run': 1}
+        )
 
         self.add_connection('out/bam_stat')
 
@@ -88,12 +91,13 @@ class RSeQC(AbstractStep):
 
             with self.declare_run(run_id) as run:
                 # todo: can be checked in add_connection('in/') with constraint?
-                if len(alignments) != 1:
-                    logger.error("Expected exactly one alignment file.")
-                    sys.exit(1)
+                #if len(alignments) != 1:
+                #    logger.error("Expected exactly one alignment file.")
+                #    sys.exit(1)
 
                 # todo: why basename and not run_id?
-                basename = os.path.basename(alignments[0]).split('.')[0]
+                #basename = os.path.basename(alignments[0]).split('.')[0]
+                out = run.get_output_directory_du_jour_placeholder() + '/' + run_id
 
                 with run.new_exec_group() as exec_group:
                     bam_stat = [
@@ -103,7 +107,7 @@ class RSeQC(AbstractStep):
                     exec_group.add_command(
                         bam_stat,
                         stderr_path=run.add_output_file(
-                            'bam_stat', basename + '.bam_stats.txt', alignments
+                            'bam_stat', run_id + '.bam_stats.txt', alignments
                         )
                     )
 
@@ -117,7 +121,7 @@ class RSeQC(AbstractStep):
                         infer_experiment,
                         stdout_path=run.add_output_file(
                             'infer_experiment',
-                            basename + '.infer_experiment.txt', alignments
+                            run_id + '.infer_experiment.txt', alignments
                         )
                     )
 
@@ -131,7 +135,7 @@ class RSeQC(AbstractStep):
                         read_distribution,
                         stdout_path=run.add_output_file(
                             'read_distribution',
-                            basename + '.read_distribution.txt', alignments
+                            run_id + '.read_distribution.txt', alignments
                         )
                     )
                 out = run.get_output_directory_du_jour_placeholder() + '/' + run_id
