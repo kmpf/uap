@@ -1,5 +1,4 @@
 import os
-import sys
 from logging import getLogger
 from abstract_step import AbstractStep
 
@@ -90,14 +89,8 @@ class RSeQC(AbstractStep):
             alignments = run_ids_connections_files[run_id]['in/alignments']
 
             with self.declare_run(run_id) as run:
-                # todo: can be checked in add_connection('in/') with constraint?
-                #if len(alignments) != 1:
-                #    logger.error("Expected exactly one alignment file.")
-                #    sys.exit(1)
-
-                # todo: why basename and not run_id?
-                #basename = os.path.basename(alignments[0]).split('.')[0]
-                out = run.get_output_directory_du_jour_placeholder() + '/' + run_id
+                out = run.get_output_directory_du_jour_placeholder() \
+                    + '/' + run_id
 
                 with run.new_exec_group() as exec_group:
                     bam_stat = [
@@ -138,7 +131,7 @@ class RSeQC(AbstractStep):
                             run_id + '.read_distribution.txt', alignments
                         )
                     )
-                out = run.get_output_directory_du_jour_placeholder() + '/' + run_id
+
                 with run.new_exec_group() as exec_group:
                     current_dir = os.getcwd()
 
@@ -149,21 +142,24 @@ class RSeQC(AbstractStep):
                         '-o', out
                     ]
                     gbc_txt = run_id + '.geneBodyCoverage.txt'
-                    run.add_output_file('geneBody_coverage.txt', gbc_txt, alignments)
+                    run.add_output_file('geneBody_coverage.txt',
+                                        gbc_txt, alignments)
                     gbc_r = run_id + '.geneBodyCoverage.r'
-                    run.add_output_file('geneBody_coverage.r', gbc_r, alignments)
+                    run.add_output_file('geneBody_coverage.r',
+                                        gbc_r, alignments)
                     gbc_pdf = run_id + '.geneBodyCoverage.curves.pdf'
-                    run.add_output_file('geneBody_coverage.pdf', gbc_pdf, alignments)
+                    run.add_output_file('geneBody_coverage.pdf',
+                                        gbc_pdf, alignments)
 
                     stdout_file = "%s-geneBody_coverage_stdout.txt" % (run_id)
-                    log_stdout = run.add_output_file("geneBody_coverage_stdout",
-                                                     stdout_file, alignments)
+                    log_stdout = run.add_output_file(
+                        "geneBody_coverage_stdout", stdout_file, alignments)
                     stderr_file = "%s-geneBody_coverage_stderr.txt" % (run_id)
-                    log_stderr = run.add_output_file("geneBody_coverage_stderr",
-                                                     stderr_file, alignments)
+                    log_stderr = run.add_output_file(
+                        "geneBody_coverage_stderr", stderr_file, alignments)
                     exec_group.add_command(geneBody_coverage,
-                        stdout_path=log_stdout, stderr_path=log_stderr
-                    )
+                                           stdout_path=log_stdout,
+                                           stderr_path=log_stderr)
                     inner_distance = [
                         self.get_tool('inner_distance.py'),
                         '-i', alignments[0],
@@ -173,9 +169,11 @@ class RSeQC(AbstractStep):
                     id_txt = run_id + '.inner_distance.txt'
                     run.add_output_file('inner_distance', id_txt, alignments)
                     id_freq = run_id + '.inner_distance_freq.txt'
-                    run.add_output_file('inner_distance_freq', id_freq, alignments)
+                    run.add_output_file('inner_distance_freq',
+                                        id_freq, alignments)
                     id_plot = run_id + '.inner_distance_plot.r'
-                    run.add_output_file('inner_distance_plot', id_plot, alignments)
+                    run.add_output_file('inner_distance_plot',
+                                        id_plot, alignments)
 
                     stdout_file = "%s-inner_distance_stdout.txt" % (run_id)
                     log_stdout = run.add_output_file("inner_distance_stdout",
@@ -184,8 +182,8 @@ class RSeQC(AbstractStep):
                     log_stderr = run.add_output_file("inner_distance_stderr",
                                                      stderr_file, alignments)
                     exec_group.add_command(inner_distance,
-                        stdout_path=log_stdout, stderr_path=log_stderr
-                    )
+                                           stdout_path=log_stdout,
+                                           stderr_path=log_stderr)
 
                 with run.new_exec_group() as exec_group:
                     junction_annotation = [
@@ -203,18 +201,21 @@ class RSeQC(AbstractStep):
                     ja_events = run_id + '.splice_events.pdf'
                     run.add_output_file('splice_events', ja_events, alignments)
                     ja_junction = run_id + '.splice_junction.pdf'
-                    run.add_output_file('splice_junction', ja_junction, alignments)
+                    run.add_output_file('splice_junction',
+                                        ja_junction, alignments)
 
-                    stdout_file = "%s-junction_annotation_stdout.txt" % (run_id)
-                    log_stdout = run.add_output_file("junction_annotation_stdout",
-                                                     stdout_file, alignments)
-                    stderr_file = "%s-junction_annotation_stderr.txt" % (run_id)
-                    log_stderr = run.add_output_file("junction_annotation_stderr",
-                                                     stderr_file, alignments)
+                    stdout_file = "%s-junction_annotation_stdout.txt" \
+                        % (run_id)
+                    log_stdout = run.add_output_file(
+                        "junction_annotation_stdout", stdout_file, alignments)
+                    stderr_file = "%s-junction_annotation_stderr.txt" \
+                        % (run_id)
+                    log_stderr = run.add_output_file(
+                        "junction_annotation_stderr", stderr_file, alignments)
 
                     exec_group.add_command(junction_annotation,
-                        stdout_path=log_stdout, stderr_path=log_stderr
-                    )
+                                           stdout_path=log_stdout,
+                                           stderr_path=log_stderr)
 
                 with run.new_exec_group() as exec_group:
                     junction_saturation = [
@@ -224,20 +225,24 @@ class RSeQC(AbstractStep):
                         '-o', out
                     ]
                     js_r = run_id + '.junctionSaturation_plot.r'
-                    run.add_output_file('junctionSaturation_r', js_r, alignments)
+                    run.add_output_file('junctionSaturation_r',
+                                        js_r, alignments)
                     js_pdf = run_id + '.junctionSaturation_plot.pdf'
-                    run.add_output_file('junctionSaturation_pdf', js_pdf, alignments)
+                    run.add_output_file('junctionSaturation_pdf',
+                                        js_pdf, alignments)
 
-                    stdout_file = "%s-junction_saturation_stdout.txt" % (run_id)
-                    log_stdout = run.add_output_file("junction_saturation_stdout",
-                                                     stdout_file, alignments)
-                    stderr_file = "%s-junction_saturation_stderr.txt" % (run_id)
-                    log_stderr = run.add_output_file("junction_saturation_stderr",
-                                                     stderr_file, alignments)
+                    stdout_file = "%s-junction_saturation_stdout.txt" \
+                        % (run_id)
+                    log_stdout = run.add_output_file(
+                        "junction_saturation_stdout", stdout_file, alignments)
+                    stderr_file = "%s-junction_saturation_stderr.txt" \
+                        % (run_id)
+                    log_stderr = run.add_output_file(
+                        "junction_saturation_stderr", stderr_file, alignments)
 
                     exec_group.add_command(junction_saturation,
-                        stdout_path=log_stdout, stderr_path=log_stderr
-                    )
+                                           stdout_path=log_stdout,
+                                           stderr_path=log_stderr)
 
                 with run.new_exec_group() as exec_group:
                     read_duplication = [
@@ -259,11 +264,11 @@ class RSeQC(AbstractStep):
                                                      stdout_file, alignments)
                     stderr_file = "%s-read_duplication_stderr.txt" % (run_id)
                     log_stderr = run.add_output_file("DupRate_stderr",
-                                                    stderr_file, alignments)
+                                                     stderr_file, alignments)
 
                     exec_group.add_command(read_duplication,
-                        stdout_path=log_stdout, stderr_path=log_stderr
-                    )
+                                           stdout_path=log_stdout,
+                                           stderr_path=log_stderr)
 
                 with run.new_exec_group() as exec_group:
                     read_gc = [
@@ -286,8 +291,8 @@ class RSeQC(AbstractStep):
                                                      stderr_file, alignments)
 
                     exec_group.add_command(read_gc,
-                        stdout_path=log_stdout, stderr_path=log_stderr
-                    )
+                                           stdout_path=log_stdout,
+                                           stderr_path=log_stderr)
 
                 # remove log.txt which is created by geneBody_coverage.py
                 # in the current working directory
@@ -295,4 +300,3 @@ class RSeQC(AbstractStep):
                 file_del = current_dir + '/' + 'log.txt'
                 eg = run.new_exec_group()
                 eg.add_command([self.get_tool('rm'), file_del])
-
