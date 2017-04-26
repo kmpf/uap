@@ -81,37 +81,37 @@ class Segemehl2017(AbstractStep):
                         description="Path to database index for segemehl (default:none)")
         self.add_option('index2', str, optional=True, 
                         description="Path to second database index for segemehl (default:none)")
-        self.add_option('filebins', str, optional=True, default = "none",
+        self.add_option('filebins', str, optional=True, 
                         description = "file bins with basename <string> for easier "
                         "data handling (default:none)")
-        self.add_option('bisulfite', int, choices=[0, 1, 2], optional=True, default = 0,
+        self.add_option('bisulfite', int, choices=[0, 1, 2], optional=True,
                         description="bisulfite mapping with methylC-seq/Lister "
                         "et al. (=1) or bs-seq/Cokus et al. protocol (=2) "
                         "(default:0)")
         ## [GENERAL]
-        self.add_option('minsize', int, optional=True, default = 12,
+        self.add_option('minsize', int, optional=True, 
                         description="minimum size of queries (default:12)")
         # progressbar - we ommit this, since it will only generate larger log files
-        self.add_option('brief', bool, optional = True, default = False,
+        self.add_option('brief', bool, optional = True,
                         description = "brief output")
-        self.add_option('checkidx', bool, optional = True, default = False,
+        self.add_option('checkidx', bool, optional = True,
                         description = "check index")
-        self.add_option('briefcigar', bool, optional = True, default = False,
+        self.add_option('briefcigar', bool, optional = True,
                         description = "brief cigar string (M vs X and =)")
         self.add_option('threads', int, default=1, optional=True,
                         description="start <n> threads (default:1)")
         # outfile => take care of that later!
         # nomatchfilename
-        self.add_option('readgroupfile', str, optional=True, default = "none",
+        self.add_option('readgroupfile', str, optional=True,
                         description = "filename to read @RG header (default:none)")
-        self.add_option('readgroupid', str, optional=True, default = "none",
+        self.add_option('readgroupid', str, optional=True, 
                         description = "read group id (default:none)")
         
         ## [SEEDPARAMS]
-        self.add_option('differences', int, default=1, optional=True,
+        self.add_option('differences', int, optional=True,
                         description="search seeds initially with <n> "
                         "differences (default:1)")
-        self.add_option('jump', int, optional=True, default = 0, 
+        self.add_option('jump', int, optional=True, 
                         description= "search seeds with jump size <n> (0=automatic) "
                         "(default:0)")
         self.add_option('nosuflinks', bool, optional = True,
