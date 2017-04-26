@@ -51,6 +51,10 @@ class Segemehl2017(AbstractStep):
         self.add_connection('out/alignments')
         self.add_connection('out/unmapped')
         self.add_connection('out/log')
+        # segemehl writes information on split reads to these files (BED format)
+        self.add_connection('out/splits_sngl')
+        self.add_connection('out/splits_mult')
+        self.add_connection('out/splits_trns')
 
         # tools from tools section of YAML config file
         # -> logs version information
@@ -157,7 +161,7 @@ class Segemehl2017(AbstractStep):
                         "larger than next best spliced alignment "
                         "(default:1.000000)")
         self.add_option('hitstrategy', int, choices=[0, 1], optional=True,
-                        default=1, description="report only best scoring hits "
+                        description="report only best scoring hits "
                         "(=1) or all (=0) (default:1)")
         self.add_option('showalign', bool, optional=True, description=
                         "show alignments")
@@ -185,7 +189,7 @@ class Segemehl2017(AbstractStep):
                    'minsize','brief','checkidx','briefcigar','threads',
                    'readgroupfile','readgroupid','differences','jump',
                    'nosuflinks','evalue','maxsplitevalue','maxinterval',
-                   'maxout','splits','MEOP','nohead','extensionpenalty',
+                   'maxout', 'MEOP','nohead','extensionpenalty',
                    'dropoff','accuracy','minsplicecover','minfragscore','minfraglen',
                    'splicescorescale','hitstrategy','showalign',
                    'prime5','prime3','clipacc','order','maxinsertsize']
@@ -236,6 +240,10 @@ class Segemehl2017(AbstractStep):
                         "The path %s provided to option 'index' is not a file."
                         % self.get_option('index') )
                     sys.exit(1)
+                    
+                if self.is_option_set_in_config('splits'):
+                    prefix = "%s_splits" % run_id
+
 
                 if self.is_option_set_in_config('index2'):
                     if not os.path.isfile(self.get_option('index2')):
@@ -290,6 +298,11 @@ class Segemehl2017(AbstractStep):
                         ]
                         if is_paired_end:
                             segemehl.extend(['--mate', sr_input[0]])
+
+                        if self.get_option('splits'):
+                            prefix = '%s_splits' % run_id
+                            segemehl.extend(['-S ', prefix])
+
                         segemehl.extend(option_list)
                         segemehl_pipe.add_command(
                             segemehl,
