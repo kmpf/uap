@@ -40,7 +40,7 @@ class Segemehl2017(AbstractStep):
     '''
 
     def __init__(self, pipeline):
-        super(Segemehl, self).__init__(pipeline)
+        super(Segemehl2017, self).__init__(pipeline)
 
         self.set_cores(10) # set # of cores for cluster, it is ignored if run locally
 
