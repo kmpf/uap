@@ -77,9 +77,9 @@ class Segemehl2017(AbstractStep):
         # query == input fastq files for R1
         # mate == input fastq files for R2 (if paired end sequencing!)
 
-        self.add_option('index', str, optional=True, default = "none",
+        self.add_option('index', str, optional=True, 
                         description="Path to database index for segemehl (default:none)")
-        self.add_option('index2', str, optional=True, default = "none",
+        self.add_option('index2', str, optional=True, 
                         description="Path to second database index for segemehl (default:none)")
         self.add_option('filebins', str, optional=True, default = "none",
                         description = "file bins with basename <string> for easier "
@@ -208,6 +208,9 @@ class Segemehl2017(AbstractStep):
             else:
                 option_list.append('--%s' % option)
                 option_list.append(str(self.get_option(option)))
+        
+        if self.get_option('threads'):
+            self.set_cores(self.get_option('threads'))
 
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
@@ -234,11 +237,12 @@ class Segemehl2017(AbstractStep):
                         % self.get_option('index') )
                     sys.exit(1)
 
-                if not os.path.isfile(self.get_option('index2')):
-                    logger.error(
-                        "The path %s provided to option 'index2' is not a file."
-                        % self.get_option('index2') )
-                    sys.exit(1)
+                if self.get_option('index2'):
+                    if not os.path.isfile(self.get_option('index2')):
+                        logger.error(
+                            "The path %s provided to option 'index2' is not a file."
+                            % self.get_option('index2') )
+                        sys.exit(1)
 
                 if not os.path.isfile(self.get_option('database')):
                     logger.error(
@@ -271,7 +275,7 @@ class Segemehl2017(AbstractStep):
                     # 3. Read genome and output to FIFO
                     dd_genome = [self.get_tool('dd'),
                                  'bs=%s' % self.get_option('dd-blocksize'),
-                                 'if=%s' % self.get_option('genome'),
+                                 'if=%s' % self.get_option('database'),
                                  'of=%s' % fifo_path_genome]
                     exec_group.add_command(dd_genome)
                 
@@ -306,8 +310,8 @@ class Segemehl2017(AbstractStep):
                         pigz_mapped_reads = [
                             self.get_tool('pigz'),
                             '--stdout',
-                            '--blocksize', '4096', 
-                            '--processes', '2'
+                            '--blocksize', self.get_option('dd-blocksize'), 
+                            '--processes', str(self.get_cores())
                         ]
 
                         segemehl_pipe.add_command(
@@ -337,8 +341,8 @@ class Segemehl2017(AbstractStep):
                         pigz_unmapped_reads = [
                             self.get_tool('pigz'),
                             '--stdout',
-                            '--blocksize', '4096',
-                            '--processes', '1'
+                            '--blocksize', self.get_option('dd-blocksize'),
+                            '--processes', str(self.get_cores())
                         ]
                         compress_unmapped_pipe.add_command(
                             pigz_unmapped_reads,
