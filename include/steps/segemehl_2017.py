@@ -241,8 +241,8 @@ class Segemehl2017(AbstractStep):
                         % self.get_option('index') )
                     sys.exit(1)
                     
-                if self.is_option_set_in_config('splits'):
-                    prefix = "%s_splits" % run_id
+#                if self.is_option_set_in_config('splits'):
+#                    prefix = "%s_splits" % run_id
 
 
                 if self.is_option_set_in_config('index2'):
@@ -299,7 +299,7 @@ class Segemehl2017(AbstractStep):
                         if is_paired_end:
                             segemehl.extend(['--mate', sr_input[0]])
 
-                        if self.get_option('splits'):
+                        if self.is_option_set_in_config('splits'):
                             prefix = '%s_splits' % run_id
                             segemehl.extend(['-S ', prefix])
 
