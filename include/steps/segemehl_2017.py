@@ -237,7 +237,7 @@ class Segemehl2017(AbstractStep):
                         % self.get_option('index') )
                     sys.exit(1)
 
-                if self.get_option('index2'):
+                if self.is_option_set_in_config('index2'):
                     if not os.path.isfile(self.get_option('index2')):
                         logger.error(
                             "The path %s provided to option 'index2' is not a file."
