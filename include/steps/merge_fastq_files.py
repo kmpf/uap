@@ -75,7 +75,7 @@ class MergeFastqFiles(AbstractStep):
                                     # 2.2 command: Uncompress file to fifo
                                     pigz = [self.get_tool('pigz'),
                                             '--decompress',
-                                            '--stdout']
+                                            '--stdout', '--processes', str(self.get_cores())]
                                     # 2.3 Write file in 4MB chunks to fifo
                                     dd_out = [
                                         self.get_tool('dd'),
@@ -115,7 +115,7 @@ class MergeFastqFiles(AbstractStep):
                             # 3.2 Gzip output file
                             #if self.get_option('compress-output'):
                             pigz = [self.get_tool('pigz'),
-                                    '--stdout']
+                                    '--stdout', '--processes', str(self.get_cores())]
                             pigz_pipe.add_command(pigz)
 
                             # 3.3 command: Write to output file in 4MB chunks

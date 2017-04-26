@@ -33,13 +33,14 @@ class SamtoolsSort(AbstractStep):
         self.require_tool('pigz')
 
         # [Options for 'samtools':]
-        self.add_option('compression-level', int, optional = True,
+        self.add_option('compression-level', int, optional = True, default = 0,
                         description = 'Set compression level, from 0 (uncompressed) '
                         'to 9 (best)')
-        self.add_option('max-mem-per-thread', str, optional = True, 
+        self.add_option('max-mem-per-thread', str, optional = True, default = '768M' 
                         description = 'Set maximum memory per thread; '
                         'suffix K/M/G recognized [768M]')
-        self.add_option('sort-by-name', bool, default = False)
+        self.add_option('sort-by-name', bool, default = False, optional = True,
+                        description = '')
         self.add_option('output-format', str, optional = False, default = 'sam',
                         description = 'Write output as FORMAT (sam/bam/cram)')
         self.add_option('genome-faidx', str, optional = False, 
@@ -121,7 +122,7 @@ class SamtoolsSort(AbstractStep):
                                     self.get_option('temp-sort-dir'),
                                      run_id), 
                                  '-',
-                                 '-@', self.get_cores()]
+                                 '-@', str(self.get_cores())]
                             )
 
                             pipe.add_command(samtools_sort)
