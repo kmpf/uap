@@ -301,7 +301,10 @@ class Segemehl2017(AbstractStep):
 
                         if self.is_option_set_in_config('splits'):
                             prefix = '%s_splits' % run_id
-                            segemehl.extend(['-S ', prefix])
+                            segemehl.extend(['-S', prefix])
+                            run.add_output_file('splits_sngl', '%s.sngl.bed' % prefix, input_paths)
+                            run.add_output_file('splits_mult', '%s.mult.bed' % prefix, input_paths)
+                            run.add_output_file('splits_trns', '%s.trns.bed' % prefix, input_paths)
 
                         segemehl.extend(option_list)
                         segemehl_pipe.add_command(
