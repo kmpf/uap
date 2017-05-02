@@ -24,7 +24,7 @@ class TopHat2(AbstractStep):
 
     def __init__(self, pipeline):
         super(TopHat2, self).__init__(pipeline)
-        self.set_cores(32)
+        self.set_cores(6)
 
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
