@@ -125,7 +125,7 @@ class FixCutadapt(AbstractStep):
                     # 4.2 Gzip output file
                     pigz = [self.get_tool('pigz'),
                             '--processes', str(self.get_cores()), 
-                            '--blocksize', self.get_option('dd-blocksize')]
+                            '--blocksize', self.get_option('dd-blocksize'),
                             '--stdout']
                     # 4.3 command: Write to output file in chunks
                     fr_stdout_path = run.add_output_file(
@@ -151,7 +151,7 @@ class FixCutadapt(AbstractStep):
                         # 4.2 Gzip output file
                         pigz = [self.get_tool('pigz'),
                                 '--processes', str(self.get_cores()), 
-                                '--blocksize', self.get_option('dd-blocksize')]
+                                '--blocksize', self.get_option('dd-blocksize'),
                                 '--stdout']
                         # 4.3 command: Write to output file in chunks
                         sr_stdout_path = run.add_output_file(
