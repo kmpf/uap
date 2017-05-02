@@ -89,7 +89,7 @@ class FeatureCounts(AbstractStep):
                         more than one matched meta-feature (or feature if \
                         -f is specified).")
 
-        self.add_option('s', int, optional=True, default=None,
+        self.add_option('s', int, optional=False, default=None,
                         description="Indicate if strand-specific read \
                         counting should be performed. It has three possible \
                         values:  0 (unstranded), 1 (stranded) and 2 \
