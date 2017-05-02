@@ -21,7 +21,7 @@ class FixCutadapt(AbstractStep):
         self.add_connection('out/second_read')
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        self.add_option('dd-blocksize', str, optional = True, default = "1M")
         
         self.require_tool('cat')
         self.require_tool('dd')

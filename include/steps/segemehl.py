@@ -97,7 +97,7 @@ class Segemehl(AbstractStep):
                         "seed will be omitted if it matches more than <n> times "
                         "(default:100)")
         self.add_option('splits', bool, default=True, optional=True,
-                        description="detect split/spliced reads (default:none)")
+                        description="detect split/spliced reads (default:True)")
         self.add_option('SEGEMEHL', bool, optional=True, description=
                         "output SEGEMEHL format (needs to be selected for brief)")
         self.add_option('MEOP', bool, optional=True, description=
