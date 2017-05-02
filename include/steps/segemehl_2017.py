@@ -179,7 +179,7 @@ class Segemehl2017(AbstractStep):
                         "(default:5000)")
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        self.add_option('dd-blocksize', str, optional = True, default = "1M")
 
     # self - macht class-funktion draus.
     # run_ids_connections_files - hash : run id -> n connections -> m files
