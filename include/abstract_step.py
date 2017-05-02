@@ -828,9 +828,10 @@ class AbstractStep(object):
                             caught_exception = (
                                 None,
                                 StandardError(
-                                    "The step failed to produce an announced "
-                                    "output file: %s." %
-                                    os.path.basename(out_file)),
+                                    "The step failed to produce an announced "\
+                                    "output file: %s. "\
+                                    "\nSource file doesn't exists: %s" %
+                                    (out_file, source_path)),
                                 None)
 
         for path, path_info in known_paths.items():
