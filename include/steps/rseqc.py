@@ -55,6 +55,7 @@ class RSeQC(AbstractStep):
 
         self.add_connection('out/DupRate_plot_pdf')
         self.add_connection('out/DupRate_plot_r')
+        
         self.add_connection('out/DupRate_pos')
         self.add_connection('out/DupRate_seq')
         self.add_connection('out/DupRate_stdout')
@@ -82,6 +83,14 @@ class RSeQC(AbstractStep):
                         description="Reference gene model in bed fomat. "
                         "[required]")
 
+
+        self.add_option('treatAs', str, optional=False,
+                        choices = ["single", "paired"],
+                        description="Some modules in rseqc  need paired end data"
+                        "an fail otherwise on single end [required]")
+
+
+        
     def runs(self, run_ids_connections_files):
 
         for run_id in run_ids_connections_files.keys():
@@ -157,33 +166,54 @@ class RSeQC(AbstractStep):
                     stderr_file = "%s-geneBody_coverage_stderr.txt" % (run_id)
                     log_stderr = run.add_output_file(
                         "geneBody_coverage_stderr", stderr_file, alignments)
+
                     exec_group.add_command(geneBody_coverage,
                                            stdout_path=log_stdout,
                                            stderr_path=log_stderr)
-                    inner_distance = [
-                        self.get_tool('inner_distance.py'),
-                        '-i', alignments[0],
-                        '-r', self.get_option('reference'),
-                        '-o', out
-                    ]
-                    id_txt = run_id + '.inner_distance.txt'
-                    run.add_output_file('inner_distance', id_txt, alignments)
-                    id_freq = run_id + '.inner_distance_freq.txt'
-                    run.add_output_file('inner_distance_freq',
-                                        id_freq, alignments)
-                    id_plot = run_id + '.inner_distance_plot.r'
-                    run.add_output_file('inner_distance_plot',
-                                        id_plot, alignments)
 
-                    stdout_file = "%s-inner_distance_stdout.txt" % (run_id)
-                    log_stdout = run.add_output_file("inner_distance_stdout",
+
+                    if self.get_option('treatAs') == 'paired':
+                        inner_distance = [
+                            self.get_tool('inner_distance.py'),
+                            '-i', alignments[0],
+                            '-r', self.get_option('reference'),
+                            '-o', out
+                        ]
+                        id_txt = run_id + '.inner_distance.txt'
+                        run.add_output_file('inner_distance', id_txt, alignments)
+                        id_freq = run_id + '.inner_distance_freq.txt'
+                        run.add_output_file('inner_distance_freq',
+                                            id_freq, alignments)
+                        id_plot = run_id + '.inner_distance_plot.r'
+                        run.add_output_file('inner_distance_plot',
+                                            id_plot, alignments)
+
+                        stdout_file = "%s-inner_distance_stdout.txt" % (run_id)
+                        log_stdout = run.add_output_file("inner_distance_stdout",
                                                      stdout_file, alignments)
-                    stderr_file = "%s-inner_distance_stderr.txt" % (run_id)
-                    log_stderr = run.add_output_file("inner_distance_stderr",
+
+                        stderr_file = "%s-inner_distance_stderr.txt" % (run_id)
+                        log_stderr = run.add_output_file("inner_distance_stderr",
                                                      stderr_file, alignments)
-                    exec_group.add_command(inner_distance,
-                                           stdout_path=log_stdout,
-                                           stderr_path=log_stderr)
+
+                        exec_group.add_command(inner_distance,
+                                               stdout_path=log_stdout,
+                                               stderr_path=log_stderr)
+
+
+
+                    else:
+
+                        run.add_empty_output_connection('inner_distance_freq')
+                        run.add_empty_output_connection('inner_distance_plot')
+                        run.add_empty_output_connection('inner_distance')
+                        run.add_empty_output_connection('inner_distance_stdout')
+                        run.add_empty_output_connection('inner_distance_stderr')
+
+                   
+                         
+
+                        
 
                 with run.new_exec_group() as exec_group:
                     junction_annotation = [
