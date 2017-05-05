@@ -171,9 +171,10 @@ class Segemehl2017(AbstractStep):
                         "add 3' adapter (default:none)")
         self.add_option('clipacc', int, optional=True, description=
                         "clipping accuracy (default:70)")
-        self.add_option('order', bool, optional=True, description=
-                        "sorts the output by chromsome and position (might take "
-                        "a while!)")
+        # ordering seems not to work if sm is writing to stdout (according to an error message of sm)
+#        self.add_option('order', bool, optional=True, description=
+#                        "sorts the output by chromsome and position (might take "
+#                        "a while!)")
         self.add_option('maxinsertsize', int, optional=True, description=
                         "maximum size of the inserts (paired end) "
                         "(default:5000)")
@@ -192,7 +193,7 @@ class Segemehl2017(AbstractStep):
                    'maxout', 'MEOP','nohead','extensionpenalty',
                    'dropoff','accuracy','minsplicecover','minfragscore','minfraglen',
                    'splicescorescale','hitstrategy','showalign',
-                   'prime5','prime3','clipacc','order','maxinsertsize']
+                   'prime5','prime3','clipacc','maxinsertsize']#, 'order']
 #        options = ['bisulfite', 'minsize', 'brief', 'differences',
 #                   'jump', 'evalue', 'maxsplitevalue', 'maxinterval', 'splits',
 #                   'SEGEMEHL', 'MEOP', 'nohead', 'extensionscore',
