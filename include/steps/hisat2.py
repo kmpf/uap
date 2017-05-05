@@ -35,40 +35,232 @@ class Hisat2(AbstractStep):
 
         self.add_option('cores', int, default=12)
 
-        flags = ["q", "qseq", "f", "c", "ignore-quals", "nofw", "dta",
-                 "norc", "no-mixed", "no-discordant", "quiet",
-                 "qc-filter",
-                 "non-deterministic", "remove-chrname", "add-chrname",
-                 "no-temp-splicesite", "no-spliced-alignment", "tmo",
-                 "no-head", "no-sq", "omit-sec-seq", 'un-gz']
+        # notice: remove-chrname, add-chrname not in help list
 
-        for flag in flags:
-            self.add_option(flag, bool, default=None, optional=True)
+        # Input:
+        self.add_option('q', bool, default=None, optional=True,
+                        description="query input files are FASTQ .fq/.fastq \
+                        (default)")
 
-        # processing everything as strings is easier
-        strflags = ["n-ceil", "ma", "mp", "sp", "np", "rdg",
-                    "rdf", "score-min", "k", "rg",
-                    "pen-cansplice", "pen-noncansplice", "pen-canintronlen",
-                    "pen-noncanintronlen", "min-intronlen", "max-intronlen",
-                    "known-splicesite-infile", "novel-splicesite-outfile",
-                    "novel-splicesite-infile"]
+        self.add_option('qseq', bool, default=None, optional=True,
+                        description="query input files are in Illumina's \
+                        qseq format")
 
-        for flag in strflags:
-            self.add_option(flag, str, default=None, optional=True)
+        self.add_option('f', bool, default=None, optional=True,
+                        description="query input files are (multi-)FASTA \
+                        .fa/.mfa")
 
-        self.add_option('fr', bool, default=None, optional=False)
-        self.add_option('rf', bool, default=None, optional=False)
-        self.add_option('ff', bool, default=None, optional=False)
+        # r?
 
-        self.add_option('rg-id', bool, default=None, optional=True,
-                        description="puts sample name in rg")
+        self.add_option('c', bool, default=None, optional=True,
+                        description="<m1>, <m2>, <r> are sequences \
+                        themselves, not files")
+
+        # s, u, 5, 3, phred33, phred64, int-quals
+
+        # Presets:?
+
+        # Alignment:
+
+        # N, L, i?
+
+        self.add_option('ignore-quals', bool, default=None, optional=True,
+                        description="treat all quality values as 30 on Phred \
+                        scale (off)")
+
+        self.add_option('n-ceil', str, default=None, optional=True,
+                        description="func for max # non-A/C/G/Ts permitted in \
+                        aln (L,0,0.15)")
+
+        # dpad, gbar?
+
+        self.add_option('nofw', bool, default=None, optional=True,
+                        description="do not align forward (original) version \
+                        of read (off)")
+
+        self.add_option('norc', bool, default=None, optional=True,
+                        description="do not align reverse-complement version \
+                        of read (off)")
+
+        # Spliced Alignment:
+        self.add_option('pen-cansplice', str, default=None, optional=True,
+                        description="penalty for a canonical splice site (0)")
+
+        self.add_option('pen-noncansplice', str, default=None, optional=True,
+                        description="penalty for a non-canonical splice site \
+                        (12)")
+
+        self.add_option('pen-canintronlen', str, default=None, optional=True,
+                        description="penalty for long introns (G,-8,1) with \
+                        canonical splice sites")
+
+        self.add_option('pen-noncanintronlen', str, default=None,
+                        optional=True, description="penalty for long introns \
+                        (G,-8,1) with noncanonical splice sites")
+
+        self.add_option('min-intronlen', str, default=None, optional=True,
+                        description="minimum intron length (20)")
+
+        self.add_option('max-intronlen', str, default=None, optional=True,
+                        description="maximum intron length (500000)")
+
+        self.add_option('known-splicesite-infile', str, default=None,
+                        optional=True, description="provide a list of known \
+                        splice sites")
+
+        self.add_option('novel-splicesite-outfile', str, default=None,
+                        optional=True, description="report a list of splice \
+                        sites")
+
+        self.add_option('novel-splicesite-infile', str, default=None,
+                        optional=True, description="provide a list of novel \
+                        splice sites")
+
+        self.add_option('no-temp-splicesite', bool, default=None,
+                        optional=True, description="disable the use of splice \
+                        sites found")
+
+        self.add_option('no-spliced-alignment', bool, default=None,
+                        optional=True, description="disable spliced alignment")
 
         # note to self just allow R F U and if paired in extend accordingly
         # otherwise mixed single paired will not work
         # Truseq is RF (R)
         self.add_option('rna-strandness', str, choices=["R", "F", "U"],
                         default=None, optional=False,
-                        desription="paried and are extended F-> FR, R->RF")
+                        desription="Specify strand-specific information \
+                        (unstranded); paired and are extended F->FR, R->RF")
+
+        self.add_option('tmo', bool, default=None, optional=True,
+                        description="Reports only those alignments within \
+                        known transcriptome")
+
+        self.add_option('dta', bool, default=None, optional=True,
+                        description="Reports alignments tailored for \
+                        transcript assemblers")
+
+        # dta-cufflinks?
+
+        # Scoring:
+
+        self.add_option('ma', str, default=None, optional=True,
+                        description="match bonus (0 for --end-to-end, 2 for \
+                        --local)")
+
+        self.add_option('mp', str, default=None, optional=True,
+                        description="max and min penalties for mismatch; \
+                        lower qual = lower penalty <2,6>")
+
+        self.add_option('sp', str, default=None, optional=True,
+                        description="max and min penalties for soft-clipping; \
+                        lower qual = lower penalty <1,2>")
+
+        self.add_option('np', str, default=None, optional=True,
+                        description="penalty for non-A/C/G/Ts in read/ref (1)")
+
+        self.add_option('rdg', str, default=None, optional=True,
+                        description="read gap open, extend penalties (5,3)")
+
+        # notice: rdf not in param list of hisat2, but rfg
+        self.add_option('rfg', str, default=None, optional=True,
+                        description="reference gap open, extend penalties \
+                        (5,3)")
+
+        self.add_option('score-min', str, default=None, optional=True,
+                        description="min acceptable alignment score w/r/t \
+                        read length (G,20,8 for local, L,-0.6,-0.6 for \
+                        end-to-end)")
+
+        # Reporting:
+
+        self.add_option('k', int, default=None, optional=True,
+                        description="report up to <int> alns per read; \
+                        MAPQ not meaningful")
+
+        # a?
+
+        # Effort:
+
+        # D, R?
+
+        ###############
+        # Paired-end: #
+        ###############
+
+        # I, X?
+
+        self.add_option('fr', bool, default=None, optional=False,
+                        description="-1, -2 mates align fw/rev, rev/fw, \
+                        fw/fw (--fr)")
+        self.add_option('rf', bool, default=None, optional=False,
+                        description="-1, -2 mates align fw/rev, rev/fw, \
+                        fw/fw (--fr)")
+        self.add_option('ff', bool, default=None, optional=False,
+                        description="-1, -2 mates align fw/rev, rev/fw, \
+                        fw/fw (--fr)")
+
+        self.add_option('no-mixed', bool, default=None, optional=False,
+                        description="suppress unpaired alignments for paired \
+                        reads")
+
+        self.add_option('no-discordant', bool, default=None, optional=False,
+                        description="suppress discordant alignments for \
+                        paired reads")
+
+        # no-dovetail, no-contain, no-overlap?
+
+        ###########
+        # Output: #
+        ###########
+
+        # t, un, al, un-conc, al-conc?
+
+        self.add_option('un-gz', bool, default=None, optional=True,
+                        description="write unpaired reads that didn't align \
+                        to <path>, gzip compress output")
+
+        self.add_option('quiet', bool, default=None, optional=True,
+                        description="print nothing to stderr except serious \
+                        errors")
+
+        # met-file, met-stderr, met?
+
+        self.add_option('no-head', bool, default=None, optional=True,
+                        description="supppress header lines, i.e. lines \
+                        starting with @")
+
+        self.add_option('no-sq', bool, default=None, optional=True,
+                        description="supppress @SQ header lines")
+
+        self.add_option('rg-id', str, default=None, optional=True,
+                        description="puts sample name in rg")
+
+        self.add_option('rg', str, default=None, optional=True,
+                        description="add <text> ('lab:value') to @RG line of \
+                        SAM header. (Note: @RG line only printed when --rg-id \
+                        is set.)")
+
+        self.add_option('omit-sec-seq', bool, default=None, optional=True,
+                        description="put '*' in SEQ and QUAL fields for \
+                        secondary alignments")
+
+        ################
+        # Performance: #
+        ################
+
+        ##########
+        # Other: #
+        ##########
+
+        self.add_option('qc-filter', bool, default=None, optional=True,
+                        description="filter out reads that are bad according \
+                        to QSEQ filter")
+
+        # seed?
+
+        self.add_option('non-deterministic', bool, default=None, optional=True,
+                        description="seed rand. gen. arbitrarily instead of \
+                        using read attributes")
 
     def runs(self, run_ids_connections_files):
         flags = ["q", "qseq", "f", "c", "ignore-quals", "nofw", "dta",
@@ -132,6 +324,7 @@ class Hisat2(AbstractStep):
                                 hisat2.extend(['--' + flag,
                                               self.get_option(flag)])
 
+                        # why -2?
                         hisat2.extend(['-p', str(self.get_option('cores') - 2),
                                        '-x', self.get_option('index')])
 
