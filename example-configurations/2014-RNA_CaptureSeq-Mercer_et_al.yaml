@@ -181,6 +181,7 @@ tools:
         exit_code: 0
 
     # URL: http://www.htslib.org/
+    # ATTENTION: Make sure to use samtools version >1.1
     samtools:
         path: samtools
         get_version: ''
