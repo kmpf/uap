@@ -35,7 +35,7 @@ class Hisat2(AbstractStep):
 
         self.add_option('cores', int, default=12)
 
-        # notice: remove-chrname, add-chrname not in help list
+        # TODO: remove-chrname, add-chrname not in help list
 
         # Input:
         self.add_option('q', bool, default=None, optional=True,
@@ -161,7 +161,7 @@ class Hisat2(AbstractStep):
         self.add_option('rdg', str, default=None, optional=True,
                         description="read gap open, extend penalties (5,3)")
 
-        # notice: rdf not in param list of hisat2, but rfg
+        # TODO: rdf not in param list of hisat2, but rfg
         self.add_option('rfg', str, default=None, optional=True,
                         description="reference gap open, extend penalties \
                         (5,3)")
@@ -199,11 +199,11 @@ class Hisat2(AbstractStep):
                         description="-1, -2 mates align fw/rev, rev/fw, \
                         fw/fw (--fr)")
 
-        self.add_option('no-mixed', bool, default=None, optional=False,
+        self.add_option('no-mixed', bool, default=None, optional=True,
                         description="suppress unpaired alignments for paired \
                         reads")
 
-        self.add_option('no-discordant', bool, default=None, optional=False,
+        self.add_option('no-discordant', bool, default=None, optional=True,
                         description="suppress discordant alignments for \
                         paired reads")
 
@@ -265,16 +265,15 @@ class Hisat2(AbstractStep):
     def runs(self, run_ids_connections_files):
         flags = ["q", "qseq", "f", "c", "ignore-quals", "nofw", "dta",
                  "norc", "no-mixed",  "no-discordant", "quiet", "qc-filter",
-                 "non-deterministic", "remove-chrname", "add-chrname",
-                 "no-temp-splicesite", "no-spliced-alignment", "tmo",
-                 "no-head", "no-sq", "omit-sec-seq"]
+                 "non-deterministic", "no-temp-splicesite",
+                 "no-spliced-alignment", "tmo", "no-head", "no-sq",
+                 "omit-sec-seq"]
 
-        strflags = ["n-ceil", "ma", "mp", "sp", "np", "rdg",
-                    "rdf", "score-min", "k", "rg",
-                    "pen-cansplice", "pen-noncansplice", "pen-canintronlen",
-                    "pen-noncanintronlen", "min-intronlen", "max-intronlen",
-                    "known-splicesite-infile", "novel-splicesite-outfile",
-                    "novel-splicesite-infile"]
+        strflags = ["n-ceil", "ma", "mp", "sp", "np", "rdg", "score-min", "k",
+                    "rg", "pen-cansplice", "pen-noncansplice",
+                    "pen-canintronlen", "pen-noncanintronlen", "min-intronlen",
+                    "max-intronlen", "known-splicesite-infile",
+                    "novel-splicesite-outfile", "novel-splicesite-infile"]
 
         self.set_cores(self.get_option('cores'))
 
