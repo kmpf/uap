@@ -290,6 +290,9 @@ class Segemehl2017(AbstractStep):
                 
                     with exec_group.add_pipeline() as segemehl_pipe:
                         # 4. Start segemehl
+                        sm_stderr = run.add_output_file('log',
+                                                        '%s-segemehl-log.txt' % run_id,
+                                                        input_paths)
                         segemehl = [
                             self.get_tool('segemehl'),
                             '--database', fifo_path_genome,
@@ -307,12 +310,10 @@ class Segemehl2017(AbstractStep):
                             run.add_output_file('splits_trns', '%s.trns.bed' % prefix, input_paths)
 
                         segemehl.extend(option_list)
+                        segemehl.extend(['2', '>>', sm_stderr])
                         segemehl_pipe.add_command(
                             segemehl,
-                            stderr_path = run.add_output_file(
-                                'log',
-                                '%s-segemehl-log.txt' % run_id,
-                                input_paths)
+                            stderr_path = sm_stderr)
                         )
                         # 4.1 command: Fix QNAMES in input SAM, if need be
                         if self.get_option('fix-qnames'):
