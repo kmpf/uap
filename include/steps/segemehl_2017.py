@@ -310,7 +310,6 @@ class Segemehl2017(AbstractStep):
                             run.add_output_file('splits_trns', '%s.trns.bed' % prefix, input_paths)
 
                         segemehl.extend(option_list)
-                        segemehl.extend(['2', '>>', sm_stderr])
                         segemehl_pipe.add_command(segemehl,
                                                   stderr_path = sm_stderr)
                         
