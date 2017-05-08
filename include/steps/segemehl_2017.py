@@ -311,10 +311,9 @@ class Segemehl2017(AbstractStep):
 
                         segemehl.extend(option_list)
                         segemehl.extend(['2', '>>', sm_stderr])
-                        segemehl_pipe.add_command(
-                            segemehl,
-                            stderr_path = sm_stderr)
-                        )
+                        segemehl_pipe.add_command(segemehl,
+                                                  stderr_path = sm_stderr)
+                        
                         # 4.1 command: Fix QNAMES in input SAM, if need be
                         if self.get_option('fix-qnames'):
                             fix_qnames = [
