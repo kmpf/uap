@@ -303,11 +303,15 @@ class Segemehl2017(AbstractStep):
                             segemehl.extend(['--mate', sr_input[0]])
 
                         if self.is_option_set_in_config('splits'):
-                            prefix = '%s_splits' % run_id
+                            # here I can add the directory for the splits files
+#                            outdir = run.get_temp_output_directory()
+#                            prefix = '%s/%s_splits' % (outputdir, run_id)
+                            prefix = '%s_splits' %  run_id
                             segemehl.extend(['-S', prefix])
-                            run.add_output_file('splits_sngl', '%s.sngl.bed' % prefix, input_paths)
+                            sngl_path = run.add_output_file('splits_sngl', '%s.sngl.bed' % prefix, input_paths)
                             run.add_output_file('splits_mult', '%s.mult.bed' % prefix, input_paths)
                             run.add_output_file('splits_trns', '%s.trns.bed' % prefix, input_paths)
+                            raise Exception(str(sngl_path))
 
                         segemehl.extend(option_list)
                         segemehl_pipe.add_command(segemehl,
