@@ -241,7 +241,7 @@ class Hisat2(AbstractStep):
                         description="put '*' in SEQ and QUAL fields for \
                         secondary alignments")
 
-        # inotice: params add-chrname and remove-chrname
+        # notice: params add-chrname and remove-chrname
         # available from version 2.0.4
         self.add_option('add-chrname', bool, default=None, optional=True,
                         description="Add 'chr' to reference names in \
@@ -274,7 +274,7 @@ class Hisat2(AbstractStep):
                  "norc", "no-mixed",  "no-discordant", "quiet", "qc-filter",
                  "non-deterministic", "no-temp-splicesite",
                  "no-spliced-alignment", "tmo", "no-head", "no-sq",
-                 "omit-sec-seq"]
+                 "omit-sec-seq", "remove-chrname", "add-chrname"]
 
         strflags = ["n-ceil", "ma", "mp", "sp", "np", "rdg", "score-min", "k",
                     "rg", "pen-cansplice", "pen-noncansplice",
