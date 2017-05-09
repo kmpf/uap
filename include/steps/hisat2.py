@@ -277,7 +277,7 @@ class Hisat2(AbstractStep):
                  "omit-sec-seq", "remove-chrname", "add-chrname"]
 
         strflags = ["n-ceil", "ma", "mp", "sp", "np", "rdg", "score-min", "k",
-                    "rg", "pen-cansplice", "pen-noncansplice",
+                    "rfg", "rg", "pen-cansplice", "pen-noncansplice",
                     "pen-canintronlen", "pen-noncanintronlen", "min-intronlen",
                     "max-intronlen", "known-splicesite-infile",
                     "novel-splicesite-outfile", "novel-splicesite-infile"]
