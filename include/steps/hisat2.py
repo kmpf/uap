@@ -35,8 +35,6 @@ class Hisat2(AbstractStep):
 
         self.add_option('cores', int, default=12)
 
-        # TODO: remove-chrname, add-chrname not in help list
-
         # Input:
         self.add_option('q', bool, default=None, optional=True,
                         description="query input files are FASTQ .fq/.fastq \
@@ -128,7 +126,7 @@ class Hisat2(AbstractStep):
         # Truseq is RF (R)
         self.add_option('rna-strandness', str, choices=["R", "F", "U"],
                         default=None, optional=False,
-                        desription="Specify strand-specific information \
+                        description="Specify strand-specific information \
                         (unstranded); paired and are extended F->FR, R->RF")
 
         self.add_option('tmo', bool, default=None, optional=True,
@@ -161,7 +159,6 @@ class Hisat2(AbstractStep):
         self.add_option('rdg', str, default=None, optional=True,
                         description="read gap open, extend penalties (5,3)")
 
-        # TODO: rdf not in param list of hisat2, but rfg
         self.add_option('rfg', str, default=None, optional=True,
                         description="reference gap open, extend penalties \
                         (5,3)")
@@ -243,6 +240,16 @@ class Hisat2(AbstractStep):
         self.add_option('omit-sec-seq', bool, default=None, optional=True,
                         description="put '*' in SEQ and QUAL fields for \
                         secondary alignments")
+
+        # inotice: params add-chrname and remove-chrname
+        # available from version 2.0.4
+        self.add_option('add-chrname', bool, default=None, optional=True,
+                        description="Add 'chr' to reference names in \
+                        alignment (e.g., 18 to chr18)")
+
+        self.add_option('remove-chrname', bool, default=None, optional=True,
+                        description="Remove 'chr' from reference names in \
+                        alignment (e.g., chr18 to 18)")
 
         ################
         # Performance: #
