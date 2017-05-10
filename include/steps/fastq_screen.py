@@ -71,7 +71,7 @@ class FastqScreen(AbstractStep):
                                             '-conf', self.get_option('config')]
 
                             prefix  = "%s%s.fastq.gz" % (run_id,read_types[read])
-                            fastq_screen.extend(['--optional_name', prefix])
+                            fastq_screen.extend(['--optionalname', prefix])
 
                             if self.get_option('subset'): 
                                 fastq_screen.extend(['--subset', str(self.get_option('subset'))])
