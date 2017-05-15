@@ -294,7 +294,7 @@ class Segemehl2017(AbstractStep):
                                                         '%s-segemehl-log.txt' % run_id,
                                                         input_paths)
                         segemehl = [
-                            self.get_tool('segemehl'),
+                            self.get_tool('segemehl2017'),
                             '--database', fifo_path_genome,
                             '--nomatchfilename', fifo_path_unmapped,
                             '--query', fr_input[0]
