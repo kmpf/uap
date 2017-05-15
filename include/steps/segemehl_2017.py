@@ -64,7 +64,7 @@ class Segemehl2017(AbstractStep):
         self.require_tool('fix_qnames')
         self.require_tool('mkfifo')
         self.require_tool('pigz')
-        self.require_tool('segemehl')
+        self.require_tool('segemehl2017')
 
         # Options for additional programs
         # these options can be used in YAML config file
@@ -303,15 +303,15 @@ class Segemehl2017(AbstractStep):
                             segemehl.extend(['--mate', sr_input[0]])
 
                         if self.is_option_set_in_config('splits'):
-                            # here I can add the directory for the splits files
                             outdir = run.get_output_directory_du_jour_placeholder()
+                            # this is the prefix for the segemehl cmd -S (splits files)
                             prefixSM = '%s/%s_splits' % (outdir, run_id)
+                            # this is the prefix without directory for uap add output file
                             prefix = '%s_splits' %  run_id
                             segemehl.extend(['-S', prefixSM])
-                            sngl_path = run.add_output_file('splits_sngl', '%s.sngl.bed' % prefix, input_paths)
+                            run.add_output_file('splits_sngl', '%s.sngl.bed' % prefix, input_paths)
                             run.add_output_file('splits_mult', '%s.mult.bed' % prefix, input_paths)
                             run.add_output_file('splits_trns', '%s.trns.bed' % prefix, input_paths)
-#                            raise Exception(str(sngl_path))
 
                         segemehl.extend(option_list)
                         segemehl_pipe.add_command(segemehl,
