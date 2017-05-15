@@ -502,6 +502,12 @@ def create_hash_from_annotation(log):
                 break_on_hyphens=False)
             label = "%s" % ("\\n".join(tw.wrap(' '.join(stripped_args))))
 
+            start_time = proc_info['start_time']
+            end_time = proc_info['end_time']
+            duration = end_time - start_time
+            runtime = misc.duration_to_str(duration, long=True)
+            label += '\\nRuntime: %s' % runtime
+
         # If any key wasn't around let's go on
         except KeyError:
             pass
@@ -514,6 +520,7 @@ def create_hash_from_annotation(log):
             if proc_info['exit_code'] != 0:
                 something_went_wrong = True
         else:
+            # TODO: in this case False? so pass?
             something_went_wrong = True
         color = "#fce94f"
         if something_went_wrong:
