@@ -64,7 +64,7 @@ class Segemehl2017(AbstractStep):
         self.require_tool('fix_qnames')
         self.require_tool('mkfifo')
         self.require_tool('pigz')
-        self.require_tool('segemehl2017')
+        self.require_tool('segemehl')
 
         # Options for additional programs
         # these options can be used in YAML config file
@@ -294,7 +294,7 @@ class Segemehl2017(AbstractStep):
                                                         '%s-segemehl-log.txt' % run_id,
                                                         input_paths)
                         segemehl = [
-                            self.get_tool('segemehl2017'),
+                            self.get_tool('segemehl'),
                             '--database', fifo_path_genome,
                             '--nomatchfilename', fifo_path_unmapped,
                             '--query', fr_input[0]
