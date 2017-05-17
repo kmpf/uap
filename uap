@@ -412,7 +412,7 @@ def main():
     '''
 
     runtime_info_parser = subparsers.add_parser(
-        "runtime_info",
+        "runtime-info",
         help="Provides Information about the runtime",
         description="Provides Information about the runtime.",
         formatter_class=argparse.RawTextHelpFormatter,
