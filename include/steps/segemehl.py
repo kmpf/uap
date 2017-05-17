@@ -13,23 +13,12 @@ class Segemehl(AbstractStep):
     specific read length and is able to mapprimer- or polyadenylation
     contaminated reads correctly.
 
-    This step creates at first two FIFOs. The first is used to provide the
-    genome data for segemehl and the second is used for the output of the
-    unmapped reads::
-
-       mkfifo genome_fifo unmapped_fifo
-       cat <genome-fasta> -o genome_fifo
 
     The executed segemehl command is this::
 
         segemehl -d genome_fifo -i <genome-index-file> -q <read1-fastq>
-                 [-p <read2-fastq>] -u unmapped_fifo -H 1 -t 11 -s -S -D 0
-                 -o /dev/stdout |  pigz --blocksize 4096 --processes 2 -c
-
-    The unmapped reads are saved via these commands::
-
-        cat unmapped_fifo | pigz --blocksize 4096 --processes 2 -c >
-        <unmapped-fastq>
+                 [-p <read2-fastq>] -u unmapped -H 1 -t 11 -s -S -D 0
+                 |  pigz --processes 2 -c
 
     '''
 
@@ -50,17 +39,9 @@ class Segemehl(AbstractStep):
         # -> logs version information
         # -> for module load/unload stuff
         self.require_tool('cat')
-        self.require_tool('dd')
-        self.require_tool('fix_qnames')
-        self.require_tool('mkfifo')
         self.require_tool('pigz')
         self.require_tool('segemehl')
 
-        # Options for additional programs
-        # these options can be used in YAML config file
-        self.add_option('fix-qnames', bool, optional=True, default=False,
-                        description="The QNAMES field of the input will "
-                        "be purged from spaces and everything thereafter.")
 
         # Options to set segemehl flags
         ## [INPUT]
@@ -151,10 +132,8 @@ class Segemehl(AbstractStep):
                         "maximum size of the inserts (paired end) "
                         "(default:5000)")
 
-        # Options for dd
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
 
-    # self - macht class-funktion draus.
+    
     # run_ids_connections_files - hash : run id -> n connections -> m files
     def runs(self, run_ids_connections_files):
         # Compile the list of options
@@ -208,40 +187,20 @@ class Segemehl(AbstractStep):
                         "The path %s provided to option 'genome' is not a file."
                         % self.get_option('genome'))
                     sys.exit(1)
-                # SEGEMEHL can cope with gzipped files so we do not need to!!!
-                #is_fr_gzipped = True if os.path.splitext(first_read_file[0])[1]\
-                #                 in ['.gz', '.gzip'] else False
-
-                #is_sr_gzipped = True if os.path.splitext(second_read_file[0])[1]\
-                #                 in ['.gz', '.gzip'] else False
-
                 # Segemehl is run in this exec group
                 # Can segemehl handle multiple input files/fifos?
-                with run.new_exec_group() as exec_group:
-                    # 1. Create FIFO for genome
-                    fifo_path_genome = run.add_temporary_file(
-                        'segemehl-genome-fifo', designation = 'input')
-                    mkfifo_genome = [self.get_tool('mkfifo'), fifo_path_genome]
-                    exec_group.add_command(mkfifo_genome)
-                    # 2. Create FIFO to write unmapped reads to
-                    fifo_path_unmapped = run.add_temporary_file(
-                        'segemehl-unmapped-fifo', designation = 'output')
-                    mkfifo_unmapped = [self.get_tool('mkfifo'), fifo_path_unmapped]
-                    exec_group.add_command(mkfifo_unmapped)
-                    # 3. Read genome and output to FIFO
-                    dd_genome = [self.get_tool('dd'),
-                                 'bs=%s' % self.get_option('dd-blocksize'),
-                                 'if=%s' % self.get_option('genome'),
-                                 'of=%s' % fifo_path_genome]
-                    exec_group.add_command(dd_genome)
 
+                with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as segemehl_pipe:
+                        unmapped_tmp = run.add_temporary_file(
+                            'segemehl-unmapped-')
+           
                         # 4. Start segemehl
                         segemehl = [
                             self.get_tool('segemehl'),
-                            '--database', fifo_path_genome,
+                            '--database', self.get_option('genome'),
                             '--index', self.get_option('index'),
-                            '--nomatchfilename', fifo_path_unmapped,
+                            '--nomatchfilename', unmapped_tmp,
                             '--threads', str(self.get_option('threads')),
                             '--query', fr_input[0]
                         ]
@@ -255,19 +214,11 @@ class Segemehl(AbstractStep):
                                 '%s-segemehl-log.txt' % run_id,
                                 input_paths)
                         )
-                        # 4.1 command: Fix QNAMES in input SAM, if need be
-                        if self.get_option('fix-qnames'):
-                            fix_qnames = [
-                                self.get_tool('fix_qnames'),
-                                '--filetype', 'SAM'
-                            ]
-                            segemehl_pipe.add_command(fix_qnames)
 
                         # 5. Compress segemehl mapped reads
                         pigz_mapped_reads = [
                             self.get_tool('pigz'),
                             '--stdout',
-                            '--blocksize', '4096',
                             '--processes', '2'
                         ]
 
@@ -278,33 +229,26 @@ class Segemehl(AbstractStep):
                                 '%s-segemehl-results.sam.gz' % run_id,
                                 input_paths)
                         )
-
-                    with exec_group.add_pipeline() as compress_unmapped_pipe:
-
-                        # 6. Read unmapped reads from fifo
+                with run.new_exec_group() as pigz_exec_group:
+                    with pigz_exec_group.add_pipeline() as compress_unmapped_pipe:
+                        # 6. Read unmapped reads 
                         cat_unmapped_reads = [self.get_tool('cat'),
-                                              fifo_path_unmapped]
+                                              unmapped_tmp]
                         compress_unmapped_pipe.add_command(cat_unmapped_reads)
-
-                        # 6.1 command: Fix QNAMES in input SAM, if need be
-                        if self.get_option('fix-qnames'):
-                            fix_qnames = [
-                                self.get_tool('fix_qnames'),
-                                '--filetype', 'FASTQ'
-                            ]
-                            compress_unmapped_pipe.add_command(fix_qnames)
-
+                    
                         # 7. Compress unmapped reads
                         pigz_unmapped_reads = [
                             self.get_tool('pigz'),
                             '--stdout',
-                            '--blocksize', '4096',
                             '--processes', '1'
                         ]
+                        
+                        res = run.add_output_file(
+                            'unmapped',
+                            '%s-segemehl-unmapped.fastq.gz' % run_id,
+                        input_paths)
+                    
+                    
                         compress_unmapped_pipe.add_command(
-                            pigz_unmapped_reads,
-                            stdout_path = run.add_output_file(
-                                'unmapped',
-                                '%s-segemehl-unmapped.fastq.gz' % run_id,
-                                input_paths)
-                        )
+                            pigz_unmapped_reads, stdout_path = res)
+                    
