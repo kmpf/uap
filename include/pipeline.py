@@ -457,7 +457,13 @@ class Pipeline(object):
                 logger.info("Try '%s' for '%s': %s" % (
                     info_key, tool_id, " ".join(command))
                 )
-                exec output
+                try:
+                    exec output
+                except NameError as e:
+                    msg = "Error while loading module '%s': \n%s"
+                    logger.error(msg % (tool_id, error))
+                    sys.exit(1)
+
                 tool_check_info.update({
                     command_call : (' '.join(command)).strip(),
                     command_exit_code : proc.returncode
