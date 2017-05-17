@@ -90,7 +90,7 @@ def main():
         "--version",
         dest="version",
         action="version",
-        version="%(prog)s 0.01 alpha",
+        version="%(prog)s 1.0.1 wonky donkey",
         help = "Display version information.")
 
     subparsers = parser.add_subparsers(
