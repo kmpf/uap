@@ -35,7 +35,7 @@ def main(args):
     else:
         task_list = p.all_tasks_topologically_sorted
 
-    output_data = [['step', 'CPUs [%]', '# requested CPUs', 'RAM [MB]', 'Duration']]
+    output_data = [['step', 'CPUs [%]', '# requested CPUs', 'RAM [MB]', 'Duration [s]']]
     for task in task_list:
         outdir = task.get_run().get_output_directory()
         anno_files = glob.glob(os.path.join(
@@ -53,7 +53,7 @@ def main(args):
                 int(annotation_data.sum['cpu_percent']),
                 annotation_data.requested_cores,
                 int((annotation_data.sum['rss'] / 1024) / 1024),
-                annotation_data.total_duration
+                annotation_data.total_duration_seconds
             ])
 
     for line in output_data:
@@ -79,6 +79,7 @@ class Annotation_Data:
         self.total_start_time = self.__yaml_data['start_time']
         self.total_end_time = self.__yaml_data['end_time']
         self.total_duration = str(self.total_end_time - self.total_start_time)
+        self.total_duration_seconds = (self.total_end_time - self.total_start_time).total_seconds()
 
         self.sum = self.__yaml_data['pipeline_log']['process_watcher']['max']['sum']
         self.requested_cores = self.__yaml_data['step']['cores']
