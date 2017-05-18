@@ -14,6 +14,15 @@ This script
 
 logger = logging.getLogger("uap_logger")
 
+def write_output_file(data):
+    file_path = 'runtime_info.csv'
+    f = open(file_path, 'w')
+
+    for line in data:
+        f.write(','.join(map(str, line)) + '\n')
+
+    f.close()
+
 def main(args):
     p = pipeline.Pipeline(arguments=args)
 
@@ -56,8 +65,7 @@ def main(args):
                 annotation_data.total_duration_seconds
             ])
 
-    for line in output_data:
-        print(line)
+    write_output_file(output_data)
 
 
 if __name__ == '__main__':
@@ -105,5 +113,3 @@ class Annotation_Data:
 
             self.processes[process_name] = dict()
             self.processes[process_name] = tmp_data
-
-        #print(self.processes)
