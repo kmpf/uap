@@ -4,6 +4,7 @@ import logging
 import glob
 import os
 import yaml
+import misc
 
 import pipeline
 
@@ -34,6 +35,7 @@ def main(args):
     else:
         task_list = p.all_tasks_topologically_sorted
 
+    output_data = [['step', 'CPUs [%]', '# requested CPUs', 'RAM [MB]', 'Duration']]
     for task in task_list:
         outdir = task.get_run().get_output_directory()
         anno_files = glob.glob(os.path.join(
@@ -42,13 +44,20 @@ def main(args):
 
         yaml_files = {os.path.realpath(f) for f in anno_files \
                       if os.path.islink(f)}
+
         for y in yaml_files:
             annotation_data = Annotation_Data(y)
-            #print(annotation_data.total_start_time, annotation_data.total_end_time)
-            #print(annotation_data)
-            for property, value in vars(annotation_data).iteritems():
-                print property, ": ", value
-            pass
+
+            output_data.append([
+                '%s/%s' % (annotation_data.step_id, annotation_data.run_id),
+                int(annotation_data.sum['cpu_percent']),
+                annotation_data.requested_cores,
+                int((annotation_data.sum['rss'] / 1024) / 1024),
+                annotation_data.total_duration
+            ])
+
+    for line in output_data:
+        print(line)
 
 
 if __name__ == '__main__':
