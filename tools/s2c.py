@@ -16,6 +16,7 @@ import os
 from Bio import SeqIO
  
 parser = argparse.ArgumentParser(description='python script for parsing the output of segemehl (remapper/realigner) into a cufflinks-compatible (tophat-like) output.     Usage: reads the segemehl-output-file (SAM format) either from stdin or from a file given as the first script argument.    Writes the output to stout.   Example1: python s2c.py -s mymap.sam -g ref_genome.fa > mymap_cufflinks_compatible.sam   Example2:  samtools view -h mymap.bam | python s2c.py -s - -g ref_genome.fa | samtools view -Sb - | samtools sort - mymap_cufflinks_compatible_sorted.bam')
+parser.add_argument('--version', action='version', version='%(prog)s 1.0')
 parser.add_argument("-s", "--sam", dest='my_sam', required=True,type=argparse.FileType('r'), help="specifies the path to directory where the segemehl.sam input file is located (when piping in with samtools than just use - as argument )")
 parser.add_argument("-g", "--genome", dest='my_genome', help="in case the protocol is not strand specific: specifies the path to the genome")
 parser.add_argument("-d", "--maxDist", dest='my_maxDist',type=int, help="specifies the maximal distance of a splice junction. junctions with disctance higher than this value are classified as fusions (default is 200.000nt)")
