@@ -506,9 +506,10 @@ class Pipeline(object):
                 proc.stdin.close()
             except OSError as e:
                 logger.error("%s: Error while checking Tool %s "
-                             "Error no.: %s Error message: %s\ncommand: %s" %
+                             "Error no.: %s Error message: %s\ncommand: %s "
+                             "\nSTDOUT-ERR: %s\n" %
                              (self.get_config_filepath(), info['path'],
-                              e.errno, e.strerror, command))
+                              e.errno, e.strerror, command, subprocess.PIPE))
                 sys.exit(1)
             proc.wait()
             exit_code = None
