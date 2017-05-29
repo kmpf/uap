@@ -1,3 +1,4 @@
+#!/global/apps/bioinf/tools/uap/1.0-alpha-fork-jana/python_env/bin/ python
 
 # Gero Doose gero@bioinf.uni-leipzig.de
 # python script for parsing the output of segemehl into a (tophat-like) cufflinks-compatible output.
