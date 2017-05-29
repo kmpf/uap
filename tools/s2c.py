@@ -1,4 +1,5 @@
-#!../python_env/bin/python
+#!/bin/bash
+"exec" "`dirname $0`/../python_env/bin/python" "$0" "$@"
 
 # Gero Doose gero@bioinf.uni-leipzig.de
 # python script for parsing the output of segemehl into a (tophat-like) cufflinks-compatible output.
