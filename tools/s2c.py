@@ -1,6 +1,15 @@
 #!/bin/bash
 "exec" "`dirname $0`/../python_env/bin/python" "$0" "$@"
 
+# ^^^
+# the cmd above ensures that the correct python environment is 
+# selected to execute this script.
+# The correct environment is the one belonging to uap, since all 
+# neccessary python modules are installed there.
+
+
+
+
 # Gero Doose gero@bioinf.uni-leipzig.de
 # python script for parsing the output of segemehl into a (tophat-like) cufflinks-compatible output.
 # Usage: reads the segemehl /remapper/ realigner-output-file (SAM format) either from stdin or from a file given as the first script argument
