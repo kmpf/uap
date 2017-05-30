@@ -202,7 +202,12 @@ class FeatureCounts(AbstractStep):
                         summarization. This option is only applicable for \
                         paired-end read data.")
 
+        self.set_cores(4)
+        self.add_option('cores', int, default=3)
+
     def runs(self, run_ids_connections_files):
+        self.set_cores(self.get_option('cores'))
+
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 alignments = run_ids_connections_files[run_id]['in/alignments']
