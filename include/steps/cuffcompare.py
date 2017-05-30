@@ -68,7 +68,7 @@ class CuffCompare(AbstractStep):
         self.add_option('N', bool, optional=True, # -N
                         description='Discard (ignore) single-exon reference ')
         self.add_option('C', bool, optional=True, # -C
-                        description='Enables the “contained” transcripts to be also '
+                        description='Enables the "contained" transcripts to be also '
                         'written in the .combined.gtffile, with the attribute '
                         '"contained_in" showing the first container transfrag found. '
                         'By default, without this option, cuffcompare does not write '
