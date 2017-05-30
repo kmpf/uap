@@ -167,7 +167,7 @@ class CuffCompare(AbstractStep):
 
                 # create cuffcompare command
                 # i) add fix options and parameters
-                cuffcompare = [selfl.get_tool('cuffcompare'), 
+                cuffcompare = [self.get_tool('cuffcompare'), 
                                '-o', prefixCC,
                                '-c', prefixCC,
                                '-T', # consider if we really want to suppress the map 
