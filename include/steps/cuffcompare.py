@@ -16,8 +16,10 @@ class CuffCompare(AbstractStep):
     CuffCompare is part of the 'Cufflinks suite of tools' for
     differential expr. analysis of RNA-Seq data and their
     visualisation. This step compares a cufflinks assembly to 
-    known annotation. For details about cuffcompare we refer to
-    the author's webpage:
+    known annotation. Cuffcompare provides classification, 
+    reference annotation mapping and various statistics for 
+    Cufflinks transfrags. For details about cuffcompare we refer 
+    to the author's webpage:
 
     http://cole-trapnell-lab.github.io/cufflinks/cuffcompare/
 
@@ -162,7 +164,7 @@ class CuffCompare(AbstractStep):
                                                     '%s.tracking' % prefix,
                                                     input_paths)
                 log_err_file  = run.add_output_file('log_stderr',
-                                                    '%s-cuffcompare-log_stderr.txt' % prefix,
+                                                    '%s-log_stderr.txt' % prefix,
                                                     input_paths)
 
                 # create cuffcompare command
@@ -179,4 +181,5 @@ class CuffCompare(AbstractStep):
                 cuffcompare.extend(input_paths[0])
 
                 with run.new_exec_group() as cc_exec_group:
-                    cc_exec_group.add_command(cuffcompare)
+                    cc_exec_group.add_command(cuffcompare,
+                                              stderr_path = log_err_file)
