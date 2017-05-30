@@ -1,5 +1,14 @@
-#!/usr/local/python/2.7.13-1/bin/python
-#/usr/bin/python
+#!/bin/bash
+"exec" "`dirname $0`/../python_env/bin/python" "$0" "$@"
+
+# ^^^
+# the cmd above ensures that the correct python environment is 
+# selected to execute this script.
+# The correct environment is the one belonging to uap, since all 
+# neccessary python modules are installed there.
+
+
+
 #post_cufflinks_merge.py
 
 # test it with

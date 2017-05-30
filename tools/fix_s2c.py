@@ -25,6 +25,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 def read_arguments():
     parser = argparse.ArgumentParser(description="Reads s2c sam (converter from segemehl) and repairs some entries to pass picard validate sam")
+    parser.add_argument('--version', action='version', version='%(prog)s 1.0')
     parser.add_argument('infile', nargs='?', type=argparse.FileType('r'),
                     default=sys.stdin, help ="Infile default reads from stdin")
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
