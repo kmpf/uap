@@ -103,7 +103,7 @@ class CuffCompare(AbstractStep):
 
         # skipped paramters are:
         # -o <out-prefix> 
-        # -c <consensus-prefix> 
+        # -p <consensus-prefix> 
         # --> both are set by uap and can not be defined by the usr!
 
     def runs(self, run_ids_connections_files):
@@ -169,7 +169,7 @@ class CuffCompare(AbstractStep):
                 # i) add fix options and parameters
                 cuffcompare = [self.get_tool('cuffcompare'), 
                                '-o', prefixCC,
-                               '-c', prefixCC,
+                               '-p', prefixCC,
                                '-T', # consider if we really want to suppress the map 
                                      # files or if we want to trace them
                                ]
