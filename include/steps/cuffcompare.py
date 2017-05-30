@@ -66,7 +66,7 @@ class CuffCompare(AbstractStep):
                         description='Discard (ignore) single-exon transfrags and '
                         'reference transcripts')
         self.add_option('N', bool, optional=True, # -N
-                        description='Discard (ignore) single-exon reference '
+                        description='Discard (ignore) single-exon reference ')
         self.add_option('C', bool, optional=True, # -C
                         description='Enables the “contained” transcripts to be also '
                         'written in the .combined.gtffile, with the attribute '
@@ -74,7 +74,7 @@ class CuffCompare(AbstractStep):
                         'By default, without this option, cuffcompare does not write '
                         'in that file isoforms that were found to be fully '
                         'contained/covered (with the same compatible intron '
-                        'structure) by other transfrags in the same locus.')
+                        'structure) by other transfrags in the same locus.'
                         'transcripts')
         self.add_option('F', bool, optional=True, # -F
                         description='Do not discard intron-redundant transfrags if '
@@ -82,7 +82,7 @@ class CuffCompare(AbstractStep):
         self.add_option('G', bool, optional=True,
                         description='generic GFF input file(s): do not assume '
                         'Cufflinks GTF, do not discard any intron-redundant '
-                        'transfrags)')
+                        'transfrags')
         self.add_option('V', bool, optional=True,
                         description='verbose processing mode (showing all GFF '
                         'parsing warnings)')
