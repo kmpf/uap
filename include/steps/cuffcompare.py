@@ -40,7 +40,7 @@ class CuffCompare(AbstractStep):
 
         # reference files
         self.add_option('r', str, optional=True,
-                        description='An optional “reference” annotation GFF file '
+                        description='An optional "reference" annotation GFF file '
                         'containing a set of known mRNAs to use as a reference '
                         'for assessing the accuracy of mRNAs or gene models '
                         'given in <input.gtf>') 
