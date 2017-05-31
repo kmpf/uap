@@ -22,10 +22,7 @@ class ReformatCigar(AbstractStep):
 
     def __init__(self, pipeline):
         super(ReformatCigar, self).__init__(pipeline)
-
-        # set # of cores for cluster, it is ignored if run locally
-        self.set_cores(1)
-
+        
         # connections - indentifier for in/output
         #             - expects list, maybe empty or 'none', 
         #               e.g. if only first_read info available
@@ -35,12 +32,23 @@ class ReformatCigar(AbstractStep):
         
         # external tools
         self.require_tool('pigz')
-        self.require_tool('dd')
         self.require_tool('cat')
         # internal tools
         self.require_tool('segemehl_2017_to_reformatCigar')
 
+        # step options
+        self.add_option('threads', int, optional=True,
+                        description='Number of threads 2B started. (Default: 1). '
+                        'Beware that this is only for (un-)compressing, '
+                        'the reformating is using a single CPU only.')
+
     def runs(self, run_ids_connections_files):
+
+        # set # of cores for cluster, it is ignored if run locally
+        if self.get_option('threads'):
+            self.set_cores(self.get_option('threads'))
+        else:
+            self.set_cores(1)
 
         for run_id in run_ids_connections_files.keys():
 
