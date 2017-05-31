@@ -5,7 +5,7 @@ from abstract_step import AbstractStep
 
 logger=getLogger('uap_logger')
 
-class ReformatCigar(AbstractStep):
+class Reformatcigar(AbstractStep):
     '''
     The segemehl release from April 2017 (segemehl/export.13) uses the 
     expanded version of Cigar strings: It clearly separates between match (=)
@@ -21,7 +21,7 @@ class ReformatCigar(AbstractStep):
     '''
 
     def __init__(self, pipeline):
-        super(ReformatCigar, self).__init__(pipeline)
+        super(Reformatcigar, self).__init__(pipeline)
         
         # connections - indentifier for in/output
         #             - expects list, maybe empty or 'none', 
