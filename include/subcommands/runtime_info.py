@@ -4,7 +4,6 @@ import logging
 import glob
 import os
 import yaml
-import misc
 
 import pipeline
 
@@ -62,7 +61,7 @@ def main(args):
                 int(annotation_data.sum['cpu_percent']),
                 annotation_data.requested_cores,
                 int((annotation_data.sum['rss'] / 1024) / 1024),
-                annotation_data.total_duration_seconds
+                int(annotation_data.total_duration_seconds)
             ])
 
     write_output_file(output_data)
