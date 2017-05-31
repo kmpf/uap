@@ -1,0 +1,101 @@
+################################################################################
+## Cluster Section                                                            ##
+## ===============                                                            ##
+##                                                                            ##
+## - uncomment/adapt as required                                              ##
+################################################################################
+
+cluster:
+#     # example for SLURM grid engine
+    default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+#     # example for UGE/SGE respectively OGS
+#     default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+    default_pre_job_command: "echo 'Run Started!'"
+    default_post_job_command: "echo 'Run Finished!'"
+    default_job_quota: 5
+
+################################################################################
+## Destination Path Section                                                   ##
+## ========================                                                   ##
+##                                                                            ##
+## - directory where analysis results get stored                              ##
+################################################################################
+
+destination_path: split_out
+
+################################################################################
+## Steps Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define analysis steps here                                               ##
+################################################################################
+
+steps:
+    #################
+    ## Source step ##
+    #################
+    ################################
+    # 1 read to get baseline stats #
+    ################################
+    fastq_source_1 (fastq_source):
+        sample_to_files_map:
+            rna_sim_1M:
+                - /in/test.fastq
+        paired_end: no
+        first_read: test.fastq
+        #second_read: 2.fastq.gz
+
+    split_test (split_fastq):
+        _depends: fastq_source_1
+        readcount: 100
+################################################################################
+## Tools Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define used tools here                                                   ##
+## - for module system usage see documentation                                ##
+################################################################################
+
+tools:
+    ##################
+    # External Tools #
+    ##################
+
+    # URL: http://zlib.net/pigz/
+    pigz:
+        path: 'pigz'
+        get_version: '--version'
+        exit_code: 0
+
+    ##################
+    # Internal Tools #
+    ##################
+
+    ##############
+    # Unix Tools #
+    ##############
+
+    ln:
+        path: 'ln'
+        get_version: '--version'
+        exit_code: 0
+
+    dd:
+        path: 'dd'
+        get_version: '--version'
+        exit_code: 0
+
+    rm:
+        path: 'rm'
+        get_version: '--version'
+        exit_code: 0
+
+    mv:
+        path: 'mv'
+        get_version: '--version'
+        exit_code: 0
+
+    pwd:
+        path: 'pwd'
+        get_version: '--version'
+        exit_code: 0
