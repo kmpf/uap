@@ -64,7 +64,7 @@ class Reformatcigar(AbstractStep):
                 alignments_path = input_paths[0]
 
                 cat = [self.get_tool('cat'), alignments_path]
-                pigzD = [self.get_tool('pigz'), '--decompress'
+                pigzD = [self.get_tool('pigz'), '--decompress',
                          '--processes', str(self.get_cores()),
                          '--stdout']
                 reformatcigar = [self.get_tool('segemehl_2017_to_reformatCigar'),
