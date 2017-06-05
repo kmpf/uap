@@ -1,3 +1,6 @@
+from itertools import (takewhile,repeat)
+import math
+
 from logging import getLogger
 from abstract_step import AbstractStep
 
@@ -30,6 +33,12 @@ class SplitFastq(AbstractStep):
 
         # required tools
         self.require_tool('split_fastq')
+        self.require_tool('wc')
+
+    def get_line_count(self, filename):
+        f = open(filename, 'rb')
+        bufgen = takewhile(lambda x: x, (f.read(1024 * 1024) for _ in repeat(None)))
+        return sum(buf.count(b'\n') for buf in bufgen)
 
     def runs(self, run_ids_connections_files):
 
@@ -42,10 +51,23 @@ class SplitFastq(AbstractStep):
             with self.declare_run(run_id) as run:
                 r1 = run_ids_connections_files[run_id]['in/first_read'][0]
                 readcount = self.get_option('readcount')
-                print(r1, readcount)
-                output_fileset = [r1]
 
-                split_fastq = [self.get_tool('split_fastq'), '-i', r1, '-n', readcount]
+                # TODO: add r2 if exists
+                input_fileset = [r1]
+
+                # get lines to calculate output count
+                line_count = self.get_line_count(r1)
+                outfile_count = int(math.ceil(float(line_count/4)/readcount))
+
+                # register output files
+                for i in range(1, outfile_count + 1):
+                    file_name = '%s_%s.fastq' % (run_id, i)
+                    run.add_output_file('out_first_read', file_name, input_fileset)
+
+                basename = run.get_output_directory_du_jour_placeholder() + '/' + run_id
+                split_fastq = [self.get_tool('split_fastq'), '-i', r1, '-n', str(readcount), '-p', basename]
+                sf_exec_group = run.new_exec_group()
+                sf_exec_group.add_command(split_fastq)
 
                 if run_ids_connections_files[run_id]['in/second_read'][0] == None:
                     r2 = run_ids_connections_files[run_id]['in/second_read'][0]

@@ -40,14 +40,26 @@ steps:
     fastq_source_1 (fastq_source):
         sample_to_files_map:
             rna_sim_1M:
-                - input/test.fastq
+                #- input/test.fastq
+                - input/SRR014849_1.fastq
         paired_end: no
-        first_read: test.fastq
+        first_read: _1.fastq
         #second_read: 2.fastq.gz
 
     split_test (split_fastq):
         _depends: fastq_source_1
-        readcount: 100
+        #readcount: 100
+        readcount: 100000
+
+    #AR (adapterremoval):
+    #    _depends: split_test
+    #    cores: 4
+    #    treatAs: single
+    #    adapter1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNATCTCGTATGCCGTCTTCTGCTTG
+    #    adapter2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+    #    collapse: False
+    #    trimns: True
+    #    trimqualities: True
 ################################################################################
 ## Tools Section                                                              ##
 ## =============                                                              ##
@@ -60,6 +72,10 @@ tools:
     ##################
     # External Tools #
     ##################
+    adapterremoval:
+        path: 'AdapterRemoval'
+        get_version: '--version'
+        exit_code: 0
 
     # URL: http://zlib.net/pigz/
     pigz:
@@ -101,5 +117,10 @@ tools:
 
     pwd:
         path: 'pwd'
+        get_version: '--version'
+        exit_code: 0
+
+    wc:
+        path: 'wc'
         get_version: '--version'
         exit_code: 0
