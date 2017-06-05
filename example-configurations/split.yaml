@@ -40,7 +40,7 @@ steps:
     fastq_source_1 (fastq_source):
         sample_to_files_map:
             rna_sim_1M:
-                - /in/test.fastq
+                - input/test.fastq
         paired_end: no
         first_read: test.fastq
         #second_read: 2.fastq.gz
@@ -70,6 +70,10 @@ tools:
     ##################
     # Internal Tools #
     ##################
+
+    split_fastq:
+        path: ['./../python_env/bin/python', '../tools/split_fastq.py']
+        exit_code: 1
 
     ##############
     # Unix Tools #
