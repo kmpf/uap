@@ -152,7 +152,7 @@ class AdapterRemoval(AbstractStep):
             else False
 
         self.set_cores(self.get_option('cores'))
-        print(run_ids_connections_files)
+
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 # set everything empty
