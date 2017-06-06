@@ -38,6 +38,18 @@ def read_args():
         nargs='?',
         help='file name pattern for output files, a counter will be added automatically at the end (<pattern>_1.fastq)'
     )
+    parser.add_argument(
+        '--sindex',
+        '-s',
+        nargs='?',
+        help='index of sample to write to file'
+    )
+    parser.add_argument(
+        '--mate',
+        '-m',
+        nargs='?',
+        help='mate1: r1, mate2: r2'
+    )
 
     args = parser.parse_args()
     # TODO: catch missing args
@@ -84,13 +96,16 @@ def main(args):
     if outpath != '' and outpath[-1] != '/':
         outpath += '/'
 
+    sample_index = args.sindex
+    mate = args.mate
+
     record_iter = SeqIO.parse(open(infile), "fastq")
     for i, batch in enumerate(batch_iterator(record_iter, read_count)):
-        filename = outpath + "%s_%i.fastq" % (out_file_pattern, i + 1)
-        print(filename)
-        with open(filename, "w") as handle:
-            count = SeqIO.write(batch, handle, "fastq")
-        #print("Wrote %i records to %s" % (count, filename))
+        if int(sample_index) == (i+1):
+            filename = outpath + "%s_%i_%s.fastq" % (out_file_pattern, int(sample_index), mate)
+            with open(filename, "w") as handle:
+                count = SeqIO.write(batch, handle, "fastq")
+            #print("Wrote %i records to %s" % (count, filename))
 
 if __name__ == '__main__':
     args = read_args()
