@@ -48,7 +48,7 @@ class SplitFastq(AbstractStep):
         for run_id in run_ids_connections_files.keys():
 
             # TODO: set upper limit in yaml (file_count)
-            index_list = range(1, 11)
+            index_list = range(1, 6)
 
             for index in index_list:
                 new_run_id = '%s_%s' % (run_id, str(index))
