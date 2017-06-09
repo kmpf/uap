@@ -32,11 +32,26 @@ class MergeGenecounts(AbstractStep):
     def runs(self, run_ids_connections_files):
 
         self.set_cores(self.get_option('cores'))
-        #print(run_ids_connections_files)
+
         gc_files = []
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 # collect needed files
                 gc_file = run_ids_connections_files[run_id]['in/counts'][0]
                 gc_files.append(gc_file)
-        print(gc_files)
+
+        new_run_id = 'merged_genecounts'
+        tool_name = self.get_option('t')
+        with self.declare_run(new_run_id) as run:
+            file_name = '%s_%s.txt' % (new_run_id, tool_name)
+            run.add_output_file('merged_counts', file_name, gc_files)
+            basename = run.get_output_directory_du_jour_placeholder()
+            merge_command = [
+                self.get_tool('merge_genecounts'),
+                '-t', tool_name,
+                '-o', basename,
+                '-p', file_name,
+                ' '.join(gc_files)
+            ]
+            merge_exec_group = run.new_exec_group()
+            merge_exec_group.add_command(merge_command)

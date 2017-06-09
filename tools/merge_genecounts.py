@@ -30,10 +30,10 @@ def is_headline(line):
 #####################
 def fc_merge(files):
     basic_data = []
-    for i, file in enumerate(files):
+    for i, infile in enumerate(files):
         # take the first as template
         if i == 0:
-            with open(file, 'r') as f:
+            with open(infile, 'r') as f:
                 for i, line in enumerate(f):
                     # first and second line in featureCounts output file are headlines
                     if i == 0:
@@ -52,7 +52,7 @@ def fc_merge(files):
                     basic_data.append(line.rstrip('\n').split('\t'))
             continue
 
-        with open(file, 'r') as f:
+        with open(infile, 'r') as f:
             for i, line in enumerate(f):
                 # continue if headline
                 if is_headline(line):
@@ -130,7 +130,8 @@ def read_args():
     return [args, other_args]
 
 def main(args):
-    options, file_list = args
+    options, raw_file_list = args
+    file_list = raw_file_list[0].split(' ')
 
     tool_name = options.tool_name[0]
     outpath = options.outpath[0]
