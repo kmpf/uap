@@ -31,9 +31,11 @@ class SplitFastq(AbstractStep):
         self.add_option('readcount', int, optional=False,
                         description="Number of reads per targetfile")
 
+        self.add_option('outfile_count', int, optional=False,
+                        description="Number of outfiles")
+
         # required tools
         self.require_tool('split_fastq')
-        self.require_tool('wc')
 
     def get_line_count(self, filename):
         # TODO: if file is gzipped, first unzip!
@@ -44,11 +46,11 @@ class SplitFastq(AbstractStep):
     def runs(self, run_ids_connections_files):
 
         self.set_cores(self.get_option('cores'))
+        outfile_count = self.get_option('outfile_count')
 
         for run_id in run_ids_connections_files.keys():
 
-            # TODO: set upper limit in yaml (file_count)
-            index_list = range(1, 6)
+            index_list = range(1, outfile_count+1)
 
             for index in index_list:
                 new_run_id = '%s_%s' % (run_id, str(index))
@@ -66,9 +68,9 @@ class SplitFastq(AbstractStep):
                         paired_end = True
 
                     # get lines to calculate output count
-                    # TODO: take outfile count temporary from yaml param (file_count)
-                    line_count = self.get_line_count(r1)
-                    outfile_count = int(math.ceil(float(line_count/4)/readcount))
+                    # TODO: temporary take outfile count from yaml param (file_count)
+                    #line_count = self.get_line_count(r1)
+                    #outfile_count = int(math.ceil(float(line_count/4)/readcount))
 
                     # register output files
                     for i in range(1, outfile_count + 1):

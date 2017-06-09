@@ -104,8 +104,7 @@ def main(args):
         if int(sample_index) == (i+1):
             filename = outpath + "%s_%i_%s.fastq" % (out_file_pattern, int(sample_index), mate)
             with open(filename, "w") as handle:
-                count = SeqIO.write(batch, handle, "fastq")
-            #print("Wrote %i records to %s" % (count, filename))
+                SeqIO.write(batch, handle, "fastq")
 
 if __name__ == '__main__':
     args = read_args()
