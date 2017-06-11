@@ -43,7 +43,9 @@ def main(args):
     else:
         task_list = p.all_tasks_topologically_sorted
 
-    output_data = [['step', 'CPUs [%]', '# requested CPUs', 'RAM [MB]', 'Duration [s]']]
+    output_data = [
+        ['step', 'CPUs [%]', '# requested CPUs', 'RAM [MB]', 'Duration [s]', 'total start time', 'total end time']
+    ]
     for task in task_list:
         outdir = task.get_run().get_output_directory()
         anno_files = glob.glob(os.path.join(
@@ -61,7 +63,9 @@ def main(args):
                 int(annotation_data.sum['cpu_percent']),
                 annotation_data.requested_cores,
                 int((annotation_data.sum['rss'] / 1024) / 1024),
-                int(annotation_data.total_duration_seconds)
+                int(annotation_data.total_duration_seconds),
+                annotation_data.total_start_time,
+                annotation_data.total_end_time
             ])
 
     write_output_file(output_data)
