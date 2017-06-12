@@ -37,6 +37,10 @@ class S2C(AbstractStep):
                         description="Temp directory for 's2c.py'. This can be "
                         "in the /work/username/ path, since it is only "
                         "temporary.")
+        self.add_option('maxDist', int, optional=True, 
+                        description="specifies the maximal distance of a splice junction. "
+                        "junctions with disctance higher than this value are classified as "
+                        "fusions (default is 200.000nt)")
 
     def runs(self, run_ids_connections_files):
 
@@ -63,6 +67,9 @@ class S2C(AbstractStep):
 #                pigz = [self.get_tool('pigz'), '--decompress', '--processes', '1', '--stdout']
                 pigz = [self.get_tool('pigz'), '--decompress', '--processes', str(self.get_cores()), '--stdout']
                 s2c = [self.get_tool('s2c'), '-s', '/dev/stdin', '-o', self.get_option('tmp_dir')]
+                if self.is_option_set_in_config('maxDist'):
+                    s2c.extend(['-d', str(self.get_option('maxDist'))])
+
                 fix_s2c = [self.get_tool('fix_s2c')] # schreibt .sam nach stdout
 #                pigz2 = [self.get_tool('pigz'), '--processes', '2', '--stdout']
                 pigz2 = [self.get_tool('pigz'), '--processes', str(self.get_cores()), '--stdout']
