@@ -34,7 +34,7 @@ class Reformatcigar(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('cat')
         # internal tools
-        self.require_tool('segemehl_2017_to_reformatCigar')
+        self.require_tool('segemehl_2017_reformatCigar')
 
         # step options
         self.add_option('threads', int, optional=True,
@@ -63,11 +63,11 @@ class Reformatcigar(AbstractStep):
 
                 alignments_path = input_paths[0]
 
-                cat = [self.get_tool('cat'), alignments_path]
+                #cat = [self.get_tool('cat'), alignments_path]
                 pigzD = [self.get_tool('pigz'), '--decompress',
                          '--processes', str(self.get_cores()),
-                         '--stdout']
-                reformatcigar = [self.get_tool('segemehl_2017_to_reformatCigar'),
+                         '--stdout', alignments_path]
+                reformatcigar = [self.get_tool('segemehl_2017_reformatCigar'),
                                  '--in-file', '/dev/stdin']
                 pigzC = [self.get_tool('pigz'), 
                          '--processes', str(self.get_cores()),
@@ -84,7 +84,7 @@ class Reformatcigar(AbstractStep):
                     
                     with exec_group.add_pipeline() as reformatCigar_pipe:
 
-                        reformatCigar_pipe.add_command(cat)
+                        #reformatCigar_pipe.add_command(cat)
                         reformatCigar_pipe.add_command(pigzD)
                         reformatCigar_pipe.add_command(reformatcigar)
                         reformatCigar_pipe.add_command(pigzC,
