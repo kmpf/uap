@@ -66,7 +66,7 @@ def process_line(line):
     # leave values as they are for 'I','D' and 'N' (del, insertion, split)
     M = 0
     cigar_new = ''
-    for j in my_range(1, len(x)-1, 2):
+    for j in range(1, len(x)-1, 2):
         # match or mismatch
         if x[j]=='=' or x[j]=='X' or x[j]=='M':
             M = M + int(x[j-1])
@@ -88,9 +88,9 @@ def process_line(line):
 
     sys.stdout.write("%s\t" % cigar_new)
 
-    for k in range(6, 11): # len(columns)):
+    for k in range(6, len(columns)):
         sys.stdout.write("%s" % columns[k])
-        if(not k==10): #len(columns)):
+        if(not k==len(columns)):
             sys.stdout.write("\t")
 
     sys.stdout.write("\n")
