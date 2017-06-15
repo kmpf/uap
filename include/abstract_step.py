@@ -817,14 +817,36 @@ class AbstractStep(object):
                         # CK: Hmm, that's a feature, isn't it?
                         if os.path.exists(source_path):
                             # Calculate SHA1 hash for output files
-                            sha1sum = str()
+                            # original init of sha1sum
+#                            sha1sum = str()
+                            # BEGIN jana:
+                            sha1sum = hashlib.sha1()
+                            # comment from jana:
+                            # - this failes with a memory error (4cores, 9G, 168h, filsize:49GB) 
+                            #   and the sha1 sum cannot be created
                             try:
                                 with open(source_path, 'rb') as f:
-                                    sha1sum = hashlib.sha1(f.read()).hexdigest()
+                                    # BEGIN jana edits:
+                                    # the below exception is raised for large files
+                                    # this workaround reads the file in chunks and
+                                    # updates the sha1sum
+                                    while True:
+                                        buf = f.read(0x100000)
+                                        if not buf:
+                                            break
+                                        sha1sum.update(buf)
+                                    # END: jana edits
+                                    # original line below
+#                                    sha1sum = hashlib.sha1(f.read()).hexdigest()
                             except:
                                 logger.error("Error while calculating SHA1sum "
                                              "of %s" % source_path)
                                 raise
+
+                            # BEGIN jana:
+                            # hexadecimal version of sha1sum
+                            sha1sum = sha1sum.hexdigest()
+                            # END jana
 
                             os.rename(source_path, destination_path)
                             for path in [source_path, destination_path]:
