@@ -41,6 +41,9 @@ class Reformatcigar(AbstractStep):
                         description='Number of threads 2B started. (Default: 1). '
                         'Beware that this is only for (un-)compressing, '
                         'the reformating is using a single CPU only.')
+        self.add_option('blocksize', int, optional=True,
+                        description='Blocksize to read the input file, in Megabytes.'
+                        'Default: 2 (2,000,000 bytes)')
 
     def runs(self, run_ids_connections_files):
 
@@ -69,6 +72,13 @@ class Reformatcigar(AbstractStep):
                          '--stdout', alignments_path]
                 reformatcigar = [self.get_tool('segemehl_2017_reformatCigar'),
                                  '--in-file', '/dev/stdin']
+
+                if self.is_option_set_in_config('threads'):
+                    reformatcigar.extend(['--threads', str(self.get_option('threads'))])
+
+                if self.is_option_set_in_config('blocksize'):
+                    reformatcigar.extend(['--blocksize', str(self.get_option('blocksize'))])
+
                 pigzC = [self.get_tool('pigz'), 
                          '--processes', str(self.get_cores()),
                          '--stdout']

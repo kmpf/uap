@@ -1,6 +1,6 @@
 #!/bin/bash
-#"exec" "`dirname $0`/../python_env/bin/python" "$0" "$@"
-"exec" "python" "$0" "$@"
+"exec" "`dirname $0`/../python_2_7.13-1_env/bin/python" "$0" "$@"
+#"exec" "python" "$0" "$@"
 
 # ^^^
 # the cmd above ensures that the correct python environment is 
@@ -33,7 +33,10 @@ parser.add_argument('--in-file', dest='my_file_in', required=True,
                     'can be processed separately.')
 parser.add_argument('--threads', dest='my_cores', default=1,
                     type=int,
-                    help='Number of CPUs 2B used.')
+                    help='Number of CPUs 2B used. Default: 1')
+parser.add_argument('--blocksize', dest='my_bufsize', default=2,
+                    type=int,
+                    help='Size of buffer to read the input file (in MB). Default: 2')
 
 args = parser.parse_args()
 
@@ -128,9 +131,13 @@ if __name__ == '__main__':
 
     eof_reached = False
 
+    # bufsize needs to be provided in bytes
+    # argument provided megabytes
+    bufsize = args.my_bufsize * 1000000
+
     while not eof_reached:
         for i in range(args.my_cores - 1):
-            linelist = args.my_file_in.readlines(2000000)
+            linelist = args.my_file_in.readlines(bufsize)
             if len(linelist) == 0:
                 eof_reached = True
             else:
