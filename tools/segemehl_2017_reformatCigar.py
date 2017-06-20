@@ -1,5 +1,6 @@
 #!/bin/bash
-"exec" "`dirname $0`/../python_env/bin/python" "$0" "$@"
+#"exec" "`dirname $0`/../python_env/bin/python" "$0" "$@"
+"exec" "python" "$0" "$@"
 
 # ^^^
 # the cmd above ensures that the correct python environment is 
@@ -20,6 +21,8 @@
 import argparse
 import sys
 import re
+from multiprocessing import Pool
+import itertools
 
 parser = argparse.ArgumentParser(description='Python script to process a large file '
                                  'using multi-processing.')
@@ -53,47 +56,62 @@ def my_range(start, end, step):
 # function that does something with the line:
 # in this case:
 # - split the line into columns by tab
-# - print the columns separated by tab to stdout
+# - returns the columns separated by tab 
 
-def process_line(line):
-#    sys.stdout.write("\n%s" % line)
-    columns = line.strip().split('\t')
-    cigar=columns[5]
-    x = re.split('(\D)', cigar)
+def process_line(lines):
 
-    # split cigar string and sum up consecutive values 
-    # for '=' and 'X' (match and mismatch)
-    # leave values as they are for 'I','D' and 'N' (del, insertion, split)
-    M = 0
-    cigar_new = ''
-    for j in range(1, len(x)-1, 2):
-        # match or mismatch
-        if x[j]=='=' or x[j]=='X' or x[j]=='M':
-            M = M + int(x[j-1])
-        else: # del or ins
-            if M > 0:
-                cigar_new += str(M) + "M" # print the previous match/mismatch
-                M = 0
-            cigar_new += x[j-1] + x[j] # anything else but '=', 'X' or 'M'
-            
-    if M > 0:
-        cigar_new += str(M) + "M"
+    newlines = list()
+
+    c = 0
+    for line in lines:
+        c += 1
+
+        columns = line.strip().split('\t')
+
+        # don't process header lines
+        if(columns[0][:1]=="@"):
+            newlines.append(line.strip())
+            continue
+    
+        cigar=columns[5]
+        x = re.split('(\D)', cigar)
+
+        # split cigar string and sum up consecutive values 
+        # for '=' and 'X' (match and mismatch)
+        # leave values as they are for 'I','D' and 'N' (del, insertion, split)
+        M = 0
+        cigar_new = ''
+        for j in range(1, len(x)-1, 2):
+            # match or mismatch
+            if x[j]=='=' or x[j]=='X' or x[j]=='M':
+                M = M + int(x[j-1])
+            else: # del or ins
+                if M > 0:
+                    cigar_new += str(M) + "M" # print the previous match/mismatch
+                    M = 0
+                    cigar_new += x[j-1] + x[j] # anything else but '=', 'X' or 'M'
+                
+        if M > 0:
+            cigar_new += str(M) + "M"
         
-    if cigar_new == "0M*":
-        cigar_new = "*"
+        if cigar_new == "0M*":
+            cigar_new = "*"
 
-    # print the sam line with the new cigar string to stdout
-    for k in range(0, 5):
-        sys.stdout.write("%s\t" % columns[k])
+        # print the sam line with the new cigar string to stdout
+        new_line = ""
+        for k in range(0, 5):
+            new_line += "%s\t" % columns[k]
 
-    sys.stdout.write("%s\t" % cigar_new)
+        new_line += "%s\t" % cigar_new
 
-    for k in range(6, len(columns)):
-        sys.stdout.write("%s" % columns[k])
-        if(not k==len(columns)):
-            sys.stdout.write("\t")
+        for k in range(6, len(columns)):
+            new_line += "%s" % columns[k]
+            if(not k==len(columns)):
+                new_line += "\t"
 
-    sys.stdout.write("\n")
+        newlines.append(new_line)
+        
+    return newlines
 
 # END: process_line(line)
 ################################################################################
@@ -101,21 +119,36 @@ def process_line(line):
 
 
 
-
 if __name__ == '__main__':
-    
-    for line in args.my_file_in:
-        columns = line.strip().split('\t')
 
-        # don't process header lines
-        # print to stdout as they are
-        if(columns[0][:1]=="@"):
-            for fields in columns:
-                sys.stdout.write(fields)
-                if(not fields==columns[len(columns)-1]):
-                    sys.stdout.write("\t")
-            sys.stdout.write("\n")
-        else: # all non-header lines
-            process_line(line)
+    # create my_cores -1 pools, 1 control + the remaining for processing the lines
+    p = Pool(args.my_cores)
 
-    
+    a = list()
+
+    eof_reached = False
+
+    while not eof_reached:
+        for i in range(args.my_cores - 1):
+            linelist = args.my_file_in.readlines(2000000)
+            if len(linelist) == 0:
+                eof_reached = True
+            else:
+                a.append(linelist) # ~ 2MB chunks
+            
+        l = p.map(process_line, a)
+
+        for j in l:
+            print '\n'.join(j)
+
+        a[:] = [] # delete processed lines from the list
+
+
+# this works in principle.. too much i/o   
+#    for line in p.imap(process_line, args.my_file_in):
+#        print line, # the coma prevents printing an additional new line
+
+
+# idea for mp:
+# read file in chunks of the size 1/args.my_cores
+# --> each chunk in one process
