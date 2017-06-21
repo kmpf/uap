@@ -705,6 +705,8 @@ class Pipeline(object):
     (cc == cluster command).
     '''
     def get_cluster_command(self, key):
+        print self.get_cluster_type()
+        print key
         return self.get_cluster_config()[self.get_cluster_type()][key]
 
     '''
