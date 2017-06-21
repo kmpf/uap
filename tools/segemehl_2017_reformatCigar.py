@@ -1,5 +1,5 @@
 #!/bin/bash
-"exec" "`dirname $0`/../python_2_7.13-1_env/bin/python" "$0" "$@"
+"exec" "`dirname $0`/../python_env/bin/python" "$0" "$@"
 #"exec" "python" "$0" "$@"
 
 # ^^^
