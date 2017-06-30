@@ -21,12 +21,6 @@ fi
 
 virtualenv python_env
 
-# create a virtualenv for a different python module
-# in this case its essential for using the multiprocessing functions
-# (e.g. in tool 'segemehl_2017_reformatCigar.py'
-
-virtualenv -p /usr/local/python/2.7.13-1/bin/python python_2_7.13-1_env
-
 ################################
 # Installation of NumPy on EVE #
 ################################
