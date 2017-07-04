@@ -31,7 +31,7 @@ class Stringtie(AbstractStep):
                         description="use reference transcript annotation to guide assembly")
         self.add_option('v', bool, optional=True,
                         description='Turns on verbose mode, printing bundle processing details')
-        self.add_option('p', int, optional=True,
+        self.add_option('p', int, default=1, optional=True,
                         description='Specify the number of processing threads (CPUs) to use for transcript assembly. The default is 1')
         self.add_option('m', int, optional=True,
                         description='Sets the minimum length allowed for the predicted transcripts. Default: 200')
@@ -40,8 +40,15 @@ class Stringtie(AbstractStep):
         self.add_option('f', float, optional=True,
                         description='Sets the minimum isoform abundance of the predicted transcripts as a fraction of the most abundant transcript assembled at a given locus. Lower abundance transcripts are often artifacts of incompletely spliced precursors of processed transcripts. Default: 0.1')
 
+        self.add_option('fr', bool, optional=True,
+                    description='assume stranded library fr-secondstrand')
+
+        self.add_option('rf', bool, optional=True,
+                    description='assume stranded library fr-firststrand')
+
 
     def runs(self, run_ids_connections_files):
+        self.set_cores(self.get_option('p'))
 
         options=['G', 'v','p', 'm', 'l', 'f']
 
@@ -56,7 +63,13 @@ class Stringtie(AbstractStep):
             else:
                 option_list.append( '-%s' % option )
                 option_list.append( str(self.get_option(option)) )
+        
+        if self.is_option_set_in_config('fr'):
+            option_list.append( '--%s' % self.get_option('fr') )
 
+        if self.is_option_set_in_config('rf'):
+            option_list.append( '--%s' % self.get_option('rf') )
+            
 
         for run_id in run_ids_connections_files.keys():
 
