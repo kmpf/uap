@@ -68,13 +68,23 @@ class HtSeqCount(AbstractStep):
                 option_list.append(
                     '--%s=%s' % (option, str(self.get_option(option))))
 
-
+                
+        ### dirty work around to get the features 
+        connect_feature_path = None
+        for run_id in run_ids_connections_files.keys():
+            try:
+                connect_feature_path = run_ids_connections_files[run_id]['in/features'][0]
+            except KeyError:
+                pass
 
         for run_id in run_ids_connections_files.keys():
             if run_id == '':
                 continue
             # Check input files
-            alignments = run_ids_connections_files[run_id]['in/alignments']
+            try:
+                alignments = run_ids_connections_files[run_id]['in/alignments']
+            except KeyError:
+                continue
             input_paths = alignments
             features_path = str
             try:
@@ -83,14 +93,19 @@ class HtSeqCount(AbstractStep):
             except KeyError:
                 if self.is_option_set_in_config('feature-file'):
                     features_path = self.get_option('feature-file')
+                    
+                #dirty work around
+                elif (connect_feature_path):
+                    features_path = connect_feature_path
                 else:
                     logger.error(
                         "No feature file could be found for '%s'" % run_id)
                     sys.exit(1)
-            if not os.path.isfile(features_path):
-                logger.error("Feature file '%s' is not a file."
-                                    % features_path)
-                sys.exit(1)
+            if not connect_feature_path:
+                if not os.path.isfile(features_path):
+                    logger.error("Feature file '%s' is not a file."
+                                 % features_path)
+                    sys.exit(1)
             # Is the alignment gzipped?
             root, ext = os.path.splitext(alignments[0])
             is_gzipped = True if ext in ['.gz', '.gzip'] else False
