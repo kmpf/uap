@@ -97,6 +97,7 @@ class HtSeqCount(AbstractStep):
                 #dirty work around
                 elif (connect_feature_path):
                     features_path = connect_feature_path
+                    input_paths.append(features_path)
                 else:
                     logger.error(
                         "No feature file could be found for '%s'" % run_id)
