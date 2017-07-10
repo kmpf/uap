@@ -1,4 +1,4 @@
-destination_path: kallisto_out
+destination_path: salmon_out
 
 constants:
     - &salmon_index  input/salmon_index
@@ -52,6 +52,14 @@ tools:
 
     mv:
         path: 'mv'
+        get_version: '--version'
+
+    mkdir:
+        path: 'mkdir'
+        get_version: '--version'
+
+    rm:
+        path: 'rm'
         get_version: '--version'
 
     cp:
