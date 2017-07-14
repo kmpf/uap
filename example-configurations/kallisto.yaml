@@ -1,0 +1,60 @@
+destination_path: kallisto_out
+
+constants:
+    - &kallisto_index  input/index.idx
+
+steps:
+    #################
+    ## Source step ##
+    #################
+    fastq_source_1M (fastq_source):
+        sample_to_files_map:
+            rna_sim_1M:
+                - input/reads_1.fastq
+                - input/reads_2.fastq
+        paired_end: yes
+        first_read: 1.fastq
+        second_read: 2.fastq
+
+    AR_1M (adapterremoval):
+        _depends: fastq_source_1M
+        cores: 2
+        treatAs: paired
+        adapter1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNATCTCGTATGCCGTCTTCTGCTTG
+        adapter2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+        collapse: False
+        trimns: True
+        trimqualities: True
+        minquality: 20
+        threads: 2
+        minlength: 30
+
+    kallisto_1M (kallisto):
+        _depends: AR_1M
+        _connect:
+            in/first_read: AR_1M/pair1.truncated
+            in/second_read: AR_1M/pair2.truncated
+        i: *kallisto_index
+
+tools:
+    adapterremoval:
+        path: 'AdapterRemoval'
+        get_version: '--version'
+
+    kallisto:
+        path: 'kallisto'
+        get_version: 'version'
+        exit_code: 0
+
+    pwd:
+        path: 'pwd'
+        get_version: '--version'
+
+    mv:
+        path: 'mv'
+        get_version: '--version'
+
+    cp:
+        path: 'cp'
+        get_version: '--version'
+        exit_code: 0
