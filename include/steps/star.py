@@ -28,6 +28,7 @@ class Star(AbstractStep):
 
         # required tools
         self.require_tool('star')
+        self.require_tool('rm')
 
         # options
         self.add_option('cores', int, optional=True, default=1,
@@ -104,3 +105,8 @@ class Star(AbstractStep):
                 star_eg = run.new_exec_group()
                 star_eg.add_command(star, stdout_path=log_stdout,
                                     stderr_path=log_stderr)
+
+                # delete _STARtmp @ tmp directory if its not removed by STAR
+                tmp_dir = run.get_temp_output_directory() + '/_STARtmp'
+                eg = run.new_exec_group()
+                eg.add_command([self.get_tool('rm'), '-r', tmp_dir])
