@@ -156,7 +156,7 @@ class StringTie(AbstractStep):
     def runs(self, run_ids_connections_files):
         
         # Compile the list of options
-        options=['p', 'G', 'l', 'f', 'm', 'a,', 'j', 't', 'c', 'g', 'e', 'M', 'x']
+        options=['p', 'G', 'l', 'f', 'm', 'a', 'j', 't', 'c', 'g', 'e', 'M', 'x']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
