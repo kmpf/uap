@@ -193,8 +193,8 @@ class StringTie(AbstractStep):
                 outfile = run.add_output_file('features', '%s-transcripts.gtf' % run_id, input_paths)
                 abundfile = run.add_output_file('abundances', '%s-abundances.gtf' % run_id, input_paths)
                 covfile = run.add_output_file('covered', '%s-coveredRefs.gtf' % run_id, input_paths)
-                stdout = run.add_output_file('log_stdout', '%s-stringtie.stdout' % run_id, input_paths)
-                stderr = run.add_output_file('log_stderr', '%s-stringtie.stderr' % run_id, input_paths)
+#                stdout = run.add_output_file('log_stdout', '%s-stringtie.stdout' % run_id, input_paths)
+#                stderr = run.add_output_file('log_stderr', '%s-stringtie.stderr' % run_id, input_paths)
 
                 stringtie = [self.get_tool('stringtie'), input_paths[0]]
                 stringtie.extend(option_list)
