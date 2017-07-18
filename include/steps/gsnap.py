@@ -78,6 +78,8 @@ class Gsnap(AbstractStep):
                 gsnap.extend(['-o', out_path + '/gsnap_out.sam'])
                 gsnap.extend(input_fileset)
 
+                run.add_output_file("alignments", "gsnap_out.sam", input_fileset)
+
                 stderr_file = "%s-gsnap-log_stderr.txt" % (run_id)
                 log_stderr = run.add_output_file("log_stderr",
                                                  stderr_file, input_fileset)
