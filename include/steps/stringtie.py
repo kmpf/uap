@@ -90,7 +90,7 @@ class StringTie(AbstractStep):
                         'across them with at least this amount of bases on both sides are '
                         'filtered out.')
         # -j <FLOAT>
-        self.add_option('j', float, optional = True, default = 1,
+        self.add_option('j', float, optional = True, default = 1.0,
                         description = 'There should be at least this many spliced reads that '
                         'align across a junction (i.e. junction coverage). This number can be '
                         'fractional, since some reads align in more than one place. A read that '
