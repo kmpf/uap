@@ -179,7 +179,7 @@ class StringTie(AbstractStep):
             raise StandardError('Unexpected value for option "library-type" in step "stringtie". '
                                 'Accepted values are: "fr-firststrand" or "fr-secondstrand".')
 
-       for run_id in run_ids_connections_files.keys():
+        for run_id in run_ids_connections_files.keys():
 
              with self.declare_run(run_id) as run:
                 input_paths = run_ids_connections_files[run_id]['in/alignments']
