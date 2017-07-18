@@ -116,7 +116,7 @@ class Samtools(AbstractStep):
                             if is_gzipped:
                                 pigz = [self.get_tool('pigz'),
                                         '--decompress',
-                                        '--processes', self.get_cores(),
+                                        '--processes', str(self.get_cores()),
                                         '--blocksize', self.get_option('dd-blocksize'),
                                         '--stdout']
                                 pipe.add_command(pigz)
@@ -125,7 +125,7 @@ class Samtools(AbstractStep):
                             samtools_view = [
                                 self.get_tool('samtools'), 'view',
                                 self.get_option('genome-faidx'), '-',
-                                '-@', self.get_cores()
+                                '-@', str(self.get_cores())
                             ]
                             
                             # 3. command: Sort BAM input
