@@ -107,6 +107,9 @@ class Star(AbstractStep):
                                     stderr_path=log_stderr)
 
                 # delete _STARtmp @ tmp directory if its not removed by STAR
-                tmp_dir = run.get_temp_output_directory() + '/_STARtmp'
-                eg = run.new_exec_group()
-                eg.add_command([self.get_tool('rm'), '-r', tmp_dir])
+                # ADDITIONAL COMMENT: this lines makes the result ambiguous 
+                # because of the tmp_dir which uses the current time so
+                # the uap want to produces the results repeatedly
+                #tmp_dir = run.get_temp_output_directory() + '/_STARtmp'
+                #eg = run.new_exec_group()
+                #eg.add_command([self.get_tool('rm'), '-r', tmp_dir])
