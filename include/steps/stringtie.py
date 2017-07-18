@@ -36,8 +36,9 @@ class StringTie(AbstractStep):
 #        self.add_connection('out/ballgown')   # -B, requires -G!
         # ballgown files
         # I skip this option if I don't know how many output files are returned here
-        self.add_connection('out/log_stderr')
-        self.add_connection('out/log_stdout')
+        # this is maintained via uap anyway
+#        self.add_connection('out/log_stderr')
+#        self.add_connection('out/log_stdout')
         
         self.require_tool('mkdir')
         self.require_tool('mv')
@@ -201,16 +202,16 @@ class StringTie(AbstractStep):
                 if self.get_option('abundances'):
                     stringtie.extend(['-A', abundfile])
                 else:
-                    open(abundfile, 'a').close() # create an empty file
+                    run.add_empty_output_connection("abundances")
+#                    open(abundfile, 'a').close() # create an empty file
 
                 if self.get_option('covered-references'):
                     stringtie.extend(['-C', covfile])
                 else:
-                    open(covfile, 'a').close() # create an empty file
+                    run.add_empty_output_connection("covered")
+#                   open(covfile, 'a').close() # create an empty file
 
                 stringtie.extend(['-o', outfile])
 
                 with run.new_exec_group() as exec_group:
-                    exec_group.add_command(stringtie,
-                                           stderr_path = stderr,
-                                           stdout_path = stdout)
+                    exec_group.add_command(stringtie)
