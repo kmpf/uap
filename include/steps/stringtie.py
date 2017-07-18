@@ -200,9 +200,13 @@ class StringTie(AbstractStep):
 
                 if self.get_option('abundances'):
                     stringtie.extend(['-A', abundfile])
+                else:
+                    open(abundfile, 'a').close() # create an empty file
 
                 if self.get_option('covered-references'):
                     stringtie.extend(['-C', covfile])
+                else:
+                    open(covfile, 'a').close() # create an empty file
 
                 stringtie.extend(['-o', outfile])
 
