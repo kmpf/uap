@@ -136,7 +136,7 @@ class Samtools(AbstractStep):
                             # header
                             if self.get_option('keep_header'):
                                 samtools_view.append('-h')
-                                samtools_sort.append('-h')
+
                             # output
                             if self.get_option('output_bam'):
                                 samtools_view.append('-b')
@@ -178,6 +178,6 @@ class Samtools(AbstractStep):
                                 dd_out,
                                 stdout_path = run.add_output_file(
                                     'alignments',
-                                    '%s.sorted.bam' % run_id,
+                                    '%s.samtools.bam' % run_id,
                                     input_paths)
                             )
