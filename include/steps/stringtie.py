@@ -77,13 +77,17 @@ class StringTie(AbstractStep):
                         description = 'Sets the minimum length allowed for the predicted '
                         'transcripts.')
 
-        # -A <FILE.tab> => out/abundances
-        self.add_option('abundances', bool, optional = True, default = False,
-                        description = 'Print a table with the gene abundances.')
-
-        # -C <FILE.gtf> => out/covered, requires -G -> might be an empty file if !-G 
-        self.add_option('covered-references', bool, optional = True, default = False,
-                        description = 'Print a gtf file of all the covered reference transcripts.')
+# For now I don't have a solution to find an expected output connection, if it has not been created
+# with one of these options..
+# => both options are set to true by default, for now
+#
+#        # -A <FILE.tab> => out/abundances
+#        self.add_option('abundances', bool, optional = True, default = False,
+#                        description = 'Print a table with the gene abundances.')
+#
+#        # -C <FILE.gtf> => out/covered, requires -G -> might be an empty file if !-G 
+#        self.add_option('covered-references', bool, optional = True, default = False,
+#                        description = 'Print a gtf file of all the covered reference transcripts.')
 
         # -a <INT>
         self.add_option('a', int, optional = True, default = 10, 
@@ -199,18 +203,9 @@ class StringTie(AbstractStep):
                 stringtie = [self.get_tool('stringtie'), input_paths[0]]
                 stringtie.extend(option_list)
 
-                if self.get_option('abundances'):
-                    stringtie.extend(['-A', abundfile])
-                else:
-                    run.add_empty_output_connection("abundances")
-#                    open(abundfile, 'a').close() # create an empty file
-
-                if self.get_option('covered-references'):
-                    stringtie.extend(['-C', covfile])
-                else:
-                    run.add_empty_output_connection("covered")
-#                   open(covfile, 'a').close() # create an empty file
-
+                stringtie.extend(['-A', abundfile])
+                stringtie.extend(['-C', covfile])
+                
                 stringtie.extend(['-o', outfile])
 
                 with run.new_exec_group() as exec_group:
