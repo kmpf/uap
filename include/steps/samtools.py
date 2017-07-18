@@ -123,26 +123,14 @@ class Samtools(AbstractStep):
 
                             # 2. command: Convert sam to bam
                             samtools_view = [
-                                self.get_tool('samtools'), 'view',
-                                self.get_option('genome-faidx'), '-',
-                                '-@', str(self.get_cores())
-                            ]
+                                self.get_tool('samtools'), 'view']
                             
                             # 3. command: Sort BAM input
                             samtools_sort = [
-                                self.get_tool('samtools'), 'sort',
-                                '-O', 'bam'
-                            ]
+                                self.get_tool('samtools'), 'sort']
+
                             if self.get_option('sort-by-name'):
                                 samtools_sort.append('-n')
-                            samtools_sort.extend(
-                                ['-T',
-                                 os.path.join(
-                                    self.get_option('temp-sort-dir'),
-                                     run_id), 
-                                 '-',
-                                 '-@', str(self.get_cores())]
-                            )
                             
                             # add the general options
                             # header
@@ -152,7 +140,7 @@ class Samtools(AbstractStep):
                             # output
                             if self.get_option('output_bam'):
                                 samtools_view.append('-b')
-                                samtools_sort.append('-b')
+                                samtools_sort.extend(['-O', 'bam'])
                             # quality
                             if self.get_option('q_mapq') > 0:
                                 samtools_view.extend(['-q', 
@@ -169,6 +157,13 @@ class Samtools(AbstractStep):
                                 samtools_view.extend(['-F',
                                                       str(self.get_option('F_skip'))])
 
+                            samtools_view.extend(['-t', self.get_option('genome-faidx'), 
+                                                  '-', '-@', str(self.get_cores())])
+                            samtools_sort.extend(['-T', 
+                                                  os.path.join(self.get_option('temp-sort-dir'), run_id), 
+                                                  '-', '-@', str(self.get_cores())]
+                            )
+                            
                             # add to pipe
                             pipe.add_command(samtools_view)
 
