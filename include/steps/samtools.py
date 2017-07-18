@@ -141,7 +141,7 @@ class Samtools(AbstractStep):
                                     self.get_option('temp-sort-dir'),
                                      run_id), 
                                  '-',
-                                 '-@', self.get_cores()]
+                                 '-@', str(self.get_cores())]
                             )
                             
                             # add the general options
