@@ -56,10 +56,10 @@ class StringTie(AbstractStep):
                         'to guide the assembly process. The output will include expressed reference '
                         'transcripts as well as any novel transcripts that are assembled. This '
                         'option is required by options -B, -b, -e, -C (see below). ')
-        # --rf/fr
-        self.add_option('library-type', str, optional=False,choices=['rf', 'fr'], 
-                        description='Assumes a stranded library. Allowed values are "rf" for '
-                        'fr-firststrand and "fr" for fr-secondstrand.')
+        # --rf/--fr
+        self.add_option('library-type', str, optional=False,choices=['fr-firststrand', 'fr-secondstrand'], 
+                        description='Assumes a stranded library. Allowed values are "fr-firststrand '
+                        'and "fr-secondstrand".')
         # -l <LABEL>
         self.add_option('l', str, optional = True, default = "STRG",
                         description = 'Sets <LABEL> as the prefix for the name of the output '
