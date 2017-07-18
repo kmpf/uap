@@ -37,15 +37,11 @@ class Kallisto(AbstractStep):
                         description="Filename for the kallisto index to be \
                         used for quantification")
 
-        #self.add_option('o', str, optional=False, default=None,
-        #                description="Directory to write output to")
-
     def runs(self, run_ids_connections_files):
         self.set_cores(self.get_option('cores'))
 
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
-                print(run_id)
                 input_fileset = []
                 r1 = run_ids_connections_files[run_id]['in/first_read'][0]
                 input_fileset.append(r1)
