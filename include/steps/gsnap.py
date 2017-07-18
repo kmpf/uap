@@ -73,6 +73,9 @@ class Gsnap(AbstractStep):
                 # Currently implemented: sam, m8 (BLAST tabular format)
                 gsnap.extend(['-A', 'sam'])
 
+                # output
+                out_path = run.get_output_directory_du_jour_placeholder()
+                gsnap.extend(['-o', out_path + '/gsnap_out.sam'])
                 gsnap.extend(input_fileset)
 
                 stderr_file = "%s-gsnap-log_stderr.txt" % (run_id)
