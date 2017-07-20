@@ -139,6 +139,7 @@ class CuffCompare(AbstractStep):
                 raise StandardError("Expected exactly one feature file.")
 
             in_file = input_paths[0]
+            print in_file
 
             logger.error("input_pahts: %s" % input_paths)
             logger.error("inputs_paths[0]: %s" % input_paths[0])
