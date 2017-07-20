@@ -19,7 +19,7 @@ import sys
 import re
 import argparse
 import pprint
-import yaml
+#import yaml
 from collections import OrderedDict 
 from collections import defaultdict
 import numpy
@@ -80,7 +80,7 @@ def eval_arguments(args):
 ## called from main                     
 
 def output_metrics (metrics):
-    args.logfile.write( yaml.dump(metrics, default_flow_style=False))
+#    args.logfile.write( yaml.dump(metrics, default_flow_style=False))
     pass
 
 
@@ -290,7 +290,6 @@ def init_metrics():
 
     return metrics
      
-  
 def get_averages_metrics(metrics):
 
     mean_exon_length         = int(numpy.mean(metrics['exon_length']))
@@ -298,6 +297,7 @@ def get_averages_metrics(metrics):
     mean_transcript_length   = int(numpy.mean(metrics['transcript_length']))
     median_transcript_length = int(numpy.median(metrics['transcript_length']))
     
+
     metrics['mean_exon_length']            = mean_exon_length
     metrics['median_exon_length']          = median_exon_length
     metrics['mean_transcript_length']      = mean_transcript_length
