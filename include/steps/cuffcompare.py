@@ -138,11 +138,7 @@ class CuffCompare(AbstractStep):
             if len(input_paths) != 1:
                 raise StandardError("Expected exactly one feature file.")
 
-            in_file = input_paths[0]
-            print in_file
-
-            logger.error("input_pahts: %s" % input_paths)
-            logger.error("inputs_paths[0]: %s" % input_paths[0])
+            in_file = input_paths
 
             # the temporary output directory
             outdir = run.get_output_directory_du_jour_placeholder()
@@ -182,7 +178,7 @@ class CuffCompare(AbstractStep):
             # ii) add user defined settings
             cuffcompare.extend(option_list)
             # iii) add input file
-            cuffcompare.extend(input_paths[0])
+            cuffcompare.extend(input_paths)
 
             with run.new_exec_group() as cc_exec_group:
                 cc_exec_group.add_command(cuffcompare,
