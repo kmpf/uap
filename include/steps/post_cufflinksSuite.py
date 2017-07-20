@@ -24,17 +24,14 @@ class Post_CufflinksSuite(AbstractStep):
         self.set_cores(6)
 
         # merged assembly 'merged.gft'
-        self.add_connection('in/features')
+        self.add_connection('in/features') # combined.gtf
         # reformatted assembly
-        self.add_connection('out/features') # merged.gtf
+        self.add_connection('out/features') # filtered.gtf
         self.add_connection('out/log_stderr')
 
         self.require_tool('post_cufflinks_merge')
         self.require_tool('cat')
 
-        self.add_option('run_id', str, optional=True,
-                        description='An arbitrary name of the new run (which is a merge of all samples).',
-                        default = 'magic')
         self.add_option('remove_gencode', bool,
                         description='Hard removal of gtf line which match \'ENS\' in gene_name field',
                         default=False )
@@ -47,7 +44,9 @@ class Post_CufflinksSuite(AbstractStep):
         self.add_option('remove_by_gene_name', bool,
                         description='Remove gtf if matches \'string\' in gene_name field',
                         default=False)
-        self.add_option('class_list', str, optional=True,
+        # we may want to remove classcodes:
+        # e,o,p,r,s
+       self.add_option('class_list', str, optional=True,
                         description='Class codes to be removed; possible \'=,c,j,e,i,o,p,r,u,x,s,.\'',
                         default=None)
         self.add_option('filter_by_class', bool,
@@ -61,7 +60,7 @@ class Post_CufflinksSuite(AbstractStep):
     def runs(self, run_ids_connections_files):
         
         # compile list of options
-        options=['run_id','remove_gencode','remove_unstranded','gene_name','remove_by_gene_name',
+        options=['remove_gencode','remove_unstranded','gene_name','remove_by_gene_name',
                  'class_list','filter_by_class','filter_by_class_and_gene_name']
 
         set_options = [option for option in options if \
@@ -76,23 +75,28 @@ class Post_CufflinksSuite(AbstractStep):
                 option_list.append('--%s' % option)
                 option_list.append(str(self.get_option(option)))
 
-        run_id = self.get_option('run_id')
+        run_id = "magic"
+
         with self.declare_run(run_id) as run:
+
             input_paths = run_ids_connections_files[run_id]['in/features']
-            outfile = run.add_output_file('features', '%s-novel.gtf' % run_id, input_paths)
-            logfile = run.add_output_file('log_stderr', '%s-log_stderr.txt' % run_id, input_paths)
-
-
+            
+            outfile = run.add_output_file('features', 
+                                          '%s-filtered.gtf' % run_id, input_paths)
+            logfile = run.add_output_file('log_stderr', 
+                                          '%s-log_stderr.txt' % run_id, input_paths)
+           	
+           	
             # 1. create pipeline
             with run.new_exec_group() as as_exec_group:
-
-                cat = [self.get_tool('cat'), input_paths[0]]
-                post_cufflinks_merge = [self.get_tool('post_cufflinks_merge')]
-                post_cufflinks_merge.extend(option_list)
-                
-                with as_exec_group.add_pipeline() as pipe:
-                    pipe.add_command(cat)
-                    pipe.add_command(post_cufflinks_merge,
-                                     stdout_path=outfile,
-                                     stderr_path=logfile)
-                    
+           	
+           	cat = [self.get_tool('cat'), input_paths]
+           	post_cufflinks_merge = [self.get_tool('post_cufflinks_merge')]
+           	post_cufflinks_merge.extend(option_list)
+           	    
+           	with as_exec_group.add_pipeline() as pipe:
+           	    pipe.add_command(cat)
+           	    pipe.add_command(post_cufflinks_merge,
+           	                     stdout_path=outfile,
+           	                     stderr_path=logfile)
+           	        
