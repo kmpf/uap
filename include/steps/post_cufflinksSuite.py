@@ -46,7 +46,7 @@ class Post_CufflinksSuite(AbstractStep):
                         default=False)
         # we may want to remove classcodes:
         # e,o,p,r,s
-       self.add_option('class_list', str, optional=True,
+        self.add_option('class_list', str, optional=True,
                         description='Class codes to be removed; possible \'=,c,j,e,i,o,p,r,u,x,s,.\'',
                         default=None)
         self.add_option('filter_by_class', bool,
