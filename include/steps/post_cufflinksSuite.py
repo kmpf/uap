@@ -90,7 +90,7 @@ class Post_CufflinksSuite(AbstractStep):
             # 1. create pipeline
             with run.new_exec_group() as as_exec_group:
            	
-           	cat = [self.get_tool('cat'), input_paths]
+           	cat = [self.get_tool('cat'), input_paths[0]]
            	post_cufflinks_merge = [self.get_tool('post_cufflinks_merge')]
            	post_cufflinks_merge.extend(option_list)
            	    
