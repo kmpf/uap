@@ -140,6 +140,9 @@ class CuffCompare(AbstractStep):
 
                 in_file = input_paths[0]
 
+                logger.error("input_pahts: %s" % input_paths)
+                logger.error("inputs_paths[0]: %s" % input_paths[0])
+
                 # the temporary output directory
                 outdir = run.get_output_directory_du_jour_placeholder()
 
