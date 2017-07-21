@@ -38,30 +38,29 @@ class Post_CufflinksSuite(AbstractStep):
         self.add_option('remove-unstranded', bool,
                         description='Removes transcripts without strand specifity',
                         default=False)
-        self.add_option('gene_name', str, optional=True,
-                        description='String to match in gtf field gene_name for discarding',
-                        default='ENS')
+        self.add_option('string', str, optional=True,
+                        description='String to match in gtf field gene_name for discarding')
         self.add_option('remove-by-gene-name', bool,
                         description='Remove gtf if matches \'string\' in gene_name field',
                         default=False)
         # we may want to remove classcodes:
         # e,o,p,r,s
-        self.add_option('class_list', str, optional=True,
+        self.add_option('class-list', str, optional=True,
                         description='Class codes to be removed; possible \'=,c,j,e,i,o,p,r,u,x,s,.\'',
                         default=None)
-        self.add_option('filter_by_class', bool,
+        self.add_option('filter-by-class', bool,
                         description='Remove gtf if any class is found in class_code field, requieres class_list',
                         default=False)
         # transport hyphenations to the final program call
-        self.add_option('filter_by_class_and_gene_name', bool,
+        self.add_option('filter-by-class-and-gene-name', bool,
                         description='Combines remove-by-class and remove-by-gene-name',
                         default=False)
 
     def runs(self, run_ids_connections_files):
         
         # compile list of options
-        options=['remove_gencode','remove_unstranded','gene_name','remove_by_gene_name',
-                 'class_list','filter_by_class','filter_by_class_and_gene_name']
+        options=['remove-gencode','remove-unstranded','remove-by-gene-name',
+                 'class-list','filter-by-class','filter-by-class-and-gene-name']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
