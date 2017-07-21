@@ -88,15 +88,14 @@ class Post_CufflinksSuite(AbstractStep):
            	
            	
             # 1. create pipeline
-            with run.new_exec_group() as as_exec_group:
+            with run.new_exec_group() as pc_exec_group:
            	
-           	cat = [self.get_tool('cat'), input_paths[0]]
            	post_cufflinks_merge = [self.get_tool('post_cufflinks_merge')]
            	post_cufflinks_merge.extend(option_list)
-           	    
-           	with as_exec_group.add_pipeline() as pipe:
-           	    pipe.add_command(cat)
-           	    pipe.add_command(post_cufflinks_merge,
-           	                     stdout_path=outfile,
-           	                     stderr_path=logfile)
+                post_cufflinks_merge.extend([input_paths[0]])
+
+           	pc_exec_group.add_command(post_cufflinks_merge,
+           	                          stdout_path=outfile,
+           	                          stderr_path=logfile)
            	        
+
