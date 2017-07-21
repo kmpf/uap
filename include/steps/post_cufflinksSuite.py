@@ -32,16 +32,16 @@ class Post_CufflinksSuite(AbstractStep):
         self.require_tool('post_cufflinks_merge')
         self.require_tool('cat')
 
-        self.add_option('remove_gencode', bool,
+        self.add_option('remove-gencode', bool,
                         description='Hard removal of gtf line which match \'ENS\' in gene_name field',
                         default=False )
-        self.add_option('remove_unstranded', bool,
+        self.add_option('remove-unstranded', bool,
                         description='Removes transcripts without strand specifity',
                         default=False)
         self.add_option('gene_name', str, optional=True,
                         description='String to match in gtf field gene_name for discarding',
                         default='ENS')
-        self.add_option('remove_by_gene_name', bool,
+        self.add_option('remove-by-gene-name', bool,
                         description='Remove gtf if matches \'string\' in gene_name field',
                         default=False)
         # we may want to remove classcodes:
