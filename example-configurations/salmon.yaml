@@ -2,6 +2,7 @@ destination_path: salmon_out
 
 constants:
     - &salmon_index  input/salmon_index
+    - &transcript_gene_mapping  input/tgmapping.csv
 
 steps:
     #################
@@ -36,6 +37,13 @@ steps:
             in/second_read: AR_1M/pair2.truncated
         i: *salmon_index
 
+    t2g_salmon (tcount2gcount):
+        _depends: salmon_1M
+        _connect:
+            in/transcript_counts: salmon_1M/quant.sf
+        m: *transcript_gene_mapping
+        t: salmon
+
 tools:
     adapterremoval:
         path: 'AdapterRemoval'
@@ -45,6 +53,10 @@ tools:
         path: 'salmon'
         get_version: 'version'
         exit_code: 0
+
+    tcount2gcount:
+        path: ['./../python_env/bin/python', '../tools/tcount2gcount.py']
+        exit_code: 1
 
     pwd:
         path: 'pwd'
