@@ -3,6 +3,7 @@ destination_path: salmon_out
 constants:
     - &salmon_index  input/salmon_index
     - &transcript_gene_mapping  input/tgmapping.csv
+    - &path_to_gtf  input/file.gtf
 
 steps:
     #################
@@ -36,6 +37,7 @@ steps:
             in/first_read: AR_1M/pair1.truncated
             in/second_read: AR_1M/pair2.truncated
         i: *salmon_index
+        g: *path_to_gtf
 
     t2g_salmon (tcount2gcount):
         _depends: salmon_1M
