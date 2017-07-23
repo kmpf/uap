@@ -23,6 +23,7 @@ class Salmon(AbstractStep):
         self.add_connection('out/cmd_info.json')
         self.add_connection('out/lib_format_counts.json')
         self.add_connection('out/quant.sf')
+        self.add_connection('out/quant.genes.sf')
         self.add_connection('out/log_stderr')
         self.add_connection('out/log_stdout')
 
@@ -125,6 +126,12 @@ class Salmon(AbstractStep):
                     "lib_format_counts.json", "lib_format_counts.json", input_fileset)
                 result_files["quant.sf"] = run.add_output_file(
                     "quant.sf", "%s_quant.sf" % run_id, input_fileset)
+
+                if self.is_option_set_in_config('g'):
+                    result_files["quant.genes.sf"] = run.add_output_file(
+                        "quant.genes.sf", "%s_quant.genes.sf" % run_id, input_fileset)
+                else:
+                    run.add_empty_output_connection("quant.genes.sf")
 
                 result_files["flenDist.txt"] = run.add_output_file(
                     "flenDist.txt", "flenDist.txt", input_fileset)
