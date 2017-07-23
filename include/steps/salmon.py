@@ -54,6 +54,29 @@ class Salmon(AbstractStep):
         self.add_option('i', str, optional=False, default=None,
                         description="Salmon index")
 
+        self.add_option('g', str, optional=True, default=None,
+                        description="File containing a mapping of transcripts " \
+                                    "to genes.  If this file is provided " \
+                                    "Salmon will output both quant.sf and " \
+                                    "quant.genes.sf files, where the latter " \
+                                    "contains aggregated gene-level abundance " \
+                                    "estimates. The transcript to gene mapping " \
+                                    "should be provided as either a GTF file, " \
+                                    "or a in a simple tab-delimited format " \
+                                    "where each line contains the name of a " \
+                                    "transcript and the gene to which it " \
+                                    "belongs separated by a tab. The " \
+                                    "extension of the file is used to " \
+                                    "determine how the file should be parsed. " \
+                                    "Files ending in '.gtf', '.gff' or '.gff3'" \
+                                    "are assumed to be in GTF format; files " \
+                                    "with any other extension are assumed to " \
+                                    "be in the simple format. In GTF / GFF " \
+                                    "format, the 'transcript_id' is assumed " \
+                                    "to contain the transcript identifier and " \
+                                    "the 'gene_id' is assumed to contain the " \
+                                    "corresponding gene identifier.")
+
     def runs(self, run_ids_connections_files):
         self.set_cores(self.get_option('cores'))
 
@@ -77,6 +100,10 @@ class Salmon(AbstractStep):
                     salmon = [self.get_tool('salmon'), 'quant']
                     salmon.extend(['-i', str(self.get_option('i'))])
                     salmon.extend(['-l', 'ISF'])
+
+                    if self.is_option_set_in_config('g'):
+                        salmon.extend(['-g', self.get_option('g')])
+
                     salmon.extend(['-o', temp_dir])
                     salmon.extend(['-1', r1])
                     (r2 is not None) and (salmon.extend(['-2', r2]))
