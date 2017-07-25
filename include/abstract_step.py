@@ -570,7 +570,7 @@ class AbstractStep(object):
         def up_to_dateness_level(path, level = 0):
             result = level
 
-#            sys.stderr.write("path: %s (level: %d)\n" % (path, level))
+            sys.stderr.write("path: %s (level: %d)\n" % (path, level))
 
             if path != None:
                 dep_paths = self.get_pipeline().file_dependencies[path]
@@ -612,9 +612,11 @@ class AbstractStep(object):
         run_info = self.get_runs()
         max_level = 0
         for tag, output_files in run_info[run_id].get_output_files_abspath().items():
+
             # output_files can be None if the connection is empty
             for output_file, input_files in output_files.items():
                 if output_file != None and input_files != None:
+                    sys.write.stderr("outputfile: %s\n" % output_files)
                     max_level = max(
                         max_level, up_to_dateness_level(output_file))
 
