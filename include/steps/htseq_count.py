@@ -81,7 +81,7 @@ class HtSeqCount(AbstractStep):
             # Check input files
             if(run_id != "magic"):
                 
-                sys.stderr.write("key: %s\n" % run_id)
+#                sys.stderr.write("key: %s\n" % run_id)
 
                 alignments = run_ids_connections_files[run_id]['in/alignments']
                 input_paths = alignments
@@ -96,7 +96,7 @@ class HtSeqCount(AbstractStep):
                         logger.error("No feature file could be found for '%s'" % run_id)
                         sys.exit(1)
           
-                sys.stderr.write("feature-file: %s\n" % features_path)
+#                sys.stderr.write("feature-file: %s\n" % features_path)
 
                 if not os.path.isfile(features_path):
                     logger.error("Feature file '%s' is not a file."
@@ -153,7 +153,7 @@ class HtSeqCount(AbstractStep):
                             htseq_count.extend(option_list)
                             htseq_count.extend(['-', features_path])
                             
-                            sys.stderr.write("hts-cmd: %s\n" % htseq_count)
+#                            sys.stderr.write("hts-cmd: %s\n" % htseq_count)
                             
                             pipe.add_command(
                                 htseq_count,

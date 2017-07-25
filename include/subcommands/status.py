@@ -81,7 +81,7 @@ def main(args):
                 original_step_name_label = ' (%s)' % step.get_step_type()
 
             sys.stderr.write("step_name: %s\n" % step.get_step_name())
-            sys.stderr.write("step_name_label: %s\n" % original_step_name_label)
+            sys.stderr.write("index: %d\n" % index)
             sys.stderr.write("still alive!\n")
             sys.stderr.write("run_info: %s\n" % step.get_run_info_str())
 

@@ -616,7 +616,7 @@ class AbstractStep(object):
             # output_files can be None if the connection is empty
             for output_file, input_files in output_files.items():
                 if output_file != None and input_files != None:
-                    sys.stderr.write("outputfile: %s\n" % output_file)
+#                    sys.stderr.write("outputfile: %s\n" % output_file)
                     max_level = max(
                         max_level, up_to_dateness_level(output_file))
 
@@ -1049,9 +1049,9 @@ class AbstractStep(object):
     def get_run_info_str(self):
         count = {}
         for _ in self.get_run_ids():
-            sys.stderr.write("cur_run_id: %s\n" % _)
+#            sys.stderr.write("cur_run_id: %s\n" % _)
             state = self.get_run_state(_)
-            sys.stderr.write("state: %s\n" % state)
+#            sys.stderr.write("state: %s\n" % state)
             if not state in count:
                 count[state] = 0
             count[state] += 1
