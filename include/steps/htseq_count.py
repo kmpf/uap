@@ -120,6 +120,8 @@ class HtSeqCount(AbstractStep):
 
                 alignments_path = alignments[0]
 
+                sys.stderr.write("alns_path: %s\n" % alignments_path)
+
                 with self.declare_run(run_id) as run:
                     with run.new_exec_group() as exec_group:
                         with exec_group.add_pipeline() as pipe:
@@ -155,7 +157,6 @@ class HtSeqCount(AbstractStep):
                                 stdout_path = run.add_output_file(
                                     'counts',
                                     '%s-htseq_counts.txt' % run_id,
-                                    #input_paths
-                                    alignments_path
+                                    input_paths
                                 )
                             )
