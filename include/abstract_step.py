@@ -616,7 +616,7 @@ class AbstractStep(object):
             # output_files can be None if the connection is empty
             for output_file, input_files in output_files.items():
                 if output_file != None and input_files != None:
-                    sys.stderr.write("outputfile: %s\n" % output_files)
+                    sys.stderr.write("outputfile: %s\n" % output_file)
                     max_level = max(
                         max_level, up_to_dateness_level(output_file))
 
