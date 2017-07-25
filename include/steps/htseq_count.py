@@ -76,6 +76,9 @@ class HtSeqCount(AbstractStep):
                     '--%s=%s' % (option, str(self.get_option(option))))
     
         for run_id in run_ids_connections_files.keys():
+
+            sys.stderr.write("key: %s\n" % run_id)
+
             # Check input files
             alignments = run_ids_connections_files[run_id]['in/alignments']
             input_paths = alignments
