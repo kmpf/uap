@@ -1049,7 +1049,7 @@ class AbstractStep(object):
         for _ in self.get_run_ids():
             sys.stderr.write("cur_run_id: %s\n" % _)
             state = self.get_run_state(_)
-            sys.stderr.write("state: %d\n" % state)
+            sys.stderr.write("state: %s\n" % state)
             if not state in count:
                 count[state] = 0
             count[state] += 1
