@@ -28,9 +28,9 @@ class HtSeqCount(AbstractStep):
 #        )
 
         # the feature file provided by another step (e.g. cuffmerge)
-        self.add_connection('in/features',
-                            constraints = {'total_files': 1}
-        )
+#        self.add_connection('in/features',
+#                            constraints = {'total_files': 1}
+#        )
 
         # the counts per alignment
         self.add_connection('out/counts')
@@ -87,7 +87,8 @@ class HtSeqCount(AbstractStep):
                 input_paths = alignments
                 features_path = str
                 try:
-                    features_path = run_ids_connections_files['magic']['in/features'][0]
+#                    features_path = run_ids_connections_files['magic']['in/features'][0]
+                    features_path = run_ids_connections_files['magic']['in/alignments'][0]
                     input_paths.extend(features_path)
                 except KeyError:
                     if self.is_option_set_in_config('feature-file'):
