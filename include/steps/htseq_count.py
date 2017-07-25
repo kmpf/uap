@@ -155,6 +155,7 @@ class HtSeqCount(AbstractStep):
                                 stdout_path = run.add_output_file(
                                     'counts',
                                     '%s-htseq_counts.txt' % run_id,
-                                    input_paths
+                                    #input_paths
+                                    alignments_path
                                 )
                             )
