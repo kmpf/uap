@@ -135,7 +135,7 @@ class HtSeqCount(AbstractStep):
                                 # 2. Uncompress file to STDOUT
                                 pigz = [self.get_tool('pigz'),
                                         '--decompress',
-                                        '--processes', '1',
+                                        '--processes', str(self.get_cores()),
                                         '--stdout']
                                 pipe.add_command(pigz)
 
@@ -152,6 +152,9 @@ class HtSeqCount(AbstractStep):
                             ]
                             htseq_count.extend(option_list)
                             htseq_count.extend(['-', features_path])
+                            
+                            sys.stderr.write("hts-cmd: %s\n" % htseq_count)
+                            
                             pipe.add_command(
                                 htseq_count,
                                 stdout_path = run.add_output_file(
