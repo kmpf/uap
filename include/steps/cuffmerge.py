@@ -53,7 +53,6 @@ class CuffMerge(AbstractStep):
         self.add_option('num-threads', int, optional=True,
                         description='Use this many threads to merge assemblies.',
                         default = self.get_cores())
-        run_id = 'magic'
 
     def runs(self, run_ids_connections_files):
         
@@ -79,7 +78,8 @@ class CuffMerge(AbstractStep):
 
 #        print '\n'.join(cufflinks_sample_gtf)
 
-        run_id = self.get_option('run_id')
+#        run_id = self.get_option('run_id')
+        run_id = 'magic'
         with self.declare_run(run_id) as run:
             
             # create the filename of the assemblies.txt file
