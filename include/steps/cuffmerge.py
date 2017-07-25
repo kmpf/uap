@@ -42,9 +42,10 @@ class CuffMerge(AbstractStep):
         self.require_tool('mv')
 
         # output dir (-o option) is fixed by out connection ?!
-        self.add_option('run_id', str, optional=True,
-                        description='An arbitrary name of the new run (which is a merge of all samples).',
-                        default = 'magic')
+#        self.add_option('run_id', str, optional=True,
+#                        description='An arbitrary name of the new '
+#                        'run (which is a merge of all samples).',
+#                        default = 'magic')
         self.add_option('ref-gtf', str, optional=True,
                         description='A "reference" annotation GTF. The input assemblies are merged together with the reference GTF and included in the final output.')
         self.add_option('ref-sequence', str, optional=True,
@@ -52,6 +53,7 @@ class CuffMerge(AbstractStep):
         self.add_option('num-threads', int, optional=True,
                         description='Use this many threads to merge assemblies.',
                         default = self.get_cores())
+        run_id = 'magic'
 
     def runs(self, run_ids_connections_files):
         

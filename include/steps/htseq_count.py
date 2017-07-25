@@ -20,15 +20,19 @@ class HtSeqCount(AbstractStep):
         
         self.set_cores(2)
         
+        # the BAM files
         self.add_connection(
             'in/alignments',
             constraints = {'min_files_per_run': 1, 'max_files_per_run': 1}
         )
+        self.add_connection('out/counts')
+
+        # the feature file provided by another step (e.g. cuffmerge)
         self.add_connection(
             'in/features',
             constraints = {'total_files': 1}
         )
-        self.add_connection('out/counts')
+
         
         self.require_tool('dd')
         self.require_tool('pigz')
@@ -75,7 +79,8 @@ class HtSeqCount(AbstractStep):
             input_paths = alignments
             features_path = str
             try:
-                features_path = run_ids_connections_files[run_id]['in/features'][0]
+#                features_path = run_ids_connections_files[run_id]['in/features'][0]
+                features_path = run_ids_connections_files['magic']['in/features'][0]
                 input_paths.extend(features_path)
             except KeyError:
                 if self.is_option_set_in_config('feature-file'):
