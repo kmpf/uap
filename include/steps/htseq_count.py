@@ -77,74 +77,84 @@ class HtSeqCount(AbstractStep):
     
         for run_id in run_ids_connections_files.keys():
 
-            sys.stderr.write("key: %s\n" % run_id)
 
             # Check input files
-            alignments = run_ids_connections_files[run_id]['in/alignments']
-            input_paths = alignments
-            features_path = str
-            try:
-#                features_path = run_ids_connections_files[run_id]['in/features'][0]
-                features_path = run_ids_connections_files['magic']['in/features'][0]
-                input_paths.extend(features_path)
-            except KeyError:
-                if self.is_option_set_in_config('feature-file'):
-                    features_path = self.get_option('feature-file')
-                else:
-                    logger.error(
-                        "No feature file could be found for '%s'" % run_id)
-                    sys.exit(1)
-            if not os.path.isfile(features_path):
-                logger.error("Feature file '%s' is not a file."
-                                    % features_path)
-                sys.exit(1)
-            # Is the alignment gzipped?
-            root, ext = os.path.splitext(alignments[0])
-            is_gzipped = True if ext in ['.gz', '.gzip'] else False
-            # Is the alignment in SAM or BAM format?
-            if is_gzipped:
-                root, ext = os.path.splitext(root)
-            is_bam = True if ext in ['.bam'] else False
-            is_sam = True if ext in ['.sam'] else False
-            if not (bool(is_bam) ^ bool(is_sam)):
-                logger.error("Alignment file '%s' is neither SAM nor BAM "
-                             "format" % alignments[0])
-                sys.exit(1)
-            alignments_path = alignments[0]
+            if(run_id != "magic"):
+                
+                sys.stderr.write("key: %s\n" % run_id)
 
-            with self.declare_run(run_id) as run:
-                with run.new_exec_group() as exec_group:
-                    with exec_group.add_pipeline() as pipe:
-                        # 1. Read alignment file in 4MB chunks
-                        dd_in = [self.get_tool('dd'),
-                                 'ibs=%s' % self.get_option('dd-blocksize'),
-                                 'if=%s' % alignments_path]
-                        pipe.add_command(dd_in)
+                alignments = run_ids_connections_files[run_id]['in/alignments']
+                input_paths = alignments
+                features_path = str
+                try:
+                    features_path = run_ids_connections_files['magic']['in/features'][0]
+                    input_paths.extend(features_path)
+                except KeyError:
+                    if self.is_option_set_in_config('feature-file'):
+                        features_path = self.get_option('feature-file')
+                    else:
+                        logger.error("No feature file could be found for '%s'" % run_id)
+                        sys.exit(1)
+          
+                sys.stderr.write("feature-file: %s\n" % features_path)
+
+                if not os.path.isfile(features_path):
+                    logger.error("Feature file '%s' is not a file."
+                                 % features_path)
+                    sys.exit(1)
+
+                # Is the alignment gzipped?
+                root, ext = os.path.splitext(alignments[0])
+                is_gzipped = True if ext in ['.gz', '.gzip'] else False
+                # Is the alignment in SAM or BAM format?
+                if is_gzipped:
+                    root, ext = os.path.splitext(root)
+                    
+                is_bam = True if ext in ['.bam'] else False
+                is_sam = True if ext in ['.sam'] else False
+
+                if not (bool(is_bam) ^ bool(is_sam)):
+                    logger.error("Alignment file '%s' is neither SAM nor BAM "
+                                 "format" % alignments[0])
+                    sys.exit(1)
+
+                alignments_path = alignments[0]
+
+                with self.declare_run(run_id) as run:
+                    with run.new_exec_group() as exec_group:
+                        with exec_group.add_pipeline() as pipe:
+                            # 1. Read alignment file in 4MB chunks
+                            dd_in = [self.get_tool('dd'),
+                                     'ibs=%s' % self.get_option('dd-blocksize'),
+                                     'if=%s' % alignments_path]
+                            pipe.add_command(dd_in)
                         
-                        if is_gzipped:
-                            # 2. Uncompress file to STDOUT
-                            pigz = [self.get_tool('pigz'),
-                                    '--decompress',
-                                    '--processes', '1',
-                                    '--stdout']
-                            pipe.add_command(pigz)
-                        # 3. Use samtools to generate SAM output
-                        if is_bam:
-                            samtools = [self.get_tool('samtools'), 'view',
-                                        '-h', '-']
-                            pipe.add_command(samtools)
-                        # 4. Count reads with htseq-count
-                        htseq_count = [
-                            self.get_tool('htseq-count')
-                            #'--format=sam'
-                        ]
-                        htseq_count.extend(option_list)
-                        htseq_count.extend(['-', features_path])
-                        pipe.add_command(
-                            htseq_count,
-                            stdout_path = run.add_output_file(
-                                'counts',
-                                '%s-htseq_counts.txt' % run_id,
-                                input_paths
+                            if is_gzipped:
+                                # 2. Uncompress file to STDOUT
+                                pigz = [self.get_tool('pigz'),
+                                        '--decompress',
+                                        '--processes', '1',
+                                        '--stdout']
+                                pipe.add_command(pigz)
+
+                            # 3. Use samtools to generate SAM output
+                            if is_bam:
+                                samtools = [self.get_tool('samtools'), 'view',
+                                            '-h', '-']
+                                pipe.add_command(samtools)
+
+                            # 4. Count reads with htseq-count
+                            htseq_count = [
+                                self.get_tool('htseq-count')
+                                #'--format=sam'
+                            ]
+                            htseq_count.extend(option_list)
+                            htseq_count.extend(['-', features_path])
+                            pipe.add_command(
+                                htseq_count,
+                                stdout_path = run.add_output_file(
+                                    'counts',
+                                    '%s-htseq_counts.txt' % run_id,
+                                    input_paths
+                                )
                             )
-                        )
