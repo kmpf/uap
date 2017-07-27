@@ -574,6 +574,7 @@ class AbstractStep(object):
 
             if path != None:
                 dep_paths = self.get_pipeline().file_dependencies[path]
+                sys.stderr.write("dep_paths: %s\n" % dep_paths)
                 if not is_path_up_to_date(path, dep_paths):
                     result = level + 1
                 for dep_path in dep_paths:
