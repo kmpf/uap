@@ -81,7 +81,7 @@ class HtSeqCount(AbstractStep):
             features_path = str
             try:
                 features_path = run_ids_connections_files['magic']['in/features'][0]
-                input_paths.extend(features_path)
+#                input_paths.extend(features_path)
             except KeyError:
                 if self.is_option_set_in_config('feature-file'):
                     features_path = self.get_option('feature-file')
