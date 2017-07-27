@@ -89,7 +89,7 @@ class HtSeqCount(AbstractStep):
                     logger.error("No feature file could be found for '%s'" % run_id)
                     sys.exit(1)
                     
-            sys.stderr.write("feature-file: %s\n" % features_path)
+#            sys.stderr.write("feature-file: %s\n" % features_path)
             
             if not os.path.isfile(features_path):
                 logger.error("Feature file '%s' is not a file."
@@ -139,7 +139,7 @@ class HtSeqCount(AbstractStep):
 
                 alignments_path = alignments[0]
 
-                sys.stderr.write("alns_path: %s\n" % alignments_path)
+#                sys.stderr.write("alns_path: %s\n" % alignments_path)
 
                 with self.declare_run(run_id) as run:
                     with run.new_exec_group() as exec_group:

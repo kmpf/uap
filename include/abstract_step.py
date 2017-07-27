@@ -570,11 +570,11 @@ class AbstractStep(object):
         def up_to_dateness_level(path, level = 0):
             result = level
 
-            sys.stderr.write("path: %s (level: %d)\n" % (path, level))
+#            sys.stderr.write("path: %s (level: %d)\n" % (path, level))
 
             if path != None:
                 dep_paths = self.get_pipeline().file_dependencies[path]
-                sys.stderr.write("dep_paths: %s\n" % dep_paths)
+#                sys.stderr.write("dep_paths: %s\n" % dep_paths)
                 if not is_path_up_to_date(path, dep_paths):
                     result = level + 1
                 for dep_path in dep_paths:
