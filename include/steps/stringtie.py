@@ -64,11 +64,11 @@ class Stringtie(AbstractStep):
                 option_list.append( '-%s' % option )
                 option_list.append( str(self.get_option(option)) )
         
-        if self.is_option_set_in_config('fr'):
-            option_list.append( '--%s' % self.get_option('fr') )
+        if (self.is_option_set_in_config('fr') and self.get_option('fr')):
+            option_list.append('--fr')
 
-        if self.is_option_set_in_config('rf'):
-            option_list.append( '--%s' % self.get_option('rf') )
+        if (self.is_option_set_in_config('rf') and self.get_option('rf')):
+            option_list.append('--rf')
             
 
         for run_id in run_ids_connections_files.keys():
