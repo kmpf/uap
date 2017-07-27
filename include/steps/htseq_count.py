@@ -75,33 +75,52 @@ class HtSeqCount(AbstractStep):
                 option_list.append(
                     '--%s=%s' % (option, str(self.get_option(option))))
     
+        # this is the feature path that is need for all the alignments for counting
+        features_path = str
+        try:
+            features_path = run_ids_connections_files['magic']['in/features'][0]
+            input_paths.extend(features_path)
+        except KeyError:
+            if self.is_option_set_in_config('feature-file'):
+                features_path = self.get_option('feature-file')
+            else:
+                logger.error("No feature file could be found for '%s'" % run_id)
+                sys.exit(1)
+                
+        sys.stderr.write("feature-file: %s\n" % features_path)
+
+        if not os.path.isfile(features_path):
+            logger.error("Feature file '%s' is not a file."
+                         % features_path)
+            sys.exit(1)
+
         for run_id in run_ids_connections_files.keys():
 
 
-            # Check input files
+            # Check input alignment files
             if(run_id != "magic"):
                 
 #                sys.stderr.write("key: %s\n" % run_id)
 
                 alignments = run_ids_connections_files[run_id]['in/alignments']
                 input_paths = alignments
-                features_path = str
-                try:
-                    features_path = run_ids_connections_files['magic']['in/features'][0]
-                    input_paths.extend(features_path)
-                except KeyError:
-                    if self.is_option_set_in_config('feature-file'):
-                        features_path = self.get_option('feature-file')
-                    else:
-                        logger.error("No feature file could be found for '%s'" % run_id)
-                        sys.exit(1)
-          
-#                sys.stderr.write("feature-file: %s\n" % features_path)
-
-                if not os.path.isfile(features_path):
-                    logger.error("Feature file '%s' is not a file."
-                                 % features_path)
-                    sys.exit(1)
+#                features_path = str
+#                try:
+#                    features_path = run_ids_connections_files['magic']['in/features'][0]
+#                    input_paths.extend(features_path)
+#                except KeyError:
+#                    if self.is_option_set_in_config('feature-file'):
+#                        features_path = self.get_option('feature-file')
+#                    else:
+#                        logger.error("No feature file could be found for '%s'" % run_id)
+#                        sys.exit(1)
+#          
+##                sys.stderr.write("feature-file: %s\n" % features_path)
+#
+#                if not os.path.isfile(features_path):
+#                    logger.error("Feature file '%s' is not a file."
+#                                 % features_path)
+#                    sys.exit(1)
 
                 # Is the alignment gzipped?
                 root, ext = os.path.splitext(alignments[0])
