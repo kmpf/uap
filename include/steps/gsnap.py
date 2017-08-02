@@ -61,6 +61,9 @@ class Gsnap(AbstractStep):
                 # kmer size to use in genome database
                 gsnap.extend(['-k', '12'])
 
+                # Look for novel splicing
+                gsnap.extend(['-N', '1'])
+
                 # Maximum number of mismatches allowed
                 #(if not specified, then
                 # defaults to the ultrafast level of ((readlength+index_interval-1)/kmer - 2))
