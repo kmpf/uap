@@ -44,6 +44,46 @@ steps:
         m: *transcript_gene_mapping
         t: kallisto
 
+    ### para ###
+    split_test (split_fastq):
+        _depends: fastq_source_1M
+        readcount: 1000
+        outfile_count: 10
+
+    AR_1M_para (adapterremoval):
+        _depends: split_test
+        cores: 10
+        treatAs: paired
+        adapter1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNATCTCGTATGCCGTCTTCTGCTTG
+        adapter2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+        collapse: False
+        trimns: True
+        trimqualities: True
+        minquality: 20
+        threads: 10
+        minlength: 30
+
+    kallisto_1M_para (kallisto):
+        _depends: AR_1M_para
+        _connect:
+            in/first_read: AR_1M_para/pair1.truncated
+            in/second_read: AR_1M_para/pair2.truncated
+        i: *kallisto_index
+
+    t2g_kallisto_para (tcount2gcount):
+        _depends: kallisto_1M_para
+        _connect:
+            in/transcript_counts: kallisto_1M_para/abundance.tsv
+        m: *transcript_gene_mapping
+        t: kallisto
+
+    kallisto_M5_merge (merge_genecounts):
+        _depends: t2g_kallisto_para
+        _connect:
+            in/counts: t2g_kallisto_para/gene_counts
+        t: htc
+
+
 tools:
     adapterremoval:
         path: 'AdapterRemoval'
@@ -53,6 +93,14 @@ tools:
         path: 'kallisto'
         get_version: 'version'
         exit_code: 0
+
+    split_fastqn:
+        path: ['./../python_env/bin/python', '../tools/split_fastq2.py']
+        exit_code: 1
+
+    merge_genecounts:
+        path: ['./../python_env/bin/python', '../tools/merge_genecounts.py']
+        exit_code: 1
 
     tcount2gcount:
         path: ['./../python_env/bin/python', '../tools/tcount2gcount.py']
