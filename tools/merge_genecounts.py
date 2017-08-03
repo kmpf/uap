@@ -16,7 +16,7 @@ def get_cleaned_line(line):
     line = line.split('\t')
     gene = line[0]
     count = line[-1].rstrip('\n')
-    return [gene, int(count)]
+    return [gene, float(count)]
 
 def is_headline(line):
     if line[0] == '#':

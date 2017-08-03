@@ -35,10 +35,11 @@ class MergeGenecounts(AbstractStep):
 
         gc_files = []
         for run_id in run_ids_connections_files.keys():
-            with self.declare_run(run_id) as run:
-                # collect needed files
-                gc_file = run_ids_connections_files[run_id]['in/counts'][0]
-                gc_files.append(gc_file)
+            if run_ids_connections_files[run_id]['in/counts']:
+                with self.declare_run(run_id) as run:
+                    # collect needed files
+                    gc_file = run_ids_connections_files[run_id]['in/counts'][0]
+                    gc_files.append(gc_file)
 
         new_run_id = 'merged_genecounts'
         tool_name = self.get_option('t')

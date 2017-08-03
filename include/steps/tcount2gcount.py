@@ -43,18 +43,19 @@ class Tcount2gcount(AbstractStep):
             with self.declare_run(run_id) as run:
                 t_counts.append(run_ids_connections_files[run_id]['in/transcript_counts'][0])
 
-        new_run_id = 'tcount2gcount'
-        with self.declare_run(new_run_id) as run:
-            tool_name = self.get_option('t')
-            file_name = '%s_%s.tsv' % (new_run_id, tool_name)
-            run.add_output_file('gene_counts', file_name, t_counts)
-            basename = run.get_output_directory_du_jour_placeholder()
-            convert_command = [
-                self.get_tool('tcount2gcount'),
-                '-m', self.get_option('m'),
-                '-i', t_counts[0],
-                '-t', tool_name,
-                '-o', basename + '/' + file_name
-            ]
-            convert_exec_group = run.new_exec_group()
-            convert_exec_group.add_command(convert_command)
+        for i in range(0, len(t_counts)):
+            new_run_id = 'tcount2gcount_%s' % i
+            with self.declare_run(new_run_id) as run:
+                tool_name = self.get_option('t')
+                file_name = '%s_%s.tsv' % (new_run_id, tool_name)
+                run.add_output_file('gene_counts', file_name, t_counts)
+                basename = run.get_output_directory_du_jour_placeholder()
+                convert_command = [
+                    self.get_tool('tcount2gcount'),
+                    '-m', self.get_option('m'),
+                    '-i', t_counts[i],
+                    '-t', tool_name,
+                    '-o', basename + '/' + file_name
+                ]
+                convert_exec_group = run.new_exec_group()
+                convert_exec_group.add_command(convert_command)
