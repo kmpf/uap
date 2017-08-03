@@ -57,6 +57,8 @@ class Kallisto(AbstractStep):
                 kallisto.extend(['-i', str(self.get_option('i'))])
                 out_path = run.get_output_directory_du_jour_placeholder()
                 kallisto.extend(['-o', out_path])
+                # TODO: implement parameter
+                kallisto.append('--fr-stranded')
                 kallisto.extend(input_fileset)
 
                 stderr_file = "%s-kallisto-log_stderr.txt" % (run_id)

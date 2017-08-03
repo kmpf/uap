@@ -106,6 +106,9 @@ class Salmon(AbstractStep):
                         salmon.extend(['-g', self.get_option('g')])
 
                     salmon.extend(['-o', temp_dir])
+
+                    # TODO: implement param --auxDir
+
                     salmon.extend(['-1', r1])
                     (r2 is not None) and (salmon.extend(['-2', r2]))
 
