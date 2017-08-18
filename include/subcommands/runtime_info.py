@@ -13,8 +13,7 @@ This script
 
 logger = logging.getLogger("uap_logger")
 
-def write_output_file(data):
-    file_path = 'runtime_info.csv'
+def write_output_file(data, file_path):
     f = open(file_path, 'w')
 
     for line in data:
@@ -68,7 +67,37 @@ def main(args):
                 annotation_data.total_end_time
             ])
 
-    write_output_file(output_data)
+    if arguments['to_screen']:
+        for line in output_data:
+            print(line)
+    else:
+        file_path = arguments['file_path']
+
+        # if file already exists
+        if os.path.exists(file_path):
+            write_file = False
+            while not write_file:
+                message = "The given file_path '%s' already exists! " \
+                          "Do you want to overwrite this file? [N/y]" % file_path
+                response = raw_input(message)
+
+                if response == "N" or response == "":
+                    file_path = raw_input("Please give a new file_path:")
+                    while file_path == '':
+                        file_path = raw_input('Please give a valid file_path:')
+
+                    if os.path.exists(file_path):
+                        continue
+
+                    print("New file will be written to '%s'" % file_path)
+                    write_file = True
+                elif response == 'y':
+                    print('File will be overwritten!')
+                    write_file = True
+                else:
+                    print('unknown option')
+
+        write_output_file(output_data, file_path)
 
 
 if __name__ == '__main__':

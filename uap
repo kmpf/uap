@@ -419,11 +419,11 @@ def main():
         parents=[common_parser])
 
     runtime_info_parser.add_argument(
-        "--to_file",
-        dest="to_file",
+        "--to-screen",
+        dest="to_screen",
         action="store_true",
         default=False,
-        help="Write information to a csv file.")
+        help="Displays information to the screen instead of writing to file.")
 
     runtime_info_parser.add_argument(
         "--run_id",
@@ -431,6 +431,13 @@ def main():
         action="store_true",
         default=False,
         help="Get information for a specific run-id.")
+
+    runtime_info_parser.add_argument(
+        "--file-path",
+        dest="file_path",
+        type=str,
+        default='runtime_info.csv',
+        help="Path of the output file.")
 
     runtime_info_parser.set_defaults(func=runtime_info.main)
 
