@@ -437,7 +437,7 @@ def main():
         dest="file_path",
         type=str,
         default='runtime_info.csv',
-        help="Path of the output file.")
+        help="Path of the output file. [runtime_info.csv]")
 
     runtime_info_parser.set_defaults(func=runtime_info.main)
 

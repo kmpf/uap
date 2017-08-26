@@ -4,7 +4,7 @@ import logging
 import glob
 import os
 import yaml
-
+import time
 import pipeline
 
 '''
@@ -42,9 +42,15 @@ def main(args):
     else:
         task_list = p.all_tasks_topologically_sorted
 
+
     output_data = [
-        ['step', 'CPUs [%]', '# requested CPUs', 'RAM [MB]', 'Duration [s]', 'total start time', 'total end time']
+        ['# uap runtime-info', time.strftime("%c"), p.git_hash_tag],
+        ['# uap  config', p.get_config_filepath()],
+        ['# step', 'CPUs [%]', 'requested CPUs', 'RAM [MB]', 'Duration [s]', 'total start time', 'total end time'],
+        ['step', 'cpu_percent', 'requested_cpu', 'ram_mb', 'duration_seconds', 'total_start_time', 'total_end_time']
     ]
+
+
     for task in task_list:
         outdir = task.get_run().get_output_directory()
         anno_files = glob.glob(os.path.join(
@@ -127,7 +133,6 @@ class Annotation_Data:
         self.processes = dict()
         for i, process_data in enumerate(self.__yaml_data['pipeline_log']['processes']):
             tmp_data = dict()
-
             tmp_data['start_time'] = process_data['start_time']
             tmp_data['end_time'] = process_data['end_time']
             tmp_data['duration'] = str(process_data['end_time'] - process_data['start_time'])
