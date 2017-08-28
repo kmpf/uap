@@ -13,6 +13,8 @@ class Hisat2(AbstractStep):
     human genomes (as well as to a single reference genome).
 
     https://ccb.jhu.edu/software/hisat2/index.shtml
+    must be version 2.1 or higher 
+    metrics and summary file are automatically produced
     '''
 
     def __init__(self, pipeline):
@@ -24,6 +26,7 @@ class Hisat2(AbstractStep):
         self.add_connection('out/alignments')
         self.add_connection('out/log_stderr')
         self.add_connection('out/metrics')
+        self.add_connection('out/summary')
         self.add_connection('out/unaligned')
 
         self.require_tool('pigz')
@@ -222,6 +225,10 @@ class Hisat2(AbstractStep):
 
         # met-file, met-stderr, met?
 
+        self.add_option('new-summary', bool, default=None, optional=True,
+                        description="print alignment summary in a new style, \
+                        which is more machine-friendly")
+
         self.add_option('no-head', bool, default=None, optional=True,
                         description="supppress header lines, i.e. lines \
                         starting with @")
@@ -269,12 +276,15 @@ class Hisat2(AbstractStep):
                         description="seed rand. gen. arbitrarily instead of \
                         using read attributes")
 
+
+
     def runs(self, run_ids_connections_files):
         flags = ["q", "qseq", "f", "c", "ignore-quals", "nofw", "dta",
                  "norc", "no-mixed",  "no-discordant", "quiet", "qc-filter",
                  "non-deterministic", "no-temp-splicesite",
                  "no-spliced-alignment", "tmo", "no-head", "no-sq",
-                 "omit-sec-seq", "remove-chrname", "add-chrname"]
+                 "omit-sec-seq", "remove-chrname", "add-chrname", "new-summary",
+                 'fr', 'rf', 'ff']
 
         strflags = ["n-ceil", "ma", "mp", "sp", "np", "rdg", "score-min", "k",
                     "rfg", "rg", "pen-cansplice", "pen-noncansplice",
@@ -354,6 +364,12 @@ class Hisat2(AbstractStep):
                             'log_stderr',
                             '%s-hisat2-log_stderr.txt' % run_id,
                             input_paths)
+
+                        summary = run.add_output_file(
+                            'summary',
+                            '%s-hisat2-summary.txt' % run_id,
+                            input_paths)
+                        hisat2.extend(['--summary-file', summary])
 
                         metrics = run.add_output_file(
                             'metrics',
