@@ -8,6 +8,7 @@ import random
 import stat
 import string
 import tempfile
+import socket
 
 import yaml
 
@@ -872,6 +873,8 @@ class Run(object):
         log['end_time'] = self.get_step().end_time
         if self.get_step().get_pipeline().git_dirty_diff:
             log['git_dirty_diff'] = self.get_step().get_pipeline().git_dirty_diff
+        log['system'] = {}
+        log['system']['hostname'] = socket.gethostname()
         if self.get_step().get_pipeline().caught_signal is not None:
             log['signal'] = self.get_step().get_pipeline().caught_signal
 
