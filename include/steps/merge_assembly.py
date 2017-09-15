@@ -85,7 +85,7 @@ class MergeAssembly(AbstractStep):
                                 '-k', '4g,4',
                                 '-k', '5g,5',
                                 '-'] # the input coming from the cat cmd in the pipe
-                        pipe.add_comand(sort,
+                        pipe.add_command(sort,
                                         stdout_path = features_file,
                                         stderr_path = log_err_file)
 
