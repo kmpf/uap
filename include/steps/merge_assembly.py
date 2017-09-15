@@ -16,7 +16,7 @@ class MergeAssembly(AbstractStep):
     def __init__(self, pipeline):
         super(MergeAssembly, self).__init__(pipeline)
         
-        self.set_cores(4) 
+        self.set_cores(1) 
         
         self.add_connection('in/features')
         self.add_connection('out/features')
@@ -30,7 +30,8 @@ class MergeAssembly(AbstractStep):
                         description = "The reference annotation file that should be merged.")
         # [Options for 'sort':]
         self.add_option('temp-sort-dir', str, optional = False, 
-                        description = "Intermediate sort files are stored into this directory. Note that this directory needs to be present before running this step.")
+                        description = 'Intermediate sort files are stored into this directory. '
+                        'Note that this directory needs to be present before running this step.')
 
     def runs(self, run_ids_connections_files):
 

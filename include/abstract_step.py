@@ -190,6 +190,9 @@ class AbstractStep(object):
         The options are either set to values given in YAML config or
         the default values set in self.add_option().
         '''
+
+        print options
+
         self._options = dict()
         
         # set options
