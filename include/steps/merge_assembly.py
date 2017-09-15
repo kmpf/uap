@@ -62,7 +62,7 @@ class MergeAssembly(AbstractStep):
                     sys.exit(1)
 
                 # this is the prefix without directory for uap add output file
-                prefix = '%s_cuffcompare' %  run_id
+                prefix = '%s_merge_assembly' %  run_id
 
                 features_file = run.add_output_file('features',
                                                     '%s.allTranscripts.gtf' % prefix,
