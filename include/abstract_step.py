@@ -192,7 +192,8 @@ class AbstractStep(object):
         '''
 
         print options
-
+        sys.exit(1)
+        
         self._options = dict()
         
         # set options
