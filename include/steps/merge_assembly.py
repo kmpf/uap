@@ -80,7 +80,7 @@ class MergeAssembly(AbstractStep):
 
                         # 2. sort concatenated file by position
                         sort = [self.get_tool('sort'), 
-                                '-T', os.path.join(self.get_option('temp-sort-dir'), run_id),
+                                '-T', self.get_option('temp-sort-dir'),
                                 '-k', '1,1',
                                 '-k', '4g,4',
                                 '-k', '5g,5',
