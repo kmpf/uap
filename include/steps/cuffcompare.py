@@ -178,7 +178,8 @@ class CuffCompare(AbstractStep):
                 # ii) add user defined settings
                 cuffcompare.extend(option_list)
                 # iii) add input file
-                cuffcompare.extend(input_paths[0])
+#                cuffcompare.extend(input_paths[0])
+                cuffcompare.extend(in_file)
 
                 with run.new_exec_group() as cc_exec_group:
                     cc_exec_group.add_command(cuffcompare,
