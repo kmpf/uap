@@ -133,14 +133,12 @@ class CuffCompare(AbstractStep):
                 input_paths = run_ids_connections_files[run_id]['in/features']
                 if not input_paths:
                     raise StandardError("No input files for run %s" % (run_id))
-
-                # input files could be more than 1!!!                    
+                    
                 # check whether there's exactly one feature file
-#                if len(input_paths) != 1:
-#                    raise StandardError("Expected exactly one feature file.")
-#
-#
-#                in_file = input_paths[0]
+                if len(input_paths) != 1:
+                    raise StandardError("Expected exactly one feature file.")
+
+                in_file = input_paths[0]
 
                 # the temporary output directory
                 outdir = run.get_output_directory_du_jour_placeholder()
@@ -180,8 +178,7 @@ class CuffCompare(AbstractStep):
                 # ii) add user defined settings
                 cuffcompare.extend(option_list)
                 # iii) add input file
-                cuffcompare.extend(input_paths)
-#                cuffcompare.extend(input_paths[0])
+                cuffcompare.extend(input_paths[0])
 
                 with run.new_exec_group() as cc_exec_group:
                     cc_exec_group.add_command(cuffcompare,
