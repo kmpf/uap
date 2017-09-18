@@ -78,8 +78,8 @@ class CuffMerge(AbstractStep):
 
 #        print '\n'.join(cufflinks_sample_gtf)
 
-        run_id = self.get_option('run_id')
-#        run_id = 'magic'
+#        run_id = self.get_option('run_id')
+        run_id = 'magic'
         with self.declare_run(run_id) as run:
             
             # create the filename of the assemblies.txt file
