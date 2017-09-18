@@ -126,60 +126,63 @@ class CuffCompare(AbstractStep):
                 option_list.append('-%s' % option)
                 option_list.append(str(self.get_option(option)))
                 
-        run_id = "magic"
+        for run_id in run_ids_connections_files.keys():
             
-        with self.declare_run(run_id) as run:
+            with self.declare_run(run_id) as run:
 
-            input_paths = run_ids_connections_files[run_id]['in/features']
-            if not input_paths:
-                raise StandardError("No input files for run %s" % (run_id))
-                
-            # check whether there's exactly one feature file
-            if len(input_paths) != 1:
-                raise StandardError("Expected exactly one feature file.")
+                input_paths = run_ids_connections_files[run_id]['in/features']
+                if not input_paths:
+                    raise StandardError("No input files for run %s" % (run_id))
 
-            in_file = input_paths
+                # input files could be more than 1!!!                    
+                # check whether there's exactly one feature file
+#                if len(input_paths) != 1:
+#                    raise StandardError("Expected exactly one feature file.")
+#
+#
+#                in_file = input_paths[0]
 
-            # the temporary output directory
-            outdir = run.get_output_directory_du_jour_placeholder()
+                # the temporary output directory
+                outdir = run.get_output_directory_du_jour_placeholder()
 
-            # this is the prefix for the cufflinks cmd options:
-            # -o and -c (out- and consensus prefix):
-            prefixCC = '%s/%s_cuffcompare' % (outdir, run_id)
+                # this is the prefix for the cufflinks cmd options:
+                # -o and -c (out- and consensus prefix):
+                prefixCC = '%s/%s_cuffcompare' % (outdir, run_id)
 
-            # this is the prefix without directory for uap add output file
-            prefix = '%s_cuffcompare' %  run_id
-                        
+                # this is the prefix without directory for uap add output file
+                prefix = '%s_cuffcompare' %  run_id
+                            
 
-            features_file = run.add_output_file('features',
-                                                '%s.combined.gtf' % prefix,
-                                                input_paths)
-            loci_file     = run.add_output_file('loci',
-                                                '%s.loci' % prefix,
-                                                input_paths)
-            stats_file    = run.add_output_file('stats',
-                                                '%s.stats' % prefix,
-                                                input_paths)
-            tracking_file = run.add_output_file('tracking',
-                                                '%s.tracking' % prefix,
-                                                input_paths)
-            log_err_file  = run.add_output_file('log_stderr',
-                                                '%s-log_stderr.txt' % prefix,
-                                                input_paths)
+                features_file = run.add_output_file('features',
+                                                    '%s.combined.gtf' % prefix,
+                                                    input_paths)
+                loci_file     = run.add_output_file('loci',
+                                                    '%s.loci' % prefix,
+                                                    input_paths)
+                stats_file    = run.add_output_file('stats',
+                                                    '%s.stats' % prefix,
+                                                    input_paths)
+                tracking_file = run.add_output_file('tracking',
+                                                    '%s.tracking' % prefix,
+                                                    input_paths)
+                log_err_file  = run.add_output_file('log_stderr',
+                                                    '%s-log_stderr.txt' % prefix,
+                                                    input_paths)
 
-            # create cuffcompare command
-            # i) add fix options and parameters
-            cuffcompare = [self.get_tool('cuffcompare'), 
-                           '-o', prefixCC,
-                           '-p', prefixCC,
-                           '-T', # consider if we really want to suppress the map 
-                                 # files or if we want to trace them
-                           ]
-            # ii) add user defined settings
-            cuffcompare.extend(option_list)
-            # iii) add input file
-            cuffcompare.extend(input_paths)
+                # create cuffcompare command
+                # i) add fix options and parameters
+                cuffcompare = [self.get_tool('cuffcompare'), 
+                               '-o', prefixCC,
+                               '-p', prefixCC,
+                               '-T', # consider if we really want to suppress the map 
+                                     # files or if we want to trace them
+                               ]
+                # ii) add user defined settings
+                cuffcompare.extend(option_list)
+                # iii) add input file
+                cuffcompare.extend(input_paths)
+#                cuffcompare.extend(input_paths[0])
 
-            with run.new_exec_group() as cc_exec_group:
-                cc_exec_group.add_command(cuffcompare,
-                                          stderr_path = log_err_file)
+                with run.new_exec_group() as cc_exec_group:
+                    cc_exec_group.add_command(cuffcompare,
+                                              stderr_path = log_err_file)
