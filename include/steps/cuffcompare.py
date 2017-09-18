@@ -138,7 +138,7 @@ class CuffCompare(AbstractStep):
                 if len(input_paths) != 1:
                     raise StandardError("Expected exactly one feature file.")
 
-                in_file = input_paths[0]
+                in_file = input_paths#[0]
 
                 # the temporary output directory
                 outdir = run.get_output_directory_du_jour_placeholder()
