@@ -228,12 +228,12 @@ class CuffLinks(AbstractStep):
              # Du willst ja nur das ein Kommando ausfuehren
              with run.new_exec_group() as exec_group:
                  exec_group.add_command(cufflinks,
-                                        stderr_path = run.add_output_file('log_stderr',
-                                                                          '%s-cufflinks-log.txt' % run_id,
-                                                                          input_paths
-                                                                          )#,
-                                        #hints = {'writes': result_files.values()}
-                                        )
+                                        stderr_path = run.add_output_file(
+                                            'log_stderr',
+                                            '%s-cufflinks-log.txt' % run_id,
+                                            input_paths
+                                        )#,
+                 )
 
              # Files get moved to expected position after cufflinks finished
              with run.new_exec_group() as mv_exec_group:

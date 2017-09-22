@@ -43,7 +43,6 @@ class Macs2(AbstractStep):
         self.add_connection('out/gappedpeaks')
 
         self.require_tool('macs2')
-        self.require_tool('pigz')
         self.require_tool('mkdir')
         self.require_tool('mv')
 
