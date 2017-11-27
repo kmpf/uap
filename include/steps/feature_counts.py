@@ -312,7 +312,7 @@ class FeatureCounts(AbstractStep):
                 fc.extend(['-a', feature_path])
 
                 basename = run.get_output_directory_du_jour_placeholder() + \
-                    '/' + run_id + '.' + 'counts.txt'
+                    '/' + run_id + '.' +  self.get_option('o')
                 fc.extend(['-o', basename])
 
                 fc.extend(input_paths)
