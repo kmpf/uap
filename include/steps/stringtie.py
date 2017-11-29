@@ -22,6 +22,11 @@ class Stringtie(AbstractStep):
         self.add_connection('out/gene_abund')
         self.add_connection('out/cov_refs')
         self.add_connection('out/log_stderr')
+        self.add_connection('out/e2t.ctab')
+        self.add_connection('out/e_data.ctab')
+        self.add_connection('out/i2t.ctab')
+        self.add_connection('out/i_data.ctab')
+        self.add_connection('out/t_data.ctab')
 
         self.require_tool('mkdir')
         self.require_tool('mv')
@@ -46,11 +51,19 @@ class Stringtie(AbstractStep):
         self.add_option('rf', bool, optional=True,
                     description='assume stranded library fr-firststrand')
 
+        self.add_option('M', float, optional=True,
+                    description='Sets the maximum fraction of muliple-location-mapped reads that are allowed to be present at a given locus. Default: 0.95.')
+
+        self.add_option('e', bool, optional=True,
+                    description='Limits the processing of read alignments to only estimate and output the assembled transcripts matching the reference transcripts given with the -G option (requires -G, recommended for -B/-b). With this option, read bundles with no reference transcripts will be entirely skipped, which may provide a considerable speed boost when the given set of reference transcripts is limited to a set of target genes, for example.')
+
+        self.add_option('B', bool, optional=True,
+                    description='This switch enables the output of Ballgown input table files (*.ctab) containing coverage data for the reference transcripts given with the -G option. (See the Ballgown documentation for a description of these files.) With this option StringTie can be used as a direct replacement of the tablemaker program included with the Ballgown distribution. If the option -o is given as a full path to the output transcript file, StringTie will write the *.ctab files in the same directory as the output GTF.')
 
     def runs(self, run_ids_connections_files):
         self.set_cores(self.get_option('p'))
 
-        options=['G', 'v','p', 'm', 'l', 'f']
+        options=['G', 'v','p', 'm', 'l', 'f','M','e','B']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -69,7 +82,7 @@ class Stringtie(AbstractStep):
 
         if (self.is_option_set_in_config('rf') and self.get_option('rf')):
             option_list.append('--rf')
-            
+
 
         for run_id in run_ids_connections_files.keys():
 
@@ -97,6 +110,34 @@ class Stringtie(AbstractStep):
                     'cov_refs',
                     '%s-cov_refs.gtf' % run_id,
                     [input_paths])
+
+
+                if (self.is_option_set_in_config('B') and self.get_option('B')): 
+
+                    e2t = run.add_output_file(
+                        'e2t.ctab',
+                        'e2t.ctab',
+                        [input_paths])
+
+                    edata = run.add_output_file(
+                        'e_data.ctab',
+                        'e_data.ctab',
+                        [input_paths])
+
+                    i2t = run.add_output_file(
+                        'i2t.ctab',
+                        'i2t.ctab', 
+                        [input_paths])
+
+                    idata = run.add_output_file(
+                        'i_data.ctab',
+                        'i_data.ctab',
+                        [input_paths])
+   
+                    tdata = run.add_output_file(
+                        't_data.ctab',
+                        't_data.ctab',
+                        [input_paths])                
 
                 # check reference annotation
                 if not os.path.isfile(self.get_option('G')):
