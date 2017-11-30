@@ -55,7 +55,14 @@ class Stringtie(AbstractStep):
                     description='Sets the maximum fraction of muliple-location-mapped reads that are allowed to be present at a given locus. Default: 0.95.')
 
         self.add_option('e', bool, optional=True,
-                    description='Limits the processing of read alignments to only estimate and output the assembled transcripts matching the reference transcripts given with the -G option (requires -G, recommended for -B/-b). With this option, read bundles with no reference transcripts will be entirely skipped, which may provide a considerable speed boost when the given set of reference transcripts is limited to a set of target genes, for example.')
+                    description="""Limits the processing of read alignments to only 
+                                estimate and output the assembled transcripts matching 
+                                the reference transcripts given with the -G option 
+                                (requires -G, recommended for -B/-b). With this option, 
+                                read bundles with no reference transcripts will be entirely 
+                                skipped, which may provide a considerable speed boost when 
+                                the given set of reference transcripts is limited to a set of 
+                                target genes, for example.""")
 
         self.add_option('B', bool, optional=True,
                     description='This switch enables the output of Ballgown input table files (*.ctab) containing coverage data for the reference transcripts given with the -G option. (See the Ballgown documentation for a description of these files.) With this option StringTie can be used as a direct replacement of the tablemaker program included with the Ballgown distribution. If the option -o is given as a full path to the output transcript file, StringTie will write the *.ctab files in the same directory as the output GTF.')
@@ -112,32 +119,6 @@ class Stringtie(AbstractStep):
                     [input_paths])
 
 
-                if (self.is_option_set_in_config('B') and self.get_option('B')): 
-
-                    e2t = run.add_output_file(
-                        'e2t.ctab',
-                        'e2t.ctab',
-                        [input_paths])
-
-                    edata = run.add_output_file(
-                        'e_data.ctab',
-                        'e_data.ctab',
-                        [input_paths])
-
-                    i2t = run.add_output_file(
-                        'i2t.ctab',
-                        'i2t.ctab', 
-                        [input_paths])
-
-                    idata = run.add_output_file(
-                        'i_data.ctab',
-                        'i_data.ctab',
-                        [input_paths])
-   
-                    tdata = run.add_output_file(
-                        't_data.ctab',
-                        't_data.ctab',
-                        [input_paths])                
 
                 # check reference annotation
                 if not os.path.isfile(self.get_option('G')):
@@ -149,7 +130,7 @@ class Stringtie(AbstractStep):
                 # check, if only a single input file is provided
                 len_input = run_ids_connections_files[run_id]['in/alignments']
                 if len(len_input) != 1:
-                    raise StandardError("Expected exactly one alignments file., but got this %s" % input_paths)
+                    raise StandardError("Expected exactly one alignments file %s" % input_paths)
 
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as pipe:
@@ -158,4 +139,24 @@ class Stringtie(AbstractStep):
                         ]
                         stringtie.extend(option_list)
                         pipe.add_command(stringtie, stdout_path=assembling, stderr_path=log_stderr)
+        
 
+                if (self.is_option_set_in_config('B') and self.get_option('B')): 
+                    mv_exec_group = run.new_exec_group()
+                    connections = ['e2t.ctab', 
+                                   'e_data.ctab', 
+                                   'i2t.ctab', 
+                                   'i_data.ctab', 
+                                   't_data.ctab']
+
+                    for connection  in connections:
+                        is_produced = ''.join([run.get_output_directory_du_jour_placeholder(),
+                                               '/', connection])
+
+                        out_file = run_id + '-' + connection 
+                        is_wanted = run.add_output_file(connection,
+                                                       out_file,
+                                                       [input_paths])
+
+                        mv_exec_group.add_command([self.get_tool('mv'),
+                                               is_produced, is_wanted])
