@@ -8,7 +8,8 @@ import os
 
 from logging import getLogger
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class Stringtie(AbstractStep):
 
@@ -37,42 +38,59 @@ class Stringtie(AbstractStep):
         self.add_option('v', bool, optional=True,
                         description='Turns on verbose mode, printing bundle processing details')
         self.add_option('p', int, default=1, optional=True,
-                        description='Specify the number of processing threads (CPUs) to use for transcript assembly. The default is 1')
+                        description='Specify the number of processing threads (CPUs) to use '
+                                    'for transcript assembly. The default is 1')
         self.add_option('m', int, optional=True,
-                        description='Sets the minimum length allowed for the predicted transcripts. Default: 200')
+                        description='Sets the minimum length allowed for the predicted '
+                                    'transcripts. Default: 200')
         self.add_option('l', str, optional=True,
-                        description='Sets <label> as the prefix for the name of the output transcripts. Default: STRG')
+                        description='Sets <label> as the prefix for the name of the output '
+                                    'transcripts. Default: STRG')
         self.add_option('f', float, optional=True,
-                        description='Sets the minimum isoform abundance of the predicted transcripts as a fraction of the most abundant transcript assembled at a given locus. Lower abundance transcripts are often artifacts of incompletely spliced precursors of processed transcripts. Default: 0.1')
+                        description='Sets the minimum isoform abundance of the predicted '
+                                    'transcripts as a fraction of the most abundant transcript '
+                                    'assembled at a given locus. Lower abundance transcripts are '
+                                    'often artifacts of incompletely spliced precursors of '
+                                    'processed transcripts. Default: 0.1')
 
         self.add_option('fr', bool, optional=True,
-                    description='assume stranded library fr-secondstrand')
+                        description='assume stranded library fr-secondstrand')
 
         self.add_option('rf', bool, optional=True,
-                    description='assume stranded library fr-firststrand')
+                        description='assume stranded library fr-firststrand')
 
         self.add_option('M', float, optional=True,
-                    description='Sets the maximum fraction of muliple-location-mapped reads that are allowed to be present at a given locus. Default: 0.95.')
+                        description='Sets the maximum fraction of muliple-location-mapped reads '
+                                    'that are allowed to be present at a given locus. Default: '
+                                    '0.95.')
 
         self.add_option('e', bool, optional=True,
-                    description="""Limits the processing of read alignments to only 
-                                estimate and output the assembled transcripts matching 
-                                the reference transcripts given with the -G option 
-                                (requires -G, recommended for -B/-b). With this option, 
-                                read bundles with no reference transcripts will be entirely 
-                                skipped, which may provide a considerable speed boost when 
-                                the given set of reference transcripts is limited to a set of 
-                                target genes, for example.""")
+                        description=""" Limits the processing of read alignments to only estimate
+                                    and output the assembled transcripts matching the reference
+                                    transcripts given with the -G option (requires -G, recommended
+                                    for -B/-b). With this option, read bundles with no reference
+                                    transcripts will be entirely skipped, which may provide a
+                                    considerable speed boost when the given set of reference
+                                    transcripts is limited to a set of target genes, for
+                                    example.""")
 
         self.add_option('B', bool, optional=True,
-                    description='This switch enables the output of Ballgown input table files (*.ctab) containing coverage data for the reference transcripts given with the -G option. (See the Ballgown documentation for a description of these files.) With this option StringTie can be used as a direct replacement of the tablemaker program included with the Ballgown distribution. If the option -o is given as a full path to the output transcript file, StringTie will write the *.ctab files in the same directory as the output GTF.')
+                        description=""" This switch enables the output of Ballgown input table
+                                    files (*.ctab) containing coverage data for the reference
+                                    transcripts given with the -G option. (See the Ballgown
+                                    documentation for a description of these files.) With this
+                                    option StringTie can be used as a direct replacement of the
+                                    tablemaker program included with the Ballgown distribution.
+                                    If the option -o is given as a full path to the output
+                                    transcript file, StringTie will write the *.ctab files in
+                                    the same directory as the output GTF.""")
 
     def runs(self, run_ids_connections_files):
         self.set_cores(self.get_option('p'))
 
-        options=['G', 'v','p', 'm', 'l', 'f','M','e','B']
+        options = ['G', 'v', 'p', 'm', 'l', 'f', 'M', 'e', 'B']
 
-        set_options = [option for option in options if \
+        set_options = [option for option in options if
                        self.is_option_set_in_config(option)]
 
         option_list = list()
@@ -81,22 +99,20 @@ class Stringtie(AbstractStep):
                 if self.get_option(option):
                     option_list.append('-%s' % option)
             else:
-                option_list.append( '-%s' % option )
-                option_list.append( str(self.get_option(option)) )
-        
-        if (self.is_option_set_in_config('fr') and self.get_option('fr')):
+                option_list.append('-%s' % option)
+                option_list.append(str(self.get_option(option)))
+
+        if self.is_option_set_in_config('fr') and self.get_option('fr'):
             option_list.append('--fr')
 
-        if (self.is_option_set_in_config('rf') and self.get_option('rf')):
+        if self.is_option_set_in_config('rf') and self.get_option('rf'):
             option_list.append('--rf')
-
 
         for run_id in run_ids_connections_files.keys():
 
-             with self.declare_run(run_id) as run:
-                alignments  = run_ids_connections_files[run_id]['in/alignments'][0]
+            with self.declare_run(run_id) as run:
+                alignments = run_ids_connections_files[run_id]['in/alignments'][0]
                 input_paths = alignments
-
 
                 assembling = run.add_output_file(
                     'assembling',
@@ -118,13 +134,11 @@ class Stringtie(AbstractStep):
                     '%s-cov_refs.gtf' % run_id,
                     [input_paths])
 
-
-
                 # check reference annotation
                 if not os.path.isfile(self.get_option('G')):
                     logger.error(
                         "The path %s provided to option 'G' is not a file."
-                        % self.get_option('G') )
+                        % self.get_option('G'))
                     sys.exit(1)
 
                 # check, if only a single input file is provided
@@ -135,28 +149,26 @@ class Stringtie(AbstractStep):
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as pipe:
                         stringtie = [self.get_tool('stringtie'), alignments, '-o', assembling,
-                                     '-A', gene_abund, '-C', cov_refs
-                        ]
+                                     '-A', gene_abund, '-C', cov_refs]
                         stringtie.extend(option_list)
                         pipe.add_command(stringtie, stdout_path=assembling, stderr_path=log_stderr)
-        
 
-                if (self.is_option_set_in_config('B') and self.get_option('B')): 
+                if self.is_option_set_in_config('B') and self.get_option('B'):
                     mv_exec_group = run.new_exec_group()
-                    connections = ['e2t.ctab', 
-                                   'e_data.ctab', 
-                                   'i2t.ctab', 
-                                   'i_data.ctab', 
+                    connections = ['e2t.ctab',
+                                   'e_data.ctab',
+                                   'i2t.ctab',
+                                   'i_data.ctab',
                                    't_data.ctab']
 
-                    for connection  in connections:
+                    for connection in connections:
                         is_produced = ''.join([run.get_output_directory_du_jour_placeholder(),
                                                '/', connection])
 
-                        out_file = run_id + '-' + connection 
+                        out_file = run_id + '-' + connection
                         is_wanted = run.add_output_file(connection,
-                                                       out_file,
-                                                       [input_paths])
+                                                        out_file,
+                                                        [input_paths])
 
                         mv_exec_group.add_command([self.get_tool('mv'),
-                                               is_produced, is_wanted])
+                                                   is_produced, is_wanted])
