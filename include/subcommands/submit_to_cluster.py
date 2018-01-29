@@ -168,11 +168,10 @@ def main(args):
         long_task_id_with_run_id = '%s_%s_%s' % (str(task.step),
                                                  task.run_id, now)
         long_task_id = str(task.step)
-        short_task_id = long_task_id[0:15]
 
         submit_script_args = [p.get_cluster_command('submit')]
         submit_script_args += p.get_cluster_command_cli_option(
-            'set_job_name', short_task_id)
+            'set_job_name', long_task_id)
 
         submit_script_args.append(p.get_cluster_command('set_stderr'))
         submit_script_args.append(
@@ -245,7 +244,7 @@ def main(args):
             quota_jids[step_name][quota_offset[step_name]] = job_id
             quota_offset[step_name] = (quota_offset[step_name] + 1) % len(quota_jids[step_name])
 
-            print("%s (%s)" % (job_id, short_task_id))
+            print("%s (%s)" % (job_id, long_task_id))
             if len(dependent_tasks) > 0:
                 print(" - with dependent tasks: " + ', '.join(dependent_tasks))
 
