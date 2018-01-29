@@ -250,7 +250,7 @@ def main(args):
 
             abstract_step.AbstractStep.fsc = fscache.FSCache()
 
-    # After defining submit_task() let's walk through tasks_left 
+    # After defining submit_task() let's walk through tasks_left
 
     for task in tasks_left:
         # Update quotas dict for current step if necessary
