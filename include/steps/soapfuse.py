@@ -35,13 +35,22 @@ class SOAPfuse(AbstractStep):
         # sf 
 
         self.require_tool('soapfuse')
+        self.require_tool('cp')
+        self.require_tool('mkdir')
 
         self.add_option('es', int, optional=True, default=8,
                         description="The step you want to end at 1-9"
                         )
 
 
-        self.add_option('c', int, optional=True, 
+
+
+        self.add_option('path_to_index_dir', str, optional=False,
+                        description="Sets 'DB_db_dir' in Saopfuse config"
+                        )
+
+
+        self.add_option('c', str, optional=False, 
                         description="""soapfuse config:
                         in config the following variables will be overwritten"
                         path to index: DB_db_dir
@@ -75,29 +84,102 @@ class SOAPfuse(AbstractStep):
                     input_paths.append(sr_input)
 
 
-                # bowtie2 is run in this exec group
-                with run.new_exec_group() as exec_group:
 
 
-                    with exec_group.add_pipeline() as soapfuse_pipe:
-                        # Assemble soapfuse command
-                        soapfuse = [
-                            self.get_tool('soapfuse'),
-                            '-p', str(self.get_option('cores') - 2),
-                        ]
+                my_temp_dir = run.get_output_directory_du_jour_placeholder()
+
+                my_input  = os.path.join(my_temp_dir, 'input')
+                my_output = os.path.join(my_temp_dir, 'output')
+                my_config = os.path.join(my_temp_dir, 'input', os.path.basename( self.get_option('c')))
                 
+
+                
+                # init 
+                with run.new_exec_group() as exec_group:
+                    with exec_group.add_pipeline() as pseudo_init:
+
+                        make_dirs = [ self.get_tool('mkdir'), 
+                                      my_input, my_output]
+
+
+                        cp_cmd = [self.get_tool('cp'), 
+                                  self.get_option('c'),
+                                  my_config]
+
+
+                        pseudo_init.add_command(make_dirs)
+                        pseudo_init.add_command(cp_cmd)
                         
-                        log_stderr = run.add_output_file(
-                                'log_stderr',
-                                '%s-soapfuse-log_stderr.txt' % run_id,
-                                                               input_paths)
-                        res = run.add_output_file(
-                                'text',
-                                '%s-text.foo' % run_id,
-                                input_paths
-                            )
+
+                    res = run.add_output_file(
+                        'text',
+                        '%s-text.foo' % run_id,
+                        input_paths
+                    )
 
 
 
-                        soapfuse_pipe.add_command(soapfuse, stderr_path=log_stderr)
+
+                
+                    log_stderr = run.add_output_file(
+                        'log_stderr',
+                        '%s-soapfuse-log_stderr.txt' % run_id,
+                        input_paths)
+
+
+                # replace variables in config
+                    with exec_group.add_pipeline() as replace_vars:
+
+                        cat_cmd = ['cat', my_config]
+                        replace_vars.add_command(cat_cmd)
+
+
+
+                        text = ' '.join(['DB_db_dir', '=', self.get_option('path_to_index_dir')])
+                        sed_arg = 's/DB_db_dir.*/' + text + '/'
+                        sed_cmd = ['sed', sed_arg]
+                        replace_vars.add_command(sed_cmd)
+
+
+
+                        text = ' '.join(['XXXDB_db_dir', '=', self.get_option('path_to_index_dir')])
+                        sed_arg = 's/DB_db_dir.*/' + text + '/'
+                        sed_cmd = ['sed', sed_arg]
+
+                        
+                       
+
+                        replace_vars.add_command(sed_cmd,  
+                                                 stderr_path=log_stderr, 
+                                                 stdout_path=res)
+                
+
+
+
+
+
+
+
+
+
+
+
+
+                # with exec_group.add_pipeline() as soapfuse_pipe:
+                #     # Assemble soapfuse command
+                #     soapfuse = [
+                #         self.get_tool('soapfuse'),
+                #         '-p', str(self.get_option('cores') - 2),
+                #     ]
+                
+
+                        
+                        
+                        
+
+
+                
+                    
+
+                #     soapfuse_pipe.add_command(soapfuse, stderr_path=log_stderr)
 
