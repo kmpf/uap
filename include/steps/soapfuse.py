@@ -56,10 +56,10 @@ class SOAPfuse(AbstractStep):
                         path to index: DB_db_dir
                         path to soapfuse bin: PG_pg_dir
                         path to soapfuse source: PS_ps_dir 
-                        suffix for fastq: PA_all_fq_postfix (ex: *fgastq.gz)
+                        suffix for fastq: PA_all_fq_postfix (ex: *fastq.gz)
                         cores: PA_all_process_of_align_software
                         """       )
-
+#is cores the SOAPfuse cores? Then we have to write this into config (see below) -CS
         self.add_option('cores', int, default=6)
         
     def runs(self, run_ids_connections_files):
@@ -140,21 +140,28 @@ class SOAPfuse(AbstractStep):
                         sed_cmd = ['sed', sed_arg]
                         replace_vars.add_command(sed_cmd)
 
-
-
-                        text = ' '.join(['XXXDB_db_dir', '=', self.get_option('path_to_index_dir')])
-                        sed_arg = 's/DB_db_dir.*/' + text + '/'
+                        text = ' '.join(['PG_pg_dir', '=', self.get_option('path_to_sf_bin')])
+                        sed_arg = 's/PG_pg_dir.*/' + text + '/'
                         sed_cmd = ['sed', sed_arg]
+			replace_vars.add_command(sed_cmd)
 
-                        
-                       
+                        text = ' '.join(['PS_ps_dir', '=', self.get_option('path_to_sf_source')])
+                        sed_arg = 's/PS_ps_dir.*/' + text + '/'
+                        sed_cmd = ['sed', sed_arg]
+			replace_vars.add_command(sed_cmd)
 
+                        text = ' '.join(['PA_all_fq_postfix', '=', self.get_option('suffix_for_fq_file')])
+                        sed_arg = 's/PA_all_fq_postfix.*/' + text + '/'
+                        sed_cmd = ['sed', sed_arg]
+			replace_vars.add_command(sed_cmd)
+
+                        text = ' '.join(['PA_all_process_of_align_software', '=', self.get_option('cores')])
+                        sed_arg = 's/PA_all_process_of_align_software.*/' + text + '/'
+                        sed_cmd = ['sed', sed_arg]
                         replace_vars.add_command(sed_cmd,  
                                                  stderr_path=log_stderr, 
                                                  stdout_path=res)
                 
-
-
 
 
 
