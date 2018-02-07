@@ -9,7 +9,8 @@ logger=getLogger('uap_logger')
 class SOAPfuse(AbstractStep):
     '''
     # TODO caro
-    bla bla bla
+
+    SOAPfuse is a tool to discover 
 
     http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
     
