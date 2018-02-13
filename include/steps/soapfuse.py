@@ -34,6 +34,7 @@ class SOAPfuse(AbstractStep):
         self.add_connection('out/sf_sample_list')
         self.add_connection('out/log_stderr')
         self.add_connection('out/log_stdout')
+        self.add_connection('out/tar_archive')
 
         # sf 
 
@@ -42,6 +43,7 @@ class SOAPfuse(AbstractStep):
         self.require_tool('mkdir')
         self.require_tool('ln')
         self.require_tool('echo')
+        self.require_tool('tar')
 
         self.add_option('es', int, optional=True, default=8,
                         description="The step you want to end at 1-9"
@@ -124,10 +126,7 @@ class SOAPfuse(AbstractStep):
                 r1 = run_id + "_1." +  self.get_option('suffix_for_fq_file')
                 r2 = run_id + "_2." +  self.get_option('suffix_for_fq_file')
                 my_sample_r1 = os.path.join(my_sample_dir, r1)
-
-
-
-                my_sample_r2 = os.path.join(my_sample_dir, r2)
+		my_sample_r2 = os.path.join(my_sample_dir, r2)
 
 
                 res = run.add_output_file(
@@ -254,9 +253,24 @@ class SOAPfuse(AbstractStep):
                         
                         
 
+ 		with run.new_exec_group() as exec_group:
+	#pack outfolder into tar/zip
+#tar -cf archiv.tar daten/ 
+			out_archive = run.add_output_file(
+					'tar_archive',
+					'%s-soapfuse-out.tar.gz'% run_id, input_paths)
 
-                
-                    
+
+			tar_output = [self.get_tool('tar'),
+				'-czf', out_archive, 
+				my_output ]
+
+ 			exec_group.add_command(tar_output, 
+#				stdout_path = run.add_output_file(
+#					'tar_archive',
+#					'%s-soapfuse-out.tar.gz'% run_id, input_paths)
+			)
+
 
 
 
