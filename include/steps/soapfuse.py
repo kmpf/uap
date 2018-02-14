@@ -8,36 +8,30 @@ logger=getLogger('uap_logger')
 
 class SOAPfuse(AbstractStep):
     '''
-    # TODO caro
+    SOAPfuse is a tool to discover gene fusions in human paired-end RNA-Seq data.
 
-    SOAPfuse is a tool to discover 
+    Paper: https://genomebiology.biomedcentral.com/articles/10.1186/gb-2013-14-2-r12
 
-    http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
+    Manual including required folder structure and typical usage:
+
+    https://sourceforge.net/p/soapfuse/wiki/Home/
     
-    typical command line::
-
-        bowtie2 [options]* -x <bt2-idx> {-1 <m1> -2 <m2> | -U <r>} -S [<hit>]
-    '''
+   '''
     
     def __init__(self, pipeline):
         super(SOAPfuse, self).__init__(pipeline)
         self.set_cores(6)
 
-
-
-        #config 
-        #sampleliste
-
+# adding input/output connections
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
-        self.add_connection('out/text')
+        self.add_connection('out/sf_config')
         self.add_connection('out/sf_sample_list')
         self.add_connection('out/log_stderr')
         self.add_connection('out/log_stdout')
         self.add_connection('out/tar_archive')
 
-        # sf 
-
+# adding required tools
         self.require_tool('soapfuse')
         self.require_tool('cp')
         self.require_tool('mkdir')
@@ -45,6 +39,7 @@ class SOAPfuse(AbstractStep):
         self.require_tool('echo')
         self.require_tool('tar')
 
+#adding options
         self.add_option('es', int, optional=True, default=8,
                         description="The step you want to end at 1-9"
                         )
@@ -52,36 +47,36 @@ class SOAPfuse(AbstractStep):
 
 
         self.add_option('c', str, optional=False, 
-                        description="""soapfuse config:
-                        in config the following variables will be overwritten"
+                        description="""SOAPfuse config;
+                        In the config file the following variables will be overwritten:
                         path to index: DB_db_dir
                         path to soapfuse bin: PG_pg_dir
                         path to soapfuse source: PS_ps_dir 
-                        suffix for fastq: PA_all_fq_postfix (ex: *fastq.gz)
+                        suffix for fastq: PA_all_fq_postfix (i.e.: *fastq.gz)
                         cores: PA_all_process_of_align_software
                         """       )
 
 
         self.add_option('path_to_index_dir', str, optional=False,
-                        description="Sets 'DB_db_dir' in Saopfuse config"
+                        description="Sets 'DB_db_dir' in SOAPfuse config"
                         )
 
     
         self.add_option('path_to_sf_bin_dir', str, optional=False,
-                        description="Sets 'TODFODB_db_dir' in Saopfuse config"
+                        description="Sets 'PG_pg_dir' in SOAPfuse config"
                         )
 
         self.add_option('path_to_sf_source', str, optional=False,
-                        description="Sets 'TODFODB_db_dir' in Saopfuse config"
+                        description="Sets 'PS_ps_dir' in SOAPfuse config"
                         )
 
         
         self.add_option('suffix_for_fq_file', str, optional=False,
-                        description="Sets 'TODFODB_db_dir' in Saopfuse config"
+                        description="Sets 'PA_all_fq_postfix' in SOAPfuse config"
                         )
 
         self.add_option('read_length', int, optional=False,
-                        description="Sets 'TODFODB_db_dir' in Saopfuse config"
+                        description="Sets read length for the sample list"
                         )
 
 
@@ -94,13 +89,10 @@ class SOAPfuse(AbstractStep):
 
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
-                # Get list of files for first/second read
 
+                # Get list of files for first/second read
                 fr_input = run_ids_connections_files[run_id]['in/first_read'][0]
                 sr_input = run_ids_connections_files[run_id]['in/second_read'][0]
-
-
-
 
                 # Do we have paired end data and is it exactly one ?
                 is_paired_end = True
@@ -113,7 +105,7 @@ class SOAPfuse(AbstractStep):
                     input_paths.append(sr_input)
 
 
-
+		#create folder structure
 
                 my_temp_dir = run.get_output_directory_du_jour_placeholder()
 
@@ -128,20 +120,19 @@ class SOAPfuse(AbstractStep):
                 my_sample_r1 = os.path.join(my_sample_dir, r1)
 		my_sample_r2 = os.path.join(my_sample_dir, r2)
 
-
+		#create config file
                 res = run.add_output_file(
-                    'text',
-                    '%s-text.foo' % run_id,
+                    'sf_config',
+                    '%s-config.txt' % run_id,
                     input_paths)
 
-
+		#create sample list
                 sl = run.add_output_file(
                     'sf_sample_list',
                     '%s-sl.txt' % run_id,
                     input_paths)
 
-
-                
+		#create logfiles                
                 log_stderr = run.add_output_file(
                     'log_stderr',
                     '%s-soapfuse-log_stderr.txt' % run_id,
@@ -152,20 +143,21 @@ class SOAPfuse(AbstractStep):
                     '%s-soapfuse-log_stdout.txt' % run_id,
                     input_paths)
 
-                
+              
 
                 
                 # init 
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as pseudo_init:
-
+			#create folders
                         make_dirs = [ self.get_tool('mkdir'), '-p',
                                       my_input,
                                       my_sample_dir, 
                                       my_output
                                       ]
                         pseudo_init.add_command(make_dirs)
-
+			
+			#copy config
                         cp_cmd = [self.get_tool('cp'), 
                                   self.get_option('c'),
                                   my_config]
@@ -175,6 +167,7 @@ class SOAPfuse(AbstractStep):
 
                 with run.new_exec_group() as exec_group:
 
+		    #create links to paired-end reads
                     ln_sample = [self.get_tool('ln'), '-s',
                                  fr_input, my_sample_r1]
                     exec_group.add_command(ln_sample)
@@ -189,6 +182,7 @@ class SOAPfuse(AbstractStep):
                 
 
                 with run.new_exec_group() as exec_group:
+		    # add content  to sample list
                     t = ['A', 'L', run_id, str(self.get_option('read_length'))]
                     sf_list = '\t'.join(t)
                     
@@ -254,8 +248,8 @@ class SOAPfuse(AbstractStep):
                         
 
  		with run.new_exec_group() as exec_group:
-	#pack outfolder into tar/zip
-#tar -cf archiv.tar daten/ 
+		
+		#pack outfolder into tar/zip
 			out_archive = run.add_output_file(
 					'tar_archive',
 					'%s-soapfuse-out.tar.gz'% run_id, input_paths)
@@ -265,12 +259,4 @@ class SOAPfuse(AbstractStep):
 				'-czf', out_archive, 
 				my_output ]
 
- 			exec_group.add_command(tar_output, 
-#				stdout_path = run.add_output_file(
-#					'tar_archive',
-#					'%s-soapfuse-out.tar.gz'% run_id, input_paths)
-			)
-
-
-
-
+ 			exec_group.add_command(tar_output)
