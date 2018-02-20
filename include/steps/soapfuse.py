@@ -38,6 +38,7 @@ class SOAPfuse(AbstractStep):
         self.require_tool('ln')
         self.require_tool('echo')
         self.require_tool('tar')
+	self.require_tool('rm')
 
 #adding options
         self.add_option('es', int, optional=True, default=8,
@@ -260,3 +261,12 @@ class SOAPfuse(AbstractStep):
 				my_output ]
 
  			exec_group.add_command(tar_output)
+
+
+ 		with run.new_exec_group() as exec_group:
+		#remove temp dir
+
+			rm_temp = [self.get_tool('rm'),
+				'-r', my_input, my_output]
+			
+			exec_group.add_command(rm_temp)
