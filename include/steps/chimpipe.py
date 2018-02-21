@@ -91,6 +91,7 @@ class ChimPipe(AbstractStep):
 
                 my_input  = os.path.join(my_temp_dir, 'input')
                 my_output = os.path.join(my_temp_dir, 'output')
+		my_cp_temp = os.path.join(my_temp_dir, 'run_temp')
 
 
 		#create logfiles                
@@ -113,7 +114,8 @@ class ChimPipe(AbstractStep):
 			#create folders
                         make_dirs = [ self.get_tool('mkdir'), '-p',
                                       my_input,
-                                      my_output
+                                      my_output,
+				      my_cp_temp
                                       ]
                         pseudo_init.add_command(make_dirs)
 			
@@ -150,6 +152,10 @@ class ChimPipe(AbstractStep):
 			'-t', self.get_option('transcriptome_index'),
 			'-k', self.get_option('transcriptome_keys'),
 			'--sample_ID', self.get_option('sample_ID'),
+			'--threads', self.get_option('cores'),
+			'--tmp-dir', my_cp_temp,
+			'--output-dir', my_output,
+			'--no-cleanup'
                     ]
 
                     exec_group.add_command(chimpipe,  
