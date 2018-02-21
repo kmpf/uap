@@ -62,6 +62,10 @@ class ChimPipe(AbstractStep):
                         )
 
         self.add_option('cores', int, default=6)
+ 
+        self.add_option('consensus_Seq', str, optional = True, 
+			"""Sequence pair of consensus splice site bases.  """
+			)
         
     def runs(self, run_ids_connections_files):
         self.set_cores(self.get_option('cores'))
@@ -70,7 +74,7 @@ class ChimPipe(AbstractStep):
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
 
-                # Get list of files for first/second read
+                # Get lst of files for first/second read
                 fr_input = run_ids_connections_files[run_id]['in/first_read'][0]
                 sr_input = run_ids_connections_files[run_id]['in/second_read'][0]
 
