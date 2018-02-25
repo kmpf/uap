@@ -239,7 +239,7 @@ class SOAPfuse(AbstractStep):
                         '-c', res,
                         '-l', sl, 
                         '-o', my_output,
-			'-es', self.get_option('es') 
+			'-es', str(self.get_option('es')) 
                     ]
 
                     exec_group.add_command(soapfuse,  
