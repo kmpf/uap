@@ -98,12 +98,12 @@ class ChimPipe(AbstractStep):
 		#create logfiles                
                 log_stderr = run.add_output_file(
                     'log_stderr',
-                    '%s-soapfuse-log_stderr.txt' % run_id,
+                    '%s-chimpipe-log_stderr.txt' % run_id,
                     input_paths)
 
                 log_stdout = run.add_output_file(
                     'log_stdout',
-                    '%s-soapfuse-log_stdout.txt' % run_id,
+                    '%s-chimpipe-log_stdout.txt' % run_id,
                     input_paths)
 
               
@@ -131,7 +131,7 @@ class ChimPipe(AbstractStep):
                         '-a', self.get_option('annotation'),
 			'-t', self.get_option('transcriptome_index'),
 			'-k', self.get_option('transcriptome_keys'),
-			'--sample_ID', self.get_option('sample_ID'),
+			'--sample-id', self.get_option('sample_ID'),
 			'--threads', self.get_option('cores'),
 			'--tmp-dir', my_cp_temp,
 			'--output-dir', my_output,
