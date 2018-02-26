@@ -148,7 +148,8 @@ class ChimPipe(AbstractStep):
                     ]
 	
 
-			if self.is_option_set_in_config('consensus_seq'):		       if self.get_option('consensus_seq'):
+			if self.is_option_set_in_config('consensus_seq'):		       
+			    if self.get_option('consensus_seq'):
 				chimpipe.extend([
 				'-C', self.get_option('consensus_seq'),
 				'-c', self.get_option('consensus_seq')])
