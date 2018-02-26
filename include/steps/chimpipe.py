@@ -144,12 +144,22 @@ class ChimPipe(AbstractStep):
 			'--threads', self.get_option('cores'),
 			'--tmp-dir', my_cp_temp,
 			'--output-dir', my_output,
-			'-C', self.get_option('consensus_seq'),
-			'-c', self.get_option('consensus_seq'),
-			'-l', self.get_option('library_type'),
-			'--similarity-gene-pairs', self.get_option('similarity') ,
-			'--no-cleanup'
+			'--no-cleanup',
                     ]
+			
+		    if self.get_option('consensus_seq'):
+			chimpipe.extend([
+			'-C', self.get_option('consensus_seq'),
+			'-c', self.get_option('consensus_seq')])
+
+		    if self.get_option('library_type'):
+			chimpipe.extend([
+			'-l', self.get_option('library_type')])
+
+		    if self.get_option('similarity'):
+			chimpipe.extend([
+			'--similarity-gene-pairs', self.get_option('similarity')])
+
 
                     exec_group.add_command(chimpipe,  
                                        stderr_path=log_stderr, 
