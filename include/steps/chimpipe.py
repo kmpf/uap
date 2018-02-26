@@ -61,7 +61,7 @@ class ChimPipe(AbstractStep):
         self.add_option('cores', int, default=6)
  
         self.add_option('consensus_seq', str, optional = True, 
-			"""Sequence pair of consensus splice site bases.TODO  """
+			description="""Sequence pair of consensus splice site bases.TODO  """
 			)
         
     def runs(self, run_ids_connections_files):
