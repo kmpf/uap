@@ -148,21 +148,21 @@ class ChimPipe(AbstractStep):
                     ]
 	
 
-			if self.is_option_set_in_config('consensus_seq'):		       
-			    if self.get_option('consensus_seq'):
-				chimpipe.extend([
-				'-C', self.get_option('consensus_seq'),
-				'-c', self.get_option('consensus_seq')])
-	
-			if self.is_option_set_in_config('library_type'):
-			    if self.get_option('library_type'):
-				chimpipe.extend([
-				'-l', self.get_option('library_type')])
-	
-			if self.is_option_set_in_config('similarity'):
-			    if self.get_option('similarity'):
-				chimpipe.extend([
-				'--similarity-gene-pairs', self.get_option('similarity')])
+	      	    if self.is_option_set_in_config('consensus_seq'):		       
+	      	        if self.get_option('consensus_seq'):
+	      	    	    chimpipe.extend([
+	      	    	    '-C', self.get_option('consensus_seq'),
+	      	    	    '-c', self.get_option('consensus_seq')])
+	      
+	      	    if self.is_option_set_in_config('library_type'):
+	      	        if self.get_option('library_type'):
+	      	    	    chimpipe.extend([
+	      	    	    '-l', self.get_option('library_type')])
+	      
+	      	    if self.is_option_set_in_config('similarity'):
+	      	        if self.get_option('similarity'):
+	      	    	    chimpipe.extend([
+	      	    	    '--similarity-gene-pairs', self.get_option('similarity')])
 	
 
                     exec_group.add_command(chimpipe,  
