@@ -36,6 +36,7 @@ class ChimPipe(AbstractStep):
         self.require_tool('chimpipe')
         self.require_tool('mkdir')
         self.require_tool('tar')
+        self.require_tool('rm')
 
 #adding options
         self.add_option('genome_index', str, optional=False, 
@@ -64,6 +65,14 @@ class ChimPipe(AbstractStep):
 			description="""Sequence pair of consensus splice site bases.TODO  """
 			)
         
+	self.add_option('library_type', str, optional = True, 
+			description="TODO"
+			)
+	self.add_option('similarity', str, optional = True, 
+			description="TODO"
+			)
+
+
     def runs(self, run_ids_connections_files):
         self.set_cores(self.get_option('cores'))
 
@@ -137,6 +146,8 @@ class ChimPipe(AbstractStep):
 			'--output-dir', my_output,
 			'-C', self.get_option('consensus_seq'),
 			'-c', self.get_option('consensus_seq'),
+			'-l', self.get_option('library_type'),
+			'--similarity-gene-pairs', self.get_option('similarity') ,
 			'--no-cleanup'
                     ]
 
@@ -160,3 +171,11 @@ class ChimPipe(AbstractStep):
 				my_output ]
 
  			exec_group.add_command(tar_output)
+
+		with run.new_exec_group() as exec_group:
+                #remove temp dir
+
+                        rm_temp = [self.get_tool('rm'),
+                                '-r', my_input, my_output, my_cp_temp]
+
+                        exec_group.add_command(rm_temp)
