@@ -34,10 +34,7 @@ class ChimPipe(AbstractStep):
 
 # adding required tools
         self.require_tool('chimpipe')
-        self.require_tool('cp')
         self.require_tool('mkdir')
-        self.require_tool('ln')
-        self.require_tool('echo')
         self.require_tool('tar')
 
 #adding options
@@ -63,8 +60,8 @@ class ChimPipe(AbstractStep):
 
         self.add_option('cores', int, default=6)
  
-        self.add_option('consensus_Seq', str, optional = True, 
-			"""Sequence pair of consensus splice site bases.  """
+        self.add_option('consensus_seq', str, optional = True, 
+			"""Sequence pair of consensus splice site bases.TODO  """
 			)
         
     def runs(self, run_ids_connections_files):
@@ -123,27 +120,6 @@ class ChimPipe(AbstractStep):
                                       ]
                         pseudo_init.add_command(make_dirs)
 			
-			#copy config
-                       # cp_cmd = [self.get_tool('cp'), 
-                       #           self.get_option('c'),
-                       #           my_config]
-                       # pseudo_init.add_command(cp_cmd)
-
-
-
-#                with run.new_exec_group() as exec_group:
-#
-#		    #create links to paired-end reads
-#                    ln_sample = [self.get_tool('ln'), '-s',
-#                                 fr_input, my_sample_r1]
-#                    exec_group.add_command(ln_sample)
-#
-#
-#                    ln_sample = [self.get_tool('ln'), '-s',
-#                                sr_input, my_sample_r2]
-#                    exec_group.add_command(ln_sample)
-
-
 
                #Assemble chimpipe command
                 with run.new_exec_group() as exec_group:
@@ -159,6 +135,8 @@ class ChimPipe(AbstractStep):
 			'--threads', self.get_option('cores'),
 			'--tmp-dir', my_cp_temp,
 			'--output-dir', my_output,
+			'-C', self.get_option('consensus_seq'),
+			'-c', self.get_option('consensus_seq'),
 			'--no-cleanup'
                     ]
 
