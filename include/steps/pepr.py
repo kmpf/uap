@@ -78,7 +78,7 @@ class PePr(AbstractStep):
                         'the data for each ChIP sample.')
         self.add_option('threshold', float, optional = True,
                         description='p-value cutoff. Default:1e-5.')
-        self.add_option('windowsize', str, optional = True,
+        self.add_option('windowsize', int, optional = True,
                         description='Sliding window size. '
                         'If not specified by user, PePr will estimate this by '
                         'calculating the average width of potential peaks. '

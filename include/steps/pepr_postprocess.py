@@ -21,12 +21,18 @@ class PePrPostprocess(AbstractStep):
         # Peaks for replicate peak calling
         self.add_connection('in/peaks')
 
+        # Files linked for this step
+        self.add_connection('out/peaks')
+        self.add_connection('out/input')
+        self.add_connection('out/chip')
+
         # Post processed peak lists
         self.add_connection('out/passed_peaks')
         self.add_connection('out/failed_peaks')
         
         self.require_tool('pepr-postprocess')
-
+        self.require_tool('ln')
+        
         # Options for PePr
         ## Required options
         self.add_option('chip_vs_input', dict, optional=False,
@@ -34,11 +40,10 @@ class PePrPostprocess(AbstractStep):
                         'runID:                        \n'
                         '    rep1: [<List of runIDs>]  \n'
                         '    input1: [<List of runIDs>]')
-        self.add_option('file-format', str, optional=False,
-                        choices=['bed', 'sam', 'bam', 'sampe', 'bampe'],
+        self.add_option('file-type', str, optional=False,
+                        choices=['bed', 'sam', 'bam'],
                         description='Read file format. Currently support bed, '
-                        'sam, bam, sampe (sam paired-end), bampe '
-                        '(bam paired-end)')
+                        'sam, bam')
         ## Optional options
         self.add_option('remove-artefacts', bool, optional=True, default=True)
         self.add_option('narrow-peak-boundary', bool, optional=True,
@@ -75,7 +80,7 @@ class PePrPostprocess(AbstractStep):
                 if in_files['peak'] == None:
                     logger.error("Upstream run %s provides no peaks" % run_id)
                     sys.exit(1)
-                elif in_files['peak'] != 1:
+                elif len(in_files['peak']) != 1:
                     logger.error("Expected single peak file for run %s got %s"
                                  % (run_id, len(in_files['peak'])))
                     sys.exit(1)
@@ -90,7 +95,7 @@ class PePrPostprocess(AbstractStep):
             if self.get_option('remove-artefacts') == True:
                 file_passed_peaks += '.passed'
                 file_failed_peaks += '.failed'
-            if self.get_option('narrow-peak') == True:
+            if self.get_option('narrow-peak-boundary') == True:
                 file_passed_peaks += '.boundary_refined'
                 file_failed_peaks += '.boundary_refined'
                 
@@ -116,23 +121,43 @@ class PePrPostprocess(AbstractStep):
 
             # Create a new run named run_id
             with self.declare_run(run_id) as run:
-                # Concatenate all paths of peak/chip/input files with comma
-                csv = dict()
-                csv = { "--%s" % k: ",".join(v) for k, v in in_files.iteritems()}
-                csv = [x for k, v in csv for x in [k, v]]
-                input_paths = [f for f in in_files.values()]
-                with run.new_exec_group() as pepr_exec_group:
+                # Generate list of input files
+                input_paths = [f for l in in_files.values() for f in l]
+                with run.new_exec_group() as ln_exec_group:
+                    for in_con, out_con in  {'peak': 'peaks',
+                                  'chip': 'chip',
+                                  'input': 'input'}.iteritems():
+                        for f in in_files[in_con]:
+                            ln = [self.get_tool('ln'), '-s',
+                                  f,
+                                  run.add_output_file(
+                                      out_con,
+                                      os.path.basename(f),
+                                      [f])
+                            ]
+                            ln_exec_group.add_command(ln)
+
+                with run.new_exec_group() as pepr_post_exec_group:
                     # 1. Compile the PePr-postprocess command
-                    pepr_post = [self.get_tool('pepr-postprocess'),
-                                 '--file-format',
-                                 self.get_option('file-format')]
-                    ## Append file lists
-                    pepr_post.extend(csv)
+                    djp = run.get_output_directory_du_jour_placeholder()
+                    peaks = ",".join([os.path.join(djp, os.path.basename(f)) \
+                                      for f in in_files['peak']])
+                    chip = ",".join([os.path.join(djp, os.path.basename(f)) \
+                                     for f in in_files['chip']])
+                    inpu = ",".join([os.path.join(djp, os.path.basename(f)) \
+                                     for f in in_files['input']])
+                    pepr_post = [
+                        self.get_tool('pepr-postprocess'),
+                        '--peak', peaks,
+                        '--chip', chip,
+                        '--input', inpu,
+                        '--file-type',
+                        self.get_option('file-type')]
                     ## Add additional options
-                    pepr.extend(option_list)
+                    pepr_post.extend(option_list)
                     ## Add command to exec group
-                    pepr_exec_group.add_command(pepr)
-                    
+                    pepr_post_exec_group.add_command(pepr_post)
+
                 run.add_output_file('passed_peaks',
                                     file_passed_peaks, input_paths)
                 run.add_output_file('failed_peaks',
