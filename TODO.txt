@@ -2,6 +2,49 @@
 TODOs für die uap v0.0.2
 ========================
 
+01.03.2018 - List of steps/tools needed for example workflows
+----
+
+The following steps occur in the example workflows
+
+**source steps**
+
+- raw_url_source
+- fetch_chrom_sizes_source
+- fastq_source
+
+**processing steps**
+
+- merge_fasta_files
+- bowtie2_generate_index
+- segemehl_generate_index
+- bwa_generate_index
+- samtools_faidx
+- fetch_chrom_sizes_source
+- merge_fastq_files
+- fastqc
+- fastx_quality_stats
+- cutadapt
+- fix_cutadapt
+- bowtie2
+- bwa_backtrack
+- segemehl (commented, why? - because of required ram of ~60GB)
+- tophat2
+- sam_to_sorted_bam
+- preseq_complexity_curve
+- picard_markduplicates
+- macs2
+- htseq_count
+- cufflinks
+
+**internal tools**
+compare_secure_hashes
+fix_cutadapt
+fix_s2c (not used but mentioned in Barski, in the other it is used)
+fix_qnames
+mate_pair_strand_switch
+s2c (not used but mentioned in Barski, used in 2014..)
+
 Zombie-Prozesse? (Don't do)
 ---------------------------
 
