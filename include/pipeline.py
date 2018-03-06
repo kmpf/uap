@@ -1,15 +1,11 @@
 import base64
 import copy
-import csv
 import datetime
-import fscache
-import glob
 import json
 from logging import getLogger
 from operator import itemgetter
 import os
 import re
-import StringIO
 import subprocess
 import sys
 import yaml
@@ -17,17 +13,20 @@ import yaml
 import abstract_step
 import misc
 import task as task_module
-from xml.dom import minidom
 
 
-logger=getLogger("uap_logger")
+logger = getLogger("uap_logger")
 
-# an exception class for reporting configuration errors
+
 class ConfigurationException(Exception):
+    """an exception class for reporting configuration errors"""
+
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return repr(self.value)
+
 
 class Pipeline(object):
     '''
@@ -50,50 +49,50 @@ class Pipeline(object):
         self.git_diff = None
         self.git_tag = None
 
-        '''use git diff to determine any changes in git 
-        directory if git is available  
+        '''use git diff to determine any changes in git
+        directory if git is available
         '''
         command = ['git', '--version']
         try:
 
             self.git_version = subprocess.check_output(command).strip()
 
-        except subprocess.CalledProcessError as e:
-            logger.warn("Execution of '%s' failed. Git seems to be "
-                         "unavailable. Continue anyways" % " ".join(command))
-           
+        except subprocess.CalledProcessError:
+            logger.warn("""Execution of %s failed. Git seems to be
+                         unavailable. Continue anyways""" % " ".join(command))
 
         if self.git_version:
             command = ['git', 'diff']
             try:
                 self.git_diff = subprocess.check_output(command)
-            except:
+            except subprocess.CalledProcessError:
                 logger.error("Execution of %s failed." % " ".join(command))
-
 
             command = ['git', 'describe', '--all', '--long']
             try:
                 self.git_tag = subprocess.check_output(command).strip()
-            except:
+            except subprocess.CalledProcessError:
                 logger.error("Execution of %s failed." % " ".join(command))
-            
 
             if self.git_diff != '':
                 logger.warn('THE GIT REPOSITORY HAS UNCOMMITED CHANGES!')
 
 
-
-        # check if we got passed an 'arguments' parameter
-        # this parameter should contain a argparse.Namespace object
+        """
+        check if we got passed an 'arguments' parameter
+        this parameter should contain a argparse.Namespace object
+        """
         args = None
         if 'arguments' in kwargs:
             args = kwargs['arguments']
 
-        self._uap_path = args.uap_path
+
         '''
         Absolute path to the directory of the uap executable.
         It is used to circumvent path issues.
         '''
+        self._uap_path = args.uap_path
+
 
         '''
         The cluster type to be used (must be one of the keys specified in
@@ -103,10 +102,6 @@ class Pipeline(object):
             self._uap_path, 'cluster/cluster-specific-commands.yaml')
         with open(self._cluster_config_path, 'r') as cluster_config_file:
             self._cluster_config = yaml.load( cluster_config_file )
-        '''
-        Cluster-related configuration for every cluster system supported.
-        '''
-
 
            
         try:
