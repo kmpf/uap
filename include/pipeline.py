@@ -77,6 +77,12 @@ class Pipeline(object):
         logger.warn(res)
 
 
+        res = subprocess.check_output(['git', '--version']).strip()
+        logger.warn('------------------ git VERSION ---------------')
+        logger.warn(res)
+
+
+        
         logger.warn('------------------ git diff ---------------')
         res = subprocess.check_output(['git', 'diff']).strip()
         logger.warn(res)
