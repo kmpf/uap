@@ -312,7 +312,9 @@ class Hisat2(AbstractStep):
             with self.declare_run(run_id) as run:
                 # Get list of files for first/second read
                 fr_input = run_ids_connections_files[run_id]['in/first_read'][0]
-                sr_input = run_ids_connections_files[run_id]['in/second_read'][0]
+                sr_input = None
+                if 'in/second_read' in run_ids_connections_files[run_id]: 
+                    sr_input = run_ids_connections_files[run_id]['in/second_read'][0]
 
                 is_paired_end = True
                 input_paths = [fr_input]
