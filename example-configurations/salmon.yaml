@@ -1,0 +1,129 @@
+destination_path: salmon_out
+
+constants:
+    - &salmon_index  input/salmon_index
+    - &transcript_gene_mapping  input/tgmapping.csv
+    - &path_to_gtf  input/file.gtf
+
+steps:
+    #################
+    ## Source step ##
+    #################
+    fastq_source_1M (fastq_source):
+        sample_to_files_map:
+            rna_sim_1M:
+                - input/reads_1.fastq
+                - input/reads_2.fastq
+        paired_end: yes
+        first_read: 1.fastq
+        second_read: 2.fastq
+
+    AR_1M (adapterremoval):
+        _depends: fastq_source_1M
+        cores: 2
+        treatAs: paired
+        adapter1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNATCTCGTATGCCGTCTTCTGCTTG
+        adapter2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+        collapse: False
+        trimns: True
+        trimqualities: True
+        minquality: 20
+        threads: 2
+        minlength: 30
+
+    salmon_1M (salmon):
+        _depends: AR_1M
+        _connect:
+            in/first_read: AR_1M/pair1.truncated
+            in/second_read: AR_1M/pair2.truncated
+        i: *salmon_index
+        #g: *path_to_gtf
+
+    t2g_salmon (tcount2gcount):
+        _depends: salmon_1M
+        _connect:
+            in/transcript_counts: salmon_1M/quant.sf
+        m: *transcript_gene_mapping
+        t: salmon
+
+    ### para ###
+    split_test (split_fastq):
+        _depends: fastq_source_1M
+        readcount: 1000
+        outfile_count: 10
+
+    AR_1M_para (adapterremoval):
+        _depends: split_test
+        cores: 10
+        treatAs: paired
+        adapter1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNATCTCGTATGCCGTCTTCTGCTTG
+        adapter2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+        collapse: False
+        trimns: True
+        trimqualities: True
+        minquality: 20
+        threads: 10
+        minlength: 30
+
+    salmon_1M_para (salmon):
+        _depends: AR_1M_para
+        _connect:
+            in/first_read: AR_1M_para/pair1.truncated
+            in/second_read: AR_1M_para/pair2.truncated
+        i: *salmon_index
+
+    t2g_salmon_para (tcount2gcount):
+        _depends: salmon_1M_para
+        _connect:
+            in/transcript_counts: salmon_1M_para/quant.sf
+        m: *transcript_gene_mapping
+        t: salmon
+
+    salmon_M5_merge (merge_genecounts):
+        _depends: t2g_salmon_para
+        _connect:
+            in/counts: t2g_salmon_para/gene_counts
+        t: htc
+
+tools:
+    adapterremoval:
+        path: 'AdapterRemoval'
+        get_version: '--version'
+
+    salmon:
+        path: 'salmon'
+        get_version: 'version'
+        exit_code: 0
+
+    split_fastqn:
+        path: ['./../python_env/bin/python', '../tools/split_fastq2.py']
+        exit_code: 1
+
+    merge_genecounts:
+        path: ['./../python_env/bin/python', '../tools/merge_genecounts.py']
+        exit_code: 1
+
+    tcount2gcount:
+        path: ['./../python_env/bin/python', '../tools/tcount2gcount.py']
+        exit_code: 1
+
+    pwd:
+        path: 'pwd'
+        get_version: '--version'
+
+    mv:
+        path: 'mv'
+        get_version: '--version'
+
+    mkdir:
+        path: 'mkdir'
+        get_version: '--version'
+
+    rm:
+        path: 'rm'
+        get_version: '--version'
+
+    cp:
+        path: 'cp'
+        get_version: '--version'
+        exit_code: 0
