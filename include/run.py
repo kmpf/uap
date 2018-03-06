@@ -862,7 +862,7 @@ class Run(object):
             os.unlink(self.get_submit_script_file())
         log['run']['known_paths'] = self.get_known_paths()
         log['config'] = self.get_step().get_pipeline().config
-        log['git_hash_tag'] = self.get_step().get_pipeline().git_hash_tag
+        
         log['tool_versions'] = {}
         for tool in self.get_step()._tools.keys():
             log['tool_versions'][tool] = self.get_step().get_pipeline()\
@@ -870,8 +870,13 @@ class Run(object):
         log['pipeline_log'] = self.get_step()._pipeline_log
         log['start_time'] = self.get_step().start_time
         log['end_time'] = self.get_step().end_time
-        if self.get_step().get_pipeline().git_dirty_diff:
-            log['git_dirty_diff'] = self.get_step().get_pipeline().git_dirty_diff
+
+
+        log['git_tag'] = self.get_step().get_pipeline().git_tag
+        log['git_diff'] = self.get_step().get_pipeline().git_diff
+        log['git_version'] = self.get_step().get_pipeline().git_version
+
+
         if self.get_step().get_pipeline().caught_signal is not None:
             log['signal'] = self.get_step().get_pipeline().caught_signal
 

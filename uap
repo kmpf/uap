@@ -83,7 +83,7 @@ def main():
         "-v", "--verbose",
         dest="verbose",
         action="count", 
-        default=0,
+        default=1,
         help="Increase output verbosity")
     
     parser.add_argument(

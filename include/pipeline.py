@@ -45,62 +45,44 @@ class Pipeline(object):
 
     def __init__(self, **kwargs):
         self.caught_signal = None
-
-        self.git_dirty_diff = None
-
         self.cluster_type = None
+        self.git_version = None
+        self.git_diff = None
+        self.git_tag = None
+
+        '''use git diff to determine any changes in git 
+        directory if git is available  
         '''
-        The cluster type to be used (must be one of the keys specified in
-        cluster_config).
-        '''
-
-
-
-
-
-
-        # # Check the availability of git
-        # command = ['git', '--version']
-        # try:
-        #     with open(os.devnull, 'w') as devnull:
-        #         subprocess.check_call(command, stdout = devnull)
-
-        # except subprocess.CalledProcessError as e:
-        #     logger.error("Execution of '%s' failed. Git seems to be "
-        #                  "unavailable." % " ".join(command))
-        #     sys.exit(1)
-
-
-        logger.warn('PATH: %s', os.getcwd())
-        res = subprocess.check_output(['git', 'status']).strip()
-        logger.warn('------------------ git status ---------------')
-        logger.warn(res)
-
-
-        res = subprocess.check_output(['git', '--version']).strip()
-        logger.warn('------------------ git VERSION ---------------')
-        logger.warn(res)
-
-
-        
-        logger.warn('------------------ git diff ---------------')
-        res = subprocess.check_output(['git', 'diff']).strip()
-        logger.warn(res)
-
-        # now determine the Git hash of the repository
-        command = ['git', 'describe', '--all', '--dirty', '--long']
-
+        command = ['git', '--version']
         try:
-            self.git_hash_tag = subprocess.check_output(command).strip()
-        except:
-            logger.error("Execution of %s failed." % " ".join(command))
-            raise
-            sys.exit(1)
+
+            self.git_version = subprocess.check_output(command).strip()
+
+        except subprocess.CalledProcessError as e:
+            logger.warn("Execution of '%s' failed. Git seems to be "
+                         "unavailable. Continue anyways" % " ".join(command))
+           
+
+        if self.git_version:
+            command = ['git', 'diff']
+            try:
+                self.git_diff = subprocess.check_output(command)
+            except:
+                logger.error("Execution of %s failed." % " ".join(command))
+
+
+            command = ['git', 'describe', '--all', '--long']
+            try:
+                self.git_tag = subprocess.check_output(command).strip()
+            except:
+                logger.error("Execution of %s failed." % " ".join(command))
+            
+
+            if self.git_diff != '':
+                logger.warn('THE GIT REPOSITORY HAS UNCOMMITED CHANGES!')
 
 
 
-        logger.warn('################ git-has-tag: %s', self.git_hash_tag)
-        exit(1)
         # check if we got passed an 'arguments' parameter
         # this parameter should contain a argparse.Namespace object
         args = None
@@ -113,6 +95,10 @@ class Pipeline(object):
         It is used to circumvent path issues.
         '''
 
+        '''
+        The cluster type to be used (must be one of the keys specified in
+        cluster_config).
+        '''
         self._cluster_config_path = os.path.join(
             self._uap_path, 'cluster/cluster-specific-commands.yaml')
         with open(self._cluster_config_path, 'r') as cluster_config_file:
@@ -122,27 +108,7 @@ class Pipeline(object):
         '''
 
 
-        #
-
-
-        if self.git_hash_tag.endswith('-dirty'):
-            if not args.even_if_dirty:
-                print("The repository has uncommitted changes, which is why " +
-                      "we will exit right now.")
-                print("If this is not a production environment, you can skip " +
-                      "this test by specifying --even-if-dirty on the command " +
-                      "line.")
-                print(self.git_hash_tag)
-
-                command = ['git', 'diff']
-                try:
-                    self.git_dirty_diff = subprocess.check_output(command)
-                except:
-                    logger.error("Execution of %s failed." % " ".join(command))
-                    sys.exit(1)
-
-                    logger.warn(self.git_dirty_diff)
-
+           
         try:
             # set cluster type
             if args.cluster == 'auto':
