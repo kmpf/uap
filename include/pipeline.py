@@ -95,6 +95,19 @@ class Pipeline(object):
         Cluster-related configuration for every cluster system supported.
         '''
 
+
+        #
+
+        logger.warn('PATH: %s', os.getcwd())
+        res = subprocess.check_output(['git', 'status']).strip()
+        logger.warn('------------------ git status ---------------')
+        logger.warn(res)
+
+
+        logger.warn('------------------ git diff ---------------')
+        res = subprocess.check_output(['git', 'diff']).strip()
+        logger.warn(res)
+
         if self.git_hash_tag.endswith('-dirty'):
             if not args.even_if_dirty:
                 print("The repository has uncommitted changes, which is why " +
@@ -103,13 +116,16 @@ class Pipeline(object):
                       "this test by specifying --even-if-dirty on the command " +
                       "line.")
                 print(self.git_hash_tag)
-                exit(1)
+
                 command = ['git', 'diff']
                 try:
                     self.git_dirty_diff = subprocess.check_output(command)
                 except:
                     logger.error("Execution of %s failed." % " ".join(command))
                     sys.exit(1)
+
+        logger.warn(self.git_dirty_diff)
+        exit(1)
         try:
             # set cluster type
             if args.cluster == 'auto':
