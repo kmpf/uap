@@ -59,16 +59,16 @@ class Pipeline(object):
 
 
 
-        # Check the availability of git
-        command = ['git', '--version']
-        try:
-            with open(os.devnull, 'w') as devnull:
-                subprocess.check_call(command, stdout = devnull)
+        # # Check the availability of git
+        # command = ['git', '--version']
+        # try:
+        #     with open(os.devnull, 'w') as devnull:
+        #         subprocess.check_call(command, stdout = devnull)
 
-        except subprocess.CalledProcessError as e:
-            logger.error("Execution of '%s' failed. Git seems to be "
-                         "unavailable." % " ".join(command))
-            sys.exit(1)
+        # except subprocess.CalledProcessError as e:
+        #     logger.error("Execution of '%s' failed. Git seems to be "
+        #                  "unavailable." % " ".join(command))
+        #     sys.exit(1)
 
 
         logger.warn('PATH: %s', os.getcwd())
