@@ -30,7 +30,6 @@ class ConfigurationException(Exception):
         return repr(self.value)
 
 class Pipeline(object):
-
     '''
     The Pipeline class represents the entire processing pipeline which is defined
     and configured via the configuration file config.yaml.
@@ -55,6 +54,11 @@ class Pipeline(object):
         cluster_config).
         '''
 
+
+
+
+
+
         # Check the availability of git
         command = ['git', '--version']
         try:
@@ -66,8 +70,20 @@ class Pipeline(object):
                          "unavailable." % " ".join(command))
             sys.exit(1)
 
+
+        logger.warn('PATH: %s', os.getcwd())
+        res = subprocess.check_output(['git', 'status']).strip()
+        logger.warn('------------------ git status ---------------')
+        logger.warn(res)
+
+
+        logger.warn('------------------ git diff ---------------')
+        res = subprocess.check_output(['git', 'diff']).strip()
+        logger.warn(res)
+
         # now determine the Git hash of the repository
         command = ['git', 'describe', '--all', '--dirty', '--long']
+
         try:
             self.git_hash_tag = subprocess.check_output(command).strip()
         except:
@@ -75,6 +91,10 @@ class Pipeline(object):
             raise
             sys.exit(1)
 
+
+
+        logger.warn('################ git-has-tag: %s', self.git_hash_tag)
+        exit(1)
         # check if we got passed an 'arguments' parameter
         # this parameter should contain a argparse.Namespace object
         args = None
@@ -95,6 +115,10 @@ class Pipeline(object):
         Cluster-related configuration for every cluster system supported.
         '''
 
+
+        #
+
+
         if self.git_hash_tag.endswith('-dirty'):
             if not args.even_if_dirty:
                 print("The repository has uncommitted changes, which is why " +
@@ -103,13 +127,16 @@ class Pipeline(object):
                       "this test by specifying --even-if-dirty on the command " +
                       "line.")
                 print(self.git_hash_tag)
-                exit(1)
+
                 command = ['git', 'diff']
                 try:
                     self.git_dirty_diff = subprocess.check_output(command)
                 except:
                     logger.error("Execution of %s failed." % " ".join(command))
                     sys.exit(1)
+
+                    logger.warn(self.git_dirty_diff)
+
         try:
             # set cluster type
             if args.cluster == 'auto':
