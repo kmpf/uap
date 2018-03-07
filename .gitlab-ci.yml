@@ -19,7 +19,7 @@ steptests:
   stage: test
   script:
     - pwd
-    - uap --help
+    - ./uap --help
     - cd  /mnt/fhgfs_ribdata/uap_test
     - make clean
   dependencies:
