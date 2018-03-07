@@ -18,15 +18,16 @@ prepare:
 steptests:
   stage: test
   script:
+    - git clone git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git 
     - pwd
-    - ./uap --help
-    - cd  /mnt/fhgfs_ribdata/uap_test
+    - cd  uap_test
     - make clean
+    - python3 scripts/run_uap_test.py --uap-test-dir . --uap-path ../uap 
   dependencies:
     - prepare
 
 
-#    - python3 /homes/olymp/sven-holger.puppel/playground/run_uap_test.py --uap-test-dir /mnt/fhgfs_ribdata/uap_test
+#    -
 
 
 
