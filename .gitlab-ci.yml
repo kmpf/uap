@@ -2,12 +2,30 @@ stages:
   - build
   - test
 
+prepare:
+  stage: build
+  script:
+    - pwd
+    - ./bootstrap.sh
+    
+  artifacts:
+    paths: python_env
+    expire_in: 24 hours
+
+
+
 steptests:
   stage: test
   script:
     - pwd
+    - uap --help
     - cd  /mnt/fhgfs_ribdata/uap_test
     - make clean
-#    - python3 /homes/olymp/sven-holger.puppel/playground/run_uap_test.py --uap-test-dir /mnt/fhgfs_ribdata/uap_test
+  dependencies:
+    - prepare
+    #    - python3 /homes/olymp/sven-holger.puppel/playground/run_uap_test.py --uap-test-dir /mnt/fhgfs_ribdata/uap_test
 
+
+
+                
 
