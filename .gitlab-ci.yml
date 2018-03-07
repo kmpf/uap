@@ -1,0 +1,11 @@
+stages:
+  - build
+  - test
+
+steptests:
+  stage: test
+  script:
+    - cd  /mnt/fhgfs_ribdata/uap_test
+    - python3 ~/playground/run_uap_test.py --uap-test-dir /mnt/fhgfs_ribdata/uap_test
+
+
