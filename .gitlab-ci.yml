@@ -9,7 +9,8 @@ prepare:
     - ./bootstrap.sh
     
   artifacts:
-    paths: python_env
+    paths:
+      - python_env
     expire_in: 24 hours
 
 
@@ -23,7 +24,9 @@ steptests:
     - make clean
   dependencies:
     - prepare
-    #    - python3 /homes/olymp/sven-holger.puppel/playground/run_uap_test.py --uap-test-dir /mnt/fhgfs_ribdata/uap_test
+
+
+#    - python3 /homes/olymp/sven-holger.puppel/playground/run_uap_test.py --uap-test-dir /mnt/fhgfs_ribdata/uap_test
 
 
 
