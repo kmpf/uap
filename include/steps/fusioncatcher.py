@@ -70,6 +70,7 @@ class ChimPipe(AbstractStep):
 
                 my_input  = os.path.join(my_temp_dir, 'input')
                 my_output = os.path.join(my_temp_dir, 'output')
+                my_read_dir = os.path.join(my_input, 'reads')
 
 		# create logfiles                
                 log_stderr = run.add_output_file(
@@ -96,7 +97,7 @@ class ChimPipe(AbstractStep):
                     fusioncatcher = [
                         self.get_tool('fusioncatcher'),
                         '-d',self.get_option('index') ,
-                        '-i', my_input,
+                        '-i', my_read_dir,
                         '-o', my_output, 
 			'--threads', self.get_option('cores'),
 			'--keep-unmapped-read',
