@@ -1,5 +1,5 @@
 before_script:
-    - eval $(ssh-agent -s)
+  - eval $(ssh-agent -s)
 
 stages:
   - build
@@ -10,8 +10,8 @@ dummy:
   stage: build
   script:
     - pwd
-    - ls ~/.ssh *
-    - git clone clone git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git
+    - ls ~/.ssh/*
+    - git clone git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git
     
 
 .prepare:
