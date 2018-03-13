@@ -1,5 +1,5 @@
-before_script:
-  - eval $(ssh-agent -s)
+#before_script:
+#  - eval $(ssh-agent -s)
 
 stages:
   - build
