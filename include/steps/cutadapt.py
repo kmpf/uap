@@ -84,8 +84,8 @@ class Cutadapt(AbstractStep):
                         run.add_empty_output_connection("%s" % read)
                         run.add_empty_output_connection("log_%s" % read)
                     else:
-                        #paired_end_info[run_id] = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
-                        paired_end_info[run_id] = None
+                        paired_end_info[run_id] = self.find_upstream_info_for_input_paths(input_paths, 'paired_end')
+                        #paired_end_info[run_id] = None
                         #print paired_end_info
                         # make sure that adapter-R1/adapter-R2 or adapter-file are
                         # correctly set
