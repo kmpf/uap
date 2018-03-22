@@ -6,7 +6,7 @@ stages:
   - test
   
   
-dummy:
+.dummy:
   stage: build
   script:
     - pwd
@@ -14,7 +14,7 @@ dummy:
     - git clone git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git
     
 
-.prepare:
+prepare:
   stage: build
   script:
     - pwd
@@ -27,7 +27,7 @@ dummy:
 
 
 
-.steptests:
+steptests:
   stage: test
   script:
     - git clone git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git 
