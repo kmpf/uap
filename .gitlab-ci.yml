@@ -1,6 +1,3 @@
-#before_script:
-#  - eval $(ssh-agent -s)
-
 stages:
   - build
   - test
@@ -26,7 +23,6 @@ prepare:
     expire_in: 24 hours
 
 
-
 steptests:
   stage: test
   script:
@@ -38,14 +34,6 @@ steptests:
     - python3 -m venv venv
     - source venv/bin/activate
     - pip install pyaml
-    - python3 scripts/uap_test.py --uap-test-dir . --uap-path ../uap 
+    - python3 scripts/uap_test.py run-tests --uap-test-dir . --uap-path ../uap 
   dependencies:
     - prepare
-
-
-#    -
-
-
-
-                
-
