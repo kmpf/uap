@@ -36,7 +36,7 @@ steptests:
     - make clean
     - module load Python/3.6.3-foss-2016b
     - python3 -m venv venv
-    - venv/bin/activate
+    - source venv/bin/activate
     - pip install pyaml
     - python3 scripts/uap_test.py --uap-test-dir . --uap-path ../uap 
   dependencies:
