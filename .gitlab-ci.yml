@@ -34,7 +34,11 @@ dummy:
     - pwd
     - cd  uap_test
     - make clean
-    - python3 scripts/run_uap_test.py --uap-test-dir . --uap-path ../uap 
+    - module load Python/3.6.3-foss-2016b
+    - python3 -m venv venv
+    - venv/bin/activate
+    - pip install pyaml
+    - python3 scripts/uap_test.py --uap-test-dir . --uap-path ../uap 
   dependencies:
     - prepare
 
