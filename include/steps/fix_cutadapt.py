@@ -21,7 +21,7 @@ class FixCutadapt(AbstractStep):
         self.add_connection('out/second_read')
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        self.add_option('dd-blocksize', str, optional = True, default = "2M")
         
         self.require_tool('cat')
         self.require_tool('dd')
@@ -67,7 +67,7 @@ class FixCutadapt(AbstractStep):
                         # 2. Output files to fifo
                         if input_paths[0].endswith('fastq.gz'):
                             with exec_group.add_pipeline() as unzip_pipe:
-                                # 2.1 command: Read file in 4MB chunks
+                                # 2.1 command: Read file in 'dd-blocksize' chunks
                                 dd_in = [
                                     self.get_tool('dd'),
                                     'ibs=%s' % self.get_option('dd-blocksize'),
@@ -75,9 +75,10 @@ class FixCutadapt(AbstractStep):
                                 ]
                                 # 2.2 command: Uncompress file to fifo
                                 pigz = [self.get_tool('pigz'),
+                                        '--processes', str(self.get_cores()),
                                         '--decompress',
                                         '--stdout']
-                                # 2.3 Write file in 4MB chunks to fifo
+                                # 2.3 Write file in 'dd-blocksize' chunks to fifo
                                 dd_out = [
                                     self.get_tool('dd'),
                                     'obs=%s' % self.get_option('dd-blocksize'),
@@ -88,8 +89,8 @@ class FixCutadapt(AbstractStep):
                                 unzip_pipe.add_command(pigz)
                                 unzip_pipe.add_command(dd_out)
                         elif input_paths[0].endswith('fastq'):
-                            # 2.1 command: Read file in 4MB chunks and
-                            #              write to fifo in 4MB chunks
+                            # 2.1 command: Read file in 'dd-blocksize' chunks and
+                            #              write to fifo in 'dd-blocksize' chunks
                             dd_in = [
                                 self.get_tool('dd'),
                                 'bs=%s' % self.get_option('dd-blocksize'),
@@ -122,10 +123,9 @@ class FixCutadapt(AbstractStep):
                            temp_fifos["first_read_out"]]
                     # 4.2 Gzip output file
                     pigz = [self.get_tool('pigz'),
-                            '--blocksize', '4096', 
-                            '--processes', '2', 
+                            '--processes', str(self.get_cores()),
                             '--stdout']
-                    # 4.3 command: Write to output file in 4MB chunks
+                    # 4.3 command: Write to output file in 'dd-blocksize' chunks
                     fr_stdout_path = run.add_output_file(
                         "first_read",
                         "%s%s.fastq.gz" %
@@ -148,10 +148,9 @@ class FixCutadapt(AbstractStep):
                                temp_fifos["second_read_out"]]
                         # 4.2 Gzip output file
                         pigz = [self.get_tool('pigz'),
-                                '--blocksize', '4096', 
-                                '--processes', '2', 
+                                '--processes', str(self.get_cores()),
                                 '--stdout']
-                        # 4.3 command: Write to output file in 4MB chunks
+                        # 4.3 command: Write to output file in 'dd-blocksize' chunks
                         sr_stdout_path = run.add_output_file(
                             "second_read",
                             "%s%s.fastq.gz" %

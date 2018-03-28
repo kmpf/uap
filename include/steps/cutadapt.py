@@ -58,7 +58,7 @@ class Cutadapt(AbstractStep):
                         "kept. This might be necessary for downstream analysis.")
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        self.add_option('dd-blocksize', str, optional = True, default = "2M")
 
     def runs(self, run_ids_connections_files):
 
@@ -128,6 +128,7 @@ class Cutadapt(AbstractStep):
                                     # 2.2 command: Uncompress file to fifo
                                     pigz = [self.get_tool('pigz'),
                                             '--decompress',
+                                            '--processes', str(self.get_cores()),
                                             '--stdout']
                                     # 2.3 command: Write file in 4MB chunks to 
                                     #              fifo
@@ -221,9 +222,8 @@ class Cutadapt(AbstractStep):
                                     input_paths)
                             # 3.4 command: Compress output
                             pigz = [self.get_tool('pigz'),
-                                     '--blocksize', '4096',
-                                     '--processes', '1',
-                                     '--stdout']
+                                    '--processes', str(self.get_cores()),
+                                    '--stdout']
                             # 3.5 command: Write to output file in 4MB chunks
                             clipped_fastq_file = run.add_output_file(
                                 "%s" % read,
