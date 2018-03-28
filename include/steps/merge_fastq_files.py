@@ -15,7 +15,7 @@ class MergeFastqFiles(AbstractStep):
     def __init__(self, pipeline):
         super(MergeFastqFiles, self).__init__(pipeline)
         
-        self.set_cores(1) 
+        self.set_cores(4) 
         
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
@@ -74,6 +74,7 @@ class MergeFastqFiles(AbstractStep):
                                     ]
                                     # 2.2 command: Uncompress file to fifo
                                     pigz = [self.get_tool('pigz'),
+                                            '--processes', str(self.get_cores()),
                                             '--decompress',
                                             '--stdout']
                                     # 2.3 Write file in 'dd-blocksize' chunks to fifo
@@ -115,6 +116,7 @@ class MergeFastqFiles(AbstractStep):
                             # 3.2 Gzip output file
                             #if self.get_option('compress-output'):
                             pigz = [self.get_tool('pigz'),
+                                    '--processes', str(self.get_cores()),
                                     '--stdout']
                             pigz_pipe.add_command(pigz)
 

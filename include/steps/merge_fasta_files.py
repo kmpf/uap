@@ -16,7 +16,7 @@ class MergeFastaFiles(AbstractStep):
     def __init__(self, pipeline):
         super(MergeFastaFiles, self).__init__(pipeline)
         
-        self.set_cores(1)
+        self.set_cores(4)
         
         self.add_connection('in/sequence')
         self.add_connection('out/sequence')
@@ -97,6 +97,7 @@ class MergeFastaFiles(AbstractStep):
                                 # 2.2 command: Uncompress file to fifo
                                 pigz = [self.get_tool('pigz'),
                                         '--decompress',
+                                        '--processes', str(self.get_cores()),
                                         '--stdout']
                                 unzip_pipe.add_command(pigz)
 
@@ -137,6 +138,7 @@ class MergeFastaFiles(AbstractStep):
                         if self.get_option('compress-output'):
                             out_file = "%s.fasta.gz" % fasta_basename
                             pigz = [self.get_tool('pigz'),
+                                    '--processes', str(self.get_cores()),
                                     '--stdout']
                             pigz_pipe.add_command(pigz)
 
