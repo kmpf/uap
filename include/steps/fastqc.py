@@ -17,7 +17,7 @@ class Fastqc(AbstractStep):
     def __init__(self, pipeline):
         super(Fastqc, self).__init__(pipeline)
         
-        self.set_cores(1) # muss auch in den Decorator
+        self.set_cores(4) 
         
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
@@ -32,6 +32,10 @@ class Fastqc(AbstractStep):
         self.require_tool('fastqc')
         self.require_tool('mkdir')
         self.require_tool('mv')
+
+        # [Options for 'dd':]
+        # can be added 
+        # see fastqc --help for all available options
 
     def runs(self, run_ids_connections_files):
         '''
@@ -70,6 +74,7 @@ class Fastqc(AbstractStep):
                             # 1. Run fastqc for input file
                             fastqc_exec_group = run.new_exec_group()
                             fastqc = [self.get_tool('fastqc'),
+                                      '--threads', str(self.get_cores()),
                                       '--noextract', '-o',
                                       temp_dir]
                             fastqc.append(input_path)
