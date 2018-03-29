@@ -59,6 +59,7 @@ class Cutadapt(AbstractStep):
 
         # [Options for 'dd':]
         self.add_option('dd-blocksize', str, optional = True, default = "2M")
+        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
     def runs(self, run_ids_connections_files):
 
@@ -129,6 +130,7 @@ class Cutadapt(AbstractStep):
                                     pigz = [self.get_tool('pigz'),
                                             '--decompress',
                                             '--processes', str(self.get_cores()),
+                                            '--blocksize', self.get_option('pigz-blocksize'),
                                             '--stdout']
                                     # 2.3 command: Write file in 4MB chunks to 
                                     #              fifo
@@ -223,6 +225,7 @@ class Cutadapt(AbstractStep):
                             # 3.4 command: Compress output
                             pigz = [self.get_tool('pigz'),
                                     '--processes', str(self.get_cores()),
+                                    '--blocksize', self.get_option('pigz-blocksize'),
                                     '--stdout']
                             # 3.5 command: Write to output file in 4MB chunks
                             clipped_fastq_file = run.add_output_file(

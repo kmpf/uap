@@ -22,6 +22,7 @@ class FixCutadapt(AbstractStep):
 
         # [Options for 'dd':]
         self.add_option('dd-blocksize', str, optional = True, default = "2M")
+        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
         
         self.require_tool('cat')
         self.require_tool('dd')
@@ -77,6 +78,7 @@ class FixCutadapt(AbstractStep):
                                 pigz = [self.get_tool('pigz'),
                                         '--processes', str(self.get_cores()),
                                         '--decompress',
+                                        '--blocksize', self.get_option('pigz-blocksize'),
                                         '--stdout']
                                 # 2.3 Write file in 'dd-blocksize' chunks to fifo
                                 dd_out = [
@@ -124,6 +126,7 @@ class FixCutadapt(AbstractStep):
                     # 4.2 Gzip output file
                     pigz = [self.get_tool('pigz'),
                             '--processes', str(self.get_cores()),
+                            '--blocksize', self.get_option('pigz-blocksize'),
                             '--stdout']
                     # 4.3 command: Write to output file in 'dd-blocksize' chunks
                     fr_stdout_path = run.add_output_file(
@@ -149,6 +152,7 @@ class FixCutadapt(AbstractStep):
                         # 4.2 Gzip output file
                         pigz = [self.get_tool('pigz'),
                                 '--processes', str(self.get_cores()),
+                                '--blocksize', self.get_option('pigz-blocksize'),
                                 '--stdout']
                         # 4.3 command: Write to output file in 'dd-blocksize' chunks
                         sr_stdout_path = run.add_output_file(

@@ -32,6 +32,7 @@ class MergeFastqFiles(AbstractStep):
 
         # [Options for 'dd':]
         self.add_option('dd-blocksize', str, optional = True, default = "2M")
+        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
     def runs(self, run_ids_connections_files):
 
@@ -76,6 +77,7 @@ class MergeFastqFiles(AbstractStep):
                                     pigz = [self.get_tool('pigz'),
                                             '--processes', str(self.get_cores()),
                                             '--decompress',
+                                            '--blocksize', self.get_option('pigz-blocksize'),
                                             '--stdout']
                                     # 2.3 Write file in 'dd-blocksize' chunks to fifo
                                     dd_out = [
@@ -117,6 +119,7 @@ class MergeFastqFiles(AbstractStep):
                             #if self.get_option('compress-output'):
                             pigz = [self.get_tool('pigz'),
                                     '--processes', str(self.get_cores()),
+                                    '--blocksize', self.get_option('pigz-blocksize'),
                                     '--stdout']
                             pigz_pipe.add_command(pigz)
 

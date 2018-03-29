@@ -40,7 +40,7 @@ class FastxQualityStats(AbstractStep):
 
         # [Options for 'dd':]
         self.add_option('dd-blocksize', str, optional = True, default = "2M")
-        
+        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
     def runs(self, run_ids_connections_files):
         # get a list of all read files we have to count
@@ -95,6 +95,7 @@ class FastxQualityStats(AbstractStep):
                                     pigz = [self.get_tool('pigz'),
                                             '--decompress',
                                             '--processes', str(self.get_cores()),
+                                            '--blocksize', self.get_option('pigz-blocksize'),
                                             '--stdout']
                                     # 2.3 Write file in 'dd-blocksize' chunks to fifo
                                     dd_out = [

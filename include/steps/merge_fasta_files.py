@@ -37,6 +37,7 @@ class MergeFastaFiles(AbstractStep):
 
         # [Options for 'dd':]
         self.add_option('dd-blocksize', str, optional = True, default = "2M")
+        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
     def runs(self, run_ids_connections_files):
         '''
@@ -98,6 +99,7 @@ class MergeFastaFiles(AbstractStep):
                                 pigz = [self.get_tool('pigz'),
                                         '--decompress',
                                         '--processes', str(self.get_cores()),
+                                        '--blocksize', self.get_option('pigz-blocksize'),
                                         '--stdout']
                                 unzip_pipe.add_command(pigz)
 
@@ -139,6 +141,7 @@ class MergeFastaFiles(AbstractStep):
                             out_file = "%s.fasta.gz" % fasta_basename
                             pigz = [self.get_tool('pigz'),
                                     '--processes', str(self.get_cores()),
+                                    '--blocksize', self.get_option('pigz-blocksize'),
                                     '--stdout']
                             pigz_pipe.add_command(pigz)
 
