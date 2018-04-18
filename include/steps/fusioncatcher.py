@@ -9,8 +9,6 @@ logger = getLogger('uap_logger')
 
 class FusionCatcher(AbstractStep):
     '''
-    TODO
-
     FusionCatcher is a tool to discover gene fusions
     in human paired-end RNA-Seq data.
 
@@ -45,6 +43,14 @@ class FusionCatcher(AbstractStep):
                         description="Path to index folder")
 
         self.add_option('cores', str, default='6')
+
+
+        self.add_option('keep-unmapped-read' , bool, optional=True)
+
+        self.add_option('skip-filter-adapter' , bool, optional=True)
+
+        self.add_option('extract-buffer-size' , str, optional=True)
+
 
     def runs(self, run_ids_connections_files):
         self.set_cores(self.get_option('cores'))
@@ -99,16 +105,20 @@ class FusionCatcher(AbstractStep):
                         '-d', self.get_option('index'),
                         '-i', fr_input + ',' + sr_input,
                         '-o', my_output,
-                        '--threads', self.get_option('cores'),
-                        '--keep-unmapped-read',
-                        '--skip-filter-adapter',
-                        '--extract-buffer-size=1000000000']
+                        '--threads', self.get_option('cores')]
 
+                    if self.is_option_set_in_config('keep-unmapped-read'):
+                        fusioncatcher.extend(['--keep-unmapped-read'])
+
+                    if self.is_option_set_in_config('skip-filter-adapter'):
+                        fusioncatcher.extend(['--skip-filter-adapter'])
+
+                    if self.is_option_set_in_config('extract-buffer-size'):
+                        fusioncatcher.extend(['--extract-buffer-size=' + self.get_option('extract-buffer-size')])
+                   
                     exec_group.add_command(fusioncatcher,
                                            stderr_path=log_stderr,
                                            stdout_path=log_stdout)
-
-                    print ' '.join(fusioncatcher)
 
                 with run.new_exec_group() as exec_group:
 
