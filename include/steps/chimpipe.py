@@ -8,8 +8,10 @@ logger = getLogger('uap_logger')
 
 class ChimPipe(AbstractStep):
     '''
-    ChimPipe is a tool to discover gene fusions
-    in human paired-end RNA-Seq data.
+
+    ChimPipe is a tool to discover gene fusions in human paired-end RNA-Seq data.
+
+    Paper: https://genomebiology.biomedcentral.com/articles/10.1186/gb-2013-14-2-r12
 
     Paper:
     https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5209911/
@@ -53,6 +55,17 @@ class ChimPipe(AbstractStep):
                         description="Identifier used in output file names")
 
         self.add_option('cores', str, default='6')
+ 
+        self.add_option('consensus_seq', str, optional = True, 
+			description="""Sequence pair of consensus splice site bases. """
+			)
+        
+	self.add_option('library_type', str, optional = True, 
+			description="TODO"
+			)
+	self.add_option('similarity', str, optional = True, 
+			description="TODO"
+			)
 
         self.add_option('consensus_seq', str, optional=True,
                         description="Sequence pair of consensus splice site bases")
