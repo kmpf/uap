@@ -15,34 +15,25 @@ class KallistoIndex(AbstractStep):
         super(KallistoIndex, self).__init__(pipeline)
 
         self.set_cores(1)
-        # input connections
+
         self.add_connection('in/fasta')
 
-
-        # output connections
         self.add_connection('out/kallisto-index')
         self.add_connection('out/log_stderr')
         self.add_connection('out/log_stdout')
 
-
-        # required tools
         self.require_tool('kallisto')
 
-        # options
         self.add_option('index', str, optional=False, default=None,
                         description="Filename for the kallisto index")
-
 
         self.add_option('kmer-size', int, optional=True, default=31,
                         description="k-mer (odd) length (default: 31, max value: 31)")
 
         self.add_option('make-unique', bool, optional=True, default=None,
-                        description="k-mer (odd) length (default: 31, max value: 31)")
-
+                        description="Replace repeated target names with unique names")
 
     def runs(self, run_ids_connections_files):
-
-
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 kallisto = [self.get_tool('kallisto'), 'index']
@@ -52,7 +43,8 @@ class KallistoIndex(AbstractStep):
 
                 kallisto.extend(['-k', str(self.get_option('kmer-size'))])
 
-                if self.is_option_set_in_config('make-unique') and self.get_option('make-unique') :
+                if self.is_option_set_in_config('make-unique') \
+                   and self.get_option('make-unique'):
 
                     kallisto.append('--make-unique')
 
@@ -62,8 +54,6 @@ class KallistoIndex(AbstractStep):
                 else:
                     kallisto.append(fasta_files)
 
-
-
                 stderr_file = "%s-kallisto-log_stderr.txt" % (run_id)
                 log_stderr = run.add_output_file("log_stderr",
                                                  stderr_file, fasta_files)
@@ -71,12 +61,10 @@ class KallistoIndex(AbstractStep):
                 log_stdout = run.add_output_file("log_stdout",
                                                  stdout_file, fasta_files)
 
-
-                run.add_output_file("kallisto-index", 
+                run.add_output_file("kallisto-index",
                                     self.get_option('index'), fasta_files)
 
-
                 kallisto_index = run.new_exec_group()
-                kallisto_index.add_command(kallisto, 
-                                        stdout_path=log_stdout,
-                                        stderr_path=log_stderr)
+                kallisto_index.add_command(kallisto,
+                                           stdout_path=log_stdout,
+                                           stderr_path=log_stderr)
