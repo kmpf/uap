@@ -17,6 +17,7 @@ class Kallisto(AbstractStep):
         # input connections
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
+        self.add_connection('in/index')
 
         # output connections
         self.add_connection('out/abundance.h5')
@@ -33,7 +34,7 @@ class Kallisto(AbstractStep):
                         description="workaround to specify cores for grid \
                         engine and threads ie")
 
-        self.add_option('index', str, optional=False, default=None,
+        self.add_option('index', str, optional=True, default=None,
                         description="Filename for the kallisto index to be \
                         used for quantification")
 
@@ -70,7 +71,18 @@ class Kallisto(AbstractStep):
     def runs(self, run_ids_connections_files):
         self.set_cores(self.get_option('cores'))
 
+        connect_index_path = None
         for run_id in run_ids_connections_files.keys():
+            try:
+                connect_index_path = run_ids_connections_files[run_id]['in/index'][0]
+            except KeyError:
+                pass
+
+
+        for run_id in run_ids_connections_files.keys():
+            if 'in/index' in run_ids_connections_files[run_id]:
+                continue
+
             with self.declare_run(run_id) as run:
                 input_fileset = []
                 r1 = run_ids_connections_files[run_id]['in/first_read'][0]
@@ -86,14 +98,25 @@ class Kallisto(AbstractStep):
                 kallisto = [self.get_tool('kallisto'), 'quant']
                 kallisto.extend(['-t', str(self.get_option('cores'))])
 
-                flags = ['index', 'fr-stranded', 'rf-stranded',
+
+                if self.is_option_set_in_config('index'):
+                    kallisto.extend(['--index', self.get_option('index')])
+                else:
+                    if connect_index_path:
+                        kallisto.extend(['--index', connect_index_path])
+                    else:
+                        logger.error(
+                        "%s no kallisto index give via config or connection" % run_id)
+                        sys.exit(1)
+
+                flags = ['fr-stranded', 'rf-stranded',
                          'bias', 'single-overhang', 'single']
 
                 for flag in flags:
                     if self.is_option_set_in_config(flag) and self.get_option(flag):
                         kallisto.append('--' + flag)
 
-                param_flags = ['index', 'bootstrap-samples', 'seed',
+                param_flags = ['bootstrap-samples', 'seed',
                                'fragment-length', 'sd']
 
                 for param_flag in param_flags:
