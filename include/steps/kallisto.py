@@ -1,6 +1,7 @@
 from logging import getLogger
 from abstract_step import AbstractStep
 
+
 logger = getLogger('uap_logger')
 
 
@@ -17,7 +18,7 @@ class Kallisto(AbstractStep):
         # input connections
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
-        self.add_connection('in/index')
+        self.add_connection('in/kallisto-index')
 
         # output connections
         self.add_connection('out/abundance.h5')
@@ -74,13 +75,13 @@ class Kallisto(AbstractStep):
         connect_index_path = None
         for run_id in run_ids_connections_files.keys():
             try:
-                connect_index_path = run_ids_connections_files[run_id]['in/index'][0]
+                connect_index_path = run_ids_connections_files[run_id]['in/kallisto-index'][0]
             except KeyError:
                 pass
 
 
         for run_id in run_ids_connections_files.keys():
-            if 'in/index' in run_ids_connections_files[run_id]:
+            if 'in/kallisto-index' in run_ids_connections_files[run_id]:
                 continue
 
             with self.declare_run(run_id) as run:
@@ -107,7 +108,7 @@ class Kallisto(AbstractStep):
                     else:
                         logger.error(
                         "%s no kallisto index give via config or connection" % run_id)
-                        sys.exit(1)
+                        exit(1)
 
                 flags = ['fr-stranded', 'rf-stranded',
                          'bias', 'single-overhang', 'single']
