@@ -99,12 +99,13 @@ class Kallisto(AbstractStep):
                 kallisto = [self.get_tool('kallisto'), 'quant']
                 kallisto.extend(['-t', str(self.get_option('cores'))])
 
-
+                d_files = input_fileset[:]
                 if self.is_option_set_in_config('index'):
                     kallisto.extend(['--index', self.get_option('index')])
                 else:
                     if connect_index_path:
                         kallisto.extend(['--index', connect_index_path])
+                        d_files.append( connect_index_path)
                     else:
                         logger.error(
                         "%s no kallisto index give via config or connection" % run_id)
@@ -132,17 +133,17 @@ class Kallisto(AbstractStep):
 
                 stderr_file = "%s-kallisto-log_stderr.txt" % (run_id)
                 log_stderr = run.add_output_file("log_stderr",
-                                                 stderr_file, input_fileset)
+                                                 stderr_file, d_files)
                 stdout_file = "%s-kallisto-log_stdout.txt" % (run_id)
                 log_stdout = run.add_output_file("log_stdout",
-                                                 stdout_file, input_fileset)
+                                                 stdout_file, d_files)
 
                 h5_file = "abundance.h5"
-                run.add_output_file("abundance.h5", h5_file, input_fileset)
+                run.add_output_file("abundance.h5", h5_file, d_files)
                 tsv_file = "abundance.tsv"
-                run.add_output_file("abundance.tsv", tsv_file, input_fileset)
+                run.add_output_file("abundance.tsv", tsv_file, d_files)
                 run_info = "run_info.json"
-                run.add_output_file("run_info.json", run_info, input_fileset)
+                run.add_output_file("run_info.json", run_info, d_files)
 
                 kallisto_eg.add_command(kallisto, stdout_path=log_stdout,
                                         stderr_path=log_stderr)
