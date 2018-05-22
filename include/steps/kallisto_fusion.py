@@ -21,15 +21,14 @@ class Kallisto(AbstractStep):
 
         # output connections
         self.add_connection('out/fusion.txt')
+        self.add_connection('out/abundance.h5')
+        self.add_connection('out/abundance.tsv')
+        self.add_connection('out/run_info.json')
         self.add_connection('out/log_stderr')
         self.add_connection('out/log_stdout')
-        self.add_connection('out/tar_archive')
 
         # required tools
         self.require_tool('kallisto')
-        self.require_tool('mkdir')
-        self.require_tool('tar')
-        self.require_tool('rm')
 
         # options
         self.add_option('cores', int, optional=True, default=6,
@@ -70,9 +69,18 @@ class Kallisto(AbstractStep):
                     '%s-chimpipe-log_stdout.txt' % run_id,
                     input_paths)
 
-                # kal_fusion = run.add_output_file(
-                # 'fusion.txt', 'fusion.txt', input_paths)
+                run.add_output_file(
+                    'fusion.txt', 'fusion.txt', input_paths)
+                
+                run.add_output_file(
+                    'abundance.h5', 'abundance.h5', input_paths)
 
+                run.add_output_file(
+                    'abundance.tsv', 'abundance.tsv', input_paths)
+                
+                run.add_output_file(
+                    'run_info.json', 'run_info.json', input_paths)
+                
                 # Assemble kallisto command
                 my_output = run.get_output_directory_du_jour_placeholder()
                 with run.new_exec_group() as exec_group:
@@ -82,6 +90,7 @@ class Kallisto(AbstractStep):
                                 '-i', self.get_option('index'),
                                 '--fusion',
                                 '-o', my_output,
+                                '--fr-stranded',
                                 fr_input,
                                 sr_input]
 
