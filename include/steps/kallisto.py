@@ -48,10 +48,10 @@ class Kallisto(AbstractStep):
         self.add_option('seed', int, optional=True, default=None,
                         description="Seed for the bootstrap sampling")
 
-        self.add_option('single', int, optional=True, default=None,
+        self.add_option('single', bool, optional=True, default=None,
                         description="Quantify single-end reads")
 
-        self.add_option('single-overhang', int, optional=True, default=None,
+        self.add_option('single-overhang', bool, optional=True, default=None,
                         description="""Include reads where unobserved
                         rest of fragment is predicted to lie
                         outside a transcript""")
