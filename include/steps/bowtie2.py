@@ -293,7 +293,8 @@ class Bowtie2(AbstractStep):
         # threads option can overwrite default # of cores for bowtie
         # and the cores variable
         if 'threads' not in set_options1:
-            option_list.append('--threads ' % str(self.get_cores()))
+            option_list.append('--threads')
+            option_list.append(str(self.get_cores()))
         else:
             self.set_cores(self.get_option('threads'))
 
