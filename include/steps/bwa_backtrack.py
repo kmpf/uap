@@ -165,8 +165,9 @@ class BwaBacktrack(AbstractStep):
                         "written. [3]")
         self.add_option('sampe-N', int, optional = True,
                         description = "Maximum number of alignments to output "
-                        "in the XA tag for reads paired properly. If a read has "
-                        "more than INT hits, the XA tag will not be written. [3]")
+                        "in the XA tag for disconcordant read pairs (excluding "
+                        "singletons). If a read has more than INT hits, the XA "
+                        "tag will not be written. [10]")
         self.add_option('sampe-r', str, optional = True,
                         description = "Specify the read group in a format like "
                         "'@RG\tID:foo\tSM:bar'. [null]")
