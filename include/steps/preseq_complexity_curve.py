@@ -33,7 +33,9 @@ class PreseqComplexityCurve(AbstractStep):
 
         # c_curve specific options
         self.add_option('step', int, optional = True, description =
-                        'step size gin extrapolations (default: 1e+06)')
+                        'step size in extrapolations (default: 1e+06)')
+        self.add_option('verbose', bool, optional = True, description =
+                        'print more information')
         self.add_option('pe', bool, optional = False, description =
                         'input is paired end read file')
         self.add_option('hist', bool, optional = True, default = False,
@@ -47,7 +49,7 @@ class PreseqComplexityCurve(AbstractStep):
                         'reads (default: 5000)')
 
     def runs(self, run_ids_connections_files):
-        options = ['step', 'pe', 'hist', 'vals', 'seg_len']
+        options = ['step', 'verbose', 'pe', 'hist', 'vals', 'seg_len']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
