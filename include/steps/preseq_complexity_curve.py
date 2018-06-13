@@ -19,6 +19,11 @@ class PreseqComplexityCurve(AbstractStep):
     file, then simply type::
 
         preseq c_curve -o output.txt input.sort.bed
+
+    Documentation::
+
+        http://smithlabresearch.org/software/preseq/
+
     '''
 
     def __init__(self, pipeline):
