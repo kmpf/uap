@@ -29,14 +29,39 @@ class SegemehlGenerateIndex(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('segemehl')
 
-        self.add_option('index-basename', str, optional=False, description=
-                        "Basename for created segemehl index.")
+        self.add_option('index-basename', str, optional = False,
+                        description= "Basename for created segemehl index.")
 
-        # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        # Segemehl options
+        self.add_option('threads', int, optional = True,
+                        description = "start <n> threads (default:4)")
+
+        # Options for dd
+        self.add_option('dd-blocksize', str, optional = True, default = "2M")
+        # Options for pigz
+        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
     def runs(self, run_ids_connections_files):
 
+        options = ['threads']
+
+        set_options = [option for option in options if \
+                       self.is_option_set_in_config(option)]
+
+        option_list = list()
+        for option in set_options:
+            if isinstance(self.get_option(option), bool):
+                if self.get_option(option):
+                    option_list.append('--%s' % option)
+            else:
+                option_list.append('--%s' % option)
+                option_list.append(str(self.get_option(option)))
+
+        if 'threads' not in set_options:
+            option_list.append('--threads')
+            option_list.append(str(self.get_cores()))
+        else:
+            self.set_cores(self.get_option('threads'))
 
         for run_id in run_ids_connections_files.keys():
             index_basename = "%s-%s" % (
@@ -120,6 +145,7 @@ class SegemehlGenerateIndex(AbstractStep):
                         '--generate', index_fifo,
                         '--database', " ".join(refseq_fifos)
                     ]
+                    segemehl.extend(option_list)
 
                     exec_group.add_command(
                         segemehl,
