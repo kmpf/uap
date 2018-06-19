@@ -180,7 +180,8 @@ class Segemehl(AbstractStep):
                 option_list.append(str(self.get_option(option)))
 
         if 'threads' not in set_options:
-            option_list.append('--threads ' % str(self.get_cores()))
+            option_list.append('--threads')
+            option_list.append(str(self.get_cores()))
         else:
             self.set_cores(self.get_option('threads'))
 
