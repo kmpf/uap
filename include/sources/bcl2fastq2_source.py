@@ -65,9 +65,9 @@ class Bcl2Fastq2Source(AbstractSourceStep):
                         description='Comma-separated list of regular expressions to select '
                         'only a subset of the tiles available in the flow-cell.Multiple '
                         'entries allowed, each applies to the corresponding base-calls.'
-                        'For example: * to select all the tiles ending with '5' in all '
+                        'For example: * to select all the tiles ending with 5 in all '
                         'lanes: tiles [0-9][0-9][0-9]5. * to select tile 2 in lane 1 '
-                        'and all the tiles in the other lanes: tiles s_1_0002,s_[2-8]'')
+                        'and all the tiles in the other lanes: tiles s_1_0002,s_[2-8]')
         self.add_option('minimum-trimmed-read-length', int, optional=True,
                         description='minimum read length after adapter trimming (=35)')
         self.add_option('use-bases-mask', str, optional=True,
