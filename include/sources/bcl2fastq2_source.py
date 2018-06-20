@@ -81,7 +81,7 @@ class Bcl2Fastq2Source(AbstractSourceStep):
         self.add_option('ignore-missing-bcls', bool, optional=True,
                         description='assume N for missing calls')
         self.add_option('ignore-missing-filter', bool, optional=True,
-                        description='assume 'true' for missing filters')
+                        description='assume true for missing filters')
         self.add_option('ignore-missing-positions', bool, optional=True,
                         description='assume [0,i] for missing positions, where i is '
                         'incremented starting from 0')
