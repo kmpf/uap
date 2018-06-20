@@ -24,89 +24,89 @@ class Bcl2Fastq2Source(AbstractSourceStep):
                         description='minimum log level recognized values: NONE, FATAL, '
                         'ERROR, WARNING, INFO, DEBUG, TRACE. (INFO)')
         self.add_option('runfolder-dir', str, optional=False,
-                        description="path to runfolder directory (=./)")
+                        description='path to runfolder directory (=./)')
         self.add_option('input-dir', str, optional=True,
-                        description="path to input directory '
-                        '(=<runfolder-dir>/Data/Intensities/BaseCalls/)")
+                        description='path to input directory '
+                        '(=<runfolder-dir>/Data/Intensities/BaseCalls/)')
         self.add_option('intensities-dir', str, optional=True,
-                        description="path to intensities directory (=<input-dir>/../). '
+                        description='path to intensities directory (=<input-dir>/../). '
                         'If intensities directory is specified, also input directory '
-                        'must be specified.")
+                        'must be specified.')
         # output dir is set by yaml configfile
 #        self.add_option('output-dir', str, optional=True)
         self.add_option('interop-dir', str, optional=True,
-                        description="path to demultiplexing statistics directory '
-                        '(=<runfolder-dir>/InterOp/)")
+                        description='path to demultiplexing statistics directory '
+                        '(=<runfolder-dir>/InterOp/)')
         self.add_option('stats-dir', str, optional=True,
-                        description="path to human-readable demultiplexing statistics '
-                        'directory (=<runfolder-dir>/InterOp/)")
+                        description='path to human-readable demultiplexing statistics '
+                        'directory (=<runfolder-dir>/InterOp/)')
         self.add_option('reports-dir', str, optional=True,
-                        description="path to reporting directory (=<output-dir>/Reports/)")
+                        description='path to reporting directory (=<output-dir>/Reports/)')
         self.add_option('sample-sheet', str, optional=True,
-                        description="path to the sample sheet'
-                        '(=<runfolder-dir>/SampleSheet.csv)")
+                        description='path to the sample sheet'
+                        '(=<runfolder-dir>/SampleSheet.csv)')
         self.add_option('aggregated-tiles', str, optional=True,
-                        description="tiles aggregation flag determining structure of '
+                        description='tiles aggregation flag determining structure of '
                         'input files (=AUTO). recognized values: AUTO - Try to detect '
                         'correct setting. YES - Tiles are aggregated into single input '
-                        'file. NO - There are separate input files for individual tiles")
+                        'file. NO - There are separate input files for individual tiles')
         self.add_option('loading-threads', int, optional=True,
-                        description="number of threads used for loading BCL data (=4)")
+                        description='number of threads used for loading BCL data (=4)')
         self.add_option('demultiplexing-threads', int, optional=True,
-                        description="number of threads used for demultiplexing '
-                        '(=20% of available CPUs)")
+                        description='number of threads used for demultiplexing '
+                        '(=20% of available CPUs)')
         self.add_option('processing-threads', int, optional=True,
-                        description="number of threads used for processing demultipled '
-                        'data (=100% of available CPUs)")
+                        description='number of threads used for processing demultipled '
+                        'data (=100% of available CPUs)')
         self.add_option('writing-threads', int, optional=True,
-                        description="number of threads used for writing FASTQ data '
-                        '(=4)")
+                        description='number of threads used for writing FASTQ data '
+                        '(=4)')
         self.add_option('tiles', str, optional=True,
-                        description="Comma-separated list of regular expressions to select '
+                        description='Comma-separated list of regular expressions to select '
                         'only a subset of the tiles available in the flow-cell.Multiple '
                         'entries allowed, each applies to the corresponding base-calls.'
                         'For example: * to select all the tiles ending with '5' in all '
                         'lanes: tiles [0-9][0-9][0-9]5. * to select tile 2 in lane 1 '
-                        'and all the tiles in the other lanes: tiles s_1_0002,s_[2-8]'")
+                        'and all the tiles in the other lanes: tiles s_1_0002,s_[2-8]'')
         self.add_option('minimum-trimmed-read-length', int, optional=True,
-                        description="minimum read length after adapter trimming (=35)")
+                        description='minimum read length after adapter trimming (=35)')
         self.add_option('use-bases-mask', str, optional=True,
-                        description="Specifies how to use each cycle.")
+                        description='Specifies how to use each cycle.')
         self.add_option('mask-short-adapter-reads', int, optional=True,
-                        description="smallest number of remaining bases (after masking '
+                        description='smallest number of remaining bases (after masking '
                         'bases below the minimum trimmed read length) below which whole '
-                        'read is masked (=22)")
+                        'read is masked (=22)')
         self.add_option('adapter-stringency', float, optional=True,
-                        description="adapter stringency (=0.9)")
+                        description='adapter stringency (=0.9)')
         self.add_option('ignore-missing-bcls', bool, optional=True,
-                        description="assume 'N'/'#' for missing calls")
+                        description='assume 'N'/'#' for missing calls')
         self.add_option('ignore-missing-filter', bool, optional=True,
-                        description="assume 'true' for missing filters")
+                        description='assume 'true' for missing filters')
         self.add_option('ignore-missing-positions', bool, optional=True,
-                        description="assume [0,i] for missing positions, where i is '
-                        'incremented starting from 0")
+                        description='assume [0,i] for missing positions, where i is '
+                        'incremented starting from 0')
         self.add_option('ignore-missing-controls', bool, optional=True,
-                        description="assume 0 for missing controls")
+                        description='assume 0 for missing controls')
         self.add_option('write-fastq-reverse-complement', bool, optional=True,
-                        description="Generate FASTQs containing reverse complements of '
-                        'actual data")
+                        description='Generate FASTQs containing reverse complements of '
+                        'actual data')
         self.add_option('with-failed-reads', bool, optional=True,
-                        description="include non-PF clusters")
+                        description='include non-PF clusters')
         self.add_option('create-fastq-for-index-reads', bool, optional=True,
-                        description="create FASTQ files also for index reads")
+                        description='create FASTQ files also for index reads')
         self.add_option('find-adapters-with-sliding-window', bool, optional=True,
-                        description="find adapters with simple sliding window algorithm")
+                        description='find adapters with simple sliding window algorithm')
         self.add_option('no-bgzf-compression', bool, optional=True,
-                        description="Turn off BGZF compression for FASTQ files")
+                        description='Turn off BGZF compression for FASTQ files')
         self.add_option('fastq-compression-level', int, optional=True,
-                        description="Zlib compression level (1-9) used for FASTQ files (=4)")
+                        description='Zlib compression level (1-9) used for FASTQ files (=4)')
         self.add_option('barcode-mismatches', bool, optional=True,
-                        description="number of allowed mismatches per index multiple '
+                        description='number of allowed mismatches per index multiple '
                         'entries, comma delimited entries, allowed; each entry is '
                         'applied to the corresponding index;last entry applies to all '
-                        'remaining indices")
+                        'remaining indices')
         self.add_option('no-lane-splitting', bool, optional=True,
-                        description="Do not split fastq files by lane.")
+                        description='Do not split fastq files by lane.')
 
     def runs(self, run_ids_connections_files):
 
