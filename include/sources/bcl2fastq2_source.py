@@ -173,7 +173,7 @@ class Bcl2Fastq2Source(AbstractSourceStep):
 
                     bcl2fastq = [self.get_tool('bcl2fastq')]
                     bcl2fastq.extend(option_list)
-                    bcl2fastq.extend('--output-dir', output_unaligned_dir)
+                    bcl2fastq.extend(['--output-dir', output_unaligned_dir])
 
                     bcl2fastq_cmd = bcl2Fastq_exec_group.add_command(
                         bcl2fastq,
