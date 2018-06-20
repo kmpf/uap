@@ -16,6 +16,8 @@ class Bcl2Fastq2Source(AbstractSourceStep):
         #self.add_connection('out/configureBcl2Fastq_log_stderr')
         #self.add_connection('out/make_log_stderr')
         #self.add_connection('out/sample_sheet')
+        self.add_connection('out/bcl2fastq2_log_stdout')
+        self.add_connection('out/bcl2fastq2_log_stderr')
 
         self.require_tool('bcl2fastq')
         self.require_tool('mkdir')
