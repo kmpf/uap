@@ -79,7 +79,7 @@ class Bcl2Fastq2Source(AbstractSourceStep):
         self.add_option('adapter-stringency', float, optional=True,
                         description='adapter stringency (=0.9)')
         self.add_option('ignore-missing-bcls', bool, optional=True,
-                        description='assume 'N'/'#' for missing calls')
+                        description='assume N for missing calls')
         self.add_option('ignore-missing-filter', bool, optional=True,
                         description='assume 'true' for missing filters')
         self.add_option('ignore-missing-positions', bool, optional=True,
