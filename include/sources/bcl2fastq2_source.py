@@ -136,15 +136,10 @@ class Bcl2Fastq2Source(AbstractSourceStep):
             else:
                 raise StandardError("No such file for option '%s': %s" %
                                     (file_option, file))
-        else:
-            ### if the sample sheet is not provided in config, bcl2fastq automatically searches for it in
-            ### the runfolder-dir, we need this file to split the process into runs per lane, 
-            ### which would speed up the whole demultiplexing process
-            path = os.path.abspath(self.get_option('runfolder-dir'))
-            file = os.path.join(path, "SampleSheet.csv")
-            if os.path.isfile(file):
-                # split file into lanes
-
+        ### if the sample sheet is not provided in config, bcl2fastq automatically searches for
+        ### it in the runfolder-dir, we need this file to split the process into runs per lane,
+        ### which would speed up the whole demultiplexing process
+        
         ## Get remaining options that are set in the configuration
         options = ["min-log-level", "stats-dir", "reports-dir", "aggregated-tiles",
                    "loading-threads", "demultiplexing-threads", "processing-threads"
