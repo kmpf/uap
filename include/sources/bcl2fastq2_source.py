@@ -21,8 +21,8 @@ class Bcl2Fastq2Source(AbstractSourceStep):
         self.require_tool('mkdir')
 
         self.add_option('min-log-level', str, optional=True,
-                        description="minimum log level recognized values: NONE, FATAL, '
-                        'ERROR, WARNING, INFO, DEBUG, TRACE. (INFO)")
+                        description='minimum log level recognized values: NONE, FATAL, '
+                        'ERROR, WARNING, INFO, DEBUG, TRACE. (INFO)')
         self.add_option('runfolder-dir', str, optional=False,
                         description="path to runfolder directory (=./)")
         self.add_option('input-dir', str, optional=True,
