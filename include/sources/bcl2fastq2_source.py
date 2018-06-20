@@ -17,7 +17,7 @@ class Bcl2Fastq2Source(AbstractSourceStep):
         #self.add_connection('out/make_log_stderr')
         #self.add_connection('out/sample_sheet')
 
-        self.require_tool('bcl2fastqfromrpm')
+        self.require_tool('bcl2fastq')
         self.require_tool('mkdir')
 
         self.add_option('min-log-level', str, optional=True,
