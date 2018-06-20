@@ -16,7 +16,6 @@ class Bcl2Fastq2Source(AbstractSourceStep):
         #self.add_connection('out/configureBcl2Fastq_log_stderr')
         #self.add_connection('out/make_log_stderr')
         #self.add_connection('out/sample_sheet')
-        self.add_connection('out/bcl2fastq2_log_stdout')
         self.add_connection('out/bcl2fastq2_log_stderr')
 
         self.require_tool('bcl2fastq')
@@ -180,10 +179,7 @@ class Bcl2Fastq2Source(AbstractSourceStep):
                     bcl2fastq_cmd = bcl2Fastq_exec_group.add_command(
                         bcl2fastq,
                         stderr_path = run.add_output_file("bcl2fastq2_log_stderr",
-                                                          "bcl2fastq-log_stderr.txt", [],
-                        stdout_path = run.add_output_file("bcl2fastq2_log_stdout",
-                                                          "bcl2fastq-log_stdout.txt", [])
-                        )
+                                                          "bcl2fastq-log_stderr.txt", [])
                     )
 
                     logger.debug(" ".join(bcl2fastq))
