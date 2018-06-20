@@ -181,10 +181,10 @@ class Bcl2Fastq2Source(AbstractSourceStep):
                                                           "bcl2fastq-log_stderr.txt", [],
                         stdout_path = run.add_output_file("bcl2fastq2_log_stdout",
                                                           "bcl2fastq-log_stdout.txt", [])
+                        )
                     )
 
-
-#                   logger.debug(" ".join(bcl2fastq))
+                    logger.debug(" ".join(bcl2fastq))
 
                     # Create placeholder for Unaligned folder
 #                    temp_output_dir = os.path.join(
