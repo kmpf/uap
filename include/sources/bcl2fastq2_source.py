@@ -142,10 +142,10 @@ class Bcl2Fastq2Source(AbstractSourceStep):
 
         ## Get remaining options that are set in the configuration
         options = ["min-log-level", "stats-dir", "reports-dir", "aggregated-tiles",
-                   "loading-threads", "demultiplexing-threads", "processing-threads"
+                   "loading-threads", "demultiplexing-threads", "processing-threads",
                    "writing-threads", "tiles", "minimum-trimmed-read-length",
                    "use-bases-mask", "mask-short-adapter-reads", "adapter-stringency",
-                   "ignore-missing-bcls", "ignore-missing-filter", "ignore-missing-positions"
+                   "ignore-missing-bcls", "ignore-missing-filter", "ignore-missing-positions",
                    "ignore-missing-controls", "write-fastq-reverse-complement",
                    "with-failed-reads", "create-fastq-for-index-reads",
                    "find-adapters-with-sliding-window", "no-bgzf-compression",
