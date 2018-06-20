@@ -139,7 +139,7 @@ class Bcl2Fastq2Source(AbstractSourceStep):
         ### if the sample sheet is not provided in config, bcl2fastq automatically searches for
         ### it in the runfolder-dir, we need this file to split the process into runs per lane,
         ### which would speed up the whole demultiplexing process
-        
+
         ## Get remaining options that are set in the configuration
         options = ["min-log-level", "stats-dir", "reports-dir", "aggregated-tiles",
                    "loading-threads", "demultiplexing-threads", "processing-threads"
@@ -183,7 +183,8 @@ class Bcl2Fastq2Source(AbstractSourceStep):
                                                           "bcl2fastq-log_stdout.txt", [])
                     )
 
-                    logger.debug(" ".join(bcl2fastq))
+
+#                   logger.debug(" ".join(bcl2fastq))
 
                     # Create placeholder for Unaligned folder
 #                    temp_output_dir = os.path.join(
