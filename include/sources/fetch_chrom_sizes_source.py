@@ -23,9 +23,6 @@ class FetchChromSizesSource(AbstractSourceStep):
                         description = "directory to move file to")
 
     def runs(self, run_ids_connections_files):
-        '''
-        
-        '''
         output_dir = self.get_option('path')
         if not os.path.exists(output_dir):
             exc_type, exc_value, exc_traceback = sys.exc_info()
