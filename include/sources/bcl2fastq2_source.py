@@ -34,7 +34,7 @@ class Bcl2Fastq2Source(AbstractSourceStep):
                         'If intensities directory is specified, also input directory '
                         'must be specified.')
         # output dir is set by yaml configfile
-#        self.add_option('output-dir', str, optional=True)
+        self.add_option('output-dir', str, optional=False)
         self.add_option('interop-dir', str, optional=True,
                         description='path to demultiplexing statistics directory '
                         '(=<runfolder-dir>/InterOp/)')
@@ -53,9 +53,6 @@ class Bcl2Fastq2Source(AbstractSourceStep):
                         'file. NO - There are separate input files for individual tiles')
         self.add_option('loading-threads', int, optional=True,
                         description='number of threads used for loading BCL data (=4)')
-        self.add_option('demultiplexing-threads', int, optional=True,
-                        description='number of threads used for demultiplexing '
-                        '(=20% of available CPUs)')
         self.add_option('processing-threads', int, optional=True,
                         description='number of threads used for processing demultipled '
                         'data (=100% of available CPUs)')
