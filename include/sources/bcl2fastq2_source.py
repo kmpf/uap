@@ -111,7 +111,7 @@ class Bcl2Fastq2Source(AbstractSourceStep):
         option_list = list()
 
         ## check all input folders for their existence
-        path_options = ['input-dir', 'runfolder-dir', 'intensities-dir', 
+        path_options = ['input-dir', 'runfolder-dir', 'intensities-dir',
                         'interop-dir']
         set_path_options = [option for option in path_options if \
                             self.is_option_set_in_config(option)]
