@@ -112,7 +112,7 @@ class Bcl2Fastq2Source(AbstractSourceStep):
 
         ## check all input folders for their existence
         path_options = ['input-dir', 'runfolder-dir', 'intensities-dir', 
-                        'interop-dir', 'output-dir']
+                        'interop-dir']
         set_path_options = [option for option in path_options if \
                             self.is_option_set_in_config(option)]
 
@@ -165,7 +165,7 @@ class Bcl2Fastq2Source(AbstractSourceStep):
             # Get path to Unaligned folder
             #output_unaligned_dir = os.path.join(output_dir, 'Unaligned')
 
-            if not os.path.exists(output_unaligned_dir):
+            if not os.path.exists(self.get_option("output-dir")):
                 # Create new execution group for configureBclToFastq.pl
                 with run.new_exec_group() as bcl2Fastq_exec_group:
 
