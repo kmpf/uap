@@ -163,15 +163,15 @@ class Bcl2Fastq2Source(AbstractSourceStep):
             # the temporary output directory
             #output_dir = run.get_output_directory_du_jour_placeholder()
             # Get path to Unaligned folder
-            #output_unaligned_dir = os.path.join(output_dir, 'Unaligned')
+            output_unaligned_dir = self.get_option("output-dir") 
 
-            if not os.path.exists(self.get_option("output-dir")):
+            if not os.path.exists(output_unaligned_dir):
                 # Create new execution group for configureBclToFastq.pl
                 with run.new_exec_group() as bcl2Fastq_exec_group:
 
                     bcl2fastq = [self.get_tool('bcl2fastq')]
                     bcl2fastq.extend(option_list)
-             #       bcl2fastq.extend(['--output-dir', output_unaligned_dir])
+                    bcl2fastq.extend(['--output-dir', output_unaligned_dir])
 
                     bcl2fastq_cmd = bcl2Fastq_exec_group.add_command(
                         bcl2fastq,
@@ -180,6 +180,11 @@ class Bcl2Fastq2Source(AbstractSourceStep):
                     )
 
                     logger.debug(" ".join(bcl2fastq))
+            else:
+               raise StandardError('Your output-directory exists already: %s.'
+                                   'I do not overwrite it. If you want to stay with this '
+                                   'path, remove the directory before running this step!'
+                                   % output_unaligned_dir)
 
                     # Create placeholder for Unaligned folder
 #                    temp_output_dir = os.path.join(
