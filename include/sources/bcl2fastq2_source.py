@@ -33,7 +33,6 @@ class Bcl2Fastq2Source(AbstractSourceStep):
                         description='path to intensities directory (=<input-dir>/../). '
                         'If intensities directory is specified, also input directory '
                         'must be specified.')
-        # output dir is set by yaml configfile
         self.add_option('output-dir', str, optional=False)
         self.add_option('interop-dir', str, optional=True,
                         description='path to demultiplexing statistics directory '
@@ -112,7 +111,8 @@ class Bcl2Fastq2Source(AbstractSourceStep):
         option_list = list()
 
         ## check all input folders for their existence
-        path_options = ['input-dir', 'runfolder-dir', 'intensities-dir', 'interop-dir']
+        path_options = ['input-dir', 'runfolder-dir', 'intensities-dir', 
+                        'interop-dir', 'output-dir']
         set_path_options = [option for option in path_options if \
                             self.is_option_set_in_config(option)]
 
