@@ -13,9 +13,6 @@ class Bcl2Fastq2Source(AbstractSourceStep):
 
         self.set_cores(10) # set # of cores for cluster, it is ignored if run locally
 
-        #self.add_connection('out/configureBcl2Fastq_log_stderr')
-        #self.add_connection('out/make_log_stderr')
-        #self.add_connection('out/sample_sheet')
         self.add_connection('out/bcl2fastq2_log_stderr')
 
         self.require_tool('bcl2fastq')
@@ -160,9 +157,6 @@ class Bcl2Fastq2Source(AbstractSourceStep):
         # Declare a new run
         with self.declare_run('read_demultiplexing') as run:
 
-            # the temporary output directory
-            #output_dir = run.get_output_directory_du_jour_placeholder()
-            # Get path to Unaligned folder
             output_unaligned_dir = self.get_option("output-dir") 
 
             #if not os.path.exists(output_unaligned_dir):
@@ -185,61 +179,4 @@ class Bcl2Fastq2Source(AbstractSourceStep):
 #                                   'I do not overwrite it. If you want to stay with this '
 #                                   'path, remove the directory before running this step!'
 #                                   % output_unaligned_dir)
-
-                    # Create placeholder for Unaligned folder
-#                    temp_output_dir = os.path.join(
-#                        run.get_output_directory_du_jour_placeholder(),
-#                        'Unaligned')
-#
-#                    # Assemble configureBclToFastq.pl command
-#                    configureBcl2Fastq = [
-#                        self.get_tool('configureBclToFastq.pl'),
-#                        '--input-dir',
-#                        os.path.join(input_dir, 'Data', 'Intensities',
-#                                     'BaseCalls')
-#                    ]
-#
-#                    configureBcl2Fastq.extend(option_list)
-#
-#                    configureBcl2Fastq.extend(
-#                        ['--output-dir', temp_output_dir])
-#
-                    # Add command to execution group
-#                    configureBcl2Fastq_command = bcl2Fastq_exec_group.add_command(
-#                        configureBcl2Fastq,
-#                        stderr_path = run.add_output_file(
-#                            "configureBcl2Fastq_log_stderr",
-#                            "bcl2fastq-log_stderr.txt", []) )
-#                    logger.debug(" ".join(configureBcl2Fastq))
-#                    # Create new execution group for make
-#                    make_exec_group = run.new_exec_group()
-#                    # Assemble make command
-#                    make = [self.get_tool('make'), '-C', temp_output_dir, '-j', str(self.get_cores())]
-#                    # Add make command to execution group
-#                    make_exec_group.add_command(
-#                        make,
-#                        stderr_path = run.add_output_file(
-#                            "make_log_stderr",
-#                            "make-log_stderr.txt", []) )
-#                    logger.debug(" ".join(make))
-#                    logger.debug("Temporary output directory: %s" %
-#                                 temp_output_dir)
-#                    # Create new execution group to move Unaligned folder
-#                    with run.new_exec_group() as mv_exec_group:
-#                        # Assemble mkdir command, if output_dir does not exist
-#
-#                        mkdir = [self.get_tool('mkdir'), '-p',
-#                                 output_unaligned_dir]
-#                        logger.debug(" ".join(mkdir))
-#                        # Add mkdir command to execution group
-#
-#                        mv_exec_group.add_command(mkdir)
-#                        # Assemble mv command
-#                        mv = [self.get_tool('mv'), temp_output_dir, output_dir]
-#                        logger.debug(" ".join(mv))
-#                        # Add mv command to execution group
-#
-#                        mv_command = mv_exec_group.add_command(mv)
-#                        run.add_public_info("bcl2fastq-output-folder",
-#                                            output_unaligned_dir)
 
