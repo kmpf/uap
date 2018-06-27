@@ -96,8 +96,8 @@ class Segemehl(AbstractStep):
                         "maximum width of a suffix array interval, i.e. a query "
                         "seed will be omitted if it matches more than <n> times "
                         "(default:100)")
-        self.add_option('splits', bool, default=True, optional=True,
-                        description="detect split/spliced reads (default:True)")
+        self.add_option('splits', bool, default=False, optional=True,
+                        description="detect split/spliced reads (default:none)")
         self.add_option('SEGEMEHL', bool, optional=True, description=
                         "output SEGEMEHL format (needs to be selected for brief)")
         self.add_option('MEOP', bool, optional=True, description=
@@ -152,7 +152,8 @@ class Segemehl(AbstractStep):
                         "(default:5000)")
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        self.add_option('dd-blocksize', str, optional = True, default = "2M")
+        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
     # self - macht class-funktion draus.
     # run_ids_connections_files - hash : run id -> n connections -> m files
@@ -160,7 +161,7 @@ class Segemehl(AbstractStep):
         # Compile the list of options
         options = ['bisulfite', 'minsize', 'silent', 'brief', 'differences',
                    'jump', 'evalue', 'maxsplitevalue', 'maxinterval', 'splits',
-                   'SEGEMEHL', 'MEOP', 'nohead', 'extensionscore',
+                   'SEGEMEHL', 'MEOP', 'nohead', 'extensionscore', 'threads',
                    'extensionpenalty', 'dropoff', 'accuracy', 'minsplicecover',
                    'minfragscore', 'minfraglen', 'splicescorescale',
                    'hitstrategy', 'showalign', 'prime5', 'prime3', 'clipacc',
@@ -177,6 +178,12 @@ class Segemehl(AbstractStep):
             else:
                 option_list.append('--%s' % option)
                 option_list.append(str(self.get_option(option)))
+
+        if 'threads' not in set_options:
+            option_list.append('--threads')
+            option_list.append(str(self.get_cores()))
+        else:
+            self.set_cores(self.get_option('threads'))
 
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
@@ -245,7 +252,7 @@ class Segemehl(AbstractStep):
                             '--database', fifo_path_genome,
                             '--index', self.get_option('index'),
                             '--nomatchfilename', fifo_path_unmapped,
-                            '--threads', str(self.get_option('threads')),
+                            '--threads', str(self.get_cores()),
                             '--query', fr_input[0]
                         ]
                         if is_paired_end:
@@ -270,8 +277,8 @@ class Segemehl(AbstractStep):
                         pigz_mapped_reads = [
                             self.get_tool('pigz'),
                             '--stdout',
-                            '--blocksize', '4096', 
-                            '--processes', '2'
+                            '--blocksize', self.get_option('pigz-blocksize'),
+                            '--processes', str(self.get_cores())
                         ]
 
                         segemehl_pipe.add_command(
@@ -301,8 +308,8 @@ class Segemehl(AbstractStep):
                         pigz_unmapped_reads = [
                             self.get_tool('pigz'),
                             '--stdout',
-                            '--blocksize', '4096',
-                            '--processes', '1'
+                            '--blocksize', self.get_option('pigz-blocksize'),
+                            '--processes', str(self.get_cores())
                         ]
                         compress_unmapped_pipe.add_command(
                             pigz_unmapped_reads,

@@ -11,6 +11,11 @@ class SamtoolsFaidx(AbstractStep):
     indexed reference sequence. If no region is specified, faidx will index the
     file and create <ref.fasta>.fai on the disk. If regions are specified, the
     subsequences will be retrieved and printed to stdout in the FASTA format.
+
+    The sequences in the input file should all have different names. If they do
+    not, indexing will emit a warning about duplicate sequences and retrieval
+    will only produce subsequences from the first sequence with the duplicated
+    name. 
     '''
 
     def __init__(self, pipeline):
@@ -23,6 +28,9 @@ class SamtoolsFaidx(AbstractStep):
         
         self.require_tool('samtools')
         self.require_tool('mv')
+
+        # Use of optional '[region1 [...]]' argument is not supported, as it
+        # changes the behaviour of the command
         
     def runs(self, run_ids_connections_files):
         
@@ -56,5 +64,4 @@ class SamtoolsFaidx(AbstractStep):
                                   input_paths
                               )
                         ]
-
                         mv_group.add_command(mv)
