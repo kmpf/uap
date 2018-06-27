@@ -4,9 +4,6 @@ matrix:
   include:
   # Ubuntu 12.04.5 LTS
     - os: linux
-      python: '2.6'
-      env: PAGER=/bin/cat
-    - os: linux
       python: '2.7'
       env: PAGER=/bin/cat
     - os: linux
@@ -22,10 +19,6 @@ matrix:
   # Ubuntu 14.04.3 LTS
     - os: linux
       dist: trusty
-      python: '2.6'
-      env: PAGER=/bin/cat
-    - os: linux
-      dist: trusty
       python: '2.7'
       env: PAGER=/bin/cat
     - os: linux
@@ -40,12 +33,6 @@ matrix:
       dist: trusty
       python: '3.5'
       env: PAGER=/bin/cat
-
-#matrix:
-#  include:
-#    - os: linux
-#      python: '2.6'
-#      env: PAGER=/bin/cat
 
 before_install:
     - sudo apt-get update -qq

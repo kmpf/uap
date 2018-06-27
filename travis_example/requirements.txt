@@ -1,1 +1,1 @@
-cutadapt
+cutadapt=1.16
