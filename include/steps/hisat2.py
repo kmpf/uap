@@ -25,8 +25,8 @@ class Hisat2(AbstractStep):
         self.add_connection('out/alignments')
         self.add_connection('out/un')
         self.add_connection('out/al')
-        self.add_connection('out/unconc')
-        self.add_connection('out/alconc')
+#        self.add_connection('out/unconc')
+#        self.add_connection('out/alconc')
         self.add_connection('out/summary')
         self.add_connection('out/met')
         self.add_connection('out/sam')
@@ -269,17 +269,17 @@ class Hisat2(AbstractStep):
 
                     # outfiles that contain other information
                     un_outfile = run.add_output_file('un',
-                                                     '%s-hisat2-unpaired_unaligned.fastq.gz' % run_id,
+                                                     '%s-hisat2-unpaired_unaligned.fastq' % run_id,
                                                      input_paths)
                     al_outfile = run.add_output_file('al',
-                                                     '%s-hisat2-unpaired_aligned.fastq.gz' % run_id,
+                                                     '%s-hisat2-unpaired_aligned.fastq' % run_id,
                                                      input_paths)
-                    un_conc_outfile = run.add_output_file('unconc',
-                                                     '%s-hisat2-paired_unconcordantly.fastq.gz' % run_id,
-                                                     input_paths)
-                    al_conc_outfile = run.add_output_file('alconc',
-                                                     '%s-hisat2-paired_concordantly.fastq.gz' % run_id,
-                                                     input_paths)
+                    #un_conc_outfile = run.add_output_file('unconc',
+                    #                                 '%s-hisat2-paired_unconcordantly.fastq.gz' % run_id,
+                    #                                 input_paths)
+                    #al_conc_outfile = run.add_output_file('alconc',
+                    #                                 '%s-hisat2-paired_concordantly.fastq.gz' % run_id,
+                    #                                 input_paths)
                     summary_outfile = run.add_output_file('summary',
                                                      '%s-hisat2-summary.txt' % run_id,
                                                      input_paths)
@@ -299,7 +299,7 @@ class Hisat2(AbstractStep):
 
                     # main output options
                     sam_outfile = run.add_output_file('alignments',
-                                                      '%s-hisat2-results.sam.gz' % run_id,
+                                                      '%s-hisat2-results.sam' % run_id,
                                                       input_paths)
                     hisat2.extend(['-S', sam_outfile])
 
@@ -314,4 +314,5 @@ class Hisat2(AbstractStep):
                                                       input_paths)
 
                     exec_group.add_command(hisat2,
-                                           stdout_path = log_outfile)
+                                           stdout_path = log_outfile,
+                                           stderr_path = err_outfile)

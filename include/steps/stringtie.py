@@ -21,6 +21,9 @@ class StringTie(AbstractStep):
     output can be processed by specialized software like Ballgown, Cuffdiff or other programs
     (DESeq2, edgeR, etc.).
 
+    NOTE: This step implements that part of stringtie that assembles new transcripts. If you want
+    stringtie to assemble transcripts from multiple input files please use step stringtie_merge!
+
     https://ccb.jhu.edu/software/stringtie/
 
     '''
@@ -28,7 +31,7 @@ class StringTie(AbstractStep):
         super(StringTie, self).__init__(pipeline)
 
         self.set_cores(6)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/features')   # contains the assempled transcripts (GTF), -o
         self.add_connection('out/abundances') # -A <FILE.tab>
@@ -37,113 +40,85 @@ class StringTie(AbstractStep):
         # ballgown files
         # I skip this option if I don't know how many output files are returned here
         # this is maintained via uap anyway
-#        self.add_connection('out/log_stderr')
-#        self.add_connection('out/log_stdout')
-        
-        self.require_tool('mkdir')
-        self.require_tool('mv')
+        self.add_connection('out/log_stderr')
+        self.add_connection('out/log_stdout')
+
         self.require_tool('stringtie')
 
         ## options for stringtie program
-        # -p <INT>
-        self.add_option('p', int, optional=True, default = 1,
-                        description='number of threads used during analysis')
-        # -> I specified 4 in a test run and only 2 were used!
-        # Q: is it only capable of using 2 CPUs?
-
         # -G <FILE.gtf/gff>
         self.add_option('G', str, optional = True,
-                        description = 'Use the reference annotation file (in GTF or GFF3 format) '
-                        'to guide the assembly process. The output will include expressed reference '
-                        'transcripts as well as any novel transcripts that are assembled. This '
-                        'option is required by options -B, -b, -e, -C (see below). ')
-        # --rf/--fr
-        self.add_option('library-type', str, optional=False,choices=['fr-firststrand', 'fr-secondstrand'], 
-                        description='Assumes a stranded library. Allowed values are "fr-firststrand '
-                        'and "fr-secondstrand".')
+                        description = 'reference annotation to use for guiding the assembly process '
+                        '(GTF/GFF3)')
+        self.add_option('library_type', str, optional=False,
+                        choices=['rf', 'fr'],
+                        description='Assume stranded library fr-firststrand (--rf) or fr-secondstrand '
+                        '(--fr).')
         # -l <LABEL>
-        self.add_option('l', str, optional = True, default = "STRG",
-                        description = 'Sets <LABEL> as the prefix for the name of the output '
-                        'transcripts.') 
+        self.add_option('l', str, optional = True,
+                        description = 'name prefix for output transcripts (default: STRG)')
         # -f <0.1-1.0>
-        self.add_option('f', float, optional = True, default = 0.1,
-                        description = 'Sets the minimum isoform abundance of the predicted '
-                        'transcripts as a fraction of the most abundant transcript assembled at '
-                        'a given locus. Lower abundance transcripts are often artifacts of '
-                        'incompletely spliced precursors of processed transcripts. Values must'
-                        'be in the interval <0.1-1.0>.')
+        self.add_option('f', float, optional = True,
+                        description = 'minimum isoform fraction (default: 0.1)')
         # -m <INT>
-        self.add_option('m', int, optional = True, default = 200,
-                        description = 'Sets the minimum length allowed for the predicted '
-                        'transcripts.')
-
-# For now I don't have a solution to find an expected output connection, if it has not been created
-# with one of these options..
-# => both options are set to true by default, for now
-#
-#        # -A <FILE.tab> => out/abundances
-#        self.add_option('abundances', bool, optional = True, default = False,
-#                        description = 'Print a table with the gene abundances.')
-#
-#        # -C <FILE.gtf> => out/covered, requires -G -> might be an empty file if !-G 
-#        self.add_option('covered-references', bool, optional = True, default = False,
-#                        description = 'Print a gtf file of all the covered reference transcripts.')
-
+        self.add_option('m', int, optional = True,
+                        description = 'minimum assembled transcript length (default: 200)')
         # -a <INT>
-        self.add_option('a', int, optional = True, default = 10, 
-                        description = 'Junctions that do not have spliced reads that align '
-                        'across them with at least this amount of bases on both sides are '
-                        'filtered out.')
+        self.add_option('a', int, optional = True,
+                        description = 'minimum anchor length for junctions (default: 10)')
         # -j <FLOAT>
-        self.add_option('j', float, optional = True, default = 1.0,
-                        description = 'There should be at least this many spliced reads that '
-                        'align across a junction (i.e. junction coverage). This number can be '
-                        'fractional, since some reads align in more than one place. A read that '
-                        'aligns in n places will contribute 1/n to the junction coverage.')
+        self.add_option('j', float, optional = True,
+                        description = 'minimum junction coverage (default: 1)')
         # -t
-        self.add_option('t', bool, optional = True, default = False,
-                        description = 'This parameter disables trimming at the ends of the '
-                        'assembled transcripts. By default StringTie adjusts the predicted '
-                        'transcripts start and/or stop coordinates based on sudden drops in '
-                        'coverage of the assembled transcript. ') 
+        self.add_option('t', bool, optional = True,
+                        description = 'disable trimming of predicted transcripts based on coverage '
+                        '(default: coverage trimming is enabled)')
         # -c <FLOAT>
-        self.add_option('c', float, optional = True, default = 2.5,
-                        description = 'Sets the minimum read coverage allowed for the predicted '
-                        'transcripts. A transcript with a lower coverage than this value is not '
-                        'shown in the output.')
+        self.add_option('c', float, optional = True,
+                        description = 'minimum reads per bp coverage to consider for transcript '
+                        'assembly (default: 2.5)')
+        # -v
+        self.add_option('v', bool, optional=True,
+                        description='verbose (log bundle processing details)')
         # -g <INT>
-        self.add_option('g', int, optional = True, default = 50,
-                        description = 'Minimum locus gap separation value (in bp). Reads that '
-                        'are mapped closer than this distance are merged together in the same '
-                        'processing bundle.')
+        self.add_option('g', int, optional = True,
+                        description = 'gap between read mappings triggering a new bundle (default: 50)')
+        # -C <FILE.gtf> => out/covered, requires -G -> might be an empty file if !-G 
+        self.add_option('covered-references', bool, optional = True,
+                        description = 'Write reference transcripts that are covered by reads to an '
+                        'output .gtf file. The file will be empty if this option is not set. Default: False')
+        # -M <0.0-1.0>
+        self.add_option('M', float, optional = True,
+                        description = 'fraction of bundle allowed to be covered by multi-hit reads '
+                        '(default:0.95)')
+        # -p <INT>
+        self.add_option('p', int, optional=True,
+                        description='number of threads (CPUs) to use (default: 1)')
+        # OLLI -> I specified 4 in a test run and only 2 were used!
+        # Q: is it only capable of using 2 CPUs?
 
+        # -A <FILE.tab> => out/abundances
+        self.add_option('abundances', bool, optional = True,
+                        description = 'Print gene abundance estimation to an output file. The file will '
+                        'be empty if this option is not set. Default: False')
         # ballgown files
-        self.add_option('ballgown', bool, optional = True, default = False,
+        self.add_option('ballgown', bool, optional = True,
                         description = 'Enable the ouput of Ballgown input table files (.ctab). '
                         'containing coverage data for the reference transcripts given with the '
                         '-G option. (See the Ballgown documentation for a description of these '
                         'files.) With this option StringTie can be used as a direct replacement '
                         'of the tablemaker program included with the Ballgown distribution. ')
         # -B, -b this is covered with -b option that specifies the exact path for this file
-        # If the option -o is given as a full path to the output transcript file, StringTie 
+        # If the option -o is given as a full path to the output transcript file, StringTie
         # will write the *.ctab files in the same directory as the output GTF.
+        # -b option is not available for uap, since it decides on its own where the output will be stored.
 
         # -e
         self.add_option('e', bool, optional = True, default = False,
-                        description = 'Limits the processing of read alignments to only estimate '
-                        'and output the assembled transcripts matching the reference transcripts '
-                        'given with the -G option (requires -G, recommended for -B/-b). With this '
-                        'option, read bundles with no reference transcripts will be entirely '
-                        'skipped, which may provide a considerable speed boost when the given set '
-                        'of reference transcripts is limited to a set of target genes, for example.')
-        
-        # -M <0.0-1.0>
-        self.add_option('M', float, optional = True, default = 0.95,
-                        description = 'Sets the maximum fraction of muliple-location-mapped '
-                        'reads that are allowed to be present at a given locus.')
-
+                        description = 'only estimate the abundance of given reference transcripts '
+                        '(requires -G)')
         # -x <seqid_list>
-        self.add_option('x', str, optional = True, 
+        self.add_option('x', str, optional = True,
                         description = 'Ignore all read alignments (and thus do not attempt to '
                         'perform transcript assembly) on the specified reference sequences. '
                         'Parameter <seqid_list> can be a single reference sequence name (e.g. '
@@ -156,12 +131,12 @@ class StringTie(AbstractStep):
                         'of the target genome against which the RNA-Seq reads were aligned in '
                         'the first place.')
 
-        # --merge, needs an additional uap step since it has different input/output conncections.
+        # OLLI --merge, needs an additional uap step since it has different input/output conncections.
 
     def runs(self, run_ids_connections_files):
-        
+
         # Compile the list of options
-        options=['p', 'G', 'l', 'f', 'm', 'a', 'j', 't', 'c', 'g', 'e', 'M', 'x']
+        options=['G','l','f','m','a','j','t','c','v','g','M','p', 'ballgown','e','x']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -176,20 +151,15 @@ class StringTie(AbstractStep):
                 option_list.append( str(self.get_option(option)) )
 
         # library-type
-        if self.get_option('library-type') == 'fr-firststrand':
-            option_list.append('--rf')
-        elif self.get_option('library-type') == 'fr-secondstrand':
-            option_list.append('--fr')
-        else:
-            raise StandardError('Unexpected value for option "library-type" in step "stringtie". '
-                                'Accepted values are: "fr-firststrand" or "fr-secondstrand".')
+        if self.is_option_set_in_config('library_type'):
+            option_list.append('--%s' % self.get_option('library_type'))
 
         for run_id in run_ids_connections_files.keys():
 
              with self.declare_run(run_id) as run:
                 input_paths = run_ids_connections_files[run_id]['in/alignments']
 #                temp_dir = run.add_temporary_directory('cufflinks-out')
-                
+
                 # check, if only a single input file is provided
                 if len(input_paths) != 1:
                     raise StandardError("Expected exactly one alignments file., but got this %s" % input_paths)
@@ -197,16 +167,21 @@ class StringTie(AbstractStep):
                 outfile = run.add_output_file('features', '%s-transcripts.gtf' % run_id, input_paths)
                 abundfile = run.add_output_file('abundances', '%s-abundances.gtf' % run_id, input_paths)
                 covfile = run.add_output_file('covered', '%s-coveredRefs.gtf' % run_id, input_paths)
-#                stdout = run.add_output_file('log_stdout', '%s-stringtie.stdout' % run_id, input_paths)
-#                stderr = run.add_output_file('log_stderr', '%s-stringtie.stderr' % run_id, input_paths)
+                stdout = run.add_output_file('log_stdout', '%s-stringtie.stdout' % run_id, input_paths)
+                stderr = run.add_output_file('log_stderr', '%s-stringtie.stderr' % run_id, input_paths)
 
                 stringtie = [self.get_tool('stringtie'), input_paths[0]]
                 stringtie.extend(option_list)
 
-                stringtie.extend(['-A', abundfile])
-                stringtie.extend(['-C', covfile])
-                
+                if self.is_option_set_in_config('covered-references'):
+                    stringtie.extend(['-C', covfile])
+
+                if self.is_option_set_in_config('abundances'):
+                    stringtie.extend(['-A', abundfile])
+
                 stringtie.extend(['-o', outfile])
 
                 with run.new_exec_group() as exec_group:
-                    exec_group.add_command(stringtie)
+                    exec_group.add_command(stringtie,
+                                           stdout_path = stdout,
+                                           stderr_path = stderr)
