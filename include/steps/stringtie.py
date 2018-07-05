@@ -32,7 +32,13 @@ class StringTie(AbstractStep):
 
         self.set_cores(6)
 
-        self.add_connection('in/alignments')
+        # The BAM files
+        self.add_connection('in/alignments',
+                            constraints ={'min_files_per_run': 1, 'max_files_per_run': 1})
+        # A .gtf file used as guide for assembly
+        self.add_connection('in/features',
+                            constraints = {'total_files': 1})
+
         self.add_connection('out/features')   # contains the assempled transcripts (GTF), -o
         self.add_connection('out/abundances') # -A <FILE.tab>
         self.add_connection('out/covered')    # -C <FILE.gtf>, requires -G!
@@ -44,6 +50,8 @@ class StringTie(AbstractStep):
         self.add_connection('out/log_stdout')
 
         self.require_tool('stringtie')
+        self.require_tool('mkfifo')
+        self.require_tool('dd')
 
         ## options for stringtie program
         # -G <FILE.gtf/gff>
@@ -133,10 +141,16 @@ class StringTie(AbstractStep):
 
         # OLLI --merge, needs an additional uap step since it has different input/output conncections.
 
+        self.add_option('merged-id', str, optional=True, default="mergeSBam",
+                        description="The run-id that has been used in the samtools_merge step before")
+
+        # [Options for 'dd':]
+        self.add_option('dd-blocksize', str, optional = True, default = "2M")
+
     def runs(self, run_ids_connections_files):
 
         # Compile the list of options
-        options=['G','l','f','m','a','j','t','c','v','g','M','p', 'ballgown','e','x']
+        options=['l','f','m','a','j','t','c','v','g','M','p', 'ballgown','e','x']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -154,34 +168,78 @@ class StringTie(AbstractStep):
         if self.is_option_set_in_config('library_type'):
             option_list.append('--%s' % self.get_option('library_type'))
 
+        merged_id = self.get_option('merged-id')
+
+        features_path = str
+
+        for run_id in run_ids_connections_files.keys():
+            try:
+                features_path = run_ids_connections_files[run_id]['in/features'][0]
+            except KeyError:
+                if self.is_option_set_in_config('G'):
+                    features_path = self.get_option('G')
+                #else:
+                #    logger.error("No feature file could be found for '%s'" % run_id)
+                #    sys.exit(1)
+
+        if features_path:
+            option_list.append('-G')
+            option_list.append(features_path)
+
         for run_id in run_ids_connections_files.keys():
 
-             with self.declare_run(run_id) as run:
+            try:
                 input_paths = run_ids_connections_files[run_id]['in/alignments']
-#                temp_dir = run.add_temporary_directory('cufflinks-out')
+            except KeyError:
+                continue # this happens if merged annotation from previous step is used as reference
+                         # guide
 
-                # check, if only a single input file is provided
-                if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file., but got this %s" % input_paths)
+            with self.declare_run(run_id) as run:
+                outfile = run.add_output_file('features',
+                                              '%s-transcripts.gtf' % run_id,
+                                              input_paths)
+                abundfile = run.add_output_file('abundances',
+                                                '%s-abundances.gtf' % run_id,
+                                                input_paths)
+                covfile = run.add_output_file('covered',
+                                              '%s-coveredRefs.gtf' % run_id,
+                                              input_paths)
+                stdout = run.add_output_file('log_stdout',
+                                             '%s-stringtie.stdout' % run_id,
+                                             input_paths)
+                stderr = run.add_output_file('log_stderr',
+                                             '%s-stringtie.stderr' % run_id,
+                                             input_paths)
 
-                outfile = run.add_output_file('features', '%s-transcripts.gtf' % run_id, input_paths)
-                abundfile = run.add_output_file('abundances', '%s-abundances.gtf' % run_id, input_paths)
-                covfile = run.add_output_file('covered', '%s-coveredRefs.gtf' % run_id, input_paths)
-                stdout = run.add_output_file('log_stdout', '%s-stringtie.stdout' % run_id, input_paths)
-                stderr = run.add_output_file('log_stderr', '%s-stringtie.stderr' % run_id, input_paths)
-
-                stringtie = [self.get_tool('stringtie'), input_paths[0]]
-                stringtie.extend(option_list)
-
-                if self.is_option_set_in_config('covered-references'):
-                    stringtie.extend(['-C', covfile])
-
-                if self.is_option_set_in_config('abundances'):
-                    stringtie.extend(['-A', abundfile])
-
-                stringtie.extend(['-o', outfile])
 
                 with run.new_exec_group() as exec_group:
+
+                    # 1. create FIFO for BAM file
+                    fifo_path_bam = run.add_temporary_file('bam_path_fifo',
+                                                           designation = 'input')
+                    mkfifo_bam = [self.get_tool('mkfifo'), fifo_path_bam]
+                    exec_group.add_command(mkfifo_bam)
+
+                    # 2. read BAM and output to FIFO
+                    dd_bam = [self.get_tool('dd'),
+                              'bs=%s' % self.get_option('dd-blocksize'),
+                              'if=%s' % input_paths[0],
+                              'of=%s' % fifo_path_bam]
+                    exec_group.add_command(dd_bam)
+
+                   # 3. run stringtie on FIFO
+                    stringtie = [self.get_tool('stringtie'), fifo_path_bam]
+#                    stringtie = [self.get_tool('stringtie'), input_paths[0]]
+                    stringtie.extend(option_list)
+
+                    if self.is_option_set_in_config('covered-references'):
+                        stringtie.extend(['-C', covfile])
+
+                    if self.is_option_set_in_config('abundances'):
+                        stringtie.extend(['-A', abundfile])
+
+                    stringtie.extend(['-o', outfile])
+
                     exec_group.add_command(stringtie,
                                            stdout_path = stdout,
                                            stderr_path = stderr)
