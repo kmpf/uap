@@ -92,9 +92,10 @@ class StringTie(AbstractStep):
         self.add_option('g', int, optional = True,
                         description = 'gap between read mappings triggering a new bundle (default: 50)')
         # -C <FILE.gtf> => out/covered, requires -G -> might be an empty file if !-G 
-        self.add_option('covered-references', bool, optional = True,
-                        description = 'Write reference transcripts that are covered by reads to an '
-                        'output .gtf file. The file will be empty if this option is not set. Default: False')
+	# this file is generated in any case 
+#        self.add_option('covered-references', bool, optional = True,
+#                        description = 'Write reference transcripts that are covered by reads to an '
+#                        'output .gtf file. The file will be empty if this option is not set. Default: False')
         # -M <0.0-1.0>
         self.add_option('M', float, optional = True,
                         description = 'fraction of bundle allowed to be covered by multi-hit reads '
@@ -106,9 +107,10 @@ class StringTie(AbstractStep):
         # Q: is it only capable of using 2 CPUs?
 
         # -A <FILE.tab> => out/abundances
-        self.add_option('abundances', bool, optional = True,
-                        description = 'Print gene abundance estimation to an output file. The file will '
-                        'be empty if this option is not set. Default: False')
+	# this file is generated in any case via uap
+#        self.add_option('abundances', bool, optional = True,
+#                        description = 'Print gene abundance estimation to an output file. The file will '
+#                        'be empty if this option is not set. Default: False')
         # ballgown files
         self.add_option('ballgown', bool, optional = True,
                         description = 'Enable the ouput of Ballgown input table files (.ctab). '
@@ -145,7 +147,10 @@ class StringTie(AbstractStep):
                         description="The run-id that has been used in the samtools_merge step before")
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "2M")
+	self.add_option('fifo', bool, optional = True, default = False,
+			description='Enable the FIFO functionality for splitting large input files.')	
+        self.add_option('dd-blocksize', str, optional = True, default = "2M",
+			description='Provide the blocksize for dd tool.')
 
     def runs(self, run_ids_connections_files):
 
@@ -214,29 +219,31 @@ class StringTie(AbstractStep):
 
                 with run.new_exec_group() as exec_group:
 
-                    # 1. create FIFO for BAM file
-                    fifo_path_bam = run.add_temporary_file('bam_path_fifo',
-                                                           designation = 'input')
-                    mkfifo_bam = [self.get_tool('mkfifo'), fifo_path_bam]
-                    exec_group.add_command(mkfifo_bam)
+                    if self.get_option('fifo'):
+			# 1. create FIFO for BAM file
+	                fifo_path_bam = run.add_temporary_file('bam_path_fifo',
+        	                                               designation = 'input')
+                    	mkfifo_bam = [self.get_tool('mkfifo'), fifo_path_bam]
+                    	exec_group.add_command(mkfifo_bam)
 
-                    # 2. read BAM and output to FIFO
-                    dd_bam = [self.get_tool('dd'),
-                              'bs=%s' % self.get_option('dd-blocksize'),
-                              'if=%s' % input_paths[0],
-                              'of=%s' % fifo_path_bam]
-                    exec_group.add_command(dd_bam)
+                    	# 2. read BAM and output to FIFO
+                    	dd_bam = [self.get_tool('dd'),
+                                  'bs=%s' % self.get_option('dd-blocksize'),
+                              	  'if=%s' % input_paths[0],
+                                  'of=%s' % fifo_path_bam]
+                    	exec_group.add_command(dd_bam)
 
-                   # 3. run stringtie on FIFO
-                    stringtie = [self.get_tool('stringtie'), fifo_path_bam]
-#                    stringtie = [self.get_tool('stringtie'), input_paths[0]]
+                   	# 3. initialize the stringtie command on FIFO
+                    	stringtie = [self.get_tool('stringtie'), fifo_path_bam]
+		    else:
+			# 1. initialize the stringtie command on input BAM file
+                    	stringtie = [self.get_tool('stringtie'), input_paths[0]]
+
                     stringtie.extend(option_list)
 
-                    if self.is_option_set_in_config('covered-references'):
-                        stringtie.extend(['-C', covfile])
+ 	            stringtie.extend(['-C', covfile])
 
-                    if self.is_option_set_in_config('abundances'):
-                        stringtie.extend(['-A', abundfile])
+                    stringtie.extend(['-A', abundfile])
 
                     stringtie.extend(['-o', outfile])
 
