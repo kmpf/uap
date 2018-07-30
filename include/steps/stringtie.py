@@ -112,7 +112,7 @@ class StringTie(AbstractStep):
 #                        description = 'Print gene abundance estimation to an output file. The file will '
 #                        'be empty if this option is not set. Default: False')
         # ballgown files
-        self.add_option('ballgown', bool, optional = True,
+        self.add_option('B', bool, optional = True,
                         description = 'Enable the ouput of Ballgown input table files (.ctab). '
                         'containing coverage data for the reference transcripts given with the '
                         '-G option. (See the Ballgown documentation for a description of these '
@@ -155,7 +155,7 @@ class StringTie(AbstractStep):
     def runs(self, run_ids_connections_files):
 
         # Compile the list of options
-        options=['l','f','m','a','j','t','c','v','g','M','p', 'ballgown','e','x']
+        options=['l','f','m','a','j','t','c','v','g','M','p', 'B','e','x']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]

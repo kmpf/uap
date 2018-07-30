@@ -10,8 +10,14 @@ class MergeAssembly(AbstractStep):
     This step merges a single gtf file that has been produced by a previous step 
     (e.g. cuffmerge or cuffcompare) with a reference annotation. No lines
     are discarded. The two files are simply concatenated and subsequently 
-    sorted by position.
+    sorted by position. 
+
     '''
+    # consider to include the following steps before concatenating
+#    - input: all XLOCs from merged assembly (cuffcompare results) - this contained exons only
+#    - gffread was applied to merge exons to transcripts
+#    - mergeBed was applied to the transcripts to combine them to genes
+ 
     
     def __init__(self, pipeline):
         super(MergeAssembly, self).__init__(pipeline)

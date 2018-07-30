@@ -116,13 +116,13 @@ class StringTieMerge(AbstractStep):
 
         with self.declare_run(merge_id) as run:
             outfile = run.add_output_file('features',
-                                          '%s-merged-transcripts.gtf' % run_id,
+                                          '%s-merged-transcripts.gtf' % merge_id,
                                           input_paths)
             stdout = run.add_output_file('log_stdout',
-                                         '%s-stringtie_merge.stdout' % run_id,
+                                         '%s-stringtie_merge.stdout' % merge_id,
                                          input_paths)
             stderr = run.add_output_file('log_stderr',
-                                         '%s-stringtie_merge.stderr' % run_id,
+                                         '%s-stringtie_merge.stderr' % merge_id,
                                          input_paths)
 
             with run.new_exec_group() as exec_group:
