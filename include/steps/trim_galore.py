@@ -225,9 +225,9 @@ class TrimGalore(AbstractStep):
 
         options = ['quality','phred33','phred64','fastqc','adapter','adapter2',
                    'illumina','nextera','small_rna','max_length','stringency', 'gzip','dont_gzip',
-                   'length','max_n','trim-n', 'clip_R1','clip_R2','three_prime_clip_R1',
+                   'length','max_n','trim-n', 'paired', 'clip_R1','clip_R2','three_prime_clip_R1',
                    'three_prime_clip_R2', 'rrbs','non_directional','keep',
-                   'paired','trim1','retain_unpaired','length_1','length_2']
+                   'trim1','retain_unpaired','length_1','length_2']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -327,7 +327,8 @@ class TrimGalore(AbstractStep):
                 # set '--paired' option if not already been done by usr in cfg
                 if input_paths['in/second_read']:
                     if not self.is_option_set_in_config('paired'):
-                        option_list.append('--paired')
+                        if '--paired' not in option_list:
+                            option_list.append('--paired')
 
 
 
