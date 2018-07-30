@@ -32,6 +32,10 @@ class Post_CufflinksSuite(AbstractStep):
         self.require_tool('post_cufflinks_merge')
         self.require_tool('cat')
 
+        self.add_option('run_id', str, optional=True,
+                        description='An arbitrary name of the new '
+                        'run (which is a merge of all samples).',
+                        default = 'magic')
         self.add_option('remove-gencode', bool,
                         description='Hard removal of gtf line which match \'ENS\' in gene_name field',
                         default=False )
@@ -74,7 +78,8 @@ class Post_CufflinksSuite(AbstractStep):
                 option_list.append('--%s' % option)
                 option_list.append(str(self.get_option(option)))
 
-        run_id = "magic"
+        run_id = self.get_option('run_id')
+
 
         with self.declare_run(run_id) as run:
 

@@ -107,6 +107,11 @@ class CuffCompare(AbstractStep):
         # -o <out-prefix> 
         # -p <consensus-prefix> 
         # --> both are set by uap and can not be defined by the usr!
+        self.add_option('run_id', str, optional=True,
+                        description='An arbitrary name of the new '
+                        'run (which is a merge of all samples).',
+                        default = 'magic')
+
 
     def runs(self, run_ids_connections_files):
         
@@ -127,7 +132,9 @@ class CuffCompare(AbstractStep):
                 option_list.append(str(self.get_option(option)))
                 
         for run_id in run_ids_connections_files.keys():
-            
+
+            run_id = self.get_option('run_id')
+
             with self.declare_run(run_id) as run:
 
                 input_paths = run_ids_connections_files[run_id]['in/features']
