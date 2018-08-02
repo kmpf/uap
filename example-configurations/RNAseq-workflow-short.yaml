@@ -1,0 +1,227 @@
+# This configuration repeats the analysis published in:
+# Targeted sequencing for gene discovery and quantification using RNA CaptureSeq,
+# Mercer et al., Nature Protocols, 2014
+
+################################################################################
+## Cluster Section                                                            ##
+## ===============                                                            ##
+##                                                                            ##
+## - uncomment/adapt as required                                              ##
+################################################################################
+
+# cluster:
+#     # example for SLURM grid engine
+#     default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+#     # example for UGE/SGE respectively OGS
+#     default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+#     default_pre_job_command: "echo 'Run Started!'"
+#     default_post_job_command: "echo 'Run Finished!'"
+#     default_job_quota: 5
+
+################################################################################
+## Destination Path Section                                                   ##
+## ========================                                                   ##
+##                                                                            ##
+## - directory where analysis results get stored                              ##
+################################################################################
+
+destination_path: example-out/2014-Mercer_et_al
+
+################################################################################
+## Constants Section                                                          ##
+## =================                                                          ##
+##                                                                            ##
+## - define constants for later use here                                      ##
+################################################################################
+
+constants:
+    # 1.  Genome Information:
+    # 1.1 Complete Sequence (FASTA)
+    - &genome
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_UCSC_complete_genome/hg19_all_chr_UCSC-all_sequences-Tc5RkRKM/hg19_all_chr_UCSC-all_sequences.fasta
+
+    # 1.2 FASTA index
+    - &genome_faidx 
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_samtools_faidx/hg19_all_chr_UCSC-all_sequences-v08iKi37/hg19_all_chr_UCSC-all_sequences.fasta.fai
+
+    # 2.  Mapping Indices:
+    # 2.1 Bowtie2
+    - &bowtie2_genome_index
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bowtie2_index/bowtie2_index-hg19_all_chr_UCSC-all_sequences-4bnBZlNy/bowtie2_index-hg19_all_chr_UCSC-all_sequences
+
+    # 3.  Gencode Annotation:
+    # 3.1 Version 24
+    - &gencode_v19_annotation_gtf
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode/gencode.v19.annotation.gtf
+
+################################################################################
+## Steps Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define analysis steps here                                               ##
+################################################################################
+
+steps:
+    #################
+    ## Source step ##
+    #################
+    fastq_source:
+        sample_to_files_map:
+            capture_RNA:
+                - example-out/2014-Mercer_et_al_download/SRR1032214_1.fastq
+                - example-out/2014-Mercer_et_al_download/SRR1032214_2.fastq
+        paired_end: no
+        first_read: _1.fastq
+        second_read: _2.fastq
+
+    fastqc:
+      _depends: fastq_source
+
+    fastx_quality_stats:
+      _depends: fastq_source
+
+    tophat2:
+        _depends: fastq_source
+        library_type: fr-secondstrand
+        index: *bowtie2_genome_index
+
+    sort_tophat2_by_pos (sam_to_sorted_bam):
+        _depends: tophat2
+        genome-faidx: *genome_faidx
+        temp-sort-dir: '/tmp/'
+
+    count_genes_tophat2 (htseq_count):
+        _depends: sort_tophat2_by_pos
+        feature-file: *gencode_v19_annotation_gtf
+        order: pos
+        stranded: 'yes'
+        mode: intersection-strict
+        type: exon
+        idattr: gene_id
+
+    cufflinks_tophat2 (cufflinks):
+        _depends: sort_tophat2_by_pos
+        library-type: fr-secondstrand
+        mask-file: *gencode_v19_annotation_gtf
+
+################################################################################
+## Tools Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define used tools here                                                   ##
+## - for module system usage see documentation                                ##
+################################################################################
+
+tools:
+    ##################
+    # External Tools #
+    ##################
+
+    # URL: http://cufflinks.cbcb.umd.edu/
+    cufflinks:
+        path: cufflinks
+        get_version: --version
+        exit_code: 1
+
+    # URL: https://github.com/marcelm/cutadapt
+    cutadapt:
+        path: cutadapt
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+    fastqc:
+        path: fastqc
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://www-huber.embl.de/users/anders/HTSeq/doc/count.html
+    htseq-count:
+        path: htseq-count
+        get_version: -h
+        exit_code: 0
+
+    # URL: http://zlib.net/pigz/
+    pigz:
+        path: pigz
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://www.htslib.org/
+    # NOTE: uap requires samtools version 1.0 or greater
+    samtools:
+        path: samtools
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://ccb.jhu.edu/software/tophat/index.shtml
+    tophat2:
+        path: tophat2
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://hannonlab.cshl.edu/fastx_toolkit/
+    fastx_quality_stats:
+        path: fastx_quality_stats
+        get_version: -h
+        exit_code: 1
+
+    ##################
+    # Internal Tools #
+    ##################
+
+    fix_cutadapt:
+        path: ../tools/fix_cutadapt.py
+        get_version: --version
+        exit_code: 0
+
+    fix_s2c:
+        path: ../tools/fix_s2c.py
+        exit_code: 1
+
+    fix_qnames:
+        path: ../tools/fix_qnames.py
+        exit_code: 0
+
+    s2c:
+        path: ['python', '../tools/s2c.py']
+        exit_code: 2
+
+    ##############
+    # Unix Tools #
+    ##############
+
+    cat:
+        path: cat
+        get_version: --version
+        exit_code: 0
+
+    cp:
+        path: 'cp'
+        get_version: '--version'
+        exit_code: 0
+
+    mkdir:
+        path: 'mkdir'
+        get_version: '--version'
+        exit_code: 0
+
+    mv:
+        path: 'mv'
+        get_version: '--version'
+        exit_code: 0
+
+    dd:
+        path: 'dd'
+        get_version: '--version'
+        exit_code: 0
+
+    mkfifo:
+        path: 'mkfifo'
+        get_version: '--version'
+        exit_code: 0
+
+    tar:
+        path: 'tar'
+        get_version: '--version'
+        exit_code: 0
