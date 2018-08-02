@@ -38,7 +38,7 @@ steps:
     ##############################################################
     ## Download Steps                                           ##
     ##                                                          ##
-    ## - uncomment steps to get complete Barski et al. data set ##
+    ## - only get H3K4me1 and H3K4me3 data from Barski et al.   ##
     ##############################################################
 
     SRR001414_download (raw_url_source):

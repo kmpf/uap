@@ -35,11 +35,11 @@ destination_path: example-out/2007-Barski_et_al_download
 ################################################################################
 
 steps:
-    ##############################################################
-    ## Download Steps                                           ##
-    ##                                                          ##
-    ## - uncomment steps to get complete Barski et al. data set ##
-    ##############################################################
+    ############################################
+    ## Download Steps                         ##
+    ##                                        ##
+    ## - get complete Barski et al. data set  ##
+    ############################################
 
     SRR001392_download (raw_url_source):
         url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001392/SRR001392.fastq.gz

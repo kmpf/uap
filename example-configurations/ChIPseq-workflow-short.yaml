@@ -55,29 +55,8 @@ constants:
     ## Control vs. Treatment information needed for MACS2
     - control: &control-treatment-hash
             None:
-	       - CTCF
-               - H2A.Z
-               - H2BK5me1
-               - H3K27me1
-               - H3K27me2
-               - H3K27me3
-               - H3K36me1
-               - H3K36me3
                - H3K4me1
-               - H3K4me2
                - H3K4me3
-               - H3K79me1
-               - H3K79me2
-               - H3K79me3
-               - H3K9me1
-               - H3K9me2
-               - H3K9me3
-               - H3R2me1
-               - H3R2me2
-               - H4K20me1
-               - H4K20me3
-               - H4R3me2
-               - Pol_II
 
 ################################################################################
 ## Steps Section                                                              ##
