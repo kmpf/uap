@@ -1,0 +1,481 @@
+# This configuration analyses data published in:
+# High-Resolution Profiling of Histone Methylations in the Human Genome
+# Barski et al., Cell, 2007
+
+################################################################################
+## Cluster Section                                                            ##
+## ===============                                                            ##
+##                                                                            ##
+## - uncomment/adapt as required                                              ##
+################################################################################
+
+# cluster:
+#     # example for SLURM grid engine
+#     default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+#     # example for UGE/SGE respectively OGS
+#     default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+#     default_pre_job_command: "echo 'Run Started!'"
+#     default_post_job_command: "echo 'Run Finished!'"
+#     default_job_quota: 5
+
+################################################################################
+## Destination Path Section                                                   ##
+## ========================                                                   ##
+##                                                                            ##
+## - directory where analysis results get stored                              ##
+################################################################################
+
+destination_path: example-out/2007-Barski_et_al
+
+################################################################################
+## Constants Section                                                          ##
+## =================                                                          ##
+##                                                                            ##
+## - define constants for later use here                                      ##
+################################################################################
+
+constants:
+    # 1.  Genome information:
+    # 1.1 Complete sequence (FASTA)
+    - &genome
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_UCSC_complete_genome/hg19_all_chr_UCSC-all_sequences-Tc5RkRKM/hg19_all_chr_UCSC-all_sequences.fasta
+
+    # 1.2 FASTA index
+    - &genome_faidx
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_samtools_faidx/hg19_all_chr_UCSC-all_sequences-v08iKi37/hg19_all_chr_UCSC-all_sequences.fasta.fai
+
+    # 2.  Mapping indices:
+    # 2.1 Bowtie2
+    - &bowtie2_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bowtie2_index/bowtie2_index-hg19_all_chr_UCSC-all_sequences-4bnBZlNy/bowtie2_index-hg19_all_chr_UCSC-all_sequences
+    ## 2. BWA
+    - &bwa_genome_index
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bwa_index/bwa_index-hg19_all_chr_UCSC-all_sequences-XR2WAVGR/bwa_index-hg19_all_chr_UCSC-all_sequences
+    ## 3. Segemehl
+#    - &segemehl_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_segemehl_index/segemehl_index-hg19_all_chr_UCSC-download-s8p1Hh3g/segemehl_index-hg19_all_chr_UCSC-download.idx
+    ## Control vs. Treatment information needed for MACS2
+    - control: &control-treatment-hash
+            None:
+	       - CTCF
+               - H2A.Z
+               - H2BK5me1
+               - H3K27me1
+               - H3K27me2
+               - H3K27me3
+               - H3K36me1
+               - H3K36me3
+               - H3K4me1
+               - H3K4me2
+               - H3K4me3
+               - H3K79me1
+               - H3K79me2
+               - H3K79me3
+               - H3K9me1
+               - H3K9me2
+               - H3K9me3
+               - H3R2me1
+               - H3R2me2
+               - H4K20me1
+               - H4K20me3
+               - H4R3me2
+               - Pol_II
+
+################################################################################
+## Steps Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define analysis steps here                                               ##
+################################################################################
+
+steps:
+    ##################
+    ## Source steps ##
+    ##################
+
+    fastq_source:
+        sample_to_files_map:
+            CTCF:
+               - example-out/2007-Barski_et_al_download/SRR001460.fastq
+            H2A.Z:
+               - example-out/2007-Barski_et_al_download/SRR001442.fastq
+               - example-out/2007-Barski_et_al_download/SRR001459.fastq
+            H2BK5me1:
+               - example-out/2007-Barski_et_al_download/SRR001401.fastq
+               - example-out/2007-Barski_et_al_download/SRR001412.fastq
+               - example-out/2007-Barski_et_al_download/SRR001413.fastq
+            H3K27me1:
+               - example-out/2007-Barski_et_al_download/SRR001438.fastq
+               - example-out/2007-Barski_et_al_download/SRR001448.fastq
+               - example-out/2007-Barski_et_al_download/SRR001463.fastq
+               - example-out/2007-Barski_et_al_download/SRR001464.fastq
+            H3K27me2:
+               - example-out/2007-Barski_et_al_download/SRR001433.fastq
+               - example-out/2007-Barski_et_al_download/SRR001434.fastq
+               - example-out/2007-Barski_et_al_download/SRR001435.fastq
+               - example-out/2007-Barski_et_al_download/SRR001436.fastq
+            H3K27me3:
+               - example-out/2007-Barski_et_al_download/SRR001426.fastq
+               - example-out/2007-Barski_et_al_download/SRR001427.fastq
+               - example-out/2007-Barski_et_al_download/SRR001428.fastq
+               - example-out/2007-Barski_et_al_download/SRR001429.fastq
+            H3K36me1:
+               - example-out/2007-Barski_et_al_download/SRR001397.fastq
+               - example-out/2007-Barski_et_al_download/SRR001406.fastq
+               - example-out/2007-Barski_et_al_download/SRR001407.fastq
+            H3K36me3:
+               - example-out/2007-Barski_et_al_download/SRR001392.fastq
+               - example-out/2007-Barski_et_al_download/SRR001393.fastq
+               - example-out/2007-Barski_et_al_download/SRR001394.fastq
+               - example-out/2007-Barski_et_al_download/SRR001450.fastq
+            H3K4me1:
+               - example-out/2007-Barski_et_al_download/SRR001439.fastq
+               - example-out/2007-Barski_et_al_download/SRR001444.fastq
+               - example-out/2007-Barski_et_al_download/SRR001445.fastq
+               - example-out/2007-Barski_et_al_download/SRR001446.fastq
+            H3K4me2:
+               - example-out/2007-Barski_et_al_download/SRR001449.fastq
+               - example-out/2007-Barski_et_al_download/SRR001465.fastq
+               - example-out/2007-Barski_et_al_download/SRR001466.fastq
+            H3K4me3:
+               - example-out/2007-Barski_et_al_download/SRR001414.fastq
+               - example-out/2007-Barski_et_al_download/SRR001419.fastq
+               - example-out/2007-Barski_et_al_download/SRR001420.fastq
+               - example-out/2007-Barski_et_al_download/SRR001421.fastq
+               - example-out/2007-Barski_et_al_download/SRR001430.fastq
+               - example-out/2007-Barski_et_al_download/SRR001431.fastq
+               - example-out/2007-Barski_et_al_download/SRR001432.fastq
+            H3K79me1:
+               - example-out/2007-Barski_et_al_download/SRR001398.fastq
+               - example-out/2007-Barski_et_al_download/SRR001408.fastq
+               - example-out/2007-Barski_et_al_download/SRR001409.fastq
+            H3K79me2:
+               - example-out/2007-Barski_et_al_download/SRR001410.fastq
+            H3K79me3:
+               - example-out/2007-Barski_et_al_download/SRR001441.fastq
+               - example-out/2007-Barski_et_al_download/SRR001457.fastq
+               - example-out/2007-Barski_et_al_download/SRR001458.fastq
+            H3K9me1:
+               - example-out/2007-Barski_et_al_download/SRR001399.fastq
+               - example-out/2007-Barski_et_al_download/SRR001400.fastq
+               - example-out/2007-Barski_et_al_download/SRR001454.fastq
+               - example-out/2007-Barski_et_al_download/SRR001467.fastq
+            H3K9me2:
+               - example-out/2007-Barski_et_al_download/SRR001440.fastq
+               - example-out/2007-Barski_et_al_download/SRR001455.fastq
+               - example-out/2007-Barski_et_al_download/SRR001456.fastq
+            H3K9me3:
+               - example-out/2007-Barski_et_al_download/SRR001422.fastq
+               - example-out/2007-Barski_et_al_download/SRR001423.fastq
+               - example-out/2007-Barski_et_al_download/SRR001424.fastq
+               - example-out/2007-Barski_et_al_download/SRR001425.fastq
+            H3R2me1:
+               - example-out/2007-Barski_et_al_download/SRR001395.fastq
+               - example-out/2007-Barski_et_al_download/SRR001396.fastq
+               - example-out/2007-Barski_et_al_download/SRR001453.fastq
+            H3R2me2:
+               - example-out/2007-Barski_et_al_download/SRR001411.fastq
+               - example-out/2007-Barski_et_al_download/SRR001443.fastq
+            H4K20me1:
+               - example-out/2007-Barski_et_al_download/SRR001402.fastq
+               - example-out/2007-Barski_et_al_download/SRR001403.fastq
+               - example-out/2007-Barski_et_al_download/SRR001452.fastq
+            H4K20me3:
+               - example-out/2007-Barski_et_al_download/SRR001404.fastq
+               - example-out/2007-Barski_et_al_download/SRR001405.fastq
+               - example-out/2007-Barski_et_al_download/SRR001451.fastq
+            H4R3me2:
+               - example-out/2007-Barski_et_al_download/SRR001415.fastq
+               - example-out/2007-Barski_et_al_download/SRR001416.fastq
+               - example-out/2007-Barski_et_al_download/SRR001417.fastq
+               - example-out/2007-Barski_et_al_download/SRR001418.fastq
+            Pol_II:
+               - example-out/2007-Barski_et_al_download/SRR001437.fastq
+               - example-out/2007-Barski_et_al_download/SRR001447.fastq
+               - example-out/2007-Barski_et_al_download/SRR001461.fastq
+               - example-out/2007-Barski_et_al_download/SRR001462.fastq
+        paired_end: no
+        first_read: .fastq
+
+    ######################
+    ## Processing steps ##
+    ######################
+        
+    merge_fastq_files:
+        _depends: fastq_source
+
+    # Quality control of sequencing run
+    merge_fastqc (fastqc):
+        _depends: merge_fastq_files
+
+    merge_fastx_quality_stats (fastx_quality_stats):
+        _depends: merge_fastq_files
+
+    cutadapt:
+        _depends: fastq_source
+        ## Reading adapters from FASTA file introduced with v1.5
+        adapter-file: ./example-data/adapter_sequences/adapter_sequences_Barski_2007.mfa
+        use_reverse_complement: False
+        adapter-type: -a
+        fix_qnames: false
+
+    fix_cutadapt:
+        _depends: cutadapt
+
+    fix_cutadapt_fastqc (fastqc):
+        _depends: fix_cutadapt
+
+    fix_cutadapt_fastx_quality_stats (fastx_quality_stats):
+        _depends: fix_cutadapt
+
+    ## Map reads onto genome ##
+    bowtie2:
+        _depends: fix_cutadapt
+        index: *bowtie2_genome_index
+        
+    bwa_backtrack:
+        _depends: fix_cutadapt
+        index: *bwa_genome_index
+        
+    segemehl:
+        _depends: fix_cutadapt
+        genome: *genome
+        index: *segemehl_genome_index
+        fix-qnames: yes       
+
+    tophat2:
+        _depends: fix_cutadapt
+        library_type: fr-unstranded
+        index: *bowtie2_genome_index
+        
+    sort_bowtie2 (sam_to_sorted_bam):
+        _depends: bowtie2
+        genome-faidx: *genome_faidx
+        temp-sort-dir: /tmp
+
+    sort_bwa_backtrack (sam_to_sorted_bam):
+        _depends: bwa_backtrack
+        genome-faidx: *genome_faidx
+        temp-sort-dir: /tmp
+
+    sort_segemehl (sam_to_sorted_bam):
+        _depends: segemehl
+        genome-faidx: *genome_faidx
+        temp-sort-dir: /tmp
+
+    sort_tophat2 (sam_to_sorted_bam):
+        _depends: tophat2
+        genome-faidx: *genome_faidx
+        temp-sort-dir: /tmp
+        
+    complexity_curve_bowtie2 (preseq_complexity_curve):
+        _depends: sort_bowtie2
+        pe: no
+        seg_len: 500
+        
+    complexity_curve_bwa_backtrack (preseq_complexity_curve):
+        _depends: sort_bwa_backtrack
+        pe: no
+        seg_len: 500
+
+    complexity_curve_segemehl (preseq_complexity_curve):
+        _depends: sort_segemehl
+        pe: no
+        seg_len: 500
+
+    complexity_curve_tophat2 (preseq_complexity_curve):
+        _depends: sort_tophat2
+        pe: no
+        seg_len: 500
+        
+    rmdup_bowtie2 (picard_markduplicates):
+        _depends: sort_bowtie2
+
+    rmdup_bwa_backtrack (picard_markduplicates):
+        _depends: sort_bwa_backtrack
+        VALIDATION_STRINGENCY: LENIENT
+        
+    rmdup_segemehl (picard_markduplicates):
+        _depends: sort_segemehl
+        
+    rmdup_tophat2 (picard_markduplicates):
+        _depends: sort_tophat2
+        
+    macs2_bowtie2_narrow_peaks (macs2):
+        _depends: rmdup_bowtie2
+        control: *control-treatment-hash
+
+    macs2_bowtie2_broad_peaks (macs2):
+        _depends: rmdup_bowtie2
+        broad: yes
+        control: *control-treatment-hash
+
+    macs2_bwa_backtrack_narrow_peaks (macs2):
+        _depends: rmdup_bwa_backtrack
+        control: *control-treatment-hash
+
+    macs2_bwa_backtrack_broad_peaks (macs2):
+        _depends: rmdup_bwa_backtrack
+        broad: yes
+        control: *control-treatment-hash
+
+    macs2_segemehl_narrow_peaks (macs2):
+        _depends: rmdup_segemehl
+        control: *control-treatment-hash
+
+    macs2_segemehl_broad_peaks (macs2):
+        _depends: rmdup_segemehl
+        broad: yes
+        control: *control-treatment-hash
+
+    macs2_tophat2_narrow_peaks (macs2):
+        _depends: rmdup_tophat2
+        control: *control-treatment-hash
+
+    macs2_tophat2_broad_peaks (macs2):
+        _depends: rmdup_tophat2
+        broad: yes
+        control: *control-treatment-hash
+
+################################################################################
+## Tools Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define used tools here                                                   ##
+## - for module system usage see documentation                                ##
+################################################################################
+
+tools:
+    ##################
+    # External Tools #
+    ##################
+
+    # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
+    bowtie2:
+        path: bowtie2
+        get_version: --version
+        exit_code: 0
+
+    # URL: https://github.com/lh3/bwa
+    bwa:
+        path: bwa
+        get_version: ''
+        exit_code: 1
+
+    # URL: https://github.com/marcelm/cutadapt
+    cutadapt:
+        path: cutadapt
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+    fastqc:
+        path: fastqc
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://hannonlab.cshl.edu/fastx_toolkit/
+    fastx_quality_stats:
+        path: fastx_quality_stats
+        get_version: -h
+        exit_code: 1
+
+    # URL: https://github.com/taoliu/MACS/
+    # Installation via 'pip install MACS2'
+    macs2:
+        path: macs2
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://broadinstitute.github.io/picard/
+    picard-tools:
+        ## Settings below work for picard-tools installed via apt-get/aptitude
+        path: picard-tools
+        get_version: --version
+        exit_code: 0
+        ## Settings below work if path to Picard JAR file is changed and
+        ## lines are uncommented (lines above have to be commented out)
+        # path: ['java', '-jar', '/path/to/picard.jar']
+        # get_version: --version
+        # exit_code: 1
+
+    # URL: http://zlib.net/pigz/
+    pigz: 
+        path: pigz
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://smithlabresearch.org/software/preseq/
+    preseq:
+        path: preseq
+        get_version: ''
+        exit_code: 0
+    
+    # URL: http://www.htslib.org/
+    # NOTE: uap requires samtools version 1.0 or greater
+    samtools:
+        path: samtools
+        get_version: '--version'
+        exit_code: 0
+
+    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
+    segemehl:
+        path: segemehl.x
+        get_version: ''
+        exit_code: 255
+
+    # URL: http://ccb.jhu.edu/software/tophat/index.shtml
+    tophat2:
+        path: tophat2
+        get_version: --version
+        exit_code: 0
+
+    ##################
+    # Internal Tools #
+    ##################
+
+    fix_cutadapt:
+        path: ../tools/fix_cutadapt.py
+        get_version: --version
+        exit_code: 0
+
+    fix_qnames:
+        path: ../tools/fix_qnames.py
+        exit_code: 0
+
+    mate_pair_strand_switch:
+        path: ../tools/mate_pair_strand_switch.py
+        get_version: --version 
+        exit_code: 0
+
+    ##############
+    # Unix Tools #
+    ##############
+
+    cat:
+        path: cat
+        get_version: --version
+        exit_code: 0
+
+    dd:
+        path: dd
+        get_version: --version
+        exit_code: 0
+        
+    mkdir:
+        path: mkdir
+        get_version: --version
+        exit_code: 0
+
+    mkfifo:
+        path: mkfifo
+        get_version: --version
+        exit_code: 0
+
+    mv:
+        path: mv
+        get_version: --version
+        exit_code: 0
+
+    tar:
+        path: tar
+        get_version: --version
+        exit_code: 0

@@ -1,0 +1,92 @@
+# This configuration downloads the sequencing data analysed in:
+# Targeted sequencing for gene discovery and quantification using RNA CaptureSeq
+# Mercer et al., Nature protocols, 2014
+
+################################################################################
+## Cluster Section                                                            ##
+## =====================                                                      ##
+##                                                                            ##
+## - uncomment/adapt as required                                              ##
+################################################################################
+
+# cluster:
+#     example for SLURM grid engine
+#     default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+#     example for UGE/SGE respectively OGS
+#     default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+#     default_pre_job_command: "echo 'Run Started!'"
+#     default_post_job_command: "echo 'Run Finished!'"
+#     default_job_quota: 5
+
+destination_path: example-out/2014-Mercer_et_al_download-short
+
+################################################################################
+## Destination Path Section                                                   ##
+## ========================                                                   ##
+##                                                                            ##
+## - directory where analysis results get stored                              ##
+################################################################################
+
+steps:
+    # Download the actual sequencing data
+    SRR1032214_1_download (raw_url_source):
+        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/004/SRR1032214/SRR1032214_1.fastq.gz
+        path: example-out/2014-Mercer_et_al_download
+        uncompress: yes
+
+    SRR1032214_2_download (raw_url_source):
+        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/004/SRR1032214/SRR1032214_2.fastq.gz
+        path: example-out/2014-Mercer_et_al_download
+        uncompress: yes
+
+################################################################################
+## Tools Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define used tools here                                                   ##
+## - for module system usage see documentation                                ##
+################################################################################
+
+tools:
+    ##################
+    # External Tools #
+    ##################
+
+    # URL: http://zlib.net/pigz/
+    pigz: 
+        path: pigz
+        get_version: --version
+        exit_code: 0
+                
+    ##################
+    # Internal Tools #
+    ##################
+
+    compare_secure_hashes:
+        path: ../tools/compare_secure_hashes.py
+        get_version: --version
+        exit_code: 0
+
+    ##############
+    # Unix Tools #
+    ##############
+
+    cp:
+        path: cp
+        get_version: --version
+        exit_code: 0
+
+    curl:
+        path: curl
+        get_version: --version
+        exit_code: 0
+
+    dd:
+        path: dd
+        get_version: --version
+        exit_code: 0
+
+    mkdir:
+        path: mkdir
+        get_version: --version
+        exit_code: 0
