@@ -38,8 +38,13 @@ steps:
     ## Source steps ##
     ##################
 
+    # Download chrom sizes file from UCSC
+    hg19_chrom_sizes (fetch_chrom_sizes_source):
+        ucsc-database: hg19
+        path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
+
     # Download all chromosomal sequences
-    hg19_UCSC (raw_url_sources):
+    hg19_chr21_UCSC (raw_url_sources):
         _cluster_job_quota: 1
         run-download-info:
             chr21:
@@ -55,41 +60,39 @@ steps:
     ######################
 
     # Merge downloaded sequences into single fasta file
-    hg19_UCSC_complete_genome (merge_fasta_files):
-        _depends: hg19_UCSC
-        _connect:
-            in/sequence: hg19_UCSC/raw
-        compress-output: no
-        merge-all-runs: yes
-        output-fasta-basename: hg19_all_chr_UCSC
+#    hg19_UCSC_complete_genome (merge_fasta_files):
+#        _depends: hg19_UCSC
+#        _connect:
+#            in/sequence: hg19_UCSC/raw
+#        compress-output: no
+#        merge-all-runs: yes
+#        output-fasta-basename: hg19_chr21_UCSC
 
     hg19_bowtie2_index (bowtie2_generate_index):
-        _depends: hg19_UCSC_complete_genome
-        _connect: 
-            in/reference_sequence: hg19_UCSC_complete_genome/sequence
+        _depends: hg19_chr21_UCSC
+        _connect:
+            in/reference_sequence: hg19_chr21_UCSC/raw
         index-basename: bowtie2_index
 
 #    ## !ATTENTION! 
 #    ## only enable if your machine possesses enough RAM (~60GB)
 #    ## otherwise this step is going to crash
 #    hg19_segemehl_index (segemehl_generate_index):
-#        _depends: hg19_UCSC_complete_genome
+#        _depends: hg19_chr21_UCSC
 #        _connect:
 #            in/reference_sequence: hg19_UCSC_complete_genome/sequence
 #        index-basename: segemehl_index
 
     hg19_bwa_index (bwa_generate_index):
-        _depends: hg19_UCSC_complete_genome
+        _depends: hg19_chr21_UCSC
         _connect:
-            in/reference_sequence: hg19_UCSC_complete_genome/sequence
+            in/reference_sequence: hg19_chr21_UCSC/raw
         index-basename: bwa_index
 
     hg19_samtools_faidx (samtools_faidx):
-        _depends: hg19_UCSC_complete_genome
-
-    hg19_chrom_sizes (fetch_chrom_sizes_source):
-        ucsc-database: hg19
-        path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
+        _depends: hg19_chr21_UCSC
+        _connect:
+            in/sequence: hg19_chr21_UCSC/raw
 
 ################################################################################
 ## Tools Section                                                              ##
