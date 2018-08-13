@@ -39,13 +39,12 @@ steps:
     ##################
 
     # Download chrom sizes file from UCSC
-    hg19_chrom_sizes (fetch_chrom_sizes_source):
+    download_chrom_sizes_homo_sapiens (fetch_chrom_sizes_source):
         ucsc-database: hg19
         path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
 
     # Download all chromosomal sequences
-    hg19_chr21_UCSC (raw_url_sources):
-        _cluster_job_quota: 1
+    download_hg19_data_UCSC (raw_url_sources):
         run-download-info:
             chr21:
                 url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr21.fa.gz
@@ -59,40 +58,31 @@ steps:
     ## Processing steps ##
     ######################
 
-    # Merge downloaded sequences into single fasta file
-#    hg19_UCSC_complete_genome (merge_fasta_files):
-#        _depends: hg19_UCSC
-#        _connect:
-#            in/sequence: hg19_UCSC/raw
-#        compress-output: no
-#        merge-all-runs: yes
-#        output-fasta-basename: hg19_chr21_UCSC
-
-    hg19_bowtie2_index (bowtie2_generate_index):
-        _depends: hg19_chr21_UCSC
+    bowtie2_generate_index:
+        _depends: download_hg19_data_UCSC
         _connect:
-            in/reference_sequence: hg19_chr21_UCSC/raw
+            in/reference_sequence: download_hg19_data_UCSC/raw
         index-basename: bowtie2_index
 
 #    ## !ATTENTION! 
 #    ## only enable if your machine possesses enough RAM (~60GB)
 #    ## otherwise this step is going to crash
-#    hg19_segemehl_index (segemehl_generate_index):
-#        _depends: hg19_chr21_UCSC
+#    segemehl_generate_index:
+#        _depends: download_hg19_data_UCSC
 #        _connect:
-#            in/reference_sequence: hg19_UCSC_complete_genome/sequence
+#            in/reference_sequence:download_hg19_data_UCSC/raw
 #        index-basename: segemehl_index
 
-    hg19_bwa_index (bwa_generate_index):
-        _depends: hg19_chr21_UCSC
+    bwa_generate_index:
+        _depends: download_hg19_data_UCSC
         _connect:
-            in/reference_sequence: hg19_chr21_UCSC/raw
+            in/reference_sequence: download_hg19_data_UCSC/raw
         index-basename: bwa_index
 
-    hg19_samtools_faidx (samtools_faidx):
-        _depends: hg19_chr21_UCSC
+    samtools_faidx:
+        _depends: download_hg19_data_UCSC
         _connect:
-            in/sequence: hg19_chr21_UCSC/raw
+            in/sequence: download_hg19_data_UCSC/raw
 
 ################################################################################
 ## Tools Section                                                              ##
