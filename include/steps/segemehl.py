@@ -67,7 +67,9 @@ class Segemehl(AbstractStep):
         self.add_option('genome', str, optional=False,
                         description="Path to genome file")
         self.add_option('index', str, optional=False,
-                        description="Path to genome index for segemehl")
+                        description="path/filename of db index (default:none)")
+        self.add_option('index2', str, optional=False,
+                        description="path/filename of second db index (default:none)")
         self.add_option('bisulfite', int, choices=[0, 1, 2], optional=True,
                         description="bisulfite mapping with methylC-seq/Lister "
                         "et al. (=1) or bs-seq/Cokus et al. protocol (=2) "
@@ -209,6 +211,15 @@ class Segemehl(AbstractStep):
                         "The path %s provided to option 'index' is not a file."
                         % self.get_option('index') )
                     sys.exit(1)
+
+                if self.is_option_set_in_config('index2'):
+                    if not os.path.isfile(self.get_option('index2')):
+                        logger.error(
+                            "The path %s provided to option 'index2' is not a file."
+                            % self.get_option('index2') )
+                        sys.exit(1)
+                    option_list.append('--index2')
+                    option_list.append(str(self.get_option('index2')))
 
                 if not os.path.isfile(self.get_option('genome')):
                     logger.error(
