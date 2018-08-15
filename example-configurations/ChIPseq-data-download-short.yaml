@@ -76,26 +76,6 @@ steps:
         path: example-out/2007-Barski_et_al_download
         uncompress: yes
 
-    SRR001439_download (raw_url_source):
-        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001439/SRR001439.fastq.gz
-        path: example-out/2007-Barski_et_al_download
-        uncompress: yes
-
-    SRR001444_download (raw_url_source):
-        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001444/SRR001444.fastq.gz
-        path: example-out/2007-Barski_et_al_download
-        uncompress: yes
-
-    SRR001445_download (raw_url_source):
-        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001445/SRR001445.fastq.gz
-        path: example-out/2007-Barski_et_al_download
-        uncompress: yes
-
-    SRR001446_download (raw_url_source):
-        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001446/SRR001446.fastq.gz
-        path: example-out/2007-Barski_et_al_download
-        uncompress: yes
-
 ################################################################################
 ## Tools Section                                                              ##
 ## =============                                                              ##

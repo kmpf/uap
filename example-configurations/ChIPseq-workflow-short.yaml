@@ -72,11 +72,6 @@ steps:
 
     fastq_source:
         sample_to_files_map:
-            H3K4me1:
-               - example-out/2007-Barski_et_al_download/SRR001439.fastq
-               - example-out/2007-Barski_et_al_download/SRR001444.fastq
-               - example-out/2007-Barski_et_al_download/SRR001445.fastq
-               - example-out/2007-Barski_et_al_download/SRR001446.fastq
             H3K4me3:
                - example-out/2007-Barski_et_al_download/SRR001414.fastq
                - example-out/2007-Barski_et_al_download/SRR001419.fastq

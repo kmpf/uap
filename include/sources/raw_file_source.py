@@ -7,7 +7,7 @@ from abstract_step import AbstractSourceStep
 logger = getLogger('uap_logger')
 
 class RawFileSource(AbstractSourceStep):
-
+    
     def __init__(self, pipeline):
         super(RawFileSource, self).__init__(pipeline)
 
