@@ -254,7 +254,7 @@ class PicardMarkDuplicates(AbstractStep):
 
         self.add_option('ASSUME_SORTED', bool, optional = True)
         self.add_option('MAX_FILE_HANDLES', int, optional = True)
-        self.add_option('SORTING_COLLECTION_SIZE_RATIO', float, optional = True)
+        #self.add_option('SORTING_COLLECTION_SIZE_RATIO', float, optional = True)
         self.add_option('READ_NAME_REGEX', str, optional = True,
                         description = "Regular expression that can be used to "
                         "parse read names in the incoming SAM file. Read names "

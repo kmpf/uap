@@ -176,7 +176,7 @@ class BwaBacktrack(AbstractStep):
         self.add_option('dd-blocksize', str, optional = True, default = "2M")
 
         # [Options for 'pigz':]
-        self.add_option('pigz-blocksize', int, optional = True,
+        self.add_option('pigz-blocksize', str, optional = True,
                         default = "2048")
 
     def runs(self, run_ids_connections_files):
@@ -221,11 +221,9 @@ class BwaBacktrack(AbstractStep):
         # and the cores variable
         if 'aln-t' not in option_list_bwa_aln:
             option_list_bwa_aln.append('-t')
-            option_list_bwa_aln.append((str(self.get_cores())
+            option_list_bwa_aln.append(str(self.get_cores()))
         else:
             self.set_cores(self.get_option('aln-t'))
-
-
         
         option_list_bwa_samse = make_option_list(set_bwa_samse_options,
                                                     prefix="samse-")

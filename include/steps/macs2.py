@@ -52,7 +52,7 @@ class Macs2(AbstractStep):
                         description = "Defines the controls and correspondent "
                         "treatments in a YAML hash. Hash keys are the run IDs "
                         "of the control datasets and hash values are the run "
-                        "IDs of the treatment datasets.)
+                        "IDs of the treatment datasets.")
         self.add_option('format', str, default='AUTO',
                         choices=['AUTO', 'ELAND', 'ELANDMULTI', 'ELANDMULTIPET',
                                  'ELANDEXPORT', 'BED', 'BEDPE', 'SAM', 'BAM',
@@ -235,7 +235,7 @@ class Macs2(AbstractStep):
                         "from control, NAME+'_treat_pvalue.bdg' for Poisson "
                         "pvalue scores (in -log10(pvalue) form), and "
                         "NAME+'_treat_qvalue.bdg' for q-value scores from "
-                        "Benjamini–Hochberg–Yekutieli procedure "
+                        "Benjamini-Hochberg-Yekutieli procedure "
                         "<http://en.wikipedia.org/wiki/False_discovery_rate#Dependent_tests>")
         self.add_option('call-summits', bool, optional=True,
                         description = "MACS will now reanalyze the shape of "
