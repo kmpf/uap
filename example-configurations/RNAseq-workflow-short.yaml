@@ -37,8 +37,8 @@ destination_path: example-out/2014-Mercer_et_al
 constants:
     # 1.  Genome Information:
     # 1.1 Complete Sequence (FASTA)
-    - &genome
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_UCSC_complete_genome/hg19_all_chr_UCSC-all_sequences-Tc5RkRKM/hg19_all_chr_UCSC-all_sequences.fasta
+    #- &genome
+    #    genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_UCSC_complete_genome/hg19_all_chr_UCSC-all_sequences-Tc5RkRKM/hg19_all_chr_UCSC-all_sequences.fasta
 
     # 1.2 FASTA index
     - &genome_faidx 
@@ -47,7 +47,7 @@ constants:
     # 2.  Mapping Indices:
     # 2.1 Bowtie2
     - &bowtie2_genome_index
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bowtie2_index/bowtie2_index-hg19_all_chr_UCSC-all_sequences-4bnBZlNy/bowtie2_index-hg19_all_chr_UCSC-all_sequences
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/bowtie2_generate_index/bowtie2_index-chr21-J94fnhgz/bowtie2_index-chr21
 
     # 3.  Gencode Annotation:
     # 3.1 Version 24
