@@ -313,10 +313,6 @@ class TrimGalore(AbstractStep):
                     run.add_empty_output_connection('second_read_fastqc_zip')
                     run.add_empty_output_connection('second_read_fastqc_html')
 
-                run.add_output_file('first_read_report',
-                                    '%s_R1_trimming_report.txt' % run_id,
-                                    input_paths['in/first_read'])
-
                 stdout = run.add_output_file('stdout',
                                              '%s_trimgalore.stdout' % run_id,
                                              input_paths['in/first_read'])
