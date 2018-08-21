@@ -50,8 +50,6 @@ constants:
     ## 2. BWA
     - &bwa_genome_index
         genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bwa_index/bwa_index-hg19_all_chr_UCSC-all_sequences-XR2WAVGR/bwa_index-hg19_all_chr_UCSC-all_sequences
-    ## 3. Segemehl
-#    - &segemehl_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_segemehl_index/segemehl_index-hg19_all_chr_UCSC-download-s8p1Hh3g/segemehl_index-hg19_all_chr_UCSC-download.idx
     ## Control vs. Treatment information needed for MACS2
     - control: &control-treatment-hash
             None:
@@ -235,17 +233,6 @@ steps:
         _depends: fix_cutadapt
         index: *bwa_genome_index
         
-    segemehl:
-        _depends: fix_cutadapt
-        genome: *genome
-        index: *segemehl_genome_index
-        fix-qnames: yes       
-
-    tophat2:
-        _depends: fix_cutadapt
-        library_type: fr-unstranded
-        index: *bowtie2_genome_index
-        
     sort_bowtie2 (sam_to_sorted_bam):
         _depends: bowtie2
         genome-faidx: *genome_faidx
@@ -255,36 +242,6 @@ steps:
         _depends: bwa_backtrack
         genome-faidx: *genome_faidx
         temp-sort-dir: /tmp
-
-    sort_segemehl (sam_to_sorted_bam):
-        _depends: segemehl
-        genome-faidx: *genome_faidx
-        temp-sort-dir: /tmp
-
-    sort_tophat2 (sam_to_sorted_bam):
-        _depends: tophat2
-        genome-faidx: *genome_faidx
-        temp-sort-dir: /tmp
-        
-    complexity_curve_bowtie2 (preseq_complexity_curve):
-        _depends: sort_bowtie2
-        pe: no
-        seg_len: 500
-        
-    complexity_curve_bwa_backtrack (preseq_complexity_curve):
-        _depends: sort_bwa_backtrack
-        pe: no
-        seg_len: 500
-
-    complexity_curve_segemehl (preseq_complexity_curve):
-        _depends: sort_segemehl
-        pe: no
-        seg_len: 500
-
-    complexity_curve_tophat2 (preseq_complexity_curve):
-        _depends: sort_tophat2
-        pe: no
-        seg_len: 500
         
     rmdup_bowtie2 (picard_markduplicates):
         _depends: sort_bowtie2
@@ -292,12 +249,6 @@ steps:
     rmdup_bwa_backtrack (picard_markduplicates):
         _depends: sort_bwa_backtrack
         VALIDATION_STRINGENCY: LENIENT
-        
-    rmdup_segemehl (picard_markduplicates):
-        _depends: sort_segemehl
-        
-    rmdup_tophat2 (picard_markduplicates):
-        _depends: sort_tophat2
         
     macs2_bowtie2_narrow_peaks (macs2):
         _depends: rmdup_bowtie2
@@ -314,24 +265,6 @@ steps:
 
     macs2_bwa_backtrack_broad_peaks (macs2):
         _depends: rmdup_bwa_backtrack
-        broad: yes
-        control: *control-treatment-hash
-
-    macs2_segemehl_narrow_peaks (macs2):
-        _depends: rmdup_segemehl
-        control: *control-treatment-hash
-
-    macs2_segemehl_broad_peaks (macs2):
-        _depends: rmdup_segemehl
-        broad: yes
-        control: *control-treatment-hash
-
-    macs2_tophat2_narrow_peaks (macs2):
-        _depends: rmdup_tophat2
-        control: *control-treatment-hash
-
-    macs2_tophat2_broad_peaks (macs2):
-        _depends: rmdup_tophat2
         broad: yes
         control: *control-treatment-hash
 
@@ -414,18 +347,6 @@ tools:
     samtools:
         path: samtools
         get_version: '--version'
-        exit_code: 0
-
-    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
-    segemehl:
-        path: segemehl.x
-        get_version: ''
-        exit_code: 255
-
-    # URL: http://ccb.jhu.edu/software/tophat/index.shtml
-    tophat2:
-        path: tophat2
-        get_version: --version
         exit_code: 0
 
     ##################
