@@ -1,4 +1,4 @@
-# This configuration repeats the analysis published in:
+# This configuration uses data published in:
 # Targeted sequencing for gene discovery and quantification using RNA CaptureSeq,
 # Mercer et al., Nature Protocols, 2014
 
@@ -42,7 +42,7 @@ constants:
 
     # 1.2 FASTA index
     - &genome_faidx 
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_samtools_faidx/hg19_all_chr_UCSC-all_sequences-v08iKi37/hg19_all_chr_UCSC-all_sequences.fasta.fai
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/samtools_faidx/chr21-jcfQZAjo/chr21.fa.fai
 
     # 2.  Mapping Indices:
     # 2.1 Bowtie2

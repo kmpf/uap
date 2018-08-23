@@ -1,4 +1,4 @@
-# This configuration analyses data published in:
+# This configuration uses data published in:
 # High-Resolution Profiling of Histone Methylations in the Human Genome
 # Barski et al., Cell, 2007
 
@@ -42,14 +42,16 @@ constants:
 
     # 1.2 FASTA index
     - &genome_faidx
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_samtools_faidx/hg19_all_chr_UCSC-all_sequences-v08iKi37/hg19_all_chr_UCSC-all_sequences.fasta.fai
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/samtools_faidx/chr21-jcfQZAjo/chr21.fa.fai
 
     # 2.  Mapping indices:
     # 2.1 Bowtie2
-    - &bowtie2_genome_index genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bowtie2_index/bowtie2_index-hg19_all_chr_UCSC-all_sequences-4bnBZlNy/bowtie2_index-hg19_all_chr_UCSC-all_sequences
-    ## 2. BWA
+    - &bowtie2_genome_index
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/bowtie2_generate_index/bowtie2_index-chr21-J94fnhgz/bowtie2_index-chr21
+    ## 2.2 BWA
     - &bwa_genome_index
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bwa_index/bwa_index-hg19_all_chr_UCSC-all_sequences-XR2WAVGR/bwa_index-hg19_all_chr_UCSC-all_sequences
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/bwa_generate_index/bwa_index-chr21-kBivDpXC/bwa_index-chr21
+
     ## Control vs. Treatment information needed for MACS2
     - control: &control-treatment-hash
             None:
