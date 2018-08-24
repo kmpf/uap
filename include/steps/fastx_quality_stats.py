@@ -36,7 +36,7 @@ class FastxQualityStats(AbstractStep):
                         description = "New output format (with more information "
                         "per nucleotide/cycle).")
         # no info in help for this option ?! -> excluded
-        # self.add_option('quality', int, default=33, optional=True)
+        self.add_option('quality', int, default=33, optional=True)
 
         # [Options for 'dd':]
         self.add_option('dd-blocksize', str, optional = True, default = "2M")
@@ -48,7 +48,7 @@ class FastxQualityStats(AbstractStep):
         reads_counts_files = dict()
         read_files = list()
 
-        options = {'new_output_format': '-N'}#, 'quality': '-Q'}
+        options = {'new_output_format': '-N', 'quality': '-Q'}
         option_list = list()
         for option in [o for o in options.keys() \
                        if self.is_option_set_in_config(o)]:
