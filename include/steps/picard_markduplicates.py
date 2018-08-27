@@ -140,35 +140,16 @@ class PicardMarkDuplicates(AbstractStep):
 
         # [Picard MarkDuplicates Options:]
 
-        self.add_option('MAX_FILE_HANDLES_FOR_READ_ENDS_MAP', int,
-                        optional = True,
-                        default = 8000, description = "Maximum number of file "
-                        "handles to keep open when spilling read ends to disk. "
-                        "Set this number a little lower than the per-process "
-                        "maximum number of file that may be open. This number "
-                        "can be found by executing the 'ulimit -n' command on "
-                        "a Unix system. Default value: 8000.")
-        self.add_option('SORTING_COLLECTION_SIZE_RATIO', float,
-                        optional = True,
-                        description = "This number, plus the maximum RAM "
-                        "available to the JVM, determine the memory footprint "
-                        "used by some of the sorting collections. If you are "
-                        "running out of memory, try reducing this number. "
-                        "Default value: 0.25.")
-        self.add_option('BARCODE_TAG', str, default = "null",
-                        optional = True,
+        self.add_option('BARCODE_TAG', str, optional = True,
                         description = "Barcode SAM tag (ex. BC for 10X "
                         "Genomics) Default value: null.")
-        self.add_option('READ_ONE_BARCODE_TAG', str, default = "null",
-                        optional = True,
+        self.add_option('READ_ONE_BARCODE_TAG', str, optional = True,
                         description = "Read one barcode SAM tag (ex. BX for "
                         "10X Genomics) Default value: null.")
-        self.add_option('READ_TWO_BARCODE_TAG', str, default = "null",
-                        optional = True,
+        self.add_option('READ_TWO_BARCODE_TAG', str, optional = True,
                         description = "Read two barcode SAM tag (ex. BX for "
                         "10X Genomics) Default value: null.")
-        self.add_option('TAG_DUPLICATE_SET_MEMBERS', str, default = "false",
-                        optional = True,
+        self.add_option('TAG_DUPLICATE_SET_MEMBERS', str, optional = True,
                         choices = ["true", "false", "null"], description = "If "
                         "a read appears in a duplicate set, add two tags. The "
                         "first tag, DUPLICATE_SET_SIZE_TAG (DS), indicates the "
@@ -183,8 +164,7 @@ class PicardMarkDuplicates(AbstractStep):
                         "duplicate set. Default value: false. This option can "
                         "be set to 'null' to clear the default value. Possible "
                         "values: {true, false}")
-        self.add_option('REMOVE_SEQUENCING_DUPLICATES', str, default = "false",
-                        optional = True,
+        self.add_option('REMOVE_SEQUENCING_DUPLICATES', str, optional = True,
                         choices = ["true", "false", "null"], description = "If "
                         "true remove 'optical' duplicates and other duplicates "
                         "that appear to have arisen from the sequencing "
@@ -194,32 +174,21 @@ class PicardMarkDuplicates(AbstractStep):
                         "and this option is ignored. Default value: false. "
                         "This option can be set to 'null' to clear the default "
                         "value. Possible values: {true, false}")
-        self.add_option('TAGGING_POLICY', str, default = "DontTag",
+        self.add_option('TAGGING_POLICY', str, optional = True,
                         choices = ["DontTag", "OpticalOnly", "All"],
                         description = "Determines how duplicate types are "
                         "recorded in the DT optional attribute. Default value: "
                         "DontTag. This option can be set to 'null' to clear "
                         "the default value. Possible values: {DontTag, "
                         "OpticalOnly, All}")
-        self.add_option('REMOVE_DUPLICATES', str, default = "false",
-                        optional = True,
-                        choices = ["true", "null", "false"],
-                        description = "If true do not write duplicates to the "
-                        "output file instead of writing them with appropriate "
-                        "flags set. Default value: false. This option can be "
-                        "set to 'null' to clear the default value. Possible "
-                        "values: {true, false}")
-        self.add_option('ASSUME_SORT_ORDER', str, default = "null",
-                        optional = True,
+        self.add_option('ASSUME_SORT_ORDER', str, optional = True,
                         choices = ["unsorted", "queryname", "coordinate",
                                    "duplicate", "unknown"],
                         description = "If not null, assume that the input file "
                         "has this order even if the header says otherwise. "
                         "Default value: null. Possible values: {unsorted, "
                         "queryname, coordinate, duplicate, unknown}")
-        self.add_option('DUPLICATE_SCORING_STRATEGY', str,
-                        optional = True,
-                        default = "SUM_OF_BASE_QUALITIES",
+        self.add_option('DUPLICATE_SCORING_STRATEGY', str, optional = True,
                         choices = ["SUM_OF_BASE_QUALITIES",
                                    "TOTAL_MAPPED_REFERENCE_LENGTH", "RANDOM"],
                         description = "The scoring strategy for choosing the "
@@ -228,6 +197,8 @@ class PicardMarkDuplicates(AbstractStep):
                         "value: SUM_OF_BASE_QUALITIES. Possible values: "
                         "{SUM_OF_BASE_QUALITIES, "
                         "TOTAL_MAPPED_REFERENCE_LENGTH, RANDOM}")
+
+        # Options supported by 'picard-tools MarkDuplicates' release 1.113
         self.add_option('PROGRAM_RECORD_ID', str, optional = True, description =
                         "The program record ID for the @PG record(s) created by "
                         "this program. Set to null to disable PG record "
@@ -251,10 +222,36 @@ class PicardMarkDuplicates(AbstractStep):
                         description = "Comment(s) to include in the output "
                         "file's header. Default value: null. This option may "
                         "be specified 0 or more times.")
-
-        self.add_option('ASSUME_SORTED', bool, optional = True)
-        self.add_option('MAX_FILE_HANDLES', int, optional = True)
-        #self.add_option('SORTING_COLLECTION_SIZE_RATIO', float, optional = True)
+        self.add_option('REMOVE_DUPLICATES', str, optional = True,
+                        default = "true",
+                        choices = ["true", "null", "false"],
+                        description = "If true do not write duplicates to the "
+                        "output file instead of writing them with appropriate "
+                        "flags set. Default value: false. This option can be "
+                        "set to 'null' to clear the default value. Possible "
+                        "values: {true, false}")
+        self.add_option('ASSUME_SORTED', str, optional = True,
+                        choices = ["true", "null", "false"],
+                        description = "If true, assume that the input file is "
+                        "coordinate sorted even if the header says otherwise. "
+                        "Default value: false. This option can be set to 'null' "
+                        "to clear the default value. Possible values: "
+                        "{true, false}")
+        self.add_option('MAX_FILE_HANDLES_FOR_READ_ENDS_MAP', int,
+                        optional = True,
+                        description = "Maximum number of file "
+                        "handles to keep open when spilling read ends to disk. "
+                        "Set this number a little lower than the per-process "
+                        "maximum number of file that may be open. This number "
+                        "can be found by executing the 'ulimit -n' command on "
+                        "a Unix system. Default value: 8000.")
+        self.add_option('SORTING_COLLECTION_SIZE_RATIO', float,
+                        optional = True,
+                        description = "This number, plus the maximum RAM "
+                        "available to the JVM, determine the memory footprint "
+                        "used by some of the sorting collections. If you are "
+                        "running out of memory, try reducing this number. "
+                        "Default value: 0.25.")
         self.add_option('READ_NAME_REGEX', str, optional = True,
                         description = "Regular expression that can be used to "
                         "parse read names in the incoming SAM file. Read names "
@@ -304,9 +301,8 @@ class PicardMarkDuplicates(AbstractStep):
             'DUPLICATE_SCORING_STRATEGY', 
             'PROGRAM_RECORD_ID', 'PROGRAM_GROUP_VERSION',
             'PROGRAM_GROUP_COMMAND_LINE', 'PROGRAM_GROUP_NAME',
-            'COMMENT', 'ASSUME_SORTED', 'MAX_FILE_HANDLES',
-            'SORTING_COLLECTION_SIZE_RATIO', 'READ_NAME_REGEX',
-            'OPTICAL_DUPLICATE_PIXEL_DISTANCE'
+            'COMMENT', 'ASSUME_SORTED',
+            'READ_NAME_REGEX', 'OPTICAL_DUPLICATE_PIXEL_DISTANCE'
         ]
 
         set_options = [option for option in options if \
@@ -351,8 +347,7 @@ class PicardMarkDuplicates(AbstractStep):
                             self.get_tool('picard-tools'), 'MarkDuplicates',
                             'INPUT=%s' % input_paths[0],
                             'OUTPUT=%s' % alignments,
-                            'METRICS_FILE=%s' % metrics,
-                            'REMOVE_DUPLICATES=true'                
+                            'METRICS_FILE=%s' % metrics
                         ]
                         mark_duplicates.extend(option_list)
                         exec_group.add_command(mark_duplicates)
