@@ -16,7 +16,7 @@ class TrimGalore(AbstractStep):
     Note for RRBS using the NuGEN Ovation RRBS System 1-16 kit:
 
     Owing to the fact that the NuGEN Ovation kit attaches a varying number of nucleotides (0-3) after each MspI
-    site Trim Galore should be run WITHOUT the option --rrbs. This trimming is accomplished in a subsequent 
+    site Trim Galore should be run WITHOUT the option --rrbs. This trimming is accomplished in a subsequent
     diversity trimming step afterwards (see their manual).
 
     Note for RRBS using MseI:
@@ -270,25 +270,47 @@ class TrimGalore(AbstractStep):
                 input_paths = run_ids_connections_files[run_id]
 
                 if input_paths['in/first_read'][0].endswith('.gz'):
-                    run.add_output_file('first_read',
-                                        '%s_R1_val_1.fq.gz' % run_id,
+                    if not input_paths['in/second_read'][0] is None:
+                        run.add_output_file('first_read',
+                                            '%s_R1_val_1.fq.gz' % run_id,
+                                            input_paths['in/first_read'])
+                    else:
+                        run.add_output_file('first_read',
+                                            '%s_R1_trimmed.fq.gz' % run_id,
+                                            input_paths['in/first_read'])
+
+                else:
+                    if not input_paths['in/second_read'][0] is None:
+                        run.add_output_file('first_read',
+                                            '%s_R1_val_1.fq' % run_id,
+                                            input_paths['in/first_read'])
+                    else:
+                        run.add_output_file('first_read',
+                                            '%s_R1_trimmed.fq' % run_id,
+                                            input_paths['in/first_read'])
+
+                if not input_paths['in/second_read'][0] is None:
+                    run.add_output_file('first_read_fastqc_zip',
+                                        '%s_R1_val_1_fastqc.zip' % run_id,
+                                        input_paths['in/first_read'])
+                    run.add_output_file('first_read_fastqc_html',
+                                        '%s_R1_val_1_fastqc.html' % run_id,
                                         input_paths['in/first_read'])
                 else:
-                    run.add_output_file('first_read',
-                                        '%s_R1_val_1.fq' % run_id,
+                    run.add_output_file('first_read_fastqc_zip',
+                                        '%s_R1_trimmed_fastqc.zip' % run_id,
+                                        input_paths['in/first_read'])
+                    run.add_output_file('first_read_fastqc_html',
+                                        '%s_R1_trimmed_fastqc.html' % run_id,
                                         input_paths['in/first_read'])
 
-                run.add_output_file('first_read_fastqc_zip',
-                                    '%s_R1_val_1_fastqc.zip' % run_id,
-                                    input_paths['in/first_read'])
-                run.add_output_file('first_read_fastqc_html',
-                                    '%s_R1_val_1_fastqc.html' % run_id,
-                                    input_paths['in/first_read'])
                 run.add_output_file('first_read_report',
-                                    '%s_trimming_report.txt' % os.path.basename(input_paths['in/first_read'][0]),
+                                        '%s_trimming_report.txt' % os.path.basename(input_paths['in/first_read'][0]),
                                     input_paths['in/first_read'])
 
-                if input_paths['in/second_read'] :
+
+
+                if not input_paths['in/second_read'][0] is None:
                     if input_paths['in/second_read'][0].endswith('.gz'):
                         run.add_output_file('second_read',
                                             '%s_R2_val_2.fq.gz' % run_id,
@@ -321,7 +343,7 @@ class TrimGalore(AbstractStep):
                                              input_paths['in/first_read'])
 
                 # set '--paired' option if not already been done by usr in cfg
-                if input_paths['in/second_read']:
+                if not input_paths['in/second_read'][0] is None:
                     if not self.is_option_set_in_config('paired'):
                         if '--paired' not in option_list:
                             option_list.append('--paired')
@@ -332,11 +354,10 @@ class TrimGalore(AbstractStep):
                               '--output_dir', outdir]
                 tg.extend(option_list)
                 tg.append(input_paths['in/first_read'][0])
-                if input_paths['in/second_read']:
+                if not input_paths['in/second_read'][0] is None:
                     tg.append(input_paths['in/second_read'][0])
 
                 with run.new_exec_group() as tg_exec_group:
                     tg_exec_group.add_command(tg,
                                               stderr_path = stderr,
                                               stdout_path = stdout)
-
