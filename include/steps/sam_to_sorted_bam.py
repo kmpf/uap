@@ -26,9 +26,12 @@ class SamToSortedBam(AbstractStep):
         
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
-        
+
+        # Step was tested for dd (coreutils) release 8.25
         self.require_tool('dd')
+        # Step was tested for samtools release 1.3.1
         self.require_tool('samtools')
+        # Step was tested for pigz release 2.3.1
         self.require_tool('pigz')
 
         self.add_option('sort-by-name', bool, default = False)

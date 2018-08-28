@@ -83,7 +83,8 @@ class PicardMarkDuplicates(AbstractStep):
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
         self.add_connection('out/metrics')
-        
+
+        # Step was tested for picard-tools release 1.113
         self.require_tool('picard-tools')
 
         # [Standard Picard Options:]

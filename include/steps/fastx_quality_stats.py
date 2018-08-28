@@ -25,10 +25,15 @@ class FastxQualityStats(AbstractStep):
         self.add_connection('out/first_read_quality_stats')
         self.add_connection('out/second_read_quality_stats')
 
+        # Step was tested for cat (GNU coreutils) release 8.25
         self.require_tool('cat')
+        # Step was tested for dd (coreutils) release 8.25
         self.require_tool('dd')
+        # Step was tested for mkfifo (GNU coreutils) release 8.25
         self.require_tool('mkfifo')
+        # Step was tested for FASTX Toolkit release 0.0.13
         self.require_tool('fastx_quality_stats')
+        # Step was tested for pigz release 2.3.1
         self.require_tool('pigz')
 
         # [Options for 'fastx_quality_stats':]

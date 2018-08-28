@@ -28,9 +28,11 @@ class Fastqc(AbstractStep):
         self.add_connection('out/second_read_fastqc_report_webpage')
         self.add_connection('out/second_read_log_stderr')
         
-        # require_tool evtl. in abstract_step verstecken
+        # Step was tested for fastqc release v0.11.7
         self.require_tool('fastqc')
+        # Step was tested for mkdir (GNU coreutils) release 8.25
         self.require_tool('mkdir')
+        # Step was tested for mv (GNU coreutils) release 8.25
         self.require_tool('mv')
 
         # [Options for 'dd':]

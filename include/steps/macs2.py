@@ -42,8 +42,11 @@ class Macs2(AbstractStep):
         self.add_connection('out/broadpeaks-xls')
         self.add_connection('out/gappedpeaks')
 
+        # Step was tested for macs2 release 2.1.1.20160309
         self.require_tool('macs2')
+        # Step was tested for mkdir (GNU coreutils) release 8.25
         self.require_tool('mkdir')
+        # Step was tested for mv (GNU coreutils) release 8.25
         self.require_tool('mv')
 
         # Options for MACS2 callpeak subcommand

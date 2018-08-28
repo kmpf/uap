@@ -36,10 +36,13 @@ class BwaBacktrack(AbstractStep):
         self.add_connection('in/second_read')
         self.add_connection('out/alignments')
 
-
+        # Step was tested for dd (coreutils) release 8.25
         self.require_tool('dd')
+        # Step was tested for mkfifo (GNU coreutils) release 8.25
         self.require_tool('mkfifo')
+        # Step was tested for pigz release 2.3.1
         self.require_tool('pigz')
+        # Step was tested for bwa release 0.7.15-r1140
         self.require_tool('bwa')
 
         # Options for the programs bwa aln/samse/sampe
