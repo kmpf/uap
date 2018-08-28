@@ -14,10 +14,15 @@ class RawUrlSource(AbstractSourceStep):
         self.add_connection('out/raw')
 
         self.require_tool('compare_secure_hashes')
+        # Step was tested for cp (GNU coreutils) release 8.25
         self.require_tool('cp')
+        # Step was tested for curl release 7.47.0
         self.require_tool('curl')
+        # Step was tested for dd (coreutils) release 8.25
         self.require_tool('dd')
+        # Step was tested for mkdir (GNU coreutils) release 8.25
         self.require_tool('mkdir')
+        # Step was tested for pigz release 2.3.1
         self.require_tool('pigz')
 
         self.add_option('filename', str, optional = True,
