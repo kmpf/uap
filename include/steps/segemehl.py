@@ -68,7 +68,7 @@ class Segemehl(AbstractStep):
                         description="Path to genome file")
         self.add_option('index', str, optional=False,
                         description="path/filename of db index (default:none)")
-        self.add_option('index2', str, optional=False,
+        self.add_option('index2', str, optional=True,
                         description="path/filename of second db index (default:none)")
         self.add_option('bisulfite', int, choices=[0, 1, 2], optional=True,
                         description="bisulfite mapping with methylC-seq/Lister "
@@ -187,6 +187,10 @@ class Segemehl(AbstractStep):
         else:
             self.set_cores(self.get_option('threads'))
 
+        if self.is_option_set_in_config('index2'):
+            option_list.append('--index2')
+            option_list.append(str(self.get_option('index2')))
+
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 # Get list of files for first/second read
@@ -218,8 +222,8 @@ class Segemehl(AbstractStep):
                             "The path %s provided to option 'index2' is not a file."
                             % self.get_option('index2') )
                         sys.exit(1)
-                    option_list.append('--index2')
-                    option_list.append(str(self.get_option('index2')))
+            #        option_list.append('--index2')
+            #        option_list.append(str(self.get_option('index2')))
 
                 if not os.path.isfile(self.get_option('genome')):
                     logger.error(
