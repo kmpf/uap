@@ -68,12 +68,15 @@ class Segemehl(AbstractStep):
                         description="Path to genome file")
         self.add_option('index', str, optional=False,
                         description="path/filename of db index (default:none)")
-        self.add_option('index2', str, optional=True,
+        self.add_option('index2', str, optional=False, default="none",
                         description="path/filename of second db index (default:none)")
         self.add_option('bisulfite', int, choices=[0, 1, 2], optional=True,
                         description="bisulfite mapping with methylC-seq/Lister "
                         "et al. (=1) or bs-seq/Cokus et al. protocol (=2) "
                         "(default:0)")
+        self.add_option('filebins', str, optional=True, default="none",
+                        description="file bins with basename <string> for easier data "
+                        "handling (default:none)")
         ## [GENERAL]
         self.add_option('minsize', int, optional=True,
                         description="minimum size of queries (default:12)")
@@ -161,7 +164,7 @@ class Segemehl(AbstractStep):
     # run_ids_connections_files - hash : run id -> n connections -> m files
     def runs(self, run_ids_connections_files):
         # Compile the list of options
-        options = ['bisulfite', 'minsize', 'silent', 'brief', 'differences',
+        options = ['bisulfite', 'filebins', 'minsize', 'silent', 'brief', 'differences',
                    'jump', 'evalue', 'maxsplitevalue', 'maxinterval', 'splits',
                    'SEGEMEHL', 'MEOP', 'nohead', 'extensionscore', 'threads',
                    'extensionpenalty', 'dropoff', 'accuracy', 'minsplicecover',
@@ -222,8 +225,8 @@ class Segemehl(AbstractStep):
                             "The path %s provided to option 'index2' is not a file."
                             % self.get_option('index2') )
                         sys.exit(1)
-            #        option_list.append('--index2')
-            #        option_list.append(str(self.get_option('index2')))
+#                    option_list.append('--index2')
+#                    option_list.append(str(self.get_option('index2')))
 
                 if not os.path.isfile(self.get_option('genome')):
                     logger.error(
@@ -260,13 +263,18 @@ class Segemehl(AbstractStep):
                                  'of=%s' % fifo_path_genome]
                     exec_group.add_command(dd_genome)
 
+                    unmapped_file = run.add_output_file('unmapped',
+                                                        '%s-segemehl-unmapped.fastq' %
+                                                        run_id,
+                                                        input_paths)
+
                     with exec_group.add_pipeline() as segemehl_pipe:
                         # 4. Start segemehl
                         segemehl = [
                             self.get_tool('segemehl'),
                             '--database', fifo_path_genome,
                             '--index', self.get_option('index'),
-                            '--nomatchfilename', fifo_path_unmapped,
+                            '--nomatchfilename', unmapped_file, #fifo_path_unmapped,
                             '--query', fr_input[0]
                         ]
                         if is_paired_end:
