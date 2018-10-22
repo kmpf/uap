@@ -1,2 +1,3 @@
+logger
 psutil
 pyyaml
