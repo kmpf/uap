@@ -292,7 +292,6 @@ class Hisat2(AbstractStep):
                                    '--met-file', met_outfile])
 
                     # main input options
-
                     hisat2.extend(['-x', self.get_option('ht2-idx')])
 
                     if is_paired_end:
