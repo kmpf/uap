@@ -119,7 +119,7 @@ class deepToolsMultiBamSummary(AbstractStep):
                         description='Save the counts per region to a '
                         'tab-delimited file. (default: False)')
         ## Read processing options:
-        self.add_option('extendReads', int, optional=True,
+        self.add_option('extendReads', bool, optional=True,
                         description='This parameter allows the extension of '
                         'reads to fragment size. If set, each read is '
                         'extended, without exception. *NOTE*: This feature is '
@@ -187,24 +187,25 @@ class deepToolsMultiBamSummary(AbstractStep):
         common_options = ['outRawCounts', 'extendReads', 'ignoreDuplicates',
                           'minMappingQuality', 'centerReads', 'samFlagInclude',
                           'samFlagExclude', 'minFragmentLength',
-                          'maxFragmentLength', 'region', 'blackListFileName']
+                          'maxFragmentLength', 'region']
         ## List of options for bin subcommand only
         bins_options = ['binSize', 'distanceBetweenBins']
         ## List of options for BED-file subcommand only
-        bed_file_options = ['metagene', 'transcriptID',
-                            'exonID', 'transcript_id_designator']
+        bed_file_options = ['metagene', 'transcriptID', 'exonID',
+                            'transcript_id_designator', 'blackListFileName']
 
         set_options = [option for option in common_options if \
                        self.is_option_set_in_config(option)]
-
+        
+        
         if self.is_option_set_in_config('bed-file'):
             subcommand = 'BED-file'
-            set_options = [option for option in bed_file_options if \
-                           self.is_option_set_in_config(option)]
+            set_options.extend( [option for option in bed_file_options if \
+                                 self.is_option_set_in_config(option)] )
         else:
             subcommand = 'bins'
-            set_options = [option for option in bins_options if \
-                           self.is_option_set_in_config(option)]
+            set_options.extend( [option for option in bins_options if \
+                                 self.is_option_set_in_config(option)] )
 
         option_list = list()
         for option in set_options:
@@ -214,7 +215,6 @@ class deepToolsMultiBamSummary(AbstractStep):
             else:
                 option_list.append( '--%s' % option )
                 option_list.append( str(self.get_option(option)) )
-
 
         for run_id in run_ids_connections_files.keys():
             # Collect input_paths and labels for multiBamSummary

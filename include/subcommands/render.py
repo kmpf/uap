@@ -131,17 +131,33 @@ def main(args):
 def render_graph_for_all_steps(p, args):
     configuration_path = p.get_config_filepath()
     if args.simple:
+        dot_file = configuration_path.replace('.yaml', '.simple.dot')
         svg_file = configuration_path.replace('.yaml', '.simple.svg')
         png_file = configuration_path.replace('.yaml', '.simple.png')        
     else:
+        dot_file = configuration_path.replace('.yaml', '.dot')
         svg_file = configuration_path.replace('.yaml', '.svg')
         png_file = configuration_path.replace('.yaml', '.png')
 
-    dot = subprocess.Popen(['dot', '-Tsvg'],
-                           stdin = subprocess.PIPE,
-                           stdout = subprocess.PIPE)
+    gv = create_dot_from_config(p, args)
+
+    run_dot(gv, dot_file, png_file, svg_file)
     
-    f = dot.stdin
+#    try:
+#        dot = subprocess.Popen(['dot', '-Tsvg', '-o%s' % ],
+#                               stdin = subprocess.PIPE,
+#                               stdout = subprocess.PIPE)
+#    
+#    
+#    #dot.stdin.close()
+#
+#    svg = dot.stdout.read()
+#    with open(svg_file, 'w') as f:
+#        f.write(svg)
+
+def create_dot_from_config(p, args):
+
+    f = StringIO.StringIO()
     
     f.write("digraph {\n")
     if args.orientation == "top-to-bottom":
@@ -246,13 +262,11 @@ def render_graph_for_all_steps(p, args):
                                     % (other_connection_key, connection_key))
 
     f.write("}\n")
-    
-    dot.stdin.close()
 
-    svg = dot.stdout.read()
-    with open(svg_file, 'w') as f:
-        f.write(svg)
-
+    gv = f.getvalue()
+    f.close()
+    return gv
+        
 def render_single_annotation(annotation_path, args):
     logger.info("Start rendering %s" % annotation_path)
     dot_file = annotation_path.replace('.yaml', '.dot')
@@ -271,8 +285,13 @@ def render_single_annotation(annotation_path, args):
     log = dict()
     with open(annotation_path, 'r') as f:
         log = yaml.load(f)
+
+    gv = create_dot_file_from_annotations([log], args)
+
+    run_dot(gv, dot_file, png_file, svg_file)
+
+def run_dot(gv, dot_file, png_file, svg_file):
     try:
-        gv = create_dot_file_from_annotations([log], args)
         with open(dot_file, 'w') as f:
             f.write(gv)
         
@@ -288,7 +307,6 @@ def render_single_annotation(annotation_path, args):
         import traceback
         traceback.print_tb(sys.exc_info()[2])
         pass
-
 
 def create_dot_file_from_annotations(logs, args):
     hash = {'nodes': {}, 'edges': {}, 'clusters': {}, 'graph_labels': {}}

@@ -86,7 +86,9 @@ class Pipeline(object):
         Absolute path to the directory of the uap executable.
         It is used to circumvent path issues.
         '''
-    
+
+        self._no_tool_checks = args.no_tool_checks
+        
         self._cluster_config_path = os.path.join(
             self._uap_path, 'cluster/cluster-specific-commands.yaml')
         with open(self._cluster_config_path, 'r') as cluster_config_file:
@@ -479,6 +481,8 @@ class Pipeline(object):
         and records their versions as determined by ``[tool] --version`` etc.
         '''
         if not 'tools' in self.config:
+            return
+        if self._no_tool_checks:
             return
         for tool_id, info in self.config['tools'].items():
             tool_check_info = dict()
