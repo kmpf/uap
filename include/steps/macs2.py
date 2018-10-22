@@ -52,7 +52,7 @@ class Macs2(AbstractStep):
                         description = "Defines the controls and correspondent "
                         "treatments in a YAML hash. Hash keys are the run IDs "
                         "of the control datasets and hash values are the run "
-                        "IDs of the treatment datasets.)
+                        "IDs of the treatment datasets.")
         self.add_option('format', str, default='AUTO',
                         choices=['AUTO', 'ELAND', 'ELANDMULTI', 'ELANDMULTIPET',
                                  'ELANDEXPORT', 'BED', 'BEDPE', 'SAM', 'BAM',
