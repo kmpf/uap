@@ -1,7 +1,7 @@
 import sys
 import os
 import glob
-from logger import getLogger
+from logging import getLogger
 from abstract_step import AbstractSourceStep
 
 logger = getLogger('uap_logger')

@@ -2,7 +2,7 @@ import sys
 import copy
 import csv
 import glob
-from logger import getLogger
+from logging import getLogger
 import os
 import re
 import yaml
