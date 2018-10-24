@@ -43,7 +43,8 @@ class CuffMerge(AbstractStep):
 
         # output dir (-o option) is fixed by out connection ?!
         self.add_option('run_id', str, optional=True,
-                        description='An arbitrary name of the new run (which is a merge of all samples).',
+                        description='An arbitrary name of the new '
+                        'run (which is a merge of all samples).',
                         default = 'magic')
         self.add_option('ref-gtf', str, optional=True,
                         description='A "reference" annotation GTF. The input assemblies are merged together with the reference GTF and included in the final output.')
@@ -78,6 +79,7 @@ class CuffMerge(AbstractStep):
 #        print '\n'.join(cufflinks_sample_gtf)
 
         run_id = self.get_option('run_id')
+#        run_id = 'magic'
         with self.declare_run(run_id) as run:
             
             # create the filename of the assemblies.txt file

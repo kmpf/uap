@@ -5,13 +5,19 @@ from abstract_step import AbstractStep
 
 logger=getLogger('uap_logger')
 
-class Segemehl(AbstractStep):
+class Segemehl2017(AbstractStep):
     '''
-    segemehl is a software to map short sequencer reads to reference genomes. 
+    segemehl_2017 is a software to map short sequencer reads to reference genomes. 
     Unlike other methods, segemehl is able to detect not only mismatches but 
     also insertions and deletions. Furthermore, segemehl is not limited to a 
     specific read length and is able to mapprimer- or polyadenylation 
     contaminated reads correctly.
+
+    This step is a wrapper for an unpublished version of segemehl that we re-
+    ceived from Steve Hoffmann on April, 24th 2017. 
+    It automatically generates the bed file containing the realigned split 
+    reads (split junctions). 
+    No need to run testrealign.x after segemehl anymore.
 
     This step creates at first two FIFOs. The first is used to provide the
     genome data for segemehl and the second is used for the output of the
@@ -34,7 +40,7 @@ class Segemehl(AbstractStep):
     '''
 
     def __init__(self, pipeline):
-        super(Segemehl, self).__init__(pipeline)
+        super(Segemehl2017, self).__init__(pipeline)
 
         self.set_cores(10) # set # of cores for cluster, it is ignored if run locally
 
@@ -45,6 +51,10 @@ class Segemehl(AbstractStep):
         self.add_connection('out/alignments')
         self.add_connection('out/unmapped')
         self.add_connection('out/log')
+        # segemehl writes information on split reads to these files (BED format)
+        self.add_connection('out/splits_sngl')
+        self.add_connection('out/splits_mult')
+        self.add_connection('out/splits_trns')
 
         # tools from tools section of YAML config file
         # -> logs version information
@@ -64,50 +74,73 @@ class Segemehl(AbstractStep):
 
         # Options to set segemehl flags
         ## [INPUT]
-        self.add_option('genome', str, optional=False,
-                        description="Path to genome file")
-        self.add_option('index', str, optional=False,
-                        description="Path to genome index for segemehl")
+        self.add_option('database', str, optional=False,
+                        description = "(Space separated list of ) filename(s) of database (e.g. genome) sequene(s)")
+#        self.add_option('genome', str, optional=False,
+#                        description="Path to genome file")
+        # query == input fastq files for R1
+        # mate == input fastq files for R2 (if paired end sequencing!)
+
+        self.add_option('index', str, optional=True, 
+                        description="Path to database index for segemehl (default:none)")
+        self.add_option('index2', str, optional=True, 
+                        description="Path to second database index for segemehl (default:none)")
+        self.add_option('filebins', str, optional=True, 
+                        description = "file bins with basename <string> for easier "
+                        "data handling (default:none)")
         self.add_option('bisulfite', int, choices=[0, 1, 2], optional=True,
                         description="bisulfite mapping with methylC-seq/Lister "
                         "et al. (=1) or bs-seq/Cokus et al. protocol (=2) "
                         "(default:0)")
         ## [GENERAL]
-        self.add_option('minsize', int, optional=True,
+        self.add_option('minsize', int, optional=True, 
                         description="minimum size of queries (default:12)")
-        self.add_option('silent', bool, default=True, optional=True,
-                        description="shut up!")
-        self.add_option('threads', int, default=10, optional=True,
-                        description="start <n> threads (default:10)")
-        self.add_option('brief', bool, default=False, optional=True,
-                        description="brief output")
+        # progressbar - we ommit this, since it will only generate larger log files
+        self.add_option('brief', bool, optional = True,
+                        description = "brief output")
+        self.add_option('checkidx', bool, optional = True,
+                        description = "check index")
+        self.add_option('briefcigar', bool, optional = True,
+                        description = "brief cigar string (M vs X and =)")
+        self.add_option('threads', int, default=1, optional=True,
+                        description="start <n> threads (default:1)")
+        # outfile => take care of that later!
+        # nomatchfilename
+        self.add_option('readgroupfile', str, optional=True,
+                        description = "filename to read @RG header (default:none)")
+        self.add_option('readgroupid', str, optional=True, 
+                        description = "read group id (default:none)")
+        
         ## [SEEDPARAMS]
-        self.add_option('differences', int, default=1, optional=True,
+        self.add_option('differences', int, optional=True,
                         description="search seeds initially with <n> "
                         "differences (default:1)")
-        self.add_option('jump', int, optional=True, description=
-                        "search seeds with jump size <n> (0=automatic) "
+        self.add_option('jump', int, optional=True, 
+                        description= "search seeds with jump size <n> (0=automatic) "
                         "(default:0)")
-        self.add_option('evalue', float, optional=True, description=
-                        "max evalue (default:5.000000)")
-        self.add_option('maxsplitevalue', float, optional=True, description=
-                        "max evalue for splits (default:50.000000)")
+        self.add_option('nosuflinks', bool, optional = True,
+                        description = "dont use suflinks (does not affect index construction, "
+                        "for short reads only, increases runtime!)")
+        self.add_option('evalue', float, optional=True, 
+                        description= "max evalue (default:5.000000)")
+        self.add_option('maxsplitevalue', float, optional=True, 
+                        description = "max evalue for splits (default:50.000000)")
         self.add_option('maxinterval', int, optional=True, description=
                         "maximum width of a suffix array interval, i.e. a query "
                         "seed will be omitted if it matches more than <n> times "
                         "(default:100)")
-        self.add_option('splits', bool, default=False, optional=True,
+        self.add_option('maxout', int, optional=True,
+                        description = "maximum number of alignments that will be reported. "
+                        "If set to zero, all alignments will be reported (default:0)")
+        self.add_option('splits', bool, default=None, optional=True,
                         description="detect split/spliced reads (default:none)")
-        self.add_option('SEGEMEHL', bool, optional=True, description=
-                        "output SEGEMEHL format (needs to be selected for brief)")
         self.add_option('MEOP', bool, optional=True, description=
                         "output MEOP field for easier variance calling in SAM "
                         "(XE:Z:)")
-        self.add_option('nohead', bool, optional=True, description=
-                        "do not output header")
+        self.add_option('nohead', bool, optional=True, 
+                        description = "do not output header")
+
         ## [SEEDEXTENSIONPARAMS]
-        self.add_option('extensionscore', int, optional=True, description=
-                        "score of a match during extension (default:2)")
         self.add_option('extensionpenalty', int, optional=True, description=
                         "penalty for a mismatch during extension (default:4)")
         self.add_option('dropoff', int, optional=True, description=
@@ -128,7 +161,7 @@ class Segemehl(AbstractStep):
                         "larger than next best spliced alignment "
                         "(default:1.000000)")
         self.add_option('hitstrategy', int, choices=[0, 1], optional=True,
-                        default=1, description="report only best scoring hits "
+                        description="report only best scoring hits "
                         "(=1) or all (=0) (default:1)")
         self.add_option('showalign', bool, optional=True, description=
                         "show alignments")
@@ -138,34 +171,36 @@ class Segemehl(AbstractStep):
                         "add 3' adapter (default:none)")
         self.add_option('clipacc', int, optional=True, description=
                         "clipping accuracy (default:70)")
-        self.add_option('polyA', bool, optional=True, description=
-                        "clip polyA tail")
-        self.add_option('autoclip', bool, optional=True, description=
-                        "autoclip unknown 3prime adapter")
-        self.add_option('hardclip', bool, optional=True, description=
-                        "enable hard clipping")
-        self.add_option('order', bool, optional=True, description=
-                        "sorts the output by chromsome and position (might take "
-                        "a while!)")
+        # ordering seems not to work if sm is writing to stdout (according to an error message of sm)
+#        self.add_option('order', bool, optional=True, description=
+#                        "sorts the output by chromsome and position (might take "
+#                        "a while!)")
         self.add_option('maxinsertsize', int, optional=True, description=
                         "maximum size of the inserts (paired end) "
                         "(default:5000)")
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "2M")
-        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
+        self.add_option('dd-blocksize', str, optional = True, default = "1M")
 
     # self - macht class-funktion draus.
     # run_ids_connections_files - hash : run id -> n connections -> m files
     def runs(self, run_ids_connections_files):
         # Compile the list of options
-        options = ['bisulfite', 'minsize', 'silent', 'brief', 'differences',
-                   'jump', 'evalue', 'maxsplitevalue', 'maxinterval', 'splits',
-                   'SEGEMEHL', 'MEOP', 'nohead', 'extensionscore', 'threads',
-                   'extensionpenalty', 'dropoff', 'accuracy', 'minsplicecover',
-                   'minfragscore', 'minfraglen', 'splicescorescale',
-                   'hitstrategy', 'showalign', 'prime5', 'prime3', 'clipacc',
-                   'polyA', 'autoclip', 'hardclip', 'order', 'maxinsertsize']
+        options = ['index', 'index2', 'filebins','bisulfite',
+                   'minsize','brief','checkidx','briefcigar','threads',
+                   'readgroupfile','readgroupid','differences','jump',
+                   'nosuflinks','evalue','maxsplitevalue','maxinterval',
+                   'maxout', 'MEOP','nohead','extensionpenalty',
+                   'dropoff','accuracy','minsplicecover','minfragscore','minfraglen',
+                   'splicescorescale','hitstrategy','showalign',
+                   'prime5','prime3','clipacc','maxinsertsize']#, 'order']
+#        options = ['bisulfite', 'minsize', 'brief', 'differences',
+#                   'jump', 'evalue', 'maxsplitevalue', 'maxinterval', 'splits',
+#                   'SEGEMEHL', 'MEOP', 'nohead', 'extensionscore',
+#                   'extensionpenalty', 'dropoff', 'accuracy', 'minsplicecover',
+#                   'minfragscore', 'minfraglen', 'splicescorescale',
+#                   'hitstrategy', 'showalign', 'prime5', 'prime3', 'clipacc',
+#                   'polyA', 'autoclip', 'hardclip', 'order', 'maxinsertsize']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -178,11 +213,8 @@ class Segemehl(AbstractStep):
             else:
                 option_list.append('--%s' % option)
                 option_list.append(str(self.get_option(option)))
-
-        if 'threads' not in set_options:
-            option_list.append('--threads')
-            option_list.append(str(self.get_cores()))
-        else:
+        
+        if self.get_option('threads'):
             self.set_cores(self.get_option('threads'))
 
         for run_id in run_ids_connections_files.keys():
@@ -209,11 +241,22 @@ class Segemehl(AbstractStep):
                         "The path %s provided to option 'index' is not a file."
                         % self.get_option('index') )
                     sys.exit(1)
+                    
+#                if self.is_option_set_in_config('splits'):
+#                    prefix = "%s_splits" % run_id
 
-                if not os.path.isfile(self.get_option('genome')):
+
+                if self.is_option_set_in_config('index2'):
+                    if not os.path.isfile(self.get_option('index2')):
+                        logger.error(
+                            "The path %s provided to option 'index2' is not a file."
+                            % self.get_option('index2') )
+                        sys.exit(1)
+
+                if not os.path.isfile(self.get_option('database')):
                     logger.error(
-                        "The path %s provided to option 'genome' is not a file."
-                        % self.get_option('genome'))
+                        "The path %s provided to option 'database' is not a file."
+                        % self.get_option('database'))
                     sys.exit(1)
                 # SEGEMEHL can cope with gzipped files so we do not need to!!!
                 #is_fr_gzipped = True if os.path.splitext(first_read_file[0])[1]\
@@ -241,30 +284,39 @@ class Segemehl(AbstractStep):
                     # 3. Read genome and output to FIFO
                     dd_genome = [self.get_tool('dd'),
                                  'bs=%s' % self.get_option('dd-blocksize'),
-                                 'if=%s' % self.get_option('genome'),
+                                 'if=%s' % self.get_option('database'),
                                  'of=%s' % fifo_path_genome]
                     exec_group.add_command(dd_genome)
                 
                     with exec_group.add_pipeline() as segemehl_pipe:
                         # 4. Start segemehl
+                        sm_stderr = run.add_output_file('log',
+                                                        '%s-segemehl-log.txt' % run_id,
+                                                        input_paths)
                         segemehl = [
                             self.get_tool('segemehl'),
                             '--database', fifo_path_genome,
-                            '--index', self.get_option('index'),
                             '--nomatchfilename', fifo_path_unmapped,
-                            '--threads', str(self.get_cores()),
                             '--query', fr_input[0]
                         ]
                         if is_paired_end:
                             segemehl.extend(['--mate', sr_input[0]])
+
+                        if self.is_option_set_in_config('splits'):
+                            outdir = run.get_output_directory_du_jour_placeholder()
+                            # this is the prefix for the segemehl cmd -S (splits files)
+                            prefixSM = '%s/%s_splits' % (outdir, run_id)
+                            # this is the prefix without directory for uap add output file
+                            prefix = '%s_splits' %  run_id
+                            segemehl.extend(['-S', prefixSM])
+                            run.add_output_file('splits_sngl', '%s.sngl.bed' % prefix, input_paths)
+                            run.add_output_file('splits_mult', '%s.mult.bed' % prefix, input_paths)
+                            run.add_output_file('splits_trns', '%s.trns.bed' % prefix, input_paths)
+
                         segemehl.extend(option_list)
-                        segemehl_pipe.add_command(
-                            segemehl,
-                            stderr_path = run.add_output_file(
-                                'log',
-                                '%s-segemehl-log.txt' % run_id,
-                                input_paths)
-                        )
+                        segemehl_pipe.add_command(segemehl,
+                                                  stderr_path = sm_stderr)
+                        
                         # 4.1 command: Fix QNAMES in input SAM, if need be
                         if self.get_option('fix-qnames'):
                             fix_qnames = [
@@ -277,7 +329,7 @@ class Segemehl(AbstractStep):
                         pigz_mapped_reads = [
                             self.get_tool('pigz'),
                             '--stdout',
-                            '--blocksize', self.get_option('pigz-blocksize'),
+                            '--blocksize', self.get_option('dd-blocksize'), 
                             '--processes', str(self.get_cores())
                         ]
 
@@ -308,7 +360,7 @@ class Segemehl(AbstractStep):
                         pigz_unmapped_reads = [
                             self.get_tool('pigz'),
                             '--stdout',
-                            '--blocksize', self.get_option('pigz-blocksize'),
+                            '--blocksize', self.get_option('dd-blocksize'),
                             '--processes', str(self.get_cores())
                         ]
                         compress_unmapped_pipe.add_command(

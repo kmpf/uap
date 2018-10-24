@@ -80,6 +80,11 @@ def main(args):
             if step.get_step_name() != step.get_step_type():
                 original_step_name_label = ' (%s)' % step.get_step_type()
 
+#            sys.stderr.write("step_name: %s\n" % step.get_step_name())
+#            sys.stderr.write("index: %d\n" % index)
+#            sys.stderr.write("still alive!\n")
+#            sys.stderr.write("run_info: %s\n" % step.get_run_info_str())
+
             line = "%s%s%s [%s]" % (''.join(_).replace("─└", "─┴"), step.get_step_name(), original_step_name_label, step.get_run_info_str())
             print(line)
     else:

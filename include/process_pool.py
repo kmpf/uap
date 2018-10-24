@@ -548,6 +548,7 @@ class ProcessPool(object):
                         sys.stderr.write("Warning: Couldn't load watcher report from %s." %
                               watcher_report_path)
                         sys.stderr.flush()
+                        raise
                         pass
                     # the process watcher has terminated, which is cool, I guess
                     # (if it's the last child process, anyway)

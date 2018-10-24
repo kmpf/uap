@@ -7,7 +7,7 @@ logger=getLogger('uap_logger')
 
 class MergeFastqFiles(AbstractStep):
     '''
-    This step merges all .fastq(.gz) files belonging to a certain sample.
+    This step concatenates all .fastq(.gz) files belonging to a certain sample.
     First and second read files are merged separately. The output files are
     gzipped.
     '''
@@ -15,23 +15,28 @@ class MergeFastqFiles(AbstractStep):
     def __init__(self, pipeline):
         super(MergeFastqFiles, self).__init__(pipeline)
         
-        self.set_cores(4) # muss auch in den Decorator
+        self.set_cores(4) 
         
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/first_read')
         self.add_connection('out/second_read')
-        
+
+        # Step was tested for cat (GNU coreutils) release 8.25
         self.require_tool('cat')
+        # Step was tested for dd (coreutils) release 8.25
         self.require_tool('dd')
+        # Step was tested for mkfifo (GNU coreutils) release 8.25
         self.require_tool('mkfifo')
+        # Step was tested for pigz release 2.3.1
         self.require_tool('pigz')
 
         #self.add_option('compress-output', bool, optional = True,
         #                default = True)
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        self.add_option('dd-blocksize', str, optional = True, default = "2M")
+        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
     def runs(self, run_ids_connections_files):
 
@@ -65,7 +70,7 @@ class MergeFastqFiles(AbstractStep):
                             # 2. Output files to fifo
                             if is_gzipped:
                                 with exec_group.add_pipeline() as unzip_pipe:
-                                    # 2.1 command: Read file in 4MB chunks
+                                    # 2.1 command: Read file in 'dd-blocksize' chunks
                                     dd_in = [
                                         self.get_tool('dd'),
                                         'ibs=%s' %
@@ -74,9 +79,11 @@ class MergeFastqFiles(AbstractStep):
                                     ]
                                     # 2.2 command: Uncompress file to fifo
                                     pigz = [self.get_tool('pigz'),
+                                            '--processes', str(self.get_cores()),
                                             '--decompress',
+                                            '--blocksize', self.get_option('pigz-blocksize'),
                                             '--stdout']
-                                    # 2.3 Write file in 4MB chunks to fifo
+                                    # 2.3 Write file in 'dd-blocksize' chunks to fifo
                                     dd_out = [
                                         self.get_tool('dd'),
                                         'obs=%s' %
@@ -89,8 +96,8 @@ class MergeFastqFiles(AbstractStep):
                                     unzip_pipe.add_command(dd_out)
                             elif os.path.splitext(input_path)[1] in\
                                  ['.fastq', '.fq']:
-                                # 2.1 command: Read file in 4MB chunks and
-                                #              write to fifo in 4MB chunks
+                                # 2.1 command: Read file in 'dd-blocksize' chunks and
+                                #              write to fifo in 'dd-blocksize' chunks
                                 dd_in = [
                                     self.get_tool('dd'),
                                     'bs=%s' %
@@ -115,10 +122,12 @@ class MergeFastqFiles(AbstractStep):
                             # 3.2 Gzip output file
                             #if self.get_option('compress-output'):
                             pigz = [self.get_tool('pigz'),
+                                    '--processes', str(self.get_cores()),
+                                    '--blocksize', self.get_option('pigz-blocksize'),
                                     '--stdout']
                             pigz_pipe.add_command(pigz)
 
-                            # 3.3 command: Write to output file in 4MB chunks
+                            # 3.3 command: Write to output file in 'dd-blocksize' chunks
                             stdout_path = run.add_output_file(
                                 "%s" % read,
                                 "%s%s.fastq.gz" %

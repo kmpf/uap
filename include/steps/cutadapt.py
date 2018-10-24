@@ -27,12 +27,17 @@ class Cutadapt(AbstractStep):
         self.add_connection('out/second_read')
         self.add_connection('out/log_first_read')
         self.add_connection('out/log_second_read')
-        
+
+        # Step was tested for cat (GNU coreutils) release 8.25
         self.require_tool('cat')
+        # Step was tested for cutadapt release 1.16
         self.require_tool('cutadapt')
+        # Step was tested for dd (coreutils) release 8.25
         self.require_tool('dd')
         self.require_tool('fix_qnames')
+        # Step was tested for mkfifo (GNU coreutils) release 8.25
         self.require_tool('mkfifo')
+        # Step was tested for pigz release 2.3.1
         self.require_tool('pigz')
 
         # Options for cutadapt
@@ -58,7 +63,8 @@ class Cutadapt(AbstractStep):
                         "kept. This might be necessary for downstream analysis.")
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        self.add_option('dd-blocksize', str, optional = True, default = "2M")
+        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
     def runs(self, run_ids_connections_files):
 
@@ -128,6 +134,8 @@ class Cutadapt(AbstractStep):
                                     # 2.2 command: Uncompress file to fifo
                                     pigz = [self.get_tool('pigz'),
                                             '--decompress',
+                                            '--processes', str(self.get_cores()),
+                                            '--blocksize', self.get_option('pigz-blocksize'),
                                             '--stdout']
                                     # 2.3 command: Write file in 4MB chunks to 
                                     #              fifo
@@ -221,9 +229,9 @@ class Cutadapt(AbstractStep):
                                     input_paths)
                             # 3.4 command: Compress output
                             pigz = [self.get_tool('pigz'),
-                                     '--blocksize', '4096',
-                                     '--processes', '1',
-                                     '--stdout']
+                                    '--processes', str(self.get_cores()),
+                                    '--blocksize', self.get_option('pigz-blocksize'),
+                                    '--stdout']
                             # 3.5 command: Write to output file in 4MB chunks
                             clipped_fastq_file = run.add_output_file(
                                 "%s" % read,

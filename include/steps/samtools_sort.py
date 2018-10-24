@@ -5,12 +5,13 @@ from abstract_step import AbstractStep
 
 logger=getLogger('uap_logger')
 
-class SamToSortedBam(AbstractStep):
+class SamtoolsSort(AbstractStep):
     '''
-    The step sam_to_sorted_bam builds on 'samtools sort' to sort SAM files and
-    output BAM files. 
+    The step samtools_sort builds on 'samtools sort' to sort SAM files and
+    output SAM/BAM/CRAM files. 
 
     Sort alignments by leftmost coordinates, or by read name when -n is used.
+    
     An appropriate @HD-SO sort order header tag will be added or an existing
     one updated if necessary.
 
@@ -20,28 +21,36 @@ class SamToSortedBam(AbstractStep):
     '''
 
     def __init__(self, pipeline):
-        super(SamToSortedBam, self).__init__(pipeline)
+        super(SamtoolsSort, self).__init__(pipeline)
         
-        self.set_cores(8)
+        self.set_cores(6)
         
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
-
-        # Step was tested for dd (coreutils) release 8.25
+        
         self.require_tool('dd')
-        # Step was tested for samtools release 1.3.1
         self.require_tool('samtools')
-        # Step was tested for pigz release 2.3.1
         self.require_tool('pigz')
 
-        self.add_option('sort-by-name', bool, default = False)
-        self.add_option('genome-faidx', str, optional = False)
+        # [Options for 'samtools':]
+        self.add_option('compression-level', int, optional = True, default = 0,
+                        description = 'Set compression level, from 0 (uncompressed) '
+                        'to 9 (best)')
+        self.add_option('max-mem-per-thread', str, optional = True, default = '768M',
+                        description = 'Set maximum memory per thread; '
+                        'suffix K/M/G recognized [768M]')
+        self.add_option('sort-by-name', bool, default = False, optional = True,
+                        description = '')
+        self.add_option('output-format', str, optional = False, default = 'sam',
+                        description = 'Write output as FORMAT (sam/bam/cram)')
+        self.add_option('genome-faidx', str, optional = False, 
+                        description = 'samtools index of the corresponding genome')
         self.add_option('temp-sort-dir', str, optional = False,
                         description = 'Intermediate sort files are stored into'
                         'this directory.')
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        self.add_option('dd-blocksize', str, optional = True, default = "4096k")
 
     def runs(self, run_ids_connections_files):
         
@@ -72,7 +81,7 @@ class SamToSortedBam(AbstractStep):
                     with run.new_exec_group() as exec_group:
 
                         with exec_group.add_pipeline() as pipe:
-                            # 1. command: Read file in 4MB chunks
+                            # 1. command: Read file in chunks
                             dd_in = [
                                 self.get_tool('dd'),
                                 'ibs=%s' % self.get_option('dd-blocksize'),
@@ -88,32 +97,36 @@ class SamToSortedBam(AbstractStep):
                                         '--stdout']
                                 pipe.add_command(pigz)
 
-                            # 2. command: Convert sam to bam
-                            samtools_view = [
-                                self.get_tool('samtools'), 'view',
-                                '-S', '-b', '-t',
-                                self.get_option('genome-faidx'), '-',
-                                '-@', '1'
-                            ]
-                            pipe.add_command(samtools_view)
-
-                            # 3. command: Sort BAM input
+                            # 2. sort the sam file
+                     
                             samtools_sort = [
                                 self.get_tool('samtools'), 'sort',
-                                '-O', 'bam'
+                                '-O', self.get_option('output-format')
                             ]
+
                             if self.get_option('sort-by-name'):
                                 samtools_sort.append('-n')
+
+                            if self.get_option('compression-level'):
+                                samtools_sort.extend(
+                                    ['-l', self.get_option('compression-level')]
+                                )
+
+                            if self.get_option('max-mem-per-thread'):
+                                samtools_sort.extend(
+                                    ['-m', self.get_option('max-mem-per-thread')]
+                                )
+
                             samtools_sort.extend(
-                                ['-T',
-                                 os.path.join(
+                                ['-T', os.path.join(
                                     self.get_option('temp-sort-dir'),
                                      run_id), 
                                  '-',
-                                 '-@', '6']
+                                 '-@', str(self.get_cores())]
                             )
-                            pipe.add_command(samtools_sort)
 
+                            pipe.add_command(samtools_sort)
+                           
                             # 4. command: dd
                             dd_out = [
                                 self.get_tool('dd'),
@@ -123,6 +136,6 @@ class SamToSortedBam(AbstractStep):
                                 dd_out,
                                 stdout_path = run.add_output_file(
                                     'alignments',
-                                    '%s.sorted.bam' % run_id,
+                                    '%s.sorted.%s' % (run_id, self.get_option('output-format')),
                                     input_paths)
                             )

@@ -16,7 +16,7 @@ uap -- Universal Analysis Pipeline
 Authors
 ============
 
-Christoph Kämpf, Michael Specht, Sven-Holger Puppel, Gero Doose, Kristin Reiche, Jana Hertel, Jörg Hackermüller
+Christoph Kämpf, Michael Specht, Sven-Holger Puppel, Gero Doose, Kristin Reiche, Jana Schor, Jörg Hackermüller
 
 
 Introduction

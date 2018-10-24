@@ -7,9 +7,10 @@ from abstract_step import AbstractStep
 logger=getLogger('uap_logger')
 
 class MergeFastaFiles(AbstractStep):
+
     '''
-    This step merges all .fasta(.gz) files belonging to a certain sample.
-    The output files are gzipped.
+    This step concatenates all .fasta(.gz) files that belong to a certain 
+    sample. 
     '''
     
     def __init__(self, pipeline):
@@ -25,16 +26,18 @@ class MergeFastaFiles(AbstractStep):
         self.require_tool('mkfifo')
         self.require_tool('pigz')
 
+        # [Options for the merging:]
         self.add_option('compress-output', bool, optional=True, default=True,
-                        description="If set to true output is gzipped.")
+                        description="Produce gzipped output.")
         self.add_option('merge-all-runs', bool, optional=True,
-                        default=False, description="If set to true sequences "
-                        "from all runs are merged")
+                        default=False, description="Merge sequences "
+                        "from all runs.")
         self.add_option('output-fasta-basename', str, optional=True, default="",
                         description="Name used as prefix for FASTA output.")
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        self.add_option('dd-blocksize', str, optional = True, default = "2M")
+        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
     def runs(self, run_ids_connections_files):
         '''
@@ -70,8 +73,6 @@ class MergeFastaFiles(AbstractStep):
                     exec_group = run.new_exec_group()
                     for input_path in input_paths:
                         # Gzipped files are unpacked first
-                        # !!! Might be worth a try to use fifos instead of
-                        #     temp files!!!
                         # 1. Create temporary fifo
                         temp_fifo = run.add_temporary_file(
                             "fifo-%s" %
@@ -83,7 +84,7 @@ class MergeFastaFiles(AbstractStep):
                         is_gzipped = True if os.path.splitext(input_path)[1]\
                                      in ['.gz', '.gzip'] else False
 
-                        # 2. Output files to fifo
+                        # 2. Unzip files to fifo
                         if is_gzipped:
                             with exec_group.add_pipeline() as unzip_pipe:
                                 # 2.1 command: Read file in 4MB chunks
@@ -97,6 +98,8 @@ class MergeFastaFiles(AbstractStep):
                                 # 2.2 command: Uncompress file to fifo
                                 pigz = [self.get_tool('pigz'),
                                         '--decompress',
+                                        '--processes', str(self.get_cores()),
+                                        '--blocksize', self.get_option('pigz-blocksize'),
                                         '--stdout']
                                 unzip_pipe.add_command(pigz)
 
@@ -110,8 +113,8 @@ class MergeFastaFiles(AbstractStep):
                         
                         elif os.path.splitext(input_path)[1] in\
                              ['.fastq', '.fq', '.fasta', '.fa', '.fna']:
-                            # 2.1 command: Read file in 4MB chunks and
-                            #              write to fifo in 4MB chunks
+                            # 2.1 command: Read file in 'dd-blocksize' chunks and
+                            #              write to fifo in 'dd-blocksize' chunks
                             dd_in = [
                                 self.get_tool('dd'),
                                 'bs=%s' % self.get_option('dd-blocksize'),
@@ -137,10 +140,12 @@ class MergeFastaFiles(AbstractStep):
                         if self.get_option('compress-output'):
                             out_file = "%s.fasta.gz" % fasta_basename
                             pigz = [self.get_tool('pigz'),
+                                    '--processes', str(self.get_cores()),
+                                    '--blocksize', self.get_option('pigz-blocksize'),
                                     '--stdout']
                             pigz_pipe.add_command(pigz)
 
-                        # 3.3 command: Write to output file in 4MB chunks
+                        # 3.3 command: Write to output file in 'dd-blocksize' chunks
                         stdout_path = run.add_output_file(
                             "sequence",
                             out_file,

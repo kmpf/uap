@@ -133,35 +133,27 @@ def render_graph_for_all_steps(p, args):
     if args.simple:
         dot_file = configuration_path.replace('.yaml', '.simple.dot')
         svg_file = configuration_path.replace('.yaml', '.simple.svg')
-        png_file = configuration_path.replace('.yaml', '.simple.png')        
+#        png_file = configuration_path.replace('.yaml', '.simple.png')
     else:
         dot_file = configuration_path.replace('.yaml', '.dot')
         svg_file = configuration_path.replace('.yaml', '.svg')
-        png_file = configuration_path.replace('.yaml', '.png')
+#        png_file = configuration_path.replace('.yaml', '.png')
 
-    gv = create_dot_from_config(p, args)
 
-    run_dot(gv, dot_file, png_file, svg_file)
-    
-#    try:
-#        dot = subprocess.Popen(['dot', '-Tsvg', '-o%s' % ],
-#                               stdin = subprocess.PIPE,
-#                               stdout = subprocess.PIPE)
-#    
-#    
-#    #dot.stdin.close()
-#
-#    svg = dot.stdout.read()
-#    with open(svg_file, 'w') as f:
-#        f.write(svg)
+#    if args.format == "svg":
+    dot = subprocess.Popen(['dot', '-Tsvg'],
+                           stdin = subprocess.PIPE,
+                           stdout = subprocess.PIPE)
+#    elif args.format == "png":
+#    dot = subprocess.Popen(['dot', '-Tpng'],
+#                           stdin = subprocess.PIPE,
+#                           stdout = subprocess.PIPE)
 
-def create_dot_from_config(p, args):
+    f = dot.stdin
 
-    f = StringIO.StringIO()
-    
     f.write("digraph {\n")
     if args.orientation == "top-to-bottom":
-        f.write("  rankdir = TB;\n")        
+        f.write("  rankdir = TB;\n")
     elif args.orientation == "left-to-right":
         f.write("  rankdir = LR;\n")
     elif args.orientation == "right-to-left":
@@ -179,7 +171,7 @@ def create_dot_from_config(p, args):
                 finished_runs += 1
 
         f.write("subgraph cluster_%s {\n" % step_name)
-        
+
         label = step_name
         if step_name != step.__module__:
             label = "%s\\n(%s)" % (step_name, step.__module__)
@@ -205,21 +197,21 @@ def create_dot_from_config(p, args):
                     f.write("    %s -> %s;\n" % (connection_key, step_name))
                 else:
                     f.write("    %s -> %s;\n" % (step_name, connection_key))
-                
+
         f.write("  graph[style=dashed];\n")
         f.write("}\n")
-            
+
     for step_name, step in p.steps.items():
         for other_step in step.dependencies:
             if args.simple:
                 f.write("    %s -> %s;\n"
                         % (other_step.get_step_name(), step_name))
             else:
-            
+
                 for in_key in step._connections:
                     if in_key[0:3] != 'in/':
                         continue
-                
+
                     out_key = in_key.replace('in/', 'out/')
                     allowed_steps = None
                     if '_connect' in step.get_options():
@@ -246,7 +238,7 @@ def create_dot_from_config(p, args):
                             else:
                                 raise StandardError("Invalid _connect value: %s"
                                                     % yaml.dump(declaration))
-                        
+
                     for real_outkey in other_step._connections:
                         if real_outkey[0:4] != 'out/':
                             continue
@@ -263,6 +255,12 @@ def create_dot_from_config(p, args):
 
     f.write("}\n")
 
+    dot.stdin.close()
+
+    svg = dot.stdout.read()
+    with open(svg_file, 'w') as f:
+        f.write(svg)
+
     gv = f.getvalue()
     f.close()
     return gv
@@ -271,16 +269,18 @@ def render_single_annotation(annotation_path, args):
     logger.info("Start rendering %s" % annotation_path)
     dot_file = annotation_path.replace('.yaml', '.dot')
     # Replace leading dot to make graphs easier to find
+#    if args.format == "svg":
     (head, tail) = os.path.split(annotation_path.replace('.yaml', '.svg'))
     logger.debug("Path: %s, SVG: %s" % (head, tail))
     tail = ''.join([tail[0].replace('.', ''), tail[1:]])
     svg_file= os.path.join(head, tail)
-    (head, tail) = os.path.split(annotation_path.replace('.yaml', '.png'))
-    logger.debug("Path: %s, PNG: %s" % (head, tail))
-    tail = ''.join([tail[0].replace('.', ''), tail[1:]])
-    png_file = os.path.join(head, tail)
     logger.debug("SVG file: %s" % svg_file)
-    logger.debug("PNG file: %s" % png_file)
+#    elif args.format == "png":
+#    (head, tail) = os.path.split(annotation_path.replace('.yaml', '.png'))
+#    logger.debug("Path: %s, PNG: %s" % (head, tail))
+#    tail = ''.join([tail[0].replace('.', ''), tail[1:]])
+#    png_file = os.path.join(head, tail)
+#    logger.debug("PNG file: %s" % png_file)
 
     log = dict()
     with open(annotation_path, 'r') as f:
@@ -294,14 +294,15 @@ def run_dot(gv, dot_file, png_file, svg_file):
     try:
         with open(dot_file, 'w') as f:
             f.write(gv)
-        
+
+#        if args.format == "svg":
         dot = subprocess.Popen(['dot', '-Tsvg', '-o%s' % svg_file, dot_file],
                                stdin = subprocess.PIPE,
                                stdout = subprocess.PIPE)
-            
-        dot = subprocess.Popen(['dot', '-Tpng', '-o%s' % png_file, dot_file],
-                               stdin = subprocess.PIPE,
-                               stdout = subprocess.PIPE)
+#        elif args.format == "png":
+#        dot = subprocess.Popen(['dot', '-Tpng', '-o%s' % png_file, dot_file],
+#                               stdin = subprocess.PIPE,
+#                               stdout = subprocess.PIPE)
     except:
         print(sys.exc_info())
         import traceback
