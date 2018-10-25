@@ -26,8 +26,8 @@ before_install:
 
 install:
     - ./bootstrap.sh
-    - mkdir -p travis_example/output_data
+    - mkdir -p example-configurations/travis-example/output_data
 
 script:
-    - cd travis_example/
-    - ./../uap travis_uap_config.yaml status
+    - cd example-configurations/travis-example/
+    - ./../../uap travis_uap_config.yaml status
