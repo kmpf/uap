@@ -141,19 +141,6 @@ def main():
     fix_problems_parser.set_defaults(func=fix_problems.main)
     
     '''
-    The argument parser for 'inspect_output.py' is created here."
-    '''
-    
-    inspect_output_parser = subparsers.add_parser(
-        "inspect-output",
-        help="Fixes problematic states by removing stall files.",
-        description="",
-        formatter_class=argparse.RawTextHelpFormatter,
-        parents=[common_parser])
-        
-    inspect_output_parser.set_defaults(func=inspect_output.main)
-    
-    '''
     The argument parser for 'render.py' is created here."
     '''
     
