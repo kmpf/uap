@@ -26,6 +26,7 @@ before_install:
 
 install:
     - ./bootstrap.sh
+    - mkdir -p travis_example/output_data
 
 script:
     - cd travis_example/
