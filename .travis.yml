@@ -15,10 +15,10 @@ matrix:
       dist: trusty
       python: '3.4'
       env: PAGER=/bin/cat
-    - os: linux
-      dist: trusty
-      python: '3.5'
-      env: PAGER=/bin/cat
+#    - os: linux
+#      dist: trusty
+#      python: '3.5'
+#      env: PAGER=/bin/cat
 
 before_install:
     - sudo apt-get update -qq
