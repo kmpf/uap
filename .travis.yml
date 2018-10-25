@@ -22,7 +22,7 @@ matrix:
 
 before_install:
     - sudo apt-get update -qq
-    - sudo apt-get install -qq pigz
+    - sudo apt-get install -qq pigz graphviz
 
 install:
     - ./bootstrap.sh
