@@ -31,3 +31,7 @@ install:
 script:
     - cd example-configurations/travis-example/
     - ./../../uap travis_uap_config.yaml status
+    - ./../../uap travis_uap_config.yaml render
+    - ./../../uap travis_uap_config.yaml steps
+    - ./../../uap travis_uap_config.yaml run-info
+    - ./../../uap travis_uap_config.yaml volatilize
