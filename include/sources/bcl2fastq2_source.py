@@ -94,7 +94,7 @@ class Bcl2Fastq2Source(AbstractSourceStep):
                         description='Turn off BGZF compression for FASTQ files')
         self.add_option('fastq-compression-level', int, optional=True,
                         description='Zlib compression level (1-9) used for FASTQ files (=4)')
-        self.add_option('barcode-mismatches', bool, optional=True,
+        self.add_option('barcode-mismatches', str, optional=True,
                         description='number of allowed mismatches per index multiple '
                         'entries, comma delimited entries, allowed; each entry is '
                         'applied to the corresponding index;last entry applies to all '

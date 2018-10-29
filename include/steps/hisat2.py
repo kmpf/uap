@@ -292,10 +292,13 @@ class Hisat2(AbstractStep):
                                    '--met-file', met_outfile])
 
                     # main input options
-                    hisat2.extend(['-x', self.get_option('ht2-idx'),
-                                   '-1', fr_input[0]])
+                    hisat2.extend(['-x', self.get_option('ht2-idx')])
+
                     if is_paired_end:
-                        hisat2.extend(['-2', sr_input[0]])
+                        hisat2.extend(['-1', fr_input[0],
+                                       '-2', sr_input[0]])
+                    else:
+                        hisat2.extend(['-U', fr_input[0]])
 
                     # main output options
                     sam_outfile = run.add_output_file('alignments',
