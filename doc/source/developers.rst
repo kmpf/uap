@@ -9,21 +9,25 @@
   This document describe different issues concerning the development of **uap**.
 
 
-*************
-Documentation
-*************
+******************************
+Information for uap Developers
+******************************
+
+Documanetation
+==============
+
 
 The official documentation is hosted on readthedocs (add link). But as
 developer you need to be able to create the documentation locally. So let's
 focus at first on:
 
 Creating the Documentation Locally
-==================================
+----------------------------------
 
 
 
 Prerequisites
--------------
+~~~~~~~~~~~~~
 
 Before the documentation can be build, we need to install some packages and
 libraries.
@@ -42,8 +46,8 @@ It also requires the readthedocs theme installed (for Ubuntu)::
   $ sudo aptitude install python-sphinx-rtd-theme sphinx-rtd-theme-common
 
 
-
 Build Documentation
+~~~~~~~~~~~~~~~~~~~
 
 The documentation can be build by::
 
