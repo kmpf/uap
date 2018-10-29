@@ -113,11 +113,11 @@ class Cutadapt(AbstractStep):
                         "discarded. In colorspace, an initial primer is not counted "
                         "(default: no limit).")
         self.add_option("no-trim", bool, default=False, optional=True,
-                        description="Match and redirect reads to output/untrimmed-output as
-                        usual, but don't remove the adapters. (Default: False)")
+                        description="Match and redirect reads to output/untrimmed-output as"
+                        "usual, but don't remove the adapters. (Default: False)")
         self.add_option("mask-adapter", bool, default=False, optional=True,
-                        description="Mask with 'N' adapter bases instead of trim (default:
-                        False)")
+                        description="Mask with 'N' adapter bases instead of trim (default:"
+                        "False)")
 
         # 3. cutadapt Options that influence what gets output to where:
         # options: [--quiet, --output, --paired-output, --info-file, --rest-file,
