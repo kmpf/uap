@@ -53,7 +53,7 @@ steps:
 
     GSM1267958_captured_transcripts_noERCC_download (raw_url_source):
         url: ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1267nnn/GSM1267958/suppl/GSM1267958_captured_transcripts_noERCC.gtf.gz
-        path: example-out/2014-Mercer_et_al_download
+        path: example-out/2014-Mercer_et_al_download-full
         uncompress: yes
 
 ################################################################################

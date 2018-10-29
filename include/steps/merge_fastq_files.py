@@ -21,10 +21,14 @@ class MergeFastqFiles(AbstractStep):
         self.add_connection('in/second_read')
         self.add_connection('out/first_read')
         self.add_connection('out/second_read')
-        
+
+        # Step was tested for cat (GNU coreutils) release 8.25
         self.require_tool('cat')
+        # Step was tested for dd (coreutils) release 8.25
         self.require_tool('dd')
+        # Step was tested for mkfifo (GNU coreutils) release 8.25
         self.require_tool('mkfifo')
+        # Step was tested for pigz release 2.3.1
         self.require_tool('pigz')
 
         #self.add_option('compress-output', bool, optional = True,

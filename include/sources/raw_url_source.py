@@ -14,10 +14,15 @@ class RawUrlSource(AbstractSourceStep):
         self.add_connection('out/raw')
 
         self.require_tool('compare_secure_hashes')
+        # Step was tested for cp (GNU coreutils) release 8.25
         self.require_tool('cp')
+        # Step was tested for curl release 7.47.0
         self.require_tool('curl')
+        # Step was tested for dd (coreutils) release 8.25
         self.require_tool('dd')
+        # Step was tested for mkdir (GNU coreutils) release 8.25
         self.require_tool('mkdir')
+        # Step was tested for pigz release 2.3.1
         self.require_tool('pigz')
 
         self.add_option('filename', str, optional = True,
@@ -34,6 +39,9 @@ class RawUrlSource(AbstractSourceStep):
                         description = 'File is uncompressed after download')
         self.add_option('url', str, optional = False,
                         description = "Download URL")
+
+        # Options for dd
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
         
     def runs(self, run_ids_connections_files):
         # Get file name of downloaded file
@@ -44,8 +52,9 @@ class RawUrlSource(AbstractSourceStep):
         root, ext = os.path.splitext(url_filename)
         is_gzipped = True if ext in ['.gz', '.gzip'] else False
         if not is_gzipped and self.get_option('uncompress'):
-            raise StandardError("Uncompression of non-gzipped file %s requested."
-                                % url_filename)
+            logger.error("Uncompression of non-gzipped file %s requested."
+                         % url_filename)
+            sys.exit(1)
 
         # Handle the filename to have the proper ending
         filename = root if self.get_option('uncompress') and is_gzipped \
@@ -58,8 +67,9 @@ class RawUrlSource(AbstractSourceStep):
 
             if is_gzipped and self.get_option('uncompress') and \
                ext in ['.gz', '.gzip']:
-                raise StandardError("The filename %s should NOT end on '.gz' or "
-                                    "'.gzip'." % conf_filename)
+                logger.error("The filename %s should NOT end on '.gz' or "
+                             "'.gzip'." % conf_filename)
+                sys.exit(1)
             filename = conf_filename
 
         # Get directory to move downloaded file to
@@ -72,8 +82,9 @@ class RawUrlSource(AbstractSourceStep):
             if os.path.exists(path):
                 # Fail if it is not a directory
                 if not os.path.isdir(path):
-                    raise StandardError(
+                    logger.error(
                         "Path %s already exists but is not a directory" % path)
+                    sys.exit(1)
             else:
                 # Create the directory
                 with run.new_exec_group() as mkdir_exec_group:
@@ -87,7 +98,7 @@ class RawUrlSource(AbstractSourceStep):
                 curl = [self.get_tool('curl'),
                         '--output', temp_filename,
                         self.get_option('url')]
-                curl_exec_group.add_command(curl)#, stdout_path = temp_filename)
+                curl_exec_group.add_command(curl)
             
             if self.is_option_set_in_config('hashing-algorithm') and \
                self.is_option_set_in_config('secure-hash'):
@@ -111,7 +122,7 @@ class RawUrlSource(AbstractSourceStep):
                                 '--processes', '1',
                                 temp_filename]
                         dd_out = [self.get_tool('dd'),
-                                  'bs=4M',
+                                  'bs=%s' % self.get_option('dd-blocksize'),
                                   'of=%s' % out_file]
                         pipe.add_command(pigz)
                         pipe.add_command(dd_out)

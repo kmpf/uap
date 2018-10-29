@@ -151,7 +151,7 @@ class CuffLinks(AbstractStep):
                         'fragments, including those not compatible with any '
                         'reference transcript, towards the number of mapped '
                         'hits used in the FPKM denominator. This option can be '
-                        'combined with -N/–upper-quartile-norm. Default: TRUE')
+                        'combined with -N/-upper-quartile-norm. Default: TRUE')
         self.add_option('num-frag-count-draws', int, optional = True,
                         description = 'Number of fragment generation samples. '
                         'Default: 100')
