@@ -13,14 +13,15 @@ class Cutadapt(AbstractStep):
 
     https://cutadapt.readthedocs.org/en/stable/
 
+    This step wraps release: cutadpat 1.5
 
     '''
-    
+
     def __init__(self, pipeline):
         super(Cutadapt, self).__init__(pipeline)
-        
+
         self.set_cores(4)
-        
+
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/first_read')
@@ -41,45 +42,186 @@ class Cutadapt(AbstractStep):
         self.require_tool('pigz')
 
         # Options for cutadapt
-        self.add_option('adapter-type', str, optional = True, default='-a',
+        # 1. cutadapt Options that influence how the adapters are found:
+        self.add_option("adapter-type", str, optional = True, default='-a',
                         choices=['-a', '-g', '-b'],
-                        description="a: 3' adapter, b: 3' or 5' adapter, g: 5' adapter")
-        self.add_option('adapter-R1', str, optional = True,
+                        description="The type of the adapter that has been used "
+                        "for sequencing. a: adapter ligated to the 3' end; "
+                        "b: adapter ligated to the 3' or 5' end (If the adapter "
+                        "is found within the read or overlapping the 3' end of "
+                        "the read, the behavior is the same as for the -a value. "
+                        "If the adapter overlaps the 5' end (beginning of the read), "
+                        "the initial portion of the read matching the adapter is "
+                        "trimmed, but anything that follows is kept.); g: adapter "
+                        "ligated to the 5' end (If the adapter sequence starts with "
+                        "the character '^',  the adapter is 'anchored'. An anchored "
+                        "adapter must appear in its entirety at the 5' end of the "
+                        "read (it is a prefix of the read). A non-anchored adapter "
+                        "may appear partially at the 5' end, or it may occur within "
+                        "the read. If it is found within a read, the sequence "
+                        "preceding the adapter is also trimmed. In all cases, the "
+                        "adapter itself is trimmed).")
+        self.add_option("adapter-R1", str, optional = True,
                         description="Adapter sequence to be clipped off of the"
                         "first read.")
-        self.add_option('adapter-R2', str, optional = True,
+        self.add_option("adapter-R2", str, optional = True,
                         description="Adapter sequence to be clipped off of the"
                         "second read")
-        self.add_option('adapter-file', str, optional = True,
+        self.add_option("adapter-file", str, optional = True,
                         description="File containing adapter sequences to be "
                         "clipped off of the reads.")
-        self.add_option('use_reverse_complement', bool, default = False,
+        self.add_option("use_reverse_complement", bool, default = False,
                         description="The reverse complement of adapter "
                         "sequences 'adapter-R1' and 'adapter-R2' are used for "
                         "adapter clipping.")
+        self.add_option("error-rate", float, default=0.1, optional=True,
+                        description="Maximum allowed error rate (no. of errors divided "
+                        "by the length of the matching region) (default: 0.1)")
+        self.add_option("no-indels", bool, default=False, optional=True,
+                        description="Do not allow indels in the alignments, that is, "
+                        "allow only mismatches. This option is currently only "
+                        "supported for anchored 5' adapters (adapter-type: \"-g\" and "
+                        "adapter-R[1|2]: \"^ADAPTER\") (default: both mismatches and "
+                        "indels are allowed)")
+        self.add_option("times", int, default=1, optional=True,
+                        description="Try to remove adapters at most COUNT times. "
+                        "Useful when an adapter gets appended multiple times (default: 1).")
+        self.add_option("overlap", int, default=3, optional=True,
+                        description="Minimum overlap length. If the overlap between the "
+                        "read and the adapter is shorter than LENGTH, the read is not "
+                        "modified. This reduces the no. of bases trimmed purely due to "
+                        "short random adapter matches (default: 3).")
+        self.add_option("match-read-wildcards", bool, default=False, optional=True,
+                        description="Allow 'N's in the read as matches to the adapter "
+                        "(default: False).")
+
+        # 2. cutadapt Options for filtering of processed reads:
+        self.add_option("discard-trimmed", bool, default=False, optional=True,
+                        description="Discard reads that contain the adapter instead of "
+                        "trimming them. Also use -O in order to avoid throwing away too "
+                        "many randomly matching reads!")
+        self.add_option("discard-untrimmed", bool, default=False, optional=True,
+                        description="Discard reads that do not contain the adapter.")
+        self.add_option("minimum-length", int, default=0, optional=True,
+                        description="Discard trimmed reads that are shorter than LENGTH. "
+                        "Reads that are too short even before adapter removal are also "
+                        "discarded. In colorspace, an initial primer is not counted "
+                        "(default: 0).")
+        self.add_option("maximum-length", int, optional=True,
+                        description="Discard trimmed reads that are longer than LENGTH. "
+                        "Reads that are too long even before adapter removal are also "
+                        "discarded. In colorspace, an initial primer is not counted "
+                        "(default: no limit).")
+        self.add_option("no-trim", bool, default=False, optional=True,
+                        description="Match and redirect reads to output/untrimmed-output as
+                        usual, but don't remove the adapters. (Default: False)")
+        self.add_option("mask-adapter", bool, default=False, optional=True,
+                        description="Mask with 'N' adapter bases instead of trim (default:
+                        False)")
+
+        # 3. cutadapt Options that influence what gets output to where:
+        # options: [--quiet, --output, --paired-output, --info-file, --rest-file,
+        #           --wildcard-file, --too-short-output, --too-long-output,
+        #           --untrimmed-output, --untrimmed-paired-output]
+        # are handled by uap and not accessible to the user
+
+        # 4. cutadapt Additional modifications to the reads:
+        self.add_option("cut", int, default=0, optional=True,
+                        description="Remove bases from the beginning or end of each read. "
+                        "If LENGTH is positive, the bases are removed from the beginning "
+                        "of each read. If LENGTH is negative, the bases are removed from "
+                        "the end of each read.")
+        self.add_option("quality-cutoff", int, default=0, optional=True,
+                        description="Trim low-quality ends from reads before adapter "
+                        "removal. The algorithm is the same as the one used by  BWA "
+                        "(Subtract CUTOFF from all qualities; compute partial sums from "
+                        "all indices to the end of the sequence; cut sequence at the index "
+                        "at which the sum is minimal) (default: 0)")
+        self.add_option("quality-base", int, default=33, optional=True, choices = [33,64],
+                        description="Assume that quality values are encoded as ascii "
+                        "(quality + QUALITY_BASE). The default (33) is usually correct, "
+                        "except for reads produced by some versions of the Illumina "
+                        "pipeline, where this should be set to 64. (Default: 33)")
+        self.add_option("prefix", str, default="", optional=True,
+                        description="Add this prefix to read names")
+        self.add_option("suffix", str, default="", optional=True,
+                        description="Add this suffix to read names")
+        self.add_option("strip-suffix", str, default="", optional=True,
+                        description="Remove this suffix from read names if present. "
+                        "Can be given multiple times.")
+        self.add_option("colospace", bool, default=False, optional=True,
+                        description="Colorspace mode: Also trim the color that is "
+                        "adjacent to the found adapter.")
+        self.add_option("double-encode", bool, default=False, optional=True,
+                        description="When in color space, double-encode colors (map "
+                        "0,1,2,3,4 to A,C,G,T,N).")
+        self.add_option("trim-primer", bool, default=False, optional=True,
+                        description="When in color space, trim primer base and the first "
+                        "color (which is the transition to the first nucleotide)")
+        self.add_option("strip-f3", bool, default=False, optional=True,
+                        description="For color space: Strip the _F3 suffix of read names")
+        self.add_option("maq", bool, default=False, optional=True,
+                        description="MAQ-compatible color space output. This enables "
+                        "colorspace, double-encode, trim-primer, strip-f3 and suffix:'/1'.")
+        self.add_option("bwa", bool, default=False, optional=True,
+                        description="BWA-compatible color space output. This enables "
+                        "colorspace, double-encode, trim-primer, strip-f3 and suffix:'/1'.")
+        self.add_option("length-tag", str, optional=True,
+                        description="Search for TAG followed by a decimal number in the "
+                        "name of the read (description/comment field of the FASTA or "
+                        "FASTQ file). Replace the decimal number with the correct length "
+                        "of the trimmed read. For example, use --length-tag 'length=' to "
+                        "correct fields like 'length=123'.")
+        self.add_option("no-zero-cap", bool, default=False, optional=True,
+                        description="Do not change negative quality values to zero. "
+                        "Colorspace quality values of -1 would appear as spaces in the "
+                        "output FASTQ file. Since many tools have problems with that, "
+                        "negative qualities are converted to zero when trimming colorspace "
+                        "data. Use this option to keep negative qualities.")
+        self.add_option("zero-cap", bool, default=True, optional=True,
+                        description="Change negative quality values to zero. This is "
+                        "enabled by default when -c/--colorspace is also enabled. Use "
+                        "the above option to disable it.")
+
+        # 5. other non-cutadapt options
         self.add_option('fix_qnames', bool, default = False,
                         description="If set to true, only the leftmost string "
                         "without spaces of the QNAME field of the FASTQ data is "
                         "kept. This might be necessary for downstream analysis.")
 
-        # [Options for 'dd':]
         self.add_option('dd-blocksize', str, optional = True, default = "2M")
         self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
     def runs(self, run_ids_connections_files):
 
-        ## Make sure the adapter type is one of -a, -b or -g 
-        if self.is_option_set_in_config('adapter-type'):
-            if not self.get_option('adapter-type') in set(['-a','-b','-g']):
-                logger.error("Option 'adapter-type' must be either '-a', "
-                             "'-b', or '-g'!")
-                sys.exit(1)
-
         read_types = {'first_read': 'R1', 'second_read': 'R2'}
+
         paired_end_info = dict()
+
+        options = ["error-rate", "no-indels", "times",
+                   "overlap", "match-read-wildcards", "discard-trimmed",
+                   "discard-untrimmed", "minimum-length", "maximum-length",
+                   "no-trim", "mask-adapter", "cut", "quality-cutoff", "quality-base",
+                   "prefix", "suffix", "strip-suffix", "colospace", "double-encode",
+                   "trim-primer", "strip-f3", "maq", "bwa", "length-tag", "no-zero-cap",
+                   "zero-cap"]
+
+        set_options = [option for option in options if \
+                       self.is_option_set_in_config(option)]
+
+        option_list = list()
+        for option in set_options:
+            if isinstance(self.get_option(option), bool):
+                if self.get_option(option):
+                    option_list.append('--%s' % option)
+            else:
+                option_list.append('--%s' % option)
+                option_list.append(str(self.get_option(option)))
+
+
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
-                for read in read_types:                
+                for read in read_types:
                     connection = 'in/%s' % read
                     input_paths = run_ids_connections_files[run_id][connection]
                     if input_paths == [None]:
@@ -87,18 +229,18 @@ class Cutadapt(AbstractStep):
                         run.add_empty_output_connection("log_%s" % read)
                     else:
                         # make sure that adapter-R1/adapter-R2 or adapter-file are
-                        # correctly set 
-                        # this kind of mutual exclusive option checking is a bit 
+                        # correctly set
+                        # this kind of mutual exclusive option checking is a bit
                         # tedious, so we do it here.
                         if read == 'second_read':
-                            if ( not self.is_option_set_in_config('adapter-R2') and 
+                            if ( not self.is_option_set_in_config('adapter-R2') and
                                  not self.is_option_set_in_config('adapter-file') ):
                                 logger.error(
                                     "Option 'adapter-R2' or 'adapter-file' "
                                     "required because sample %s is paired end!"
                                     % run_id)
                                 sys.exit(1)
-                                
+
                         if ( self.is_option_set_in_config('adapter-file') and
                              self.is_option_set_in_config('adapter-R1') ):
                             logger.error(
@@ -137,7 +279,7 @@ class Cutadapt(AbstractStep):
                                             '--processes', str(self.get_cores()),
                                             '--blocksize', self.get_option('pigz-blocksize'),
                                             '--stdout']
-                                    # 2.3 command: Write file in 4MB chunks to 
+                                    # 2.3 command: Write file in 4MB chunks to
                                     #              fifo
                                     dd_out = [
                                         self.get_tool('dd'),
@@ -171,34 +313,35 @@ class Cutadapt(AbstractStep):
                             cat = [self.get_tool('cat')]
                             cat.extend(temp_fifos)
                             cutadapt_pipe.add_command(cat)
+
                             # 3.2 command: Fix qnames if user wants us to
                             if self.get_option('fix_qnames') == True:
                                 fix_qnames = [self.get_tool('fix_qnames')]
                                 cutadapt_pipe.add_command(fix_qnames)
 
                             # Let's get the correct adapter sequences or
-                            # adapter sequence fasta file 
+                            # adapter sequence fasta file
                             adapter = None
                             # Do we have adapter sequences as input?
                             if self.is_option_set_in_config('adapter-%s' \
                                                             % read_types[read]):
-                                # Get adapter sequence 
+                                # Get adapter sequence
                                 adapter = self.get_option(
                                     'adapter-%s' % read_types[read])
-                            
+
                                 # add index to adapter sequence if necessary
                                 if '((INDEX))' in adapter:
                                     index = self.find_upstream_info_for_input_paths(
                                         input_paths,
                                         'index-%s' % read_types[read])
                                     adapter = adapter.replace('((INDEX))', index)
-                            
+
                                 # create reverse complement if necessary
                                 if self.get_option('use_reverse_complement'):
                                     complements = string.maketrans('acgtACGT',
                                                                    'tgcaTGCA')
                                     adapter = adapter.translate(complements)[::-1]
-                                
+
                                 # make sure the adapter is looking good
                                 if re.search('^[ACGT]+$', adapter) == None:
                                     logger.error("Unable to come up with a "
@@ -219,14 +362,17 @@ class Cutadapt(AbstractStep):
 
 
                             # 3.3 command: Clip adapters
-                            cutadapt = [self.get_tool('cutadapt'), 
-                                        self.get_option('adapter-type'), 
+                            cutadapt = [self.get_tool('cutadapt'),
+                                        self.get_option('adapter-type'),
                                         adapter, '-']
+                            cutadapt.extend(option_list)
+
                             cutadapt_log_file = run.add_output_file(
                                     'log_%s' % read,
                                     '%s-cutadapt-%s-log.txt'
                                     % (run_id, read_types[read]),
                                     input_paths)
+
                             # 3.4 command: Compress output
                             pigz = [self.get_tool('pigz'),
                                     '--processes', str(self.get_cores()),

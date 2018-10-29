@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 from logging import getLogger
 from abstract_step import AbstractStep
 
@@ -16,7 +17,7 @@ class TrimGalore(AbstractStep):
     Note for RRBS using the NuGEN Ovation RRBS System 1-16 kit:
 
     Owing to the fact that the NuGEN Ovation kit attaches a varying number of nucleotides (0-3) after each MspI
-    site Trim Galore should be run WITHOUT the option --rrbs. This trimming is accomplished in a subsequent 
+    site Trim Galore should be run WITHOUT the option --rrbs. This trimming is accomplished in a subsequent
     diversity trimming step afterwards (see their manual).
 
     Note for RRBS using MseI:
@@ -42,15 +43,15 @@ class TrimGalore(AbstractStep):
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
 
-        self.add_connection('out/first_read') # <run_id>_R1_val_1.fq.gz
+        self.add_connection('out/first_read') # <run_id>_<first_read>_val_1.fq.gz
         self.add_connection('out/first_read_report') #_trimming_report.txt
-        self.add_connection('out/first_read_fastqc_zip') # <run_id>_R1_val_1.fq.gz
-        self.add_connection('out/first_read_fastqc_html') # <run_id>_R1_val_1.fq.html
+        self.add_connection('out/first_read_fastqc_zip') # <run_id>_<first_read>_val_1.fq.gz
+        self.add_connection('out/first_read_fastqc_html') # <run_id>_<first_read>_val_1.fq.html
 
-        self.add_connection('out/second_read')
+        self.add_connection('out/second_read') # <run_id>_<first_read>_val_2.fq.gz
         self.add_connection('out/second_read_report') #_trimming_report.txt
-        self.add_connection('out/second_read_fastqc_zip') # <run_id>_R1_val_1.fq.gz
-        self.add_connection('out/second_read_fastqc_html') # <run_id>_R1_val_1.fq.html
+        self.add_connection('out/second_read_fastqc_zip') # <run_id>_<second_read>_val_2.fq.gz
+        self.add_connection('out/second_read_fastqc_html') # <run_id>_<second_read>_val_2.fq.html
 
         self.add_connection('out/stdout')
         self.add_connection('out/stderr')
@@ -215,6 +216,12 @@ class TrimGalore(AbstractStep):
         self.add_option('length_2', int, optional=True,
                         description='Unpaired single-end read length cutoff needed for read 2 to be written to \'.unpaired_2.fq \''
                         'output file. These reads may be mapped in single-end mode.Default: 35 bp.')
+        self.add_option('first_read', str, optional=True, default='R1',
+                        description='Part of the file name that marks all files containing sequencing data of the first read. '
+                        'Example: \'_R1\' or \'_1\'. Default: \'R1\'')
+        self.add_option('second_read', str, optional=True, default='R2',
+                        description='Part of the file name that marks all files containing sequencing data of the second read. '
+                        'Example: \'_R2\' or \'_2\'. Default: \'R2\'')
 
         # any other options for uap behaviour?
         # [Options for 'dd' and 'pigz':]
@@ -225,9 +232,9 @@ class TrimGalore(AbstractStep):
 
         options = ['quality','phred33','phred64','fastqc','adapter','adapter2',
                    'illumina','nextera','small_rna','max_length','stringency', 'gzip','dont_gzip',
-                   'length','max_n','trim-n', 'clip_R1','clip_R2','three_prime_clip_R1',
+                   'length','max_n','trim-n', 'paired', 'clip_R1','clip_R2','three_prime_clip_R1',
                    'three_prime_clip_R2', 'rrbs','non_directional','keep',
-                   'paired','trim1','retain_unpaired','length_1','length_2']
+                   'trim1','retain_unpaired','length_1','length_2']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -254,55 +261,86 @@ class TrimGalore(AbstractStep):
             option_list.append('\"%s\"' % str(self.get_option(option)))
 
         # set possible read types
-        read_types = {'first_read': 'R1', 'second_read': 'R2'}
+        read_types = {'first_read': self.get_option('first_read'), 'second_read': self.get_option('second_read')}
+
         paired_end_info = dict()
 
         for run_id in run_ids_connections_files.keys():
 
             with self.declare_run(run_id) as run:
 
+                
+
                 # the temporary output directory
                 outdir = run.get_output_directory_du_jour_placeholder()
                 # this is the prefix for the trim_galore cmd option:
                 # -o
                 prefixTG = '%s' % outdir
-
                 input_paths = run_ids_connections_files[run_id]
 
+
+                # remove file endings if they are given and leading underscores
+                read_types['first_read'] = re.sub( "^_(.*)\.?.*$", "\g<1>", read_types['first_read'])
+
+                if not input_paths['in/second_read'][0] is None:
+                    read_types['second_read'] = re.sub( "^_(.*)\.?.*$", "\g<1>", read_types['second_read'])
+                    
                 if input_paths['in/first_read'][0].endswith('.gz'):
-                    run.add_output_file('first_read',
-                                        '%s_R1_val_1.fq.gz' % run_id,
+                    if not input_paths['in/second_read'][0] is None:
+                        run.add_output_file('first_read',
+                                            '%s_%s_val_1.fq.gz' % ( run_id, read_types['first_read']),
+                                            input_paths['in/first_read'])
+                    else:
+                        run.add_output_file('first_read',
+                                            '%s_%s_trimmed.fq.gz' % ( run_id, read_types['first_read']),
+                                            input_paths['in/first_read'])
+
+                else:
+                    if not input_paths['in/second_read'][0] is None:
+                        run.add_output_file('first_read',
+                                            '%s_%s_val_1.fq' % ( run_id, read_types['first_read']),
+                                            input_paths['in/first_read'])
+                    else:
+                        run.add_output_file('first_read',
+                                            '%s_%s_trimmed.fq' % ( run_id, read_types['first_read']),
+                                            input_paths['in/first_read'])
+
+                if not input_paths['in/second_read'][0] is None:
+                    run.add_output_file('first_read_fastqc_zip',
+                                        '%s_%s_val_1_fastqc.zip' % ( run_id, read_types['first_read']),
+                                        input_paths['in/first_read'])
+                    run.add_output_file('first_read_fastqc_html',
+                                        '%s_%s_val_1_fastqc.html' % ( run_id, read_types['first_read']),
                                         input_paths['in/first_read'])
                 else:
-                    run.add_output_file('first_read',
-                                        '%s_R1_val_1.fq' % run_id,
+                    run.add_output_file('first_read_fastqc_zip',
+                                        '%s_%s_trimmed_fastqc.zip' % ( run_id, read_types['first_read']),
                                         input_paths['in/first_read'])
+                    run.add_output_file('first_read_fastqc_html',
+                                        '%s_%s_trimmed_fastqc.html' % ( run_id, read_types['first_read']),
+                                        input_paths['in/first_read']) 
 
-                run.add_output_file('first_read_fastqc_zip',
-                                    '%s_R1_val_1_fastqc.zip' % run_id,
-                                    input_paths['in/first_read'])
-                run.add_output_file('first_read_fastqc_html',
-                                    '%s_R1_val_1_fastqc.html' % run_id,
-                                    input_paths['in/first_read'])
                 run.add_output_file('first_read_report',
-                                    '%s_trimming_report.txt' % os.path.basename(input_paths['in/first_read'][0]),
+                                        '%s_trimming_report.txt' % os.path.basename(input_paths['in/first_read'][0]),
                                     input_paths['in/first_read'])
 
-                if input_paths['in/second_read'] :
+
+
+                if not input_paths['in/second_read'][0] is None:
                     if input_paths['in/second_read'][0].endswith('.gz'):
                         run.add_output_file('second_read',
-                                            '%s_R2_val_2.fq.gz' % run_id,
+                                            '%s_%s_val_2.fq.gz' %( run_id, read_types['second_read']),
                                             input_paths['in/second_read'])
                     else:
                         run.add_output_file('second_read',
-                                            '%s_R2_val_2.fq' % run_id,
+                                            '%s_%s_val_2.fq' % ( run_id, read_types['second_read']),
                                             input_paths['in/second_read'])
 
                     run.add_output_file('second_read_fastqc_zip',
-                                        '%s_R2_val_2_fastqc.zip' % run_id,
+                                        '%s_%s_val_2_fastqc.zip' % ( run_id, read_types['second_read']),
                                         input_paths['in/second_read'])
                     run.add_output_file('second_read_fastqc_html',
-                                        '%s_R2_val_2_fastqc.html' % run_id,
+                                        '%s_%s_val_2_fastqc.html' % ( run_id, read_types['second_read']),
                                         input_paths['in/second_read'])
                     run.add_output_file('second_read_report',
                                         '%s_trimming_report.txt' % os.path.basename(input_paths['in/second_read'][0]),
@@ -313,10 +351,6 @@ class TrimGalore(AbstractStep):
                     run.add_empty_output_connection('second_read_fastqc_zip')
                     run.add_empty_output_connection('second_read_fastqc_html')
 
-                run.add_output_file('first_read_report',
-                                    '%s_R1_trimming_report.txt' % run_id,
-                                    input_paths['in/first_read'])
-
                 stdout = run.add_output_file('stdout',
                                              '%s_trimgalore.stdout' % run_id,
                                              input_paths['in/first_read'])
@@ -325,9 +359,10 @@ class TrimGalore(AbstractStep):
                                              input_paths['in/first_read'])
 
                 # set '--paired' option if not already been done by usr in cfg
-                if input_paths['in/second_read']:
+                if not input_paths['in/second_read'][0] is None:
                     if not self.is_option_set_in_config('paired'):
-                        option_list.append('--paired')
+                        if '--paired' not in option_list:
+                            option_list.append('--paired')
 
 
 
@@ -335,11 +370,10 @@ class TrimGalore(AbstractStep):
                               '--output_dir', outdir]
                 tg.extend(option_list)
                 tg.append(input_paths['in/first_read'][0])
-                if input_paths['in/second_read']:
+                if not input_paths['in/second_read'][0] is None:
                     tg.append(input_paths['in/second_read'][0])
 
                 with run.new_exec_group() as tg_exec_group:
                     tg_exec_group.add_command(tg,
                                               stderr_path = stderr,
                                               stdout_path = stdout)
-
