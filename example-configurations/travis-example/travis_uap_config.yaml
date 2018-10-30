@@ -15,6 +15,9 @@ destination_path: output_data
 ################################################################################
 
 constants:
+    - &chromosome_sizes
+        constants/hg19.chrom.sizes
+
     - &genome
         constants/hg19_all_chr_UCSC-all_sequences.fasta
 
@@ -23,6 +26,9 @@ constants:
 
     - &bowtie2_genome_index
         constants/bowtie2_index/bowtie2_index-chr21
+
+    - &bwa_genome_index
+        constants/bwa_index
 
     - &segemehl_genome_index
         constants/segemehl_index-hg19_all_chr_UCSC-all_sequences.idx
@@ -57,19 +63,66 @@ steps:
         first_read: _R1_
         second_read: _R2_
 
+    # Download sequence of chromosome 21
+    download_hg19_chr21_UCSC (raw_url_source):
+        url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr21.fa.gz
+        hashing-algorithm: md5
+        secure-hash: 26cdd5a3a539b63930752604feb2912b
+        path: dummy_files
+        filename: chr21.fa
+        uncompress: yes
+
     ######################
     ## Processing steps ##
     ######################
 
-#    bam_to_bedgraph_and_bigwig:
-#    bam_to_genome_browser:
-#    bowtie2_generate_index:
-#    bowtie2:
-#    bwa_backtrack:
-#    bwa_generate_index:
-#    bwa_mem:
-#    chromhmm_binarizebam:
+    bam_to_bedgraph_and_bigwig:
+        _depends: tophat2
+        chromosome-sizes: *chromosome_sizes
+        temp-sort-dir: /tmp
+
+    bam_to_genome_browser:
+        _depends: tophat2
+        chromosome-sizes: *chromosome_sizes
+        output-format: bigWig
+
+    bowtie2_generate_index:
+        _depends: download_hg19_chr21_UCSC
+        _connect:
+            in/reference_sequence: download_hg19_chr21_UCSC/raw
+        index-basename: bowtie2_index
+
+    bowtie2:
+        _depends: fastq_source
+        index: *bowtie2_genome_index
+        dd-blocksize: 4M
+
+    bwa_backtrack:
+        _depends: fastq_source
+        index: *bwa_genome_index
+        dd-blocksize: 4M
+
+    bwa_generate_index:
+        _depends: download_hg19_chr21_UCSC
+        _connect:
+            in/reference_sequence: download_hg19_chr21_UCSC/raw
+        index-basename: bwa_index
+
+    bwa_mem:
+        _depends: fastq_source
+        index: *bwa_genome_index
+        dd-blocksize: 4M
+
+    chromhmm_binarizebam:
+        _depends: bowtie2
+        chrom_sizes_file: *chromosome_sizes
+        cell_mark_files:
+            sample_hmm:
+                - [Sample1, Sample2, Sample3]
+
+
 #    chromhmm_learnmodel:
+
 #    cuffcompare:
 
     cufflinks_tophat2 (cufflinks):
@@ -77,13 +130,18 @@ steps:
         library-type: fr-secondstrand
         mask-file: *gencode_v19_annotation_gtf
 
-    cufflinks_segemehl (cufflinks):
-        _depends: segemehl
-        library-type: fr-secondstrand
-        mask-file: *gencode_v19_annotation_gtf
+#    cufflinks_segemehl (cufflinks):
+#        _depends: segemehl
+#        library-type: fr-secondstrand
+#        mask-file: *gencode_v19_annotation_gtf
 
 #    cuffmerge:
-#    cutadapt:
+
+    cutadapt:
+        _depends: fastq_source
+        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+        adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+
 #    deepTools_bamCompare:
 #    deepTools_bamPEFragmentSize:
 #    deepTools_multiBamSummary:
@@ -107,14 +165,14 @@ steps:
         type: exon
         idattr: gene_id
 
-    htseq_count:
-        _depends: segemehl
-        feature-file: *gencode_v19_annotation_gtf
-        order: pos
-        stranded: 'yes'
-        mode: intersection-strict
-        type: exon
-        idattr: gene_id
+#    htseq_count:
+#        _depends: segemehl
+#        feature-file: *gencode_v19_annotation_gtf
+#        order: pos
+#        stranded: 'yes'
+#        mode: intersection-strict
+#        type: exon
+#        idattr: gene_id
 
 #    macs2:
 #    merge_fasta_files:
@@ -134,9 +192,9 @@ steps:
 #    rgt_thor:
 #    rseqc:
 
-    s2c:
-        _depends: segemehl
-        tmp_dir: /tmp/
+#    s2c:
+#        _depends: segemehl
+#        tmp_dir: /tmp/
 
 #    samtools_faidx:
 #    samtools_index:
@@ -147,18 +205,18 @@ steps:
         genome-faidx: *genome_faidx
         temp-sort-dir: '/tmp/'
 
-    sort_s2c (sam_to_sorted_bam):
-        _depends: s2c
-        genome-faidx: *genome_faidx
-        temp-sort-dir: /tmp/
+#    sort_s2c (sam_to_sorted_bam):
+#        _depends: s2c
+#        genome-faidx: *genome_faidx
+#        temp-sort-dir: /tmp/
 
 
 #    segemehl_generate_index:
 
-    segemehl:
-        _depends: fastq_source
-        genome: *genome
-        index: *segemehl_genome_index
+#    segemehl:
+#        _depends: fastq_source
+#        genome: *genome
+#        index: *segemehl_genome_index
 
 #    sra_fastq_dump:
 #    subsetMappedReads:
@@ -183,7 +241,47 @@ tools:
     # All Tools Refer To ./dummy_tool #
     ###################################
 
+    bedGraphToBigWig:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    bedToBigBed:    
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    bedtools:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    bowtie2:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    bowtie2-build:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    bwa:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
     cat:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    ChromHMM:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    compare_secure_hashes:
         path: ./dummy_tool
         get_version: --version
         exit_code: 0
@@ -194,6 +292,11 @@ tools:
         exit_code: 0
 
     cufflinks:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    curl:
         path: ./dummy_tool
         get_version: --version
         exit_code: 0
@@ -243,6 +346,11 @@ tools:
         get_version: --version
         exit_code: 0
 
+    ls:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
     mkdir:
         path: ./dummy_tool
         get_version: --version
@@ -268,12 +376,22 @@ tools:
         get_version: --version
         exit_code: 0
 
+    printf:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
     samtools:
         path: ./dummy_tool
         get_version: --version
         exit_code: 0
 
     segemehl: 
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    sort:
         path: ./dummy_tool
         get_version: --version
         exit_code: 0
@@ -289,6 +407,11 @@ tools:
         exit_code: 0
 
     tophat2:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    xargs:
         path: ./dummy_tool
         get_version: --version
         exit_code: 0
