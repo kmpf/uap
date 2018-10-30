@@ -13,8 +13,8 @@
 Information for uap Developers
 ******************************
 
-Documanetation
-==============
+Documentation
+=============
 
 
 The official documentation is hosted on readthedocs (add link). But as
