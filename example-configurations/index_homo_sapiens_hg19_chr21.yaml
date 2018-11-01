@@ -43,8 +43,8 @@ steps:
         ucsc-database: hg19
         path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
 
-    # Download all chromosomal sequences
-    download_hg19_data_UCSC (raw_url_sources):
+    # Download sequence of chromosome 21
+    download_hg19_data_UCSC (raw_url_source):
         run-download-info:
             chr21:
                 url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr21.fa.gz

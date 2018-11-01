@@ -39,7 +39,7 @@ steps:
     ##################
 
     # Download all chromosomal sequences
-    hg19_UCSC (raw_url_sources):
+    hg19_UCSC (raw_url_source):
         _cluster_job_quota: 1
         run-download-info:
             chr1:

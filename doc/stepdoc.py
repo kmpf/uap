@@ -133,6 +133,7 @@ def main():
                 doc_module(module_name, fout)
 
 if __name__ == '__main__':
+    logging.basicConfig()
     logger = logging.getLogger("uap_logger")
     info_formatter = logging.Formatter(
         fmt = '[uap][%(levelname)s]: %(message)s '

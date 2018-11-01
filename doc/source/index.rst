@@ -60,12 +60,11 @@ Table of contents
    configuration
    interaction
    extension
-   software-design
    platforms
    annotation
    steps
    api
-
+   developers
 
 *******
 Remarks
