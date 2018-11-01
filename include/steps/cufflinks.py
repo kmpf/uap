@@ -23,14 +23,14 @@ class CuffLinks(AbstractStep):
         super(CuffLinks, self).__init__(pipeline)
 
         self.set_cores(6)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/features')
         self.add_connection('out/skipped')
         self.add_connection('out/genes-fpkm')
         self.add_connection('out/isoforms_fpkm')
         self.add_connection('out/log_stderr')
-        
+
         self.require_tool('mkdir')
         self.require_tool('mv')
         self.require_tool('cufflinks')
@@ -48,7 +48,7 @@ class CuffLinks(AbstractStep):
                         description = 'Quantitate against reference transcript '
                         'annotations. Use with either RABT or ab initio '
                         'assembly is not supported.')
-        self.add_option('GTF-guide', bool, optional=True, 
+        self.add_option('GTF-guide', bool, optional=True,
                         description = 'Tells Cufflinks to use the supplied '
                         'reference annotation a GFF file to guide RABT '
                         'assembly. Reference transcripts will be tiled with '
@@ -150,22 +150,21 @@ class CuffLinks(AbstractStep):
                         description = 'With this option, Cufflinks counts all '
                         'fragments, including those not compatible with any '
                         'reference transcript, towards the number of mapped '
-                        'hits used in the FPKM denominator. This option can be '
-                        'combined with -N/-upper-quartile-norm. Default: TRUE')
+                        'hits used in the FPKM denominator. Default: TRUE')
         self.add_option('num-frag-count-draws', int, optional = True,
                         description = 'Number of fragment generation samples. '
                         'Default: 100')
         self.add_option('num-frag-assign-draws', int, optional = True,
                         description = 'Number of fragment assignment samples '
                         'per generation. Default: 50')
-        self.add_option('max-frag-multihits', str, optional = True, 
+        self.add_option('max-frag-multihits', str, optional = True,
                         description = 'Maximum number of alignments allowed '
                         'per fragment. Default: unlim')
-        self.add_option('no-effective-length-correction', bool, optional = True, 
+        self.add_option('no-effective-length-correction', bool, optional = True,
                         description = 'Cufflinks will not employ its '
                         '"effective" length normalization to transcript FPKM. '
                         'Default: FALSE')
-        self.add_option('no-length-correction', bool, optional = True, 
+        self.add_option('no-length-correction', bool, optional = True,
                         description = 'Cufflinks will not normalize fragment '
                         'counts by transcript length at all. Use this option '
                         'when fragment count is independent of the size of the '
@@ -184,11 +183,11 @@ class CuffLinks(AbstractStep):
                         'and transcripts.')
 
         # [Advanced Assembly Options:]
-        self.add_option('label', str, optional = True, 
+        self.add_option('label', str, optional = True,
                         description = 'Cufflinks will report transfrags in GTF '
                         'format, with a prefix given by this option. Default: '
                         'CUFF')
-        self.add_option('min-isoform-fraction', float, optional = True, 
+        self.add_option('min-isoform-fraction', float, optional = True,
                         description = 'After calculating isoform abundance for '
                         'a gene, Cufflinks filters out transcripts that it '
                         'believes are very low abundance, because isoforms '
@@ -200,7 +199,7 @@ class CuffLinks(AbstractStep):
                         'supporting them. The default is 0.1, or 10% of the '
                         'most abundant isoform (the major isoform) of the '
                         'gene. Range: 0.0-1.0. Default: 0.10')
-        self.add_option('pre-mrna-fraction', float, optional = True, 
+        self.add_option('pre-mrna-fraction', float, optional = True,
                         description = 'Some RNA-Seq protocols produce a '
                         'significant amount of reads that originate from '
                         'incompletely spliced transcripts, and these reads '
@@ -218,56 +217,56 @@ class CuffLinks(AbstractStep):
                         'will not report transcripts with introns longer than '
                         'this, and will ignore SAM alignments with REF_SKIP '
                         'CIGAR operations longer than this. Default: 300000')
-        self.add_option('junc-alpha', float, optional = True, 
+        self.add_option('junc-alpha', float, optional = True,
                         description = 'The alpha value for the binomial test '
                         'used during false positive spliced alignment '
                         'filtration. Default: 0.001')
-        self.add_option('small-anchor-fraction', float, optional = True, 
+        self.add_option('small-anchor-fraction', float, optional = True,
                         description = 'Spliced reads with less than this '
                         'percent of their length on each side of the junction '
                         'are considered suspicious and are candidates for '
                         'filtering prior to assembly. Default: 0.09')
-        self.add_option('min-frags-per-transfrag', int, optional = True, 
+        self.add_option('min-frags-per-transfrag', int, optional = True,
                         description = 'Assembled transfrags supported by fewer '
                         'than this many aligned RNA-Seq fragments are not '
                         'reported. Default: 10')
-        self.add_option('overhang-tolerance', int, optional = True, 
+        self.add_option('overhang-tolerance', int, optional = True,
                         description = 'The number of bp allowed to enter the '
                         'intron of a transcript when determining if a read or '
                         'another transcript is mappable to/compatible with it. '
                         'The default is 8 bp based on the default bowtie/'
                         'TopHat parameters. Default: 8')
-        self.add_option('max-bundle-length', int, optional = True, 
+        self.add_option('max-bundle-length', int, optional = True,
                         description = 'Maximum genomic length allowed for a '
                         'given bundle. Default: 3500000')
-        self.add_option('max-bundle-frags', int, optional = True, 
+        self.add_option('max-bundle-frags', int, optional = True,
                         description = 'Sets the maximum number of fragments a '
                         'locus may have before being skipped. Skipped loci '
                         'are listed in skipped.gtf. Default: 500000')
-        self.add_option('min-intron-length', int, optional = True, 
+        self.add_option('min-intron-length', int, optional = True,
                         description = 'Minimum intron size allowed in genome. '
                         'Default: 50')
-        self.add_option('trim-3-avgcov-thresh', int, optional = True, 
+        self.add_option('trim-3-avgcov-thresh', int, optional = True,
                         description = 'Minimum average coverage required to '
                         'attempt 3 prime trimming. Default: 10')
-        self.add_option('trim-3-dropoff-frac', float, optional = True, 
+        self.add_option('trim-3-dropoff-frac', float, optional = True,
                         description = 'The fraction of average coverage below '
                         'which to trim the 3 prime end of an assembled '
                         'transcript. Default: 0.1')
-        self.add_option('max-multiread-fraction', float, optional = True, 
+        self.add_option('max-multiread-fraction', float, optional = True,
                         description = 'The fraction a transfrags supporting '
                         'reads that may be multiply mapped to the genome. A '
                         'transcript composed of more than this fraction will '
                         'not be reported by the assembler. Default: 0.75 '
                         '(75% multireads or more is suppressed).')
-        self.add_option('overlap-radius', int, optional = True, 
+        self.add_option('overlap-radius', int, optional = True,
                         description = 'Transfrags that are separated by less '
                         'than this distance (in bp) get merged together, and '
                         'the gap is filled. Default: 50')
 
         # [Advanced Reference Annotation Guided Assembly Options:]
 
-        self.add_option('no-faux-reads', bool, optional = True, 
+        self.add_option('no-faux-reads', bool, optional = True,
                         description = 'This option disables tiling of the '
                         'reference transcripts with faux reads. Use this if '
                         'you only want to use sequencing reads in assembly but '
@@ -275,13 +274,13 @@ class CuffLinks(AbstractStep):
                         'within reference transcripts. All reference '
                         'transcripts in the input annotation will also be '
                         'included in the output. Default: FALSE')
-        self.add_option('3-overhang-tolerance', int, optional = True, 
+        self.add_option('3-overhang-tolerance', int, optional = True,
                         description = 'The number of bp allowed to overhang '
                         'the 3 prime end of a reference transcript when '
                         'determining if an assembled transcript should be '
                         'merged with it (i.e., the assembled transcript is not '
                         'novel). Default: 600')
-        self.add_option('intron-overhang-tolerance', int, optional = True, 
+        self.add_option('intron-overhang-tolerance', int, optional = True,
                         description = 'The number of bp allowed to enter the '
                         'intron of a reference transcript when determining if '
                         'an assembled transcript should be merged with it '
@@ -289,11 +288,11 @@ class CuffLinks(AbstractStep):
                         'Default: 50')
 
         # [Advanced Program Behavior Options:]
-        self.add_option('verbose', bool, optional = True, 
+        self.add_option('verbose', bool, optional = True,
                         description = 'Print lots of status updates and other '
                         'diagnostic information. Default: FALSE')
         # Do not allow using 'quiet' option
-        self.add_option('no-update-check', bool, optional = True, 
+        self.add_option('no-update-check', bool, optional = True,
                         description = 'Turns off the automatic routine that '
                         'contacts the Cufflinks server to check for a more '
                         'recent version. Default: FALSE')
@@ -301,7 +300,7 @@ class CuffLinks(AbstractStep):
 
 
     def runs(self, run_ids_connections_files):
-        
+
         # Compile the list of options
         options = [
             # [General options:]
@@ -353,7 +352,7 @@ class CuffLinks(AbstractStep):
              with self.declare_run(run_id) as run:
                 input_paths = run_ids_connections_files[run_id]['in/alignments']
                 temp_dir = run.add_temporary_directory('cufflinks-out')
-                
+
                 # check, if only a single input file is provided
                 if len(input_paths) != 1:
                     raise StandardError("Expected exactly one alignments file, "
@@ -389,7 +388,7 @@ class CuffLinks(AbstractStep):
                         input_paths
                         )
                     }
-             
+
              with run.new_exec_group() as exec_group:
                  # 1. Create temporary directory for cufflinks output
                  mkdir = [self.get_tool('mkdir'), temp_dir]
@@ -407,7 +406,7 @@ class CuffLinks(AbstractStep):
              # Files get moved to expected position after cufflinks finished
              with run.new_exec_group() as mv_exec_group:
                  for orig, dest_path in result_files.iteritems():
-                     # 3. Rename files 
+                     # 3. Rename files
                      orig_path = os.path.join(temp_dir, orig)
                      mv = [self.get_tool('mv'), orig_path, dest_path]
                      mv_exec_group.add_command(mv)

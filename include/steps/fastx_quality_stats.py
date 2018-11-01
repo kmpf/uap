@@ -13,13 +13,15 @@ class FastxQualityStats(AbstractStep):
     Documentation::
 
         http://hannonlab.cshl.edu/fastx_toolkit/
+
+    Tested fastqc release: 0.0.13
     '''
 
     def __init__(self, pipeline):
         super(FastxQualityStats, self).__init__(pipeline)
-        
+
         self.set_cores(4)
-        
+
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/first_read_quality_stats')
@@ -37,7 +39,7 @@ class FastxQualityStats(AbstractStep):
         self.require_tool('pigz')
 
         # [Options for 'fastx_quality_stats':]
-        self.add_option('new_output_format', bool, default= True, optional=True,
+        self.add_option('new_output_format', bool, optional=True,
                         description = "New output format (with more information "
                         "per nucleotide/cycle).")
         # no info in help for this option ?! -> excluded
@@ -70,7 +72,7 @@ class FastxQualityStats(AbstractStep):
                 for read in read_types:
                     connection = 'in/%s' % read
                     input_paths = run_ids_connections_files[run_id][connection]
-                    
+
                     # Check for empty connections
                     if input_paths == [None]:
                         run.add_empty_output_connection(
@@ -109,7 +111,7 @@ class FastxQualityStats(AbstractStep):
                                         self.get_option('dd-blocksize'),
                                         'of=%s' % temp_fifo
                                     ]
-                                
+
                                     unzip_pipe.add_command(dd_in)
                                     unzip_pipe.add_command(pigz)
                                     unzip_pipe.add_command(dd_out)
