@@ -1,9 +1,9 @@
 import sys
-from logging import getLogger
 import os
+from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
 
 class PicardMarkDuplicates(AbstractStep):
     '''
@@ -223,7 +223,6 @@ class PicardMarkDuplicates(AbstractStep):
                         description = "Comment(s) to include in the output "
                         "file's header. Default value: null. This option may "
                         "be specified 0 or more times.")
-        self.add_option('ASSUME_SORTED', bool, optional = True)
         self.add_option('MAX_FILE_HANDLES', int, optional = True)
         self.add_option('REMOVE_DUPLICATES', str, optional = True,
                         default = "true",

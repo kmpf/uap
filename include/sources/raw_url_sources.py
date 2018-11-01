@@ -17,7 +17,6 @@ class RawUrlSource(AbstractSourceStep):
         self.require_tool('cp')
         self.require_tool('curl')
         self.require_tool('dd')
-        self.require_tool('mkdir')
         self.require_tool('pigz')
 
         self.add_option('run-download-info', dict, optional = False,
@@ -126,6 +125,7 @@ class RawUrlSource(AbstractSourceStep):
                     with run.new_exec_group() as mkdir_exec_group:
                         mkdir = [self.get_tool('mkdir'), '-p', path]
                         mkdir_exec_group.add_command(mkdir)
+
                 out_file = run.add_output_file('raw', final_abspath, [] )
 
                 temp_filename = run.add_temporary_file(suffix = url_filename)

@@ -74,4 +74,5 @@ target/
 # Folder used by example configurations
 example-configurations/example-out/
 example-configurations/genomes/
+example-configurations/travis-example/output_data
 *-out

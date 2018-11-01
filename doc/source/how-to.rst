@@ -79,6 +79,7 @@ The following configurations showcase how to get or generate that data:
 
         * |bwa_link|
         * |bowtie2_link|
+        * |curl_link|
         * |pigz_link|
         * |samtools_link|
         * |segemehl_link|
@@ -111,6 +112,7 @@ The following configurations showcase how to get or generate that data:
 
         * |bwa_link|
         * |bowtie2_link|
+        * |curl_link|
         * |fetchChromsizes_link|
         * |pigz_link|
         * |samtools_link|
@@ -132,6 +134,7 @@ The following configurations showcase how to get or generate that data:
 
         * |bwa_link|
         * |bowtie2_link|
+        * |curl_link|
         * |fetchChromsizes_link|
         * |pigz_link|
         * |samtools_link|
@@ -291,11 +294,12 @@ B. *De novo* Transcript Assembly
     Downloads the data published in the paper |Mercer_link|.
 
     :Max. memory: ~? GB
-    :Disk usage: ~ GB
+    :Disk usage: ~12 GB
     :Run time: minutes (depending on your internet connection)
 
     Required tools:
 
+        * |curl_link|
         * |pigz_link|
 
 .. _example_mercer:
@@ -313,7 +317,7 @@ B. *De novo* Transcript Assembly
     transcript assembly employing our **s2c** python script.
 
     :Max. memory: ~? GB
-    :Disk usage: ~ GB
+    :Disk usage: ~3 GB
     :Run time: several hours
 
         * |cufflinks_link|
@@ -360,8 +364,9 @@ files:
 
     Required tools:
 
+        * |curl_link|
         * |pigz_link|
-    
+
 .. _example_barski:
     
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
@@ -378,8 +383,8 @@ files:
     Finally enriched regions are detected with |macs2_link|.
 
     :Max. memory: ~? GB
-    :Disk usage: ~ GB
-    :Run time: ~1 day
+    :Disk usage: ~51 GB
+    :Run time: ~several hours (on a cluster), ~1 day (on a single machine)
 
     Required tools:
 
@@ -442,6 +447,10 @@ on another page (see :ref:`analysis_configuration`).
    
    <a href="http://cufflinks.cbcb.umd.edu/" target="_blank">cufflinks</a>
 
+.. |curl_link| raw:: html
+   
+   <a href="https://curl.haxx.se/" target="_blank">curl</a>
+   
 .. |cutadapt_link| raw:: html
    
    <a href="https://github.com/marcelm/cutadapt" target="_blank">cutadapt</a>
