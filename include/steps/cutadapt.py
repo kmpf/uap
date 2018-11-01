@@ -184,7 +184,7 @@ class Cutadapt(AbstractStep):
                         "the above option to disable it.")
 
         # 5. other non-cutadapt options
-        self.add_option('fix_qnames', bool,
+        self.add_option('fix_qnames', bool, default=False,
                         description="If set to true, only the leftmost string "
                         "without spaces of the QNAME field of the FASTQ data is "
                         "kept. This might be necessary for downstream analysis.")
