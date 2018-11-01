@@ -53,7 +53,7 @@ constants:
     ## Control vs. Treatment information needed for MACS2
     - control: &control-treatment-hash
             None:
-	       - CTCF
+               - CTCF
                - H2A.Z
                - H2BK5me1
                - H3K27me1
