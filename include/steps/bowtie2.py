@@ -187,22 +187,22 @@ class Bowtie2(AbstractStep):
         # This should be solved via temp. files
         # For now these options are ignored
         # which of these is written anyway??
-        self.add_option('un', str, optional=True,
-                        description="Path to write unpaired reads that didn't align")
-        self.add_option('al', str, optional=True,
-                        description="Path to write unpaired reads that aligned at least "
-                        "once to")
-        self.add_option('un-conc', str, optional=True,
-                        description="Path to write pairs that didn't align concordantly")
-        self.add_option('al-conc', str, optional=True,
-                        description="write pairs that aligned concordantly at least once to")
+        #self.add_option('un', str, optional=True,
+        #                description="Path to write unpaired reads that didn't align")
+        #self.add_option('al', str, optional=True,
+        #                description="Path to write unpaired reads that aligned at least "
+        #                "once to")
+        #self.add_option('un-conc', str, optional=True,
+        #                description="Path to write pairs that didn't align concordantly")
+        #self.add_option('al-conc', str, optional=True,
+        #                description="write pairs that aligned concordantly at least once to")
         self.add_option('compress_add_output', bool, optional=True,
                         description="Ads -gz to the 4 options above to produce "
                         "compressed output.")
         self.add_option('quiet', bool, optional=True,
                         description="print nothing to stderr except serious errors")
-        self.add_option('met-file', str, optional=True,
-                        description="send metrics to file at")
+        #self.add_option('met-file', str, optional=True,
+        #                description="send metrics to file at")
         self.add_option('met-stderr', bool, optional=True,
                         description="send metrics to stderr")
         self.add_option('met', int, optional=True,
@@ -270,8 +270,7 @@ class Bowtie2(AbstractStep):
                     # all non-bolean options:
                     'skip', 'upto', 'trim5', 'trim3', 'n-ceil',
                     'dpad', 'gbar', 'ma', 'mp', 'np', 'rdg', 'rfg', 'score-min',
-                    'minins', 'maxins', 'un', 'al', 'un-conc', 'al-conc',
-                    'met-file', 'met', 'rg-id', 'rg', 'threads', 'seed']
+                    'minins', 'maxins', 'met', 'rg-id', 'rg', 'threads', 'seed']
 
 
         ## 2nd all options that require a value, given with -

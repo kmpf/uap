@@ -13,19 +13,19 @@ class TopHat2(AbstractStep):
     results to identify splice junctions between exons.
 
     http://tophat.cbcb.umd.edu/
-    
+
     typical command line::
 
         tophat [options]* <index_base> <reads1_1[,...,readsN_1]> \
         [reads1_2,...readsN_2]
 
-
+    Tested on release: TopHat v2.0.13
     '''
-    
+
     def __init__(self, pipeline):
         super(TopHat2, self).__init__(pipeline)
         self.set_cores(6)
-        
+
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/alignments')
@@ -43,8 +43,52 @@ class TopHat2(AbstractStep):
         self.require_tool('tar')
         self.require_tool('tophat2')
 
-        self.add_option('index', str, optional=False,
-                        description="Path to genome index for tophat2")
+        self.add_option('bowtie1', bool, optional=True, #default=False,
+                        description="Use bowtie1. Default: bowtie2")
+        self.add_option('read-mismatches', int, optional=True, #default=2,
+                        desciption="Number of read mismatches")
+        self.add_option('read-gap-length', int, optional=True, #default=2,
+                        description="Size of gap length")
+        self.add_option('read-edit-dist', int, optional=True, #default=2,
+                        description="Read edit distance")
+        self.add_option('read-realign-edit-dist', int, optional=True,
+                        description="Read alignment distance. Default: read-edit-dist + 1.")
+        self.add_option('min-anchor', int, optional=True, #default=8,
+                        description="Size of minimal anchor.")
+        self.add_option('splice-mismatches', int, optional=True, #default=0,
+                        choices=[0,1,2],
+                        description="Number of splice mismatches")
+        self.add_option('min-intron-length' int, optional=True, #default=50,
+                        description="Minimal intron length")
+        self.add_option('max-intron-length', int, optional=True, #default=500000,
+                        description="maximal intron length")
+        self.add_option('max-multihits', int, optional=True, #default=20,
+                        description="Maximal number of multiple hits")
+        self.add_option('supress-hits', bool, optional=True, #default=False,
+                        description="Supress hits")
+        self.add_option('transcriptome-max-hits', int, optional=True, #default=60,
+                        description="Max hits in transcriptome")
+        self.add_option('prefilter-multihits', bool, optional=True, #default=False,
+                        description="for -G/--GTF option, enable an initial bowtie search "
+                        "against the genome")
+        self.add_option('max-insertion-length', int, optional=True, #default=3,
+                        description="Max size of insertion")
+        self.add_option('max-deletion-length', int, optional=True, #default=3,
+                        description="Max size of deletion")
+        self.add_option('solexa-quals', bool, optional=True, #default=False,
+                        description="Qualities are solexa qualities.")
+        self.add_option('solexa1.3-quals', bool, optional=True, #default=False,
+                        description="Qualities are solexa1.3 qualities (same as phred64-quals).")
+        self.add_option('phred64-quals', bool, optional=True, #default=False,
+                        description="Qualities are phred64 qualities (same as solexa1.3-quals).")
+        self.add_option('quals', bool, optional=True, #default=False,
+                        description="Provide/Use (?) qualities.")
+        self.add_option('integer-quals', bool, optional=True, #default=False,
+                        description="Provide/Use (?) integer qualities.")
+        self.add_option('color', bool, optional=True, #default=False,
+                        description="Solid - color space")
+        self.add_option('color-out', bool, optional=True, #default=False,
+                        description="Colored output")
         self.add_option('library_type', str, optional=False, choices=
                         ['fr-unstranded', 'fr-firststrand', 'fr-secondstrand'],
                         description="The default is unstranded (fr-unstranded). "
@@ -54,6 +98,10 @@ class TopHat2(AbstractStep):
                         "library type options below to select the correct "
                         "RNA-seq protocol."
                         "(https://ccb.jhu.edu/software/tophat/manual.shtml)")
+        self.add_option('index', str, optional=False,
+                        description="Path to genome index for tophat2")
+
+
 
     def runs(self, run_ids_connections_files):
 
@@ -93,17 +141,17 @@ class TopHat2(AbstractStep):
                         '--library-type', self.get_option('library_type'),
                         '--output-dir', temp_out_dir,
                         '-p', str(self.get_cores()),
-                        self.get_option('index'), 
+                        self.get_option('index'),
                         ','.join(fr_input)
                     ]
-                    
+
                     if is_paired_end:
                         tophat2.append(','.join(sr_input))
 
                     exec_group.add_command(
                         tophat2,
                         stderr_path = run.add_output_file(
-                            'log_stderr', 
+                            'log_stderr',
                             '%s-tophat2-log_stderr.txt' % run_id, input_paths)
                     )
 
@@ -118,31 +166,31 @@ class TopHat2(AbstractStep):
                     # Define output files
                     tophat2_files = {
                         'accepted_hits.bam' : run.add_output_file(
-                            'alignments', 
+                            'alignments',
                             '%s-tophat2-accepted.bam' % run_id,
                             input_paths),
                         'unmapped.bam' : run.add_output_file(
-                            'unmapped', 
+                            'unmapped',
                             '%s-tophat2-unmapped.bam' % run_id,
                             input_paths),
                         'insertions.bed' : run.add_output_file(
-                            'insertions', 
+                            'insertions',
                             '%s-tophat2-insertions.bed' % run_id,
                             input_paths),
                         'deletions.bed' : run.add_output_file(
-                            'deletions', 
+                            'deletions',
                             '%s-tophat2-deletions.bed' % run_id,
                             input_paths),
                         'junctions.bed' : run.add_output_file(
-                            'junctions', 
+                            'junctions',
                             '%s-tophat2-junctions.bed' % run_id,
                             input_paths),
                         'prep_reads.info' : run.add_output_file(
-                            'prep_reads', 
+                            'prep_reads',
                             '%s-tophat2-prep_reads.info' % run_id,
                             input_paths),
                         'align_summary.txt' : run.add_output_file(
-                            'align_summary', 
+                            'align_summary',
                             '%s-tophat2-align_summary.txt' % run_id,
                             input_paths)
                     }
