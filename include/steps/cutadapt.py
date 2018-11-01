@@ -43,7 +43,7 @@ class Cutadapt(AbstractStep):
 
         # Options for cutadapt
         # 1. cutadapt Options that influence how the adapters are found:
-        self.add_option("adapter-type", str, optional = True,
+        self.add_option("adapter-type", str, optional = True, default='-a',
                         choices=['-a', '-g', '-b'],
                         description="The type of the adapter that has been used "
                         "for sequencing. a: adapter ligated to the 3' end; "
@@ -70,7 +70,7 @@ class Cutadapt(AbstractStep):
         self.add_option("adapter-file", str, optional = True,
                         description="File containing adapter sequences to be "
                         "clipped off of the reads.")
-        self.add_option("use_reverse_complement", bool,
+        self.add_option("use_reverse_complement", bool, default = False,
                         description="The reverse complement of adapter "
                         "sequences 'adapter-R1' and 'adapter-R2' are used for "
                         "adapter clipping.")
