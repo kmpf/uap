@@ -58,7 +58,7 @@ class TopHat2(AbstractStep):
         self.add_option('splice-mismatches', int, optional=True, #default=0,
                         choices=[0,1,2],
                         description="Number of splice mismatches")
-        self.add_option('min-intron-length' int, optional=True, #default=50,
+        self.add_option('min-intron-length', int, optional=True, #default=50,
                         description="Minimal intron length")
         self.add_option('max-intron-length', int, optional=True, #default=500000,
                         description="maximal intron length")
