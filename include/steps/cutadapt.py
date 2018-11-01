@@ -43,7 +43,7 @@ class Cutadapt(AbstractStep):
 
         # Options for cutadapt
         # 1. cutadapt Options that influence how the adapters are found:
-        self.add_option("adapter-type", str, optional = True, default='-a',
+        self.add_option("adapter-type", str, optional = True,
                         choices=['-a', '-g', '-b'],
                         description="The type of the adapter that has been used "
                         "for sequencing. a: adapter ligated to the 3' end; "
@@ -70,39 +70,39 @@ class Cutadapt(AbstractStep):
         self.add_option("adapter-file", str, optional = True,
                         description="File containing adapter sequences to be "
                         "clipped off of the reads.")
-        self.add_option("use_reverse_complement", bool, default = False,
+        self.add_option("use_reverse_complement", bool,
                         description="The reverse complement of adapter "
                         "sequences 'adapter-R1' and 'adapter-R2' are used for "
                         "adapter clipping.")
-        self.add_option("error-rate", float, default=0.1, optional=True,
+        self.add_option("error-rate", float, optional=True,
                         description="Maximum allowed error rate (no. of errors divided "
                         "by the length of the matching region) (default: 0.1)")
-        self.add_option("no-indels", bool, default=False, optional=True,
+        self.add_option("no-indels", bool, optional=True,
                         description="Do not allow indels in the alignments, that is, "
                         "allow only mismatches. This option is currently only "
                         "supported for anchored 5' adapters (adapter-type: \"-g\" and "
                         "adapter-R[1|2]: \"^ADAPTER\") (default: both mismatches and "
                         "indels are allowed)")
-        self.add_option("times", int, default=1, optional=True,
+        self.add_option("times", int, optional=True,
                         description="Try to remove adapters at most COUNT times. "
                         "Useful when an adapter gets appended multiple times (default: 1).")
-        self.add_option("overlap", int, default=3, optional=True,
+        self.add_option("overlap", int, optional=True,
                         description="Minimum overlap length. If the overlap between the "
                         "read and the adapter is shorter than LENGTH, the read is not "
                         "modified. This reduces the no. of bases trimmed purely due to "
                         "short random adapter matches (default: 3).")
-        self.add_option("match-read-wildcards", bool, default=False, optional=True,
+        self.add_option("match-read-wildcards", bool, optional=True,
                         description="Allow 'N's in the read as matches to the adapter "
                         "(default: False).")
 
         # 2. cutadapt Options for filtering of processed reads:
-        self.add_option("discard-trimmed", bool, default=False, optional=True,
+        self.add_option("discard-trimmed", bool, optional=True,
                         description="Discard reads that contain the adapter instead of "
                         "trimming them. Also use -O in order to avoid throwing away too "
                         "many randomly matching reads!")
-        self.add_option("discard-untrimmed", bool, default=False, optional=True,
+        self.add_option("discard-untrimmed", bool, optional=True,
                         description="Discard reads that do not contain the adapter.")
-        self.add_option("minimum-length", int, default=0, optional=True,
+        self.add_option("minimum-length", int, optional=True,
                         description="Discard trimmed reads that are shorter than LENGTH. "
                         "Reads that are too short even before adapter removal are also "
                         "discarded. In colorspace, an initial primer is not counted "
@@ -112,11 +112,11 @@ class Cutadapt(AbstractStep):
                         "Reads that are too long even before adapter removal are also "
                         "discarded. In colorspace, an initial primer is not counted "
                         "(default: no limit).")
-        self.add_option("no-trim", bool, default=False, optional=True,
-                        description="Match and redirect reads to output/untrimmed-output as"
+        self.add_option("no-trim", bool, optional=True,
+                        description="Match and redirect reads to output/untrimmed-output as "
                         "usual, but don't remove the adapters. (Default: False)")
-        self.add_option("mask-adapter", bool, default=False, optional=True,
-                        description="Mask with 'N' adapter bases instead of trim (default:"
+        self.add_option("mask-adapter", bool, optional=True,
+                        description="Mask with 'N' adapter bases instead of trim (default: "
                         "False)")
 
         # 3. cutadapt Options that influence what gets output to where:
@@ -126,44 +126,44 @@ class Cutadapt(AbstractStep):
         # are handled by uap and not accessible to the user
 
         # 4. cutadapt Additional modifications to the reads:
-        self.add_option("cut", int, default=0, optional=True,
+        self.add_option("cut", int, optional=True,
                         description="Remove bases from the beginning or end of each read. "
                         "If LENGTH is positive, the bases are removed from the beginning "
                         "of each read. If LENGTH is negative, the bases are removed from "
                         "the end of each read.")
-        self.add_option("quality-cutoff", int, default=0, optional=True,
+        self.add_option("quality-cutoff", int, optional=True,
                         description="Trim low-quality ends from reads before adapter "
                         "removal. The algorithm is the same as the one used by  BWA "
                         "(Subtract CUTOFF from all qualities; compute partial sums from "
                         "all indices to the end of the sequence; cut sequence at the index "
                         "at which the sum is minimal) (default: 0)")
-        self.add_option("quality-base", int, default=33, optional=True, choices = [33,64],
+        self.add_option("quality-base", int, optional=True, choices = [33,64],
                         description="Assume that quality values are encoded as ascii "
                         "(quality + QUALITY_BASE). The default (33) is usually correct, "
                         "except for reads produced by some versions of the Illumina "
                         "pipeline, where this should be set to 64. (Default: 33)")
-        self.add_option("prefix", str, default="", optional=True,
+        self.add_option("prefix", str, optional=True,
                         description="Add this prefix to read names")
-        self.add_option("suffix", str, default="", optional=True,
+        self.add_option("suffix", str, optional=True,
                         description="Add this suffix to read names")
-        self.add_option("strip-suffix", str, default="", optional=True,
+        self.add_option("strip-suffix", str, optional=True,
                         description="Remove this suffix from read names if present. "
                         "Can be given multiple times.")
-        self.add_option("colospace", bool, default=False, optional=True,
+        self.add_option("colospace", bool, optional=True,
                         description="Colorspace mode: Also trim the color that is "
                         "adjacent to the found adapter.")
-        self.add_option("double-encode", bool, default=False, optional=True,
+        self.add_option("double-encode", bool, optional=True,
                         description="When in color space, double-encode colors (map "
                         "0,1,2,3,4 to A,C,G,T,N).")
-        self.add_option("trim-primer", bool, default=False, optional=True,
+        self.add_option("trim-primer", bool, optional=True,
                         description="When in color space, trim primer base and the first "
                         "color (which is the transition to the first nucleotide)")
-        self.add_option("strip-f3", bool, default=False, optional=True,
+        self.add_option("strip-f3", bool, optional=True,
                         description="For color space: Strip the _F3 suffix of read names")
-        self.add_option("maq", bool, default=False, optional=True,
+        self.add_option("maq", bool, optional=True,
                         description="MAQ-compatible color space output. This enables "
                         "colorspace, double-encode, trim-primer, strip-f3 and suffix:'/1'.")
-        self.add_option("bwa", bool, default=False, optional=True,
+        self.add_option("bwa", bool, optional=True,
                         description="BWA-compatible color space output. This enables "
                         "colorspace, double-encode, trim-primer, strip-f3 and suffix:'/1'.")
         self.add_option("length-tag", str, optional=True,
@@ -172,19 +172,19 @@ class Cutadapt(AbstractStep):
                         "FASTQ file). Replace the decimal number with the correct length "
                         "of the trimmed read. For example, use --length-tag 'length=' to "
                         "correct fields like 'length=123'.")
-        self.add_option("no-zero-cap", bool, default=False, optional=True,
+        self.add_option("no-zero-cap", bool, optional=True,
                         description="Do not change negative quality values to zero. "
                         "Colorspace quality values of -1 would appear as spaces in the "
                         "output FASTQ file. Since many tools have problems with that, "
                         "negative qualities are converted to zero when trimming colorspace "
                         "data. Use this option to keep negative qualities.")
-        self.add_option("zero-cap", bool, default=True, optional=True,
+        self.add_option("zero-cap", bool, optional=True,
                         description="Change negative quality values to zero. This is "
                         "enabled by default when -c/--colorspace is also enabled. Use "
                         "the above option to disable it.")
 
         # 5. other non-cutadapt options
-        self.add_option('fix_qnames', bool, default = False,
+        self.add_option('fix_qnames', bool, default=False,
                         description="If set to true, only the leftmost string "
                         "without spaces of the QNAME field of the FASTQ data is "
                         "kept. This might be necessary for downstream analysis.")
