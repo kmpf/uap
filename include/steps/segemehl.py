@@ -68,7 +68,7 @@ class Segemehl(AbstractStep):
                         description="Path to genome file")
         self.add_option('index', str, optional=False,
                         description="path/filename of db index (default:none)")
-        self.add_option('index2', str, optional=False, #default="none",
+        self.add_option('index2', str, optional=True, #default="none",
                         description="path/filename of second db index (default:none)")
         self.add_option('bisulfite', int, choices=[0, 1, 2], optional=True,
                         description="bisulfite mapping with methylC-seq/Lister "
