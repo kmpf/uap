@@ -27,10 +27,15 @@ class FastxQualityStats(AbstractStep):
         self.add_connection('out/first_read_quality_stats')
         self.add_connection('out/second_read_quality_stats')
 
+        # Step was tested for cat (GNU coreutils) release 8.25
         self.require_tool('cat')
+        # Step was tested for dd (coreutils) release 8.25
         self.require_tool('dd')
+        # Step was tested for mkfifo (GNU coreutils) release 8.25
         self.require_tool('mkfifo')
+        # Step was tested for FASTX Toolkit release 0.0.13
         self.require_tool('fastx_quality_stats')
+        # Step was tested for pigz release 2.3.1
         self.require_tool('pigz')
 
         # [Options for 'fastx_quality_stats':]
@@ -38,7 +43,7 @@ class FastxQualityStats(AbstractStep):
                         description = "New output format (with more information "
                         "per nucleotide/cycle).")
         # no info in help for this option ?! -> excluded
-        # self.add_option('quality', int, default=33, optional=True)
+        self.add_option('quality', int, default=33, optional=True)
 
         # [Options for 'dd':]
         self.add_option('dd-blocksize', str, optional = True, default = "2M")
@@ -50,7 +55,7 @@ class FastxQualityStats(AbstractStep):
         reads_counts_files = dict()
         read_files = list()
 
-        options = {'new_output_format': '-N'}#, 'quality': '-Q'}
+        options = {'new_output_format': '-N', 'quality': '-Q'}
         option_list = list()
         for option in [o for o in options.keys() \
                        if self.is_option_set_in_config(o)]:

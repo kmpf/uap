@@ -24,10 +24,14 @@ class FixCutadapt(AbstractStep):
         self.add_option('dd-blocksize', str, optional = True, default = "2M")
         self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
+        # Step was tested for cat (GNU coreutils) release 8.25
         self.require_tool('cat')
+        # Step was tested for dd (coreutils) release 8.25
         self.require_tool('dd')
         self.require_tool('fix_cutadapt')
+        # Step was tested for mkfifo (GNU coreutils) release 8.25
         self.require_tool('mkfifo')
+        # Step was tested for pigz release 2.3.1
         self.require_tool('pigz')
 
     def runs(self, run_ids_connections_files):

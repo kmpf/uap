@@ -36,7 +36,7 @@ class SamtoolsSort(AbstractStep):
         self.add_option('compression-level', int, optional = True, default = 0,
                         description = 'Set compression level, from 0 (uncompressed) '
                         'to 9 (best)')
-        self.add_option('max-mem-per-thread', str, optional = True, default = '768M' 
+        self.add_option('max-mem-per-thread', str, optional = True, default = '768M',
                         description = 'Set maximum memory per thread; '
                         'suffix K/M/G recognized [768M]')
         self.add_option('sort-by-name', bool, default = False, optional = True,

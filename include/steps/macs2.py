@@ -42,8 +42,11 @@ class Macs2(AbstractStep):
         self.add_connection('out/broadpeaks-xls')
         self.add_connection('out/gappedpeaks')
 
+        # Step was tested for macs2 release 2.1.1.20160309
         self.require_tool('macs2')
+        # Step was tested for mkdir (GNU coreutils) release 8.25
         self.require_tool('mkdir')
+        # Step was tested for mv (GNU coreutils) release 8.25
         self.require_tool('mv')
 
         # Options for MACS2 callpeak subcommand
@@ -235,7 +238,7 @@ class Macs2(AbstractStep):
                         "from control, NAME+'_treat_pvalue.bdg' for Poisson "
                         "pvalue scores (in -log10(pvalue) form), and "
                         "NAME+'_treat_qvalue.bdg' for q-value scores from "
-                        "Benjamini–Hochberg–Yekutieli procedure "
+                        "Benjamini-Hochberg-Yekutieli procedure "
                         "<http://en.wikipedia.org/wiki/False_discovery_rate#Dependent_tests>")
         self.add_option('call-summits', bool, optional=True,
                         description = "MACS will now reanalyze the shape of "
