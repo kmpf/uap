@@ -47,10 +47,11 @@ constants:
     # 2.  Mapping indices:
     # 2.1 Bowtie2
     - &bowtie2_genome_index
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/bowtie2_generate_index/bowtie2_index-chr21-J94fnhgz/bowtie2_index-chr21
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/bowtie2_generate_index/bowtie2_index-download-FgvWLBqA/bowtie2_index-download
+
     ## 2.2 BWA
     - &bwa_genome_index
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/bwa_generate_index/bwa_index-chr21-kBivDpXC/bwa_index-chr21
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/bwa_generate_index/bwa_index-download-BsAeGUho/bwa_index-download
 
     ## Control vs. Treatment information needed for MACS2
     - control: &control-treatment-hash
