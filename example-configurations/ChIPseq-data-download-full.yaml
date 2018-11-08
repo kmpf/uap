@@ -151,10 +151,10 @@ steps:
         path: example-out/2007-Barski_et_al_download
         uncompress: yes
 
-  SRR001414_download (raw_url_source):
-      url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001414/SRR001414.fastq.gz
-      path: example-out/2007-Barski_et_al_download
-      uncompress: yes
+    SRR001414_download (raw_url_source):
+        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001414/SRR001414.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
 
     SRR001415_download (raw_url_source):
         url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001415/SRR001415.fastq.gz
