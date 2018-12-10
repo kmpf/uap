@@ -1,4 +1,4 @@
-# This configuration downloads the sequence of chromosome 21 and creates
+# This configuration downloads the sequence of all human chromosomes and creates
 # bowtie2, BWA, and fasta indices.
 
 ################################################################################
