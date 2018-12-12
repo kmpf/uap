@@ -27,14 +27,6 @@ These four configurations implement the data analysis:
 - RNAseq-workflow-short.yaml
 
 
-**Questions??**
-- Why do we need the following two configuration file *index_mycoplasma_genitalium_ASM2732v1_genome.yaml*, it is very similar to 01.b
-
-**ToDos!!**
-- remove those lines from the worfklow configurations that are not required (commented addtional samples, files, etc.)
-- rename the workflows to more intuitive files
-
-
 1. Download genome information and create indices for the data analysis workflows
 =================================================================================
 
@@ -48,6 +40,7 @@ This configuration downloads the GENCODE annotation.
 **Configuration file:** download_human_gencode_release.yaml
 
 **Steps:**
+
 - download .gtf annotation for hg19 genes via ftp
 - download lncRNA .gtf annotation for hg19 via ftp
 
@@ -205,18 +198,18 @@ workflow for your own purpose, it might not be necessary to download the example
 data.
 
 **Steps:**
-- RNAseq-workflow-short.yaml
-  - read input data (fastq files)
-  - quality control (*fastqc* and *fastx quality stats*) 
-  - read mapping onto genome (*TopHat2*)
-  - sorting of alignments (*samtools*)
-  - assemble new transcripts (*cufflinks*)
-  - count reads mapped by tophat2 overlapping genes (*htseq-count*)
 
+- RNAseq-workflow-short.yaml
+ - read input data (fastq files)
+ - quality control (*fastqc* and *fastx quality stats*) 
+ - read mapping onto genome (*TopHat2*)
+ - sorting of alignments (*samtools*)
+ - assemble new transcripts (*cufflinks*)
+ - count reads mapped by tophat2 overlapping genes (*htseq-count*)
 
 - RNAseq-workflow-full.yaml (contains all the steps in RNAseq-workflow-short.yaml plus)
-  - read mapping onto genome (*segemehl*)
-  - make segemehl output compatible with cufflinks (*s2c*)
-  - sort alignments by position (*samtools*)
-  - assemble new transcripts (*cufflinks*)
-  - count reads mapped by segemehl overlapping genes (*htseq-count*)
+ - read mapping onto genome (*segemehl*)
+ - make segemehl output compatible with cufflinks (*s2c*)
+ - sort alignments by position (*samtools*)
+ - assemble new transcripts (*cufflinks*)
+ - count reads mapped by segemehl overlapping genes (*htseq-count*)
