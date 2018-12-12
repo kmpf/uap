@@ -76,16 +76,6 @@ steps:
     ## Processing steps ##
     ######################
 
-    bam_to_bedgraph_and_bigwig:
-        _depends: tophat2
-        chromosome-sizes: *chromosome_sizes
-        temp-sort-dir: /tmp
-
-    bam_to_genome_browser:
-        _depends: tophat2
-        chromosome-sizes: *chromosome_sizes
-        output-format: bigWig
-
     bowtie2_generate_index:
         _depends: download_hg19_chr21_UCSC
         _connect:
@@ -108,23 +98,6 @@ steps:
             in/reference_sequence: download_hg19_chr21_UCSC/raw
         index-basename: bwa_index
 
-    bwa_mem:
-        _depends: fastq_source
-        index: *bwa_genome_index
-        dd-blocksize: 4M
-
-    chromhmm_binarizebam:
-        _depends: bowtie2
-        chrom_sizes_file: *chromosome_sizes
-        cell_mark_files:
-            sample_hmm:
-                - [Sample1, Sample2, Sample3]
-
-
-#    chromhmm_learnmodel:
-
-#    cuffcompare:
-
     cufflinks_tophat2 (cufflinks):
         _depends: tophat2
         library-type: fr-secondstrand
@@ -135,18 +108,10 @@ steps:
 #        library-type: fr-secondstrand
 #        mask-file: *gencode_v19_annotation_gtf
 
-#    cuffmerge:
-
     cutadapt:
         _depends: fastq_source
         adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
         adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
-
-#    deepTools_bamCompare:
-#    deepTools_bamPEFragmentSize:
-#    deepTools_multiBamSummary:
-#    deepTools_plotFingerprint:
-#    discardLargeSplitsAndPairs:
 
     fastqc:
       _depends: fastq_source
@@ -177,28 +142,13 @@ steps:
 #    macs2:
 #    merge_fasta_files:
 #    merge_fastq_files:
-#    merge_numpy_zip_arrays:
-#    pear:
-#    pepr_postprocess:
-#    pepr:
-#    picard_add_replace_read_groups:
 #    picard_markduplicates:
-#    picard_merge_sam_bam_files:
-#    post_cufflinksSuite:
-#    preseq_complexity_curve:
-#    preseq_future_genome_coverage:
-#    preseq_future_yield:
-#    remove_duplicate_reads_runs:
-#    rgt_thor:
-#    rseqc:
 
 #    s2c:
 #        _depends: segemehl
 #        tmp_dir: /tmp/
 
 #    samtools_faidx:
-#    samtools_index:
-#    samtools_stats:
 
     sort_tophat2 (sam_to_sorted_bam):
         _depends: tophat2
@@ -218,15 +168,10 @@ steps:
 #        genome: *genome
 #        index: *segemehl_genome_index
 
-#    sra_fastq_dump:
-#    subsetMappedReads:
-
     tophat2:
         _depends: fastq_source
         library_type: fr-secondstrand
         index: *bowtie2_genome_index
-
-#    trimmomatic:
 
 ################################################################################
 ## Tools Section                                                              ##

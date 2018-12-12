@@ -1,4 +1,4 @@
-# This configuration downloads the sequence of all human chromosomes and creates
+# This configuration downloads the sequence of chromosome 21 and creates
 # bowtie2, BWA, and fasta indices.
 
 ################################################################################
@@ -39,7 +39,7 @@ steps:
     ##################
 
     # Download all chromosomal sequences
-    hg19_UCSC (raw_url_source):
+    hg19_UCSC (raw_url_sources):
         _cluster_job_quota: 1
         run-download-info:
             chr1:

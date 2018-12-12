@@ -38,7 +38,7 @@ These four configurations implement the data analysis:
 1. Download genome information and create indices for the data analysis workflows
 =================================================================================
 
-Most analysis require some kind of genome sequence and/or annotation.
+Most analysis require some kind of genome sequence and/or annotation data.
 
 1.1 download_human_gencode_release_v19.yaml
 -------------------------------------------
@@ -48,8 +48,8 @@ This configuration downloads the GENCODE annotation.
 **Configuration file:** download_human_gencode_release.yaml
 
 **Steps:**
-- download .gtf annotation of hg19 genes via ftp
-- download lncRNA .gtf annotation via ftp
+- download .gtf annotation for hg19 genes via ftp
+- download lncRNA .gtf annotation for hg19 via ftp
 
 
 1.2 index_homo_sapiens_hg19_chr21.yaml
@@ -91,7 +91,7 @@ analysis workflows (see section 3, below).
 1.4 index_mycoplasma_genitalium_ASM2732v1_genome.yaml
 -----------------------------------------------------
 
-This conifguration file downloads the FASTA sequence of the Mycoplasma
+This configuration file downloads the FASTA sequence of the Mycoplasma
 genitalium genome and creates the index files for different read mapping tools.
 *Due to the small genome size the creation of the segemehl index can be tested
 with this workflow.*
@@ -152,7 +152,7 @@ analysis can be found in section 3.2 below.
 3. Data analysis workflows
 ==========================
 
-Most analysis require some kind of genome sequence and/or annotation.
+Most analysis require some kind of genome sequence and/or annotation data.
 
 3.1 ChIPseq-workflow-full.yaml &  ChIPseq-workflow-short.yaml
 -------------------------------------------------------------
