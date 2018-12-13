@@ -58,6 +58,7 @@ the data analysis workflows (see section 3, below).
 
 - download sequence of human chr21 (hg19)
 - create index files for:
+  
   - bowtie2/tophat2
   - BWA
   - fasta indices
@@ -76,9 +77,11 @@ analysis workflows (see section 3, below).
 - download sequences of human chr1-chr22, chrX and chrY (hg19)
 - merge all chromosme sequences
 - create index files for:
+  
   - bowtie2/tophat2
   - BWA
   - fasta indices
+
 - download chromosome sizes file
 
 1.4 index_mycoplasma_genitalium_ASM2732v1_genome.yaml
@@ -95,6 +98,7 @@ with this workflow.*
 
 - download genome sequence of Mycoplasma genitalium
 - create index files for:
+  
   - bowtie2/tophat2
   - BWA
   - segemehl
@@ -200,6 +204,7 @@ data.
 **Steps:**
 
 - RNAseq-workflow-short.yaml
+  
  - read input data (fastq files)
  - quality control (*fastqc* and *fastx quality stats*) 
  - read mapping onto genome (*TopHat2*)
@@ -208,6 +213,7 @@ data.
  - count reads mapped by tophat2 overlapping genes (*htseq-count*)
 
 - RNAseq-workflow-full.yaml (contains all the steps in RNAseq-workflow-short.yaml plus)
+  
  - read mapping onto genome (*segemehl*)
  - make segemehl output compatible with cufflinks (*s2c*)
  - sort alignments by position (*samtools*)
