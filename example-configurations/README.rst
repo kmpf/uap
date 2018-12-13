@@ -205,17 +205,17 @@ data.
 
 - RNAseq-workflow-short.yaml
   
- - read input data (fastq files)
- - quality control (*fastqc* and *fastx quality stats*) 
- - read mapping onto genome (*TopHat2*)
- - sorting of alignments (*samtools*)
- - assemble new transcripts (*cufflinks*)
- - count reads mapped by tophat2 overlapping genes (*htseq-count*)
+  - read input data (fastq files)
+  - quality control (*fastqc* and *fastx quality stats*) 
+  - read mapping onto genome (*TopHat2*)
+  - sorting of alignments (*samtools*)
+  - assemble new transcripts (*cufflinks*)
+  - count reads mapped by tophat2 overlapping genes (*htseq-count*)
 
 - RNAseq-workflow-full.yaml (contains all the steps in RNAseq-workflow-short.yaml plus)
   
- - read mapping onto genome (*segemehl*)
- - make segemehl output compatible with cufflinks (*s2c*)
- - sort alignments by position (*samtools*)
- - assemble new transcripts (*cufflinks*)
- - count reads mapped by segemehl overlapping genes (*htseq-count*)
+  - read mapping onto genome (*segemehl*)
+  - make segemehl output compatible with cufflinks (*s2c*)
+  - sort alignments by position (*samtools*)
+  - assemble new transcripts (*cufflinks*)
+  - count reads mapped by segemehl overlapping genes (*htseq-count*)
