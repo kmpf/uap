@@ -64,6 +64,12 @@ class Hisat2(AbstractStep):
         # Alignment:
 
         # N, L, i?
+        self.add_option('trim5', str, optional=True,
+                        description="trim 5 prime")
+
+        self.add_option('trim3', str, optional=True,
+                        description="trim 3 prime")
+
 
         self.add_option('ignore-quals', bool, default=None, optional=True,
                         description="treat all quality values as 30 on Phred \
@@ -290,7 +296,7 @@ class Hisat2(AbstractStep):
                     "rfg", "rg", "pen-cansplice", "pen-noncansplice",
                     "pen-canintronlen", "pen-noncanintronlen", "min-intronlen",
                     "max-intronlen", "known-splicesite-infile",
-                    "novel-splicesite-outfile", "novel-splicesite-infile"]
+                    "novel-splicesite-outfile", "novel-splicesite-infile", "trim5", "trim3"]
 
         self.set_cores(self.get_option('cores'))
 
