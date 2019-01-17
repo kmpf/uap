@@ -50,4 +50,4 @@ unset LDFLAGS_BAK && unset CPPFLAGS_BAK
 
 # matplotlib requires freetype
 module load freetype/2.5.5-1
-./python_env/bin/pip install matplotlib
+./python_env/bin/pip install matplotlib==2.2.3
