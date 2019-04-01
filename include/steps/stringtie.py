@@ -155,7 +155,7 @@ class StringTie(AbstractStep):
     def runs(self, run_ids_connections_files):
 
         # Compile the list of options
-        options=['l','f','m','a','j','t','c','v','g','M','p', 'B','e','x']
+        options=['l','f','m','a','j','t','c','v','g','M','p', 'B','e','x', 'G']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -187,9 +187,9 @@ class StringTie(AbstractStep):
                 #    logger.error("No feature file could be found for '%s'" % run_id)
                 #    sys.exit(1)
 
-        if features_path:
-            option_list.append('-G')
-            option_list.append(features_path)
+        #if not features_path:
+        #    option_list.append('-G')
+        #    option_list.append(features_path)
 
         for run_id in run_ids_connections_files.keys():
 
