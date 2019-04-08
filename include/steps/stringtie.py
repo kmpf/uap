@@ -206,9 +206,13 @@ class StringTie(AbstractStep):
                 abundfile = run.add_output_file('abundances',
                                                 '%s-abundances.gtf' % run_id,
                                                 input_paths)
-                covfile = run.add_output_file('covered',
+                if self.is_option_set_in_config('G'):
+			covfile = run.add_output_file('covered',
                                               '%s-coveredRefs.gtf' % run_id,
                                               input_paths)
+		else:
+			covfile = run.add_empty_output_connection('covered')
+			
                 stdout = run.add_output_file('log_stdout',
                                              '%s-stringtie.stdout' % run_id,
                                              input_paths)
@@ -241,7 +245,8 @@ class StringTie(AbstractStep):
 
                     stringtie.extend(option_list)
 
- 	            stringtie.extend(['-C', covfile])
+ 	            if self.is_option_set_in_config('G'):
+			stringtie.extend(['-C', covfile])
 
                     stringtie.extend(['-A', abundfile])
 
