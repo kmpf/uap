@@ -75,3 +75,5 @@ target/
 example-configurations/example-out/
 example-configurations/genomes/
 *-out
+
+.idea/

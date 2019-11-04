@@ -149,8 +149,7 @@ def main(args):
 
         config_file_path = args.config.name
         command = ['uap', config_file_path, 'run-locally']
-        if args.even_if_dirty:
-            command.append('--even-if-dirty')
+
         command.append('"' + str(task) + '"')
 
         submit_script = submit_script.replace("#{COMMAND}", ' '.join(command))
