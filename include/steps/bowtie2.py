@@ -41,7 +41,18 @@ class Bowtie2(AbstractStep):
         self.add_option('index', str, optional=False,
                         description="Path to bowtie2 index (not containing file "
                         "suffixes).")
-                        
+
+
+        self.add_option('local', bool, optional=True,
+                        description="local mode" )
+
+        self.add_option('trim5', int, optional=True,
+                        description="trim 5 prime")
+
+        self.add_option('trim3', int, optional=True,
+                        description="trim 3 prime")
+
+
         self.add_option('cores', int, default=6)
         self.add_option('unaligned', bool, default = None, optional=True)
 
@@ -109,9 +120,20 @@ class Bowtie2(AbstractStep):
                                     input_paths)
                                 bowtie2.extend(['--un', unaligned])
 
-                            
-                            
+                        if self.is_option_set_in_config('local'):
+                            if self.get_option('local'):
+                                bowtie2.extend(['--local'])
 
+                        if self.is_option_set_in_config('trim5'):
+                            if self.get_option('trim5'):
+                                bowtie2.extend(['--trim5', str(self.get_option('trim5'))])
+
+                        if self.is_option_set_in_config('trim3'):
+                            if self.get_option('trim3'):
+                                bowtie2.extend(['--trim3', str(self.get_option('trim3'))])
+
+                                
+                                
 
                         bowtie2_pipe.add_command(bowtie2, stderr_path=log_stderr)
                         res = run.add_output_file(

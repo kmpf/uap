@@ -1,15 +1,11 @@
 import base64
 import copy
-import csv
 import datetime
-import fscache
-import glob
 import json
 from logging import getLogger
 from operator import itemgetter
 import os
 import re
-import StringIO
 import subprocess
 import sys
 import yaml
@@ -17,20 +13,22 @@ import yaml
 import abstract_step
 import misc
 import task as task_module
-from xml.dom import minidom
 
 
-logger=getLogger("uap_logger")
+logger = getLogger("uap_logger")
 
-# an exception class for reporting configuration errors
+
 class ConfigurationException(Exception):
+    """an exception class for reporting configuration errors"""
+
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return repr(self.value)
 
-class Pipeline(object):
 
+class Pipeline(object):
     '''
     The Pipeline class represents the entire processing pipeline which is defined
     and configured via the configuration file config.yaml.
@@ -46,70 +44,66 @@ class Pipeline(object):
 
     def __init__(self, **kwargs):
         self.caught_signal = None
-
-        self.git_dirty_diff = None
-
         self.cluster_type = None
-        '''
-        The cluster type to be used (must be one of the keys specified in
-        cluster_config).
-        '''
+        self.git_version = None
+        self.git_diff = None
+        self.git_tag = None
 
-        # Check the availability of git
+        '''use git diff to determine any changes in git
+        directory if git is available
+        '''
         command = ['git', '--version']
         try:
-            with open(os.devnull, 'w') as devnull:
-                subprocess.check_call(command, stdout = devnull)
 
-        except subprocess.CalledProcessError as e:
-            logger.error("Execution of '%s' failed. Git seems to be "
-                         "unavailable." % " ".join(command))
-            sys.exit(1)
+            self.git_version = subprocess.check_output(command).strip()
 
-        # now determine the Git hash of the repository
-        command = ['git', 'describe', '--all', '--dirty', '--long']
-        try:
-            self.git_hash_tag = subprocess.check_output(command).strip()
-        except:
-            logger.error("Execution of %s failed." % " ".join(command))
-            raise
-            sys.exit(1)
+        except subprocess.CalledProcessError:
+            logger.warn("""Execution of %s failed. Git seems to be
+                         unavailable. Continue anyways""" % " ".join(command))
 
-        # check if we got passed an 'arguments' parameter
-        # this parameter should contain a argparse.Namespace object
+        if self.git_version:
+            command = ['git', 'diff']
+            try:
+                self.git_diff = subprocess.check_output(command)
+            except subprocess.CalledProcessError:
+                logger.error("Execution of %s failed." % " ".join(command))
+
+            command = ['git', 'describe', '--all', '--long']
+            try:
+                self.git_tag = subprocess.check_output(command).strip()
+            except subprocess.CalledProcessError:
+                logger.error("Execution of %s failed." % " ".join(command))
+
+            if self.git_diff != '':
+                logger.warn('THE GIT REPOSITORY HAS UNCOMMITED CHANGES!')
+
+
+        """
+        check if we got passed an 'arguments' parameter
+        this parameter should contain a argparse.Namespace object
+        """
         args = None
         if 'arguments' in kwargs:
             args = kwargs['arguments']
 
-        self._uap_path = args.uap_path
+
         '''
         Absolute path to the directory of the uap executable.
         It is used to circumvent path issues.
         '''
+        self._uap_path = args.uap_path
 
+
+        '''
+        The cluster type to be used (must be one of the keys specified in
+        cluster_config).
+        '''
         self._cluster_config_path = os.path.join(
             self._uap_path, 'cluster/cluster-specific-commands.yaml')
         with open(self._cluster_config_path, 'r') as cluster_config_file:
             self._cluster_config = yaml.load( cluster_config_file )
-        '''
-        Cluster-related configuration for every cluster system supported.
-        '''
 
-        if self.git_hash_tag.endswith('-dirty'):
-            if not args.even_if_dirty:
-                print("The repository has uncommitted changes, which is why " +
-                      "we will exit right now.")
-                print("If this is not a production environment, you can skip " +
-                      "this test by specifying --even-if-dirty on the command " +
-                      "line.")
-                print(self.git_hash_tag)
-                exit(1)
-                command = ['git', 'diff']
-                try:
-                    self.git_dirty_diff = subprocess.check_output(command)
-                except:
-                    logger.error("Execution of %s failed." % " ".join(command))
-                    sys.exit(1)
+           
         try:
             # set cluster type
             if args.cluster == 'auto':

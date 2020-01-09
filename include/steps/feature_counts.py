@@ -38,14 +38,6 @@ class FeatureCounts(AbstractStep):
                         provided annotation file is in GTF format. Use -F \
                         option to specify other annotation formats.")
 
-        self.add_option('o', str, optional=False, description="Give the name \
-                        of the output file. The output file contains the \
-                        number of reads assigned to each meta-feature \
-                        (or each feature if -f is specified). A meta-feature \
-                        is the aggregation of features, grouped by using gene \
-                        identifiers. Please refer to the users guide for more \
-                        details.")
-
         self.add_option('t', str, optional=False, default=None,
                         description="Specify the feature type. Only rows \
                         which have the matched feature type in the provided \
@@ -53,6 +45,15 @@ class FeatureCounts(AbstractStep):
                         counting. `exon' by default.")
 
         # optional parameters
+        self.add_option('o', str, optional=True, default="counts.txt",
+                        description="Give the name \
+                        of the output file. The output file contains the \
+                        number of reads assigned to each meta-feature \
+                        (or each feature if -f is specified). A meta-feature \
+                        is the aggregation of features, grouped by using gene \
+                        identifiers. Please refer to the users guide for more \
+                        details.")
+
         self.add_option('A', str, optional=True, default=None,
                         description="Specify the name of a file including \
                         aliases of chromosome names. The file should be a \
@@ -311,7 +312,7 @@ class FeatureCounts(AbstractStep):
                 fc.extend(['-a', feature_path])
 
                 basename = run.get_output_directory_du_jour_placeholder() + \
-                    '/' + run_id + '.' + self.get_option('o')
+                    '/' + run_id + '.' +  self.get_option('o')
                 fc.extend(['-o', basename])
 
                 fc.extend(input_paths)
@@ -324,10 +325,10 @@ class FeatureCounts(AbstractStep):
                                                  stdout_file, input_paths)
 
                 run.add_output_file('counts',
-                                    run_id + '.counts.txt',
+                                    run_id + '.' +  self.get_option('o'),
                                     input_paths)
                 run.add_output_file('summary',
-                                    run_id + '.counts.txt.summary',
+                                    run_id + '.' + self.get_option('o') + '.summary',
                                     input_paths)
                 fc_exec_group = run.new_exec_group()
                 fc_exec_group.add_command(fc, stdout_path=log_stdout,
