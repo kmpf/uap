@@ -28,12 +28,7 @@ class CommandInfo(object):
 
     def replace_output_dir_du_jour(func):
         def inner(self, *args):
-            run_info = None
-            if isinstance(self._eop, pipeline_info.PipelineInfo):
-                run_info = self._eop.get_exec_group().get_run()
-            elif isinstance(self._eop, exec_group.ExecGroup):
-                run_info = self._eop.get_run()
-            # Collect info to replace du_jour placeholder with temp_out_dir
+            run_info = self._get_run_info()
             placeholder = run_info.get_output_directory_du_jour_placeholder()
             temp_out_dir = run_info.get_output_directory_du_jour()
 
@@ -60,6 +55,17 @@ class CommandInfo(object):
                 sys.exit(1)
             return(command)
         return(inner)
+
+    def _get_run_info(self):
+        if isinstance(self._eop, pipeline_info.PipelineInfo):
+            run_info = self._eop.get_exec_group().get_run()
+        elif isinstance(self._eop, exec_group.ExecGroup):
+            run_info = self._eop.get_run()
+        else:
+            raise StandardError("Runs can only be PipelineInfo or ExecGroup but not %s."
+                    % type(self._eop))
+        return(run_info)
+
 
     def set_command(self, command):
         if not isinstance(command, list):
