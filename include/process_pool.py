@@ -357,9 +357,8 @@ class ProcessPool(object):
         working_directory = copy.copy(info['working_directory'])
         hints = copy.deepcopy(info['hints'])
 
-        kwargs = dict()
         if working_directory is not None:
-            kwargs['cwd'] = working_directory
+            working_directory = os.getcwd()
 
         program_name = copy.deepcopy(args[0])
         if program_name.__class__ == list:
@@ -379,7 +378,7 @@ class ProcessPool(object):
             stderr = subprocess.PIPE,
             preexec_fn = restore_sigpipe_handler,
             close_fds = True,
-            **kwargs
+            cwd = working_directory
         )
         pid = proc.pid
         self.popen_procs[pid] = proc
@@ -393,8 +392,10 @@ class ProcessPool(object):
             'pid': pid,
             'hints': hints
         }
-        self.log("Launched %s as PID %d." % (' '.join(args), pid))
-        sys.stderr.write("Launched %s as PID %d.\n" % (' '.join(args), pid))
+        message = "Launched %s in %s as PID %d." % \
+                (' '.join(args), working_directory, pid)
+        self.log(message)
+        sys.stderr.write(message)
         sys.stderr.flush()
 
         pipe = None
