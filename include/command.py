@@ -1,4 +1,5 @@
 import sys
+import os
 from logging import getLogger
 import pipeline_info
 import exec_group
@@ -103,4 +104,5 @@ class CommandInfo(object):
         if wd is None:
             run_info = self._get_run_info()
             wd = run_info.get_output_directory_du_jour()
+            wd = os.path.abspath(wd)
         return(wd)
