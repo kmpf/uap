@@ -352,7 +352,12 @@ class ProcessPool(object):
         args = copy.deepcopy(info['args'])
         stdout_path = copy.copy(info['stdout_path'])
         stderr_path = copy.copy(info['stderr_path'])
+        working_directory = copy.copy(info['working_directory'])
         hints = copy.deepcopy(info['hints'])
+
+        kwargs = dict()
+        if working_directory is not None:
+            kwargs['cwd'] = working_directory
 
         program_name = copy.deepcopy(args[0])
         if program_name.__class__ == list:
@@ -371,7 +376,8 @@ class ProcessPool(object):
             stdout = subprocess.PIPE,
             stderr = subprocess.PIPE,
             preexec_fn = restore_sigpipe_handler,
-            close_fds = True
+            close_fds = True,
+            **kwargs
         )
         pid = proc.pid
         self.popen_procs[pid] = proc
