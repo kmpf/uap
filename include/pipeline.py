@@ -241,14 +241,16 @@ class Pipeline(object):
         if not 'id' in self.config:
             self.config['id'] = config_file.name
 
-        if 'lmod' in self.config:
-            for key in ('path', 'module_path'):
-                if key not in self.config['lmod']:
-                    logger.error('lmod misses the required key %s' % key)
-                    sys.exit(1)
-            lmod_configured = True
-        else:
-            lmod_configured = False
+        if 'lmod' not in self.config or self.config['lmod'] is None:
+            self.config['lmod'] = dict()
+        if os.environ.has_key('LMOD_CMD'):
+            self.config['lmod']setdefault('path', os.environ['LMOD_CMD'])
+        if os.environ.has_key('MODULEPATH'):
+            self.config['lmod']setdefault('module_path', os.environ['MODULEPATH'])
+        for key in ('path', 'module_path'):
+            if key not in self.config['lmod']:
+                logger.error('lmod is not loaded and misses the key %s' % key)
+                sys.exit(1)
 
         if 'tools' in self.config and isinstance(self.config['tools'], dict):
             for tool, args in self.config['tools'].items():
@@ -259,14 +261,10 @@ class Pipeline(object):
                 self.config['tools'][tool].setdefault('exit_code', 0)
                 if 'module_name' in self.config['tools'][tool]:
                     mn = self.config['tools'][tool]['module_name']
-                    if lmod_configured is True:
-                        cmd = '%s python load %s' % (self.config['lmod']['path'], mn)
-                        self.config['tools'][tool].setdefault('module_load', cmd)
-                        cmd = '%s python unload %s' % (self.config['lmod']['path'], mn)
-                        self.config['tools'][tool].setdefault('module_unload', cmd)
-                    elif 'module_load' not in self.config['tools'][tool]:
-                        logger.error('The tool %s requires lmod or module_load.' % tool)
-                        sys.exit(1)
+                    cmd = '%s python load %s' % (self.config['lmod']['path'], mn)
+                    self.config['tools'][tool].setdefault('module_load', cmd)
+                    cmd = '%s python unload %s' % (self.config['lmod']['path'], mn)
+                    self.config['tools'][tool].setdefault('module_unload', cmd)
 
 
         if not 'destination_path' in self.config:
