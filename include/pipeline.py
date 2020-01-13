@@ -184,6 +184,7 @@ class Pipeline(object):
         '''
 
         self.read_config(args.config)
+        self.setup_lmod()
 
         # collect all tasks
         for step_name in self.topological_step_order:
@@ -501,6 +502,13 @@ class Pipeline(object):
 
         return tool_check_info
 
+    def setup_lmod(self):
+        '''
+        If lmod is configured this functions sets the required environmental variables.
+        '''
+        if 'lmod' in self.config:
+            os.environ['MODULEPATH'] = self.config['lmod']['module_path']
+
     def check_tools(self):
         '''
         checks whether all tools references by the configuration are available
@@ -512,8 +520,6 @@ class Pipeline(object):
             tool_check_info = dict()
 
             # Load module(s) and execute command if configured
-            if 'module_load' in info and 'MODULEPATH' not in os.environ:
-                os.environ['MODULEPATH'] = info['module_path']
             for pre_cmd in (x for x in ('module_load', 'pre_command')
                              if x in info):
                 tool_check_info = self.exec_pre_post_calls(
