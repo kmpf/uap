@@ -392,7 +392,7 @@ class ProcessPool(object):
             'pid': pid,
             'hints': hints
         }
-        message = "Launched %s in %s as PID %d." % \
+        message = "Launched %s in %s as PID %d.\n" % \
                 (' '.join(args), working_directory, pid)
         self.log(message)
         sys.stderr.write(message)
