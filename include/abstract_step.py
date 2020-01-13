@@ -344,12 +344,14 @@ class AbstractStep(object):
                                     pipeline.append(
                                         command.get_command(),
                                         stdout_path = command.get_stdout_path(),
-                                        stderr_path = command.get_stderr_path())
+                                        stderr_path = command.get_stderr_path(),
+                                        working_directory = command.get_wd())
                         elif isinstance(poc, command_info.CommandInfo):
                             pool.launch(
                                 poc.get_command(),
                                 stdout_path = poc.get_stdout_path(),
-                                stderr_path = poc.get_stderr_path())
+                                stderr_path = poc.get_stderr_path(),
+                                working_directory = proc.get_wd())
 
     def get_runs(self):
         '''
