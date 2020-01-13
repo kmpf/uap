@@ -244,9 +244,9 @@ class Pipeline(object):
         if 'lmod' not in self.config or self.config['lmod'] is None:
             self.config['lmod'] = dict()
         if os.environ.has_key('LMOD_CMD'):
-            self.config['lmod']setdefault('path', os.environ['LMOD_CMD'])
+            self.config['lmod'].setdefault('path', os.environ['LMOD_CMD'])
         if os.environ.has_key('MODULEPATH'):
-            self.config['lmod']setdefault('module_path', os.environ['MODULEPATH'])
+            self.config['lmod'].setdefault('module_path', os.environ['MODULEPATH'])
         for key in ('path', 'module_path'):
             if key not in self.config['lmod']:
                 logger.error('lmod is not loaded and misses the key %s' % key)
