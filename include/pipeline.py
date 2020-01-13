@@ -257,13 +257,12 @@ class Pipeline(object):
                 self.config['tools'][tool].setdefault('get_version', '--version')
                 self.config['tools'][tool].setdefault('exit_code', 0)
                 if 'module_name' in self.config['tools'][tool]:
+                    mn = self.config['tools'][tool]['module_name']
                     if lmod_configured is True:
-                        cmd = '%s python load %s' %s self.config['lmod']['path']
+                        cmd = '%s python load %s' % (self.config['lmod']['path'], mn)
                         self.config['tools'][tool].setdefault('module_load', cmd)
-                        cmd = '%s python unload %s' %s self.config['lmod']['path']
+                        cmd = '%s python unload %s' % (self.config['lmod']['path'], mn)
                         self.config['tools'][tool].setdefault('module_unload', cmd)
-                        value = self.config['lmod']['module_path']
-                        self.config['tools'][tool].setdefault('module_path', value)
                     elif 'module_load' not in self.config['tools'][tool]:
                         logger.error('The tool %s requires lmod or module_load.' % tool)
                         sys.exit(1)
