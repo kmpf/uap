@@ -1371,6 +1371,10 @@ class AbstractStep(object):
                         run_ids_connections_files[parent_run_id]\
                             [in_connection] = list()
 
+                    # fix paths independent of the future working directory
+                    output_files = [os.path.abspath(path) for path in\
+                            output_files]
+
                     if run_ids_connections_files[parent_run_id][in_connection] != [None]:
                         run_ids_connections_files[parent_run_id][in_connection]\
                         .extend(output_files)
