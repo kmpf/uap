@@ -240,6 +240,15 @@ class Pipeline(object):
         if not 'id' in self.config:
             self.config['id'] = config_file.name
 
+        if 'lmod' in self.config:
+            for key in ('path', 'module_path'):
+                if key not in self.config['lmod']:
+                    logger.error('lmod misses the required key %s' % key)
+                    sys.exit(1)
+            lmod_configured = True
+        else:
+            lmod_configured = False
+
         if 'tools' in self.config and isinstance(self.config['tools'], dict):
             for tool, args in self.config['tools'].items():
                 if args is None:
@@ -247,6 +256,18 @@ class Pipeline(object):
                 self.config['tools'][tool].setdefault('path', tool)
                 self.config['tools'][tool].setdefault('get_version', '--version')
                 self.config['tools'][tool].setdefault('exit_code', 0)
+                if 'module_name' in self.config['tools'][tool]:
+                    if lmod_configured is True:
+                        cmd = '%s python load %s' %s self.config['lmod']['path']
+                        self.config['tools'][tool].setdefault('module_load', cmd)
+                        cmd = '%s python unload %s' %s self.config['lmod']['path']
+                        self.config['tools'][tool].setdefault('module_unload', cmd)
+                        value = self.config['lmod']['module_path']
+                        self.config['tools'][tool].setdefault('module_path', value)
+                    elif 'module_load' not in self.config['tools'][tool]:
+                        logger.error('The tool %s requires lmod or module_load.' % tool)
+                        sys.exit(1)
+
 
         if not 'destination_path' in self.config:
             logger.error("%s: Missing key: destination_path"
@@ -492,6 +513,8 @@ class Pipeline(object):
             tool_check_info = dict()
 
             # Load module(s) and execute command if configured
+            if 'module_load' in info and 'MODULEPATH' not in os.environ:
+                os.environ['MODULEPATH'] = info['module_path']
             for pre_cmd in (x for x in ('module_load', 'pre_command')
                              if x in info):
                 tool_check_info = self.exec_pre_post_calls(
