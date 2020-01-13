@@ -1371,16 +1371,9 @@ class AbstractStep(object):
                         run_ids_connections_files[parent_run_id]\
                             [in_connection] = list()
 
-                    # relative to the working directory of the process
-                    relative_out_files = list()
-                    for path in output_files:
-                        if not os.path.isabs(path):
-                            path = '../../%s' % path
-                        relative_out_files.append(path)
-
                     if run_ids_connections_files[parent_run_id][in_connection] != [None]:
                         run_ids_connections_files[parent_run_id][in_connection]\
-                        .extend(relative_out_files)
+                        .extend(output_files)
 
         return run_ids_connections_files
 
