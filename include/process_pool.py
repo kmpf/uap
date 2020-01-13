@@ -98,7 +98,8 @@ class ProcessPool(object):
         def __exit__(self, type, value, traceback):
             pass
 
-        def append(self, args, stdout_path = None, stderr_path = None, hints = {}):
+        def append(self, args, stdout_path = None, stderr_path = None, hints = {},
+                working_directory=None):
             '''
             Append a process to the pipeline. Parameters get stored and are passed
             to *ProcessPool.launch()* later, so the same behaviour applies.
@@ -107,6 +108,7 @@ class ProcessPool(object):
                 'args': copy.deepcopy(args),
                 'stdout_path': copy.copy(stdout_path),
                 'stderr_path': copy.copy(stderr_path),
+                'working_directory': copy.copy(working_directory),
                 'hints': copy.deepcopy(hints)
             }
             self.append_calls.append(call)
