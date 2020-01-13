@@ -266,7 +266,8 @@ class ProcessPool(object):
 
         ProcessPool.current_instance = None
 
-    def launch(self, args, stdout_path = None, stderr_path = None, hints = {}):
+    def launch(self, args, stdout_path = None, stderr_path = None, hints = {},
+            working_directory = None):
         '''
         Launch a process. Arguments, including the program itself, are passed in
         *args*. If the program is not a binary but a script which cannot be
@@ -289,6 +290,7 @@ class ProcessPool(object):
             'args': copy.deepcopy(args),
             'stdout_path': copy.copy(stdout_path),
             'stderr_path': copy.copy(stderr_path),
+            'working_directory': copy.copy(working_directory),
             'hints': copy.deepcopy(hints)
         }
 
