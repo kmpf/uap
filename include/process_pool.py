@@ -357,7 +357,7 @@ class ProcessPool(object):
         working_directory = copy.copy(info['working_directory'])
         hints = copy.deepcopy(info['hints'])
 
-        if working_directory is not None:
+        if working_directory is None:
             working_directory = os.getcwd()
 
         program_name = copy.deepcopy(args[0])
