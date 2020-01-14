@@ -161,7 +161,7 @@ def main(args):
         # Assemble submit command #
         ###########################
         now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        long_task_id_with_date = '%s_%s' % (step_name, now)
+        long_task_id_with_date = '%s_%%A_%%a_%s' % (step_name, now)
 
         submit_script_args = [p.get_cluster_command('submit')]
         size = len(tasks)
