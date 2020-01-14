@@ -252,7 +252,7 @@ def main(args):
             print("Set job quota for %s to %s" % (step_name, quotas[step_name]))
         parents = step.get_dependencies()
         parent_job_ids = set()
-        for parent_task in p.tasks_in_step[parent.get_step_name()] for parent in parents:
+        for parent_task in [p.tasks_in_step[parent.get_step_name()] for parent in parents]:
             parent_state = parent_task.get_task_state()
             if parent_state in [p.states.EXECUTING, p.states.QUEUED]:
                 # determine job_id from YAML queued ping file
