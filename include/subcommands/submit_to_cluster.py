@@ -94,7 +94,7 @@ def main(args):
         '''
         dependent_tasks = copy.copy(dependent_tasks_in)
 
-        step = task.step
+        step = task.get_step()
         step_name = task.step.get_step_name()
         step_type = task.step.get_step_type()
         if not step_name in quota_jids:
