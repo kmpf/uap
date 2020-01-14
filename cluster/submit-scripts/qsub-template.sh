@@ -10,6 +10,8 @@
 # Commands #
 ############
 
+array_jobs=(#{ARRAY_JOBS})
+
 #{PRE_JOB_COMMAND}
 
 #{COMMAND}
