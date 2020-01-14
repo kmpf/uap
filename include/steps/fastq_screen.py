@@ -25,7 +25,8 @@ class FastqScreen(AbstractStep):
         self.add_connection('out/fqc_report')
         self.add_connection('out/fqc_image')
         self.add_connection('out/fqc_html')
-        self.add_connection('out/first_read')
+        self.add_connection('out/tagged')
+        self.add_connection('out/tagged_filter')
         self.add_connection('out/log_stdout')
         self.add_connection('out/log_stderr')
 
@@ -125,13 +126,16 @@ class FastqScreen(AbstractStep):
                                 fastq_screen.extend(['--subset', str(self.get_option('subset'))])
 
                             if self.get_option('nohits'):
-                                file_pattern = "%s%s_no_hits.fastq.gz" % (run_id,read_types[read])
-                                nohits = run.add_output_file("first_read",
-                                                             file_pattern,
-                                                             [input_path])
+                                file_pattern = "%s%s.tagged.fastq.gz" % (run_id,read_types[read])
+                                run.add_output_file("tagged", file_pattern, [input_path])
+
+                                file_pattern = "%s%s.tagged_filter.fastq.gz" % (run_id,read_types[read])
+                                run.add_output_file("tagged_filter", file_pattern, [input_path])
+
                                 fastq_screen.extend(['--nohits', nohits])
                             else:
-                                run.add_empty_output_connection("first_read")
+                                run.add_empty_output_connection("tagged")
+                                run.add_empty_output_connection("tagged_filter")
 
                             fastq_screen.extend(['--outdir', run.get_output_directory_du_jour_placeholder(), input_path])
                             fastq_screen_exec_group.add_command(fastq_screen, stdout_path = log_stdout, stderr_path = log_stderr)
