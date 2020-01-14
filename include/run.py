@@ -847,6 +847,12 @@ class Run(object):
         log['step'] = {}
         log['step']['options'] = self.get_step().get_options()
         log['step']['name'] = self.get_step().get_step_name()
+        # if a submit script was used ...
+        script = self.get_step().get_submit_script_file()
+        if os.path.exists(script):
+            # ... read it and store it ...
+            with open(script, 'r') as f:
+                log['step']['submit_script'] = f.read()
         log['step']['known_paths'] = self.get_known_paths()
         log['step']['cores'] = self.get_step()._cores
         log['run'] = {}
