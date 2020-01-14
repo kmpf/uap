@@ -1,0 +1,5 @@
+#! /bin/bash -
+
+uap_dir="$(dirname $(readlink -f ${BASH_SOURCE[0]}))"
+"exec" "$uap_dir/python_env/bin/python" "$uap_dir/uap.py" "$@"
+
