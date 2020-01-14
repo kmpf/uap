@@ -312,6 +312,24 @@ class AbstractStep(object):
         # fetch all incoming run IDs which produce reads...
         self.runs( self.get_run_ids_in_connections_input_files() )
 
+    def get_output_directory(self):
+        '''
+        Returns the step output directory.
+        '''
+        return os.path.join(
+            self.get_pipeline().config['destination_path'],
+            self.get_step_name()
+        )
+
+    def get_submit_script_file(self):
+        if self._submit_script == None:
+            self._submit_script = os.path.join(
+                self.get_output_directory(),
+                ".submit-%s-%s.sh" % (self.get_step().get_step_name(),
+                                      self.get_run_id())
+            )
+        return self._submit_script
+
     def runs(self, run_ids_connections_files):
         '''
         Abstract method this must be implemented by actual step.

@@ -276,8 +276,7 @@ class Run(object):
         Returns the final output directory.
         '''
         return os.path.join(
-            self.get_step().get_pipeline().config['destination_path'],
-            self.get_step().get_step_name(),
+            self.get_step().get_output_directory()
             '%s-%s' % (self.get_run_id(), self.get_execution_hashtag())
         )
 
