@@ -55,7 +55,7 @@ class FastqScreen(AbstractStep):
                         parameter set to 100000. To process an entire dataset \
                         however, adjust --subset to 0.")
 
-        self.add_option('with_optional_name', bool, optional=False,
+        self.add_option('with_optionalname', bool, optional=False,
                         description="Indicates if the self implemented \
                         parameter --optionalname should be used. The \
                         parameter --optionalname cannot be modified \
@@ -117,8 +117,9 @@ class FastqScreen(AbstractStep):
                                             '-conf', self.get_option('config')]
 
                             # this parameter is only available in self patched fastq_screen version
-                            prefix  = "%s%s.fastq.gz" % (run_id,read_types[read])
-                            fastq_screen.extend(['--optionalname', prefix])
+                            if self.get_option('with_optionalname'):
+                                prefix  = "%s%s.fastq.gz" % (run_id,read_types[read])
+                                fastq_screen.extend(['--optionalname', prefix])
 
                             if self.get_option('subset'):
                                 fastq_screen.extend(['--subset', str(self.get_option('subset'))])
