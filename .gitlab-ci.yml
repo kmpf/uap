@@ -30,7 +30,7 @@ steptests:
     - pwd
     - cd  uap_test
     - make clean
-    - module load Python/3.6.3-foss-2016b
+    - module load Python/3.6.6-foss-2018b
     - python3 -m venv venv
     - source venv/bin/activate
     - pip install pyaml
