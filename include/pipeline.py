@@ -183,11 +183,17 @@ class Pipeline(object):
         List of all tasks in topological order.
         '''
 
+        self.tasks_in_step = dict()
+        '''
+        This dict stores tasks per step name.
+        '''
+
         self.read_config(args.config)
 
         # collect all tasks
         for step_name in self.topological_step_order:
             step = self.get_step(step_name)
+            self.tasks_in_step[step_name] = list()
             logger.debug("Collect now all tasks for step: %s" % step)
             for run_index, run_id in enumerate(misc.natsorted(step.get_run_ids())):
                 task = task_module.Task(self, step, run_id, run_index)
@@ -201,6 +207,7 @@ class Pipeline(object):
                 if run_has_exec_groups:
                     logger.debug("Task: %s" % task)
                     self.all_tasks_topologically_sorted.append(task)
+                    self.tasks_in_step[step_name].append(task)
                 # Fail if multiple tasks with the same name exist
                 if str(task) in self.task_for_task_id:
                     logger.error("%s: Duplicate task ID %s." %
