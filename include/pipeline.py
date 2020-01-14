@@ -602,7 +602,7 @@ class Pipeline(object):
         if check_queue:
             for line in stat_output.split("\n"):
                 try:
-                    jid = int(line.strip().split(' ')[0])
+                    jid = int(line.strip().split(' ')[0].split('_')[0])
                     running_jids.add(str(jid))
                 except ValueError:
                     # this is not a JID
