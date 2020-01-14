@@ -145,7 +145,7 @@ def main(args):
         command = ['uap', config_file_path, 'run-locally']
 
         task_id = p.get_cluster_command('array_task_id')
-        command.append('"${array_jobs[' + task_id + ']}"')
+        command.append('"${array_jobs[$' + task_id + ']}"')
 
         submit_script = submit_script.replace("#{COMMAND}", ' '.join(command))
 
