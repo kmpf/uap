@@ -110,6 +110,8 @@ class AbstractStep(object):
 
         self._state = AbstractStep.states.DEFAULT
 
+        self._submit_script = None
+
     def finalize(self):
         '''Finalizes the step.
 
@@ -325,8 +327,7 @@ class AbstractStep(object):
         if self._submit_script == None:
             self._submit_script = os.path.join(
                 self.get_output_directory(),
-                ".submit-%s-%s.sh" % (self.get_step().get_step_name(),
-                                      self.get_run_id())
+                ".submit-%s.sh" % self.get_step_name()
             )
         return self._submit_script
 
