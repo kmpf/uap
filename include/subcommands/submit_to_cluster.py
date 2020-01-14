@@ -137,8 +137,9 @@ def main(args):
         for placeholder, value in placeholder_values.items():
             submit_script = submit_script.replace(placeholder, value)
 
+        task_names = [str(task) for task in tasks_left[step_name]]
         submit_script = submit_script.replace("#{ARRAY_JOBS}",
-                "'"+"' '".join(tasks_left[step_name])+"'")
+                "'" + "' '".join(task_names) + "'")
         submit_script = submit_script.replace("#{CORES}", str(step._cores))
 
         config_file_path = args.config.name
@@ -176,11 +177,11 @@ def main(args):
 
         submit_script_args.append(p.get_cluster_command('set_stderr'))
         submit_script_args.append(
-            os.path.join(task.get_run().get_output_directory(),
+            os.path.join(step.get_output_directory(),
                          '.' + long_task_id_with_date + '.stderr'))
         submit_script_args.append(p.get_cluster_command('set_stdout'))
         submit_script_args.append(
-            os.path.join(task.get_run().get_output_directory(),
+            os.path.join(step.get_output_directory(),
                          '.' + long_task_id_with_date + '.stdout'))
 
         if len(dependent_steps) > 0:
