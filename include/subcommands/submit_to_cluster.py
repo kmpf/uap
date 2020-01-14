@@ -253,24 +253,25 @@ def main(args):
             print("Set job quota for %s to %s" % (step_name, quotas[step_name]))
         parents = step.get_dependencies()
         parent_job_ids = set()
-        for parent_task in [p.tasks_in_step[parent.get_step_name()] for parent in parents]:
-            parent_state = parent_task.get_task_state()
-            if parent_state in [p.states.EXECUTING, p.states.QUEUED]:
-                # determine job_id from YAML queued ping file
-                parent_job_id = None
-                parent_queued_ping_path = parent.get_run(parent_task.run_id).get_queued_ping_file()
-                try:
-                    parent_info = yaml.load(open(parent_queued_ping_path))
-                    parent_job_ids.add(parent_info['job_id'])
-                except:
-                    print("Couldn't determine job_id of %s while trying to load %s." %
-                        (parent_task, parent_queued_ping_path))
-                    raise
-            elif parent_state in [p.states.READY, p.states.WAITING]:
-                print("Cannot submit %s because a parent job "
-                    "%s is %s when it should be queued, running, "
-                    "or finished and the task selection as defined by "
-                    "your command-line arguments do not request it to "
-                    "submitted." % (step_name, parent_task, parent_state.lower()))
-                continue
+        for parent in parents:
+            for parent_task in p.tasks_in_step[parent.get_step_name()]:
+                parent_state = parent_task.get_task_state()
+                if parent_state in [p.states.EXECUTING, p.states.QUEUED]:
+                    # determine job_id from YAML queued ping file
+                    parent_job_id = None
+                    parent_queued_ping_path = parent.get_run(parent_task.run_id).get_queued_ping_file()
+                    try:
+                        parent_info = yaml.load(open(parent_queued_ping_path))
+                        parent_job_ids.add(parent_info['job_id'])
+                    except:
+                        print("Couldn't determine job_id of %s while trying to load %s." %
+                            (parent_task, parent_queued_ping_path))
+                        raise
+                elif parent_state in [p.states.READY, p.states.WAITING]:
+                    print("Cannot submit %s because a parent job "
+                        "%s is %s when it should be queued, running, "
+                        "or finished and the task selection as defined by "
+                        "your command-line arguments do not request it to "
+                        "submitted." % (step_name, parent_task, parent_state.lower()))
+                    continue
         submit_step(step_name, parent_job_ids)
