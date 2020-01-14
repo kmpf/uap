@@ -98,7 +98,7 @@ def main(args):
         step_name = task.step.get_step_name()
         step_type = task.step.get_step_type()
         if not step_name in quota_jids:
-            size = quotas[step_type] if step_type in quotas else quotas['default']
+            size = quotas[step_name] if step_name in quotas else quotas['default']
             quota_jids[step_name] = [None for _ in range(size)]
             quota_offset[step_name] = 0
 
