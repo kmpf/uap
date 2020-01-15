@@ -1,4 +1,5 @@
 import sys
+import os
 from logging import getLogger
 import pipeline_info
 import exec_group
@@ -28,11 +29,7 @@ class CommandInfo(object):
 
     def replace_output_dir_du_jour(func):
         def inner(self, *args):
-            run_info = None
-            if isinstance(self._eop, pipeline_info.PipelineInfo):
-                run_info = self._eop.get_exec_group().get_run()
-            elif isinstance(self._eop, exec_group.ExecGroup):
-                run_info = self._eop.get_run()
+            run_info = self.get_run()
             # Collect info to replace du_jour placeholder with temp_out_dir
             placeholder = run_info.get_output_directory_du_jour_placeholder()
             temp_out_dir = run_info.get_output_directory_du_jour()
@@ -60,6 +57,15 @@ class CommandInfo(object):
             return(command)
         return(inner)
 
+    def get_run(self):
+        if isinstance(self._eop, pipeline_info.PipelineInfo):
+            run_info = self._eop.get_exec_group().get_run()
+        elif isinstance(self._eop, exec_group.ExecGroup):
+            run_info = self._eop.get_run()
+        else:
+            run_info = None
+        return(run_info)
+
     def set_command(self, command):
         if not isinstance(command, list):
             logger.error("Given non-list command: %s" % command)
@@ -84,4 +90,15 @@ class CommandInfo(object):
 
     @replace_output_dir_du_jour
     def get_command(self):
-        return(self._command)
+        '''
+        Return command after replacing all file inside the destination
+        directory with relative paths.
+        '''
+        cmd = self._command
+        run = self.get_run()
+        working_dir = os.path.realpath(run.get_temp_output_directory())
+        destination = run.get_step().get_pipeline().config['destination_path']
+        destination = os.path.realpath(destination)
+        diff = os.path.relpath(destination, working_dir)
+        cmd = [arg.replace(destination, diff) for arg in cmd]
+        return(cmd)
