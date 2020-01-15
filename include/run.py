@@ -46,7 +46,7 @@ class Run(object):
         '''
         self._private_info = dict()
         self._public_info = dict()
-        self._input_files = list()
+        self._input_files = set()
         self._output_files = dict()
         for out_connection in self._step.get_out_connections():
             self.add_out_connection(out_connection)
@@ -578,7 +578,7 @@ class Run(object):
                 ": %s" % in_paths)
             sys.exit(1)
 
-        self._input_files.append(in_paths)
+        self._input_files.union(set(in_paths))
         self._output_files[out_connection][out_path] = in_paths
         if head != "":
             out_path = os.path.abspath(out_path)
