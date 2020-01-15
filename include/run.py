@@ -212,7 +212,7 @@ class Run(object):
         if self.get_step()._state == abst.AbstractStep.states.DEFAULT:
             return self.get_output_directory()
         elif self.get_step()._state == abst.AbstractStep.states.EXECUTING:
-            return self.get_temp_output_directory()
+            return '.'
         else:
             return None
 
