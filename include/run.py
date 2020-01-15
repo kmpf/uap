@@ -589,9 +589,11 @@ class Run(object):
 
         self._input_files.union(set(in_paths))
         self._output_files[out_connection][out_path] = in_paths
+        return_value = os.path.join(
+                self.get_output_directory_du_jour_placeholder(), out_path)
         if head != "":
-            out_path = os.path.abspath(out_path)
-        return out_path
+            return_value = os.path.abspath(out_path)
+        return return_value
 
     @replace_output_dir_du_jour
     def add_temporary_file(self, prefix = '', suffix = '', designation = None):
