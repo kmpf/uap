@@ -716,12 +716,15 @@ class Pipeline(object):
                              )
                     sys.exit(1)
             # Now that we know let's test for that cluster    
-            try:
-                if (subprocess.check_output( identity['test'] )
-                    .startswith(identity['answer']) ):
-                    return cluster_type
-            except OSError:
-                pass
+            if not isinstace(identity['answer'], list):
+                identity['answer'] = [identity['answer']]
+            for answer in identity['answer']:
+                try:
+                    if (subprocess.check_output( identity['test'] )
+                        .startswith(answer) ):
+                        return cluster_type
+                except OSError:
+                    pass
         return None
 
     def get_cluster_type(self):
