@@ -260,13 +260,12 @@ class Pipeline(object):
         if not os.path.exists("%s-out" % self.config['id']):
             os.symlink(self.config['destination_path'], '%s-out' % self.config['id'])
 
-        if not 'cluster' in self.config:
+        if not 'cluster' in self.config or self.config['cluster'] is None:
             self.config['cluster'] = dict()
 
         for i in ['default_submit_options', 'default_pre_job_command',
                   'default_post_job_command']:
-            if i not in self.config['cluster']:
-                self.config['cluster'][i] = ''
+            self.config['cluster'].setdefault(i, '')
 
         self.build_steps()
 
