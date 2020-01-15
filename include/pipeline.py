@@ -115,10 +115,22 @@ class Pipeline(object):
             # (we're probably in run-locally.py)
             pass
 
-        self._config_filepath = args.config.name
+        self._start_working_dir = os.getcwd()
+        '''
+        User working directory.
+        '''
+
+        config_path, config_name = os.path.split(args.config.name)
+        self._config_filepath = config_name
         '''
         Name of the YAML configuration file
         '''
+
+        self._config_path = os.path.abspath(config_path)
+        '''
+        Path of the YAML configuration file
+        '''
+        os.chdir(self._config_path)
 
         self.config = dict()
         '''
@@ -214,6 +226,12 @@ class Pipeline(object):
     def get_uap_path(self):
         return self._uap_path
 
+    def get_config_path(self):
+        '''
+        Working directory of the pipeline that coinsides with the config path.
+        '''
+        return self._config_path
+
     def get_config_filepath(self):
         return self._config_filepath
 
@@ -233,12 +251,11 @@ class Pipeline(object):
 
         # Make self.config['destination_path'] an absolute path if necessary
         if not os.path.isabs(self.config['destination_path']):
-            config_abspath = os.path.dirname(config_file.name)
             self.config['destination_path'] = os.path.join(
-                config_abspath,self.config['destination_path'])
+                self.get_config_path(),self.config['destination_path'])
 
         if not 'id' in self.config:
-            self.config['id'] = config_file.name
+            self.config['id'] = self.get_config_filepath()
 
         if not 'destination_path' in self.config:
             logger.error("%s: Missing key: destination_path"
