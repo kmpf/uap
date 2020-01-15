@@ -145,8 +145,8 @@ class Run(object):
             value = None
             ret_value = func(self, *args, **kwargs)
             # If currently calling AbstractStep.runs() do nothing
-            if temp_out_dir == None:
-                value = ret_value
+            if temp_out_dir is None or ret_value is None:
+                return(None)
             elif isinstance(ret_value, list) or isinstance(ret_value, set):
                 value = list()
                 for string in ret_value:

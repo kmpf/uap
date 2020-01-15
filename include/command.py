@@ -39,6 +39,8 @@ class CommandInfo(object):
 
             command = None
             ret_value = func(self, *args)
+            if ret_value is None:
+                return(None)
             if isinstance(ret_value, list) or isinstance(ret_value, set):
                 command = list()
                 for string in ret_value:
