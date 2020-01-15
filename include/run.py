@@ -66,7 +66,7 @@ class Run(object):
         }
         self._submit_script = None
         self._exec_groups = list()
-        self._temp_paths = list()
+        self._temp_paths = set()
         '''
         List of temporary paths which can be either files or paths
         '''
@@ -183,7 +183,7 @@ class Run(object):
     @replace_output_dir_du_jour
     def get_temp_paths(self):
         '''
-        Returns a list of all temporary paths which belong to this run.
+        Returns a set of all temporary paths which belong to this run.
         '''
         return self._temp_paths
 
@@ -613,9 +613,9 @@ class Run(object):
             'type': ''
         }
         self.add_known_paths(known_paths)
-        # _temp_paths list contains all temporary files which are going to be
+        # _temp_paths set contains all temporary files which are going to be
         # deleted
-        self._temp_paths.append(temp_placeholder)
+        self._temp_paths.add(temp_placeholder)
         return temp_placeholder
 
     def add_temporary_directory(self, prefix = '', suffix = '',
