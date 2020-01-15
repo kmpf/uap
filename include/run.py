@@ -555,6 +555,8 @@ class Run(object):
             logger.error("The declared output file path contains "
                          "directory separator: %s." % out_path)
             sys.exit(1)
+        elif head != "":
+            out_path = os.path.abspath(out_path)
         # make sure tag was declared with an outgoing connection
         if 'out/' + tag not in self._step._connections:
             logger.error("Invalid output_file tag '%s' in %s. "
@@ -589,11 +591,9 @@ class Run(object):
 
         self._input_files.union(set(in_paths))
         self._output_files[out_connection][out_path] = in_paths
-        return_value = os.path.join(
+        out_path = os.path.join(
                 self.get_output_directory_du_jour_placeholder(), out_path)
-        if head != "":
-            return_value = os.path.abspath(out_path)
-        return return_value
+        return out_path
 
     @replace_output_dir_du_jour
     def add_temporary_file(self, prefix = '', suffix = '', designation = None):
