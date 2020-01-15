@@ -21,7 +21,6 @@ class FastqScreen(AbstractStep):
         self.set_cores(cores)
 
         self.add_connection('in/first_read')
-#        self.add_connection('in/second_read')
         self.add_connection('out/fqc_report')
         self.add_connection('out/fqc_image')
         self.add_connection('out/fqc_html')
@@ -56,13 +55,6 @@ class FastqScreen(AbstractStep):
                         parameter set to 100000. To process an entire dataset \
                         however, adjust --subset to 0.")
 
-        self.add_option('with_optionalname', bool, optional=False,
-                        description="Indicates if the self implemented \
-                        parameter --optionalname should be used. The \
-                        parameter --optionalname cannot be modified \
-                        and will only work with a patched version of \
-                        fastq_screen. (see https://ribogit.izi.fraunhofer.de/oneButton/patched-uap-tools/fastq-screen)")
-
         self.require_tool('fastq_screen')
         self.require_tool('bowtie2')
         self.require_tool('mv')
@@ -76,7 +68,6 @@ class FastqScreen(AbstractStep):
         '''
         self.set_cores(self.get_option('cores'))
 
-#        read_types = {'first_read': '_R1', 'second_read': '_R2'}
         read_types = {'first_read': '_R1'}
 
         for run_id in run_ids_connections_files.keys():
@@ -85,29 +76,28 @@ class FastqScreen(AbstractStep):
                     connection = 'in/%s' % read
                     input_paths = run_ids_connections_files[run_id][connection]
                     if input_paths == [None]:
-                        run.add_empty_output_connection("%s_first_read" %
-                                                        read)
+                        run.add_empty_output_connection("%s_first_read" % read)
                         run.add_empty_output_connection("%s_log_stderr" % read)
                     else:
                         for input_path in input_paths:
+                            file_name = os.path.basename(input_path).split(".")[0]
                             # prepare output files
-                            file_pattern = "%s%s_screen.txt" % (run_id,read_types[read])
+                            file_pattern = "%s_screen.txt" % (file_name)
                             run.add_output_file("fqc_report", file_pattern, [input_path])
 
-                            file_pattern = "%s%s_screen.png" % (run_id, read_types[read])
+                            file_pattern = "%s_screen.png" % (file_name)
                             run.add_output_file("fqc_image", file_pattern, [input_path])
 
 
-                            file_pattern = "%s%s_screen.html" % (run_id, read_types[read])
+                            file_pattern = "%s_screen.html" % (file_name)
                             run.add_output_file("fqc_html", file_pattern, [input_path])
 
-
-                            file_pattern = "%s%s-fastqscreen-log_stdout.txt" % (run_id, read_types[read])
+                            file_pattern = "%s-fastqscreen-log_stdout.txt" % (file_name)
                             log_stdout = run.add_output_file("log_stdout",
                                                              file_pattern,
                                                              [input_path])
 
-                            file_pattern = "%s%s-fastqscreen-log_stderr.txt" % (run_id, read_types[read])
+                            file_pattern = "%s-fastqscreen-log_stderr.txt" % (file_name)
                             log_stderr = run.add_output_file("log_stderr",
                                                              file_pattern,
                                                              [input_path])
@@ -117,19 +107,14 @@ class FastqScreen(AbstractStep):
                             fastq_screen = [self.get_tool('fastq_screen'),
                                             '-conf', self.get_option('config')]
 
-                            # this parameter is only available in self patched fastq_screen version
-                            if self.get_option('with_optionalname'):
-                                prefix  = "%s%s.fastq.gz" % (run_id,read_types[read])
-                                fastq_screen.extend(['--optionalname', prefix])
-
                             if self.get_option('subset'):
                                 fastq_screen.extend(['--subset', str(self.get_option('subset'))])
 
                             if self.get_option('nohits'):
-                                file_pattern = "%s%s.tagged.fastq.gz" % (run_id,read_types[read])
+                                file_pattern = "%s.tagged.fastq.gz" % (file_name)
                                 run.add_output_file("tagged", file_pattern, [input_path])
 
-                                file_pattern = "%s%s.tagged_filter.fastq.gz" % (run_id,read_types[read])
+                                file_pattern = "%s.tagged_filter.fastq.gz" % (file_name)
                                 run.add_output_file("tagged_filter", file_pattern, [input_path])
 
                                 fastq_screen.extend(['--nohits', nohits])
