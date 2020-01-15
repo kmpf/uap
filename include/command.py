@@ -96,9 +96,8 @@ class CommandInfo(object):
         '''
         cmd = self._command
         run = self.get_run()
-        working_dir = os.path.realpath(run.get_temp_output_directory())
+        working_dir = run.get_temp_output_directory()
         destination = run.get_step().get_pipeline().config['destination_path']
-        destination = os.path.realpath(destination)
         diff = os.path.relpath(destination, working_dir)
         cmd = [arg.replace(destination, diff) for arg in cmd]
         return(cmd)
