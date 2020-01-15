@@ -39,7 +39,7 @@ class CommandInfo(object):
 
             command = None
             ret_value = func(self, *args)
-            if isinstance(ret_value, list):
+            if isinstance(ret_value, list) or isinstance(ret_value, set):
                 command = list()
                 for string in ret_value:
                     if string != None and placeholder in string and\
@@ -53,7 +53,7 @@ class CommandInfo(object):
                         command = ret_value.replace(placeholder, temp_out_dir)
             else:
                 logger.error("Function %s does not return list or string object"
-                             % func.__class__.__name__)
+                             % func.__name__)
                 sys.exit(1)
             return(command)
         return(inner)
