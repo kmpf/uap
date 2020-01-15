@@ -83,12 +83,6 @@ class AbstractStep(object):
         post-processed run objects are stored in here.
         '''
 
-        self._temp_directory = None
-        '''
-        The temporary output directory the step is using. Only set when
-        the step is being run.
-        '''
-
         self._pipeline_log = dict()
 
         self._cores = 1
@@ -851,7 +845,6 @@ class AbstractStep(object):
             else run.get_temp_output_directory())
 
         self._state = AbstractStep.states.DEFAULT
-#        self._temp_directory = None
 
         if self.get_pipeline().caught_signal is not None or \
            caught_exception is not None:
