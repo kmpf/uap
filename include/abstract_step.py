@@ -732,7 +732,7 @@ class AbstractStep(object):
         caught_exception = None
         self._state = AbstractStep.states.EXECUTING
         base_working_dir = os.getcwd()
-        os.chdir(run.get_wd_du_jour())
+        os.chdir(run.get_temp_output_directory())
         try:
             self.execute(run_id, run)
         except Exception as e:

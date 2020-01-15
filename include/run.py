@@ -234,15 +234,6 @@ class Run(object):
 
         return self._temp_directory
 
-    def get_wd_du_jour(self):
-        '''
-        Returns working directory of the run.
-        '''
-        if self.get_step()._state == abst.AbstractStep.states.EXECUTING:
-            return self.get_temp_output_directory()
-        else:
-            return self.get_output_directory_du_jour_placeholder()
-
     def get_execution_hashtag(self):
         '''
         Creates a hash tag based on the commands to be executed.
