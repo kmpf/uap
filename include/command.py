@@ -49,8 +49,7 @@ class CommandInfo(object):
                     else:
                         command.append(string)
             elif isinstance(ret_value, str):
-                if ret_value != None and placeholder in ret_value and\
-                   isinstance(temp_out_dir, str):
+                if ret_value != None and isinstance(temp_out_dir, str):
                         command = ret_value.replace(placeholder, temp_out_dir)
             elif ret_value == None:
                 command = None

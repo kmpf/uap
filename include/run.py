@@ -582,8 +582,6 @@ class Run(object):
 
         self._input_files.union(set(in_paths))
         self._output_files[out_connection][out_path] = in_paths
-        out_path = os.path.join(
-                self.get_output_directory_du_jour_placeholder(), out_path)
         return out_path
 
     @replace_output_dir_du_jour
