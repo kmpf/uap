@@ -51,8 +51,6 @@ class CommandInfo(object):
             elif isinstance(ret_value, str):
                 if ret_value != None and isinstance(temp_out_dir, str):
                         command = ret_value.replace(placeholder, temp_out_dir)
-            elif ret_value == None:
-                command = None
             else:
                 logger.error("Function %s does not return list or string object"
                              % func.__class__.__name__)
