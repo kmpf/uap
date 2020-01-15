@@ -55,7 +55,7 @@ class AbstractStep(object):
                           '_cluster_submit_options', '_cluster_pre_job_command',
                           '_cluster_post_job_command', '_cluster_job_quota']
 
-    states = misc.Enum(['DEFAULT', 'DECLARING', 'EXECUTING'])
+    states = misc.Enum(['DEFAULT', 'DECLARING', 'EXECUTING', 'POSTPROCESS'])
 
     def __init__(self, pipeline):
 
@@ -344,14 +344,12 @@ class AbstractStep(object):
                                     pipeline.append(
                                         command.get_command(),
                                         stdout_path = command.get_stdout_path(),
-                                        stderr_path = command.get_stderr_path(),
-                                        working_directory = command.get_wd())
+                                        stderr_path = command.get_stderr_path())
                         elif isinstance(poc, command_info.CommandInfo):
                             pool.launch(
                                 poc.get_command(),
                                 stdout_path = poc.get_stdout_path(),
-                                stderr_path = poc.get_stderr_path(),
-                                working_directory = proc.get_wd())
+                                stderr_path = poc.get_stderr_path())
 
     def get_runs(self):
         '''
@@ -733,6 +731,8 @@ class AbstractStep(object):
              socket.gethostname()))
         caught_exception = None
         self._state = AbstractStep.states.EXECUTING
+        base_working_dir = os.getcwd()
+        os.chdir(run.get_wd_du_jour())
         try:
             self.execute(run_id, run)
         except Exception as e:
@@ -744,6 +744,8 @@ class AbstractStep(object):
             # Store the exception, re-raise it later
             caught_exception = sys.exc_info()
         finally:
+            self._state = AbstractStep.states.POSTPROCESS # changes relative paths
+            os.chdir(base_working_dir)
             try:
                 os.kill(executing_ping_pid, signal.SIGTERM)
                 os.waitpid(executing_ping_pid, 0)

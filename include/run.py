@@ -147,7 +147,7 @@ class Run(object):
             # If currently calling AbstractStep.runs() do nothing
             if temp_out_dir == None:
                 value = ret_value
-            elif isinstance(ret_value, list):
+            elif isinstance(ret_value, list) or isinstance(ret_value, set):
                 value = list()
                 for string in ret_value:
                     if string != None and placeholder in string:
@@ -168,7 +168,7 @@ class Run(object):
                 value = None
             else:
                 logger.error("Function %s does not return list or string object"
-                             % func.__class__.__name__)
+                             % func.__name__)
                 sys.exit(1)
             return(value)
         return(inner)
@@ -233,6 +233,15 @@ class Run(object):
                     return self._temp_directory
 
         return self._temp_directory
+
+    def get_wd_du_jour(self):
+        '''
+        Returns working directory of the run.
+        '''
+        if self.get_step()._state == abst.AbstractStep.states.EXECUTING:
+            return self.get_temp_output_directory()
+        else:
+            return self.get_output_directory_du_jour_placeholder()
 
     def get_execution_hashtag(self):
         '''

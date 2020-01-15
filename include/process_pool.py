@@ -98,8 +98,7 @@ class ProcessPool(object):
         def __exit__(self, type, value, traceback):
             pass
 
-        def append(self, args, stdout_path = None, stderr_path = None, hints = {},
-                working_directory=None):
+        def append(self, args, stdout_path = None, stderr_path = None, hints = {}):
             '''
             Append a process to the pipeline. Parameters get stored and are passed
             to *ProcessPool.launch()* later, so the same behaviour applies.
@@ -108,7 +107,6 @@ class ProcessPool(object):
                 'args': copy.deepcopy(args),
                 'stdout_path': copy.copy(stdout_path),
                 'stderr_path': copy.copy(stderr_path),
-                'working_directory': copy.copy(working_directory),
                 'hints': copy.deepcopy(hints)
             }
             self.append_calls.append(call)
@@ -268,8 +266,7 @@ class ProcessPool(object):
 
         ProcessPool.current_instance = None
 
-    def launch(self, args, stdout_path = None, stderr_path = None, hints = {},
-            working_directory = None):
+    def launch(self, args, stdout_path = None, stderr_path = None, hints = {}):
         '''
         Launch a process. Arguments, including the program itself, are passed in
         *args*. If the program is not a binary but a script which cannot be
@@ -292,7 +289,6 @@ class ProcessPool(object):
             'args': copy.deepcopy(args),
             'stdout_path': copy.copy(stdout_path),
             'stderr_path': copy.copy(stderr_path),
-            'working_directory': copy.copy(working_directory),
             'hints': copy.deepcopy(hints)
         }
 
@@ -354,11 +350,7 @@ class ProcessPool(object):
         args = copy.deepcopy(info['args'])
         stdout_path = copy.copy(info['stdout_path'])
         stderr_path = copy.copy(info['stderr_path'])
-        working_directory = copy.copy(info['working_directory'])
         hints = copy.deepcopy(info['hints'])
-
-        if working_directory is None:
-            working_directory = os.getcwd()
 
         program_name = copy.deepcopy(args[0])
         if program_name.__class__ == list:
@@ -377,8 +369,7 @@ class ProcessPool(object):
             stdout = subprocess.PIPE,
             stderr = subprocess.PIPE,
             preexec_fn = restore_sigpipe_handler,
-            close_fds = True,
-            cwd = working_directory
+            close_fds = True
         )
         pid = proc.pid
         self.popen_procs[pid] = proc
@@ -393,7 +384,7 @@ class ProcessPool(object):
             'hints': hints
         }
         message = "Launched %s in %s as PID %d.\n" % \
-                (' '.join(args), working_directory, pid)
+                (' '.join(args), os.getcwd(), pid)
         self.log(message)
         sys.stderr.write(message)
         sys.stderr.flush()

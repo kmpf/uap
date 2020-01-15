@@ -7,14 +7,12 @@ import exec_group
 logger=getLogger('uap_logger')
 
 class CommandInfo(object):
-    def __init__(self, eop, command, stdout_path=None, stderr_path=None,
-            working_directory=None):
+    def __init__(self, eop, command, stdout_path=None, stderr_path=None):
         # eop = exec_group or pipeline
         self._eop = eop
         self._command = list()
         self._stdout_path = stdout_path
         self._stderr_path = stderr_path
-        self._working_directory = working_directory
         self._tool = str
         self._output_files_per_connection = dict()
 
@@ -54,7 +52,7 @@ class CommandInfo(object):
                 command = None
             else:
                 logger.error("Function %s does not return list or string object"
-                             % func.__class__.__name__)
+                             % func.__name__)
                 sys.exit(1)
             return(command)
         return(inner)
@@ -96,13 +94,3 @@ class CommandInfo(object):
     def get_command(self):
         return(self._command)
 
-    def get_wd(self):
-        '''
-        Returns desired working directory of the command.
-        '''
-        wd = self._working_directory
-        if wd is None:
-            run_info = self._get_run_info()
-            wd = run_info.get_output_directory_du_jour()
-            wd = os.path.abspath(wd)
-        return(wd)
