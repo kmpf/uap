@@ -266,6 +266,7 @@ class Pipeline(object):
         for i in ['default_submit_options', 'default_pre_job_command',
                   'default_post_job_command']:
             self.config['cluster'].setdefault(i, '')
+        self.config['cluster'].setdefault('default_job_quota', 0) # no quota
 
         self.build_steps()
 
