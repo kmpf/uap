@@ -538,7 +538,7 @@ class ProcessPool(object):
                     ProcessPool.process_watcher_pid = None
                     try:
                         with open(watcher_report_path, 'r') as f:
-                            self.process_watcher_report = yaml.load(f)
+                            self.process_watcher_report = yaml.load(f, Loader=yaml.FullLoader)
                     except IOError as e:
                         sys.stderr.write("%s (%s): %s" %
                               (type(e).__name__, e.errno, e.strerror))
@@ -614,7 +614,7 @@ class ProcessPool(object):
                         report_path = self.copy_process_reports[pid]
                         if os.path.exists(report_path):
                             with open(report_path, 'r') as f:
-                                report = yaml.load(f)
+                                report = yaml.load(f, Loader=yaml.FullLoader)
 
                             if report is not None:
                                 self.proc_details[pid].update(report)
@@ -655,7 +655,7 @@ class ProcessPool(object):
             os.waitpid(watcher_pid, 0)
             try:
                 with open(watcher_report_path, 'r') as f:
-                    self.process_watcher_report = yaml.load(f)
+                    self.process_watcher_report = yaml.load(f, Loader=yaml.FullLoader)
             except IOError as e:
                 sys.stderr.write("%s (%s): %s" % (type(e).__name__, e.errno, e.strerror))
                 sys.stderr.write("Warning: Couldn't load watcher report from %s." %
