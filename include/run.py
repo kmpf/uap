@@ -601,6 +601,11 @@ class Run(object):
             temp_placeholder = os.path.join(
                 self.get_output_directory_du_jour_placeholder(), temp_name)
 
+            if not temp_placeholder in self._temp_paths:
+                break
+            else:
+                count += 1
+
 
         logger.info("Temporary file (#%s): %s" %
               (len(self._temp_paths) + 1, temp_name) )
