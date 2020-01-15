@@ -206,15 +206,15 @@ class Run(object):
             - if we are currently calling a step's declare_runs()
               method, this will return None
             - if we are currently calling a step's execute() method,
-              this will return the temporary directory
+              this will return the current directory
             - otherwise, it will return the real output directory
         '''
-        if self.get_step()._state == abst.AbstractStep.states.DEFAULT:
-            return self.get_output_directory()
+        if self.get_step()._state == abst.AbstractStep.states.DECLARING:
+            return None
         elif self.get_step()._state == abst.AbstractStep.states.EXECUTING:
             return '.'
         else:
-            return None
+            return self.get_output_directory()
 
     def get_temp_output_directory(self):
         '''
