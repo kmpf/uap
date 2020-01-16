@@ -275,7 +275,7 @@ def render_single_annotation(annotation_path, args):
 
     log = dict()
     with open(annotation_path, 'r') as f:
-        log = yaml.load(f)
+        log = yaml.load(f, Loader=yaml.FullLoader)
     try:
         gv = create_dot_file_from_annotations([log], args)
         with open(dot_file, 'w') as f:

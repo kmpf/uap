@@ -276,7 +276,7 @@ def main(args):
                     parent_job_id = None
                     parent_queued_ping_path = parent_task.get_step().get_run(parent_task.run_id).get_queued_ping_file()
                     try:
-                        parent_info = yaml.load(open(parent_queued_ping_path))
+                        parent_info = yaml.load(open(parent_queued_ping_path), Loader=yaml.FullLoader)
                         parent_job_ids.append(parent_info['job_id'])
                     except:
                         print("Couldn't determine job_id of %s while trying to load %s." %

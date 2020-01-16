@@ -64,7 +64,8 @@ def main():
         "http://uap.readthedocs.org/en/latest/\n"
         "For citation use: ...\n"
         "For source code see: https://github.com/yigbt/uap",
-        formatter_class=argparse.RawTextHelpFormatter
+        formatter_class=argparse.RawTextHelpFormatter,
+        prog='uap'
         )
     
     parser.add_argument(
@@ -86,7 +87,7 @@ def main():
         "--version",
         dest="version",
         action="version",
-        version="%(prog)s 1.0.1 wonky donkey",
+        version="%(prog)s 1.1",
         help = "Display version information.")
 
     subparsers = parser.add_subparsers(
