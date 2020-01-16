@@ -106,5 +106,4 @@ class CommandInfo(object):
                 return([repl(element) for element in text])
             else:
                 return(text)
-        cmd = repl(cmd)
-        return(cmd)
+        return(repl(cmd))
