@@ -75,7 +75,7 @@ class CuffCompare(AbstractStep):
                 # replace cuffcompare with 'touch', check if the
                 # outputfiles are still in the main dir
                 cuffcompare = [self.get_tool('cuffcompare'), '-R', '-o', run_id,
-                               '-r', str(self.get_option('ref-gtf')),
+                               '-r', os.path.abspath(str(self.get_option('ref-gtf'))),
                                in_file]
 
                 with run.new_exec_group() as cc_exec_group:

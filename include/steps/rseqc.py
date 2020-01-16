@@ -117,7 +117,7 @@ class RSeQC(AbstractStep):
                     infer_experiment = [
                         self.get_tool('infer_experiment.py'),
                         '-i', alignments[0],
-                        '-r', self.get_option('reference')
+                        '-r', os.path.abspath(self.get_option('reference'))
                     ]
                     exec_group.add_command(
                         infer_experiment,
@@ -131,7 +131,7 @@ class RSeQC(AbstractStep):
                     read_distribution = [
                         self.get_tool('read_distribution.py'),
                         '-i', alignments[0],
-                        '-r', self.get_option('reference')
+                        '-r', os.path.abspath(self.get_option('reference'))
                     ]
                     exec_group.add_command(
                         read_distribution,
@@ -147,7 +147,7 @@ class RSeQC(AbstractStep):
                     geneBody_coverage = [
                         self.get_tool('geneBody_coverage.py'),
                         '-i', alignments[0],
-                        '-r', self.get_option('reference'),
+                        '-r', os.path.abspath(self.get_option('reference')),
                         '-o', out
                     ]
                     gbc_txt = run_id + '.geneBodyCoverage.txt'
@@ -176,7 +176,7 @@ class RSeQC(AbstractStep):
                         inner_distance = [
                             self.get_tool('inner_distance.py'),
                             '-i', alignments[0],
-                            '-r', self.get_option('reference'),
+                            '-r', os.path.abspath(self.get_option('reference')),
                             '-o', out
                         ]
                         id_txt = run_id + '.inner_distance.txt'
@@ -219,7 +219,7 @@ class RSeQC(AbstractStep):
                     junction_annotation = [
                         self.get_tool('junction_annotation.py'),
                         '-i', alignments[0],
-                        '-r', self.get_option('reference'),
+                        '-r', os.path.abspath(self.get_option('reference')),
                         '-o', out
                     ]
                     ja_bed = run_id + '.junction.bed'
@@ -251,7 +251,7 @@ class RSeQC(AbstractStep):
                     junction_saturation = [
                         self.get_tool('junction_saturation.py'),
                         '-i', alignments[0],
-                        '-r', self.get_option('reference'),
+                        '-r', os.path.abspath(self.get_option('reference')),
                         '-o', out
                     ]
                     js_r = run_id + '.junctionSaturation_plot.r'

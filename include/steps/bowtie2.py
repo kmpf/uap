@@ -91,7 +91,7 @@ class Bowtie2(AbstractStep):
                         bowtie2 = [
                             self.get_tool('bowtie2'),
                             '-p', str(self.get_option('cores') - 2),
-                            '-x', self.get_option('index')
+                            '-x', os.path.abspath(self.get_option('index'))
                         ]
                         if is_paired_end:
                             bowtie2.extend([

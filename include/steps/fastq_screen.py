@@ -68,7 +68,7 @@ class FastqScreen(AbstractStep):
 
                             fastq_screen_exec_group  = run.new_exec_group()
                             fastq_screen = [self.get_tool('fastq_screen'), 
-                                            '-conf', self.get_option('config')]
+                                            '-conf', os.path.abspath(self.get_option('config'))]
 
                             prefix  = "%s%s.fastq.gz" % (run_id,read_types[read])
                             fastq_screen.extend(['--optionalname', prefix])

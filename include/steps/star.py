@@ -1,6 +1,7 @@
 import sys
 from logging import getLogger
 from abstract_step import AbstractStep
+import os
 
 logger = getLogger('uap_logger')
 
@@ -68,7 +69,7 @@ class Star(AbstractStep):
 
                 # get genomeDir from config or from input files
                 if self.is_option_set_in_config('genomeDir'):
-                    genome_dir = str(self.get_option('genomeDir'))
+                    genome_dir = os.path.abspath(str(self.get_option('genomeDir')))
                 else:
                     if 'in/genome_dir' not in run_ids_connections_files[run_id]:
                         logger.error('Required parameter "GenomDir" wasnt found!')

@@ -118,8 +118,7 @@ class FastqSample(AbstractStep):
                             # @todo: its impossible to get a shorter line at
                             # this position for pep8-compatibility...
                             # maybe rename method?
-                            outfile_path = run.get_output_directory_du_jour_placeholder()
-                            outfile = outfile_path + "/sample"
+                            outfile = "sample"
 
                             fastqsample = [self.get_tool('fastq-sample')]
 

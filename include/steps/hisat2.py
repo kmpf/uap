@@ -350,7 +350,7 @@ class Hisat2(AbstractStep):
 
                         # why -2?
                         hisat2.extend(['-p', str(self.get_option('cores') - 2),
-                                       '-x', self.get_option('index')])
+                                       '-x', os.path.abspath(self.get_option('index'))])
 
                         if is_paired_end:
                             if self.get_option('rna-strandness') == 'F':

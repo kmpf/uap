@@ -95,7 +95,7 @@ class SamtoolsSort(AbstractStep):
                         ]
                         
                         if self.is_option_set_in_config('reference'):
-                            samtools_sort.extend(['--reference', self.get_option('reference')])
+                            samtools_sort.extend(['--reference', os.path.abspath(self.get_option('reference'))])
                             
                             
                         if self.get_option('O') == 'CRAM':
@@ -110,7 +110,7 @@ class SamtoolsSort(AbstractStep):
                         sortpath =  (run.get_output_directory_du_jour_placeholder()  + '/')
 
                         if self.is_option_set_in_config('temp-sort-dir'):
-                            sortpath = os.path.join(self.get_option('temp-sort-dir'),
+                            sortpath = os.path.join(os.path.abspath(self.get_option('temp-sort-dir')),
                                                 'sort' + run_id)
 
                         samtools_sort.extend(

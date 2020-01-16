@@ -81,14 +81,14 @@ class subsetMappedReads(AbstractStep):
                         if self.get_option('paired_end'):
                             samtools_view = [
                                 self.get_tool('samtools'), 'view', '-F', '0x04', '-f', '0x03', '-h',
-#                                '-t', self.get_option('genome-faidx'),
+#                                '-t', os.path.abspath(self.get_option('genome-faidx')),
                                 '-'
                             ]
                         else:
                             samtools_view = [
                                 self.get_tool('samtools'), 'view', '-F', '0x04', '-h',
 #                                self.get_tool('samtools'), 'view', '-c',
-#                                '-t', self.get_option('genome-faidx'),
+#                                '-t', os.path.abspath(self.get_option('genome-faidx')),
                                 '-'
                             ]
                         pipe.add_command(samtools_view)

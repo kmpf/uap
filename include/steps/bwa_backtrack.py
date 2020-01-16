@@ -288,7 +288,7 @@ class BwaBacktrack(AbstractStep):
                                 'aln'
                             ]
                             bwa_aln.extend(option_list_bwa_aln)
-                            bwa_aln.append(self.get_option('index'))
+                            bwa_aln.append(os.path.abspath(self.get_option('index')))
                             bwa_aln.append(temp_fifo)
                             # 3.1.1 Add 'bwa aln' to pipeline
                             bwa_aln_pipe.add_command(bwa_aln)
@@ -338,7 +338,7 @@ class BwaBacktrack(AbstractStep):
                                 'sampe'
                             ]
                             bwa_sampe.extend(option_list_bwa_sampe)
-                            bwa_sampe.append(self.get_option('index'))
+                            bwa_sampe.append(os.path.abspath(self.get_option('index')))
                             bwa_sampe.append(fr_sai_fifo)
                             bwa_sampe.append(sr_sai_fifo)
                             bwa_sampe.append(temp_fr_fifo)
@@ -370,7 +370,7 @@ class BwaBacktrack(AbstractStep):
                                 'samse'
                             ]
                             bwa_samse.extend(option_list_bwa_samse)
-                            bwa_samse.append(self.get_option('index'))
+                            bwa_samse.append(os.path.abspath(self.get_option('index')))
                             bwa_samse.append(fr_sai_fifo)
                             bwa_samse.append(temp_fr_fifo)
                             # 1.1 Add 'bwa samse' to pipeline
