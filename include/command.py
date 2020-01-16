@@ -99,5 +99,12 @@ class CommandInfo(object):
         working_dir = run.get_temp_output_directory()
         destination = run.get_step().get_pipeline().config['destination_path']
         diff = os.path.relpath(destination, working_dir)
-        cmd = [arg.replace(destination, diff) for arg in cmd]
+        def repl(text):
+            if isinstance(text, str):
+                return(text.replace(destination, diff))
+            elif isinstance(text, list) or isinstance(text, set):
+                return([repl(element) for element in text])
+            else:
+                return(text)
+        cmd = repl(cmd)
         return(cmd)
