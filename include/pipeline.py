@@ -240,6 +240,14 @@ class Pipeline(object):
         if not 'id' in self.config:
             self.config['id'] = config_file.name
 
+        if 'tools' in self.config and isinstance(self.config['tools'], dict):
+            for tool, args in self.config['tools'].items():
+                if args is None:
+                    self.config['tools'][tool] = dict()
+                self.config['tools'][tool].setdefault('path', tool)
+                self.config['tools'][tool].setdefault('get_version', '--version')
+                self.config['tools'][tool].setdefault('exit_code', 0)
+
         if not 'destination_path' in self.config:
             logger.error("%s: Missing key: destination_path"
                          % self.get_config_filepath())
