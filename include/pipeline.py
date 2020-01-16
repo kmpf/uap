@@ -254,7 +254,7 @@ class Pipeline(object):
 
         if 'tools' in self.config and isinstance(self.config['tools'], dict):
             for tool, args in self.config['tools'].items():
-                if args is None or len(ars)==0:
+                if args is None or len(args)==0:
                     self.config['tools'][tool] = dict()
                 self.config['tools'][tool].setdefault('path', tool)
                 self.config['tools'][tool].setdefault('get_version', '--version')
