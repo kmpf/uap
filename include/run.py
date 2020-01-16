@@ -546,7 +546,7 @@ class Run(object):
             logger.error("The declared output file path contains "
                          "directory separator: %s." % out_path)
             sys.exit(1)
-        elif head != "":
+        elif isinstance(self._step, abst.AbstractSourceStep):
             out_path = os.path.abspath(out_path)
         # make sure tag was declared with an outgoing connection
         if 'out/' + tag not in self._step._connections:
