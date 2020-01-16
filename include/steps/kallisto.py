@@ -101,7 +101,7 @@ class Kallisto(AbstractStep):
 
                 d_files = input_fileset[:]
                 if self.is_option_set_in_config('index'):
-                    kallisto.extend(['--index', self.get_option('index')])
+                    kallisto.extend(['--index', os.path.abspath(self.get_option('index'))])
                 else:
                     if connect_index_path:
                         kallisto.extend(['--index', connect_index_path])
