@@ -185,6 +185,9 @@ class Pipeline(object):
 
         self.read_config(args.config)
 
+        self.tool_versions = {}
+        self.check_tools()
+
         # collect all tasks
         for step_name in self.topological_step_order:
             step = self.get_step(step_name)
@@ -207,9 +210,6 @@ class Pipeline(object):
                                  (self.get_config_filepath(), str(task)))
                     sys.exit(1)
                 self.task_for_task_id[str(task)] = task
-
-        self.tool_versions = {}
-        self.check_tools()
 
     def get_uap_path(self):
         return self._uap_path
