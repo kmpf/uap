@@ -67,7 +67,7 @@ class Tcount2gcount(AbstractStep):
                 cmd = [self.get_tool('tcount2gcount')]
 
                 if self.is_option_set_in_config('m'): 
-                     cmd.extend(['-m', self.get_option('m')]) 
+                     cmd.extend(['-m', os.path.abspath(self.get_option('m'))])
                 else:                    
                     if annotation:
                         cmd.extend(['-m', os.path.abspath(annotation)])
