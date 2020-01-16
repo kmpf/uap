@@ -909,9 +909,9 @@ class AbstractStep(object):
 
             self._reset()
 
-    def get_parents(self):
+    def get_parents(self, run_id):
         '''
-        Returns all taks that produce input for this task.
+        Returns all tasks that produce input for this task.
         '''
         task_id = '%s/%s' % (self, run_id)
         input_files = set()
@@ -919,7 +919,7 @@ class AbstractStep(object):
             input_files = self.get_pipeline().input_files_for_task_id[task_id]
         parents = set()
         # Only source steps do have empty strings in the input files list
-        # so we can savely exclude them here
+        # so we can safely exclude them here
         for inpath in [x for x in input_files if x != '']:
             task_id = self.get_pipeline().task_id_for_output_file[inpath]
             if task_id in self.get_pipeline().task_for_task_id:
