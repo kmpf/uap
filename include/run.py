@@ -273,8 +273,8 @@ class Run(object):
         tools = step._tools.keys()
         cmd_by_eg['tool_versions'] = dict()
         for tool in tools:
-            tvr = step.get_pipeline().tool_versions[tool]
-            cmd_by_eg['tool_versions'][tool] = tv['response']]
+            tool_info = step.get_pipeline().tool_versions[tool]
+            cmd_by_eg['tool_versions'][tool] = tool_info['response']
 
         # Set step state back to original state
         step._state = previous_state
