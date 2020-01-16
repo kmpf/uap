@@ -1,5 +1,6 @@
 from logging import getLogger
 from abstract_step import AbstractStep
+import os
 
 logger = getLogger('uap_logger')
 
@@ -69,7 +70,7 @@ class Tcount2gcount(AbstractStep):
                      cmd.extend(['-m', self.get_option('m')]) 
                 else:                    
                     if annotation:
-                        cmd.extend(['-m', annotation]) 
+                        cmd.extend(['-m', os.path.abspath(annotation)])
                     else:  
                         logger.error("%s no annotation give via config or connection" % run_id) 
                         sys.exit(1)
