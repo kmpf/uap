@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from logging import getLogger
 import os
@@ -156,14 +157,12 @@ class PicardMarkDuplicates(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    logger.error("Expected exactly one alignments file.")
-                    sys.exit(1)
+                    raise UAPError("Expected exactly one alignments file.")
                 elif os.path.splitext(input_paths[0])[1] not in ['.sam', '.bam']:
-                    logger.error(
+                    raise UAPError(
                         "The file %s seems not to be a SAM or BAM file. At "
                         "least the suffix is wrong." % input_paths[0]
                     )
-                    sys.exit(1)
                 else:
                     with run.new_exec_group() as exec_group:
                         alignments = run.add_output_file(

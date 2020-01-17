@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -99,14 +100,12 @@ class HtSeqCount(AbstractStep):
                     features_path = connect_feature_path
                     input_paths.append(features_path)
                 else:
-                    logger.error(
+                    raise UAPError(
                         "No feature file could be found for '%s'" % run_id)
-                    sys.exit(1)
             if not connect_feature_path:
                 if not os.path.isfile(features_path):
-                    logger.error("Feature file '%s' is not a file."
+                    raise UAPError("Feature file '%s' is not a file."
                                  % features_path)
-                    sys.exit(1)
             # Is the alignment gzipped?
             root, ext = os.path.splitext(alignments[0])
             is_gzipped = True if ext in ['.gz', '.gzip'] else False
@@ -116,9 +115,8 @@ class HtSeqCount(AbstractStep):
             is_bam = True if ext in ['.bam'] else False
             is_sam = True if ext in ['.sam'] else False
             if not (bool(is_bam) ^ bool(is_sam)):
-                logger.error("Alignment file '%s' is neither SAM nor BAM "
+                raise UAPError("Alignment file '%s' is neither SAM nor BAM "
                              "format" % alignments[0])
-                sys.exit(1)
             alignments_path = alignments[0]
 
             with self.declare_run(run_id) as run:

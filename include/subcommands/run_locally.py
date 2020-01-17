@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 #!/usr/bin/env python
 
 import sys
@@ -49,11 +50,10 @@ def main(args):
         if basic_task_state == p.states.READY:
             task.run()
         else:
-            logger.error("Unexpected basic task state for %s: %s\n"
+            raise UAPError("Unexpected basic task state for %s: %s\n"
                          "Expected state to be 'READY'. Probably an upstream "
                          "run crashed." %
                          (task, basic_task_state))
-            sys.exit(1)
 
 if __name__ == '__main__':
     try:

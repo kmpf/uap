@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from logging import getLogger
 import pipeline_info
@@ -22,8 +23,7 @@ class CommandInfo(object):
                     self._tool = _[-1]
                 pass
             elif not isinstance(_, str):
-                logger.error("Non-string element %s in command %s" % (_, command))
-                sys.exit(1)
+                raise UAPError("Non-string element %s in command %s" % (_, command))
             self._command.append(_)
 
     def replace_output_dir_du_jour(func):
@@ -55,16 +55,14 @@ class CommandInfo(object):
             elif ret_value == None:
                 command = None
             else:
-                logger.error("Function %s does not return list or string object"
+                raise UAPError("Function %s does not return list or string object"
                              % func.__class__.__name__)
-                sys.exit(1)
             return(command)
         return(inner)
 
     def set_command(self, command):
         if not isinstance(command, list):
-            logger.error("Given non-list command: %s" % command)
-            sys.exit(1)
+            raise UAPError("Given non-list command: %s" % command)
         self._command = command
 
     def set_stdout_path(self, stdout_path):

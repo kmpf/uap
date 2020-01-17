@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 import yaml
@@ -60,8 +61,7 @@ class Task(object):
             print("Skipping task: %s is already finished." % self)
             return
         if task_state == self.pipeline.states.WAITING:
-            logger.error("%s cannot be run yet." % self)
-            sys.exit(1)
+            raise UAPError("%s cannot be run yet." % self)
         self.step.run(self.run_id)
 
     def generate_report(self):

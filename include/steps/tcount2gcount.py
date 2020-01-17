@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 from logging import getLogger
 from abstract_step import AbstractStep
 
@@ -71,8 +72,7 @@ class Tcount2gcount(AbstractStep):
                     if annotation:
                         cmd.extend(['-m', annotation]) 
                     else:  
-                        logger.error("%s no annotation give via config or connection" % run_id) 
-                        sys.exit(1)
+                        raise UAPError("%s no annotation give via config or connection" % run_id) 
                     
                 if self.is_option_set_in_config('kallisto-extended'): 
                     cmd.append('--kallisto-extended')

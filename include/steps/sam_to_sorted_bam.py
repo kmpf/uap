@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -49,8 +50,7 @@ class SamToSortedBam(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    logger.error("Expected exactly one alignments file.")
-                    sys.exit(1)
+                    raise UAPError("Expected exactly one alignments file.")
                 else:
                     is_gzipped = True if os.path.splitext(input_paths[0])[1]\
                                  in ['.gz', '.gzip'] else False
@@ -58,12 +58,10 @@ class SamToSortedBam(AbstractStep):
                 if self.is_option_set_in_config('temp-sort-dir'):
                     if not os.path.isdir(self.get_option('temp-sort-dir')):
                         #dir not present
-                        logger.error("Directory %s not found" % self.get_option('temp-sort-dir'))
-                        sys.exit(1)
+                        raise UAPError("Directory %s not found" % self.get_option('temp-sort-dir'))
                     if not os.access(self.get_option('temp-sort-dir'), os.W_OK):
                         #not accessible
-                        logger.error("Directory %s not accessible." % self.get_option('temp-sort-dir'))
-                        sys.exit(1)
+                        raise UAPError("Directory %s not accessible." % self.get_option('temp-sort-dir'))
 
 
                 with run.new_exec_group() as exec_group:

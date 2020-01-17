@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -153,10 +154,9 @@ class RgtThor(AbstractStep):
                     except KeyError as e:
                         # rep1 and rep2 are required
                         if key in ['rep1', 'rep2']:
-                            logger.error("Required key %s missing in "
+                            raise UAPError("Required key %s missing in "
                                          "'config_file' for run %s"
                                          % (key, run_id))
-                            sys.exit(1)
                         # inputs1 and inputs2 are optional
                         else:
                             pass
@@ -164,10 +164,9 @@ class RgtThor(AbstractStep):
                     for align_run in run_ids:
                         input_paths = run_ids_connections_files[align_run]['in/alignments']
                         if input_paths == [None]:
-                            logger.error("%s provides no alignments for "
+                            raise UAPError("%s provides no alignments for "
                                          " run %s"
                                          % (align_run, run_id))
-                            sys.exit(1)
                         input_files.extend(input_paths)
                         config_content[key].extend(input_paths)
                 # Add chrom_sizes

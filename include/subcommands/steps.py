@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 #!/usr/bin/env python
 
 import ast
@@ -112,9 +113,8 @@ def main(args):
                 step_file = os.path.join(steps_path, step_file)
                 
                 if not os.path.exists(step_file):
-                    logger.error("Step file %s does not exists." %
+                    raise UAPError("Step file %s does not exists." %
                                  step_file)
-                    sys.exit(1)
                 
                 with open(step_file) as f:
                     fc = f.read()
@@ -135,7 +135,7 @@ def main(args):
                 #print(rt.body[0].value.args)
                 
         if not is_step:
-            logger.error("'%s' is neither a source nor a processing step"
+            raise UAPError("'%s' is neither a source nor a processing step"
                          % args.step)
 
     else:

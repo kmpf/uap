@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from logging import getLogger
 from abstract_step import AbstractStep
@@ -71,8 +72,7 @@ class Star(AbstractStep):
                     genome_dir = str(self.get_option('genomeDir'))
                 else:
                     if 'in/genome_dir' not in run_ids_connections_files[run_id]:
-                        logger.error('Required parameter "GenomDir" wasnt found!')
-                        sys.exit(1)
+                        raise UAPError('Required parameter "GenomDir" wasnt found!')
                     genome_dir = run_ids_connections_files[run_id]['in/genome_dir'][0]
 
                 star.extend(['--genomeDir', genome_dir])

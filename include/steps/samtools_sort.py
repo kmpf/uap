@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -68,23 +69,19 @@ class SamtoolsSort(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    logger.error("Expected exactly one alignments file.")
-                    sys.exit(1)
+                    raise UAPError("Expected exactly one alignments file.")
 
                 if self.is_option_set_in_config('temp-sort-dir'):
                     if not os.path.isdir(self.get_option('temp-sort-dir')):
                         #dir not present
-                        logger.error("Directory %s not found" % self.get_option('temp-sort-dir'))
-                        sys.exit(1)
+                        raise UAPError("Directory %s not found" % self.get_option('temp-sort-dir'))
                     if not os.access(self.get_option('temp-sort-dir'), os.W_OK):
                         #not accessible
-                        logger.error("Directory %s not accessible." % self.get_option('temp-sort-dir'))
-                        sys.exit(1)
+                        raise UAPError("Directory %s not accessible." % self.get_option('temp-sort-dir'))
 
                     if self.is_option_set_in_config('reference'):
                         if not os.path.isfile(self.get_option('reference')):
-                            logger.error("reference:   %s not accessible" % self.get_option('reference'))
-                            sys.exit(1)
+                            raise UAPError("reference:   %s not accessible" % self.get_option('reference'))
 
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as pipe:
@@ -100,8 +97,7 @@ class SamtoolsSort(AbstractStep):
                             
                         if self.get_option('O') == 'CRAM':
                             if  not self.is_option_set_in_config('reference'):
-                                logger.error("option: reference not set in config rqueiered for CRAM output")
-                                sys.exit(1)
+                                raise UAPError("option: reference not set in config rqueiered for CRAM output")
 
 
                         if self.get_option('sort-by-name'):

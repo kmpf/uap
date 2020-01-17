@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -39,12 +40,10 @@ class BwaGenerateIndex(AbstractStep):
                              ['in/reference_sequence']
 
                     if refseq == [None]:
-                        logger.error("No reference sequence received.")
-                        sys.exit(1)
+                        raise UAPError("No reference sequence received.")
                     if len(refseq) != 1:
-                        logger.error(
+                        raise UAPError(
                             "Reference sequence is not a single file.")
-                        sys.exit(1)
                     bwa_index = [self.get_tool('bwa'), 'index']
                     # Add index_basename 
                     bwa_index.extend(
