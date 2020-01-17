@@ -5,7 +5,7 @@ cd "$1"
 printf '
 <html>
 <body>
-<h2>UAP Sphinx Docu per branch</h2>
+<h2>UAP Sphinx docu per branch</h2>
 <p>
 ' > index.html
 
