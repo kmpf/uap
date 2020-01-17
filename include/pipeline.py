@@ -258,7 +258,6 @@ class Pipeline(object):
             if not tool in self.config['tools'] or \
                     not isinstance(self.config['tools'][tool], dict):
                         self.config['tools'][tool] = dict()
-            print('------ adding %s' % tool)
             self.config['tools'][tool].setdefault('path', [uap_python, tool_path])
             self.config['tools'][tool].setdefault('get_version', '--help')
             self.config['tools'][tool].setdefault('exit_code', 0)
