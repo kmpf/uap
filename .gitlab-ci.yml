@@ -2,10 +2,10 @@ stages:
   - build
   - test
 
-cashe:
-paths:
-  - python_env
-  - venv
+cache:
+  paths:
+    - python_env
+    - venv
 
 prepare:
   stage: build
