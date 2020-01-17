@@ -1,14 +1,13 @@
 #! /bin/bash -
 
 cd "$1"
-touch index.html
 
 printf '
 <html>
 <body>
 <h2>UAP Sphinx Docu per branch</h2>
 <p>
-' >> index.html
+' > index.html
 
 for file in $(ls -1); do
     [[ "$file" == "index.html" ]] && continue
