@@ -2,6 +2,11 @@ stages:
   - build
   - test
 
+cashe:
+paths:
+  - python_env
+  - venv
+
 prepare:
   stage: build
   script:
@@ -11,10 +16,10 @@ prepare:
     - python3 -m venv venv
     - source venv/bin/activate
     - pip install pyaml sphinx
-
   artifacts:
     paths:
       - python_env
+      - venv
     expire_in: 24 hours
 
 
