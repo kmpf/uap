@@ -171,22 +171,22 @@ class Segemehl(AbstractStep):
 
                 if len(fr_input) != 1 or fr_input == [None]:
                     logger.error("Expected single input file for first read.")
-                    StandardError()
+                    sys.exit(1)
                 if is_paired_end and len(sr_input) != 1:
                     logger.error("Expected single input file for second read.")
-                    StandardError()
+                    sys.exit(1)
 
                 if not os.path.isfile(self.get_option('index')):
                     logger.error(
                         "The path %s provided to option 'index' is not a file."
                         % self.get_option('index') )
-                    StandardError()
+                    sys.exit(1)
 
                 if not os.path.isfile(self.get_option('genome')):
                     logger.error(
                         "The path %s provided to option 'genome' is not a file."
                         % self.get_option('genome'))
-                    StandardError()
+                    sys.exit(1)
                 # Segemehl is run in this exec group
                 # Can segemehl handle multiple input files/fifos?
 

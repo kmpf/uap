@@ -44,14 +44,14 @@ class SamtoolsIndex(AbstractStep):
                 # Fail if we haven't exactly one input file
                 elif len(input_paths) != 1:
                     logger.error("Expected exactly one alignments file.")
-                    StandardError()
+                    sys.exit(1)
                 # Fail if the input is not a bam file
                 elif os.path.splitext(input_paths[0])[1] not in ['.bam']:
                     logger.error(
                         "The file %s seems not to be a BAM file. At "
                         "least the suffix is wrong." % input_paths[0]
                     )
-                    StandardError()
+                    sys.exit(1)
                 # Everything seems fine, lets start
                 else:
                     input_bam = input_paths[0]

@@ -50,7 +50,7 @@ class SegemehlGenerateIndex(AbstractStep):
                 if refseq == [None]:
                     logger.error("No reference sequence received via "
                                  "connection in/reference_sequence.")
-                    StandardError()
+                    sys.exit(1)
                 # Get names of FIFOs
                 refseq_fifos = list()
                 index_fifo = run.add_temporary_file(

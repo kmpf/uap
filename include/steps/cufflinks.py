@@ -175,13 +175,13 @@ class CuffLinks(AbstractStep):
 #                if not os.path.isdir(tmp_dir):
 #                    #dir not present
 #                    logger.error("Directory %s not found" % tmp_dir)
-#                    StandardError()
+#                    sys.exit(1)
 #
 #                # .. and if its accessible
 #                if not os.access(tmp_dir, os.W_OK):
 #                    #not accessible
 #                    logger.error("Directory %s not accessible." % tmp_dir)
-#                    StandardError()
+#                    sys.exit(1)
 
                 cufflinks = [self.get_tool('cufflinks'),'-o', temp_dir, '-q']
                 cufflinks.extend(option_list)

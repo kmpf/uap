@@ -191,7 +191,7 @@ class Bowtie2GenerateIndex(AbstractStep):
                                          "expected suffix (fastq.gz or "
                                          "fastq). Please fix that issue." %
                                          input_path)
-                            StandardError()
+                            sys.exit(1)
                     bowtie_build = [self.get_tool('bowtie2-build')]
                     # Add options
                     bowtie_build.extend(option_list)

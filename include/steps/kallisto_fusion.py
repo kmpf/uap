@@ -94,7 +94,7 @@ class Kallisto(AbstractStep):
 
                 if sr_input is None:
                     logger.error("Not paired end")
-                    StandardError()
+                    sys.exit(1)
                 else:
                     input_paths.append(sr_input)
 

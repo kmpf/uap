@@ -34,12 +34,12 @@ class SamtoolsFaidx(AbstractStep):
                     run.add_empty_output_connection("sequence")
                 elif len(input_paths) != 1:
                     logger.error("Expected exactly one sequence file.")
-                    StandardError()
+                    sys.exit(1)
                 elif os.path.splitext(os.path.basename(input_paths[0]))[1] \
                 not in ['.fa', '.fna', '.fasta']:
                     logger.error("The input file %s does not seem to be "
                                  "a FASTA file." % input_paths[0])
-                    StandardError()
+                    sys.exit(1)
                 else:
                     with run.new_exec_group() as faidx_group:
                         samtools_faidx = [

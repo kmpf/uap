@@ -50,7 +50,7 @@ class SamToSortedBam(AbstractStep):
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
                     logger.error("Expected exactly one alignments file.")
-                    StandardError()
+                    sys.exit(1)
                 else:
                     is_gzipped = True if os.path.splitext(input_paths[0])[1]\
                                  in ['.gz', '.gzip'] else False
@@ -59,11 +59,11 @@ class SamToSortedBam(AbstractStep):
                     if not os.path.isdir(self.get_option('temp-sort-dir')):
                         #dir not present
                         logger.error("Directory %s not found" % self.get_option('temp-sort-dir'))
-                        StandardError()
+                        sys.exit(1)
                     if not os.access(self.get_option('temp-sort-dir'), os.W_OK):
                         #not accessible
                         logger.error("Directory %s not accessible." % self.get_option('temp-sort-dir'))
-                        StandardError()
+                        sys.exit(1)
 
 
                 with run.new_exec_group() as exec_group:

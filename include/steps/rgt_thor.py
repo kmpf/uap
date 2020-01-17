@@ -156,7 +156,7 @@ class RgtThor(AbstractStep):
                             logger.error("Required key %s missing in "
                                          "'config_file' for run %s"
                                          % (key, run_id))
-                            StandardError()
+                            sys.exit(1)
                         # inputs1 and inputs2 are optional
                         else:
                             pass
@@ -167,7 +167,7 @@ class RgtThor(AbstractStep):
                             logger.error("%s provides no alignments for "
                                          " run %s"
                                          % (align_run, run_id))
-                            StandardError()
+                            sys.exit(1)
                         input_files.extend(input_paths)
                         config_content[key].extend(input_paths)
                 # Add chrom_sizes

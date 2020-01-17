@@ -35,7 +35,7 @@ class Run(object):
     def __init__(self, step, run_id):
         if '/' in run_id:
             logger.error("Error: A run ID must not contain a slash: %s." % run_id)
-            StandardError()
+            sys.exit(1)
         self._step = step
         '''
         Step this run belongs to.
@@ -110,7 +110,7 @@ class Run(object):
         else:
             logger.error("Connection %s not declared for step %s" %
                          (connection, self.get_step()))
-            StandardError()
+            sys.exit(1)
 
     def _get_ping_file(self, key):
         if self._ping_files[key] == None:
@@ -169,7 +169,7 @@ class Run(object):
             else:
                 logger.error("Function %s does not return list or string object"
                              % func.__class__.__name__)
-                StandardError()
+                sys.exit(1)
             return(value)
         return(inner)
 
@@ -483,7 +483,7 @@ class Run(object):
                 "You're trying to overwrite private info %s with %s, "
                 "but there's already a different value stored: %s." %
                 (key, value, self._private_info[key]))
-            StandardError()
+            sys.exit(1)
         self._private_info[key] = value
 
     def add_public_info(self, key, value):
@@ -497,7 +497,7 @@ class Run(object):
                 "You're trying to overwrite public info %s with %s, "
                 "but there's already a different value stored: %s." %
                 (key, value, self._public_info[key]))
-            StandardError()
+            sys.exit(1)
         self._public_info[key] = value
 
     def update_public_info(self, key, value):
@@ -513,7 +513,7 @@ class Run(object):
             logger.error("The key %s doesn't exist yet as public info."
                          "Please use add_public_info(%s, %s)"
                          % (key, key, value))
-            StandardError()
+            sys.exit(1)
         else:
             self._public_info[key] = value
 
@@ -545,14 +545,14 @@ class Run(object):
            isinstance(self._step, abst.AbstractSourceStep):
             logger.error("The declared output file path contains "
                          "directory separator: %s." % out_path)
-            StandardError()
+            sys.exit(1)
         # make sure tag was declared with an outgoing connection
         if 'out/' + tag not in self._step._connections:
             logger.error("Invalid output_file tag '%s' in %s. "
                          "You might want to add self.add_connection('out/%s') "
                          "to the constructor of %s."
                          % (tag, str(self._step), tag, self._step.__module__))
-            StandardError()
+            sys.exit(1)
 
         out_connection = self.get_out_connection(tag)
 
@@ -560,23 +560,23 @@ class Run(object):
             logger.error(
                 "You're trying to re-add an output file which has already "
                 "been declared: %s." % out_path)
-            StandardError()
+            sys.exit(1)
 
         if not isinstance(in_paths, list):
             logger.error("Input paths (%s) is not a list." % in_paths)
-            StandardError()
+            sys.exit(1)
 
         if None in in_paths:
             logger.error(
                 "There is a NoneType element in input paths (%s) for output "
                 "file (%s)" % (in_paths, out_path))
-            StandardError()
+            sys.exit(1)
 
         if out_path == None:
             logger.error(
                 "Trying to add NoneType element as output file for input paths "
                 ": %s" % in_paths)
-            StandardError()
+            sys.exit(1)
 
         self._input_files.append(in_paths)
         self._output_files[out_connection][out_path] = in_paths
@@ -691,7 +691,7 @@ class Run(object):
                          "You might want to add self.add_connection('out/%s') "
                          "to the constructor of %s."
                          % (tag, str(self._step), tag, self._step.__module__))
-            StandardError()
+            sys.exit(1)
         try:
             out_connection = self.get_out_connection(tag)
         except KeyError:
@@ -701,7 +701,7 @@ class Run(object):
             logger.error(
                 "You're trying to re-declare %s as an empty output connection "
                 % out_connection)
-            StandardError()
+            sys.exit(1)
 
         self._output_files[out_connection][None] = None
 
@@ -773,7 +773,7 @@ class Run(object):
         if len(temp[annotation]) != 1:
             logger.error("More than one output file declared for out/%s."
                          % annotation)
-            StandardError()
+            sys.exit(1)
         return temp[annotation].keys()[0]
 
     def get_output_files_for_annotation_and_tags(self, annotation, tags):
@@ -799,7 +799,7 @@ class Run(object):
                 return sorted(temp[tag][out_path])
         logger.error("Sorry, your output '%s' file couldn't be found in"
                      "the dictionary: %s." % (out_path, temp))
-        StandardError()
+        sys.exit(1)
 
     def get_public_info(self, key):
         '''

@@ -142,7 +142,7 @@ class AbstractStep(object):
         if run_id in self._runs:
             logger.error(
                 "Cannot declare the same run ID twice: %s." % run_id)
-            StandardError()
+            sys.exit(1)
         run = run_module.Run(self, run_id)
         self.add_run(run)
         return run
@@ -183,27 +183,27 @@ class AbstractStep(object):
                 if not key in AbstractStep.UNDERSCORE_OPTIONS:
                     logger.error(
                         "Invalid option in %s: %s" % (key, self))
-                    StandardError()
+                    sys.exit(1)
                 self._options[key] = value
             else:
                 if not key in self._defined_options:
                     logger.error(
                         "Unknown option in %s (%s): %s." %
                         (self.get_step_name(), self.get_step_type(), key))
-                    StandardError()
+                    sys.exit(1)
                 if type(value) not in self._defined_options[key]['types']:
                     logger.error(
                         "Invalid type for option %s - it's %s and should be "
                         "one of %s." % (key, type(value),
                                         self._defined_options[key]['types']))
-                    StandardError()
+                    sys.exit(1)
                 if self._defined_options[key]['choices'] != None and \
                    value not in self._defined_options[key]['choices']:
                     logger.error(
                         "Invalid value '%s' specified for option %s - "
                         "possible values are %s." %
                         (value, key, self._defined_options[key]['choices']))
-                    StandardError()
+                    sys.exit(1)
                 self._options[key] = value
 
         # set default values for unset options and make sure all required
@@ -215,7 +215,7 @@ class AbstractStep(object):
                     if info['optional'] == False:
                         logger.error(
                             "Required option not set in %s: %s." % (self, key))
-                        StandardError()
+                        sys.exit(1)
                 else:
                     self._options[key] = value
 
@@ -241,7 +241,7 @@ class AbstractStep(object):
             logger.error(
                 "Cannot query undefined option %s in step %s." %
                 (key, self.__module__))
-            StandardError()
+            sys.exit(1)
         return self._options[key]
 
     def is_option_set_in_config(self, key):
@@ -253,7 +253,7 @@ class AbstractStep(object):
             logger.error(
                 "Cannot query undefined option %s in step %s." %
                 (key, self.get_step_name()))
-            StandardError()
+            sys.exit(1)
         return key in self._options
 
     def is_volatile(self):
@@ -268,10 +268,10 @@ class AbstractStep(object):
         if not isinstance(parent, AbstractStep):
             logger.error(
                 "Error: parent argument must be an AbstractStep.")
-            StandardError()
+            sys.exit(1)
         if parent == self:
             logger.error("Cannot add a node as its own dependency.")
-            StandardError()
+            sys.exit(1)
         self.dependencies.append(parent)
         parent.children_step_names.add(str(self))
 
@@ -284,11 +284,11 @@ class AbstractStep(object):
         if type(filepath) is not str:
             logger.error("Filename must be string. Got %s of type %s"
                          % (filepath, type(filepath)))
-            StandardError()
+            sys.exit(1)
         for ext in extensions:
             if type(ext) is not str:
                 logger.error("Found non-string file extension: %s " % ext)
-                StandardError()
+                sys.exit(1)
             else:
                 extension_list.append(ext)
 
@@ -664,7 +664,7 @@ class AbstractStep(object):
         if os.path.exists(executing_ping_path):
             logger.error("%s/%s seems to be already running, exiting..."
                          % (self, run_id))
-            StandardError()
+            sys.exit(1)
         queued_ping_path = run.get_queued_ping_file()
 
         # create a temporary directory for the output files
@@ -1006,7 +1006,7 @@ class AbstractStep(object):
         if key not in self._tools:
             logger.error("Tool %s unknown. Maybe you forgot to use "
                          "self.require_tool('%s')" % (key, key))
-            StandardError()
+            sys.exit(1)
         return self._tools[key]
 
     def get_module_unloads(self):
@@ -1094,11 +1094,11 @@ class AbstractStep(object):
                 if len(classes) != 1:
                     logger.error("need exactly one subclass of %s in %s"
                                  % (c, key))
-                    StandardError()
+                    sys.exit(1)
                 return classes[0][1]
 
         logger.error("No suitable class found for module %s." % key)
-        StandardError()
+        sys.exit(1)
     def set_cores(self, cores):
         """
         Specify the number of CPU cores this step will use.
@@ -1129,7 +1129,7 @@ class AbstractStep(object):
         """
         if not (connection[0:3] == 'in/' or connection[0:4] == 'out/'):
             logger.error("A connection must start with 'in/' or 'out/'.")
-            StandardError()
+            sys.exit(1)
         if connection[0:3] == 'in/':
             self.needs_parents = True
         self._connections.add(connection)
@@ -1168,7 +1168,7 @@ class AbstractStep(object):
                 logger.error("%s requires the tool %s but it's not declared in "
                              "the configuration."
                              % (self, tool))
-                StandardError()
+                sys.exit(1)
             self._tools[tool] = self.get_pipeline().config['tools'][tool]['path']
             if 'pre_command' in self.get_pipeline().config['tools'][tool]:
                 self._pre_command[tool] = self.get_pipeline().config['tools'][tool]\
@@ -1199,29 +1199,29 @@ class AbstractStep(object):
         if key[0] == '_':
             logger.error(
                 "Option key must not start with an underscore: %s." % key)
-            StandardError()
+            sys.exit(1)
         if key in self._defined_options:
             logger.error("Option %s is already defined." % key)
-            StandardError()
+            sys.exit(1)
         if len(option_types) == 0:
             logger.error("No option type specified for option %s." % key)
-            StandardError()
+            sys.exit(1)
         if len(option_types) > 1 and kwargs['choices'] != None:
             logger.error("You cannot define choices if multiple options types "
                          "are defined (%s)." % key)
-            StandardError()
+            sys.exit(1)
         for option_type in option_types:
             if not  option_type in [int, float, str, bool, list, dict]:
                 logger.error("Invalid type for option %s: %s."
                              % (key, option_type))
-                StandardError()
+                sys.exit(1)
         if kwargs['optional'] and (kwargs['default'] != None):
             if type(kwargs['default']) not in option_types:
                 logger.error(
                     "In step: (%s) option: (%s) Type of default value (%s) does not match any of the "
                     "declared possible types (%s)."
                     % (self, key, type(kwargs['default']), option_types))
-                StandardError()
+                sys.exit(1)
 
         info = dict()
         info['types'] = option_types
@@ -1252,7 +1252,7 @@ class AbstractStep(object):
                 logger.error(
                     "Unable to determine upstream %s info from %s." %
                     (key, self))
-                StandardError()
+                sys.exit(1)
         return results
 
     def find_upstream_info_for_input_paths(self, input_paths, key):
@@ -1315,7 +1315,7 @@ class AbstractStep(object):
                 if in_connection not in self.get_in_connections():
                     logger.error("'_connect': unknown input connection %s "
                                  "found." % in_connection)
-                    StandardError()
+                    sys.exit(1)
 
         # Check each parent step ...
         for parent in self.get_dependencies():
@@ -1379,10 +1379,10 @@ class AbstractStep(object):
     def get_input_run_info_for_connection(self, in_key):
         if in_key[0:3] != 'in/':
             logger.error("in_key does not start with 'in/': %s" % in_key)
-            StandardError()
+            sys.exit(1)
         if in_key not in self._connections:
             logger.error("Undeclared connection %s." % in_key)
-            StandardError()
+            sys.exit(1)
         out_key = in_key.replace('in/', 'out/')
         out_keys = None
         allowed_steps = None
@@ -1415,7 +1415,7 @@ class AbstractStep(object):
                 else:
                     logger.error(
                         "Invalid _connect value: %s" % yaml.dump(declaration))
-                    StandardError()
+                    sys.exit(1)
 
         result = dict()
         result['counts'] = {
@@ -1476,7 +1476,7 @@ class AbstractStep(object):
                                  "/%s should be %d but is %s."
                                  % (self, in_key, k, v,
                                     str(result['counts'][k])))
-                    StandardError()
+                    sys.exit(1)
 
         return result
 

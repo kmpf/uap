@@ -47,7 +47,7 @@ class FixCutadapt(AbstractStep):
                     elif len(input_paths) != 1:
                         logger.error("Expected single input file. Found files "
                                      "%s for run: %s" % (input_paths, run_id))
-                        StandardError()
+                        sys.exit(1)
                     else:
                         # 1. Create temporary fifos
                         # 1.1 Input fifo
@@ -95,7 +95,7 @@ class FixCutadapt(AbstractStep):
                             logger.error("File %s does not end with any "
                                          "expected suffix (fastq.gz or fastq). "
                                          "Please fix that issue." % input_path)
-                            StandardError()
+                            sys.exit(1)
                 # 3. Start fix_cutadapt
                 fix_cutadapt = [self.get_tool('fix_cutadapt'),
                                 temp_fifos["first_read_in"],

@@ -55,7 +55,7 @@ def assign_strings(paths, tags):
     results = {}
     if len(paths) != len(tags):
         logger.error("Number of tags must be equal to number of paths")
-        StandardError()
+        sys.exit(1)
     for tag in tags:
         for path in paths:
             result_candidate = {}
@@ -77,7 +77,7 @@ def assign_strings(paths, tags):
 
     if len(results) != 1:
         logger.error("Unable to find an unambiguous mapping.")
-        StandardError()
+        sys.exit(1)
 
     return results[results.keys()[0]]
 
@@ -88,11 +88,11 @@ def assign_string(s, tags):
             if match != None:
                 logger.error("Could not unambiguously match %s to %s."
                              % (s, tags))
-                StandardError()
+                sys.exit(1)
             match = tag
     if match == None:
         logger.error("Could not match %s to %s." % (s, tags))
-        StandardError()
+        sys.exit(1)
     return match
 
 def natsorted(l):

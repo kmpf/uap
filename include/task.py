@@ -61,7 +61,7 @@ class Task(object):
             return
         if task_state == self.pipeline.states.WAITING:
             logger.error("%s cannot be run yet." % self)
-            StandardError()
+            sys.exit(1)
         self.step.run(self.run_id)
 
     def generate_report(self):

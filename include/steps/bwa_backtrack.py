@@ -186,7 +186,7 @@ class BwaBacktrack(AbstractStep):
         if not os.path.exists(self.get_option('index') + '.bwt'):
             logger.error("Could not find index: %s.*" %
                          self.get_option('index') )
-            StandardError()
+            sys.exit(1)
         # Compile the list of options
         options_bwa_aln = ['aln-n', 'aln-o', 'aln-e', 'aln-d', 'aln-i', 'aln-l',
                            'aln-k', 'aln-t', 'aln-M', 'aln-E', 'aln-R', 'aln-c',
@@ -238,13 +238,13 @@ class BwaBacktrack(AbstractStep):
                 # an empty connection
                 if len(fr_input) != 1 or fr_input == [None]:
                     logger.error("Expected single input file for first read.")
-                    StandardError()
+                    sys.exit(1)
                 # Fail if we don't have exactly one second read file in case of
                 # paired end reads
                 if is_paired_end and len(sr_input) != 1:
                     logger.error(
                         "Expected single input file for seconnd read.")
-                    StandardError()
+                    sys.exit(1)
                 input_paths = fr_input # single element list
                 if is_paired_end:
                     input_paths.extend(sr_input)
@@ -255,7 +255,7 @@ class BwaBacktrack(AbstractStep):
                                if input_path.endswith(_)]) != 1:
                         logger.error("%s possess unknown suffix. "
                                      "(None of: fastq, fq, fq.gz, fastq.gz)")
-                        StandardError()
+                        sys.exit(1)
                 # BWA can handle only single files for first and second read
                 # IMPORTANT: BWA handles gzipped as well as not gzipped files
 

@@ -220,7 +220,7 @@ class ChromHmmLearnModel(AbstractStep):
                 logger.error("Expected single tar.gz file via "
                              "'in/chromhmm_binarization' for run %s, but got "
                              "this %s" % (run_id, ", ".join(input_paths)))
-                StandardError()
+                sys.exit(1)
 
 
             # read tar file and get names of included files

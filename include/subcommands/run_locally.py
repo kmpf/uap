@@ -53,7 +53,7 @@ def main(args):
                          "Expected state to be 'READY'. Probably an upstream "
                          "run crashed." %
                          (task, basic_task_state))
-            StandardError()
+            sys.exit(1)
 
 if __name__ == '__main__':
     try:

@@ -41,7 +41,7 @@ class SamtoolsStats(AbstractStep):
                 run.add_empty_output_connection("alignments")
             elif len(input_paths) != 1:
                 logger.error("Expected exactly one alignments file.")
-                StandardError()
+                sys.exit(1)
 
             with self.declare_run(run_id) as run:
                 for input_path in input_paths:

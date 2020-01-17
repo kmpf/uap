@@ -40,11 +40,11 @@ class BwaGenerateIndex(AbstractStep):
 
                     if refseq == [None]:
                         logger.error("No reference sequence received.")
-                        StandardError()
+                        sys.exit(1)
                     if len(refseq) != 1:
                         logger.error(
                             "Reference sequence is not a single file.")
-                        StandardError()
+                        sys.exit(1)
                     bwa_index = [self.get_tool('bwa'), 'index']
                     # Add index_basename 
                     bwa_index.extend(

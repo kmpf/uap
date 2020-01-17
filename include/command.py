@@ -23,7 +23,7 @@ class CommandInfo(object):
                 pass
             elif not isinstance(_, str):
                 logger.error("Non-string element %s in command %s" % (_, command))
-                StandardError()
+                sys.exit(1)
             self._command.append(_)
 
     def replace_output_dir_du_jour(func):
@@ -57,14 +57,14 @@ class CommandInfo(object):
             else:
                 logger.error("Function %s does not return list or string object"
                              % func.__class__.__name__)
-                StandardError()
+                sys.exit(1)
             return(command)
         return(inner)
 
     def set_command(self, command):
         if not isinstance(command, list):
             logger.error("Given non-list command: %s" % command)
-            StandardError()
+            sys.exit(1)
         self._command = command
 
     def set_stdout_path(self, stdout_path):

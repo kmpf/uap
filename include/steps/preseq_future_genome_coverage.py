@@ -79,11 +79,11 @@ class PreseqFutureGenomeCoverage(AbstractStep):
                     run.add_empty_output_connection("future_yield")
                 elif len(input_paths) != 1:
                     logger.error("Expected exactly one alignments file.")
-                    StandardError()
+                    sys.exit(1)
                 elif not is_bam and not is_bed:
                     logger.error("Input file %s is niether BAM nor BED." %
                                  input_paths[0])
-                    StandardError()
+                    sys.exit(1)
                 else:
                     with run.new_exec_group() as gc_group:
                         gc_extrap_out = run.add_output_file(
