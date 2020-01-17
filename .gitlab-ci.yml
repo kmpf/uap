@@ -41,7 +41,7 @@ pages:
   script:
     - module load Python/3.6.6-foss-2018b
     - source venv/bin/activate
-    - sphinx-build -b html . public
+    - sphinx-build -b html doc/source public
   dependencies:
     - prepare
   artifacts:
