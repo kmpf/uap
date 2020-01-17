@@ -1,33 +1,29 @@
 stages:
-  - build
-  - test
+  - test_and_deploy
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip"
 
 cache:
   paths:
     - python_env
     - venv
+    - pip
+    - uap_test
 
-prepare:
-  stage: build
-  script:
-    - module load Python/2.7.15-foss-2018b
-    - ./bootstrap.sh
-    - module load Python/3.6.6-foss-2018b
-    - python3 -m venv venv
-    - source venv/bin/activate
-    - pip install pyaml sphinx
-  artifacts:
-    paths:
-      - python_env
-      - venv
-    expire_in: 24 hours
+before_script:
+  - module load Python/2.7.15-foss-2018b
+  - ./bootstrap.sh
+  - module load Python/3.6.6-foss-2018b
+  - python3 -m venv venv
+  - source venv/bin/activate
+  - pip install pyaml sphinx
 
 
 steptests:
-  stage: test
+  stage: test_and_deploy
   script:
     - git clone git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git
-    - pwd
     - cd uap_test
     - make clean
     - module load Python/3.6.6-foss-2018b
@@ -37,7 +33,7 @@ steptests:
     - prepare
 
 pages:
-  stage: test
+  stage: test_and_deploy
   script:
     - module load Python/3.6.6-foss-2018b
     - source venv/bin/activate
