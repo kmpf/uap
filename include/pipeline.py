@@ -601,6 +601,8 @@ class Pipeline(object):
 
         if check_queue:
             for line in stat_output.split("\n"):
+                if 'COMPLETING' in line:
+                    continue
                 try:
                     jid = int(line.strip().split(' ')[0])
                     running_jids.add(str(jid))
