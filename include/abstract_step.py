@@ -1,4 +1,3 @@
-from uaperrors import UAPError
 '''
 Classes AbstractStep and AbstractSourceStep are defined here.
 
@@ -34,6 +33,7 @@ import fscache
 import psutil
 import yaml
 # 3. local application/library specific imports
+from uaperrors import UAPError
 import command as command_info
 import misc
 import process_pool

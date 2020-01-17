@@ -1,4 +1,3 @@
-from uaperrors import UAPError
 #!/usr/bin/env python
 
 import sys
@@ -12,6 +11,7 @@ import yaml
 import misc
 import pipeline
 import process_pool
+from uaperrors import UAPError
 
 logger = logging.getLogger("uap_logger")
 

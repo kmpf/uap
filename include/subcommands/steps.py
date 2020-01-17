@@ -1,4 +1,3 @@
-from uaperrors import UAPError
 #!/usr/bin/env python
 
 import ast
@@ -7,6 +6,7 @@ import glob
 import os
 import string
 import sys
+from uaperrors import UAPError
 from logging import getLogger
 logger = getLogger('uap_logger')
 

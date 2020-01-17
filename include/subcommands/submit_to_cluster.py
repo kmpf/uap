@@ -1,4 +1,3 @@
-from uaperrors import UAPError
 #!/usr/bin/env python
 
 import sys
@@ -13,6 +12,7 @@ import yaml
 import abstract_step
 import fscache
 import pipeline
+from uaperrors import UAPError
 '''
 By default, this script submits all tasks to a compute cluster via a
 submit script. The list of tasks can be narrowed down by specifying a step name
