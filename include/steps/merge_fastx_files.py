@@ -41,7 +41,7 @@ class MergeFastxFiles(AbstractStep):
             logger.error("File %s does not end with any "
                          "expected suffix (%s). Please fix that issue." %
                          (fast_file, ' | '.join(required_file_extensions)))
-            sys.exit(1)
+            StandardError()
 
         fast_char = fast_format[-1]
         return fast_char

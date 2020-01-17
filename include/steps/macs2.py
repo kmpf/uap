@@ -113,7 +113,7 @@ class Macs2(AbstractStep):
                     control_id = "-" + control_id
                 except KeyError:
                     logger.error("No control for ID '%s' found." % control_id)
-                    sys.exit(1)
+                    StandardError()
             else:
                 control_id = ""
 
@@ -125,7 +125,7 @@ class Macs2(AbstractStep):
                                      ['in/alignments']
                 except KeyError:
                     logger.error("No treatment for ID '%s' found." % tr)
-                    sys.exit(1)
+                    StandardError()
                 # Assemble rund ID
                 run_id = "%s%s" % (tr, control_id)
 

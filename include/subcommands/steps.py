@@ -114,7 +114,7 @@ def main(args):
                 if not os.path.exists(step_file):
                     logger.error("Step file %s does not exists." %
                                  step_file)
-                    sys.exit(1)
+                    StandardError()
                 
                 with open(step_file) as f:
                     fc = f.read()

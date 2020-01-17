@@ -82,7 +82,7 @@ class BamToBedgraph(AbstractStep):
         if not os.path.isfile(self.get_option('chromosome-sizes')):
             logger.error("Value for option 'chromosome-sizes' is not a "
                          "file: %s" % self.get_option('chromosome-sizes'))
-            sys.exit(1)
+            StandardError()
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 input_paths = run_ids_connections_files[run_id]["in/alignments"]
@@ -92,7 +92,7 @@ class BamToBedgraph(AbstractStep):
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
                     logger.error("Expected exactly one alignments file.")
-                    sys.exit(1)
+                    StandardError()
                 else:
                     root, ext = os.path.splitext(os.path.basename(input_paths[0]))
                     if ext in ['.gz', '.gzip']:
@@ -109,7 +109,7 @@ class BamToBedgraph(AbstractStep):
                                      "of bam.gz, bam.gzip, or bam"
                                      % input_paths[0]
                         )
-                        sys.exit(1)
+                        StandardError()
                     with run.new_exec_group() as exec_group:
                         # Create FIFO for use with bedToBigBed, bedGraphToBigWig
                         big_fifo = run.add_temporary_file(

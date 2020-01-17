@@ -38,7 +38,7 @@ class FetchChromSizesSource(AbstractSourceStep):
             logger.debug( tb )
             logger.error('Output directory (%s) does not exist. Please create it.'
                          % output_dir)
-            sys.exit(1)
+            StandardError()
 
         ucsc_database = self.get_option('ucsc-database')
 

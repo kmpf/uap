@@ -49,7 +49,7 @@ class RawUrlSource(AbstractSourceStep):
             if len( unknown_opts ) > 0:
                 logger.error("Unknown option(s) %s for download of %s"
                              % (" ".join(unknown_opts), files) )
-                sys.exit(1)
+                StandardError()
             # Control input for missing mandatory options
             missing_mandatory_opts = mandatory_opts.difference( set(
                 downloads.keys() ))
@@ -69,7 +69,7 @@ class RawUrlSource(AbstractSourceStep):
                              "has invalid value %s. Has to be one of %s."
                              % (files, downloads['hashing-algorithm'],
                                 ", ".join(hash_algos)) )
-                sys.exit(1)
+                StandardError()
 
             # 2. Check the 'secure-hash'
             if isinstance(downloads['secure-hash'], str) and not \
@@ -77,7 +77,7 @@ class RawUrlSource(AbstractSourceStep):
                     logger.error("Option 'secure-hash' set for download %s "
                                  "but option 'hashing-algorithm' is missing."
                                  % files)
-                    sys.exit(1)
+                    StandardError()
 
             # Get file name of downloaded file
             url_filename = os.path.basename(

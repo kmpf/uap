@@ -312,7 +312,7 @@ class Hisat2(AbstractStep):
         if not os.path.exists(self.get_option('index') + '.1.ht2'):
             logger.error("Could not find index file: %s.*" %
                          self.get_option('index'))
-            sys.exit(1)
+            StandardError()
 
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:

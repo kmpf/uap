@@ -72,7 +72,7 @@ class Tcount2gcount(AbstractStep):
                         cmd.extend(['-m', annotation]) 
                     else:  
                         logger.error("%s no annotation give via config or connection" % run_id) 
-                        sys.exit(1)
+                        StandardError()
                     
                 if self.is_option_set_in_config('kallisto-extended'): 
                     cmd.append('--kallisto-extended')

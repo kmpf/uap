@@ -51,11 +51,11 @@ class S2C(AbstractStep):
                     if not os.path.isdir(self.get_option('tmp_dir')):
                         #dir not present
                         logger.error("Directory %s not found" % self.get_option('tmp_dir'))
-                        sys.exit(1)
+                        StandardError()
                     if not os.access(self.get_option('tmp_dir'), os.W_OK):
                         #not accessible
                         logger.error("Directory %s not accessible." % self.get_option('tmp_dir'))
-                        sys.exit(1)
+                        StandardError()
 
                 alignments_path = input_paths[0]
                 cat = [self.get_tool('cat'), alignments_path]

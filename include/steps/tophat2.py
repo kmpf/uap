@@ -61,7 +61,7 @@ class TopHat2(AbstractStep):
         if not os.path.exists(self.get_option('index') + '.1.bt2'):
             logger.error("Could not find index file: %s.*" %
                          self.get_option('index') )
-            sys.exit(1)
+            StandardError()
 
 
         read_types = {'first_read': '_R1', 'second_read': '_R2'}

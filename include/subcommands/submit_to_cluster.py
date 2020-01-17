@@ -59,7 +59,7 @@ def main(args):
         template = open(template_path, 'r').read()
     except OSError:
         logger.error("Couldn't open %s." % template_path)
-        sys.exit(1)
+        StandardError()
 
     for task in p.all_tasks_topologically_sorted:
         if task_wish_list is not None:

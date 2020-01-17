@@ -31,12 +31,12 @@ class BamToBedgraphAndBigwig(AbstractStep):
         if not os.path.isfile(self.get_option('chromosome-sizes')):
             logger.error("Value for option 'chromosome-sizes' is not a "
                          "file: %s" % self.get_option('chromosome-sizes'))
-            sys.exit(1)
+            StandardError()
         if self.get_option('temp-sort-dir') and \
            not os.path.isdir(self.get_option('temp-sort-dir')):
             logger.error("Value for option 'temp-sort-dir' is not a "
                          "directory: %s" % self.get_option('temp-sort-dir'))
-            sys.exit(1)
+            StandardError()
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 # Collect input paths
@@ -47,7 +47,7 @@ class BamToBedgraphAndBigwig(AbstractStep):
                 # Complain if necessary
                 elif len(input_paths) != 1:
                     logger.error("Expected exactly one alignments file.")
-                    sys.exit(1)
+                    StandardError()
 
                 root, ext = os.path.splitext(os.path.basename(input_paths[0]))
                 # Complain if necessary
@@ -56,7 +56,7 @@ class BamToBedgraphAndBigwig(AbstractStep):
                                  "of bam.gz, bam.gzip, or bam"
                                  % input_paths[0]
                     )
-                    sys.exit(1)
+                    StandardError()
 
                 bedgraph_file = run.add_output_file(
                     'bedgraph', '%s.bg' % run_id, input_paths)

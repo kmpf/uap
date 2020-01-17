@@ -180,7 +180,7 @@ class ChromHmmBinarizeBam(AbstractStep):
                 except KeyError as e:
                     logger.error("Option 'control':\n"
                                  "No control '%s' found.\n" % control_id)
-                    sys.exit(1)
+                    StandardError()
 
             # Check for existence of treatment files
             for tr in treatment_list:
@@ -192,7 +192,7 @@ class ChromHmmBinarizeBam(AbstractStep):
                     logger.error("Option 'control':\n"
                                  "No treatment '%s' for control '%s' found."
                                  % (tr, control_id) )
-                    sys.exit(1)
+                    StandardError()
 
                 # Assemble rund ID
                 run_id = "%s%s" % (tr, control_id)

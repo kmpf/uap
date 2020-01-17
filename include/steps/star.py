@@ -72,7 +72,7 @@ class Star(AbstractStep):
                 else:
                     if 'in/genome_dir' not in run_ids_connections_files[run_id]:
                         logger.error('Required parameter "GenomDir" wasnt found!')
-                        sys.exit(1)
+                        StandardError()
                     genome_dir = run_ids_connections_files[run_id]['in/genome_dir'][0]
 
                 star.extend(['--genomeDir', genome_dir])

@@ -139,7 +139,7 @@ class Stringtie(AbstractStep):
                     logger.error(
                         "The path %s provided to option 'G' is not a file."
                         % self.get_option('G'))
-                    sys.exit(1)
+                    StandardError()
 
                 # check, if only a single input file is provided
                 len_input = run_ids_connections_files[run_id]['in/alignments']

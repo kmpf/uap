@@ -205,7 +205,7 @@ class Pipeline(object):
                 if str(task) in self.task_for_task_id:
                     logger.error("%s: Duplicate task ID %s." %
                                  (self.get_config_filepath(), str(task)))
-                    sys.exit(1)
+                    StandardError()
                 self.task_for_task_id[str(task)] = task
 
         self.tool_versions = {}
@@ -243,13 +243,13 @@ class Pipeline(object):
         if not 'destination_path' in self.config:
             logger.error("%s: Missing key: destination_path"
                          % self.get_config_filepath())
-            sys.exit(1)
+            StandardError()
         if not os.path.exists(self.config['destination_path']):
             logger.error("%s: Destination path does not exist: %s"
                          % (self.get_config_filepath(),
                             self.config['destination_path'])
             )
-            sys.exit(1)
+            StandardError()
         if not os.path.exists("%s-out" % self.config['id']):
             os.symlink(self.config['destination_path'], '%s-out' % self.config['id'])
 
@@ -270,7 +270,7 @@ class Pipeline(object):
         self.steps = {}
         if not 'steps' in self.config:
             logger.error("%s: Missing key: steps" % self.get_config_filepath())
-            sys.exit(1)
+            StandardError()
         re_simple_key = re.compile('^[a-zA-Z0-9_]+$')
         re_complex_key = re.compile('^([a-zA-Z0-9_]+)\s+\(([a-zA-Z0-9_]+)\)$')
 
@@ -296,7 +296,7 @@ class Pipeline(object):
                 # directory to store temporary files.
                 logger.error("%s: A step name cannot be 'temp'."
                              % self.get_config_filepath())
-                sys.exit(1)
+                StandardError()
             step_class = abstract_step.AbstractStep.get_step_class_for_key(module_name)
             step = step_class(self)
 
@@ -313,13 +313,13 @@ class Pipeline(object):
                                  "it declares no in/* connections (remove the "
                                  "_depends key)."
                                  % (self.get_config_filepath(), step_name))
-                    sys.exit(1)
+                    StandardError()
             else:
                 if not '_depends' in step._options:
                     logger.error("%s: Missing key in step '%s': _depends (set "
                                  "to null if the step has no dependencies)."
                                  % (self.get_config_filepath(), step_name))
-                    sys.exit(1)
+                    StandardError()
                 depends = step._options['_depends']
                 if depends == None:
                     pass
@@ -333,7 +333,7 @@ class Pipeline(object):
                                          "dependency: %s."
                                          % (self.get_config_filepath(),
                                             step_name, d))
-                            sys.exit(1)
+                            StandardError()
                         step.add_dependency(self.steps[d])
 
         # step three: perform topological sort
@@ -358,7 +358,7 @@ class Pipeline(object):
             if len(next_steps) == 0:
                 logger.error("%s: There is a cycle in the step dependencies."
                              % self.get_config_filepath())
-                sys.exit(1)
+                StandardError()
             for step_name in misc.natsorted(next_steps):
                 self.topological_step_order.append(step_name)
                 assigned_steps.add(step_name)
@@ -379,7 +379,7 @@ class Pipeline(object):
         if output_path in self.file_dependencies:
             logger.error("Different steps/runs/tags want to create "
                          "the same output file: %s." % output_path)
-            sys.exit(1)
+            StandardError()
         self.file_dependencies[output_path] = set(input_paths)
 
         for inpath in input_paths:
@@ -391,7 +391,7 @@ class Pipeline(object):
         if output_path in self.task_id_for_output_file:
             logger.error("More than one step is trying to create the "
                          "same output file: %s." % output_path)
-            sys.exit(1)
+            StandardError()
         self.task_id_for_output_file[output_path] = task_id
 
         if not task_id in self.output_files_for_task_id:
@@ -414,7 +414,7 @@ class Pipeline(object):
                     "The command to be launched '%s' contains non-string "
                     "argument '%s'. Therefore the command will fail. Please "
                     "fix this type issue." % (command, argument))
-                sys.exit(1)
+                StandardError()
         return
 
     def exec_pre_post_calls(self, tool_id, info_key, info_command,
@@ -441,7 +441,7 @@ class Pipeline(object):
                     (self.get_config_filepath(), info_key, tool_id,
                      " ".join(command), e.errno, e.strerror)
                 )
-                sys.exit(1)
+                StandardError()
 
             command_call = info_key
             command_exit_code = '%s-exit-code' % info_key
@@ -456,7 +456,7 @@ class Pipeline(object):
                 except NameError as e:
                     msg = "Error while loading module '%s': \n%s"
                     logger.error(msg % (tool_id, error))
-                    sys.exit(1)
+                    StandardError()
 
                 tool_check_info.update({
                     command_call : (' '.join(command)).strip(),
@@ -509,7 +509,7 @@ class Pipeline(object):
                              "Error no.: %s Error message: %s" %
                              (self.get_config_filepath(), info['path'],
                               e.errno, e.strerror))
-                sys.exit(1)
+                StandardError()
             proc.wait()
             exit_code = None
             exit_code = proc.returncode
@@ -531,7 +531,7 @@ class Pipeline(object):
                     % (self.get_config_filepath(), tool_id, ' '.join(command),
                        exit_code, expected_exit_code, tool_check_info['response'])
                 )
-                sys.exit(1)
+                StandardError()
             # Execute clean-up command (if configured)
             for info_key in (x for x in ('module_unload', 'post_command')
                              if x in info):
@@ -707,7 +707,7 @@ class Pipeline(object):
                                  % (self._cluster_config_path,
                                     key, cluster_type)
                              )
-                    sys.exit(1)
+                    StandardError()
             # Now that we know let's test for that cluster    
             try:
                 if (subprocess.check_output( identity['test'] )

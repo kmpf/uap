@@ -101,12 +101,12 @@ class HtSeqCount(AbstractStep):
                 else:
                     logger.error(
                         "No feature file could be found for '%s'" % run_id)
-                    sys.exit(1)
+                    StandardError()
             if not connect_feature_path:
                 if not os.path.isfile(features_path):
                     logger.error("Feature file '%s' is not a file."
                                  % features_path)
-                    sys.exit(1)
+                    StandardError()
             # Is the alignment gzipped?
             root, ext = os.path.splitext(alignments[0])
             is_gzipped = True if ext in ['.gz', '.gzip'] else False
@@ -118,7 +118,7 @@ class HtSeqCount(AbstractStep):
             if not (bool(is_bam) ^ bool(is_sam)):
                 logger.error("Alignment file '%s' is neither SAM nor BAM "
                              "format" % alignments[0])
-                sys.exit(1)
+                StandardError()
             alignments_path = alignments[0]
 
             with self.declare_run(run_id) as run:

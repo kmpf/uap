@@ -67,7 +67,7 @@ class FastqSample(AbstractStep):
         if isset_n and isset_p:
             logger.error("Option n AND p are set in config.yaml. "
                          "Only one is allowed.")
-            sys.exit(1)
+            StandardError()
 
         config_options = self.get_options()
 

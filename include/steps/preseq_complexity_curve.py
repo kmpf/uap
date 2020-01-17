@@ -74,11 +74,11 @@ class PreseqComplexityCurve(AbstractStep):
                     run.add_empty_output_connection("complexity_curve")
                 elif len(input_paths) != 1:
                     logger.error("Expected exactly one alignments file.")
-                    sys.exit(1)
+                    StandardError()
                 elif not is_bam and not is_bed:
                     logger.error("Input file %s is niether BAM nor BED." %
                                  input_paths[0])
-                    sys.exit(1)
+                    StandardError()
                 else:
                     with run.new_exec_group() as cc_group:
                         c_curve_out = run.add_output_file(

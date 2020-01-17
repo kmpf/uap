@@ -114,7 +114,7 @@ class ProcessPool(object):
     def __init__(self, run):
         if ProcessPool.process_pool_is_dead:
             logger.error("We have encountered an error, stopping now...")
-            sys.exit(1)
+            StandardError()
         # the run for which this ProcessPool computes stuff
         # (for temporary paths etc.)
         self._run = run
@@ -171,7 +171,7 @@ class ProcessPool(object):
                     "contains non-string argument '%s'. " % argument +
                     "Therefore the command will fail. Please " +
                     "fix this type issue.")
-                sys.exit(1)
+                StandardError()
         return
 
     def load_unload_module(self, module_cmd):
@@ -195,7 +195,7 @@ class ProcessPool(object):
                 logger.error("Error while executing '%s' "
                              "Error no.: %s Error message: %s" %
                              (" ".join(command), e.errno, e.strerror))
-                sys.exit(1)
+                StandardError()
 
             (output, error) = proc.communicate()
             exec output
@@ -218,7 +218,7 @@ class ProcessPool(object):
         if ProcessPool.current_instance is not None:
             logger.error("Sorry, only one instance of ProcessPool allowed at "
                          "a time.")
-            sys.exit(1)
+            StandardError()
         ProcessPool.current_instance = self
 
         # First we have to add the pre_command commands for execution
@@ -674,7 +674,7 @@ class ProcessPool(object):
             log = "Pipeline crashed. PID: %s" % pid
             self.log(log)
             logger.error(log)
-            sys.exit(1)
+            StandardError()
 
     def _launch_process_watcher(self, watcher_report_path):
         '''
