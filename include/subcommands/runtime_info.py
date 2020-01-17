@@ -113,7 +113,7 @@ class Annotation_Data:
 
     def __init__(self, file_path):
         file = open(file_path, 'r')
-        self.__yaml_data = yaml.load(file)
+        self.__yaml_data = yaml.load(file, Loader=yaml.FullLoader)
         self.__prepare_data()
 
     def __prepare_data(self):
