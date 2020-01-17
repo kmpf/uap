@@ -10,10 +10,12 @@ prepare:
   script:
     - module load Python/2.7.15-foss-2018b
     - ./bootstrap.sh
+    - source python_env/bin/activate
+    - pip install sphinx
     - module load Python/3.6.6-foss-2018b
     - python3 -m venv venv
     - source venv/bin/activate
-    - pip install pyaml sphinx
+    - pip install pyaml
   cache:
     paths:
       - python_env
@@ -44,8 +46,8 @@ steptests:
 pages:
   stage: test
   script:
-    - module load Python/3.6.6-foss-2018b
-    - source venv/bin/activate
+    - module load Python/2.7.15-foss-2018b
+    - source python_env/bin/activate
     - sphinx-build -b html doc/source public
   dependencies:
     - prepare
