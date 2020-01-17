@@ -239,13 +239,29 @@ class Pipeline(object):
         if not 'id' in self.config:
             self.config['id'] = config_file.name
 
-        if 'tools' in self.config and isinstance(self.config['tools'], dict):
-            for tool, args in self.config['tools'].items():
-                if args is None:
-                    self.config['tools'][tool] = dict()
-                self.config['tools'][tool].setdefault('path', tool)
-                self.config['tools'][tool].setdefault('get_version', '--version')
-                self.config['tools'][tool].setdefault('exit_code', 0)
+        if not 'tools' in self.config or not isinstance(self.config['tools'], dict):
+            self.config['tools'] = dict()
+        for tool, args in self.config['tools'].items():
+            if args is None:
+                self.config['tools'][tool] = dict()
+            self.config['tools'][tool].setdefault('path', tool)
+            self.config['tools'][tool].setdefault('get_version', '--version')
+            self.config['tools'][tool].setdefault('exit_code', 0)
+
+        uap_tools_path = os.path.join(self._uap_path, 'tools')
+        uap_python = os.path.join(self._uap_path, "python_env", "bin", "python")
+        for tool_file in os.listdir(uap_tools_path):
+            tool_path = os.path.join(uap_tools_path, tool_file)
+            if not tool_file.endswith('.py') or not os.path.isfile(tool_path):
+                continue
+            tool = tool_file[:-3]
+            if not tool in self.config['tools'] or \
+                    not isinstance(self.config['tools'][tool], dict):
+                        self.config['tools'][tool] = dict()
+            print('------ adding %s' % tool)
+            self.config['tools'][tool].setdefault('path', [uap_python, tool_path])
+            self.config['tools'][tool].setdefault('get_version', '--help')
+            self.config['tools'][tool].setdefault('exit_code', 0)
 
         if not 'destination_path' in self.config:
             logger.error("%s: Missing key: destination_path"
