@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import os
+import argparse
 seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
 execfile(activate_this_file, dict(__file__=activate_this_file))
@@ -84,6 +85,8 @@ class Filter:
         sys.stderr.write("%s\n" % "\t".join([str(getattr(self, k)) for k in keys]))
 
 def main():
+    parser = argparse.ArgumentParser(description='No documentation available.')
+    args = parser.parse_args()
     filter = Filter(sys.stdin, sys.stdout)
     filter.run()
 
