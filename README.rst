@@ -31,4 +31,4 @@ allows for a variety of other applications.
 Documentation
 =============
 
-The documentation of **uap** is available at `Read the Docs <http://izi-uap.readthedocs.io/en/latest/?badge=latest>`_.
+The documentation of **uap** is available as `Giltab Page <https://onebutton.ribogitpages.izi.fraunhofer.de/uap/>`_.
