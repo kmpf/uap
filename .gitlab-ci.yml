@@ -1,7 +1,9 @@
 stages:
   - build
   - test
-  
+ 
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
   
 .dummy:
   stage: build
@@ -26,8 +28,6 @@ prepare:
 steptests:
   stage: test
   script:
-    - git clone git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git 
-    - pwd
     - cd  uap_test
     - make clean
     - module load Python/3.6.6-foss-2018b
