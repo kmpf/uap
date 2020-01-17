@@ -33,7 +33,7 @@ steptests:
   script:
     - module load Python/3.6.6-foss-2018b
     - source venv/bin/activate
-    - git clone git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git
+    - git clone git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git || ( cd uap_test && git pull )
     - cd uap_test
     - make clean
     - python3 scripts/uap_test.py run-tests --uap-test-dir . --uap-path ../uap
