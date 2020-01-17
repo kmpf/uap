@@ -48,12 +48,12 @@ pages:
   script:
     - module load Python/2.7.15-foss-2018b
     - source python_env/bin/activate
-    - sphinx-build -b html doc/source doc/_build
+    - sphinx-build -b html doc/source public
   dependencies:
     - prepare
   artifacts:
     paths:
-    - doc/_build
+    - public
   only:
   - 117-docu-not-online
 
