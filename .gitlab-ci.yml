@@ -4,7 +4,8 @@ stages:
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip"
 
-cache:
+cache: &global_cache
+  key: same_for_all_branches
   paths:
     - python_env
     - venv
@@ -22,6 +23,9 @@ before_script:
 
 steptests:
   stage: test_and_deploy
+  cache:
+    <<: *global_cache
+    policy: pull
   script:
     - git clone git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git
     - cd uap_test
@@ -29,17 +33,16 @@ steptests:
     - module load Python/3.6.6-foss-2018b
     - source venv/bin/activate
     - python3 scripts/uap_test.py run-tests --uap-test-dir . --uap-path ../uap
-  dependencies:
-    - prepare
 
 pages:
   stage: test_and_deploy
+  cache:
+    <<: *global_cache
+    policy: pull
   script:
     - module load Python/3.6.6-foss-2018b
     - source venv/bin/activate
     - sphinx-build -b html doc/source public
-  dependencies:
-    - prepare
   artifacts:
     paths:
     - public
