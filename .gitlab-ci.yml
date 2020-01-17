@@ -48,12 +48,13 @@ pages:
   script:
     - module load Python/2.7.15-foss-2018b
     - source python_env/bin/activate
-    - sphinx-build -b html doc/source public
+    - sphinx-build -b html doc/source public/$CI_COMMIT_REF_SLUG
+  cache:
+    key: pages-cache
+    paths:
+      - public/$CI_COMMIT_REF_SLUG
   dependencies:
     - prepare
   artifacts:
     paths:
     - public
-  only:
-  - 117-docu-not-online
-
