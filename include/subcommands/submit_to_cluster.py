@@ -94,11 +94,10 @@ def main(args):
         '''
         dependent_tasks = copy.copy(dependent_tasks_in)
 
-        step = task.step
+        step = task.get_step()
         step_name = task.step.get_step_name()
-        step_type = task.step.get_step_type()
         if not step_name in quota_jids:
-            size = quotas[step_type] if step_type in quotas else quotas['default']
+            size = quotas[step_name] if step_name in quotas else quotas['default']
             quota_jids[step_name] = [None for _ in range(size)]
             quota_offset[step_name] = 0
 
@@ -253,13 +252,14 @@ def main(args):
 
     for task in tasks_left:
         # Update quotas dict for current step if necessary
-        if not str(task.get_step()) in quotas.keys():
+        step_name = task.step.get_step_name()
+        if step_name not in quotas.keys():
             step = task.get_step()
-            quotas[str(step)] = quotas['default']
+            quotas[step_name] = quotas['default']
             if step._options['_cluster_job_quota']:
-                quotas[str(step)] = step._options['_cluster_job_quota']
+                quotas[step_name] = step._options['_cluster_job_quota']
 
-            print("Set job quota for %s to %s" % (str(step), quotas[str(step)]))
+            print("Set job quota for %s to %s" % (step_name, quotas[step_name]))
         state = task.get_task_state()
         if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
             print("Skipping %s because it is already %s..." % (str(task), state.lower()))
