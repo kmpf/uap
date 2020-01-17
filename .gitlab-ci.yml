@@ -49,7 +49,7 @@ pages:
     - module load Python/2.7.15-foss-2018b
     - source python_env/bin/activate
     - sphinx-build -b html doc/source public/$CI_COMMIT_REF_SLUG
-    - cp doc/pages_index.html public/index.html
+    - doc/make_pages_index.sh public
   cache:
     key: pages-cache
     paths:
