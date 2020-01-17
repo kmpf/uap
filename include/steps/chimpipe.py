@@ -56,17 +56,6 @@ class ChimPipe(AbstractStep):
                         description="Identifier used in output file names")
 
         self.add_option('cores', str, default='6')
- 
-        self.add_option('consensus_seq', str, optional = True, 
-			description="""Sequence pair of consensus splice site bases. """
-			)
-        
-	self.add_option('library_type', str, optional = True, 
-			description="TODO"
-			)
-	self.add_option('similarity', str, optional = True, 
-			description="TODO"
-			)
 
         self.add_option('consensus_seq', str, optional=True,
                         description="Sequence pair of consensus splice site bases")
