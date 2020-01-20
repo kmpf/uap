@@ -181,7 +181,7 @@ class SOAPfuse(AbstractStep):
 
                         for tag, option in sed_replace.items():
                             new_path = os.path.abspath(self.get_option('path_to_index_dir'))
-                            new_path = new_path.replace("/", "\\/")]
+                            new_path = new_path.replace("/", "\\/")
                             sed_arg = 's/'+tag+'.*/'+tag+' = '+new_path+'/'
                             sed_cmd = ['sed', sed_arg]
                             replace_vars.add_command(sed_cmd)
