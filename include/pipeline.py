@@ -102,9 +102,8 @@ class Pipeline(object):
         self._cluster_config_path = os.path.join(
             self._uap_path, 'cluster/cluster-specific-commands.yaml')
         with open(self._cluster_config_path, 'r') as cluster_config_file:
-            self._cluster_config = yaml.load( cluster_config_file )
+            self._cluster_config = yaml.load(cluster_config_file, Loader=yaml.FullLoader)
 
-           
         try:
             # set cluster type
             if args.cluster == 'auto':
@@ -229,7 +228,7 @@ class Pipeline(object):
     # read configuration and make sure it's good
     def read_config(self, config_file):
         # yaml.load works fine, even for duplicate dictionary keys (WTF)
-        self.config = yaml.load(config_file)
+        self.config = yaml.load(config_file, Loader=yaml.FullLoader)
 
         # Make self.config['destination_path'] an absolute path if necessary
         if not os.path.isabs(self.config['destination_path']):
@@ -239,6 +238,14 @@ class Pipeline(object):
 
         if not 'id' in self.config:
             self.config['id'] = config_file.name
+
+        if 'tools' in self.config and isinstance(self.config['tools'], dict):
+            for tool, args in self.config['tools'].items():
+                if args is None:
+                    self.config['tools'][tool] = dict()
+                self.config['tools'][tool].setdefault('path', tool)
+                self.config['tools'][tool].setdefault('get_version', '--version')
+                self.config['tools'][tool].setdefault('exit_code', 0)
 
         if not 'destination_path' in self.config:
             raise UAPError("%s: Missing key: destination_path"
@@ -591,7 +598,7 @@ class Pipeline(object):
             exec_ping_file = task.get_run().get_executing_ping_file()
             queued_ping_file = task.get_run().get_queued_ping_file()
             if os.path.exists(exec_ping_file):
-                info = yaml.load(open(exec_ping_file, 'r'))
+                info = yaml.load(open(exec_ping_file, 'r'), Loader=yaml.FullLoader)
                 start_time = info['start_time']
                 last_activity = datetime.datetime.fromtimestamp(
                     abstract_step.AbstractStep.fsc.getmtime(exec_ping_file))
@@ -603,7 +610,7 @@ class Pipeline(object):
                                          last_activity - start_time))
 
             if os.path.exists(queued_ping_file) and check_queue:
-                info = yaml.load(open(queued_ping_file, 'r'))
+                info = yaml.load(open(queued_ping_file, 'r'), Loader=yaml.FullLoader)
                 if not str(info['job_id']) in running_jids:
                     queue_problems.append((task, queued_ping_file,
                                            info['submit_time']))

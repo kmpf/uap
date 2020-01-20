@@ -94,11 +94,10 @@ def main(args):
         '''
         dependent_tasks = copy.copy(dependent_tasks_in)
 
-        step = task.step
+        step = task.get_step()
         step_name = task.step.get_step_name()
-        step_type = task.step.get_step_type()
         if not step_name in quota_jids:
-            size = quotas[step_type] if step_type in quotas else quotas['default']
+            size = quotas[step_name] if step_name in quotas else quotas['default']
             quota_jids[step_name] = [None for _ in range(size)]
             quota_offset[step_name] = 0
 
@@ -253,13 +252,14 @@ def main(args):
 
     for task in tasks_left:
         # Update quotas dict for current step if necessary
-        if not str(task.get_step()) in quotas.keys():
+        step_name = task.step.get_step_name()
+        if step_name not in quotas.keys():
             step = task.get_step()
-            quotas[str(step)] = quotas['default']
+            quotas[step_name] = quotas['default']
             if step._options['_cluster_job_quota']:
-                quotas[str(step)] = step._options['_cluster_job_quota']
+                quotas[step_name] = step._options['_cluster_job_quota']
 
-            print("Set job quota for %s to %s" % (str(step), quotas[str(step)]))
+            print("Set job quota for %s to %s" % (step_name, quotas[step_name]))
         state = task.get_task_state()
         if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
             print("Skipping %s because it is already %s..." % (str(task), state.lower()))
@@ -276,7 +276,7 @@ def main(args):
                     parent_job_id = None
                     parent_queued_ping_path = parent_task.get_step().get_run(parent_task.run_id).get_queued_ping_file()
                     try:
-                        parent_info = yaml.load(open(parent_queued_ping_path))
+                        parent_info = yaml.load(open(parent_queued_ping_path), Loader=yaml.FullLoader)
                         parent_job_ids.append(parent_info['job_id'])
                     except:
                         print("Couldn't determine job_id of %s while trying to load %s." %

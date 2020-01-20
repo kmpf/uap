@@ -151,7 +151,7 @@ class Task(object):
                                 info['downstream'][path_b]['size'] = AbstractStep.fsc.getsize(path_b)
                                 info['downstream'][path_b]['mtime'] = AbstractStep.fsc.getmtime(path_b)
                             else:
-                                downstream_info = yaml.load(open(path_b + AbstractStep.VOLATILE_SUFFIX, 'r'))
+                                downstream_info = yaml.load(open(path_b + AbstractStep.VOLATILE_SUFFIX, 'r'), Loader=yaml.FullLoader)
                                 info['downstream'][path_b]['size'] = downstream_info['self']['size']
                                 info['downstream'][path_b]['mtime'] = downstream_info['self']['mtime']
 
