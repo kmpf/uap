@@ -1,4 +1,3 @@
-from uaperrors import UAPError
 import base64
 import copy
 import datetime
@@ -14,6 +13,7 @@ import yaml
 import abstract_step
 import misc
 import task as task_module
+from uaperrors import UAPError
 
 
 logger = getLogger("uap_logger")

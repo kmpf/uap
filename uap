@@ -32,6 +32,7 @@ if subcommand_path not in sys.path:
     sys.path.append(subcommand_path)
 
 from include.subcommands import *
+from uaperrors import UAPError
 
 def main():
     '''
@@ -86,6 +87,13 @@ def main():
         default=1,
         help="Increase output verbosity")
     
+    parser.add_argument(
+        "--debugging",
+        dest="debugging",
+        action="store_true",
+        default=False,
+        help="Print traceback on UAPError.")
+ 
     parser.add_argument(
         "--version",
         dest="version",
@@ -449,7 +457,11 @@ def main():
     # create logger object
     logger = _configure_logger(args.verbose)
     # call subcommand
-    args.func(args)
+    try:
+        args.func(args)
+    except UAPError as e:
+        if args.debugging is True:
+            raise
 
 def _configure_logger(verbosity):
     logger = logging.getLogger("uap_logger")
