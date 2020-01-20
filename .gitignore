@@ -76,3 +76,6 @@ example-configurations/genomes/
 *-out
 
 .idea/
+
+.gitmodules
+
