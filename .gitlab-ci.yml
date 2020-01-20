@@ -18,7 +18,7 @@ prepare:
     - pip install --upgrade pip
     - pip install pyaml pyyaml
   cache:
-    keys: python-envs
+    key: python-envs
     paths:
       - python_env
       - venv
