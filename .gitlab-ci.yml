@@ -12,6 +12,7 @@ prepare:
     - ./bootstrap.sh
     - source python_env/bin/activate
     - pip install sphinx sphinx_rtd_theme
+    - deactivate
     - module load Python/3.6.6-foss-2018b
     - python3 -m venv venv
     - source venv/bin/activate
