@@ -16,4 +16,22 @@ allows for a variety of other applications.
 Documentation
 =============
 
-The documentation of **uap** is available at `Read the Docs <http://izi-uap.readthedocs.io/en/latest/?badge=latest>`_.
+The documentation of **uap** is available as `Giltab Page <https://onebutton.ribogitpages.izi.fraunhofer.de/uap/>`_.
+
+Testing
+=======
+
+In order to use the testing repo [uap_test](https://ribogit.izi.fraunhofer.de/oneButton/uap_test)
+you hav to change the file .gitmodules
+by replacing `url = ../uap_test.git` with `url = git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git`.
+The entry for `uap_test` looks like this:
+
+```
+[submodule "uap_test"]
+        path = uap_test
+        url = git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git
+```
+
+Then you can run `git submodule sync && git checkout HEAD -- .gitmodules && git submodule update`
+to have the testing repo in `uap_test`. Please consult tutorials for submodules for further info.
+E.g., https://git-scm.com/book/en/v2/Git-Tools-Submodules.
