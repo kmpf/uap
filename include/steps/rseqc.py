@@ -23,14 +23,11 @@ class RSeQC(AbstractStep):
         )
 
         self.add_connection('out/bam_stat')
-
         self.add_connection('out/infer_experiment')
-
         self.add_connection('out/read_distribution')
 
         self.add_connection('out/geneBody_coverage.txt')
         self.add_connection('out/geneBody_coverage.r')
-        self.add_connection('out/geneBody_coverage.pdf')
         self.add_connection('out/geneBody_coverage_stdout')
         self.add_connection('out/geneBody_coverage_stderr')
 
@@ -43,25 +40,22 @@ class RSeQC(AbstractStep):
         self.add_connection('out/junction_bed')
         self.add_connection('out/junction_plot')
         self.add_connection('out/junction_xls')
-        self.add_connection('out/splice_events')
+
         self.add_connection('out/splice_junction')
+
         self.add_connection('out/junction_annotation_stdout')
         self.add_connection('out/junction_annotation_stderr')
 
-        self.add_connection('out/junctionSaturation_pdf')
         self.add_connection('out/junctionSaturation_r')
         self.add_connection('out/junction_saturation_stdout')
         self.add_connection('out/junction_saturation_stderr')
 
-        self.add_connection('out/DupRate_plot_pdf')
         self.add_connection('out/DupRate_plot_r')
-        
         self.add_connection('out/DupRate_pos')
         self.add_connection('out/DupRate_seq')
         self.add_connection('out/DupRate_stdout')
         self.add_connection('out/DupRate_stderr')
 
-        self.add_connection('out/gc_pdf')
         self.add_connection('out/gc_r')
         self.add_connection('out/gc_xls')
         self.add_connection('out/gc_stdout')
@@ -83,14 +77,11 @@ class RSeQC(AbstractStep):
                         description="Reference gene model in bed fomat. "
                         "[required]")
 
-
         self.add_option('treatAs', str, optional=False,
                         choices = ["single", "paired"],
                         description="Some modules in rseqc  need paired end data"
                         "an fail otherwise on single end [required]")
 
-
-        
     def runs(self, run_ids_connections_files):
 
         for run_id in run_ids_connections_files.keys():
@@ -156,9 +147,6 @@ class RSeQC(AbstractStep):
                     gbc_r = run_id + '.geneBodyCoverage.r'
                     run.add_output_file('geneBody_coverage.r',
                                         gbc_r, alignments)
-                    gbc_pdf = run_id + '.geneBodyCoverage.curves.pdf'
-                    run.add_output_file('geneBody_coverage.pdf',
-                                        gbc_pdf, alignments)
 
                     stdout_file = "%s-geneBody_coverage_stdout.txt" % (run_id)
                     log_stdout = run.add_output_file(
@@ -199,9 +187,6 @@ class RSeQC(AbstractStep):
                         exec_group.add_command(inner_distance,
                                                stdout_path=log_stdout,
                                                stderr_path=log_stderr)
-
-
-
                     else:
 
                         run.add_empty_output_connection('inner_distance_freq')
@@ -209,11 +194,6 @@ class RSeQC(AbstractStep):
                         run.add_empty_output_connection('inner_distance')
                         run.add_empty_output_connection('inner_distance_stdout')
                         run.add_empty_output_connection('inner_distance_stderr')
-
-                   
-                         
-
-                        
 
                 with run.new_exec_group() as exec_group:
                     junction_annotation = [
@@ -228,11 +208,6 @@ class RSeQC(AbstractStep):
                     run.add_output_file('junction_plot', ja_plot, alignments)
                     ja_xls = run_id + '.junction.xls'
                     run.add_output_file('junction_xls', ja_xls, alignments)
-                    ja_events = run_id + '.splice_events.pdf'
-                    run.add_output_file('splice_events', ja_events, alignments)
-                    ja_junction = run_id + '.splice_junction.pdf'
-                    run.add_output_file('splice_junction',
-                                        ja_junction, alignments)
 
                     stdout_file = "%s-junction_annotation_stdout.txt" \
                         % (run_id)
@@ -257,9 +232,6 @@ class RSeQC(AbstractStep):
                     js_r = run_id + '.junctionSaturation_plot.r'
                     run.add_output_file('junctionSaturation_r',
                                         js_r, alignments)
-                    js_pdf = run_id + '.junctionSaturation_plot.pdf'
-                    run.add_output_file('junctionSaturation_pdf',
-                                        js_pdf, alignments)
 
                     stdout_file = "%s-junction_saturation_stdout.txt" \
                         % (run_id)
@@ -280,8 +252,6 @@ class RSeQC(AbstractStep):
                         '-i', alignments[0],
                         '-o', out
                     ]
-                    rd_pdf = run_id + '.DupRate_plot.pdf'
-                    run.add_output_file('DupRate_plot_pdf', rd_pdf, alignments)
                     rd_r = run_id + '.DupRate_plot.r'
                     run.add_output_file('DupRate_plot_r', rd_r, alignments)
                     rd_pos = run_id + '.pos.DupRate.xls'
@@ -306,8 +276,6 @@ class RSeQC(AbstractStep):
                         '-i', alignments[0],
                         '-o', out
                     ]
-                    gc_pdf = run_id + '.GC_plot.pdf'
-                    run.add_output_file('gc_pdf', gc_pdf, alignments)
                     gc_r = run_id + '.GC_plot.r'
                     run.add_output_file('gc_r', gc_r, alignments)
                     gc_xls = run_id + '.GC.xls'
@@ -324,9 +292,3 @@ class RSeQC(AbstractStep):
                                            stdout_path=log_stdout,
                                            stderr_path=log_stderr)
 
-                # remove log.txt which is created by geneBody_coverage.py
-                # in the current working directory
-                current_dir = os.getcwd()
-                file_del = current_dir + '/' + 'log.txt'
-                eg = run.new_exec_group()
-                eg.add_command([self.get_tool('rm'), file_del])
