@@ -15,8 +15,10 @@ prepare:
     - module load Python/3.6.6-foss-2018b
     - python3 -m venv venv
     - source venv/bin/activate
-    - pip install pyaml
+    - pip install --upgrade pip
+    - pip install pyaml pyyaml
   cache:
+    key: python-envs
     paths:
       - python_env
       - venv
@@ -53,7 +55,7 @@ pages:
   cache:
     key: pages-cache
     paths:
-      - public/$CI_COMMIT_REF_SLUG
+      - public
   dependencies:
     - prepare
   artifacts:

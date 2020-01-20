@@ -24,7 +24,7 @@ class FastxReverseComplement(AbstractStep):
         self.require_tool('fastx_reverse_complement')
         self.require_tool('pigz')
         self.require_tool('cat')
-    
+
         self.add_option('prefix', str, default=None, optional=True,
                         description="Add Prefix to sample name")
 
@@ -47,12 +47,11 @@ class FastxReverseComplement(AbstractStep):
 
                 out = run.add_output_file(
                     "fastx",
-                    "%s_%s-fastq.gz" %  (new_run_id, 'R1'),
-                    input_paths) 
-       
+                    "%s_%s.fastq.gz" %  (new_run_id, 'R1'),
+                    input_paths)
+
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as pipe:
-          
                     # 1.1 command: Uncompress file
                         if is_gzipped:
                             pigz = [self.get_tool('pigz'),
@@ -61,17 +60,14 @@ class FastxReverseComplement(AbstractStep):
                                     '--stdout']
                             pigz.extend(input_paths)
                             pipe.add_command(pigz)
-                           
                         else:
                             cat = [self.get_tool('cat')]
                             cat.extend(input_paths)
                             pipe.add_command(cat)
-                                   
 
                         # 1. Run  fastx  for input file
                         fastx_revcom = [self.get_tool('fastx_reverse_complement')]
                         # gzip 
                         fastx_revcom.extend(['-z'])
-                        pipe.add_command(fastx_revcom,  stdout_path=out )
-                        
+                        pipe.add_command(fastx_revcom, stdout_path=out)
 
