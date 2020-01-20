@@ -1,5 +1,4 @@
-uap -- Universal Analysis Pipeline
-==================================
+# uap -- Universal Analysis Pipeline
 
 The **uap** package is a framework to configure, run, and control
 large data multi-step analyses.
@@ -13,19 +12,16 @@ Although the primary focus is the evaluation of sequencing data, its design
 allows for a variety of other applications.
 
 
-Documentation
-=============
+# Documentation
 
-The documentation of **uap** is available as `Giltab Page <https://onebutton.ribogitpages.izi.fraunhofer.de/uap/>`_.
+The documentation of **uap** is available as [Giltab Page](https://onebutton.ribogitpages.izi.fraunhofer.de/uap/).
 
-Testing
-=======
+# Testing
 
 In order to use the testing repo [uap_test](https://ribogit.izi.fraunhofer.de/oneButton/uap_test)
 you hav to change the file .gitmodules
 by replacing `url = ../uap_test.git` with `url = git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git`.
 The entry for `uap_test` looks like this:
-
 ```
 [submodule "uap_test"]
         path = uap_test
