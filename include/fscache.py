@@ -33,7 +33,7 @@ class FSCache:
             return self.cache['load_yaml_from_file'][path]
 
         f = open(path, 'r')
-        data = yaml.load(f)
+        data = yaml.load(f, Loader=yaml.FullLoader)
         f.close()
         self.cache['load_yaml_from_file'][path] = data
         return data

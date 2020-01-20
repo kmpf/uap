@@ -1,5 +1,4 @@
 # uap specific
-uap
 python_env
 python3_venv
 *.pyc
