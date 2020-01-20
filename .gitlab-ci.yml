@@ -4,6 +4,7 @@ stages:
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip"
+  GIT_SUBMODULE_STRATEGY: recursive
 
 prepare:
   stage: build
