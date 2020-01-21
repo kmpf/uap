@@ -1,0 +1,3 @@
+[submodule "uap_test"]
+	path = uap_test
+	url = ../uap_test.git
