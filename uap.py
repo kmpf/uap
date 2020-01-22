@@ -44,7 +44,8 @@ def main():
 
     common_parser = argparse.ArgumentParser(
         add_help=False,
-        formatter_class=argparse.RawTextHelpFormatter
+        formatter_class=argparse.RawTextHelpFormatter,
+        prog='uap'
     )
 
     common_parser.add_argument(
@@ -82,6 +83,13 @@ def main():
         action="count",
         default=1,
         help="Increase output verbosity")
+
+    parser.add_argument(
+        "--debugging",
+        dest="debugging",
+        action="store_true",
+        default=False,
+        help="Print traceback on UAPError.")
 
     parser.add_argument(
         "--version",
@@ -446,7 +454,11 @@ def main():
     # create logger object
     logger = _configure_logger(args.verbose)
     # call subcommand
-    args.func(args)
+    try:
+        args.func(args)
+    except UAPError as e:
+        if args.debugging is True:
+            raise
 
 def _configure_logger(verbosity):
     logger = logging.getLogger("uap_logger")

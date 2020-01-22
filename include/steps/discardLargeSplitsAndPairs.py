@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from abstract_step import *
 import process_pool
@@ -49,8 +50,7 @@ class discardLargeSplitsAndPairs (AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    logger.error("Expected exactly one alignments file.")
-                    sys.exit(1)
+                    raise UAPError("Expected exactly one alignments file.")
                 else:
                     is_gzipped = True if os.path.splitext(input_paths[0])[1]\
                                  in ['.gz', '.gzip'] else False

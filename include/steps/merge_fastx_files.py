@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from logging import getLogger
 import os
@@ -38,10 +39,9 @@ class MergeFastxFiles(AbstractStep):
         fast_format = '.' + example_file.split('.')[format_index]
 
         if fast_format not in required_file_extensions:
-            logger.error("File %s does not end with any "
+            raise UAPError("File %s does not end with any "
                          "expected suffix (%s). Please fix that issue." %
                          (fast_file, ' | '.join(required_file_extensions)))
-            sys.exit(1)
 
         fast_char = fast_format[-1]
         return fast_char

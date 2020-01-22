@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -310,9 +311,8 @@ class Hisat2(AbstractStep):
 
         # Check if option values are valid
         if not os.path.exists(self.get_option('index') + '.1.ht2'):
-            logger.error("Could not find index file: %s.*" %
+            raise UAPError("Could not find index file: %s.*" %
                          self.get_option('index'))
-            sys.exit(1)
 
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:

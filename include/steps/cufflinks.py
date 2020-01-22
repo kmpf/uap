@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from abstract_step import *
 import glob
@@ -178,14 +179,12 @@ class CuffLinks(AbstractStep):
 #                # check if temporary directory is there 
 #                if not os.path.isdir(tmp_dir):
 #                    #dir not present
-#                    logger.error("Directory %s not found" % tmp_dir)
-#                    sys.exit(1)
+#                    raise UAPError("Directory %s not found" % tmp_dir)
 #
 #                # .. and if its accessible
 #                if not os.access(tmp_dir, os.W_OK):
 #                    #not accessible
-#                    logger.error("Directory %s not accessible." % tmp_dir)
-#                    sys.exit(1)
+#                    raise UAPError("Directory %s not accessible." % tmp_dir)
 
                 cufflinks = [self.get_tool('cufflinks'),'-o', temp_dir, '-q']
                 cufflinks.extend(option_list)

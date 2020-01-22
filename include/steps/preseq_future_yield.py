@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -83,12 +84,10 @@ class PreseqFutureYield(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("future_yield")
                 elif len(input_paths) != 1:
-                    logger.error("Expected exactly one alignments file.")
-                    sys.exit(1)
+                    raise UAPError("Expected exactly one alignments file.")
                 elif not is_bam and not is_bed:
-                    logger.error("Input file %s is niether BAM nor BED." %
+                    raise UAPError("Input file %s is niether BAM nor BED." %
                                  input_paths[0])
-                    sys.exit(1)
                 else:
                     with run.new_exec_group() as lc_group:
                         lc_extrap_out = run.add_output_file(

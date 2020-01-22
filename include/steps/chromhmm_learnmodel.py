@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import os
 from logging import getLogger
 import tarfile
@@ -221,10 +222,9 @@ class ChromHmmLearnModel(AbstractStep):
                           ['in/chromhmm_binarization']
             # Test the input_paths (at least a bit)
             if len(input_paths) != 1 or not input_paths[0].endswith('.tar.gz'):
-                logger.error("Expected single tar.gz file via "
+                raise UAPError("Expected single tar.gz file via "
                              "'in/chromhmm_binarization' for run %s, but got "
                              "this %s" % (run_id, ", ".join(input_paths)))
-                sys.exit(1)
 
 
             # read tar file and get names of included files

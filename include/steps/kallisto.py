@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 from logging import getLogger
 from abstract_step import AbstractStep
 import os
@@ -108,9 +109,8 @@ class Kallisto(AbstractStep):
                         kallisto.extend(['--index', connect_index_path])
                         d_files.append( connect_index_path)
                     else:
-                        logger.error(
+                        raise UAPError(
                         "%s no kallisto index give via config or connection" % run_id)
-                        exit(1)
 
                 flags = ['fr-stranded', 'rf-stranded',
                          'bias', 'single-overhang', 'single']
