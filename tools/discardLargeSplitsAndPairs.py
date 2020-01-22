@@ -97,7 +97,7 @@ def main(args):
                         splitsPairedN +=1
                     else: # nope, R2 is not a split read, check R1
                         # split the line from R1 again and check if it is a split read
-                        
+                        pass
         else: # this read is neither single read nor part of mate pair.. just keep it
             otherN += 1
             args.outfile.write(lineBR)
@@ -107,7 +107,7 @@ def main(args):
         if 'N' in x[5]:
             # is this split read part of a mate pair?
             if '=' == x[6]: # yes
-
+                pass
             else: # no
                 splitsN += 1
                 y = re.search('(\d+)N', x[5])
