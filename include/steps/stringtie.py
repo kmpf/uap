@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from abstract_step import *
 import glob
@@ -99,8 +100,11 @@ class Stringtie(AbstractStep):
                 if self.get_option(option):
                     option_list.append('-%s' % option)
             else:
+                value = str(self.get_option(option))
+                if os.path.isfile(value):
+                    value = os.path.abspath(value)
                 option_list.append('-%s' % option)
-                option_list.append(str(self.get_option(option)))
+                option_list.append(value)
 
         if self.is_option_set_in_config('fr') and self.get_option('fr'):
             option_list.append('--fr')
@@ -136,10 +140,9 @@ class Stringtie(AbstractStep):
 
                 # check reference annotation
                 if not os.path.isfile(self.get_option('G')):
-                    logger.error(
+                    raise UAPError(
                         "The path %s provided to option 'G' is not a file."
                         % self.get_option('G'))
-                    sys.exit(1)
 
                 # check, if only a single input file is provided
                 len_input = run_ids_connections_files[run_id]['in/alignments']

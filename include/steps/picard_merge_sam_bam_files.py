@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from logging import getLogger
 import os
@@ -130,6 +131,7 @@ class PicardMergeSamFiles(AbstractStep):
             'SORT_ORDER', 'ASSUME_SORTED', 'MERGE_SEQUENCE_DICTIONARIES',
             'USE_THREADING', 'COMMENT', 'INTERVALS'
         ]
+        file_options = ['TMP_DIR', 'REFERENCE_SEQUENCE']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -142,9 +144,10 @@ class PicardMergeSamFiles(AbstractStep):
                 else:
                     option_list.append('%s=false' % option)
             else:
-                option_list.append(
-                    '%s=%s' % (option, str(self.get_option(option)))
-                )
+                value = str(self.get_option(option))
+                if option in file_options:
+                    value = os.path.abspath(value)
+                option_list.append('%s=%s' % (option, value))
 
         for run_id in run_ids_connections_files.keys():
 
@@ -154,16 +157,14 @@ class PicardMergeSamFiles(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif os.path.splitext(input_paths[0])[1] not in ['.sam', '.bam']:
-                    logger.error(
+                    raise UAPError(
                         "The file %s seems not to be a SAM or BAM file. At "
                         "least the suffix is wrong." % input_paths[0]
                     )
-                    sys.exit(1)
                 elif self.is_option_set_in_config("INTERVALS") and \
                      not os.path.exists(self.get_option("INTERVALS")):
-                    logger.error("The path %s given to option 'INTERVALS' is "
+                    raise UAPError("The path %s given to option 'INTERVALS' is "
                                  "not pointing to a file.")
-                    sys.exit(1)
                 elif len(input_paths) == 0:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) == 1:

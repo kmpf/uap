@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -170,23 +171,19 @@ class Segemehl(AbstractStep):
                 is_paired_end = False if sr_input == [None] else True
 
                 if len(fr_input) != 1 or fr_input == [None]:
-                    logger.error("Expected single input file for first read.")
-                    sys.exit(1)
+                    raise UAPError("Expected single input file for first read.")
                 if is_paired_end and len(sr_input) != 1:
-                    logger.error("Expected single input file for second read.")
-                    sys.exit(1)
+                    raise UAPError("Expected single input file for second read.")
 
                 if not os.path.isfile(self.get_option('index')):
-                    logger.error(
+                    raise UAPError(
                         "The path %s provided to option 'index' is not a file."
                         % self.get_option('index') )
-                    sys.exit(1)
 
                 if not os.path.isfile(self.get_option('genome')):
-                    logger.error(
+                    raise UAPError(
                         "The path %s provided to option 'genome' is not a file."
                         % self.get_option('genome'))
-                    sys.exit(1)
                 # Segemehl is run in this exec group
                 # Can segemehl handle multiple input files/fifos?
 
@@ -198,8 +195,8 @@ class Segemehl(AbstractStep):
                         # 4. Start segemehl
                         segemehl = [
                             self.get_tool('segemehl'),
-                            '--database', self.get_option('genome'),
-                            '--index', self.get_option('index'),
+                            '--database', os.path.abspath(self.get_option('genome')),
+                            '--index', os.path.abspath(self.get_option('index')),
                             '--nomatchfilename', unmapped_tmp,
                             '--threads', str(self.get_option('threads')),
                             '--query', fr_input[0]

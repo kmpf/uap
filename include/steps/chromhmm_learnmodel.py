@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import os
 from logging import getLogger
 import tarfile
@@ -197,6 +198,7 @@ class ChromHmmLearnModel(AbstractStep):
                    'm', 'nobed', 'nobrowser', 'noenrich',
                    # 'printposterior', 'printstatebyline',
                    'r', 's', 'stateordering', 't', 'x', 'z']
+        file_options = ['assembly', 'l', 'm']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -208,8 +210,11 @@ class ChromHmmLearnModel(AbstractStep):
                 if self.get_option(option):
                     option_list.append('-%s' % option)
             else:
+                value = str(self.get_option(option))
+                if option in file_options:
+                    value = os.path.abspath(value)
                 option_list.append('-%s' % option)
-                option_list.append(str(self.get_option(option)))
+                option_list.append(value)
 
         for run_id in run_ids_connections_files.keys():
             # The input_paths should be a single tar.gz file
@@ -217,10 +222,9 @@ class ChromHmmLearnModel(AbstractStep):
                           ['in/chromhmm_binarization']
             # Test the input_paths (at least a bit)
             if len(input_paths) != 1 or not input_paths[0].endswith('.tar.gz'):
-                logger.error("Expected single tar.gz file via "
+                raise UAPError("Expected single tar.gz file via "
                              "'in/chromhmm_binarization' for run %s, but got "
                              "this %s" % (run_id, ", ".join(input_paths)))
-                sys.exit(1)
 
 
             # read tar file and get names of included files
@@ -261,7 +265,7 @@ class ChromHmmLearnModel(AbstractStep):
                     chromhmm.append(input_dir)
                     chromhmm.append(output_dir)
                     chromhmm.append(str(self.get_option('numstates')))
-                    chromhmm.append(self.get_option('assembly'))
+                    chromhmm.append(os.path.abspath(self.get_option('assembly')))
                     learnmodel.add_command(chromhmm)
 
                 with run.new_exec_group() as pack_model:

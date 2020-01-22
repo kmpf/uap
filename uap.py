@@ -35,18 +35,19 @@ def main():
     '''
     os.environ["GIT_DIR"] = "%s/.git" % uap_path
     os.environ["GIT_WORK_TREE"] = uap_path
-    
+
     '''
     This script allows access to all commands which are provided by the pipeline.
     '''
-    
+
     # Definition of common parser(s)
-    
+
     common_parser = argparse.ArgumentParser(
         add_help=False,
-        formatter_class=argparse.RawTextHelpFormatter
+        formatter_class=argparse.RawTextHelpFormatter,
+        prog='uap'
     )
-    
+
     common_parser.add_argument(
         "--even-if-dirty",
         dest="even_if_dirty",
@@ -55,9 +56,9 @@ def main():
         help="This option must be set if the local git repository "
         "contains uncommited changes.\n"
         "Otherwise uap will not run.")
-    
+
     # Definition of the final parser
-    
+
     parser = argparse.ArgumentParser(
         description="This script starts and controls analysis for 'uap'.",
         epilog="For complete documentation see: "
@@ -67,7 +68,7 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter,
         prog='uap'
         )
-    
+
     parser.add_argument(
         "config",
         help="Path to YAML file that contains the pipeline configuration.\n"
@@ -75,14 +76,21 @@ def main():
         metavar="<project-config>.yaml",
         nargs='?',
         type=argparse.FileType('r'))
-    
+
     parser.add_argument(
         "-v", "--verbose",
         dest="verbose",
-        action="count", 
+        action="count",
         default=1,
         help="Increase output verbosity")
-    
+
+    parser.add_argument(
+        "--debugging",
+        dest="debugging",
+        action="store_true",
+        default=False,
+        help="Print traceback on UAPError.")
+
     parser.add_argument(
         "--version",
         dest="version",
@@ -91,20 +99,20 @@ def main():
         help = "Display version information.")
 
     subparsers = parser.add_subparsers(
-        title="subcommands", 
+        title="subcommands",
         description="Available subcommands.")
-    
+
     '''
     The argument parser for 'fix-problems.py' is created here."
     '''
-    
+
     fix_problems_parser = subparsers.add_parser(
         "fix-problems",
         help="Fixes problematic states by removing stall files.",
         description="",
         formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
-    
+
     fix_problems_parser.add_argument(
         "--cluster",
         dest="cluster",
@@ -125,13 +133,13 @@ def main():
         action="store_true",
         default=False,
         help="Delete problematic files.")
-    
+
     fix_problems_parser.set_defaults(func=fix_problems.main)
-    
+
     '''
     The argument parser for 'render.py' is created here."
     '''
-    
+
     render_parser = subparsers.add_parser(
         "render",
         help="Renders DOT-graphs displaying information of the analysis.",
@@ -140,7 +148,7 @@ def main():
         "showing details of the computation.",
         formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
-    
+
     render_parser.add_argument(
         "--files",
         dest="files",
@@ -148,7 +156,7 @@ def main():
         default=False,
         help="Renders a graph showing all files of the analysis. "
         "[Not implemented yet!]")
-    
+
     render_parser.add_argument(
         "--steps",
         dest="steps",
@@ -170,7 +178,7 @@ def main():
         dest="orientation",
         default='top-to-bottom',
         help="Defines orientation of the graph. Default: 'top-to-bottom'",
-        type=str       
+        type=str
     )
 
     render_parser.add_argument(
@@ -179,20 +187,20 @@ def main():
         default=list(),
         type=str,
         help="Render only graphs for these runs.")
-    
+
     render_parser.set_defaults(func=render.main)
 
 #    '''
 #    The argument parser for 'report.py' is created here."
 #    '''
-#    
+#
 #    report_parser = subparsers.add_parser(
 #        "report",
 #        help="Generates reports of steps which can do so.",
 #        description="",
 #        formatter_class=argparse.RawTextHelpFormatter,
 #        parents=[common_parser])
-#    
+#
 #    report_parser.add_argument(
 #        "run",
 #        nargs='*',
@@ -202,13 +210,13 @@ def main():
 #        "of any entry in the 'steps:' section as defined in "
 #        "'<project-config>.yaml'. To get a list of all run IDs please "
 #        "run 'uap <project-config>.yaml status'.")
-#    
+#
 #    report_parser.set_defaults(func=report.main)
-    
+
     '''
     The argument parser for 'run_locally.py' is created here."
     '''
-    
+
     run_locally_parser = subparsers.add_parser(
         "run-locally",
         help="Executes the analysis on the local machine.",
@@ -230,20 +238,20 @@ def main():
         "$ uap <project-config>.yaml status",
         formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
-    
+
     run_locally_parser.add_argument(
         "run",
         nargs='*',
         default=list(),
         type=str,
         help="These runs are processed on the local machine.")
-    
+
     run_locally_parser.set_defaults(func=run_locally.main)
-    
+
     '''
     The argument parser for 'status.py' is created here.
     '''
-    
+
     status_parser = subparsers.add_parser(
         "status",
         help="Displays information about the status of the analysis.",
@@ -255,7 +263,7 @@ def main():
         "submitted to the cluster.",
         formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
-    
+
     status_parser.add_argument(
         "--cluster",
         dest="cluster",
@@ -283,7 +291,7 @@ def main():
         action="store_true",
         default=False,
         help="Displays only information about the source runs.")
-    
+
     status_parser.add_argument(
         "-r","--run",
         dest="run",
@@ -291,13 +299,13 @@ def main():
         default=list(),
         type=str,
         help="The status of these runs are displayed.")
-    
+
     status_parser.set_defaults(func=status.main)
-    
+
     '''
     The argument parser for 'steps.py' is created here.
     '''
-    
+
     steps_parser = subparsers.add_parser(
         "steps",
         help="Displays information about the steps available in uap.",
@@ -305,20 +313,20 @@ def main():
         "steps the pipeline can use.\n",
         formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
-    
+
     steps_parser.add_argument(
         "--show",
         dest="step",
         type=str,
         default="",
         help="Show the details of a specific step.")
-    
+
     steps_parser.set_defaults(func=steps.main)
-    
+
     '''
     The argument parser for 'submit-to-cluster.py' is created here."
     '''
-    
+
     submit_to_cluster_parser = subparsers.add_parser(
         "submit-to-cluster",
         help="Submits the jobs created by uap to a cluster",
@@ -351,21 +359,21 @@ def main():
     '''
     The argument parser for 'run-info.py' is created here."
     '''
-    
+
     run_info_parser = subparsers.add_parser(
         "run-info",
         help="Displays information about certain source or processing runs.",
         description="",
         formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
-    
+
     run_info_parser.add_argument(
          "--sources",
         dest="sources",
         action="store_true",
         default=False,
         help="Displays only information about the source runs.")
-    
+
     run_info_parser.add_argument(
         "-r","--run",
         dest="run",
@@ -375,11 +383,11 @@ def main():
         help="Display run-info for these runs.")
 
     run_info_parser.set_defaults(func=run_info.main)
-        
+
     '''
     The argument parser for 'volatilize.py' is created here."
     '''
-    
+
     volatilize_parser = subparsers.add_parser(
         "volatilize",
         help="Saves disk space by volatilizing intermediate results",
@@ -387,21 +395,21 @@ def main():
         "Only steps marked with '_volatile: True' are considered.",
         formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
-    
+
     volatilize_parser.add_argument(
         "--details",
         dest="details",
         action="store_true",
         default=False,
         help="Shows which files can be volatilized.")
-    
+
     volatilize_parser.add_argument(
         "--srsly",
         dest="srsly",
         action="store_true",
         default=False,
         help="Replaces files marked for volatilization with a placeholder.")
-    
+
     volatilize_parser.set_defaults(func=volatilize.main)
 
     '''
@@ -446,7 +454,11 @@ def main():
     # create logger object
     logger = _configure_logger(args.verbose)
     # call subcommand
-    args.func(args)
+    try:
+        args.func(args)
+    except UAPError as e:
+        if args.debugging is True:
+            raise
 
 def _configure_logger(verbosity):
     logger = logging.getLogger("uap_logger")
@@ -462,7 +474,7 @@ def _configure_logger(verbosity):
     ch = logging.StreamHandler()
     # set handler logging level
     ch.setLevel(logging.NOTSET)
-    
+
     # Instantiate logger
     if verbosity == 0:
         # add formatter to ch

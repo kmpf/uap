@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from datetime import datetime
 import glob
@@ -34,8 +35,7 @@ class Run(object):
     '''
     def __init__(self, step, run_id):
         if '/' in run_id:
-            logger.error("Error: A run ID must not contain a slash: %s." % run_id)
-            sys.exit(1)
+            raise UAPError("Error: A run ID must not contain a slash: %s." % run_id)
         self._step = step
         '''
         Step this run belongs to.
@@ -46,7 +46,7 @@ class Run(object):
         '''
         self._private_info = dict()
         self._public_info = dict()
-        self._input_files = list()
+        self._input_files = set()
         self._output_files = dict()
         for out_connection in self._step.get_out_connections():
             self.add_out_connection(out_connection)
@@ -66,7 +66,7 @@ class Run(object):
         }
         self._submit_script = None
         self._exec_groups = list()
-        self._temp_paths = list()
+        self._temp_paths = set()
         '''
         List of temporary paths which can be either files or paths
         '''
@@ -108,9 +108,8 @@ class Run(object):
         if connection in self.get_out_connections():
             return connection
         else:
-            logger.error("Connection %s not declared for step %s" %
+            raise UAPError("Connection %s not declared for step %s" %
                          (connection, self.get_step()))
-            sys.exit(1)
 
     def _get_ping_file(self, key):
         if self._ping_files[key] == None:
@@ -145,9 +144,9 @@ class Run(object):
             value = None
             ret_value = func(self, *args, **kwargs)
             # If currently calling AbstractStep.runs() do nothing
-            if temp_out_dir == None:
-                value = ret_value
-            elif isinstance(ret_value, list):
+            if temp_out_dir is None or ret_value is None:
+                return(None)
+            elif isinstance(ret_value, list) or isinstance(ret_value, set):
                 value = list()
                 for string in ret_value:
                     if string != None and placeholder in string:
@@ -167,9 +166,8 @@ class Run(object):
             elif ret_value == None:
                 value = None
             else:
-                logger.error("Function %s does not return list or string object"
+                raise UAPError("Function %s does not return list or string object"
                              % func.__class__.__name__)
-                sys.exit(1)
             return(value)
         return(inner)
 
@@ -183,7 +181,7 @@ class Run(object):
     @replace_output_dir_du_jour
     def get_temp_paths(self):
         '''
-        Returns a list of all temporary paths which belong to this run.
+        Returns a set of all temporary paths which belong to this run.
         '''
         return self._temp_paths
 
@@ -206,15 +204,15 @@ class Run(object):
             - if we are currently calling a step's declare_runs()
               method, this will return None
             - if we are currently calling a step's execute() method,
-              this will return the temporary directory
+              this will return the current directory
             - otherwise, it will return the real output directory
         '''
-        if self.get_step()._state == abst.AbstractStep.states.DEFAULT:
-            return self.get_output_directory()
-        elif self.get_step()._state == abst.AbstractStep.states.EXECUTING:
-            return self.get_temp_output_directory()
-        else:
+        if self.get_step()._state == abst.AbstractStep.states.DECLARING:
             return None
+        elif self.get_step()._state == abst.AbstractStep.states.EXECUTING:
+            return '.'
+        else:
+            return self.get_output_directory()
 
     def get_temp_output_directory(self):
         '''
@@ -479,11 +477,10 @@ class Run(object):
         (hint: they get written to a temporary directory inside *execute()*).
         '''
         if key in self._private_info and value != self._private_info[key]:
-            logger.error(
+            raise UAPError(
                 "You're trying to overwrite private info %s with %s, "
                 "but there's already a different value stored: %s." %
                 (key, value, self._private_info[key]))
-            sys.exit(1)
         self._private_info[key] = value
 
     def add_public_info(self, key, value):
@@ -493,11 +490,10 @@ class Run(object):
         ``AbstractStep.find_upstream_info()``.
         '''
         if key in self._public_info and value != self._public_info[key]:
-            logger.error(
+            raise UAPError(
                 "You're trying to overwrite public info %s with %s, "
                 "but there's already a different value stored: %s." %
                 (key, value, self._public_info[key]))
-            sys.exit(1)
         self._public_info[key] = value
 
     def update_public_info(self, key, value):
@@ -510,10 +506,9 @@ class Run(object):
         ``AbstractStep.find_upstream_info()``.
         '''
         if not key in self._public_info:
-            logger.error("The key %s doesn't exist yet as public info."
+            raise UAPError("The key %s doesn't exist yet as public info."
                          "Please use add_public_info(%s, %s)"
                          % (key, key, value))
-            sys.exit(1)
         else:
             self._public_info[key] = value
 
@@ -543,48 +538,40 @@ class Run(object):
         # make sure there's no slash in out_path unless it's a source step
         if head != "" and not \
            isinstance(self._step, abst.AbstractSourceStep):
-            logger.error("The declared output file path contains "
+            raise UAPError("The declared output file path contains "
                          "directory separator: %s." % out_path)
-            sys.exit(1)
+        elif isinstance(self._step, abst.AbstractSourceStep):
+            out_path = os.path.abspath(out_path)
         # make sure tag was declared with an outgoing connection
         if 'out/' + tag not in self._step._connections:
-            logger.error("Invalid output_file tag '%s' in %s. "
+            raise UAPError("Invalid output_file tag '%s' in %s. "
                          "You might want to add self.add_connection('out/%s') "
                          "to the constructor of %s."
                          % (tag, str(self._step), tag, self._step.__module__))
-            sys.exit(1)
 
         out_connection = self.get_out_connection(tag)
 
         if out_path in self.get_output_files_for_out_connection(out_connection):
-            logger.error(
+            raise UAPError(
                 "You're trying to re-add an output file which has already "
                 "been declared: %s." % out_path)
-            sys.exit(1)
 
         if not isinstance(in_paths, list):
-            logger.error("Input paths (%s) is not a list." % in_paths)
-            sys.exit(1)
+            raise UAPError("Input paths (%s) is not a list." % in_paths)
 
         if None in in_paths:
-            logger.error(
+            raise UAPError(
                 "There is a NoneType element in input paths (%s) for output "
                 "file (%s)" % (in_paths, out_path))
-            sys.exit(1)
 
         if out_path == None:
-            logger.error(
+            raise UAPError(
                 "Trying to add NoneType element as output file for input paths "
                 ": %s" % in_paths)
-            sys.exit(1)
 
-        self._input_files.append(in_paths)
+        self._input_files.union(set(in_paths))
         self._output_files[out_connection][out_path] = in_paths
-        return_value = os.path.join(
-                self.get_output_directory_du_jour_placeholder(), out_path)
-        if head != "":
-            return_value = os.path.abspath(out_path)
-        return return_value
+        return out_path
 
     @replace_output_dir_du_jour
     def add_temporary_file(self, prefix = '', suffix = '', designation = None):
@@ -620,9 +607,9 @@ class Run(object):
             'type': ''
         }
         self.add_known_paths(known_paths)
-        # _temp_paths list contains all temporary files which are going to be
+        # _temp_paths set contains all temporary files which are going to be
         # deleted
-        self._temp_paths.append(temp_placeholder)
+        self._temp_paths.add(temp_placeholder)
         return temp_placeholder
 
     def add_temporary_directory(self, prefix = '', suffix = '',
@@ -687,21 +674,19 @@ class Run(object):
         '''
         # make sure tag was declared with an outgoing connection
         if 'out/' + tag not in self._step._connections:
-            logger.error("Invalid output_file tag '%s' in %s. "
+            raise UAPError("Invalid output_file tag '%s' in %s. "
                          "You might want to add self.add_connection('out/%s') "
                          "to the constructor of %s."
                          % (tag, str(self._step), tag, self._step.__module__))
-            sys.exit(1)
         try:
             out_connection = self.get_out_connection(tag)
         except KeyError:
             out_connection = self.add_out_connection(tag)
 
         if None in self._output_files[out_connection]:
-            logger.error(
+            raise UAPError(
                 "You're trying to re-declare %s as an empty output connection "
                 % out_connection)
-            sys.exit(1)
 
         self._output_files[out_connection][None] = None
 
@@ -771,9 +756,8 @@ class Run(object):
         '''
         temp = self.get_output_files_abspath()
         if len(temp[annotation]) != 1:
-            logger.error("More than one output file declared for out/%s."
+            raise UAPError("More than one output file declared for out/%s."
                          % annotation)
-            sys.exit(1)
         return temp[annotation].keys()[0]
 
     def get_output_files_for_annotation_and_tags(self, annotation, tags):
@@ -797,9 +781,8 @@ class Run(object):
         for tag in temp.keys():
             if out_path in temp[tag].keys():
                 return sorted(temp[tag][out_path])
-        logger.error("Sorry, your output '%s' file couldn't be found in"
+        raise UAPError("Sorry, your output '%s' file couldn't be found in"
                      "the dictionary: %s." % (out_path, temp))
-        sys.exit(1)
 
     def get_public_info(self, key):
         '''

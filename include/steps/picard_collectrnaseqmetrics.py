@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from logging import getLogger
 import os
@@ -116,6 +117,7 @@ class PicardCollectRnaSeqMetrics(AbstractStep):
             'REF_FLAT', 'RIBOSOMAL_INTERVALS', 'STRAND_SPECIFICITY', 'MINIMUM_LENGTH',
             'IGNORE_SEQUENCE', 'ASSUME_SORTED', 'RRNA_FRAGMENT_PERCENTAGE',
             'METRIC_ACCUMULATION_LEVEL', 'STOP_AFTER']
+        file_options = ['TMP_DIR', 'REFERENCE_SEQUENCE']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -128,9 +130,10 @@ class PicardCollectRnaSeqMetrics(AbstractStep):
                 else:
                     option_list.append('%s=false' % option)
             else:
-                option_list.append(
-                    '%s=%s' % (option, str(self.get_option(option)))
-                )
+                value = str(self.get_option(option))
+                if option in file_options:
+                    value = os.path.abspath(value)
+                option_list.append('%s=%s' % (option, value))
 
         for run_id in run_ids_connections_files.keys():
 
@@ -140,14 +143,12 @@ class PicardCollectRnaSeqMetrics(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    logger.error("Expected exactly one alignments file.")
-                    sys.exit(1)
+                    raise UAPError("Expected exactly one alignments file.")
                 elif os.path.splitext(input_paths[0])[1] not in ['.sam', '.bam']:
-                    logger.error(
+                    raise UAPError(
                         "The file %s seems not to be a SAM or BAM file. At "
                         "least the suffix is wrong." % input_paths[0]
                     )
-                    sys.exit(1)
                 else:
                     with run.new_exec_group() as exec_group:
                         metrics = run.add_output_file(

@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import os
 from logging import getLogger
 from abstract_step import AbstractStep
@@ -222,11 +223,11 @@ class FeatureCounts(AbstractStep):
                     if self.is_option_set_in_config('a'):
                         feature_path = self.get_option('a')
                     else:
-                        logger.error(
+                        raise UAPError(
                             "No feature file could be found for '%s'" % run_id)
                         exit(1)
                     if not os.path.isfile(feature_path):
-                        logger.error("Feature file '%s' is not a file."
+                        raise UAPError("Feature file '%s' is not a file."
                                      % feature_path)
                         exit(1)
 
@@ -309,10 +310,9 @@ class FeatureCounts(AbstractStep):
                 if self.get_option('C') is True:
                     fc.extend(['-C'])
 
-                fc.extend(['-a', feature_path])
+                fc.extend(['-a', os.path.abspath(feature_path)])
 
-                basename = run.get_output_directory_du_jour_placeholder() + \
-                    '/' + run_id + '.' +  self.get_option('o')
+                basename = run_id + '.' +  self.get_option('o')
                 fc.extend(['-o', basename])
 
                 fc.extend(input_paths)

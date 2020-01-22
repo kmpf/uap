@@ -1,5 +1,6 @@
 from logging import getLogger
 from abstract_step import AbstractStep
+import os
 
 logger = getLogger('uap_logger')
 
@@ -51,7 +52,7 @@ class GffreadExtractTranscripts(AbstractStep):
                                
 
             if self.is_option_set_in_config('gtf'):
-                cmd.append(self.get_option('gtf'))
+                cmd.append(os.path.abspath(self.get_option('gtf')))
             else:
                 for __ , connection  in run_ids_connections_files.items():
                     if 'in/anno' in connection:
