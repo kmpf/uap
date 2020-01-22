@@ -240,10 +240,11 @@ class Run(object):
         executed change.
         '''
 
+        step = self.get_step()
         # Store step state
-        previous_state = self.get_step()._state
+        previous_state = step._state
         # Set step state to DECLARING to avoid circular dependencies
-        self.get_step()._state = abst.AbstractStep.states.DECLARING
+        step._state = abst.AbstractStep.states.DECLARING
 
         cmd_by_eg = dict()
         eg_count = 0
@@ -265,8 +266,16 @@ class Run(object):
                     cmd_count += 1
                     cmd_by_eg[eg_count]['Cmd %s' % cmd_count] = poc.get_command()
 
+
+        # get tool version texts
+        tools = step._tools.keys()
+        cmd_by_eg['tool_versions'] = dict()
+        for tool in tools:
+            tool_info = step.get_pipeline().tool_versions[tool]
+            cmd_by_eg['tool_versions'][tool] = tool_info['response']
+
         # Set step state back to original state
-        self.get_step()._state = previous_state
+        step._state = previous_state
         return misc.str_to_sha1_b62(json.dumps(cmd_by_eg))[0:8]
 
     def get_output_directory(self):
