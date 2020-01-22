@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import yaml
 import os
@@ -64,9 +65,8 @@ class Bowtie2(AbstractStep):
 
         # Check if option values are valid
         if not os.path.exists(self.get_option('index') + '.1.bt2'):
-            logger.error("Could not find index file: %s.*" %
+            raise UAPError("Could not find index file: %s.*" %
                          self.get_option('index'))
-            sys.exit(1)
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 # Get list of files for first/second read

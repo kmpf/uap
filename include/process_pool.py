@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 '''
 This module can be used to launch child processes and wait for them.
 Processes may either run on their own or pipelines can be built with them.
@@ -113,8 +114,7 @@ class ProcessPool(object):
 
     def __init__(self, run):
         if ProcessPool.process_pool_is_dead:
-            logger.error("We have encountered an error, stopping now...")
-            sys.exit(1)
+            raise UAPError("We have encountered an error, stopping now...")
         # the run for which this ProcessPool computes stuff
         # (for temporary paths etc.)
         self._run = run
@@ -166,12 +166,11 @@ class ProcessPool(object):
     def check_subprocess_command(self, command):
         for argument in command:
             if not isinstance(argument, str):
-                logger.error(
+                raise UAPError(
                     "The command to be launched '%s' " % command +
                     "contains non-string argument '%s'. " % argument +
                     "Therefore the command will fail. Please " +
                     "fix this type issue.")
-                sys.exit(1)
         return
 
     def load_unload_module(self, module_cmd):
@@ -192,10 +191,9 @@ class ProcessPool(object):
                     close_fds = True)
 
             except OSError as e:
-                logger.error("Error while executing '%s' "
+                raise UAPError("Error while executing '%s' "
                              "Error no.: %s Error message: %s" %
                              (" ".join(command), e.errno, e.strerror))
-                sys.exit(1)
 
             (output, error) = proc.communicate()
             exec output
@@ -216,9 +214,8 @@ class ProcessPool(object):
 
     def __enter__(self):
         if ProcessPool.current_instance is not None:
-            logger.error("Sorry, only one instance of ProcessPool allowed at "
+            raise UAPError("Sorry, only one instance of ProcessPool allowed at "
                          "a time.")
-            sys.exit(1)
         ProcessPool.current_instance = self
 
         # First we have to add the pre_command commands for execution
@@ -675,8 +672,7 @@ class ProcessPool(object):
         if something_went_wrong:
             log = "Pipeline crashed. PID: %s" % pid
             self.log(log)
-            logger.error(log)
-            sys.exit(1)
+            raise UAPError(log)
 
     def _launch_process_watcher(self, watcher_report_path):
         '''

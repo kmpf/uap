@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from logging import getLogger
 import os
@@ -47,14 +48,13 @@ class RawUrlSource(AbstractSourceStep):
             # Control input for unknown options
             unknown_opts = set( downloads.keys() ).difference(download_opts)
             if len( unknown_opts ) > 0:
-                logger.error("Unknown option(s) %s for download of %s"
+                raise UAPError("Unknown option(s) %s for download of %s"
                              % (" ".join(unknown_opts), files) )
-                sys.exit(1)
             # Control input for missing mandatory options
             missing_mandatory_opts = mandatory_opts.difference( set(
                 downloads.keys() ))
             if len(missing_mandatory_opts) > 0:
-                logger.error("Download of %s misses mandatory option(s): %s"
+                raise UAPError("Download of %s misses mandatory option(s): %s"
                              % (files, " ".join(missing_mandatory_opts)) )
 
             # Check the optional parameters and set default if not available
@@ -65,19 +65,17 @@ class RawUrlSource(AbstractSourceStep):
             # 1. Check the 'hashing-algorithm'
             hash_algos = ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']
             if downloads['hashing-algorithm'] not in hash_algos:
-                logger.error("Option 'hashing-algorithm' for download %s "
+                raise UAPError("Option 'hashing-algorithm' for download %s "
                              "has invalid value %s. Has to be one of %s."
                              % (files, downloads['hashing-algorithm'],
                                 ", ".join(hash_algos)) )
-                sys.exit(1)
 
             # 2. Check the 'secure-hash'
             if isinstance(downloads['secure-hash'], str) and not \
                    downloads['hashing-algorithm']:
-                    logger.error("Option 'secure-hash' set for download %s "
+                    raise UAPError("Option 'secure-hash' set for download %s "
                                  "but option 'hashing-algorithm' is missing."
                                  % files)
-                    sys.exit(1)
 
             # Get file name of downloaded file
             url_filename = os.path.basename(

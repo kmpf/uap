@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import logging
 import traceback
@@ -36,9 +37,8 @@ class FetchChromSizesSource(AbstractSourceStep):
                 tb += " %s, line %s, %s %s" % (stack_entries)
 
             logger.debug( tb )
-            logger.error('Output directory (%s) does not exist. Please create it.'
+            raise UAPError('Output directory (%s) does not exist. Please create it.'
                          % output_dir)
-            sys.exit(1)
 
         ucsc_database = self.get_option('ucsc-database')
 

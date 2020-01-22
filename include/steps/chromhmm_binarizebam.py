@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import os
 from logging import getLogger
 from abstract_step import AbstractStep
@@ -178,9 +179,8 @@ class ChromHmmBinarizeBam(AbstractStep):
                                     ['in/alignments']
                     control_id = "-" + control_id
                 except KeyError as e:
-                    logger.error("Option 'control':\n"
+                    raise UAPError("Option 'control':\n"
                                  "No control '%s' found.\n" % control_id)
-                    sys.exit(1)
 
             # Check for existence of treatment files
             for tr in treatment_list:
@@ -189,10 +189,9 @@ class ChromHmmBinarizeBam(AbstractStep):
                     treatments[tr] = run_ids_connections_files[tr]\
                                      ['in/alignments']
                 except KeyError as e:
-                    logger.error("Option 'control':\n"
+                    raise UAPError("Option 'control':\n"
                                  "No treatment '%s' for control '%s' found."
                                  % (tr, control_id) )
-                    sys.exit(1)
 
                 # Assemble rund ID
                 run_id = "%s%s" % (tr, control_id)

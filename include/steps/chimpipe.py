@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -79,8 +80,7 @@ class ChimPipe(AbstractStep):
                 input_paths = [fr_input]
 
                 if sr_input is None:
-                    logger.error("Not paired end")
-                    sys.exit(1)
+                    raise UAPError("Not paired end")
                 else:
                     input_paths.append(sr_input)
 

@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -187,11 +188,10 @@ class Bowtie2GenerateIndex(AbstractStep):
                             temp_files.append(input_path)
                             exec_group.add_command(dd)
                         else:
-                            logger.error("File %s does not end with any "
+                            raise UAPError("File %s does not end with any "
                                          "expected suffix (fastq.gz or "
                                          "fastq). Please fix that issue." %
                                          input_path)
-                            sys.exit(1)
                     bowtie_build = [self.get_tool('bowtie2-build')]
                     # Add options
                     bowtie_build.extend(option_list)

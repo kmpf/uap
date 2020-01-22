@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from abstract_step import *
 import glob
@@ -139,10 +140,9 @@ class Stringtie(AbstractStep):
 
                 # check reference annotation
                 if not os.path.isfile(self.get_option('G')):
-                    logger.error(
+                    raise UAPError(
                         "The path %s provided to option 'G' is not a file."
                         % self.get_option('G'))
-                    sys.exit(1)
 
                 # check, if only a single input file is provided
                 len_input = run_ids_connections_files[run_id]['in/alignments']

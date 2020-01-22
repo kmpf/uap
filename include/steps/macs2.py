@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -112,8 +113,7 @@ class Macs2(AbstractStep):
                                     ['in/alignments']
                     control_id = "-" + control_id
                 except KeyError:
-                    logger.error("No control for ID '%s' found." % control_id)
-                    sys.exit(1)
+                    raise UAPError("No control for ID '%s' found." % control_id)
             else:
                 control_id = ""
 
@@ -124,8 +124,7 @@ class Macs2(AbstractStep):
                     treatments[tr] = run_ids_connections_files[tr]\
                                      ['in/alignments']
                 except KeyError:
-                    logger.error("No treatment for ID '%s' found." % tr)
-                    sys.exit(1)
+                    raise UAPError("No treatment for ID '%s' found." % tr)
                 # Assemble rund ID
                 run_id = "%s%s" % (tr, control_id)
 

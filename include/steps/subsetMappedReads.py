@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from abstract_step import *
 import process_pool
@@ -48,15 +49,13 @@ class subsetMappedReads(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    logger.error("Expected exactly one alignments file.")
-                    sys.exit(1)
+                    raise UAPError("Expected exactly one alignments file.")
                 else:
                     is_gzipped = True if os.path.splitext(input_paths[0])[1]\
                                  in ['.gz', '.gzip'] else False
 
                 if not self.is_option_set_in_config('Nreads'):
-                    logger.error("Required option 'Nreads' not set in your configuration file")
-                    sys.exit(1)
+                    raise UAPError("Required option 'Nreads' not set in your configuration file")
 
                 with run.new_exec_group() as exec_group:
 
