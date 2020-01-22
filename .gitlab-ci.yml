@@ -1,39 +1,60 @@
 stages:
   - build
   - test
-  
-  
-.dummy:
-  stage: build
-  script:
-    - pwd
-    - ls ~/.ssh/*
-    - git clone git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git
-    
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip"
+  GIT_SUBMODULE_STRATEGY: recursive
 
 prepare:
   stage: build
   script:
-    - pwd
+    - module load Python/2.7.15-foss-2018b
     - ./bootstrap.sh
-    
+    - source python_env/bin/activate
+    - python -m pip install sphinx sphinx_rtd_theme
+    - deactivate
+    - module load Python/3.6.6-foss-2018b
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - python -m pip install --upgrade pip
+    - python -m pip install pyaml pyyaml
+  cache:
+    key: python-envs
+    paths:
+      - python_env
+      - venv
+      - pip
   artifacts:
     paths:
       - python_env
+      - venv
     expire_in: 24 hours
 
 
 steptests:
   stage: test
   script:
-    - git clone git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git 
-    - pwd
-    - cd  uap_test
-    - make clean
     - module load Python/3.6.6-foss-2018b
-    - python3 -m venv venv
     - source venv/bin/activate
-    - pip install pyaml
-    - python3 scripts/uap_test.py run-tests --uap-test-dir . --uap-path ../uap 
+    - cd uap_test
+    - python3 scripts/uap_test.py run-tests --uap-test-dir . --uap-path ../uap
   dependencies:
     - prepare
+
+pages:
+  stage: test
+  script:
+    - module load Python/2.7.15-foss-2018b
+    - source python_env/bin/activate
+    - sphinx-build -b html doc/source public/$CI_COMMIT_REF_SLUG
+    - doc/make_pages_index.sh public
+  cache:
+    key: pages-cache
+    paths:
+      - public
+  dependencies:
+    - prepare
+  artifacts:
+    paths:
+    - public

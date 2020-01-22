@@ -52,7 +52,8 @@ class CatText(AbstractStep):
             with run.new_exec_group() as exec_group:
                 cat = [self.get_tool('cat')]
                 if self.is_option_set_in_config('additionalFiles'):
-                    cat.extend(self.get_option('additionalFiles'))
+                    files = [os.path.abspath(f) for f in self.get_option('additionalFiles')]
+                    cat.extend(files)
                 cat.extend(input_paths)
                 exec_group.add_command(cat, stdout_path=out)
 

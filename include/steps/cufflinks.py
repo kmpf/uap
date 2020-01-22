@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from abstract_step import *
 import glob
@@ -147,6 +148,7 @@ class CuffLinks(AbstractStep):
                  'min-intron-length', 'trim-3-avgcov-thresh', 'trim-3-dropoff-frac', 'max-multiread-fraction', 'overlap-radius', 
                  'no-faux-reads', '3-overhang-tolerance', 'intron-overhang-tolerance', 'verbose', 'no-update-check']
 #                 'no-faux-reads', '3-overhang-tolerance', 'intron-overhang-tolerance', 'verbose', 'quiet', 'no-update-check']
+        file_options=['mask-file']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -157,8 +159,11 @@ class CuffLinks(AbstractStep):
                 if self.get_option(option):
                     option_list.append('--%s' % option)
             else:
-                option_list.append( '--%s' % option )
-                option_list.append( str(self.get_option(option)) )
+                value = str(self.get_option(option))
+                if option in file_options:
+                    value = os.path.abspath(value)
+                option_list.append('--%s' % option)
+                option_list.append(value)
 
 
         for run_id in run_ids_connections_files.keys():
@@ -174,14 +179,12 @@ class CuffLinks(AbstractStep):
 #                # check if temporary directory is there 
 #                if not os.path.isdir(tmp_dir):
 #                    #dir not present
-#                    logger.error("Directory %s not found" % tmp_dir)
-#                    sys.exit(1)
+#                    raise UAPError("Directory %s not found" % tmp_dir)
 #
 #                # .. and if its accessible
 #                if not os.access(tmp_dir, os.W_OK):
 #                    #not accessible
-#                    logger.error("Directory %s not accessible." % tmp_dir)
-#                    sys.exit(1)
+#                    raise UAPError("Directory %s not accessible." % tmp_dir)
 
                 cufflinks = [self.get_tool('cufflinks'),'-o', temp_dir, '-q']
                 cufflinks.extend(option_list)

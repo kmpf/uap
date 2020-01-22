@@ -1,6 +1,8 @@
+from uaperrors import UAPError
 import sys
 from logging import getLogger
 from abstract_step import AbstractStep
+import os
 
 logger = getLogger('uap_logger')
 
@@ -93,8 +95,7 @@ class Kallisto(AbstractStep):
                 input_paths = [fr_input]
 
                 if sr_input is None:
-                    logger.error("Not paired end")
-                    sys.exit(1)
+                    raise UAPError("Not paired end")
                 else:
                     input_paths.append(sr_input)
 
@@ -130,14 +131,13 @@ class Kallisto(AbstractStep):
                                 '-t', str(self.get_option('cores')),
                                 '--fusion']
                     if self.is_option_set_in_config('index'):
-                            kallisto.extend(['-i', self.get_option('index')])
+                            kallisto.extend(['-i', os.path.abspath(self.get_option('index'))])
                     else:
                         if connect_index_path:
                             kallisto.extend(['-i', connect_index_path])
                         else:
-                            logger.error(
+                            raise UAPError(
                             "%s no kallisto index give via config or connection" % run_id)
-                            exit(1)
 
                     optns = ['fr-stranded', 'rf-stranded', 
                             'bias', 'single-overhang', 'single'] 

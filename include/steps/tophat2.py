@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -59,9 +60,8 @@ class TopHat2(AbstractStep):
 
         # Check if option values are valid
         if not os.path.exists(self.get_option('index') + '.1.bt2'):
-            logger.error("Could not find index file: %s.*" %
+            raise UAPError("Could not find index file: %s.*" %
                          self.get_option('index') )
-            sys.exit(1)
 
 
         read_types = {'first_read': '_R1', 'second_read': '_R2'}
@@ -93,7 +93,7 @@ class TopHat2(AbstractStep):
                         '--library-type', self.get_option('library_type'),
                         '--output-dir', temp_out_dir,
                         '-p', str(self.get_cores()),
-                        self.get_option('index'),
+                        os.path.abspath(self.get_option('index')),
                         ','.join(fr_input)
                     ]
 

@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -48,9 +49,8 @@ class SegemehlGenerateIndex(AbstractStep):
                          ['in/reference_sequence']
 
                 if refseq == [None]:
-                    logger.error("No reference sequence received via "
+                    raise UAPError("No reference sequence received via "
                                  "connection in/reference_sequence.")
-                    sys.exit(1)
                 # Get names of FIFOs
                 refseq_fifos = list()
                 index_fifo = run.add_temporary_file(

@@ -12,6 +12,7 @@ import yaml
 import abstract_step
 import fscache
 import pipeline
+from uaperrors import UAPError
 '''
 By default, this script submits all tasks to a compute cluster via a
 submit script. The list of tasks can be narrowed down by specifying a step name
@@ -56,8 +57,7 @@ def main(args):
     try:
         template = open(template_path, 'r').read()
     except OSError:
-        logger.error("Couldn't open %s." % template_path)
-        sys.exit(1)
+        raise UAPError("Couldn't open %s." % template_path)
 
     steps_left = list()
     tasks_left = dict()

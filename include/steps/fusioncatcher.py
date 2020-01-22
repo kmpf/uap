@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import os
 import sys
 from logging import getLogger
@@ -66,8 +67,7 @@ class FusionCatcher(AbstractStep):
                 input_paths = [fr_input]
 
                 if sr_input is None:
-                    logger.error("Not paired end")
-                    sys.exit(1)
+                    raise UAPError("Not paired end")
                 else:
                     input_paths.append(sr_input)
 
@@ -102,7 +102,7 @@ class FusionCatcher(AbstractStep):
                 with run.new_exec_group() as exec_group:
                     fusioncatcher = [
                         self.get_tool('fusioncatcher'),
-                        '-d', self.get_option('index'),
+                        '-d', os.path.abspath(self.get_option('index')),
                         '-i', fr_input + ',' + sr_input,
                         '-o', my_output,
                         '--threads', self.get_option('cores')]

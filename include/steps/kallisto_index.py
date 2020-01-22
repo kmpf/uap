@@ -38,8 +38,7 @@ class KallistoIndex(AbstractStep):
             with self.declare_run(run_id) as run:
                 kallisto = [self.get_tool('kallisto'), 'index']
 
-                path = run.get_output_directory_du_jour_placeholder()
-                kallisto.extend(['-i', path + '/' + self.get_option('index')])
+                kallisto.extend(['-i', self.get_option('index')])
 
                 kallisto.extend(['-k', str(self.get_option('kmer-size'))])
 
