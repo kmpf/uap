@@ -269,8 +269,7 @@ class Pipeline(object):
                 sys.exit(1)
 
         if not 'tools' in self.config or not isinstance(self.config['tools'], dict):
-            self.config['tools'] = dict()rsion')
-            self.config['tools'][tool].setdefault('exit_code', 0)
+            self.config['tools'] = dict()
         for tool, args in self.config['tools'].items():
             if args is None or len(args)==0:
                 self.config['tools'][tool] = dict()
