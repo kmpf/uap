@@ -9,7 +9,7 @@ import random
 import stat
 import string
 import tempfile
-import socket
+import platform
 
 import yaml
 
@@ -875,8 +875,8 @@ class Run(object):
         log['git_diff'] = self.get_step().get_pipeline().git_diff
         log['git_version'] = self.get_step().get_pipeline().git_version
         log['system'] = {}
-        log['system']['hostname'] = socket.gethostname()
-
+        log['system']['hostname'] = platform.node()
+        log['system']['platform'] = platform.platform()
 
 
         if self.get_step().get_pipeline().caught_signal is not None:
