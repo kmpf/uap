@@ -195,6 +195,11 @@ class Pipeline(object):
         List of all tasks in topological order.
         '''
 
+        self.tasks_in_step = dict()
+        '''
+        This dict stores tasks per step name.
+        '''
+
         self.read_config(args.config)
         self.setup_lmod()
 
@@ -204,6 +209,7 @@ class Pipeline(object):
         # collect all tasks
         for step_name in self.topological_step_order:
             step = self.get_step(step_name)
+            self.tasks_in_step[step_name] = list()
             logger.debug("Collect now all tasks for step: %s" % step)
             for run_index, run_id in enumerate(misc.natsorted(step.get_run_ids())):
                 task = task_module.Task(self, step, run_id, run_index)
@@ -217,6 +223,7 @@ class Pipeline(object):
                 if run_has_exec_groups:
                     logger.debug("Task: %s" % task)
                     self.all_tasks_topologically_sorted.append(task)
+                    self.tasks_in_step[step_name].append(task)
                 # Fail if multiple tasks with the same name exist
                 if str(task) in self.task_for_task_id:
                     raise UAPError("%s: Duplicate task ID %s." %
@@ -308,13 +315,13 @@ class Pipeline(object):
         if not os.path.exists("%s-out" % self.config['id']):
             os.symlink(self.config['destination_path'], '%s-out' % self.config['id'])
 
-        if not 'cluster' in self.config:
+        if not 'cluster' in self.config or self.config['cluster'] is None:
             self.config['cluster'] = dict()
 
         for i in ['default_submit_options', 'default_pre_job_command',
                   'default_post_job_command']:
-            if i not in self.config['cluster']:
-                self.config['cluster'][i] = ''
+            self.config['cluster'].setdefault(i, '')
+        self.config['cluster'].setdefault('default_job_quota', 0) # no quota
 
         self.build_steps()
 
@@ -646,7 +653,7 @@ class Pipeline(object):
                 if 'COMPLETING' in line:
                     continue
                 try:
-                    jid = int(line.strip().split(' ')[0])
+                    jid = int(line.strip().split(' ')[0].split('_')[0])
                     running_jids.add(str(jid))
                 except ValueError:
                     # this is not a JID
@@ -759,12 +766,15 @@ class Pipeline(object):
                                     key, cluster_type)
                              )
             # Now that we know let's test for that cluster    
-            try:
-                if (subprocess.check_output( identity['test'] )
-                    .startswith(identity['answer']) ):
-                    return cluster_type
-            except OSError:
-                pass
+            if not isinstance(identity['answer'], list):
+                identity['answer'] = [identity['answer']]
+            for answer in identity['answer']:
+                try:
+                    if (subprocess.check_output( identity['test'] )
+                        .startswith(answer) ):
+                        return cluster_type
+                except OSError:
+                    pass
         return None
 
     def get_cluster_type(self):

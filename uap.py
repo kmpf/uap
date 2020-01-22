@@ -28,6 +28,7 @@ if subcommand_path not in sys.path:
     sys.path.append(subcommand_path)
 
 from include.subcommands import *
+from uaperrors import UAPError
 
 def main():
     '''

@@ -6,45 +6,25 @@ slurm:
     template: 'cluster/submit-scripts/sbatch-template.sh'
     hold_jid: '--dependency=afterany:%s'
     hold_jid_separator: ':'
+    array_job: '--array=1-%s'
+    array_job_wquota: '--array=1-%s%%%s'
+    array_task_id: 'SLURM_ARRAY_TASK_ID'
     set_job_name: '--job-name=%s'
     set_stderr: '-e'
     set_stdout: '-o'
     parse_job_id: 'Submitted batch job (\d+)'
 
-sge:
+qstat:
     identity_test: ['qstat', '-help']
-    identity_answer: 'SGE'
-    submit: qsub
-    stat: qstat
-    template: 'cluster/submit-scripts/qsub-template.sh'
-    hold_jid: '-hold_jid'
-    hold_jid_separator: ';'
-    set_job_name: '-N'
-    set_stderr: '-e'
-    set_stdout: '-o'
-    parse_job_id: 'Your job (\d+)'
-
-uge:
-    identity_test: ['qstat', '-help']
-    identity_answer: 'UGE'
+    identity_answer: ['SGE', 'UGE', 'OGS']
     submit: 'qsub'
     stat: 'qstat'
     template: 'cluster/submit-scripts/qsub-template.sh'
     hold_jid: '-hold_jid'
     hold_jid_separator: ';'
-    set_job_name: '-N'
-    set_stderr: '-e'
-    set_stdout: '-o'
-    parse_job_id: 'Your job (\d+)'
-
-oge:
-    identity_test: ['qstat', '-help']
-    identity_answer: 'OGS'
-    submit: 'qsub'
-    stat: 'qstat'
-    template: 'cluster/submit-scripts/qsub-template.sh'
-    hold_jid: '-hold_jid'
-    hold_jid_separator: ';'
+    array_job: '-t 1-%s'
+    array_job_wquota: '-t 1-%s -tc %s'
+    array_task_id: 'SGE_TASK_ID'
     set_job_name: '-N'
     set_stderr: '-e'
     set_stdout: '-o'
