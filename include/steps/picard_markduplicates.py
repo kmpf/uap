@@ -133,6 +133,8 @@ class PicardMarkDuplicates(AbstractStep):
             'OPTICAL_DUPLICATE_PIXEL_DISTANCE'
         ]
 
+        file_options = ['TMP_DIR', 'REFERENCE_SEQUENCE']
+
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
 
@@ -144,9 +146,10 @@ class PicardMarkDuplicates(AbstractStep):
                 else:
                     option_list.append('%s=false' % option)
             else:
-                option_list.append(
-                    '%s=%s' % (option, str(self.get_option(option)))
-                )
+                value = str(self.get_option(option))
+                if option in file_options:
+                    value = os.path.abspath(value)
+                option_list.append('%s=%s' % (option, value))
 
         for run_id in run_ids_connections_files.keys():
 

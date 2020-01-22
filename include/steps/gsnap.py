@@ -1,5 +1,6 @@
 from logging import getLogger
 from abstract_step import AbstractStep
+import os
 
 logger = getLogger('uap_logger')
 
@@ -51,8 +52,8 @@ class Gsnap(AbstractStep):
                     input_fileset.append(r2)
 
                 gsnap = [self.get_tool('gsnap'), '--gunzip']
-                gsnap.extend(['-D', self.get_option('D')])
-                gsnap.extend(['-d', self.get_option('d')])
+                gsnap.extend(['-D', os.path.abspath(self.get_option('D'))])
+                gsnap.extend(['-d', os.path.abspath(self.get_option('d'))])
                 if self.is_option_set_in_config('t'):
                     gsnap.extend(['-t', str(self.get_option('t'))])
                 # Batch-Mode

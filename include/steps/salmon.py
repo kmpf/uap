@@ -99,11 +99,11 @@ class Salmon(AbstractStep):
                     salmon_eg.add_command(mkdir)
 
                     salmon = [self.get_tool('salmon'), 'quant']
-                    salmon.extend(['-i', str(self.get_option('i'))])
+                    salmon.extend(['-i', os.path.abspath(str(self.get_option('i')))])
                     salmon.extend(['-l', 'ISF'])
 
                     if self.is_option_set_in_config('g'):
-                        salmon.extend(['-g', self.get_option('g')])
+                        salmon.extend(['-g', os.path.abspath(self.get_option('g'))])
 
                     salmon.extend(['-o', temp_dir])
 

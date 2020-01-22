@@ -198,8 +198,8 @@ class Segemehl(AbstractStep):
                         # 4. Start segemehl
                         segemehl = [
                             self.get_tool('segemehl'),
-                            '--database', self.get_option('genome'),
-                            '--index', self.get_option('index'),
+                            '--database', os.path.abspath(self.get_option('genome')),
+                            '--index', os.path.abspath(self.get_option('index')),
                             '--nomatchfilename', unmapped_tmp,
                             '--threads', str(self.get_option('threads')),
                             '--query', fr_input[0]

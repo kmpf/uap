@@ -93,7 +93,7 @@ class TopHat2(AbstractStep):
                         '--library-type', self.get_option('library_type'),
                         '--output-dir', temp_out_dir,
                         '-p', str(self.get_cores()),
-                        self.get_option('index'),
+                        os.path.abspath(self.get_option('index')),
                         ','.join(fr_input)
                     ]
 

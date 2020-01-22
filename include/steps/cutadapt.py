@@ -204,8 +204,8 @@ class Cutadapt(AbstractStep):
 #                                    sys.exit(1)
                             # Or do we have a adapter sequence fasta file?
                             elif self.is_option_set_in_config('adapter-file'):
-                                adapter = "file:" + self.get_option(
-                                    'adapter-file')
+                                adapter = "file:" + os.path.abspath(self.get_option(
+                                    'adapter-file'))
                                 if not os.path.exists(
                                         self.get_option('adapter-file')):
                                     logger.error(

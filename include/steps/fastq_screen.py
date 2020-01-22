@@ -104,8 +104,8 @@ class FastqScreen(AbstractStep):
 
                             # build fastq_screen command
                             fastq_screen_exec_group  = run.new_exec_group()
-                            fastq_screen = [self.get_tool('fastq_screen'),
-                                            '-conf', self.get_option('config')]
+                            fastq_screen = [self.get_tool('fastq_screen'), 
+                                            '-conf', os.path.abspath(self.get_option('config'))]
 
                             if self.get_option('subset'):
                                 fastq_screen.extend(['--subset', str(self.get_option('subset'))])

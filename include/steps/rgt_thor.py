@@ -101,6 +101,7 @@ class RgtThor(AbstractStep):
                    'housekeeping-genes', 'merge', 'name', 'no-correction',
                    'no-gc-content', 'pvalue', 'report',
                    'save-input', 'scaling-factors', 'step']
+        file_options = ['chrom_sizes_file', 'genome']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -112,8 +113,10 @@ class RgtThor(AbstractStep):
                 if self.get_option(option):
                     option_list.append('--%s' % option)
             else:
-                option_list.append(
-                    '--%s=%s' % (option, str(self.get_option(option))))
+                value = str(self.get_option(option))
+                if option in file_options:
+                    value = os.path.abspath(value)
+                option_list.append('--%s=%s' % (option, value))
 
         # We need to create a config file. Should look something
         # like this:
@@ -175,10 +178,11 @@ class RgtThor(AbstractStep):
                 if not os.path.isfile(self.get_option('chrom_sizes_file')):
                     raise StandardError("Chromsizes file %s is not a file"
                                         % self.get_option('chrom_sizes_file'))
-                config_content['chrom_sizes'] = [self.get_option('chrom_sizes_file')]
+                file = os.path.abspath(self.get_option('chrom_sizes_file'))
+                config_content['chrom_sizes'] = [file]
                 # Add genome if available
                 if self.is_option_set_in_config('genome'):
-                    config_content['genome'] = [self.get_option('genome')]
+                    config_content['genome'] = [os.path.abspath(self.get_option('genome'))]
 
                 # Create THOR config file
                 with run.new_exec_group() as pre_rgt_thor:

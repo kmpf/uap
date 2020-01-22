@@ -147,6 +147,7 @@ class CuffLinks(AbstractStep):
                  'min-intron-length', 'trim-3-avgcov-thresh', 'trim-3-dropoff-frac', 'max-multiread-fraction', 'overlap-radius', 
                  'no-faux-reads', '3-overhang-tolerance', 'intron-overhang-tolerance', 'verbose', 'no-update-check']
 #                 'no-faux-reads', '3-overhang-tolerance', 'intron-overhang-tolerance', 'verbose', 'quiet', 'no-update-check']
+        file_options=['mask-file']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -157,8 +158,11 @@ class CuffLinks(AbstractStep):
                 if self.get_option(option):
                     option_list.append('--%s' % option)
             else:
-                option_list.append( '--%s' % option )
-                option_list.append( str(self.get_option(option)) )
+                value = str(self.get_option(option))
+                if option in file_options:
+                    value = os.path.abspath(value)
+                option_list.append('--%s' % option)
+                option_list.append(value)
 
 
         for run_id in run_ids_connections_files.keys():

@@ -86,10 +86,9 @@ class ChimPipe(AbstractStep):
 
                 # create folder structure
 
-                my_temp_dir = run.get_output_directory_du_jour_placeholder()
-                my_input = os.path.join(my_temp_dir, 'input')
-                my_output = os.path.join(my_temp_dir, 'output')
-                my_cp_temp = os.path.join(my_temp_dir, 'run_temp')
+                my_input = 'input'
+                my_output = 'output'
+                my_cp_temp = 'run_temp'
 
                 # create logfiles
                 log_stderr = run.add_output_file(
@@ -119,10 +118,10 @@ class ChimPipe(AbstractStep):
                         self.get_tool('chimpipe'),
                         '--fastq_1', fr_input,
                         '--fastq_2', sr_input,
-                        '-g', self.get_option('genome_index'),
-                        '-a', self.get_option('annotation'),
-                        '-t', self.get_option('transcriptome_index'),
-                        '-k', self.get_option('transcriptome_keys'),
+                        '-g', os.path.abspath(self.get_option('genome_index')),
+                        '-a', os.path.abspath(self.get_option('annotation')),
+                        '-t', os.path.abspath(self.get_option('transcriptome_index')),
+                        '-k', os.path.abspath(self.get_option('transcriptome_keys')),
                         '--sample-id', self.get_option('sample_ID'),
                         '--threads', self.get_option('cores'),
                         '--tmp-dir', my_cp_temp,
