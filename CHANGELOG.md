@@ -1,3 +1,20 @@
+## 1.2 (22.01.2020)
+
+**Fixes**
+ * completing slurm jobs are not considered running (#100)
+ * invoce uap from anywhere (#114)
+ * avoid depricated pip wrapper (#122)
+
+**Features**
+ * steps now run within their temp directory (#29, #31)
+ * use relative paths; uap output can now be moved (#115)
+ * slurm jobs as array per step (#105)
+ * error handling and --debugging option (#118)
+ * platform info in annotation file (#62)
+ * output hash now sensitive to tool versions (#116)
+ * shorter lmod config (#104)
+ * uap tools musst not be referenced in config (#119)
+
 ## 1.1 (20.01.2020)
 
 **Fixed**
