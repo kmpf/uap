@@ -142,7 +142,7 @@ def main(args):
                 "'" + "' '".join(task_names) + "'")
         submit_script = submit_script.replace("#{CORES}", str(step._cores))
 
-        config_file_path = args.config.name
+        config_file_path = p.get_config_filepath()
         command = ['uap', config_file_path, 'run-locally']
 
         task_id = p.get_cluster_command('array_task_id')
