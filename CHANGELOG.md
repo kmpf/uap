@@ -14,6 +14,7 @@
  * output hash now sensitive to tool versions (#116)
  * shorter lmod config (#104)
  * uap tools musst not be referenced in config (#119)
+ * uap path in PATH environmental variable not required (#107)
 
 ## 1.1 (20.01.2020)
 
