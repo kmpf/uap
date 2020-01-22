@@ -766,7 +766,7 @@ class Pipeline(object):
                                     key, cluster_type)
                              )
             # Now that we know let's test for that cluster    
-            if not isinstace(identity['answer'], list):
+            if not isinstance(identity['answer'], list):
                 identity['answer'] = [identity['answer']]
             for answer in identity['answer']:
                 try:
