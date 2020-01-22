@@ -195,6 +195,7 @@ class Pipeline(object):
         '''
 
         self.read_config(args.config)
+        self.setup_lmod()
 
         # collect all tasks
         for step_name in self.topological_step_order:
@@ -256,13 +257,31 @@ class Pipeline(object):
         if not 'id' in self.config:
             self.config['id'] = self.get_config_filepath()
 
+        if 'lmod' not in self.config or self.config['lmod'] is None:
+            self.config['lmod'] = dict()
+        if os.environ.has_key('LMOD_CMD'):
+            self.config['lmod'].setdefault('path', os.environ['LMOD_CMD'])
+        if os.environ.has_key('MODULEPATH'):
+            self.config['lmod'].setdefault('module_path', os.environ['MODULEPATH'])
+        for key in ('path', 'module_path'):
+            if key not in self.config['lmod']:
+                logger.error('lmod is not loaded and misses the key %s' % key)
+                sys.exit(1)
+
         if 'tools' in self.config and isinstance(self.config['tools'], dict):
             for tool, args in self.config['tools'].items():
-                if args is None:
+                if args is None or len(args)==0:
                     self.config['tools'][tool] = dict()
                 self.config['tools'][tool].setdefault('path', tool)
                 self.config['tools'][tool].setdefault('get_version', '--version')
                 self.config['tools'][tool].setdefault('exit_code', 0)
+                if 'module_name' in self.config['tools'][tool]:
+                    mn = self.config['tools'][tool]['module_name']
+                    cmd = '%s python load %s' % (self.config['lmod']['path'], mn)
+                    self.config['tools'][tool].setdefault('module_load', cmd)
+                    cmd = '%s python unload %s' % (self.config['lmod']['path'], mn)
+                    self.config['tools'][tool].setdefault('module_unload', cmd)
+
 
         if not 'destination_path' in self.config:
             logger.error("%s: Missing key: destination_path"
@@ -496,6 +515,13 @@ class Pipeline(object):
                 })
 
         return tool_check_info
+
+    def setup_lmod(self):
+        '''
+        If lmod is configured this functions sets the required environmental variables.
+        '''
+        if 'lmod' in self.config:
+            os.environ['MODULEPATH'] = self.config['lmod']['module_path']
 
     def check_tools(self):
         '''
