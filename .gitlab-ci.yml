@@ -15,7 +15,7 @@ prepare:
     - python -m pip install sphinx sphinx_rtd_theme
     - deactivate
     - module load Python/3.6.6-foss-2018b
-    - rm -r venv || :
+    - rm -r venv || echo removed
     - python3 -m venv venv
     - source venv/bin/activate
     - python -m pip install --upgrade pip
