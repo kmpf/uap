@@ -47,6 +47,7 @@ pages:
   script:
     - module load Python/2.7.15-foss-2018b
     - source python_env/bin/activate
+    - rm -r public/$CI_COMMIT_REF_SLUG || echo "First doc for $CI_COMMIT_REF_SLUG"
     - sphinx-build -b html doc/source public/$CI_COMMIT_REF_SLUG
     - doc/make_pages_index.sh public
   cache:
