@@ -2,6 +2,7 @@ from uaperrors import UAPError
 import sys
 from logging import getLogger
 from abstract_step import AbstractStep
+import os
 
 logger = getLogger('uap_logger')
 
@@ -130,7 +131,7 @@ class Kallisto(AbstractStep):
                                 '-t', str(self.get_option('cores')),
                                 '--fusion']
                     if self.is_option_set_in_config('index'):
-                            kallisto.extend(['-i', self.get_option('index')])
+                            kallisto.extend(['-i', os.path.abspath(self.get_option('index'))])
                     else:
                         if connect_index_path:
                             kallisto.extend(['-i', connect_index_path])

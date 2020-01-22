@@ -1,5 +1,6 @@
 from logging import getLogger
 from abstract_step import AbstractStep
+import os
 
 logger = getLogger('uap_logger')
 
@@ -28,11 +29,11 @@ class Pizzly(AbstractStep):
 
         self.add_connection('out/log_stderr')
         self.add_connection('out/log_stdout')
-        self.add_connection('out/fusion_json') 
+        self.add_connection('out/fusion_json')
         self.add_connection('out/fusion_fasta')
         self.add_connection('out/unfiltered_json')
         self.add_connection('out/unfiltered_fasta')
-        
+
 # adding required tools
         self.require_tool('pizzly')
 
@@ -65,7 +66,6 @@ class Pizzly(AbstractStep):
 
                 # create folder structure
 
-                my_output = run.get_output_directory_du_jour_placeholder()
                 my_input = run_ids_connections_files[run_id]['in/fusion.txt'][0]
 
                 log_stderr = run.add_output_file(
@@ -87,12 +87,12 @@ class Pizzly(AbstractStep):
                     'fusion_fasta',
                     '%s.fusions.fasta' % run_id,
                     [my_input])
-                
+
                 info_json = run.add_output_file(
                     'unfiltered_json',
                     '%s.unfiltered.json' % run_id,
                     [my_input])
-                
+
                 info_json = run.add_output_file(
                     'unfiltered_fasta',
                     '%s.unfiltered.fusions.fasta' % run_id,
@@ -103,9 +103,9 @@ class Pizzly(AbstractStep):
                     pizzly = [
                         self.get_tool('pizzly'),
                         '-k', self.get_option('k-mer_size'),
-                        '--gtf', self.get_option('gtf-file'),
-                        '--fasta', self.get_option('fasta-file'),
-                        '--output', my_output + '/' + run_id]
+                        '--gtf', os.path.abspath(self.get_option('gtf-file')),
+                        '--fasta', os.path.abspath(self.get_option('fasta-file')),
+                        '--output', run_id]
 
                     if self.is_option_set_in_config('cache'):
                         pizzly.extend([

@@ -198,6 +198,7 @@ class ChromHmmLearnModel(AbstractStep):
                    'm', 'nobed', 'nobrowser', 'noenrich',
                    # 'printposterior', 'printstatebyline',
                    'r', 's', 'stateordering', 't', 'x', 'z']
+        file_options = ['assembly', 'l', 'm']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -209,8 +210,11 @@ class ChromHmmLearnModel(AbstractStep):
                 if self.get_option(option):
                     option_list.append('-%s' % option)
             else:
+                value = str(self.get_option(option))
+                if option in file_options:
+                    value = os.path.abspath(value)
                 option_list.append('-%s' % option)
-                option_list.append(str(self.get_option(option)))
+                option_list.append(value)
 
         for run_id in run_ids_connections_files.keys():
             # The input_paths should be a single tar.gz file
@@ -261,7 +265,7 @@ class ChromHmmLearnModel(AbstractStep):
                     chromhmm.append(input_dir)
                     chromhmm.append(output_dir)
                     chromhmm.append(str(self.get_option('numstates')))
-                    chromhmm.append(self.get_option('assembly'))
+                    chromhmm.append(os.path.abspath(self.get_option('assembly')))
                     learnmodel.add_command(chromhmm)
 
                 with run.new_exec_group() as pack_model:

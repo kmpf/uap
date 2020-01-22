@@ -56,7 +56,7 @@ class AbstractStep(object):
                           '_cluster_submit_options', '_cluster_pre_job_command',
                           '_cluster_post_job_command', '_cluster_job_quota']
 
-    states = misc.Enum(['DEFAULT', 'DECLARING', 'EXECUTING'])
+    states = misc.Enum(['DEFAULT', 'DECLARING', 'EXECUTING', 'POSTPROCESS'])
 
     def __init__(self, pipeline):
 
@@ -82,12 +82,6 @@ class AbstractStep(object):
         '''
         Cached run information. ``declare_runs`` is only called once, the
         post-processed run objects are stored in here.
-        '''
-
-        self._temp_directory = None
-        '''
-        The temporary output directory the step is using. Only set when
-        the step is being run.
         '''
 
         self._pipeline_log = dict()
@@ -719,6 +713,8 @@ class AbstractStep(object):
              socket.gethostname()))
         caught_exception = None
         self._state = AbstractStep.states.EXECUTING
+        base_working_dir = os.getcwd()
+        os.chdir(run.get_temp_output_directory())
         try:
             self.execute(run_id, run)
         except Exception as e:
@@ -730,6 +726,8 @@ class AbstractStep(object):
             # Store the exception, re-raise it later
             caught_exception = sys.exc_info()
         finally:
+            self._state = AbstractStep.states.POSTPROCESS # changes relative paths
+            os.chdir(base_working_dir)
             try:
                 os.kill(executing_ping_pid, signal.SIGTERM)
                 os.waitpid(executing_ping_pid, 0)
@@ -834,7 +832,6 @@ class AbstractStep(object):
             else run.get_temp_output_directory())
 
         self._state = AbstractStep.states.DEFAULT
-#        self._temp_directory = None
 
         if self.get_pipeline().caught_signal is not None or \
            caught_exception is not None:

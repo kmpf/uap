@@ -2,6 +2,7 @@ from uaperrors import UAPError
 import sys
 from logging import getLogger
 from abstract_step import AbstractStep
+import os
 
 logger=getLogger('uap_logger')
 

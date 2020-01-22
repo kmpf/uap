@@ -57,6 +57,7 @@ class CuffMerge(AbstractStep):
         
         # compile list of options
         options=['ref-gtf', 'ref-sequence', 'num-threads']
+        file_options=['ref-gtf', 'ref-sequence']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -67,8 +68,11 @@ class CuffMerge(AbstractStep):
                 if self.get_option(option):
                     option_list.append('--%s' % option)
             else:
+                value = str(self.get_option(option))
+                if option in file_options:
+                    value = os.path.abspath(value)
                 option_list.append('--%s' % option)
-                option_list.append(str(self.get_option(option)))
+                option_list.append(value)
 
         # get all paths to the cufflinks assemblies from each sample
         cufflinks_sample_gtf = []

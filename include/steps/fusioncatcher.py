@@ -102,7 +102,7 @@ class FusionCatcher(AbstractStep):
                 with run.new_exec_group() as exec_group:
                     fusioncatcher = [
                         self.get_tool('fusioncatcher'),
-                        '-d', self.get_option('index'),
+                        '-d', os.path.abspath(self.get_option('index')),
                         '-i', fr_input + ',' + sr_input,
                         '-o', my_output,
                         '--threads', self.get_option('cores')]

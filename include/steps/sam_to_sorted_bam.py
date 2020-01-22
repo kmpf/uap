@@ -84,7 +84,7 @@ class SamToSortedBam(AbstractStep):
                         samtools_view = [
                             self.get_tool('samtools'), 'view',
                             '-S', '-b', '-t',
-                            self.get_option('genome-faidx'), '-',
+                            os.path.abspath(self.get_option('genome-faidx')), '-',
                             '-@', '1'
                         ]
                         pipe.add_command(samtools_view)
@@ -101,8 +101,10 @@ class SamToSortedBam(AbstractStep):
                         sortpath =  (run.get_output_directory_du_jour_placeholder()  + '/')
 
                         if self.is_option_set_in_config('temp-sort-dir'):
-                            sortpath = os.path.join(self.get_option('temp-sort-dir'),
-                                                'sort' + run_id)
+                            sortpath = os.path.join(
+                                os.path.abspath(self.get_option('temp-sort-dir')),
+                                'sort' + run_id
+                            )
 
                         samtools_sort.extend(
                             ['-T',

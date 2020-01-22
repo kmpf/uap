@@ -100,8 +100,11 @@ class Stringtie(AbstractStep):
                 if self.get_option(option):
                     option_list.append('-%s' % option)
             else:
+                value = str(self.get_option(option))
+                if os.path.isfile(value):
+                    value = os.path.abspath(value)
                 option_list.append('-%s' % option)
-                option_list.append(str(self.get_option(option)))
+                option_list.append(value)
 
         if self.is_option_set_in_config('fr') and self.get_option('fr'):
             option_list.append('--fr')

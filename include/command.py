@@ -1,5 +1,6 @@
 from uaperrors import UAPError
 import sys
+import os
 from logging import getLogger
 import pipeline_info
 import exec_group
@@ -28,18 +29,16 @@ class CommandInfo(object):
 
     def replace_output_dir_du_jour(func):
         def inner(self, *args):
-            run_info = None
-            if isinstance(self._eop, pipeline_info.PipelineInfo):
-                run_info = self._eop.get_exec_group().get_run()
-            elif isinstance(self._eop, exec_group.ExecGroup):
-                run_info = self._eop.get_run()
+            run_info = self.get_run()
             # Collect info to replace du_jour placeholder with temp_out_dir
             placeholder = run_info.get_output_directory_du_jour_placeholder()
             temp_out_dir = run_info.get_output_directory_du_jour()
 
             command = None
             ret_value = func(self, *args)
-            if isinstance(ret_value, list):
+            if ret_value is None:
+                return(None)
+            if isinstance(ret_value, list) or isinstance(ret_value, set):
                 command = list()
                 for string in ret_value:
                     if string != None and placeholder in string and\
@@ -49,16 +48,22 @@ class CommandInfo(object):
                     else:
                         command.append(string)
             elif isinstance(ret_value, str):
-                if ret_value != None and placeholder in ret_value and\
-                   isinstance(temp_out_dir, str):
+                if ret_value != None and isinstance(temp_out_dir, str):
                         command = ret_value.replace(placeholder, temp_out_dir)
-            elif ret_value == None:
-                command = None
             else:
                 raise UAPError("Function %s does not return list or string object"
                              % func.__class__.__name__)
             return(command)
         return(inner)
+
+    def get_run(self):
+        if isinstance(self._eop, pipeline_info.PipelineInfo):
+            run_info = self._eop.get_exec_group().get_run()
+        elif isinstance(self._eop, exec_group.ExecGroup):
+            run_info = self._eop.get_run()
+        else:
+            run_info = None
+        return(run_info)
 
     def set_command(self, command):
         if not isinstance(command, list):
@@ -83,4 +88,20 @@ class CommandInfo(object):
 
     @replace_output_dir_du_jour
     def get_command(self):
-        return(self._command)
+        '''
+        Return command after replacing all file inside the destination
+        directory with relative paths.
+        '''
+        cmd = self._command
+        run = self.get_run()
+        working_dir = run.get_temp_output_directory()
+        destination = run.get_step().get_pipeline().config['destination_path']
+        diff = os.path.relpath(destination, working_dir)
+        def repl(text):
+            if isinstance(text, str):
+                return(text.replace(destination, diff))
+            elif isinstance(text, list) or isinstance(text, set):
+                return([repl(element) for element in text])
+            else:
+                return(text)
+        return(repl(cmd))

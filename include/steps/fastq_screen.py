@@ -80,7 +80,7 @@ class FastqScreen(AbstractStep):
                         run.add_empty_output_connection("%s_log_stderr" % read)
                     else:
                         for input_path in input_paths:
-                            file_name = os.path.basename(input_path).split(".")[0]
+                            file_name = os.path.basename(input_path).rstrip(".fastq.gz")
                             # prepare output files
                             file_pattern = "%s_screen.txt" % (file_name)
                             run.add_output_file("fqc_report", file_pattern, [input_path])
@@ -104,8 +104,8 @@ class FastqScreen(AbstractStep):
 
                             # build fastq_screen command
                             fastq_screen_exec_group  = run.new_exec_group()
-                            fastq_screen = [self.get_tool('fastq_screen'),
-                                            '-conf', self.get_option('config')]
+                            fastq_screen = [self.get_tool('fastq_screen'), 
+                                            '-conf', os.path.abspath(self.get_option('config'))]
 
                             if self.get_option('subset'):
                                 fastq_screen.extend(['--subset', str(self.get_option('subset'))])

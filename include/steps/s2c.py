@@ -59,7 +59,7 @@ class S2C(AbstractStep):
                 alignments_path = input_paths[0]
                 cat = [self.get_tool('cat'), alignments_path]
                 pigz = [self.get_tool('pigz'), '--decompress', '--processes', str(self.get_cores()), '--stdout']
-                s2c = [self.get_tool('s2c'), '-s', '/dev/stdin', '-o', self.get_option('tmp_dir')]
+                s2c = [self.get_tool('s2c'), '-s', '/dev/stdin', '-o', os.path.abspath(self.get_option('tmp_dir'))]
                 fix_s2c = [self.get_tool('fix_s2c')] # schreibt .sam nach stdout
                 pigz2 = [self.get_tool('pigz'), '--processes', str(self.get_cores()), '--stdout']
 

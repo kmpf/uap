@@ -310,10 +310,9 @@ class FeatureCounts(AbstractStep):
                 if self.get_option('C') is True:
                     fc.extend(['-C'])
 
-                fc.extend(['-a', feature_path])
+                fc.extend(['-a', os.path.abspath(feature_path)])
 
-                basename = run.get_output_directory_du_jour_placeholder() + \
-                    '/' + run_id + '.' +  self.get_option('o')
+                basename = run_id + '.' +  self.get_option('o')
                 fc.extend(['-o', basename])
 
                 fc.extend(input_paths)

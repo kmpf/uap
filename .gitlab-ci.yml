@@ -4,6 +4,7 @@ stages:
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip"
+  GIT_SUBMODULE_STRATEGY: recursive
 
 prepare:
   stage: build
@@ -12,11 +13,14 @@ prepare:
     - ./bootstrap.sh
     - source python_env/bin/activate
     - pip install sphinx sphinx_rtd_theme
+    - deactivate
     - module load Python/3.6.6-foss-2018b
     - python3 -m venv venv
     - source venv/bin/activate
-    - pip install pyaml
+    - pip install --upgrade pip
+    - pip install pyaml pyyaml
   cache:
+    key: python-envs
     paths:
       - python_env
       - venv
@@ -33,13 +37,8 @@ steptests:
   script:
     - module load Python/3.6.6-foss-2018b
     - source venv/bin/activate
-    - git clone git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git || ( cd uap_test && git pull )
     - cd uap_test
-    - make clean
     - python3 scripts/uap_test.py run-tests --uap-test-dir . --uap-path ../uap
-  cache:
-    paths:
-      - uap_test
   dependencies:
     - prepare
 

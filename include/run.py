@@ -46,7 +46,7 @@ class Run(object):
         '''
         self._private_info = dict()
         self._public_info = dict()
-        self._input_files = list()
+        self._input_files = set()
         self._output_files = dict()
         for out_connection in self._step.get_out_connections():
             self.add_out_connection(out_connection)
@@ -66,7 +66,7 @@ class Run(object):
         }
         self._submit_script = None
         self._exec_groups = list()
-        self._temp_paths = list()
+        self._temp_paths = set()
         '''
         List of temporary paths which can be either files or paths
         '''
@@ -144,9 +144,9 @@ class Run(object):
             value = None
             ret_value = func(self, *args, **kwargs)
             # If currently calling AbstractStep.runs() do nothing
-            if temp_out_dir == None:
-                value = ret_value
-            elif isinstance(ret_value, list):
+            if temp_out_dir is None or ret_value is None:
+                return(None)
+            elif isinstance(ret_value, list) or isinstance(ret_value, set):
                 value = list()
                 for string in ret_value:
                     if string != None and placeholder in string:
@@ -181,7 +181,7 @@ class Run(object):
     @replace_output_dir_du_jour
     def get_temp_paths(self):
         '''
-        Returns a list of all temporary paths which belong to this run.
+        Returns a set of all temporary paths which belong to this run.
         '''
         return self._temp_paths
 
@@ -204,15 +204,15 @@ class Run(object):
             - if we are currently calling a step's declare_runs()
               method, this will return None
             - if we are currently calling a step's execute() method,
-              this will return the temporary directory
+              this will return the current directory
             - otherwise, it will return the real output directory
         '''
-        if self.get_step()._state == abst.AbstractStep.states.DEFAULT:
-            return self.get_output_directory()
-        elif self.get_step()._state == abst.AbstractStep.states.EXECUTING:
-            return self.get_temp_output_directory()
-        else:
+        if self.get_step()._state == abst.AbstractStep.states.DECLARING:
             return None
+        elif self.get_step()._state == abst.AbstractStep.states.EXECUTING:
+            return '.'
+        else:
+            return self.get_output_directory()
 
     def get_temp_output_directory(self):
         '''
@@ -540,6 +540,8 @@ class Run(object):
            isinstance(self._step, abst.AbstractSourceStep):
             raise UAPError("The declared output file path contains "
                          "directory separator: %s." % out_path)
+        elif isinstance(self._step, abst.AbstractSourceStep):
+            out_path = os.path.abspath(out_path)
         # make sure tag was declared with an outgoing connection
         if 'out/' + tag not in self._step._connections:
             raise UAPError("Invalid output_file tag '%s' in %s. "
@@ -567,13 +569,9 @@ class Run(object):
                 "Trying to add NoneType element as output file for input paths "
                 ": %s" % in_paths)
 
-        self._input_files.append(in_paths)
+        self._input_files.union(set(in_paths))
         self._output_files[out_connection][out_path] = in_paths
-        return_value = os.path.join(
-                self.get_output_directory_du_jour_placeholder(), out_path)
-        if head != "":
-            return_value = os.path.abspath(out_path)
-        return return_value
+        return out_path
 
     @replace_output_dir_du_jour
     def add_temporary_file(self, prefix = '', suffix = '', designation = None):
@@ -609,9 +607,9 @@ class Run(object):
             'type': ''
         }
         self.add_known_paths(known_paths)
-        # _temp_paths list contains all temporary files which are going to be
+        # _temp_paths set contains all temporary files which are going to be
         # deleted
-        self._temp_paths.append(temp_placeholder)
+        self._temp_paths.add(temp_placeholder)
         return temp_placeholder
 
     def add_temporary_directory(self, prefix = '', suffix = '',
