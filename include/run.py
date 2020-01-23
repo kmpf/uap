@@ -689,7 +689,8 @@ class Run(object):
         try:
             out_connection = self.get_out_connection(tag)
         except KeyError:
-            out_connection = self.add_out_connection(tag)
+            raise UAPError("The empty output %s was not declared as output in "
+                "the constructor of %s." % (tag, self._step.__module__))
 
         if None in self._output_files[out_connection]:
             raise UAPError(
