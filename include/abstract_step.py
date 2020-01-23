@@ -34,6 +34,7 @@ import psutil
 import yaml
 # 3. local application/library specific imports
 from uaperrors import UAPError
+from util import ConnectionsCollector
 import command as command_info
 import misc
 import process_pool
@@ -1293,74 +1294,47 @@ class AbstractStep(object):
         absolute.
         '''
 
-        run_ids_connections_files = dict()
+        cc = ConnectionsCollector(self.get_step_name())
+        self._options.setdefault('_connect', dict())
+        cons = self._options['_connect'].items()
 
         # Check if set in-connections are defined in the step class
-        if '_connect' in self._options:
-            in_connections = list(self._options['_connect']\
-                                         .keys())
-            for in_connection in in_connections:
-                if in_connection not in self.get_in_connections():
-                    raise UAPError("'_connect': unknown input connection %s "
-                                 "found." % in_connection)
+        for in_connection, _ in cons:
+            if in_connection not in self.get_in_connections():
+                raise UAPError("'_connect': unknown input connection %s "
+                             "found." % in_connection)
 
         # For each parent step ...
         for parent in self.get_dependencies():
             # ... and each parent step run ...
             for parent_run_id in parent.get_runs():
-                # ... create an input dictionary.
-                if parent_run_id not in run_ids_connections_files.keys():
-                    run_ids_connections_files[parent_run_id] = dict()
+                cc.switch_run_id(parent_run_id)
+                parent_run = parent.get_run(parent_run_id)
 
                 # Workaround: Set empty connections
-                if '_connect' in self._options:
-                    for _con_in, parent_out_connection_to_bend in \
-                        self._options['_connect'].items():
-
-                        if parent_out_connection_to_bend == 'empty':
-                            run_ids_connections_files[parent_run_id]\
-                                [_con_in] = [None]
-
-                            logger.debug("Found connection %s which is declared empty" %
-                                         (_con_in))
+                for _con_in, parent_out_connection_to_bend in cons:
+                    if parent_out_connection_to_bend == 'empty':
+                        cc.add_empty(_con_in)
 
                 # ... and each connection
-                parent_run = parent.get_run(parent_run_id)
                 for parent_out_connection in parent_run.get_out_connections():
                     output_files = parent_run\
                             .get_output_files_abspath_for_out_connection(
                                 parent_out_connection)
-                    in_connection = parent_out_connection.replace('out/', 'in/')
 
-                    # Do we need to connect certain outputs to certain inputs?
                     this_parent_out_connection = '%s/%s' % (
                             parent.get_step_name(), parent_out_connection[4:])
 
-                    if '_connect' in self._options:
-                        for _con_in, parent_out_connection_to_bend in \
-                            self._options['_connect'].items():
+                    for in_connection, parent_out_connection_to_bend in cons:
+                        for entry in list(parent_out_connection_to_bend):
+                            if entry ==  this_parent_out_connection:
+                                cc.add_connection(in_connection, output_files)
+                                break
 
-                            if isinstance(parent_out_connection_to_bend, list):
-                                pass
-                            else:
-                               parent_out_connection_to_bend =  [parent_out_connection_to_bend]
+                    if cc.used_current_run_id is False:
+                        cc.add_default_ins(parent_out_connection, output_files)
 
-                            for entry in parent_out_connection_to_bend:
-                                if entry ==  this_parent_out_connection:
-                                    logger.debug("Found %s to connect to  %s" %
-                                                 (parent_out_connection_to_bend,_con_in))
-                                    in_connection = _con_in
-
-                    if in_connection not in \
-                       list( run_ids_connections_files[parent_run_id].keys() ):
-                        run_ids_connections_files[parent_run_id]\
-                            [in_connection] = list()
-
-                    if run_ids_connections_files[parent_run_id][in_connection] != [None]:
-                        run_ids_connections_files[parent_run_id][in_connection]\
-                        .extend(output_files)
-
-        return run_ids_connections_files
+        return cc.connections
 
 
     def get_input_run_info_for_connection(self, in_key):
