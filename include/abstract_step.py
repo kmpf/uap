@@ -219,13 +219,15 @@ class AbstractStep(object):
         self._options.setdefault('_cluster_job_quota', 0)
 
         self._options.setdefault('_connect', dict())
-        self._options.setdefault('_depends', set())
+        self._options.setdefault('_depends', list())
+        if not isinstance(self._options['_depends'], list):
+            self._options['_depends'] = [self._options['_depends']]
         self._options['_depends'] = set(self._options['_depends'])
         # add implied dependencies
         for in_cons in self._options['_connect'].values():
-            for parent_cons in list(in_cons):
+            in_cons = in_cons if isinstance(in_cons, list) else [in_cons]
+            for parent_cons in in_cons:
                 parent = parent_cons.split("/")[0]
-                self._options['_depends'].add(parent)
 
     def get_options(self):
         '''
@@ -1333,11 +1335,11 @@ class AbstractStep(object):
                     this_parent_out_connection = '%s/%s' % (
                             parent.get_step_name(), parent_out_connection[4:])
 
-                    for in_connection, parent_out_connection_to_bend in cons:
-                        for entry in list(parent_out_connection_to_bend):
-                            if entry ==  this_parent_out_connection:
-                                cc.add_connection(in_connection, output_files)
-                                break
+                    for in_connection, out in cons:
+                        out = out if isinstance(out, list) else [out]
+                        if this_parent_out_connection in out:
+                            cc.add_connection(in_connection, output_files)
+                            break
 
                     if cc.used_current_run_id is False:
                         cc.add_default_ins(parent_out_connection, output_files)

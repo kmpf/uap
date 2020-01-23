@@ -3,7 +3,7 @@ from uaperrors import UAPError
 
 logger = getLogger("uap_logger")
 
-class ConnectionsCollector(Object):
+class ConnectionsCollector(object):
     def __init__(self, name=None):
         self.name = name
         self.connections = dict()
@@ -35,7 +35,7 @@ class ConnectionsCollector(Object):
         logger.debug("Found %s to connect to %s in run %s." %
                 (self.name, connection, run_id))
         self.connections[run_id].setdefault(connection, list())
-        self.connections[run_id].[connection].extend(files)
+        self.connections[run_id][connection].extend(files)
 
     def add_default_ins(self, out_connection, files):
         in_connection = out_connection.replace('out/', 'in/')

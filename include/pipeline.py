@@ -368,7 +368,7 @@ class Pipeline(object):
         # step two: set dependencies
         for step_name, step in self.steps.items():
             for parent_step in step._options['_depends']:
-                if not step in self.steps:
+                if not parent_step in self.steps.keys():
                     raise UAPError("%s: Step %s specifies an undefined "
                                  "dependency: %s."
                                  % (self.get_config_filepath(),
