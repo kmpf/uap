@@ -367,31 +367,13 @@ class Pipeline(object):
 
         # step two: set dependencies
         for step_name, step in self.steps.items():
-            if not step.needs_parents:
-                if '_depends' in step._options:
-                    raise UAPError("%s: %s must not have dependencies because "
-                                 "it declares no in/* connections (remove the "
-                                 "_depends key)."
-                                 % (self.get_config_filepath(), step_name))
-            else:
-                if not '_depends' in step._options:
-                    raise UAPError("%s: Missing key in step '%s': _depends (set "
-                                 "to null if the step has no dependencies)."
-                                 % (self.get_config_filepath(), step_name))
-                depends = step._options['_depends']
-                if depends == None:
-                    pass
-                else:
-                    temp_list = depends
-                    if depends.__class__ == str:
-                        temp_list = [depends]
-                    for d in temp_list:
-                        if not d in self.steps:
-                            raise UAPError("%s: Step %s specifies an undefined "
-                                         "dependency: %s."
-                                         % (self.get_config_filepath(),
-                                            step_name, d))
-                        step.add_dependency(self.steps[d])
+            for parent_step in step._options['_depends']:
+                if not step in self.steps:
+                    raise UAPError("%s: Step %s specifies an undefined "
+                                 "dependency: %s."
+                                 % (self.get_config_filepath(),
+                                    step_name, parent_step))
+                step.add_dependency(self.steps[parent_step])
 
         # step three: perform topological sort
         # if there's a cycle (yeah, the algorithm is O(n^2), tsk, tsk...)

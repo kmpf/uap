@@ -211,13 +211,21 @@ class AbstractStep(object):
                 else:
                     self._options[key] = value
 
-        if not '_volatile' in self._options:
-            self._options['_volatile'] = False
+        self._options.setdefault('_volatile', False)
 
         for i in ['_cluster_submit_options', '_cluster_pre_job_command',
-                  '_cluster_post_job_command', '_cluster_job_quota']:
-            if not i in self._options:
-                self._options[i] = ''
+                  '_cluster_post_job_command']:
+            self._options.setdefault(i, '')
+        self._options.setdefault('_cluster_job_quota', 0)
+
+        self._options.setdefault('_connect', dict())
+        self._options.setdefault('_depends', set())
+        self._options['_depends'] = set(self._options['_depends'])
+        # add implied dependencies
+        for in_cons in self._options['_connect'].values():
+            for parent_cons in list(in_cons):
+                parent = parent_cons.split("/")[0]
+                self._options['_depends'].add(parent)
 
     def get_options(self):
         '''
