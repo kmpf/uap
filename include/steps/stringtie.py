@@ -20,6 +20,7 @@ class Stringtie(AbstractStep):
         self.set_cores(12)
 
         self.add_connection('in/alignments')
+        self.add_connection('in/reference')
         self.add_connection('out/assembling')
         self.add_connection('out/gene_abund')
         self.add_connection('out/cov_refs')
@@ -34,7 +35,7 @@ class Stringtie(AbstractStep):
         self.require_tool('mv')
         self.require_tool('stringtie')
 
-        self.add_option('G', str, optional=False,
+        self.add_option('G', str, optional=True, default=None,
                         description="use reference transcript annotation to guide assembly")
         self.add_option('v', bool, optional=True,
                         description='Turns on verbose mode, printing bundle processing details')
@@ -89,7 +90,7 @@ class Stringtie(AbstractStep):
     def runs(self, run_ids_connections_files):
         self.set_cores(self.get_option('p'))
 
-        options = ['G', 'v', 'p', 'm', 'l', 'f', 'M', 'e', 'B']
+        options = ['v', 'p', 'm', 'l', 'f', 'M', 'e', 'B']
 
         set_options = [option for option in options if
                        self.is_option_set_in_config(option)]
@@ -112,11 +113,32 @@ class Stringtie(AbstractStep):
         if self.is_option_set_in_config('rf') and self.get_option('rf'):
             option_list.append('--rf')
 
-        for run_id in run_ids_connections_files.keys():
+        # look for reference assembly in in-connections
+        ref_assembly = self.get_option('G')
+        # check reference annotation
+        if ref_assembly is not None and not os.path.isfile(ref_assembly):
+            raise UAPError(
+                "The path %s provided to option 'G' is not a file."
+                % self.get_option('G'))
+        for run_id, connection in run_ids_connections_files.items():
+            if 'in/reference' in connection.keys():
+                if ref_assembly is not None:
+                    UAPError('Reference assembly given through option and connection.')
+                if len(connection['in/reference']) != 1:
+                    UAPError('More then one reference assembly passed from run %s' % run_id)
+                ref_assembly = connection['in/reference'][0]
+                break
+        if ref_assembly is not None:
+            option_list.append('-G %s', ref_assembly)
 
+
+        for run_id, connection in run_ids_connections_files.items():
+            if 'in/alignments' not in connection.keys():
+                continue
+            else:
+                alignments = connection['in/alignments']
             with self.declare_run(run_id) as run:
-                alignments = run_ids_connections_files[run_id]['in/alignments'][0]
-                input_paths = alignments
+                input_paths = alignments[0]
 
                 assembling = run.add_output_file(
                     'assembling',
@@ -138,16 +160,9 @@ class Stringtie(AbstractStep):
                     '%s-cov_refs.gtf' % run_id,
                     [input_paths])
 
-                # check reference annotation
-                if not os.path.isfile(self.get_option('G')):
-                    raise UAPError(
-                        "The path %s provided to option 'G' is not a file."
-                        % self.get_option('G'))
-
                 # check, if only a single input file is provided
-                len_input = run_ids_connections_files[run_id]['in/alignments']
-                if len(len_input) != 1:
-                    raise StandardError("Expected exactly one alignments file %s" % input_paths)
+                if len(alignments) != 1:
+                    raise UAPError("Expected exactly one alignments file %s" % input_paths)
 
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as pipe:
