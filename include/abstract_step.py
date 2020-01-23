@@ -1295,6 +1295,7 @@ class AbstractStep(object):
 
         run_ids_connections_files = dict()
 
+        # Check if set in-connections are defined in the step class
         if '_connect' in self._options:
             in_connections = list(self._options['_connect']\
                                          .keys())
@@ -1303,12 +1304,12 @@ class AbstractStep(object):
                     raise UAPError("'_connect': unknown input connection %s "
                                  "found." % in_connection)
 
-        # Check each parent step ...
+        # For each parent step ...
         for parent in self.get_dependencies():
-            # ... for each run ...
+            # ... and each parent step run ...
             for parent_run_id in parent.get_runs():
-                # Check if this key exists
-                if parent_run_id not in list( run_ids_connections_files.keys() ):
+                # ... create an input dictionary.
+                if parent_run_id not in run_ids_connections_files.keys():
                     run_ids_connections_files[parent_run_id] = dict()
 
                 # Workaround: Set empty connections
@@ -1324,9 +1325,9 @@ class AbstractStep(object):
                                          (_con_in))
 
                 # ... and each connection
-                for parent_out_connection in \
-                    parent.get_run(parent_run_id).get_out_connections():
-                    output_files = parent.get_run(parent_run_id)\
+                parent_run = parent.get_run(parent_run_id)
+                for parent_out_connection in parent_run.get_out_connections():
+                    output_files = parent_run\
                             .get_output_files_abspath_for_out_connection(
                                 parent_out_connection)
                     in_connection = parent_out_connection.replace('out/', 'in/')
