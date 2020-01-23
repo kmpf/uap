@@ -16,6 +16,7 @@
  * uap tools musst not be referenced in config (#119)
  * uap path in PATH environmental variable not required (#107)
  * default job quota is 0 -> no quota (#105)
+ * `_depends` amended implicitly through `_connect` (#127)
 
 ## 1.1 (20.01.2020)
 
