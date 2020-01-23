@@ -4,6 +4,7 @@
  * completing slurm jobs are not considered running (#100)
  * invoce uap from anywhere (#114)
  * avoid depricated pip wrapper (#122)
+ * all step input connections are used (#125)
 
 **Features**
  * steps now run within their temp directory (#29, #31)
@@ -17,6 +18,8 @@
  * uap path in PATH environmental variable not required (#107)
  * default job quota is 0 -> no quota (#105)
  * `_depends` amended implicitly through `_connect` (#127)
+ * reference assembly is optional for `stringtieMerge` (#124)
+ * pass reference assmbly through `in/reference` connection to `stringtieMerge` (#47)
 
 ## 1.1 (20.01.2020)
 
