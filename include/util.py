@@ -140,3 +140,6 @@ class ConnectionsCollector(object):
 
     def values(self):
         return self.connections.values()
+
+    def items(self):
+    return self.connections.items()
