@@ -33,7 +33,7 @@ class ConnectionsCollector(object):
         self.connections[run_id][connection] = [None]
         self._by_cons_empty.setdefault(connection, set())
         self._by_cons_empty[connection].add(un_id)
-        self.connection_exists.add(connection)
+        self.existing_connections.add(connection)
         self._con_of_all_runs = None # reset cache
         logger.debug("Found connection %s which is declared empty" %
                      (connection))
@@ -44,7 +44,7 @@ class ConnectionsCollector(object):
         self.connections[run_id][connection].extend(files)
         self._by_cons_none_empty.setdefault(connection, set())
         self._by_cons_none_empty[connection].add(run_id)
-        self.connection_exists.add(connection)
+        self.existing_connections.add(connection)
         self._con_of_all_runs = None # reset cache
         logger.debug("Found %s to connect to %s in run %s." %
                 (self.step_name, connection, run_id))
