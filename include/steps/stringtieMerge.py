@@ -87,8 +87,6 @@ class StringtieMerge(AbstractStep):
         else:
             ref_assembly = None
         ref_assembly = cc.look_for_unique('in/reference', ref_assembly)
-        if ref_assembly is None:
-            raise UAPError('No reference assembly given for stringtieMerge.')
         if cc.all_runs_have_connection('in/reference'):
             raise UAPError('For stringtieMerge only one reference assmbly can be used.')
 

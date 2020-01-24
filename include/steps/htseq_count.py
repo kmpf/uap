@@ -71,6 +71,9 @@ class HtSeqCount(AbstractStep):
 
         if self.is_option_set_in_config('feature-file'):
             features_path = os.path.abspath(self.get_option('feature-file'))
+            if not os.path.isfile(features_path):
+                raise UAPError('[HTSeqCount]: %s is no file.' %
+                        self.get_option('feature-file'))
         else:
             features_path = None
         features_path = cc.look_for_unique('in/features', features_path)

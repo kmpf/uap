@@ -116,6 +116,9 @@ class Stringtie(AbstractStep):
         # look for reference assembly in in-connections
         if self.is_option_set_in_config('G'):
             ref_assembly = os.path.abspath(self.get_option('G'))
+            if not os.path.isfile(ref_assembly):
+                raise UAPError('[Stringtie]: %s is no file.' %
+                        self.get_option('G'))
         else:
             ref_assembly = None
         ref_assembly = cc.look_for_unique('in/reference', ref_assembly)
@@ -130,7 +133,8 @@ class Stringtie(AbstractStep):
             alignments = connection['in/alignments']
             # check, if only a single input file is provided
             if len(alignments) != 1:
-                raise UAPError("Expected exactly one alignments file %s" % input_paths)
+                raise UAPError("Expected exactly one alignments file %s" %
+                        input_paths)
             input_paths = alignments[0]
 
             run = self.declare_run(run_id)
@@ -156,7 +160,7 @@ class Stringtie(AbstractStep):
                 [input_paths])
 
 
-            stringtie = [self.get_tool('stringtie'), alignments, '-o', assembling,
+            stringtie = [self.get_tool('stringtie'), input_paths, '-o', assembling,
                          '-A', gene_abund, '-C', cov_refs]
             if ref_assembly is not None:
                 stringtie.extend(['-G', ref_assembly])

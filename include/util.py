@@ -59,17 +59,20 @@ class ConnectionsCollector(object):
 
     def _runs_with_connection(self, connection, with_empty=True):
         runs = set()
-        runs.add(self._by_cons_none_empty.get(connection))
+        if connection in self._by_cons_none_empty.keys():
+            runs = runs.union(self._by_cons_none_empty[connection])
         if with_empty is True:
-            runs.add(self._by_cons_empty.get(connection))
+            if connection in self._by_cons_empty.keys():
+                runs = runs.union(self._by_cons_empty[connection])
         return runs
 
     def get_runs_with_connections(self, connections, with_empty=True):
         '''
         Returns all run ids that have requested all connections.
         '''
-        if not isinstance(connections, list):
+        if isinstance(connections, str):
             return self._runs_with_connection(connections, with_empty)
+        cons = list(connections)
         run_ids = self._runs_with_connection(connections[0], with_empty)
         for con in connections[1:]:
             run_ids.intersection(self._runs_with_connection(con, with_empty))
@@ -82,22 +85,22 @@ class ConnectionsCollector(object):
         If all runs come with the file and no default is set it returns None.
         If more then one but not all runs come with the connection an UAPError is raised.
         '''
-        if self.connection_exists(connection):
-            if default is not None:
-                raise UAPError('In step %s runs come with %s but it is set '
+        if self.connection_exists(connection) and default is not None:
+            raise UAPError('In step %s runs come with %s but it is set '
                 'to %s in the config.' % (self.step_name, connection, default))
 
         if self.all_runs_have_connection(connection):
             return default
 
-        ref_run = self.get_runs_with_connections(connection)
+        ref_run = self.get_runs_with_connections(connection, with_empty=False)
         if len(ref_run) > 1:
             UAPError('More then one but not all runs come with %s.' % connection)
         elif len(ref_run) == 1:
             if default is not None:
                 raise UAPError('In step %s, value supplied by connection %s but'
                         'option is set to %s.' % (self.step_name, connection, default))
-            con_value = self.connections[ref_run[0]][connection]
+            ref_run = ref_run.pop()
+            con_value = self.connections[ref_run][connection]
             if len(con_value) > 1:
                 raise UAPError('In step %s more than one file is passed with %s.' %
                         (self.step_name, connection))
