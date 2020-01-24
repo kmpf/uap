@@ -141,9 +141,8 @@ class Stringtie(AbstractStep):
                 run_ref_assembly = connection['in/reference'][0]
             else:
                 run_ref_assembly = ref_assembly
-            else:
-                alignments = connection['in/alignments']
 
+            alignments = connection['in/alignments']
             # check, if only a single input file is provided
             if len(alignments) != 1:
                 raise UAPError("Expected exactly one alignments file %s" % input_paths)
