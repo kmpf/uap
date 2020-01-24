@@ -114,7 +114,7 @@ class StringtieMerge(AbstractStep):
         assemblies = [self.get_tool('printf'), '\n'.join(stringtie_sample_gtf)]
         # print assemblies
         
-        input_files.append(stringtie_sample_gtf)
+        input_files.extend(stringtie_sample_gtf)
         assemblies_file = run.add_output_file('assemblies', 
                                               '%s-stringtieMerge-assemblies.txt' % 
                                               run_id, input_files)
