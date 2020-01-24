@@ -56,8 +56,8 @@ class StringtieMerge(AbstractStep):
         self.add_option('p', int, optional=True,
                         default=2, description='Number of cores')
 
-        self.add_option('run_id', str, optional=True,
-                        default="merge", description='uap specific sets runid')
+        self.add_option('output_prefix', str, optional=True,
+                        default="merge", description='Prefix used in the utput directory.')
         
 
     def runs(self, cc):
@@ -107,7 +107,7 @@ class StringtieMerge(AbstractStep):
 
 
 
-        run_id = self.get_option('run_id')
+        run_id = self.get_option('output_prefix')
         run = self.declare_run(run_id)
         
         # create the filename of the assemblies.txt file
