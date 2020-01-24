@@ -121,49 +121,51 @@ class Stringtie(AbstractStep):
                         self.get_option('G'))
         else:
             ref_assembly = None
-        ref_assembly = cc.look_for_unique('in/reference', ref_assembly)
+        con_ref_assembly = cc.look_for_unique('in/reference', ref_assembly)
         ref_per_run = cc.all_runs_have_connection('in/reference')
 
         allignment_runs = cc.get_runs_with_connections('in/alignments')
         for run_id in allignment_runs:
             connection = cc[run_id]
             if ref_per_run is True:
-                ref_assembly = connection['in/reference'][0]
+                con_ref_assembly = connection['in/reference'][0]
 
             alignments = connection['in/alignments']
             # check, if only a single input file is provided
             if len(alignments) != 1:
                 raise UAPError("Expected exactly one alignments file %s" %
-                        input_paths)
-            input_paths = alignments[0]
+                        alignments)
 
             run = self.declare_run(run_id)
 
             assembling = run.add_output_file(
                 'assembling',
                 '%s-assembling.gtf' % run_id,
-                [input_paths])
+                alignments)
 
             log_stderr = run.add_output_file(
                 'log_stderr',
                 '%s-log_stderr.txt' % run_id,
-                [input_paths])
+                alignments)
 
             gene_abund = run.add_output_file(
                 'gene_abund',
                 '%s-gene_abund.tab' % run_id,
-                [input_paths])
+                alignments)
 
             cov_refs = run.add_output_file(
                 'cov_refs',
                 '%s-cov_refs.gtf' % run_id,
-                [input_paths])
+                alignments)
 
 
-            stringtie = [self.get_tool('stringtie'), input_paths, '-o', assembling,
+            stringtie = [self.get_tool('stringtie'), alignments, '-o', assembling,
                          '-A', gene_abund, '-C', cov_refs]
-            if ref_assembly is not None:
+            if con_ref_assembly is not None:
                 stringtie.extend(['-G', ref_assembly])
+                if ref_assembly is None:
+                    # include dependency
+                    alignments.append(con_ref_assembly)
             stringtie.extend(option_list)
 
             pipe = run.new_exec_group().add_pipeline()
@@ -184,7 +186,7 @@ class Stringtie(AbstractStep):
                     out_file = run_id + '-' + connection
                     is_wanted = run.add_output_file(connection,
                                                     out_file,
-                                                    [input_paths])
+                                                    alignments)
 
                     mv_exec_group.add_command([self.get_tool('mv'),
                                                is_produced, is_wanted])

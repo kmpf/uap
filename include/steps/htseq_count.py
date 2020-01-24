@@ -70,13 +70,13 @@ class HtSeqCount(AbstractStep):
                     '--%s=%s' % (option, str(self.get_option(option))))
 
         if self.is_option_set_in_config('feature-file'):
-            features_path = os.path.abspath(self.get_option('feature-file'))
-            if not os.path.isfile(features_path):
+            option_feature_path = os.path.abspath(self.get_option('feature-file'))
+            if not os.path.isfile(option_feature_path):
                 raise UAPError('[HTSeqCount]: %s is no file.' %
                         self.get_option('feature-file'))
         else:
-            features_path = None
-        features_path = cc.look_for_unique('in/features', features_path)
+            option_feature_path = None
+        features_path = cc.look_for_unique('in/features', option_feature_path)
         features_per_run = cc.all_runs_have_connection('in/features')
         if features_per_run is False and features_path is None:
             raise UAPError('No features given for HTSeqCount.')
@@ -87,6 +87,8 @@ class HtSeqCount(AbstractStep):
             input_paths = alignments
             if features_per_run is True:
                 features_path = cc[run_id]['in/features'][0]
+            if option_feature_path is None:
+                input_paths.append(features_path)
 
             # Is the alignment gzipped?
             root, ext = os.path.splitext(alignments[0])

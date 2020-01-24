@@ -86,9 +86,17 @@ class StringtieMerge(AbstractStep):
             ref_assembly = os.path.abspath(self.get_option('G'))
         else:
             ref_assembly = None
-        ref_assembly = cc.look_for_unique('in/reference', ref_assembly)
+        con_ref_assembly = cc.look_for_unique('in/reference', ref_assembly)
         if cc.all_runs_have_connection('in/reference'):
             raise UAPError('For stringtieMerge only one reference assmbly can be used.')
+
+
+        input_files = []
+        if con_ref_assembly is not None:
+            option_list.extend(['-G', con_ref_assembly])
+            if ref_assembly is None:
+                # include dependency
+                input_files.append(con_ref_assembly)
 
         # get all paths to the stringtie assemblies from each sample
 
@@ -106,9 +114,10 @@ class StringtieMerge(AbstractStep):
         assemblies = [self.get_tool('printf'), '\n'.join(stringtie_sample_gtf)]
         # print assemblies
         
+        input_files.append(stringtie_sample_gtf)
         assemblies_file = run.add_output_file('assemblies', 
                                               '%s-stringtieMerge-assemblies.txt' % 
-                                              run_id, stringtie_sample_gtf)
+                                              run_id, input_files)
        
 
         # 1. create assemblies file
@@ -117,11 +126,11 @@ class StringtieMerge(AbstractStep):
             with exec_group.add_pipeline() as stringtie_pipe:
                 res = run.add_output_file('assembling', 
                                           '%s-stringtieMerge-merged.gtf' % 
-                                          run_id, stringtie_sample_gtf)
+                                          run_id, input_files)
 
                 log_err_file = run.add_output_file('log_stderr', 
                                                    '%s-stringtieMerge-log_stderr.txt' % 
-                                                   run_id, stringtie_sample_gtf)
+                                                   run_id, input_files)
 
               
 

@@ -75,13 +75,13 @@ class Kallisto(AbstractStep):
         self.set_cores(self.get_option('cores'))
 
         if self.is_option_set_in_config('index'):
-            connect_index_path = os.path.abspath(self.get_option('index'))
-            if not os.path.isfile(connect_index_path):
-                raise UAPError('[kallisto]: %s is no file.' %
+            index_path = os.path.abspath(self.get_option('index'))
+            if not os.path.isfile(index_path):
+                raise UAPError('[]: %s is no file.' %
                         self.get_option('index'))
         else:
-            connect_index_path = None
-        connect_index_path = cc.look_for_unique('in/kallisto-index', connect_index_path)
+            index_path = None
+        connect_index_path = cc.look_for_unique('in/kallisto-index', index_path)
         index_per_run = cc.all_runs_have_connection('in/kallisto-index')
         if index_per_run is False and connect_index_path is None:
             raise UAPError("No kallisto index give via config or connection.")
@@ -108,7 +108,8 @@ class Kallisto(AbstractStep):
                 if index_per_run is True:
                     connect_index_path = cc[run_id]['in/kallisto-index'][0]
                 kallisto.extend(['--index', connect_index_path])
-                d_files.append( connect_index_path)
+                if index_path is None:
+                    d_files.append(connect_index_path)
 
                 flags = ['fr-stranded', 'rf-stranded',
                          'bias', 'single-overhang', 'single']
