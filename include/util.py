@@ -73,10 +73,32 @@ class ConnectionsCollector(object):
         if isinstance(connections, str):
             return self._runs_with_connection(connections, with_empty)
         cons = list(connections)
-        run_ids = self._runs_with_connection(connections[0], with_empty)
-        for con in connections[1:]:
-            run_ids.intersection(self._runs_with_connection(con, with_empty))
+        run_ids = self._runs_with_connection(cons[0], with_empty)
+        for con in cons[1:]:
+            runs_of_con = self._runs_with_connection(con, with_empty)
+            run_ids = run_ids.intersection(runs_of_con)
         return run_ids
+
+    def get_runs_with_any(self, connections, with_empty=True):
+        '''
+        Returns all run ids with any of the given connections.
+        '''
+        if isinstance(connections, str):
+            connections = [connections]
+        cons = list(connections)
+        run_ids = self._runs_with_connection(cons[0], with_empty)
+        for con in cons[1:]:
+            runs_of_con = self._runs_with_connection(con, with_empty)
+            run_ids = run_ids.union(runs_of_con)
+        return run_ids
+
+    def get_runs_without_any(self, connections, with_empty=True):
+        '''
+        Returns runs that have none of the passed connections.
+        '''
+        runs = set(self.connections.keys())
+        runs_with_any = self.get_runs_with_any(connections)
+        return runs.difference(runs_with_any)
 
     def look_for_unique(self, connection, default=None):
         '''
