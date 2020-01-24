@@ -43,7 +43,7 @@ class ConnectionsCollector(object):
         self.connections[run_id].setdefault(connection, list())
         self.connections[run_id][connection].extend(files)
         self._by_cons_none_empty.setdefault(connection, set())
-        self._by_cons_none_empty[connection].add(un_id)
+        self._by_cons_none_empty[connection].add(run_id)
         self.connection_exists.add(connection)
         self._con_of_all_runs = None # reset cache
         logger.debug("Found %s to connect to %s in run %s." %
@@ -128,6 +128,6 @@ class ConnectionsCollector(object):
 
     def __getitem__(self, run_id):
         if run_id not in self.connections.keys():
-            raise KeyError('In step %s there is connection for run %s.' %
+            raise KeyError('In step %s there is no connection for run %s.' %
                     (self.step_name, run_id))
         return self.connections[run_id]
