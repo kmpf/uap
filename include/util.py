@@ -128,5 +128,6 @@ class ConnectionsCollector(object):
 
     def __getitem__(self, run_id):
         if run_id not in self.connections.keys():
-            raise UAPError('There is connection for run %s.' % run_id)
+            raise KeyError('In step %s there is connection for run %s.' %
+                    (self.step_name, run_id))
         return self.connections[run_id]
