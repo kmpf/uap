@@ -37,7 +37,7 @@ class HtSeqCount(AbstractStep):
         self.require_tool('samtools')
 
         # Path to external feature file if necessary
-        self.add_option('feature-file', str, optional = True)
+        self.add_option('feature-file', str, optional = True, default = None)
         # Options for htseq-count
         self.add_option('order', str, choices = ['name', 'pos'],
                         optional = False)
@@ -53,7 +53,7 @@ class HtSeqCount(AbstractStep):
         # Options for dd
         self.add_option('dd-blocksize', str, optional = True, default = "256k")
 
-    def runs(self, run_ids_connections_files):
+    def runs(self, cc):
         # Compile the list of options
         options = ['order', 'stranded', 'a', 'type', 'idattr', 'mode']
 
@@ -70,42 +70,19 @@ class HtSeqCount(AbstractStep):
                     '--%s=%s' % (option, str(self.get_option(option))))
 
                 
-        ### dirty work around to get the features 
-        connect_feature_path = None
-        for run_id in run_ids_connections_files.keys():
-            try:
-                connect_feature_path = run_ids_connections_files[run_id]['in/features'][0]
-            except KeyError:
-                pass
-
-        for run_id in run_ids_connections_files.keys():
-            if run_id == '':
-                continue
+        features_path = os.path.abspath(self.get_option('feature-file'))
+        features_path = cc.look_for_unique('in/features', features_path)
+        features_per_run = cc.all_runs_have_connection('in/features')
+        if features_per_run is False and features_path is None:
+            raise UAPError('No features given for HTSeqCount.')
+        allignment_runs = cc.get_runs_with_connections('in/alignments')
+        for run_id in allignment_runs:
             # Check input files
-            try:
-                alignments = run_ids_connections_files[run_id]['in/alignments']
-            except KeyError:
-                continue
+            alignments = cc[run_id]['in/alignments']
             input_paths = alignments
-            features_path = str
-            try:
-                features_path = run_ids_connections_files[run_id]['in/features'][0]
-                input_paths.extend(features_path)
-            except KeyError:
-                if self.is_option_set_in_config('feature-file'):
-                    features_path = self.get_option('feature-file')
-                    
-                #dirty work around
-                elif (connect_feature_path):
-                    features_path = connect_feature_path
-                    input_paths.append(features_path)
-                else:
-                    raise UAPError(
-                        "No feature file could be found for '%s'" % run_id)
-            if not connect_feature_path:
-                if not os.path.isfile(features_path):
-                    raise UAPError("Feature file '%s' is not a file."
-                                 % features_path)
+            if features_per_run is True:
+                features_path = cc[run_id]['in/features'][0]
+
             # Is the alignment gzipped?
             root, ext = os.path.splitext(alignments[0])
             is_gzipped = True if ext in ['.gz', '.gzip'] else False

@@ -87,7 +87,7 @@ class Stringtie(AbstractStep):
                                     transcript file, StringTie will write the *.ctab files in
                                     the same directory as the output GTF.""")
 
-    def runs(self, run_ids_connections_files):
+    def runs(self, cc):
         self.set_cores(self.get_option('p'))
 
         options = ['v', 'p', 'm', 'l', 'f', 'M', 'e', 'B']
@@ -115,32 +115,14 @@ class Stringtie(AbstractStep):
 
         # look for reference assembly in in-connections
         ref_assembly = os.path.abspath(self.get_option('G'))
-        # check reference annotation
-        if ref_assembly is not None and not os.path.isfile(ref_assembly):
-            raise UAPError(
-                "The path %s provided to option 'G' is not a file."
-                % self.get_option('G'))
-        for run_id, connection in run_ids_connections_files.items():
-            if 'in/reference' in connection.keys():
-                if ref_assembly is not None:
-                    UAPError('Reference assembly given through option and connection.')
-                if len(connection['in/reference']) != 1:
-                    UAPError('More then one reference assembly passed from run %s' % run_id)
+        ref_assembly = cc.look_for_unique('in/reference', ref_assembly)
+        ref_per_run = cc.all_runs_have_connection('in/reference')
+
+        allignment_runs = cc.get_runs_with_connections('in/alignments')
+        for run_id in allignment_runs:
+            connection = cc[run_id]
+            if ref_per_run is True:
                 ref_assembly = connection['in/reference'][0]
-                break
-
-
-        for run_id, connection in run_ids_connections_files.items():
-            # look for run specific reference assembly
-            if 'in/alignments' not in connection.keys()\
-                    and 'in/reference' in connection.keys():
-                continue
-            elif 'in/reference' in connection.keys():
-                if len(connection['in/reference']) != 1:
-                    UAPError('More then one reference assembly passed from run %s' % run_id)
-                run_ref_assembly = connection['in/reference'][0]
-            else:
-                run_ref_assembly = ref_assembly
 
             alignments = connection['in/alignments']
             # check, if only a single input file is provided
@@ -173,8 +155,8 @@ class Stringtie(AbstractStep):
 
             stringtie = [self.get_tool('stringtie'), alignments, '-o', assembling,
                          '-A', gene_abund, '-C', cov_refs]
-            if run_ref_assembly is not None:
-                stringtie.extend(['-G', run_ref_assembly])
+            if ref_assembly is not None:
+                stringtie.extend(['-G', ref_assembly])
             stringtie.extend(option_list)
 
             pipe = run.new_exec_group().add_pipeline()

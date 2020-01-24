@@ -23,6 +23,7 @@ class StringtieMerge(AbstractStep):
 
         # all .gft assemblies from all samples that have been produced with stringtie
         self.add_connection('in/assembling')
+        self.add_connection('in/reference')
         # merged assembly 'merged.gft'
         self.add_connection('out/assembling') # merged.gtf
         self.add_connection('out/assemblies') # input assemblies txt file
@@ -59,15 +60,14 @@ class StringtieMerge(AbstractStep):
                         default="merge", description='uap specific sets runid')
         
 
-    def runs(self, run_ids_connections_files):
+    def runs(self, cc):
        
         # reset cores to number of threads
         self.set_cores(self.get_option('p'))    
 
 
         # compile list of options
-        options=['G', 'm', 'c', 'F', 'T', 'f', 'g', 'l']
-        file_options=['G']
+        options=['m', 'c', 'F', 'T', 'f', 'g', 'l']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -79,15 +79,22 @@ class StringtieMerge(AbstractStep):
                     option_list.append('-%s' % option)
             else:
                 value = str(self.get_option(option))
-                if option in file_options:
-                    value = os.path.abspath(value)
                 option_list.append('-%s' % option)
                 option_list.append(value)
 
+        ref_assembly = os.path.abspath(self.get_option('G'))
+        ref_assembly = cc.look_for_unique('in/reference', ref_assembly)
+        if ref_assembly is None:
+            raise UAPError('No reference assembly given for stringtieMerge.')
+        if cc.all_runs_have_connection('in/reference'):
+            raise UAPError('For stringtieMerge only one reference assmbly can be used.')
+
         # get all paths to the stringtie assemblies from each sample
+
         stringtie_sample_gtf = []
-        for run_id in run_ids_connections_files.keys():
-            stringtie_sample_gtf.append(run_ids_connections_files[run_id]['in/assembling'][0])
+        assembling_runs = cc.get_runs_with_connections('in/assembling')
+        for run_id in assembling_runs:
+            stringtie_sample_gtf.append(cc[run_id]['in/assembling'][0])
 
 
 
