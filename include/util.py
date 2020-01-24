@@ -5,7 +5,7 @@ logger = getLogger("uap_logger")
 
 class ConnectionsCollector(object):
     def __init__(self, step_name=None):
-        self.step_name = name
+        self.step_name = step_name
         self.connections = dict()
         self._current_run_id = None
         self.used_current_run_id = False
