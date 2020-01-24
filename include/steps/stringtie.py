@@ -159,7 +159,7 @@ class Stringtie(AbstractStep):
                 alignments)
 
 
-            stringtie = [self.get_tool('stringtie'), alignments, '-o', assembling,
+            stringtie = [self.get_tool('stringtie'), alignments[0], '-o', assembling,
                          '-A', gene_abund, '-C', cov_refs]
             if con_ref_assembly is not None:
                 stringtie.extend(['-G', ref_assembly])
