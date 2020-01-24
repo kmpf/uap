@@ -114,7 +114,10 @@ class Stringtie(AbstractStep):
             option_list.append('--rf')
 
         # look for reference assembly in in-connections
-        ref_assembly = os.path.abspath(self.get_option('G'))
+        if self.is_option_set_in_config('G'):
+            ref_assembly = os.path.abspath(self.get_option('G'))
+        else:
+            ref_assembly = None
         ref_assembly = cc.look_for_unique('in/reference', ref_assembly)
         ref_per_run = cc.all_runs_have_connection('in/reference')
 

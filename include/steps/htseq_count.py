@@ -37,7 +37,7 @@ class HtSeqCount(AbstractStep):
         self.require_tool('samtools')
 
         # Path to external feature file if necessary
-        self.add_option('feature-file', str, optional = True, default = None)
+        self.add_option('feature-file', str, optional = True)
         # Options for htseq-count
         self.add_option('order', str, choices = ['name', 'pos'],
                         optional = False)
@@ -69,8 +69,10 @@ class HtSeqCount(AbstractStep):
                 option_list.append(
                     '--%s=%s' % (option, str(self.get_option(option))))
 
-                
-        features_path = os.path.abspath(self.get_option('feature-file'))
+        if self.is_option_set_in_config('feature-file'):
+            features_path = os.path.abspath(self.get_option('feature-file'))
+        else:
+            features_path = None
         features_path = cc.look_for_unique('in/features', features_path)
         features_per_run = cc.all_runs_have_connection('in/features')
         if features_per_run is False and features_path is None:

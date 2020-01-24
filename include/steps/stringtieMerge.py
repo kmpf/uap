@@ -82,7 +82,10 @@ class StringtieMerge(AbstractStep):
                 option_list.append('-%s' % option)
                 option_list.append(value)
 
-        ref_assembly = os.path.abspath(self.get_option('G'))
+        if self.is_option_set_in_config('G'):
+            ref_assembly = os.path.abspath(self.get_option('G'))
+        else:
+            ref_assembly = None
         ref_assembly = cc.look_for_unique('in/reference', ref_assembly)
         if ref_assembly is None:
             raise UAPError('No reference assembly given for stringtieMerge.')
