@@ -1344,7 +1344,7 @@ class AbstractStep(object):
                     if cc.used_current_run_id is False:
                         cc.add_default_ins(parent_out_connection, output_files)
 
-        return cc.connections
+        return cc
 
 
     def get_input_run_info_for_connection(self, in_key):

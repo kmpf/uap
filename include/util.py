@@ -40,3 +40,8 @@ class ConnectionsCollector(object):
     def add_default_ins(self, out_connection, files):
         in_connection = out_connection.replace('out/', 'in/')
         self.add_connection(in_connection, files)
+
+    def __getitem__(self, run_id):
+        if run_id not in self.connections.keys():
+            UAPError('There is connection for run %s.' % run_id)
+        return self.connections[run_id]
