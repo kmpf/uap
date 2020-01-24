@@ -356,6 +356,13 @@ def main():
         help="Specify the cluster type. Default: [auto].")
 
     submit_to_cluster_parser.add_argument(
+        "--legacy",
+        dest="legacy",
+        action="store_true",
+        default=False,
+        help="Use none array cluster submission.")
+
+    submit_to_cluster_parser.add_argument(
         "run",
         nargs='*',
         default=list(),

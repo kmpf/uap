@@ -12,7 +12,6 @@ import yaml
 import abstract_step
 import fscache
 import pipeline
-from include.subcommands import submit_to_cluster_legacy
 '''
 By default, this script submits all tasks to a compute cluster via a
 submit script. The list of tasks can be narrowed down by specifying a step name
@@ -39,9 +38,6 @@ This task wish list is now processed one by one (in topological order):
 logger = logging.getLogger("uap_logger")
 
 def main(args):
-    if args.legacy is True:
-        submit_to_cluster_legacy.main(args)
-        return
     p = pipeline.Pipeline(arguments=args)
 
     task_wish_list = None
@@ -100,14 +96,15 @@ def main(args):
 
         step = task.get_step()
         step_name = task.step.get_step_name()
+        size = quotas[step_name] if step_name in quotas else quotas['default']
         if not step_name in quota_jids:
-            size = quotas[step_name] if step_name in quotas else quotas['default']
             quota_jids[step_name] = [None for _ in range(size)]
             quota_offset[step_name] = 0
 
-        quota_predecessor = quota_jids[step_name][quota_offset[step_name]]
-        if quota_predecessor:
-            dependent_tasks.append(quota_predecessor)
+        if size > 0:
+            quota_predecessor = quota_jids[step_name][quota_offset[step_name]]
+            if quota_predecessor:
+                dependent_tasks.append(quota_predecessor)
 
         ##########################
         # Assemble submit script #
@@ -146,6 +143,7 @@ def main(args):
         for placeholder, value in placeholder_values.items():
             submit_script = submit_script.replace(placeholder, value)
 
+        submit_script = submit_script.replace("#{ARRAY_JOBS}", '')
         submit_script = submit_script.replace("#{CORES}", str(task.step._cores))
 
         # todo: set email address
@@ -243,8 +241,9 @@ def main(args):
             with open(task.get_step().get_run(task.run_id).get_queued_ping_file(), 'w') as f:
                 f.write(yaml.dump(queued_ping_info, default_flow_style = False))
 
-            quota_jids[step_name][quota_offset[step_name]] = job_id
-            quota_offset[step_name] = (quota_offset[step_name] + 1) % len(quota_jids[step_name])
+            if size > 0:
+                quota_jids[step_name][quota_offset[step_name]] = job_id
+                quota_offset[step_name] = (quota_offset[step_name] + 1) % len(quota_jids[step_name])
 
             print("%s (%s)" % (job_id, long_task_id))
             if len(dependent_tasks) > 0:
