@@ -1,4 +1,4 @@
-## 1.2 (22.01.2020)
+## 1.2 (24.01.2020)
 
 **Fixes**
  * completing slurm jobs are not considered running (#100)
@@ -20,7 +20,7 @@
  * `_depends` amended implicitly through `_connect` (#127)
  * reference assembly is optional for `stringtieMerge` (#124)
  * pass reference assembly through `in/reference` connection to `stringtieMerge` (#47)
- * objects for handling input from multiple steps (#47)
+ * object `ConnectionsCollector` for handling input from multiple steps (#47)
 
 ## 1.1 (20.01.2020)
 
