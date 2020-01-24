@@ -131,3 +131,9 @@ class ConnectionsCollector(object):
             raise KeyError('In step %s there is no connection for run %s.' %
                     (self.step_name, run_id))
         return self.connections[run_id]
+
+    def keys(self):
+        return self.connections.keys()
+
+    def values(self):
+        return self.connections.values()
