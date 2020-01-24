@@ -128,65 +128,75 @@ class Stringtie(AbstractStep):
                     UAPError('More then one reference assembly passed from run %s' % run_id)
                 ref_assembly = connection['in/reference'][0]
                 break
-        if ref_assembly is not None:
-            option_list.append('-G %s', ref_assembly)
 
 
         for run_id, connection in run_ids_connections_files.items():
-            if 'in/alignments' not in connection.keys():
+            # look for run specific reference assembly
+            if 'in/alignments' not in connection.keys()\
+                    and 'in/reference' in connection.keys():
                 continue
+            elif 'in/reference' in connection.keys():
+                if len(connection['in/reference']) != 1:
+                    UAPError('More then one reference assembly passed from run %s' % run_id)
+                run_ref_assembly = connection['in/reference'][0]
+            else:
+                run_ref_assembly = ref_assembly
             else:
                 alignments = connection['in/alignments']
-            with self.declare_run(run_id) as run:
-                input_paths = alignments[0]
 
-                assembling = run.add_output_file(
-                    'assembling',
-                    '%s-assembling.gtf' % run_id,
-                    [input_paths])
+            # check, if only a single input file is provided
+            if len(alignments) != 1:
+                raise UAPError("Expected exactly one alignments file %s" % input_paths)
+            input_paths = alignments[0]
 
-                log_stderr = run.add_output_file(
-                    'log_stderr',
-                    '%s-log_stderr.txt' % run_id,
-                    [input_paths])
+            run = self.declare_run(run_id)
 
-                gene_abund = run.add_output_file(
-                    'gene_abund',
-                    '%s-gene_abund.tab' % run_id,
-                    [input_paths])
+            assembling = run.add_output_file(
+                'assembling',
+                '%s-assembling.gtf' % run_id,
+                [input_paths])
 
-                cov_refs = run.add_output_file(
-                    'cov_refs',
-                    '%s-cov_refs.gtf' % run_id,
-                    [input_paths])
+            log_stderr = run.add_output_file(
+                'log_stderr',
+                '%s-log_stderr.txt' % run_id,
+                [input_paths])
 
-                # check, if only a single input file is provided
-                if len(alignments) != 1:
-                    raise UAPError("Expected exactly one alignments file %s" % input_paths)
+            gene_abund = run.add_output_file(
+                'gene_abund',
+                '%s-gene_abund.tab' % run_id,
+                [input_paths])
 
-                with run.new_exec_group() as exec_group:
-                    with exec_group.add_pipeline() as pipe:
-                        stringtie = [self.get_tool('stringtie'), alignments, '-o', assembling,
-                                     '-A', gene_abund, '-C', cov_refs]
-                        stringtie.extend(option_list)
-                        pipe.add_command(stringtie, stdout_path=assembling, stderr_path=log_stderr)
+            cov_refs = run.add_output_file(
+                'cov_refs',
+                '%s-cov_refs.gtf' % run_id,
+                [input_paths])
 
-                if self.is_option_set_in_config('B') and self.get_option('B'):
-                    mv_exec_group = run.new_exec_group()
-                    connections = ['e2t.ctab',
-                                   'e_data.ctab',
-                                   'i2t.ctab',
-                                   'i_data.ctab',
-                                   't_data.ctab']
 
-                    for connection in connections:
-                        is_produced = ''.join([run.get_output_directory_du_jour_placeholder(),
-                                               '/', connection])
+            stringtie = [self.get_tool('stringtie'), alignments, '-o', assembling,
+                         '-A', gene_abund, '-C', cov_refs]
+            if run_ref_assembly is not None:
+                stringtie.extend(['-G', run_ref_assembly])
+            stringtie.extend(option_list)
 
-                        out_file = run_id + '-' + connection
-                        is_wanted = run.add_output_file(connection,
-                                                        out_file,
-                                                        [input_paths])
+            pipe = run.new_exec_group().add_pipeline()
+            pipe.add_command(stringtie, stdout_path=assembling, stderr_path=log_stderr)
 
-                        mv_exec_group.add_command([self.get_tool('mv'),
-                                                   is_produced, is_wanted])
+            if self.is_option_set_in_config('B') and self.get_option('B'):
+                mv_exec_group = run.new_exec_group()
+                connections = ['e2t.ctab',
+                               'e_data.ctab',
+                               'i2t.ctab',
+                               'i_data.ctab',
+                               't_data.ctab']
+
+                for connection in connections:
+                    is_produced = ''.join([run.get_output_directory_du_jour_placeholder(),
+                                           '/', connection])
+
+                    out_file = run_id + '-' + connection
+                    is_wanted = run.add_output_file(connection,
+                                                    out_file,
+                                                    [input_paths])
+
+                    mv_exec_group.add_command([self.get_tool('mv'),
+                                               is_produced, is_wanted])
