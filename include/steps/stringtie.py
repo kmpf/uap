@@ -114,7 +114,7 @@ class Stringtie(AbstractStep):
             option_list.append('--rf')
 
         # look for reference assembly in in-connections
-        ref_assembly = self.get_option('G')
+        ref_assembly = os.path.abspath(self.get_option('G'))
         # check reference annotation
         if ref_assembly is not None and not os.path.isfile(ref_assembly):
             raise UAPError(
