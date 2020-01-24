@@ -120,7 +120,7 @@ class ConnectionsCollector(object):
             if len(con_list) > 1:
                 self._con_of_all_runs = set(con_list[0]).intersection(*con_list)
             elif len(con_list) == 1:
-                self._con_of_all_runs = set(con_list)
+                self._con_of_all_runs = set(con_list[0])
             else:
                 self._con_of_all_runs = set()
         return connection in self._con_of_all_runs

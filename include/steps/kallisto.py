@@ -71,29 +71,32 @@ class Kallisto(AbstractStep):
                         description="Estimated standard deviation of fragment length")
         # skipping gtf, pseudobam, genomebam, chromosomes
 
-    def runs(self, run_ids_connections_files):
+    def runs(self, cc):
         self.set_cores(self.get_option('cores'))
 
-        connect_index_path = None
-        for run_id in run_ids_connections_files.keys():
-            try:
-                connect_index_path = run_ids_connections_files[run_id]['in/kallisto-index'][0]
-            except KeyError:
-                pass
+        if self.is_option_set_in_config('index'):
+            connect_index_path = os.path.abspath(self.get_option('index'))
+            if not os.path.isfile(connect_index_path):
+                raise UAPError('[kallisto]: %s is no file.' %
+                        self.get_option('index'))
+        else:
+            connect_index_path = None
+        connect_index_path = cc.look_for_unique('in/kallisto-index', connect_index_path)
+        index_per_run = cc.all_runs_have_connection('in/kallisto-index')
+        if index_per_run is False and connect_index_path is None:
+            raise UAPError("No kallisto index give via config or connection.")
 
-
-        for run_id in run_ids_connections_files.keys():
-            if 'in/kallisto-index' in run_ids_connections_files[run_id]:
-                continue
+        read_runs = cc.get_runs_with_connections(['in/first_read', 'in/second_read'])
+        for run_id in read_runs:
 
             with self.declare_run(run_id) as run:
                 input_fileset = []
-                r1 = run_ids_connections_files[run_id]['in/first_read'][0]
+                r1 = cc[run_id]['in/first_read'][0]
                 input_fileset.append(r1)
 
                 r2 = None
-                if 'in/second_read' in run_ids_connections_files[run_id]:
-                    r2 = run_ids_connections_files[run_id]['in/second_read'][0]
+                if 'in/second_read' in cc[run_id]:
+                    r2 = cc[run_id]['in/second_read'][0]
                     input_fileset.append(r2)
 
                 kallisto_eg = run.new_exec_group()
@@ -102,15 +105,10 @@ class Kallisto(AbstractStep):
                 kallisto.extend(['-t', str(self.get_option('cores'))])
 
                 d_files = input_fileset[:]
-                if self.is_option_set_in_config('index'):
-                    kallisto.extend(['--index', os.path.abspath(self.get_option('index'))])
-                else:
-                    if connect_index_path:
-                        kallisto.extend(['--index', connect_index_path])
-                        d_files.append( connect_index_path)
-                    else:
-                        raise UAPError(
-                        "%s no kallisto index give via config or connection" % run_id)
+                if index_per_run is True:
+                    connect_index_path = cc[run_id]['in/kallisto-index'][0]
+                kallisto.extend(['--index', connect_index_path])
+                d_files.append( connect_index_path)
 
                 flags = ['fr-stranded', 'rf-stranded',
                          'bias', 'single-overhang', 'single']
