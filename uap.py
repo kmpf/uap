@@ -93,6 +93,13 @@ def main():
         help="Print traceback on UAPError.")
 
     parser.add_argument(
+        "--profiling",
+        dest="profiling",
+        action="store_true",
+        default=False,
+        help="Enable profiling save report in uap.cprof.")
+
+    parser.add_argument(
         "--version",
         dest="version",
         action="version",
@@ -456,7 +463,12 @@ def main():
     logger = _configure_logger(args.verbose)
     # call subcommand
     try:
-        args.func(args)
+        if args.profiling is True:
+            import cProfile
+            cProfile.runctx('args.func(args)', {'args': args}, {},
+                    filename='uap.cprof')
+        else:
+            args.func(args)
     except UAPError as e:
         if args.debugging is True:
             raise
