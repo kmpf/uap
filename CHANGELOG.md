@@ -22,7 +22,7 @@
  * object `ConnectionsCollector` for handling input from multiple steps (#47)
  * pass reference assembly through `in/reference` connection to `stringtieMerge` or `stringtie`
  * `stringtieMerge` option `run_id` changed to `output_prefix`
- * introduce --profiling option to analyse uap runtime
+ * introduce --profiling option to analyse uap runtime (#132)
 
 ## 1.1 (20.01.2020)
 
