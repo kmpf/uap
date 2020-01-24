@@ -18,9 +18,10 @@
  * uap path in PATH environmental variable not required (#107)
  * default job quota is 0 -> no quota (#105)
  * `_depends` amended implicitly through `_connect` (#127)
- * reference assembly is optional for `stringtieMerge` (#124)
- * pass reference assembly through `in/reference` connection to `stringtieMerge` (#47)
+ * reference assembly is optional for `stringtieMerge` and `stringtie` (#124)
  * object `ConnectionsCollector` for handling input from multiple steps (#47)
+ * pass reference assembly through `in/reference` connection to `stringtieMerge` or `stringtie`
+ * `stringtieMerge` option `run_id` changed to `output_prefix`
 
 ## 1.1 (20.01.2020)
 
