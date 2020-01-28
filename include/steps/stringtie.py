@@ -153,16 +153,15 @@ class Stringtie(AbstractStep):
                 '%s-gene_abund.tab' % run_id,
                 alignments)
 
-            cov_refs = run.add_output_file(
-                'cov_refs',
-                '%s-cov_refs.gtf' % run_id,
-                alignments)
-
 
             stringtie = [self.get_tool('stringtie'), alignments[0], '-o', assembling,
-                         '-A', gene_abund, '-C', cov_refs]
+                         '-A', gene_abund]
             if con_ref_assembly is not None:
-                stringtie.extend(['-G', ref_assembly])
+                cov_refs = run.add_output_file(
+                    'cov_refs',
+                    '%s-cov_refs.gtf' % run_id,
+                    alignments)
+                stringtie.extend(['-C', cov_refs, '-G', ref_assembly])
                 if ref_assembly is None:
                     # include dependency
                     alignments.append(con_ref_assembly)

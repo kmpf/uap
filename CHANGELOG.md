@@ -5,7 +5,6 @@
  * invoce uap from anywhere (#114)
  * avoid depricated pip wrapper (#122)
  * one parent step can now be used for multiple inputs (#125)
- * updated documentation and resolved sphinx warnings
 
 **Features**
  * steps now run within their temp directory (#29, #31)
@@ -19,12 +18,15 @@
  * uap path in PATH environmental variable not required (#107)
  * default job quota is 0 -> no quota (#105)
  * `_depends` amended implicitly through `_connect` (#127)
- * reference assembly is optional for `stringtieMerge` and `stringtie` (#124)
+ * reference assembly `-G` is optional for `stringtieMerge` and `stringtie` (#124)
  * object `ConnectionsCollector` for handling input from multiple steps (#47)
  * pass reference assembly through `in/reference` connection to `stringtieMerge` or `stringtie`
- * `stringtieMerge` option `run_id` changed to `output_prefix`
  * introduce --profiling option to analyse uap runtime (#132)
  * introduce --legacy option for submit-to-cluster to use none array jobs
+
+**additional stuff**
+ * updated documentation and resolved sphinx warnings
+ * `stringtieMerge` option `run_id` changed to `output_prefix`
 
 ## 1.1 (20.01.2020)
 
