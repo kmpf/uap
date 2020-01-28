@@ -5,6 +5,7 @@
  * invoce uap from anywhere (#114)
  * avoid depricated pip wrapper (#122)
  * one parent step can now be used for multiple inputs (#125)
+ * updated documentation and resolved sphinx warnings
 
 **Features**
  * steps now run within their temp directory (#29, #31)
