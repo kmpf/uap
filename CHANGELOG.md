@@ -4,7 +4,7 @@
  * completing slurm jobs are not considered running (#100)
  * invoce uap from anywhere (#114)
  * avoid depricated pip wrapper (#122)
- * all step input connections are used (#125)
+ * one parent step can now be used for multiple inputs (#125)
 
 **Features**
  * steps now run within their temp directory (#29, #31)
