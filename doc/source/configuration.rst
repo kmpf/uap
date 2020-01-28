@@ -1,6 +1,6 @@
 ..
   This is the documentation for uap. Please keep lines under
-  80 characters if you can and start each sentence on a new line as it 
+  80 characters if you can and start each sentence on a new line as it
   decreases maintenance and makes diffs more readable.
 
 .. title:: Configuration of uap
@@ -28,8 +28,8 @@ although technically, they are keys):
     annotations and temporary files are written to
   * ``constants`` -- defines constants for later use (define repeatedly used
     values as constants to increase readability of the following sections)
-  * ``steps`` -- defines the source and processing steps and their order 
-  * ``tools`` -- defines all tools used in the analysis and how to determine 
+  * ``steps`` -- defines the source and processing steps and their order
+  * ``tools`` -- defines all tools used in the analysis and how to determine
     their versions (for later reference)
 
 **Optional Sections**
@@ -80,7 +80,7 @@ Later on the value can be reused by typing ``*genome_faidx``.
 
 The ``steps`` section is the core of the analysis file, because it defines when
 steps are executed and how they depend on each other.
-All available steps are described in detail in the steps documentation: 
+All available steps are described in detail in the steps documentation:
 :doc:`steps`.
 The ``steps`` section contains an entry (technically a key) for every step.
 Every step name **must** be unique.
@@ -101,12 +101,12 @@ still ensure unique naming:
         # called 'cutadapt'
         cutadapt:
             ... # options following
-            
+
         # here, we also insert a cutadapt step, but we give it a different name:
         # 'clip_adapters'
         clip_adapters (cutadapt):
             ... # options following
-            
+
 
 Now let's have a look at the two different types of steps which constitute
 an **uap** analaysis.
@@ -166,21 +166,21 @@ Reserved Keywords for Steps
 
   Dependencies are defined via the ``_depends`` key which may either be ``null``,
   a step name, or a list of step names.
-  
+
 .. code-block:: yaml
 
     steps:
         # the source step which depends on nothing
         fastq_source:
             # ...
-            
+
         run_folder_source:
             # ...
 
         # the first processing step, which depends on the source step
         cutadapt:
             _depends: [fastq_source, run_folder_source]
-        
+
         # the second processing step, which depends on the cutadapt step
         fix_cutadapt:
             _depends: cutadapt
@@ -232,21 +232,21 @@ Reserved Keywords for Steps
 
 **_BREAK:**
 
-  If you want to cut off entire branches of the step graph, set the ``_BREAK`` 
+  If you want to cut off entire branches of the step graph, set the ``_BREAK``
   flag in a step definition, which will force the step to produce no runs
-  (which will in turn give all following steps nothing to do, thereby 
+  (which will in turn give all following steps nothing to do, thereby
   effectively disabling these steps):
-        
+
 
 .. code-block:: yaml
 
     steps:
         fastq_source:
             # ...
-            
+
         cutadapt:
             _depends: fastq_source
-        
+
         # this step and all following steps will not be executed
         fix_cutadapt:
             _depends: cutadapt
@@ -259,14 +259,14 @@ Reserved Keywords for Steps
   Steps can be marked with ``_volatile: yes``.
   This flag tells **uap** that the output files of the marked step are only
   intermediate results.
-  
+
 .. code-block:: yaml
 
     steps:
         # the source step which depends on nothing
         fastq_source:
             # ...
-            
+
         # this steps output can be deleted if all depending steps are finished
         cutadapt:
             _depends: fastq_source
@@ -296,7 +296,7 @@ executes the :ref:`volatilize <uap-volatilize>` command.
 
     This string contains the entire submit options which will be set in the
     submit script.
-    This option allows to overwrite the values set in 
+    This option allows to overwrite the values set in
     :ref:`default_submit_options <config_file_default_submit_options>`.
 
 .. _config_file_cluster_pre_job_command:
@@ -305,7 +305,7 @@ executes the :ref:`volatilize <uap-volatilize>` command.
 
     This string contains command(s) that are executed **BEFORE uap** is started
     on the cluster.
-    This option allows to overwrite the values set in 
+    This option allows to overwrite the values set in
     :ref:`default_pre_job_command <config_file_default_pre_job_command>`.
 
 .. _config_file_cluster_post_job_command:
@@ -314,7 +314,7 @@ executes the :ref:`volatilize <uap-volatilize>` command.
 
     This string contains command(s) that are executed **AFTER uap** did finish
     on the cluster.
-    This option allows to overwrite the values set in 
+    This option allows to overwrite the values set in
     :ref:`default_post_job_command <config_file_default_post_job_command>`.
 
 .. _config_file_cluster_job_quota:
@@ -323,7 +323,7 @@ executes the :ref:`volatilize <uap-volatilize>` command.
 
     This option defines the number of jobs of the same type that can
     run simultaneously on a cluster.
-    This option allows to overwrite the values set in 
+    This option allows to overwrite the values set in
     :ref:`default_job_quota <config_file_default_job_quota>`.
 
 .. _uap_config_tools:
@@ -341,9 +341,9 @@ An example tool configuration looks like this:
 
         # you don't have to specify a path if the tool can be found in $PATH
         cat:
-            path: cat 
+            path: cat
             get_version: --version
-            module_load: 
+            module_load:
 
         # you have to specify a path if the tool can not be found in $PATH
         some-tool:
@@ -376,7 +376,7 @@ The configuration for ``pigz`` would change a bit:
 .. code-block:: yaml
 
    tools:
-       
+
        pigz:
            path: pigz
            get_version: --version
@@ -409,8 +409,8 @@ An other possible output is:
 
 .. code-block:: bash
 
-    module () 
-        { 
+    module ()
+        {
             eval $($LMOD_CMD bash "$@");
             [ $? = 0 ] && eval $(${LMOD_SETTARG_CMD:-:} -s sh)
         }
@@ -428,7 +428,7 @@ system.
 .. code-block:: yaml
 
    tools:
-       
+
        pigz:
            path: pigz
            get_version: --version
@@ -441,14 +441,14 @@ system.
           Because the module is loaded from within a python environment and
           not within a BASH shell.
 
-.. _config_file_cluster: 
+.. _config_file_cluster:
 
 ``cluster`` Section
 -------------------
 
 The ``cluster`` section is required only if the analysis is executed on a
 system using a cluster engine like |uge_link| or |slurm_link|.
-This section interacts tightly with the  
+This section interacts tightly with the
 An example ``cluster`` section looks like this:
 
 .. code-block:: yaml
@@ -538,7 +538,7 @@ An example file is shown here:
        # Relative path to submit script template
        # The path has to be relative to:
        # $ dirname $(which uap)
-       template: 'cluster/submit-scripts/qsub-template.sh' 
+       template: 'cluster/submit-scripts/qsub-template.sh'
        # way to define job dependencies
        hold_jid: '-hold_jid'
        # Separator for job dependencies
@@ -581,7 +581,7 @@ Let's browse over the options which need to be set per cluster engine:
 ``submit:``
     Command to submit a job onto the cluster e.g. ``sbatch``.
 
-``stat:`` 
+``stat:``
     Command to check the status of jobs on the cluster e.g. ``squeue``.
 
 ``template:``
@@ -599,7 +599,7 @@ Let's browse over the options which need to be set per cluster engine:
     Separator used to concatenate multiple jobs for ``hold_jid`` e.g. ``:``.
 
 ``set_job_name:``
-    Option given to the ``submit`` command to set the job name e.g. 
+    Option given to the ``submit`` command to set the job name e.g.
     ``--job-name=%s``.
     ``%s`` is replaced by the job name if present.
 
