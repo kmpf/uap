@@ -156,7 +156,7 @@ A **finished** analysis leaves the user with:
   even make it publicly available along with your input files for anybody to
   re-run the entire data analysis or parts thereof.
 * *The output files and comprehensive annotations of the analysis*
-(see :doc:`annotation`).
+  (see :doc:`annotation`).
   These files are stored in the destination path defined in the configuration
   file.
 

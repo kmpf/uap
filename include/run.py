@@ -201,11 +201,11 @@ class Run(object):
 
         Returns this steps output directory according to its current
         state:
-            - if we are currently calling a step's declare_runs()
-              method, this will return None
-            - if we are currently calling a step's execute() method,
-              this will return the current directory
-            - otherwise, it will return the real output directory
+          - if we are currently calling a step's declare_runs()
+            method, this will return None
+          - if we are currently calling a step's execute() method,
+            this will return the current directory
+          - otherwise, it will return the real output directory
         '''
         if self.get_step()._state == abst.AbstractStep.states.DECLARING:
             return None
@@ -526,20 +526,21 @@ class Run(object):
         all runs defined by a step, so it may be a good idea to include the
         run_id into the output filename.
         - *tag*: You must specify the connection annotation which must have been
-                 previously declared via *AbstractStep.add_connection("out/...")*,
-                 but this doesn't have to be done in the step constructor, it's
-                 also possible in *declare_runs()* right before this method is
-                 called.
+            previously declared via *AbstractStep.add_connection("out/...")*,
+            but this doesn't have to be done in the step constructor, it's
+            also possible in *declare_runs()* right before this method is
+            called.
         - *out_path*: The output file path, without a directory. The pipeline
-                      assigns directories for you (this parameter must not
-                      contain a slash).
+            assigns directories for you (this parameter must not
+            contain a slash).
         - *in_paths*: A list of input files this output file depends on. It is
-                      **crucial** to get this right, so that the pipeline can
-                      determine which steps are up-to-date at any given time.
-                      You have to specify absolute paths here, including a
-                      directory, and you can obtain them via
-                      *AbstractStep.run_ids_and_input_files_for_connection*
-                      and related functions.
+            **crucial** to get this right, so that the pipeline can
+            determine which steps are up-to-date at any given time.
+            You have to specify absolute paths here, including a
+            directory, and you can obtain them via
+            *AbstractStep.run_ids_and_input_files_for_connection*
+            and related functions.
+
         '''
         head, tail = os.path.split(out_path)
 

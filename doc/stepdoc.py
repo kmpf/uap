@@ -25,19 +25,19 @@ def doc_module(module_name, fout):
         doc = step.__doc__.split("\n")
         for line in doc:
             fout.write(line.rstrip() + "\n")
-        
+
     # print connections
     fout.write("**Connections:**\n")
     in_con = [i for i in sorted(step._connections) if 'in/' in i]
     out_con = [i for i in sorted(step._connections) if 'out/' in i]
     if in_con:
         fout.write("  - Input Connection:\n")
-        fout.write("    \n")
+        fout.write("\n")
         for con in in_con:
             fout.write("    - '%s'\n" % con)
     if out_con:
         fout.write("  - Output Connection:\n")
-        fout.write("    \n")
+        fout.write("\n")
         for con in out_con:
             fout.write("    - '%s'\n" % con)
     fout.write("\n")
@@ -58,35 +58,35 @@ def doc_module(module_name, fout):
         else:
             fout.write("      in_%d [label=\"%s\"];\n" % (index, c[1]))
             fout.write("      in_%d -> %s;\n" % (index, module_name))
-    fout.write("   }    \n")
+    fout.write("   }\n")
     fout.write("\n")
-    
+
     # print options
     if len(step._defined_options) > 0:
         fout.write("**Options:**\n")
         for key in sorted(step._defined_options.keys()):
             option = step._defined_options[key]
             fout.write("  - **%s** (%s, %s)" % (
-                key, 
+                key,
                 '/'.join([_.__name__ for _ in option['types']]),
                 'optional' if option['optional'] else 'required'
             ))
             if option['description']:
                 fout.write(" -- %s" % option['description'])
                 fout.write("\n")
-                fout.write("    \n")
+                fout.write("\n")
             if option['default']:
                 fout.write("    - default value: %s\n" % option['default'])
             if option['choices']:
                 fout.write("    - possible values: %s\n" %
                            ", ".join(["'%s'" % x for x in option['choices']]) )
-                fout.write("    \n")
+                fout.write("\n")
 
     # print tools
     if len(step._tools) > 0:
         fout.write("**Required tools:** %s\n" % ', '.join(sorted(step._tools.keys())))
         fout.write("\n")
-        
+
     if abstract_step.AbstractSourceStep in step.__class__.__bases__:
         # this is a source step which does not create any tasks
         fout.write("This step provides input files which already exists and therefore creates no tasks in the pipeline.\n")
@@ -95,8 +95,8 @@ def doc_module(module_name, fout):
         # this is a step which creates tasks
         fout.write("**CPU Cores:** %s\n" % step._cores)
         fout.write("\n")
-        
-    
+
+
     '''
     print("Cores: %d" % step._cores)
     print("Connections: %s" % step._connections)
