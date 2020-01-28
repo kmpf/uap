@@ -15,7 +15,6 @@ class SraFastqDump (AbstractStep):
 
     The following options cannot be set, as they would interefere with the
     pipeline implemented in this step
-    .. glossary::
 
         -O|--outdir <path>
             Output directory, default is working directory '.' )
@@ -30,7 +29,6 @@ class SraFastqDump (AbstractStep):
     Setting these options will produce more
     than 1 file, each of which will be suffixed
     according to splitting criteria.
-    .. glossary::
 
         --split-files
             Dump each read into separate file.Files
