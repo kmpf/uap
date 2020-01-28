@@ -4,6 +4,14 @@ from uaperrors import UAPError
 logger = getLogger("uap_logger")
 
 class ConnectionsCollector(object):
+    '''
+    A ConnectionsCollector helps to collect and query file connections.
+    An instance `cc` is generated for each step and passed to its
+    ``runs`` method. For backwards compatibility reasons it can be
+    queryed like a dictionary ``cc[run_id][connection]``. ``cc``
+    can be used in the course of a step to dicide how to use the
+    input runs and connections.
+    '''
     def __init__(self, step_name=None):
         self.step_name = step_name
         self.connections = dict()
@@ -15,11 +23,14 @@ class ConnectionsCollector(object):
         self.existing_connections = set()
 
     def switch_run_id(self, run_id):
-        self.init_run_id(run_id)
+        '''
+        Set a default run id to use in subsequent calls.
+        '''
+        self._init_run_id(run_id)
         self._current_run_id = run_id
         self.used_current_run_id = False
 
-    def init_run_id(self, run_id=None):
+    def _init_run_id(self, run_id=None):
         if run_id is None:
             run_id = self._current_run_id
         else:
@@ -29,7 +40,10 @@ class ConnectionsCollector(object):
         return run_id
 
     def add_empty(self, connection, run_id=None):
-        run_id = self.init_run_id(run_id)
+        '''
+        Makes a connection withou files.
+        '''
+        run_id = self._init_run_id(run_id)
         self.connections[run_id][connection] = [None]
         self._by_cons_empty.setdefault(connection, set())
         self._by_cons_empty[connection].add(un_id)
@@ -39,7 +53,13 @@ class ConnectionsCollector(object):
                      (connection))
 
     def add_connection(self, connection, files, run_id=None):
-        run_id = self.init_run_id(run_id)
+        '''
+        Saves the names in ``files`` for a new ``connection``.
+        '''
+        if not isinstace(files, list):
+            raise UAPError('files musst to be a list but is a %s' %
+                    file.__class__.__name__)
+        run_id = self._init_run_id(run_id)
         self.connections[run_id].setdefault(connection, list())
         self.connections[run_id][connection].extend(files)
         self._by_cons_none_empty.setdefault(connection, set())
@@ -50,7 +70,10 @@ class ConnectionsCollector(object):
                 (self.step_name, connection, run_id))
 
     def get_connection(self, connection, run_id=None):
-        run_id = self.init_run_id(run_id)
+        '''
+        Returns a list of file names for the ``connection``.
+        '''
+        run_id = self._init_run_id(run_id)
         cons = self.connections[run_id]
         if connection not in cons.keys():
             raise UAPError('The input run %s of %s has no connection %s.' %
@@ -130,11 +153,15 @@ class ConnectionsCollector(object):
         return default
 
     def connection_exists(self, connection):
+        '''
+        Returns a logical indication whether the requested connection exists.
+        '''
         return connection in self.existing_connections
 
     def all_runs_have_connection(self, connection):
         '''
-        Returns True or False.
+        Returns a logical indication whether all saved runs have the queried
+        ``connection``.
         '''
         if self._con_of_all_runs is None:
             # calculate and cache connections of all runs
@@ -148,6 +175,10 @@ class ConnectionsCollector(object):
         return connection in self._con_of_all_runs
 
     def add_default_ins(self, out_connection, files):
+        '''
+        Takes ``out_connection`` of the parent step to make and save
+        the default ins.
+        '''
         in_connection = out_connection.replace('out/', 'in/')
         self.add_connection(in_connection, files)
 
@@ -161,7 +192,13 @@ class ConnectionsCollector(object):
         return self.connections.keys()
 
     def values(self):
+        '''
+        Emulates dict.values().
+        '''
         return self.connections.values()
 
     def items(self):
+        '''
+        Emulates dict.items().
+        '''
         return self.connections.items()
