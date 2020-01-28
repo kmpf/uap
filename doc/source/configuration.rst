@@ -455,10 +455,9 @@ An example ``cluster`` section looks like this:
 
     This option defines the number of jobs of the same type that can
     run simultaneously on a cluster.
-    The number influences the way **uap** sets the job dependencies of
-    submitted jobs.
-    It is **optional** to set this value, if the value is not provided it is
-    set to *5*.
+    A value *0* means no limit is applied.
+    It is **optional** to set this value, if the value is not provided it
+    defaults to *0*.
 
 Example Configurations
 ======================
@@ -501,6 +500,10 @@ An example file is shown here:
        # Separator for job dependencies
        hold_jid_separator: ';'
        # Option to set job names
+       array_job: '-t 1-%s'
+       # Option to submit an array job
+       array_job_wquota: '-t 1-%s -tc %s'
+       # Options to submit an array job with a quota
        set_job_name: '-N'
        # Option to set path of stderr file
        set_stderr: '-e'
@@ -518,6 +521,8 @@ An example file is shown here:
        template: 'cluster/submit-scripts/sbatch-template.sh'
        hold_jid: '--dependency=afterany:%s'
        hold_jid_separator: ':'
+       array_job: '--array=1-%s'
+       array_job_wquota: '--array=1-%s%%%s'
        set_job_name: '--job-name=%s'
        set_stderr: '-e'
        set_stdout: '-o'
@@ -554,6 +559,24 @@ Let's browse over the options which need to be set per cluster engine:
 
 ``hold_jid_separator:``
     Separator used to concatenate multiple jobs for ``hold_jid`` e.g. ``:``.
+
+``array_job``:
+    Option given to the ``submit`` command to use array jobs e.g.
+    ``--array=1-%s``.
+    ``%s`` is replaced by the number of jobs.
+
+``array_job_wquota``:
+    Option given to the ``submit`` command to use array jobs with quota
+    e.g. ``--array=1-%s%%%s`` (will be ``--array=1-100%5`` for *100*
+    jobs with a quota of *5*).
+    The first ``%s`` is replaced by the number of jobs and the second
+    ``%s`` by the quota (if above 0). A literal "%" has to be written
+    as ``%%``.
+
+``array_task_id``
+    The name of the environment variable set by the resource manager
+    that contains the job array id e.g.
+    ``SLURM_ARRAY_TASK_ID`` or ``SGE_TASK_ID``.
 
 ``set_job_name:``
     Option given to the ``submit`` command to set the job name e.g.
@@ -602,6 +625,13 @@ The templates need to contain the following placeholders:
    Will be replaced with the steps ``_cluster_pre_job_command`` value (see
    :ref:`_cluster_pre_job_command <_config_file_cluster_pre_job_command>`), if
    present, or the ``default_pre_job_command`` value.
+
+.. _submit_template_array_jobs:
+
+``#{ARRAY_JOBS}``
+   Will be replaced with a space seperated list of tasks. The resulting array
+   will be used in the command for the ``<run ID>`` if the submitted job is
+   an array job.
 
 .. _submit_template_command:
 
