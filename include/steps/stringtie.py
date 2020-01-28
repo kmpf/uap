@@ -25,11 +25,6 @@ class Stringtie(AbstractStep):
         self.add_connection('out/gene_abund')
         self.add_connection('out/cov_refs')
         self.add_connection('out/log_stderr')
-        self.add_connection('out/e2t.ctab')
-        self.add_connection('out/e_data.ctab')
-        self.add_connection('out/i2t.ctab')
-        self.add_connection('out/i_data.ctab')
-        self.add_connection('out/t_data.ctab')
 
         self.require_tool('mkdir')
         self.require_tool('mv')
@@ -83,9 +78,10 @@ class Stringtie(AbstractStep):
                                     documentation for a description of these files.) With this
                                     option StringTie can be used as a direct replacement of the
                                     tablemaker program included with the Ballgown distribution.
-                                    If the option -o is given as a full path to the output
-                                    transcript file, StringTie will write the \*.ctab files in
-                                    the same directory as the output GTF.""")
+                                    The \*.ctab files will be supplied to child steps through
+                                    additional connections ``out/e2t.ctab``, ``out/e_data.ctab``,
+                                    ``out/i2t.ctab``, ``out/i_data.ctab`` and ``out/t_data.ctab``.
+                                    """)
 
     def runs(self, cc):
         self.set_cores(self.get_option('p'))
@@ -184,6 +180,7 @@ class Stringtie(AbstractStep):
                                't_data.ctab']
 
                 for connection in connections:
+                    run.add_out_connection('out/%s' % connection)
                     is_produced = ''.join([run.get_output_directory_du_jour_placeholder(),
                                            '/', connection])
 
