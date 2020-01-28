@@ -165,6 +165,11 @@ class Stringtie(AbstractStep):
                 if ref_assembly is None:
                     # include dependency
                     alignments.append(con_ref_assembly)
+            elif self.is_option_set_in_config('B') \
+                    or self.is_option_set_in_config('b') \
+                    or self.is_option_set_in_config('e'):
+                        UAPError('[stringtie] Options -B, -b and -e can only '
+                                'be used if a reference is provided with -G.')
             stringtie.extend(option_list)
 
             pipe = run.new_exec_group().add_pipeline()
