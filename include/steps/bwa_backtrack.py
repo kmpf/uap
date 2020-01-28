@@ -122,10 +122,10 @@ class BwaBacktrack(AbstractStep):
                         "pair must be grouped together and options aln-1 or "
                         "aln-2 are usually applied to specify which end should "
                         "be mapped. Typical command lines for mapping pair-end "
-                        "data in the BAM format are:\n"
-                        " bwa aln ref.fa -b1 reads.bam > 1.sai\n"
-                        " bwa aln ref.fa -b2 reads.bam > 2.sai \n"
-                        " bwa sampe ref.fa 1.sai 2.sai reads.bam reads.bam > "
+                        "data in the BAM format are::\n"
+                        "        bwa aln ref.fa -b1 reads.bam > 1.sai\n"
+                        "        bwa aln ref.fa -b2 reads.bam > 2.sai \n"
+                        "        bwa sampe ref.fa 1.sai 2.sai reads.bam reads.bam > "
                         "aln.sam")
         self.add_option('aln-0', bool, optional = True,
                         description = "When aln-b is specified, only use single-"

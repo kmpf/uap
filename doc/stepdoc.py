@@ -74,13 +74,14 @@ def doc_module(module_name, fout):
             if option['description']:
                 fout.write(" -- %s" % option['description'])
                 fout.write("\n")
-                fout.write("\n")
             if option['default']:
                 fout.write("    - default value: %s\n" % option['default'])
             if option['choices']:
                 fout.write("    - possible values: %s\n" %
                            ", ".join(["'%s'" % x for x in option['choices']]) )
                 fout.write("\n")
+            fout.write("\n")
+        fout.write("\n")
 
     # print tools
     if len(step._tools) > 0:

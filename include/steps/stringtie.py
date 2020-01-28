@@ -78,13 +78,13 @@ class Stringtie(AbstractStep):
 
         self.add_option('B', bool, optional=True,
                         description=""" This switch enables the output of Ballgown input table
-                                    files (*.ctab) containing coverage data for the reference
+                                    files (\*.ctab) containing coverage data for the reference
                                     transcripts given with the -G option. (See the Ballgown
                                     documentation for a description of these files.) With this
                                     option StringTie can be used as a direct replacement of the
                                     tablemaker program included with the Ballgown distribution.
                                     If the option -o is given as a full path to the output
-                                    transcript file, StringTie will write the *.ctab files in
+                                    transcript file, StringTie will write the \*.ctab files in
                                     the same directory as the output GTF.""")
 
     def runs(self, cc):

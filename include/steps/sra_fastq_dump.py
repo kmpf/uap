@@ -15,31 +15,43 @@ class SraFastqDump (AbstractStep):
 
     The following options cannot be set, as they would interefere with the
     pipeline implemented in this step
-     -O|--outdir <path>               Output directory, default is working 
-                                   directory '.' ) 
-     -Z|--stdout                      Output to stdout, all split data become 
-                                   joined into single stream 
-     --gzip                           Compress output using gzip 
-     --bzip2                          Compress output using bzip2 
+    .. glossary::
 
-    Multiple File Options               Setting these options will produce more
-                                        than 1 file, each of which will be suffixed
-                                        according to splitting criteria.
-       --split-files                    Dump each read into separate file.Files 
-                                        will receive suffix corresponding to read 
-                                        number 
-       --split-3                        Legacy 3-file splitting for mate-pairs: 
-                                        First biological reads satisfying dumping 
-                                        conditions are placed in files *_1.fastq and 
-                                        *_2.fastq If only one biological read is 
-                                        present it is placed in *.fastq Biological 
-                                        reads and above are ignored. 
-       -G|--spot-group                  Split into files by SPOT_GROUP (member name) 
-       -R|--read-filter <[filter]>      Split into files by READ_FILTER value 
-                                        optionally filter by value: 
-                                        pass|reject|criteria|redacted 
-       -T|--group-in-dirs               Split into subdirectories instead of files 
-       -K|--keep-empty-files            Do not delete empty files 
+        -O|--outdir <path>
+            Output directory, default is working directory '.' )
+        -Z|--stdout
+            Output to stdout, all split data become  joined into single stream
+        --gzip
+            Compress output using gzip
+        --bzip2
+            Compress output using bzip2
+
+    **Multiple File Options**
+    Setting these options will produce more
+    than 1 file, each of which will be suffixed
+    according to splitting criteria.
+    .. glossary::
+
+        --split-files
+            Dump each read into separate file.Files
+            will receive suffix corresponding to read number
+        --split-3
+            Legacy 3-file splitting for mate-pairs:
+            First biological reads satisfying dumping
+            conditions are placed in files \*_1.fastq and
+            \*_2.fastq If only one biological read is
+            present it is placed in \*.fastq Biological
+            reads and above are ignored.
+        -G|--spot-group
+            Split into files by SPOT_GROUP (member name)
+        -R|--read-filter <[filter]>
+            Split into files by READ_FILTER value
+            optionally filter by value:
+            pass|reject|criteria|redacted
+        -T|--group-in-dirs
+            Split into subdirectories instead of files
+        -K|--keep-empty-files
+            Do not delete empty files
 
 
     Details on fastq-dump can be found at
@@ -49,8 +61,8 @@ class SraFastqDump (AbstractStep):
     Rather, dd with configurable blocksize is used to provide the sra file via a
     fifo to fastq-dump.
 
-    The executed calls lools like this 
-    
+    The executed calls lools like this
+
     mkfifo sra_fifo
     dd bs=4M if=<sra-file> of=sra_fifo
     fastq-dump -Z sra_fifo | pigz --blocksize 4096 --processes 2 > file.fastq
@@ -74,12 +86,12 @@ class SraFastqDump (AbstractStep):
 
         ## Complete set of options (excluding those mentioned above) for version
         ## 2.7.0
-        
+
         ## INPUT
         self.add_option('accession', str, optional=True,
                         description="Replaces accession derived from <path> in "
                         "filename(s) and deflines (only for single table dump)")
-    
+
         self.add_option('table', str, optional=True,
                         description='Table name within cSRA object, default is '
                         '"SEQUENCE"')
@@ -123,7 +135,7 @@ class SraFastqDump (AbstractStep):
         ### Filters based on alignments
         self.add_option('aligned', bool, optional=True,
                         description='Dump only aligned sequences')
-        
+
         self.add_option('unaligned', bool, optional=True,
                         description='Dump only unaligned sequences')
 
@@ -186,7 +198,7 @@ class SraFastqDump (AbstractStep):
         self.add_option('defline-qual', str, optional=True,
                         description='Defline format specification for quality.')
 
-    
+
         ## OTHER
         self.add_option('disable-multithreading', bool, optional=True,
                         description='disable multithreading')
@@ -279,7 +291,7 @@ class SraFastqDump (AbstractStep):
                     fastq_dump=[self.get_tool('fastq-dump'), '--stdout']
                     exec_group.extend(option_list)
                     exec_group.extend(fifo_path_sra)
-                    
+
                     exec_group.add_command (
                         fastq_dump,
                         stderr_path = run.add_output_file(
@@ -295,7 +307,7 @@ class SraFastqDump (AbstractStep):
 #                         '--blocksize%s' % self.get_option('dd-blocksize'),
 #                         '--processes', 2 if (self.get_option('max_cores') >=2) else self.get_option('max_cores')
 #                         ]
-#                     
+#
 #                     fastq_dump_pipe.add_command (
 #                         pigz_sequence,
 #                         stdout_path = run.add_output_file(
@@ -303,8 +315,8 @@ class SraFastqDump (AbstractStep):
 #                                 '%s.fastq.gz' % run_id,
 #                                 input_paths)
 #                         )
-# 
-                
-                    
+#
 
-                    
+
+
+

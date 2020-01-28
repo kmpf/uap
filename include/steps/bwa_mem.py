@@ -91,12 +91,12 @@ class BwaMem(AbstractStep):
                         description = "penalty for an unpaired read pair [17]")
         self.add_option('x', str, optional = True,
                         description = "read type. Setting -x changes multiple "
-                        "parameters unless overriden [null]\n"
-                        "pacbio: -k17 -W40 -r10 -A1 -B1 -O1 -E1 -L0  (PacBio "
+                        "parameters unless overriden [null]::\n"
+                        "       pacbio: -k17 -W40 -r10 -A1 -B1 -O1 -E1 -L0  (PacBio "
                         "reads to ref)\n"
-                        "ont2d: -k14 -W20 -r10 -A1 -B1 -O1 -E1 -L0  (Oxford "
+                        "       ont2d: -k14 -W20 -r10 -A1 -B1 -O1 -E1 -L0  (Oxford "
                         "Nanopore 2D-reads to ref)\n"
-                        "intractg: -B9 -O16 -L5  (intra-species contigs to ref)"
+                        "       intractg: -B9 -O16 -L5  (intra-species contigs to ref)"
         )
 
         ## [Input/output options:]

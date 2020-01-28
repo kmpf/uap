@@ -43,7 +43,7 @@ class FeatureCounts(AbstractStep):
                         description="Specify the feature type. Only rows \
                         which have the matched feature type in the provided \
                         GTF annotation file will be included for read \
-                        counting. `exon' by default.")
+                        counting. 'exon' by default.")
 
         # optional parameters
         self.add_option('o', str, optional=True, default="counts.txt",
@@ -67,14 +67,14 @@ class FeatureCounts(AbstractStep):
 
         self.add_option('F', str, optional=True, default=None,
                         description="Specify the format of the annotation \
-                        file. Acceptable formats include `GTF' and `SAF'. \
-                        `GTF' by default. Please refer to the users guide \
+                        file. Acceptable formats include 'GTF' and 'SAF'. \
+                        'GTF' by default. Please refer to the users guide \
                         for SAF annotation format.")
 
         self.add_option('g', str, optional=True, default=None,
                         description="Specify the attribute type used to group \
                         features (eg. exons) into meta-features (eg. genes), \
-                        when GTF annotation is provided. `gene_id' by \
+                        when GTF annotation is provided. 'gene_id' by \
                         default. This attribute type is usually the gene \
                         identifier. This argument is useful for the \
                         meta-feature level summarization.")
@@ -102,7 +102,7 @@ class FeatureCounts(AbstractStep):
                         reads/fragments will be counted (ie. a multi-mapping \
                         read will be counted up to N times if it has N \
                         reported mapping locations). The program uses the \
-                        `NH' tag to find multi-mapping reads.")
+                        'NH' tag to find multi-mapping reads.")
 
         self.add_option('Q', int, optional=True, default=None,
                         description="The minimum mapping quality score a read \
@@ -123,7 +123,7 @@ class FeatureCounts(AbstractStep):
                         and number of hits if the read/fragment is counted \
                         multiple times. Name of the file is the same as name \
                         of the input read file except a suffix \
-                        `.featureCounts' is added.")
+                        '.featureCounts' is added.")
 
         self.add_option('primary', bool, optional=True, default=False,
                         description="If specified, only primary alignments \
@@ -149,7 +149,7 @@ class FeatureCounts(AbstractStep):
 
         self.add_option('countSplitAlignmentsOnly', bool, optional=True,
                         default=False, description="If specified, only split \
-                        alignments (CIGAR strings containing letter `N') will \
+                        alignments (CIGAR strings containing letter 'N') will \
                         be counted. All the other alignments will be ignored. \
                         An example of split alignments is the exon-spanning \
                         reads in RNA-seq data.")

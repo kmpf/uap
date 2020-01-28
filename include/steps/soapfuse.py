@@ -51,7 +51,7 @@ class SOAPfuse(AbstractStep):
                         path to index: DB_db_dir
                         path to soapfuse bin: PG_pg_dir
                         path to soapfuse source: PS_ps_dir
-                        suffix for fastq: PA_all_fq_postfix (i.e.: *fastq.gz)
+                        suffix for fastq: PA_all_fq_postfix (i.e.: \*fastq.gz)
                         cores: PA_all_process_of_align_software
                         """)
 

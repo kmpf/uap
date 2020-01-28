@@ -264,7 +264,7 @@ class Pipeline(object):
         if not 'id' in self.config:
             self.config['id'] = self.get_config_filepath()
 
-        i 'lmod' not in self.config or self.config['lmod'] is None:
+        if 'lmod' not in self.config or self.config['lmod'] is None:
             self.config['lmod'] = dict()
         if os.environ.has_key('LMOD_CMD'):
             self.config['lmod'].setdefault('path', os.environ['LMOD_CMD'])

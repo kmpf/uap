@@ -54,7 +54,6 @@ Table of contents
    configuration
    interaction
    extension
-   software-design
    annotation
    steps
    api

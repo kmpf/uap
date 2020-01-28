@@ -10,7 +10,7 @@ class HtSeqCount(AbstractStep):
     '''
     The htseq-count script counts the number of reads overlapping a feature.
     Input needs to be a file with aligned sequencing reads and a list of genomic
-    features. For more information see::
+    features. For more information see:
 
     http://www-huber.embl.de/users/anders/HTSeq/doc/count.html
     '''
