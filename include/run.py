@@ -201,11 +201,12 @@ class Run(object):
 
         Returns this steps output directory according to its current
         state:
-          - if we are currently calling a step's declare_runs()
-            method, this will return None
-          - if we are currently calling a step's execute() method,
-            this will return the current directory
-          - otherwise, it will return the real output directory
+
+         - if we are currently calling a step's declare_runs()
+           method, this will return None
+         - if we are currently calling a step's execute() method,
+           this will return the current directory
+         - otherwise, it will return the real output directory
         '''
         if self.get_step()._state == abst.AbstractStep.states.DECLARING:
             return None
@@ -525,6 +526,7 @@ class Run(object):
         Add an output file to this run. Output file names must be unique across
         all runs defined by a step, so it may be a good idea to include the
         run_id into the output filename.
+
           - *tag*: You must specify the connection annotation which must have been
                   previously declared via *AbstractStep.add_connection("out/...")*,
                   but this doesn't have to be done in the step constructor, it's
