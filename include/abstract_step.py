@@ -34,7 +34,7 @@ import psutil
 import yaml
 # 3. local application/library specific imports
 from uaperrors import UAPError
-from util import ConnectionsCollector
+from connections_collector import ConnectionsCollector
 import command as command_info
 import misc
 import process_pool
