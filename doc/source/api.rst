@@ -58,8 +58,8 @@ misc
 .. automodule:: misc
     :members:
 
-ConnectionsCollector
-====================
+connections_collector
+=====================
 
 .. automodule:: connections_collector
 
