@@ -211,11 +211,6 @@ Reserved Keywords for Steps
             ...
 
         merge_fasta_files:
-            _depends:
-                - chr1
-                - chr2
-            # Equivalent to:
-            # _depends: [chr1, chr2]
             _connect:
                 in/sequence:
                     - chr1/raw
@@ -367,63 +362,11 @@ version by calling the program without command-line arguments.
 get the version information.
 ``exit_code`` is the value returned by ``echo $?`` after trying to determine
 the version e.g. by running ``pigz --version``.
-If not set ``exit_code`` defaults to 0.
+If not set ``exit_code`` defaults to 0, ``get_version`` to ``--version`` and
+``path`` to the tool name.
 
-**uap** can use the module system if you are working on a cluster system (e.g.
-|uge_link| or |slurm_link|).
-The configuration for ``pigz`` would change a bit:
-
-.. code-block:: yaml
-
-   tools:
-
-       pigz:
-           path: pigz
-           get_version: --version
-           exit_code: 0
-           module_load: /path/to/modulecmd python load pigz
-           module_unload: /path/to/modulecmd python unload pigz
-
-As you can see you need to get the ``/path/to/modulecmd``.
-So let's investigate what happens when a module is loaded or unloaded::
-
-  $ module load <module-name>
-  $ module unload <module-name>
-
-As far as I know is ``module`` neither a command nor an alias.
-It is a BASH function. So use ``declare -f`` to find out what it is actually
-doing::
-
-  $ declare -f module
-
-The output should look like this:
-
-.. code-block:: bash
-
-    module ()
-        {
-            eval `/usr/local/modules/3.2.10-1/Modules/$MODULE_VERSION/bin/modulecmd bash $*`
-        }
-
-An other possible output is:
-
-.. code-block:: bash
-
-    module ()
-        {
-            eval $($LMOD_CMD bash "$@");
-            [ $? = 0 ] && eval $(${LMOD_SETTARG_CMD:-:} -s sh)
-        }
-
-In this case you have to look in ``$LMOD_CMD`` for the required path::
-
-    $ echo $LMOD_CMD
-    /usr/local/modules/3.2.10-1/Modules/$MODULE_VERSION/bin/modulecmd
-
-You can use this path to assemble the ``module_load`` and ``module_unload``
-options for ``pigz``.
-Just replace the ``$MODULE_VERSION`` with the current version of the module
-system.
+To use |lmod_link| to load an unload a tool you can specify the
+``module_name`` option:
 
 .. code-block:: yaml
 
@@ -433,13 +376,27 @@ system.
            path: pigz
            get_version: --version
            exit_code: 0
-           module_load: /usr/local/modules/3.2.10-1/Modules/$MODULE_VERSION/bin/modulecmd python load pigz
-           module_unload: /usr/local/modules/3.2.10-1/Modules/$MODULE_VERSION/bin/modulecmd python unload pigz
+           module_name: pigz/version
 
 
-.. NOTE:: Use ``python`` instead of ``bash`` for loading modules via **uap**.
-          Because the module is loaded from within a python environment and
-          not within a BASH shell.
+.. _config_file_lmod:
+
+``lmod`` Section
+-------------------
+
+This section is optional and specifies the |lmod_link| utility. It is
+only required if |lmod_link| is not loaded and ``module_name`` is
+used in the ``tools`` section.
+
+.. code-block:: yaml
+
+    lmod:
+        path: /path/to/lmod/executable
+        module_path: /colon/seperated/paths/to/the/used/modules
+
+``path`` defaults to ``$LMOD_CMD`` and ``module_path`` to ``$MODULEPATH``
+of the user environment.
+
 
 .. _config_file_cluster:
 
@@ -684,3 +641,7 @@ cluster.
 .. |pythex_link| raw:: html
 
    <a href="http://pythex.org" target="_blank">pythex.org</a>
+
+.. |lmod_link| raw:: html
+
+   <a href="https://lmod.readthedocs.io/en/latest/" target="_blank">lmod</a>
