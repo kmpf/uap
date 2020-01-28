@@ -61,6 +61,8 @@ misc
 ConnectionsCollector
 ====================
 
+.. automodule:: connections_collector
+
 .. autoclass:: ConnectionsCollector
     :members:
 

@@ -1,4 +1,3 @@
-from uaperrors import UAPError
 import sys
 from datetime import datetime
 import glob
@@ -18,6 +17,7 @@ import command as command_info
 import exec_group
 import pipeline_info
 import misc
+from uaperrors import UAPError
 
 logger = getLogger("uap_logger")
 
