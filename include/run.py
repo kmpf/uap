@@ -554,7 +554,7 @@ class Run(object):
         elif isinstance(self._step, abst.AbstractSourceStep):
             out_path = os.path.abspath(out_path)
         # make sure tag was declared with an outgoing connection
-        if 'out/' + tag not in self._step._connections:
+        if 'out/' + tag not in self._output_files:
             raise UAPError("Invalid output_file tag '%s' in %s. "
                          "You might want to add self.add_connection('out/%s') "
                          "to the constructor of %s."

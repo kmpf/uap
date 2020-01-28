@@ -180,7 +180,7 @@ class Stringtie(AbstractStep):
                                't_data.ctab']
 
                 for connection in connections:
-                    run.add_out_connection('out/%s' % connection)
+                    run.add_out_connection(connection)
                     is_produced = ''.join([run.get_output_directory_du_jour_placeholder(),
                                            '/', connection])
 
