@@ -23,6 +23,7 @@ prepare:
     key: python-envs
     paths:
       - python_env
+      - venv
       - pip
   artifacts:
     paths:
