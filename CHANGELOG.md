@@ -23,10 +23,12 @@
  * pass reference assembly through `in/reference` connection to `stringtieMerge` or `stringtie`
  * introduce --profiling option to analyse uap runtime (#132)
  * introduce --legacy option for submit-to-cluster to use none array jobs
+ * optional step connections (#35)
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
  * `stringtieMerge` option `run_id` changed to `output_prefix`
+ * step connection documentation (#137)
 
 ## 1.1 (20.01.2020)
 
