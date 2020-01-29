@@ -65,13 +65,17 @@ def doc_module(module_name, fout):
     fout.write("      node [fontname = Helvetica, fontsize = 12, shape = rect];\n")
     fout.write("      edge [fontname = Helvetica, fontsize = 12];\n")
     fout.write("      %s [style=filled, fillcolor=\"#fce94f\"];\n" % module_name)
-    for index, c in enumerate(sorted(step._connections)):
+    for index, c in enumerate(sorted(step.get_connections())):
+        if c in step._optional_connections:
+            fill = ', style=filled, fillcolor="#a7a7a7"'
+        else:
+            fill = ''
         c = c.split('/')
         if c[0] == 'out':
-            fout.write("      out_%d [label=\"%s\"];\n" % (index, c[1]))
+            fout.write("      out_%d [label=\"%s\"%s];\n" % (index, c[1], fill))
             fout.write("      %s -> out_%d;\n" % (module_name, index))
         else:
-            fout.write("      in_%d [label=\"%s\"];\n" % (index, c[1]))
+            fout.write("      in_%d [label=\"%s\"%s];\n" % (index, c[1], fill))
             fout.write("      in_%d -> %s;\n" % (index, module_name))
     fout.write("   }\n")
     fout.write("\n")
