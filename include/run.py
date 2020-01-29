@@ -700,11 +700,11 @@ class Run(object):
         self._output_files[out_connection][None] = None
 
     def add_out_connection(self, out_connection):
-        if not out_connection.startswith("out/"):
+        if not out_connection.startswith('out/'):
             out_connection = 'out/' + out_connection
         if out_connection not in self._step.get_out_connections():
             raise UAPError("Invalid output connection '%s' in %s. "
-                         "You might want to add self.add_connection('out/%s') "
+                         "You might want to add self.add_connection('%s') "
                          "to the constructor of %s."
                          % (out_connection, str(self._step), out_connection,
                                  self._step.__module__))

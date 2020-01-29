@@ -33,6 +33,9 @@ class Stringtie(AbstractStep):
         self.add_connection('out/i2t.ctab', optional=True,
                 description='Ballgown output. Only produced if reference '
                     'assembly and option B are given.')
+        self.add_connection('out/e2t.ctab', optional=True,
+                description='Ballgown output. Only produced if reference '
+                    'assembly and option B are given.')
         self.add_connection('out/i_data.ctab', optional=True,
                 description='Ballgown output. Only produced if reference '
                     'assembly and option B are given.')
