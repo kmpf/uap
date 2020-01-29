@@ -19,12 +19,25 @@ class Stringtie(AbstractStep):
 
         self.set_cores(12)
 
-        self.add_connection('in/alignments')
-        self.add_connection('in/reference')
+        self.add_connection('in/alignments', format='fastq')
+        self.add_connection('in/reference', format='gtf',
+                description='Optional reference assembly. Can also be passed as option.')
         self.add_connection('out/assembling')
         self.add_connection('out/gene_abund')
         self.add_connection('out/cov_refs')
         self.add_connection('out/log_stderr')
+        self.add_connection('out/e_data.ctab', optional=True,
+                description='Ballgown output. Only produced if reference '
+                    'assembly and option B are given.')
+        self.add_connection('out/i2t.ctab', optional=True,
+                description='Ballgown output. Only produced if reference '
+                    'assembly and option B are given.')
+        self.add_connection('out/i_data.ctab', optional=True,
+                description='Ballgown output. Only produced if reference '
+                    'assembly and option B are given.')
+        self.add_connection('out/t_data.ctab', optional=True,
+                description='Ballgown output. Only produced if reference '
+                    'assembly and option B are given.')
 
         self.require_tool('mkdir')
         self.require_tool('mv')
@@ -62,26 +75,25 @@ class Stringtie(AbstractStep):
                                     '0.95.')
 
         self.add_option('e', bool, optional=True,
-                        description=""" Limits the processing of read alignments to only estimate
-                                    and output the assembled transcripts matching the reference
-                                    transcripts given with the -G option (requires -G, recommended
-                                    for -B/-b). With this option, read bundles with no reference
-                                    transcripts will be entirely skipped, which may provide a
-                                    considerable speed boost when the given set of reference
-                                    transcripts is limited to a set of target genes, for
-                                    example.""")
+                        description='Limits the processing of read alignments to only estimate'
+                                    'and output the assembled transcripts matching the reference'
+                                    'transcripts given with the -G option (requires -G, recommended'
+                                    'for -B/-b). With this option, read bundles with no reference'
+                                    'transcripts will be entirely skipped, which may provide a'
+                                    'considerable speed boost when the given set of reference'
+                                    'transcripts is limited to a set of target genes, for'
+                                    'example.')
 
         self.add_option('B', bool, optional=True,
-                        description=""" This switch enables the output of Ballgown input table
-                                    files (\*.ctab) containing coverage data for the reference
-                                    transcripts given with the -G option. (See the Ballgown
-                                    documentation for a description of these files.) With this
-                                    option StringTie can be used as a direct replacement of the
-                                    tablemaker program included with the Ballgown distribution.
-                                    The \*.ctab files will be supplied to child steps through
-                                    additional connections ``out/e2t.ctab``, ``out/e_data.ctab``,
-                                    ``out/i2t.ctab``, ``out/i_data.ctab`` and ``out/t_data.ctab``.
-                                    """)
+                        description='This switch enables the output of Ballgown input table'
+                                    'files (\*.ctab) containing coverage data for the reference'
+                                    'transcripts given with the -G option. (See the Ballgown'
+                                    'documentation for a description of these files.) With this'
+                                    'option StringTie can be used as a direct replacement of the'
+                                    'tablemaker program included with the Ballgown distribution.'
+                                    'The \*.ctab files will be supplied to child steps through'
+                                    'additional connections ``out/e2t.ctab``, ``out/e_data.ctab``,'
+                                    '``out/i2t.ctab``, ``out/i_data.ctab`` and ``out/t_data.ctab``.')
 
     def runs(self, cc):
         self.set_cores(self.get_option('p'))
@@ -180,7 +192,6 @@ class Stringtie(AbstractStep):
                                't_data.ctab']
 
                 for connection in connections:
-                    run.add_out_connection(connection)
                     is_produced = ''.join([run.get_output_directory_du_jour_placeholder(),
                                            '/', connection])
 

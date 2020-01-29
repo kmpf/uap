@@ -89,6 +89,9 @@ class AbstractStep(object):
 
         self._cores = 1
         self._connections = set()
+        self._optional_connections = set()
+        self._connection_formats = dict()
+        self._connection_descriptions = dict()
         self._connection_restrictions = dict()
         self._pre_command = dict()
         self._post_command = dict()
@@ -1131,7 +1134,8 @@ class AbstractStep(object):
         '''
         self.add_connection('out/%s' % connection, constraints)
 
-    def add_connection(self, connection, constraints = None):
+    def add_connection(self, connection, constraints = None,
+            optional = False, data_format = None, description = None):
         """
         Add a connection, which must start with 'in/' or 'out/'.
         """
@@ -1139,26 +1143,37 @@ class AbstractStep(object):
             raise UAPError("A connection must start with 'in/' or 'out/'.")
         if connection[0:3] == 'in/':
             self.needs_parents = True
-        self._connections.add(connection)
+        if optional is True:
+            self._optional_connections.add(connection)
+        else:
+            self._connections.add(connection)
+        if data_format is not None:
+            self._connection_formats[connection] = data_format
+        if description is not None:
+            self._connection_descriptions[connection] = description
         if constraints is not None:
             self._connection_restrictions[connection] = constraints
 
-    def get_in_connections(self):
+    def get_in_connections(self, with_optional=True):
         """
         Return all in-connections for this step
         """
         connections = self._connections
+        if with_optional is True:
+            connections = connections.union(self._optional_connections)
         in_connections = set()
         for connection in connections:
             if connection[0:3] == "in/":
                 in_connections.add(connection)
         return in_connections
 
-    def get_out_connections(self):
+    def get_out_connections(self, with_optional=True):
         """
         Return all out-connections for this step
         """
         connections = self._connections
+        if with_optional is True:
+            connections = connections.union(self._optional_connections)
         out_connections = set()
         for connection in connections:
             if connection[0:4] == "out/":

@@ -555,10 +555,7 @@ class Run(object):
             out_path = os.path.abspath(out_path)
         # make sure tag was declared with an outgoing connection
         if 'out/' + tag not in self._output_files:
-            raise UAPError("Invalid output_file tag '%s' in %s. "
-                         "You might want to add self.add_connection('out/%s') "
-                         "to the constructor of %s."
-                         % (tag, str(self._step), tag, self._step.__module__))
+            self.add_out_connection('out/' + tag)
 
         out_connection = self.get_out_connection(tag)
 
@@ -684,7 +681,7 @@ class Run(object):
         file.
         '''
         # make sure tag was declared with an outgoing connection
-        if 'out/' + tag not in self._step._connections:
+        if 'out/' + tag not in self._step.get_out_connections():
             raise UAPError("Invalid output_file tag '%s' in %s. "
                          "You might want to add self.add_connection('out/%s') "
                          "to the constructor of %s."
@@ -705,6 +702,12 @@ class Run(object):
     def add_out_connection(self, out_connection):
         if not out_connection.startswith("out/"):
             out_connection = 'out/' + out_connection
+        if out_connection not in self._step.get_out_connections():
+            raise UAPError("Invalid output connection '%s' in %s. "
+                         "You might want to add self.add_connection('out/%s') "
+                         "to the constructor of %s."
+                         % (out_connection, str(self._step), out_connection,
+                                 self._step.__module__))
         self._output_files[out_connection] = dict()
         return out_connection
 

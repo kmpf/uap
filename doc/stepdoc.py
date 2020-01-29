@@ -27,19 +27,34 @@ def doc_module(module_name, fout):
             fout.write(line.rstrip() + "\n")
 
     # print connections
-    fout.write("**Connections:**\n")
-    in_con = [i for i in sorted(step._connections) if 'in/' in i]
-    out_con = [i for i in sorted(step._connections) if 'out/' in i]
+    in_con = step.get_in_connections()
+    out_con = step.get_out_connections()
     if in_con:
-        fout.write("  - Input Connection:\n")
+        fout.write("**Input Connection**\n")
         fout.write("\n")
         for con in in_con:
-            fout.write("    - '%s'\n" % con)
+            fout.write("  - '%s" % con)
+            if con in step._optional_connections.keys():
+                fout.write(" (optional)")
+            if con in step._connection_formats.keys():
+                format = step._connection_formats[con]
+                fout.write(" Format: **%s**." % format)
+            if con in step._connection_descriptions.keys():
+                fout.write(' %s' % step._connection_descriptions[con])
+        fout.write("\n")
     if out_con:
-        fout.write("  - Output Connection:\n")
+        fout.write("**Output Connection**")
         fout.write("\n")
         for con in out_con:
-            fout.write("    - '%s'\n" % con)
+            fout.write("  - '%s'" % con)
+            if con in step._optional_connections.keys():
+                fout.write(" (optional)")
+            if con in step._connection_formats.keys():
+                format = step._connection_formats[con]
+                fout.write(" Format: **%s**." % format)
+            if con in step._connection_descriptions.keys():
+                fout.write(' %s' % step._connection_descriptions[con])
+        fout.write("\n")
     fout.write("\n")
     fout.write(".. graphviz::\n")
     fout.write("\n")
