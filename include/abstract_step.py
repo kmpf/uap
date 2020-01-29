@@ -1156,11 +1156,20 @@ class AbstractStep(object):
         if constraints is not None:
             self._connection_restrictions[connection] = constraints
 
+    def get_connections(self, with_optional=True):
+        """
+        Return all connections for this step
+        """
+        connections = self._connections.copy()
+        if with_optional is True:
+            connections = connections.union(self._optional_connections)
+        return connections
+
     def get_in_connections(self, with_optional=True):
         """
         Return all in-connections for this step
         """
-        connections = self._connections
+        connections = self._connections.copy()
         if with_optional is True:
             connections = connections.union(self._optional_connections)
         in_connections = set()
@@ -1173,7 +1182,7 @@ class AbstractStep(object):
         """
         Return all out-connections for this step
         """
-        connections = self._connections
+        connections = self._connections.copy()
         if with_optional is True:
             connections = connections.union(self._optional_connections)
         out_connections = set()
