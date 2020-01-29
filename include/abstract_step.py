@@ -1135,7 +1135,7 @@ class AbstractStep(object):
         self.add_connection('out/%s' % connection, constraints)
 
     def add_connection(self, connection, constraints = None,
-            optional = False, data_format = None, description = None):
+            optional = False, format = None, description = None):
         """
         Add a connection, which must start with 'in/' or 'out/'.
         """
@@ -1147,8 +1147,8 @@ class AbstractStep(object):
             self._optional_connections.add(connection)
         else:
             self._connections.add(connection)
-        if data_format is not None:
-            self._connection_formats[connection] = data_format
+        if format is not None:
+            self._connection_formats[connection] = format
         if description is not None:
             self._connection_descriptions[connection] = description
         if constraints is not None:
