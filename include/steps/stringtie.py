@@ -27,19 +27,19 @@ class Stringtie(AbstractStep):
         self.add_connection('out/gene_abund')
         self.add_connection('out/cov_refs')
         self.add_connection('out/log_stderr')
-        self.add_connection('out/e_data.ctab', optional=True,
+        self.add_connection('out/e_data', optional=True, format='ctab',
                 description='Ballgown output. Only produced if reference '
                     'assembly and option B are given.')
-        self.add_connection('out/i2t.ctab', optional=True,
+        self.add_connection('out/i2t', optional=True, format='ctab',
                 description='Ballgown output. Only produced if reference '
                     'assembly and option B are given.')
-        self.add_connection('out/e2t.ctab', optional=True,
+        self.add_connection('out/e2t', optional=True, format='ctab',
                 description='Ballgown output. Only produced if reference '
                     'assembly and option B are given.')
-        self.add_connection('out/i_data.ctab', optional=True,
+        self.add_connection('out/i_data', optional=True, format='ctab',
                 description='Ballgown output. Only produced if reference '
                     'assembly and option B are given.')
-        self.add_connection('out/t_data.ctab', optional=True,
+        self.add_connection('out/t_data', optional=True, format='ctab',
                 description='Ballgown output. Only produced if reference '
                     'assembly and option B are given.')
 
@@ -96,8 +96,8 @@ class Stringtie(AbstractStep):
                                     'option StringTie can be used as a direct replacement of the '
                                     'tablemaker program included with the Ballgown distribution. '
                                     'The \*.ctab files will be supplied to child steps through '
-                                    'additional connections ``out/e2t.ctab``, ``out/e_data.ctab``, '
-                                    '``out/i2t.ctab``, ``out/i_data.ctab`` and ``out/t_data.ctab``.')
+                                    'additional connections ``out/e2t``, ``out/e_data``, '
+                                    '``out/i2t``, ``out/i_data`` and ``out/t_data``.')
 
     def runs(self, cc):
         self.set_cores(self.get_option('p'))
@@ -189,11 +189,11 @@ class Stringtie(AbstractStep):
 
             if self.is_option_set_in_config('B') and self.get_option('B'):
                 mv_exec_group = run.new_exec_group()
-                connections = ['e2t.ctab',
-                               'e_data.ctab',
-                               'i2t.ctab',
-                               'i_data.ctab',
-                               't_data.ctab']
+                connections = ['e2t',
+                               'e_data',
+                               'i2t',
+                               'i_data',
+                               't_data']
 
                 for connection in connections:
                     is_produced = ''.join([run.get_output_directory_du_jour_placeholder(),
