@@ -19,7 +19,7 @@ class Stringtie(AbstractStep):
 
         self.set_cores(12)
 
-        self.add_connection('in/alignments', format='fastq')
+        self.add_connection('in/alignments', format='bam')
         self.add_connection('in/reference', format='gtf', optional=True,
                 description='Reference assembly. Can also be passed with option G '
                             'or left out for denovo assembling.')
