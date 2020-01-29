@@ -17,9 +17,9 @@ class SraFastqDump (AbstractStep):
     pipeline implemented in this step
 
         -O|--outdir <path>
-            Output directory, default is working directory '.' )
+            Output directory, default is working directory '.'
         -Z|--stdout
-            Output to stdout, all split data become  joined into single stream
+            Output to stdout, all split data become joined into single stream
         --gzip
             Compress output using gzip
         --bzip2

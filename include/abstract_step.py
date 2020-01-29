@@ -1138,6 +1138,8 @@ class AbstractStep(object):
             optional = False, format = None, description = None):
         """
         Add a connection, which must start with 'in/' or 'out/'.
+        :type format: (str) Data format passed in the connection.
+        :type description: (str) Explain the connection.
         """
         if not (connection[0:3] == 'in/' or connection[0:4] == 'out/'):
             raise UAPError("A connection must start with 'in/' or 'out/'.")

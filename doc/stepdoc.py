@@ -41,6 +41,7 @@ def doc_module(module_name, fout):
                 fout.write(" Format: **%s**." % format)
             if con in step._connection_descriptions.keys():
                 fout.write(' - %s' % step._connection_descriptions[con])
+            fout.write("\n")
         fout.write("\n")
     if out_con:
         fout.write("**Output Connection**")
@@ -54,6 +55,7 @@ def doc_module(module_name, fout):
                 fout.write(" Format: **%s**." % format)
             if con in step._connection_descriptions.keys():
                 fout.write(' - %s' % step._connection_descriptions[con])
+            fout.write("\n")
         fout.write("\n")
     fout.write("\n")
     fout.write(".. graphviz::\n")
