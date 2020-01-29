@@ -21,7 +21,7 @@ class Stringtie(AbstractStep):
 
         self.add_connection('in/alignments', format='fastq')
         self.add_connection('in/reference', format='gtf', optional=True,
-                description='Reference assembly. Can also be passed with option B '
+                description='Reference assembly. Can also be passed with option G '
                             'or left out for denovo assembling.')
         self.add_connection('out/assembling')
         self.add_connection('out/gene_abund')
