@@ -990,7 +990,7 @@ class AbstractStep(object):
             logger.info('Step %s is not capable to generate reports' %
                         (self._step_name))
         except Exception as e:
-            raise UAPError('Unexpected error while trying to generate report for '
+            logger.error('Unexpected error while trying to generate report for '
                          'task %s/%s: %s' % (self._step_name, run_id,
                                              e))
 
@@ -1012,7 +1012,7 @@ class AbstractStep(object):
             logger.info('Step %s is not capable to generate reports' %
                         (self._step_name))
         except Exception as e:
-            logger.error('Unexpected error while trying to generate report for '
+            raise UAPError('Unexpected error while trying to generate report for '
                          'step %s: %s' % (self.get_step_name(), e))
 
     def get_pre_commands(self):

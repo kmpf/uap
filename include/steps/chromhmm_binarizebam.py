@@ -179,7 +179,7 @@ class ChromHmmBinarizeBam(AbstractStep):
                                     ['in/alignments']
                     control_id = "-" + control_id
                 except KeyError as e:
-                    raise UAPError("Option 'control':\n"
+                    logger.info("Option 'control':\n"
                                  "No control '%s' found.\n" % control_id)
 
             # Check for existence of treatment files
@@ -189,7 +189,7 @@ class ChromHmmBinarizeBam(AbstractStep):
                     treatments[tr] = run_ids_connections_files[tr]\
                                      ['in/alignments']
                 except KeyError as e:
-                    raise UAPError("Option 'control':\n"
+                    logger.info("Option 'control':\n"
                                  "No treatment '%s' for control '%s' found."
                                  % (tr, control_id) )
 
@@ -223,9 +223,9 @@ class ChromHmmBinarizeBam(AbstractStep):
                                 # Save basename of created link
                                 links.append(os.path.basename(temp_f))
 
-                        logger.error("Controls: %s" %
+                        logger.info("Controls: %s" %
                                      ", ".join(linked_controls))
-                        logger.error("Treatments: %s" %
+                        logger.info("Treatments: %s" %
                                      ", ".join(linked_treatments))
 
                         # Create the table file
@@ -236,7 +236,7 @@ class ChromHmmBinarizeBam(AbstractStep):
                                 for lc in linked_controls:
                                     line += "\t%s" % lc
                             cell_mark_file_content += "%s\n" % line
-                        logger.error(cell_mark_file_content)
+                        logger.info(cell_mark_file_content)
                         echo = [self.get_tool('echo'), cell_mark_file_content]
 
                         cell_mark_file = run.add_temporary_file(suffix = run_id)

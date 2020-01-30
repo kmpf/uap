@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -207,32 +208,27 @@ class Segemehl(AbstractStep):
                 is_paired_end = False if sr_input == [None] else True
 
                 if len(fr_input) != 1 or fr_input == [None]:
-                    logger.error("Expected single input file for first read.")
-                    sys.exit(1)
+                    raise UAPError("Expected single input file for first read.")
                 if is_paired_end and len(sr_input) != 1:
-                    logger.error("Expected single input file for second read.")
-                    sys.exit(1)
+                    raise UAPError("Expected single input file for second read.")
 
                 if not os.path.isfile(self.get_option('index')):
-                    logger.error(
+                    raise UAPError(
                         "The path %s provided to option 'index' is not a file."
                         % self.get_option('index') )
-                    sys.exit(1)
 
                 if self.is_option_set_in_config('index2'):
                     if not os.path.isfile(self.get_option('index2')):
-                        logger.error(
+                        raise UAPError(
                             "The path %s provided to option 'index2' is not a file."
                             % self.get_option('index2') )
-                        sys.exit(1)
 #                    option_list.append('--index2')
 #                    option_list.append(str(self.get_option('index2')))
 
                 if not os.path.isfile(self.get_option('genome')):
-                    logger.error(
+                    raise UAPError(
                         "The path %s provided to option 'genome' is not a file."
                         % self.get_option('genome'))
-                    sys.exit(1)
                 # SEGEMEHL can cope with gzipped files so we do not need to!!!
                 #is_fr_gzipped = True if os.path.splitext(first_read_file[0])[1]\
                 #                 in ['.gz', '.gzip'] else False

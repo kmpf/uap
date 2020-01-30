@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -78,15 +79,12 @@ class PePrPostprocess(AbstractStep):
             try:
                 in_files['peak'] = run_ids_connections_files[run_id]['in/peaks']
                 if in_files['peak'] == None:
-                    logger.error("Upstream run %s provides no peaks" % run_id)
-                    sys.exit(1)
+                    raise UAPError("Upstream run %s provides no peaks" % run_id)
                 elif len(in_files['peak']) != 1:
-                    logger.error("Expected single peak file for run %s got %s"
+                    raise UAPError("Expected single peak file for run %s got %s"
                                  % (run_id, len(in_files['peak'])))
-                    sys.exit(1)
             except KeyError as e:
-                logger.error("No run %s or it provides no peaks" % run_id)
-                sys.exit(1)
+                raise UAPError("No run %s or it provides no peaks" % run_id)
 
             # Output file name is coupled to input file name
             file_input_peaks = os.path.basename(in_files['peak'][0])
@@ -110,14 +108,12 @@ class PePrPostprocess(AbstractStep):
                             ['in/alignments'])
                         if run_ids_connections_files[in_run_id]\
                            ['in/alignments'] == [None]:
-                            logger.error("Upstream run %s provides no "
+                            raise UAPError("Upstream run %s provides no "
                                          "alignments for run %s"
                                          % (in_run_id, run_id))
-                            sys.exit(1)
                 except KeyError as e:
-                    logger.error("Required key %s missing in 'chip_vs_input' "
+                    raise UAPError("Required key %s missing in 'chip_vs_input' "
                                  "for run %s" % (key, run_id))
-                    sys.exit(1)
 
             # Create a new run named run_id
             with self.declare_run(run_id) as run:

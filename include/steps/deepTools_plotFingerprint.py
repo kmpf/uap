@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -185,12 +186,10 @@ class deepToolsPlotFingerprint(AbstractStep):
             for sample in samples:
                 bamfiles = run_ids_connections_files[sample]['in/alignments']
                 if not len(bamfiles) == 1:
-                    logger.error("Expected a single file for input run %s "
+                    raise UAPError("Expected a single file for input run %s "
                                  "received %s" % (sample, ", ".join(bamfile)))
-                    sys.exit(1)
                 if not bamfiles[0].endswith(".bam"):
-                    logger.error("Not a BAM file: %s" % bamfiles[0])
-                    sys.exit(1)
+                    raise UAPError("Not a BAM file: %s" % bamfiles[0])
 
                 input_paths.append(bamfiles[0])
                 labels.append(sample)

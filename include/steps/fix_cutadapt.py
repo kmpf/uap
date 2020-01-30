@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from logging import getLogger
 import os
@@ -50,9 +51,8 @@ class FixCutadapt(AbstractStep):
                         run.add_empty_output_connection("%s" % read)
 
                     elif len(input_paths) != 1:
-                        logger.error("Expected single input file. Found files "
+                        raise UAPError("Expected single input file. Found files "
                                      "%s for run: %s" % (input_paths, run_id))
-                        sys.exit(1)
                     else:
                         # 1. Create temporary fifos
                         # 1.1 Input fifo
@@ -105,10 +105,9 @@ class FixCutadapt(AbstractStep):
                             ]
                             exec_group.add_command(dd_in)
                         else:
-                            logger.error("File %s does not end with any "
+                            raise UAPError("File %s does not end with any "
                                          "expected suffix (fastq.gz or fastq). "
                                          "Please fix that issue." % input_path)
-                            sys.exit(1)
                 # 3. Start fix_cutadapt
                 fix_cutadapt = [self.get_tool('fix_cutadapt'),
                                 temp_fifos["first_read_in"], 

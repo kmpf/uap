@@ -9,9 +9,6 @@ class UAPError(StandardError):
         message -- explanation of the error
     """
 
-    def __init__(self, *args):
-        logger.error(*args)
-        message = 'No info.'
-        if len(args)>0 and isinstance(args[0], str):
-            message = args[0]
+    def __init__(self, message):
+        logger.error(message)
         super(UAPError, self).__init__(message)

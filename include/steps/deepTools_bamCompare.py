@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -268,22 +269,19 @@ class deepToolsBamCompare(AbstractStep):
         # Test the user input and connection data for validity
         for samples in losl:
             if len(samples) != 2:
-                logger.error("Expected exactly two samples. Received %s (%s)"
+                raise UAPError("Expected exactly two samples. Received %s (%s)"
                              % (len(samples), ", ".join(samples)))
-                sys.exit(1)
             
             input_paths = list()
             for sample in samples:
                 try:
                     files=run_ids_connections_files[sample]['in/alignments']
                 except KeyError as e:
-                    logger.error('No files found for sample %s and connection '
+                    raise UAPError('No files found for sample %s and connection '
                     '"in/alignments". Please check your configuration.')
-                    sys.exit(1)
                 if not len(files) == 1 or not files[0].endswith('.bam'):
-                    logger.error("Expected exactly one BAM file, got %s"
+                    raise UAPError("Expected exactly one BAM file, got %s"
                                  % ", ".join(files))
-                    sys.exit(1)
                 # Add found BAM file to input paths
                 input_paths.append(files[0])
             # Assemble new run name from input sample names

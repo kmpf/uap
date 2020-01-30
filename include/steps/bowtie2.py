@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -255,9 +256,8 @@ class Bowtie2(AbstractStep):
 
         # Check if option values are valid
         if not os.path.exists(self.get_option('index') + '.1.bt2'):
-            logger.error("Could not find index file: %s.*" %
+            raise UAPError("Could not find index file: %s.*" %
                          self.get_option('index'))
-            sys.exit(1)
 
         # compile all options set
         ## 1st all options that are given via --

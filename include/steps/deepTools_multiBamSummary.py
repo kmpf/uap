@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -222,8 +223,7 @@ class deepToolsMultiBamSummary(AbstractStep):
             labels = list()
             for f in input_paths:
                 if not f.endswith(".bam"):
-                    logger.error("Not a BAM file: %s" % bam_files[i])
-                    sys.exit(1)
+                    raise UAPError("Not a BAM file: %s" % bam_files[i])
                 if len(input_paths) > 1:
                     labels.append("%s-%s" % (run_id, input_paths.index(f)))
                 else:

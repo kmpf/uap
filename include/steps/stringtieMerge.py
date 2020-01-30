@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from abstract_step import *
 import glob

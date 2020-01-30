@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 import glob
@@ -48,10 +49,9 @@ class RawFileSource(AbstractSourceStep):
             for path in glob.glob(os.path.abspath(self.get_option('pattern'))):
                 match = regex.match(os.path.basename(path))
                 if match == None:
-                    logger.error("Couldn't match regex /%s/ to file %s."
+                    raise UAPError("Couldn't match regex /%s/ to file %s."
                                  % (self.get_option('group'),
                                     os.path.basename(path)))
-                    sys.exit(1)
             
                 sample_id_parts = []
                 if self.is_option_set_in_config('sample_id_prefix'):
@@ -67,17 +67,15 @@ class RawFileSource(AbstractSourceStep):
             for run_id, paths in self.get_option('sample_to_files_map').items():
                 for path in paths:
                     if not os.path.isfile(path):
-                        logger.error("[raw_file_source]: %s is no file. "
+                        raise UAPError("[raw_file_source]: %s is no file. "
                                      "Please provide correct path." % path)
-                        sys.exit(1)
                 if not run_id in found_files:
                     found_files[run_id] = list()
                 found_files[run_id] = paths
 
         else:
-            logger.error("[raw_file_source]: Either 'group' AND 'pattern'"
+            raise UAPError("[raw_file_source]: Either 'group' AND 'pattern'"
                          " OR 'sample_to_files_map' options have to be set. ")
-            sys.exit(1)
         # declare a run for every sample
         for run_id, paths in found_files.items():
             with self.declare_run(run_id) as run:

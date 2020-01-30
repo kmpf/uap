@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from logging import getLogger
 import os
@@ -60,12 +61,10 @@ class MergeAssembly(AbstractStep):
                 # check for the existence of temporary sort directory
                 if not os.path.isdir(self.get_option('temp-sort-dir')):
                     #dir not present
-                    logger.error("Directory %s not found" % self.get_option('temp-sort-dir'))
-                    sys.exit(1)
+                    raise UAPError("Directory %s not found" % self.get_option('temp-sort-dir'))
                 if not os.access(self.get_option('temp-sort-dir'), os.W_OK):
                     #not accessible
-                    logger.error("Directory %s not accessible." % self.get_option('temp-sort-dir'))
-                    sys.exit(1)
+                    raise UAPError("Directory %s not accessible." % self.get_option('temp-sort-dir'))
 
                 # this is the prefix without directory for uap add output file
                 prefix = '%s_merge_assembly' %  run_id

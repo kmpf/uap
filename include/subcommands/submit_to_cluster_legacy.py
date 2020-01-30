@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 #!/usr/bin/env python
 
 import sys
@@ -58,8 +59,7 @@ def main(args):
     try:
         template = open(template_path, 'r').read()
     except OSError:
-        logger.error("Couldn't open %s." % template_path)
-        sys.exit(1)
+        raise UAPError("Couldn't open %s." % template_path)
 
     for task in p.all_tasks_topologically_sorted:
         if task_wish_list is not None:

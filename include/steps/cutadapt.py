@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 import re
@@ -235,25 +236,22 @@ class Cutadapt(AbstractStep):
                         if read == 'second_read':
                             if ( not self.is_option_set_in_config('adapter-R2') and
                                  not self.is_option_set_in_config('adapter-file') ):
-                                logger.error(
+                                raise UAPError(
                                     "Option 'adapter-R2' or 'adapter-file' "
                                     "required because sample %s is paired end!"
                                     % run_id)
-                                sys.exit(1)
 
                         if ( self.is_option_set_in_config('adapter-file') and
                              self.is_option_set_in_config('adapter-R1') ):
-                            logger.error(
+                            raise UAPError(
                                 "Option 'adapter-R1' and 'adapter-file' "
                                 "are both set but are mutually exclusive!")
-                            sys.exit(1)
                         if ( not self.is_option_set_in_config('adapter-file') and
                              not self.is_option_set_in_config('adapter-R1') ):
-                            logger.error(
+                            raise UAPError(
                                 "Option 'adapter-R1' or 'adapter-file' "
                                 "required to call cutadapt for sample %s!"
                                 % run_id)
-                            sys.exit(1)
                         temp_fifos = list()
                         exec_group = run.new_exec_group()
                         for input_path in input_paths:
@@ -303,10 +301,9 @@ class Cutadapt(AbstractStep):
                                 ]
                                 exec_group.add_command(dd_in)
                             else:
-                                logger.error("File %s does not end with any "
+                                raise UAPError("File %s does not end with any "
                                              "expected suffix (fastq.gz or "
                                              "fastq). Please fix that issue.")
-                                sys.exit(1)
                         # 3. Read data from fifos
                         with exec_group.add_pipeline() as cutadapt_pipe:
                             # 3.1 command: Read from ALL fifos
@@ -344,21 +341,19 @@ class Cutadapt(AbstractStep):
 
                                 # make sure the adapter is looking good
                                 if re.search('^[ACGT]+$', adapter) == None:
-                                    logger.error("Unable to come up with a "
+                                    raise UAPError("Unable to come up with a "
                                                  "legit-looking adapter: %s"
                                                  % adapter)
-                                    sys.exit(1)
                             # Or do we have a adapter sequence fasta file?
                             elif self.is_option_set_in_config('adapter-file'):
                                 adapter = "file:" + self.get_option(
                                     'adapter-file')
                                 if not os.path.exists(
                                         self.get_option('adapter-file')):
-                                    logger.error(
+                                    raise UAPError(
                                         "File %s containing adapter sequences "
                                         "does not exist."
                                         % self.get_option('adapter-file'))
-                                    sys.exit(1)
 
 
                             # 3.3 command: Clip adapters

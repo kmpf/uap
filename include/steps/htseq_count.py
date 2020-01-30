@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -113,14 +114,12 @@ class HtSeqCount(AbstractStep):
             elif ext in ['.sam']:
                 is_sam = True
             else:
-                logger.error("Input file not in [SB]am format: %s" % input_paths[0])
-                sys.exit(1)
+                raise UAPError("Input file not in [SB]am format: %s" % input_paths[0])
 
 
             if not (bool(is_bam) ^ bool(is_sam)):
-                logger.error("Alignment file '%s' is neither SAM nor BAM "
+                raise UAPError("Alignment file '%s' is neither SAM nor BAM "
                              "format" % input_paths[0])
-                sys.exit(1)
 
             alignments_path = input_paths[0]
 

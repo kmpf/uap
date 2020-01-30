@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -133,14 +134,12 @@ class PePr(AbstractStep):
                             ['in/alignments'])
                         if run_ids_connections_files[in_run_id]\
                            ['in/alignments'] == [None]:
-                            logger.error("Upstream run %s provides no "
+                            raise UAPError("Upstream run %s provides no "
                                          "alignments for run %s"
                                          % (in_run_id, run_id))
-                            sys.exit(1)
                 except KeyError as e:
-                    logger.error("Required key %s missing in 'chip_vs_input' "
+                    raise UAPError("Required key %s missing in 'chip_vs_input' "
                                  "for run %s" % (key, run_id))
-                    sys.exit(1)
 
             # Create a new run named run_id
             with self.declare_run(run_id) as run:

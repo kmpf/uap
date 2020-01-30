@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -140,25 +141,21 @@ class deepToolsBamPEFragmentSize(AbstractStep):
 
             for run_id, samples in runIds_samples.iteritems():
                 if not isinstance(run_id, str):
-                    logger.error("Not a string run ID (%s) for samples (%s)"
+                    raise UAPError("Not a string run ID (%s) for samples (%s)"
                                  % (run_id, ", ".join(samples)))
-                    sys.exit(1)
                 if not isinstance(samples, list):
-                    logger.error("Not a list of samples. Type: %s, Value: %s"
+                    raise UAPError("Not a list of samples. Type: %s, Value: %s"
                                  % (type(samples), samples))
-                    sys.exit(1)
 
                 for sample in samples:
                     try:
                         bam_files = run_ids_connections_files[sample]['in/alignments']
                     except KeyError:
-                        logger.error("No input sample named %s" % sample)
-                        sys.exit(1)
+                        raise UAPError("No input sample named %s" % sample)
 
                     for i in range(len(bam_files)):
                         if not bam_files[i].endswith(".bam"):
-                            logger.error("Not a BAM file: %s" % bam_files[i])
-                            sys.exit(1)
+                            raise UAPError("Not a BAM file: %s" % bam_files[i])
                         input_paths.append(bam_files[i])
                         if i > 0:
                             labels.append("%s-%s" % (sample, i))
@@ -172,8 +169,7 @@ class deepToolsBamPEFragmentSize(AbstractStep):
                 try:
                     input_paths = run_ids_connections_files[run_id]['in/alignments']
                 except KeyError:
-                    logger.error("No input sample named %s" % sample)
-                    sys.exit(1)
+                    raise UAPError("No input sample named %s" % sample)
                 for f in input_paths:
                     label = run_id
                     if len(input_paths) > 1:

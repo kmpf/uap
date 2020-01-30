@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from logging import getLogger
 import os
@@ -52,9 +53,8 @@ class RawUrlSource(AbstractSourceStep):
         root, ext = os.path.splitext(url_filename)
         is_gzipped = True if ext in ['.gz', '.gzip'] else False
         if not is_gzipped and self.get_option('uncompress'):
-            logger.error("Uncompression of non-gzipped file %s requested."
+            raise UAPError("Uncompression of non-gzipped file %s requested."
                          % url_filename)
-            sys.exit(1)
 
         # Handle the filename to have the proper ending
         filename = root if self.get_option('uncompress') and is_gzipped \
@@ -67,9 +67,8 @@ class RawUrlSource(AbstractSourceStep):
 
             if is_gzipped and self.get_option('uncompress') and \
                ext in ['.gz', '.gzip']:
-                logger.error("The filename %s should NOT end on '.gz' or "
+                raise UAPError("The filename %s should NOT end on '.gz' or "
                              "'.gzip'." % conf_filename)
-                sys.exit(1)
             filename = conf_filename
 
         # Get directory to move downloaded file to
@@ -82,9 +81,8 @@ class RawUrlSource(AbstractSourceStep):
             if os.path.exists(path):
                 # Fail if it is not a directory
                 if not os.path.isdir(path):
-                    logger.error(
+                    raise UAPError(
                         "Path %s already exists but is not a directory" % path)
-                    sys.exit(1)
             else:
                 # Create the directory
                 with run.new_exec_group() as mkdir_exec_group:

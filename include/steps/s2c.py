@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 from abstract_step import *
 import process_pool
@@ -55,12 +56,10 @@ class S2C(AbstractStep):
                 if self.is_option_set_in_config('tmp_dir'):
                     if not os.path.isdir(self.get_option('tmp_dir')):
                         #dir not present
-                        logger.error("Directory %s not found" % self.get_option('tmp_dir'))
-                        sys.exit(1)
+                        raise UAPError("Directory %s not found" % self.get_option('tmp_dir'))
                     if not os.access(self.get_option('tmp_dir'), os.W_OK):
                         #not accessible
-                        logger.error("Directory %s not accessible." % self.get_option('tmp_dir'))
-                        sys.exit(1)
+                        raise UAPError("Directory %s not accessible." % self.get_option('tmp_dir'))
                 
                 alignments_path = input_paths[0]
                 cat = [self.get_tool('cat'), alignments_path]
