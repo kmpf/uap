@@ -519,8 +519,6 @@ class Pipeline(object):
         '''
         if not 'tools' in self.config:
             return
-        if self._no_tool_checks:
-            return
         for tool_id, info in self.config['tools'].items():
             tool_check_info = dict()
 

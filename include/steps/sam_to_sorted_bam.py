@@ -37,7 +37,7 @@ class SamToSortedBam(AbstractStep):
 
         self.add_option('sort-by-name', bool, default = False)
         self.add_option('genome-faidx', str, optional = False)
-        self.add_option('temp-sort-dir', str, optional = False,
+        self.add_option('temp-sort-dir', str, optional = True,
                         description = 'Intermediate sort files are stored into'
                         'this directory.')
 
@@ -59,68 +59,69 @@ class SamToSortedBam(AbstractStep):
                                  in ['.gz', '.gzip'] else False
 
                 if self.is_option_set_in_config('temp-sort-dir'):
-                    if not os.path.isdir(self.get_option('temp-sort-dir')):
+                    sortpath = os.path.abspath(self.get_option('temp-sort-dir'))
+                    if not os.path.isdir(sortpath):
                         #dir not present
                         raise UAPError("Directory %s not found" % self.get_option('temp-sort-dir'))
-                    if not os.access(self.get_option('temp-sort-dir'), os.W_OK):
+                    if not os.access(sortpath, os.W_OK):
                         #not accessible
                         raise UAPError("Directory %s not accessible." % self.get_option('temp-sort-dir'))
+                else:
+                    sortpath =  (run.get_output_directory_du_jour_placeholder()  + '/')
                 
 
-                    with run.new_exec_group() as exec_group:
+                with run.new_exec_group() as exec_group:
 
-                        with exec_group.add_pipeline() as pipe:
-                            # 1. command: Read file in 4MB chunks
-                            dd_in = [
-                                self.get_tool('dd'),
-                                'ibs=%s' % self.get_option('dd-blocksize'),
-                                'if=%s' % input_paths[0]
-                            ]
-                            pipe.add_command(dd_in)
+                    with exec_group.add_pipeline() as pipe:
+                        # 1. command: Read file in 4MB chunks
+                        dd_in = [
+                            self.get_tool('dd'),
+                            'ibs=%s' % self.get_option('dd-blocksize'),
+                            'if=%s' % input_paths[0]
+                        ]
+                        pipe.add_command(dd_in)
 
-                            # 1.1 command: Uncompress file to fifo
-                            if is_gzipped:
-                                pigz = [self.get_tool('pigz'),
-                                        '--decompress',
-                                        '--processes', '1',
-                                        '--stdout']
-                                pipe.add_command(pigz)
+                        # 1.1 command: Uncompress file to fifo
+                        if is_gzipped:
+                            pigz = [self.get_tool('pigz'),
+                                    '--decompress',
+                                    '--processes', '1',
+                                    '--stdout']
+                            pipe.add_command(pigz)
 
-                            # 2. command: Convert sam to bam
-                            samtools_view = [
-                                self.get_tool('samtools'), 'view',
-                                '-S', '-b', '-t',
-                                self.get_option('genome-faidx'), '-',
-                                '-@', '1'
-                            ]
-                            pipe.add_command(samtools_view)
+                        # 2. command: Convert sam to bam
+                        samtools_view = [
+                            self.get_tool('samtools'), 'view',
+                            '-S', '-b', '-t',
+                            self.get_option('genome-faidx'), '-',
+                            '-@', '1'
+                        ]
+                        pipe.add_command(samtools_view)
 
-                            # 3. command: Sort BAM input
-                            samtools_sort = [
-                                self.get_tool('samtools'), 'sort',
-                                '-O', 'bam'
-                            ]
-                            if self.get_option('sort-by-name'):
-                                samtools_sort.append('-n')
-                            samtools_sort.extend(
-                                ['-T',
-                                 os.path.join(
-                                    self.get_option('temp-sort-dir'),
-                                     run_id), 
-                                 '-',
-                                 '-@', '6']
-                            )
-                            pipe.add_command(samtools_sort)
+                        # 3. command: Sort BAM input
+                        samtools_sort = [
+                            self.get_tool('samtools'), 'sort',
+                            '-O', 'bam'
+                        ]
+                        if self.get_option('sort-by-name'):
+                            samtools_sort.append('-n')
+                        samtools_sort.extend(
+                            ['-T',
+                             os.path.join(sortpath, run_id), 
+                             '-',
+                             '-@', '6']
+                        )
+                        pipe.add_command(samtools_sort)
 
-                            # 4. command: dd
-                            dd_out = [
-                                self.get_tool('dd'),
-                                'obs=%s' % self.get_option('dd-blocksize')
-                            ]
-                            pipe.add_command(
-                                dd_out,
-                                stdout_path = run.add_output_file(
-                                    'alignments',
-                                    '%s.sorted.bam' % run_id,
-                                    input_paths)
-                            )
+                        # 4. command: dd
+                        dd_out = [
+                            self.get_tool('dd'),
+                            'obs=%s' % self.get_option('dd-blocksize')
+                        ]
+                        pipe.add_command(
+                            dd_out,
+                            stdout_path = run.add_output_file(
+                                'alignments',
+                                '%s.sorted.bam' % run_id,
+                                input_paths)
+                        )
