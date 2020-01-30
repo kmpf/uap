@@ -26,9 +26,9 @@ class BwaGenerateIndex(AbstractStep):
 
         self.add_option('index-basename', str, optional = False,
                         description="Prefix of the created index database")
-
+        
     def runs(self, run_ids_connections_files):
-        # Compile the list of options
+
         for run_id in run_ids_connections_files.keys():
             # Get the basename
             index_basename =  "%s-%s" % (
@@ -55,12 +55,6 @@ class BwaGenerateIndex(AbstractStep):
                     bwa_index.append(refseq[0])
                     exec_group.add_command(bwa_index)
 
-                    # Announce output files !!! Here might be dragons !!!
-                    # 1.) input seqeunce length >4 billion leads to changed
-                    #     file extension '.ebwtl'
-                    # 2.) options --noref and --justref reduce number of
-                    #     output files (therefore I disabled them)
-                    # These issues need to be fixed or thought about!
                     run.add_output_file(
                         'bwa_index',
                         '%s.amb' % index_basename,

@@ -519,6 +519,8 @@ class Pipeline(object):
         '''
         if not 'tools' in self.config:
             return
+        if self._no_tool_checks:
+            return
         for tool_id, info in self.config['tools'].items():
             tool_check_info = dict()
 
@@ -545,9 +547,10 @@ class Pipeline(object):
                 proc.stdin.close()
             except OSError as e:
                 raise UAPError("%s: Error while checking Tool %s "
-                             "Error no.: %s Error message: %s" %
+                             "Error no.: %s Error message: %s\ncommand: %s "
+                             "\nSTDOUT-ERR: %s\n" %
                              (self.get_config_filepath(), info['path'],
-                              e.errno, e.strerror))
+                              e.errno, e.strerror, command, subprocess.PIPE))
             proc.wait()
             exit_code = None
             exit_code = proc.returncode

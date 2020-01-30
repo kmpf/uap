@@ -1,4 +1,3 @@
-from uaperrors import UAPError
 import sys
 from logging import getLogger
 import os
@@ -21,13 +20,18 @@ class FixCutadapt(AbstractStep):
         self.add_connection('out/first_read')
         self.add_connection('out/second_read')
 
-        # Options for dd
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        # [Options for 'dd':]
+        self.add_option('dd-blocksize', str, optional = True, default = "2M")
+        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
+        # Step was tested for cat (GNU coreutils) release 8.25
         self.require_tool('cat')
+        # Step was tested for dd (coreutils) release 8.25
         self.require_tool('dd')
         self.require_tool('fix_cutadapt')
+        # Step was tested for mkfifo (GNU coreutils) release 8.25
         self.require_tool('mkfifo')
+        # Step was tested for pigz release 2.3.1
         self.require_tool('pigz')
 
     def runs(self, run_ids_connections_files):
@@ -46,8 +50,9 @@ class FixCutadapt(AbstractStep):
                         run.add_empty_output_connection("%s" % read)
 
                     elif len(input_paths) != 1:
-                        raise UAPError("Expected single input file. Found files "
+                        logger.error("Expected single input file. Found files "
                                      "%s for run: %s" % (input_paths, run_id))
+                        sys.exit(1)
                     else:
                         # 1. Create temporary fifos
                         # 1.1 Input fifo
@@ -67,37 +72,46 @@ class FixCutadapt(AbstractStep):
                         # 2. Output files to fifo
                         if input_paths[0].endswith('fastq.gz'):
                             with exec_group.add_pipeline() as unzip_pipe:
-                                # 2.1 command: Read file in chunks
-                                dd_in = [self.get_tool('dd'),
-                                         'ibs=%s' % self.get_option('dd-blocksize'),
-                                         'if=%s' % input_paths[0]]
+                                # 2.1 command: Read file in 'dd-blocksize' chunks
+                                dd_in = [
+                                    self.get_tool('dd'),
+                                    'ibs=%s' % self.get_option('dd-blocksize'),
+                                    'if=%s' % input_paths[0]
+                                ]
                                 # 2.2 command: Uncompress file to fifo
                                 pigz = [self.get_tool('pigz'),
+                                        '--processes', str(self.get_cores()),
                                         '--decompress',
+                                        '--blocksize', self.get_option('pigz-blocksize'),
                                         '--stdout']
-                                # 2.3 Write file in chunks to fifo
-                                dd_out = [self.get_tool('dd'),
-                                          'obs=%s' % self.get_option('dd-blocksize'),
-                                          'of=%s' % temp_fifos["%s_in" % read] ]
+                                # 2.3 Write file in 'dd-blocksize' chunks to fifo
+                                dd_out = [
+                                    self.get_tool('dd'),
+                                    'obs=%s' % self.get_option('dd-blocksize'),
+                                    'of=%s' % temp_fifos["%s_in" % read]
+                                ]
 
                                 unzip_pipe.add_command(dd_in)
                                 unzip_pipe.add_command(pigz)
                                 unzip_pipe.add_command(dd_out)
                         elif input_paths[0].endswith('fastq'):
-                            # 2.1 command: Read file in chunks and
-                            #              write to fifo in chunks
-                            dd_in = [self.get_tool('dd'),
-                                     'bs=%s' % self.get_option('dd-blocksize'),
-                                     'if=%s' % input_paths[0],
-                                     'of=%s' % temp_fifos["%s_in" % read] ]
+                            # 2.1 command: Read file in 'dd-blocksize' chunks and
+                            #              write to fifo in 'dd-blocksize' chunks
+                            dd_in = [
+                                self.get_tool('dd'),
+                                'bs=%s' % self.get_option('dd-blocksize'),
+                                'if=%s' % input_paths[0],
+                                'of=%s' % temp_fifos["%s_in" % read]
+                            ]
                             exec_group.add_command(dd_in)
                         else:
-                            raise UAPError("File %s does not end with any "
+                            logger.error("File %s does not end with any "
                                          "expected suffix (fastq.gz or fastq). "
                                          "Please fix that issue." % input_path)
+                            sys.exit(1)
                 # 3. Start fix_cutadapt
                 fix_cutadapt = [self.get_tool('fix_cutadapt'),
-                                temp_fifos["first_read_in"],
+                                temp_fifos["first_read_in"], 
                                 temp_fifos["first_read_out"] ]
                 if temp_fifos["second_read_in"] != None and \
                    temp_fifos["second_read_out"] != None:
@@ -115,10 +129,10 @@ class FixCutadapt(AbstractStep):
                            temp_fifos["first_read_out"]]
                     # 4.2 Gzip output file
                     pigz = [self.get_tool('pigz'),
-                            '--blocksize', '4096',
-                            '--processes', '2',
+                            '--processes', str(self.get_cores()),
+                            '--blocksize', self.get_option('pigz-blocksize'),
                             '--stdout']
-                    # 4.3 command: Write to output file in chunks
+                    # 4.3 command: Write to output file in 'dd-blocksize' chunks
                     fr_stdout_path = run.add_output_file(
                         "first_read",
                         "%s%s.fastq.gz" %
@@ -141,10 +155,10 @@ class FixCutadapt(AbstractStep):
                                temp_fifos["second_read_out"]]
                         # 4.2 Gzip output file
                         pigz = [self.get_tool('pigz'),
-                                '--blocksize', '4096',
-                                '--processes', '2',
+                                '--processes', str(self.get_cores()),
+                                '--blocksize', self.get_option('pigz-blocksize'),
                                 '--stdout']
-                        # 4.3 command: Write to output file in chunks
+                        # 4.3 command: Write to output file in 'dd-blocksize' chunks
                         sr_stdout_path = run.add_output_file(
                             "second_read",
                             "%s%s.fastq.gz" %

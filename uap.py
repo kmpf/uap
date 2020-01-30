@@ -479,6 +479,8 @@ def main():
     except UAPError as e:
         if args.debugging is True:
             raise
+        else:
+            sys.exit(1)
 
 def _configure_logger(verbosity):
     logger = logging.getLogger("uap_logger")
@@ -501,25 +503,25 @@ def _configure_logger(verbosity):
         ch.setFormatter(info_formatter)
         # set logger logging level
         logger.setLevel(logging.ERROR)
-        sys.stderr.write("[uap] Set log level to ERROR\n")
+        logger.info("[uap] Set log level to ERROR\n")
     elif verbosity == 1:
         # add formatter to ch
         ch.setFormatter(info_formatter)
         # set logger logging level
         logger.setLevel(logging.WARNING)
-        sys.stderr.write("[uap] Set log level to WARNING\n")
+        logger.info("[uap] Set log level to WARNING\n")
     elif verbosity == 2:
         # add formatter to ch
         ch.setFormatter(info_formatter)
         # set logger logging level
         logger.setLevel(logging.INFO)
-        sys.stderr.write("[uap] Set log level to INFO\n")
+        logger.info("[uap] Set log level to INFO\n")
     elif verbosity >= 3:
         # add formatter to ch
         ch.setFormatter(debug_formatter)
         # set logger logging level
         logger.setLevel(logging.DEBUG)
-        sys.stderr.write("[uap] Set log level to DEBUG\n")
+        logger.info("[uap] Set log level to DEBUG\n")
 
     sys.stderr.flush()
 

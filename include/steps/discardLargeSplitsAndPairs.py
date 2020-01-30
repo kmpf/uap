@@ -60,7 +60,7 @@ class discardLargeSplitsAndPairs (AbstractStep):
                     with exec_group.add_pipeline() as pipe:
                         # 1. command: Read file in 4MB chunks
                         dd_in = [self.get_tool('dd'),
-                                 'ibs=4M',
+                                 'ibs=2M',
                                  'if=%s' % input_paths[0]]
                         pipe.add_command(dd_in)
 
@@ -87,23 +87,26 @@ class discardLargeSplitsAndPairs (AbstractStep):
                         statsfile = run.add_output_file('stats',
                                                         '%s.statistics.txt' % run_id,
                                                         input_paths)
+                        outfile = run.add_output_file('alignments',
+                                                      '%s.reduced.sam' % run_id,
+                                                      input_paths)
                         # construct cmd
                         discard_cmd = [self.get_tool('discardLargeSplitsAndPairs'),
                                        '--N_splits', self.get_option('N_splits'),
                                        '--M_mates', self.get_option('M_mates'),
                                        '--statsfile', statsfile,
                                        '--logfile', logfile,
-                                       '-'] #, '-']
+                                       '-', outfile]
                         # execute cmd                              
                         pipe.add_command(discard_cmd)
 
 
-                        dd_out = [self.get_tool('dd'), 'obs=4M']
-                        outfile = run.add_output_file('alignments',
-                                                      '%s.reduced.sam' % run_id,
-                                                      input_paths)
-                        pipe.add_command(dd_out,
-                                         stdout_path = outfile)
+#                        dd_out = [self.get_tool('dd'), 'obs=4M']
+#                        outfile = run.add_output_file('alignments',
+#                                                      '%s.reduced.sam' % run_id,
+#                                                      input_paths)
+#                        pipe.add_command(dd_out,
+#                                         stdout_path = outfile)
 
                         # 3. gzip the outfile again
                         #pigz2 = [self.get_tool('pigz'),

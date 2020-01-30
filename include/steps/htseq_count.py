@@ -1,4 +1,3 @@
-from uaperrors import UAPError
 import sys
 import os
 from logging import getLogger
@@ -10,25 +9,29 @@ class HtSeqCount(AbstractStep):
     '''
     The htseq-count script counts the number of reads overlapping a feature.
     Input needs to be a file with aligned sequencing reads and a list of genomic
-    features. For more information see:
+    features. For more information see::
 
     http://www-huber.embl.de/users/anders/HTSeq/doc/count.html
     '''
-
 
     def __init__(self, pipeline):
         super(HtSeqCount, self).__init__(pipeline)
 
         self.set_cores(2)
 
+        #        self.add_connection('in/alignments')
+        # the BAM files
         self.add_connection(
             'in/alignments',
             constraints = {'min_files_per_run': 1, 'max_files_per_run': 1}
         )
-        self.add_connection(
-            'in/features',
-            constraints = {'total_files': 1}
+
+        # the feature file provided by another step (e.g. cuffmerge)
+        self.add_connection('in/features',
+                            constraints = {'total_files': 1}
         )
+
+        # the counts per alignment
         self.add_connection('out/counts')
 
         self.require_tool('dd')
@@ -38,7 +41,8 @@ class HtSeqCount(AbstractStep):
 
         # Path to external feature file if necessary
         self.add_option('feature-file', str, optional = True)
-        # Options for htseq-count
+
+        # [Options for 'htseq-count':]
         self.add_option('order', str, choices = ['name', 'pos'],
                         optional = False)
         self.add_option('stranded', str, choices = ['yes', 'no', 'reverse'],
@@ -50,8 +54,11 @@ class HtSeqCount(AbstractStep):
                                                 'intersection-nonempty'],
                         default = 'union', optional = True)
 
-        # Options for dd
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        # [Options for 'dd':]
+        self.add_option('dd-blocksize', str, optional = True, default = "2M")
+        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
+        self.add_option('threads', int, default=2, optional=True,
+                        description="start <n> threads (default:2)")
 
     def runs(self, cc):
         # Compile the list of options
@@ -69,39 +76,53 @@ class HtSeqCount(AbstractStep):
                 option_list.append(
                     '--%s=%s' % (option, str(self.get_option(option))))
 
+        if 'threads' in set_options:
+            self.set_cores(self.get_option('threads'))
+
+        # look for reference assembly in in-connections
         if self.is_option_set_in_config('feature-file'):
-            option_feature_path = os.path.abspath(self.get_option('feature-file'))
-            if not os.path.isfile(option_feature_path):
-                raise UAPError('[HTSeqCount]: %s is no file.' %
+            features_path = os.path.abspath(self.get_option('feature-file'))
+            if not os.path.isfile(features_path):
+                raise UAPError('[HTSeq-Count]: %s is no file.' %
                         self.get_option('feature-file'))
         else:
-            option_feature_path = None
-        features_path = cc.look_for_unique('in/features', option_feature_path)
-        features_per_run = cc.all_runs_have_connection('in/features')
-        if features_per_run is False and features_path is None:
-            raise UAPError('No features given for HTSeqCount.')
+            features_path = None
+        features_path = cc.look_for_unique('in/features', features_path)
+        ref_per_run = cc.all_runs_have_connection('in/features')
+        if features_path is None and ref_per_run is False:
+            raise UAPError('[HTSeq-Count]: no feature file given')
+
         allignment_runs = cc.get_runs_with_connections('in/alignments')
         for run_id in allignment_runs:
-            # Check input files
-            alignments = cc[run_id]['in/alignments']
-            input_paths = alignments
-            if features_per_run is True:
-                features_path = cc[run_id]['in/features'][0]
-            if option_feature_path is None:
-                input_paths.append(features_path)
+
+            input_paths = cc[run_id]['in/alignments']
+            if ref_per_run is True:
+                features_path = connection['in/features'][0]
 
             # Is the alignment gzipped?
-            root, ext = os.path.splitext(alignments[0])
+            root, ext = os.path.splitext(input_paths[0])
             is_gzipped = True if ext in ['.gz', '.gzip'] else False
             # Is the alignment in SAM or BAM format?
             if is_gzipped:
                 root, ext = os.path.splitext(root)
-            is_bam = True if ext in ['.bam'] else False
-            is_sam = True if ext in ['.sam'] else False
+
+            is_bam = False
+            is_sam = False
+            if ext in ['.bam']:
+                is_bam = True
+            elif ext in ['.sam']:
+                is_sam = True
+            else:
+                logger.error("Input file not in [SB]am format: %s" % input_paths[0])
+                sys.exit(1)
+
+
             if not (bool(is_bam) ^ bool(is_sam)):
-                raise UAPError("Alignment file '%s' is neither SAM nor BAM "
-                             "format" % alignments[0])
-            alignments_path = alignments[0]
+                logger.error("Alignment file '%s' is neither SAM nor BAM "
+                             "format" % input_paths[0])
+                sys.exit(1)
+
+            alignments_path = input_paths[0]
 
             with self.declare_run(run_id) as run:
                 with run.new_exec_group() as exec_group:
@@ -109,28 +130,35 @@ class HtSeqCount(AbstractStep):
                         # 1. Read alignment file in 4MB chunks
                         dd_in = [self.get_tool('dd'),
                                  'ibs=%s' % self.get_option('dd-blocksize'),
-                                 'if=%s' % alignments_path]
+                                 'if=%s' % input_paths[0]]
                         pipe.add_command(dd_in)
 
                         if is_gzipped:
                             # 2. Uncompress file to STDOUT
                             pigz = [self.get_tool('pigz'),
                                     '--decompress',
-                                    '--processes', '1',
+                                    '--blocksize', self.get_option('pigz-blocksize'),
+                                    '--processes', str(self.get_cores()),
                                     '--stdout']
                             pipe.add_command(pigz)
+
                         # 3. Use samtools to generate SAM output
                         if is_bam:
-                            samtools = [self.get_tool('samtools'), 'view',
-                                        '-h', '-']
+                            samtools = [self.get_tool('samtools'), 'view', 
+                                        '-']
                             pipe.add_command(samtools)
+
                         # 4. Count reads with htseq-count
                         htseq_count = [
                             self.get_tool('htseq-count')
-                            #'--format=sam'
                         ]
                         htseq_count.extend(option_list)
+
+                        htseq_count.extend(['--format=sam'])
+
                         htseq_count.extend(['-', features_path])
+                        # sys.stderr.write("hts-cmd: %s\n" % htseq_count)
+
                         pipe.add_command(
                             htseq_count,
                             stdout_path = run.add_output_file(

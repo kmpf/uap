@@ -15,6 +15,7 @@ import yaml
 
 import pipeline
 import misc
+from uaperrors import UAPError
 '''
 This script uses graphviz to produce graphs that display information about the
 tasks processed by the pipeline.
@@ -136,14 +137,21 @@ def main(args):
 def render_graph_for_all_steps(p, args):
     configuration_path = p.get_config_filepath()
     if args.simple:
+        dot_file = configuration_path.replace('.yaml', '.simple.dot')
         svg_file = configuration_path.replace('.yaml', '.simple.svg')
     else:
+        dot_file = configuration_path.replace('.yaml', '.dot')
         svg_file = configuration_path.replace('.yaml', '.svg')
 
-    dot = subprocess.Popen(['dot', '-Tsvg'],
-                           stdin=subprocess.PIPE,
-                           stdout=subprocess.PIPE)
 
+#    if args.format == "svg":
+    dot = subprocess.Popen(['dot', '-Tsvg'],
+                           stdin = subprocess.PIPE,
+                           stdout = subprocess.PIPE)
+#    elif args.format == "png":
+#    dot = subprocess.Popen(['dot', '-Tpng'],
+#                           stdin = subprocess.PIPE,
+#                           stdout = subprocess.PIPE)
     f = dot.stdin
 
     f.write("digraph {\n")
@@ -231,10 +239,9 @@ def render_graph_for_all_steps(p, args):
                                         else:
                                             out_key = 'out/' + connection
                             else:
-                                raise StandardError(
+                                raise UAPError(
                                     "Invalid _connect value: %s"
                                     % yaml.dump(declaration))
-
                     for real_outkey in other_step._connections:
                         if real_outkey[0:4] != 'out/':
                             continue
@@ -257,11 +264,15 @@ def render_graph_for_all_steps(p, args):
     with open(svg_file, 'w') as f:
         f.write(svg)
 
-
+    gv = f.getvalue()
+    f.close()
+    return gv
+        
 def render_single_annotation(annotation_path, args):
     logger.info("Start rendering %s" % annotation_path)
     dot_file = annotation_path.replace('.yaml', '.dot')
     # Replace leading dot to make graphs easier to find
+#    if args.format == "svg":
     (head, tail) = os.path.split(annotation_path.replace('.yaml', '.svg'))
     logger.debug("Path: %s, SVG: %s" % (head, tail))
     tail = ''.join([tail[0].replace('.', ''), tail[1:]])
@@ -271,29 +282,39 @@ def render_single_annotation(annotation_path, args):
     tail = ''.join([tail[0].replace('.', ''), tail[1:]])
     png_file = os.path.join(head, tail)
     logger.debug("SVG file: %s" % svg_file)
-    logger.debug("PNG file: %s" % png_file)
+#    elif args.format == "png":
+#    (head, tail) = os.path.split(annotation_path.replace('.yaml', '.png'))
+#    logger.debug("Path: %s, PNG: %s" % (head, tail))
+#    tail = ''.join([tail[0].replace('.', ''), tail[1:]])
+#    png_file = os.path.join(head, tail)
+#    logger.debug("PNG file: %s" % png_file)
 
     log = dict()
     with open(annotation_path, 'r') as f:
         log = yaml.load(f, Loader=yaml.FullLoader)
+
+    gv = create_dot_file_from_annotations([log], args)
+
+    run_dot(gv, dot_file, png_file, svg_file)
+
+def run_dot(gv, dot_file, png_file, svg_file):
     try:
-        gv = create_dot_file_from_annotations([log], args)
         with open(dot_file, 'w') as f:
             f.write(gv)
 
-        subprocess.Popen(['dot', '-Tsvg', '-o%s' % svg_file, dot_file],
-                         stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE)
-
-        subprocess.Popen(['dot', '-Tpng', '-o%s' % png_file, dot_file],
-                         stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE)
+#        if args.format == "svg":
+        dot = subprocess.Popen(['dot', '-Tsvg', '-o%s' % svg_file, dot_file],
+                               stdin = subprocess.PIPE,
+                               stdout = subprocess.PIPE)
+#        elif args.format == "png":
+#        dot = subprocess.Popen(['dot', '-Tpng', '-o%s' % png_file, dot_file],
+#                               stdin = subprocess.PIPE,
+#                               stdout = subprocess.PIPE)
     except:
         print(sys.exc_info())
         import traceback
         traceback.print_tb(sys.exc_info()[2])
         pass
-
 
 def create_dot_file_from_annotations(logs, args):
     hash = {'nodes': {}, 'edges': {}, 'clusters': {}, 'graph_labels': {}}

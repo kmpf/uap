@@ -1,0 +1,181 @@
+# This configuration downloads the sequence of chromosome 21 and creates
+# bowtie2, BWA, and fasta indices.
+
+################################################################################
+## Cluster Section                                                            ##
+## ===============                                                            ##
+##                                                                            ##
+## - uncomment/adapt as required                                              ##
+################################################################################
+
+# cluster:
+#     example for SLURM grid engine
+#     default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+#     example for UGE/SGE respectively OGS
+#     default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+#     default_pre_job_command: "echo 'Run Started!'"
+#     default_post_job_command: "echo 'Run Finished!'"
+#     default_job_quota: 5
+
+################################################################################
+## Destination Path Section                                                   ##
+## ========================                                                   ##
+##                                                                            ##
+## - directory where analysis results get stored                              ##
+################################################################################
+
+destination_path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19
+
+################################################################################
+## Steps Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define analysis steps here                                               ##
+################################################################################
+
+steps:
+    ##################
+    ## Source steps ##
+    ##################
+
+    # Download chrom sizes file from UCSC
+    download_chrom_sizes_homo_sapiens (fetch_chrom_sizes_source):
+        ucsc-database: hg19
+        path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
+
+    # Download sequence of chromosome 21
+    download_hg19_data_UCSC (raw_url_source):
+        url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr21.fa.gz
+        hashing-algorithm: md5
+        secure-hash: 26cdd5a3a539b63930752604feb2912b
+        path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+        filename: chr21.fa
+        uncompress: yes
+
+    ######################
+    ## Processing steps ##
+    ######################
+
+    bowtie2_generate_index:
+        _depends: download_hg19_data_UCSC
+        _connect:
+            in/reference_sequence: download_hg19_data_UCSC/raw
+        index-basename: bowtie2_index
+
+#    ## !ATTENTION! 
+#    ## only enable if your machine possesses enough RAM (~60GB)
+#    ## otherwise this step is going to crash
+#    segemehl_generate_index:
+#        _depends: download_hg19_data_UCSC
+#        _connect:
+#            in/reference_sequence:download_hg19_data_UCSC/raw
+#        index-basename: segemehl_index
+
+    bwa_generate_index:
+        _depends: download_hg19_data_UCSC
+        _connect:
+            in/reference_sequence: download_hg19_data_UCSC/raw
+        index-basename: bwa_index
+
+    samtools_faidx:
+        _depends: download_hg19_data_UCSC
+        _connect:
+            in/sequence: download_hg19_data_UCSC/raw
+
+################################################################################
+## Tools Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define used tools here                                                   ##
+## - for module system usage see documentation                                ##
+################################################################################
+
+tools:
+    ##################
+    # External Tools #
+    ##################
+
+    # URL: https://github.com/lh3/bwa
+    bwa:
+        path: bwa
+        get_version: ''
+        exit_code: 1
+        
+    # URL: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
+    bowtie2-build:
+        path: bowtie2-build
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/fetchChromSizes
+    fetchChromSizes:
+        path: fetchChromSizes
+        get_version: ''
+        exit_code: 255
+
+    # URL: http://zlib.net/pigz/
+    pigz: 
+        path: pigz
+        get_version: --version
+        exit_code: 0
+
+    # URL: http://www.htslib.org/
+    # NOTE: uap requires samtools version 1.0 or greater
+    samtools:
+        path: samtools
+        get_version: --version
+        exit_code: 0
+
+#    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
+#    segemehl:
+#        path: segemehl.x
+#        get_version: ''
+#        exit_code: 255
+                
+    ##################
+    # Internal Tools #
+    ##################
+
+    compare_secure_hashes:
+        path: ../tools/compare_secure_hashes.py
+        get_version: --version
+        exit_code: 0
+
+    ##############
+    # Unix Tools #
+    ##############
+
+    cat:
+        path: cat
+        get_version: --version
+        exit_code: 0
+
+    cp:
+        path: cp
+        get_version: --version
+        exit_code: 0
+
+    curl:
+        path: curl
+        get_version: --version
+        exit_code: 0
+
+    dd:
+        path: dd
+        get_version: --version
+        exit_code: 0
+
+    mkdir:
+        path: mkdir
+        get_version: --version
+        exit_code: 0
+        
+    mkfifo:
+        path: mkfifo
+        get_version: --version
+        exit_code: 0
+
+    mv:
+        path: mv
+        get_version: --version
+        exit_code: 0

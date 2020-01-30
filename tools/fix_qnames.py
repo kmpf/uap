@@ -1,4 +1,13 @@
-#!/usr/bin/env python
+#!/bin/bash
+"exec" "`dirname $0`/../python_env/bin/python" "$0" "$@"
+
+# ^^^
+# the cmd above ensures that the correct python environment is 
+# selected to execute this script.
+# The correct environment is the one belonging to uap, since all 
+# neccessary python modules are installed there.
+
+
 import os
 seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path

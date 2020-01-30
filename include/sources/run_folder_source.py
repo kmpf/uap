@@ -25,41 +25,58 @@ class RunFolderSource(AbstractSourceStep):
         self.add_connection('out/first_read')
         self.add_connection('out/second_read')
 
-        self.add_option('path', str)
-        self.add_option('project', str, default='*')
-
-
-        self.add_option('paired_end', bool)
-        self.add_option('first_read', str, default = "_R1",
-            description = "Part of the file name that marks all "
-                "files containing sequencing data of the first read. "
-                "Example: '_R1.fastq' or '_1.fastq'")
-
+        self.add_option('path', str, optional=False,
+                        description='Path to the sequencing directories that contain '
+                        'the fastq[.gz] files.')
+        self.add_option('unaligned_included', bool, optional=True, default=True,
+                        description='Is the typical Unaligned folder included in path?')
+        self.add_option('project', str, default='*', optional=True,
+                        description='Name of the project. If provided, this is appended'
+                        'to the path string')
+        self.add_option('project_name', str, default='*', optional=True,
+                        description="Name of the project. If provided, this is appended"
+                        "to the path string. This option has the same meaning as 'project',"
+                        "however, the prefix 'Project_' is not added. If 'project' and "
+                        "'project_name' are provided, 'project_name' is choosen.")
+        self.add_option('samples', str, default='Sample_*', optional=True,
+                        description='Pattern for the sample directory names inside '
+                        'path/[Project_]project[_name]')
+        self.add_option('first_read', str, default = '_R1',
+                        description = "Part of the file name that marks all "
+                        "files containing sequencing data of the first read. "
+                        "Example: '_R1.fastq' or '_1.fastq'")
         self.add_option('second_read', str, default = "_R2",
-            description = "Part of the file name that marks all "
-                "files containing sequencing data of the second read. "
-                "Example: 'R2.fastq' or '_2.fastq'")
+                        description = "Part of the file name that marks all "
+                        "files containing sequencing data of the second read. "
+                        "Example: 'R2.fastq.gz' or '_2.fastq'")
+        self.add_option('paired_end', bool, optional=True,
+                        description='Is the project a paired-end sequencing project?')
 
     def runs(self, run_ids_connections_files):
 
         found_samples = dict()
         read_types = dict()
-        if self.get_option('first_read'):
-            read_types['first_read'] = self.get_option('first_read')
+        read_types['first_read'] = self.get_option('first_read')
 
-        if self.get_option('second_read'):
+        if self.get_option('paired_end'):
             read_types['second_read'] = self.get_option('second_read')
 
         # let's look if the path to our data exists
         path = self.get_option('path')
+        if not self.is_option_set_in_config('unaligned_included'):
+            os.path.join(path, 'Unaligned')
         path = os.path.abspath(path)
         if not os.path.exists(path):
             raise StandardError("Source path does not exist: " + path)
 
         # find all samples
-
         project = 'Project_' + self.get_option('project')
-        for sample_path in glob.glob(os.path.join(path, 'Unaligned', project, 'Sample_*')):
+        if self.is_option_set_in_config('project_name'):
+           project = self.get_option('project_name')
+
+        paths = glob.glob(os.path.join(path, project, self.get_option('samples')))
+
+        for sample_path in paths:
 
             sample_name = os.path.basename(sample_path).replace('Sample_', '')
             if sample_name in found_samples:
@@ -82,12 +99,12 @@ class RunFolderSource(AbstractSourceStep):
                 run.add_public_info('paired_end', self.get_option('paired_end'))
 
                 sample_path = None
+
                 for read in ['first_read', 'second_read']:
                     if read in read_types.keys():
                         for path in found_samples[run_id][read_types[read]]:
                             run.add_output_file(read, path, [])
                             sample_path = os.path.dirname(path)
-
                     # always set the out connection even for zero files
                     else:
                         run.add_empty_output_connection(read)

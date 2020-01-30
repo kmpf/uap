@@ -569,8 +569,12 @@ class AbstractStep(object):
 
         def up_to_dateness_level(path, level = 0):
             result = level
+
+#            sys.stderr.write("path: %s (level: %d)\n" % (path, level))
+
             if path != None:
                 dep_paths = self.get_pipeline().file_dependencies[path]
+#                sys.stderr.write("dep_paths: %s\n" % dep_paths)
                 if not is_path_up_to_date(path, dep_paths):
                     result = level + 1
                 for dep_path in dep_paths:
@@ -609,9 +613,11 @@ class AbstractStep(object):
         run_info = self.get_runs()
         max_level = 0
         for tag, output_files in run_info[run_id].get_output_files_abspath().items():
+
             # output_files can be None if the connection is empty
             for output_file, input_files in output_files.items():
                 if output_file != None and input_files != None:
+#                    sys.stderr.write("outputfile: %s\n" % output_file)
                     max_level = max(
                         max_level, up_to_dateness_level(output_file))
 
@@ -821,16 +827,26 @@ class AbstractStep(object):
                             os.unlink(destination_path_volatile)
                         # TODO: if the destination path already exists, this
                         # will overwrite the file.
-                        # CK: Hmm, that's a feature, isn't it?
                         if os.path.exists(source_path):
                             # Calculate SHA1 hash for output files
-                            sha1sum = str()
+                            sha1sum = hashlib.sha1()
                             try:
                                 with open(source_path, 'rb') as f:
-                                    sha1sum = hashlib.sha1(f.read()).hexdigest()
+                                    # the below exception is raised for large files
+                                    # this workaround reads the file in chunks and
+                                    # updates the sha1sum
+                                    while True:
+                                        # read file in 2MB chunks
+                                        buf = f.read(2*1024*1024)
+                                        if not buf:
+                                            break
+                                        sha1sum.update(buf)
                             except:
                                 raise UAPError("Error while calculating SHA1sum "
                                              "of %s" % source_path)
+
+                            # hexadecimal version of sha1sum
+                            sha1sum = sha1sum.hexdigest()
 
                             os.rename(source_path, destination_path)
                             for path in [source_path, destination_path]:
@@ -1041,7 +1057,9 @@ class AbstractStep(object):
     def get_run_info_str(self):
         count = {}
         for _ in self.get_run_ids():
+#            sys.stderr.write("cur_run_id: %s\n" % _)
             state = self.get_run_state(_)
+#            sys.stderr.write("state: %s\n" % state)
             if not state in count:
                 count[state] = 0
             count[state] += 1

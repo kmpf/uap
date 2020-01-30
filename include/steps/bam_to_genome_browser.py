@@ -37,7 +37,7 @@ class BamToBedgraph(AbstractStep):
 
         # Options for bedtools genomecov (that make sense for BAM to BG)
         self.add_option('bedtools-genomecov-report-zero-coverage',
-                        bool, optional = False)
+                        bool, optional = False, default = False)
         self.add_option('bedtools-genomecov-max', int, optional = True)
         self.add_option('bedtools-genomecov-split', bool, default = True)
         self.add_option('bedtools-genomecov-strand', str, choices = ['+', '-'],

@@ -60,6 +60,7 @@ class Run(object):
            annotation_2: ...
 
         '''
+
         self._ping_files = {
             'run': None,
             'queued': None
@@ -111,6 +112,20 @@ class Run(object):
             raise UAPError("Connection %s not declared for step %s" %
                          (connection, self.get_step()))
 
+    @property
+    def annotation_file(self):
+        afl = glob.glob( os.path.join(
+            self.get_output_directory(),
+            ".%s-annotation-*.yaml" % self.get_run_id()))
+        if not afl:
+            print(self.get_output_directory())
+            return ""
+        elif len(afl) != 1:
+            raise StandardError("Found multiple annotation files: %s" %
+                                ", ".join(afl))
+        elif os.path.isfile(afl[0]):
+            return afl[0]
+
     def _get_ping_file(self, key):
         if self._ping_files[key] == None:
             self._ping_files[key] = os.path.join(
@@ -134,6 +149,9 @@ class Run(object):
             )
         return self._submit_script
 
+    def is_source(self):
+        return True if isinstance(self._step, abst.AbstractSourceStep) else False
+    
     def replace_output_dir_du_jour(func):
         def inner(self, *args, **kwargs):
             # Collect info to replace du_jour placeholder with temp_out_dir
@@ -718,10 +736,10 @@ class Run(object):
 
     def get_input_files_for_output_file_abspath(self, output_file):
         for connection in self.get_out_connections():
-            if abspath_output_file in \
+            if output_file in \
                self.get_output_files_abspath_for_out_connection(connection):
                 return self.get_output_files_abspath()[connection]\
-                    [abspath_output_file]
+                    [output_file]
 
     def get_output_files_for_out_connection(self, out_connection):
         return list( self._output_files[out_connection].keys() )

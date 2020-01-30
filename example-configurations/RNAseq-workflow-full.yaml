@@ -49,14 +49,14 @@ constants:
     - &bowtie2_genome_index
         genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_bowtie2_index/bowtie2_index-hg19_all_chr_UCSC-all_sequences-4bnBZlNy/bowtie2_index-hg19_all_chr_UCSC-all_sequences
 
-#    # 2.2 Segemehl
-#    - &segemehl_genome_index
-#        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_segemehl_index/segemehl_index-hg19_all_chr_UCSC-all_sequences-dbEMdEVV/segemehl_index-hg19_all_chr_UCSC-all_sequences.idx
+    # 2.2 Segemehl
+    - &segemehl_genome_index
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/hg19_segemehl_index/segemehl_index-hg19_all_chr_UCSC-all_sequences-dbEMdEVV/segemehl_index-hg19_all_chr_UCSC-all_sequences.idx
 
     # 3.  Gencode Annotation:
     # 3.1 Version 24
-    - &gencode_v24_annotation_gtf
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode/gencode.v24.annotation.gtf
+    - &gencode_v19_annotation_gtf
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode/gencode.v19.annotation.gtf
 
 ################################################################################
 ## Steps Section                                                              ##
@@ -96,7 +96,7 @@ steps:
 
     count_genes_tophat2 (htseq_count):
         _depends: sort_tophat2_by_pos
-        feature-file: *gencode_v24_annotation_gtf
+        feature-file: *gencode_v19_annotation_gtf
         order: pos
         stranded: 'yes'
         mode: intersection-strict
@@ -106,36 +106,36 @@ steps:
     cufflinks_tophat2 (cufflinks):
         _depends: sort_tophat2_by_pos
         library-type: fr-secondstrand
-        mask-file: *gencode_v24_annotation_gtf
+        mask-file: *gencode_v19_annotation_gtf
 
 # Uncomment the following steps if you created the segemehl genome index
-#    segemehl:
-#        _depends: fastq_source
-#        genome: *genome
-#        index: *segemehl_genome_index
-#
-#    s2c:
-#        _depends: segemehl
-#        tmp_dir: /tmp/
-#
-#    sort_segemehl_by_pos (sam_to_sorted_bam):
-#        _depends: s2c
-#        genome-faidx: *genome_faidx
-#        temp-sort-dir: /tmp/
-#
-#    count_genes_segemehl (htseq_count):
-#        _depends: sort_segemehl_by_pos
-#        feature-file: *gencode_v24_annotation_gtf
-#        order: pos
-#        stranded: 'yes'
-#        mode: intersection-strict
-#        type: exon
-#        idattr: gene_id
-#
-#    cufflinks_segemehl (cufflinks):
-#        _depends: sort_segemehl_by_pos
-#        library-type: fr-secondstrand
-#        mask-file: *gencode_v24_annotation_gtf
+    segemehl:
+        _depends: fastq_source
+        genome: *genome
+        index: *segemehl_genome_index
+
+    s2c:
+        _depends: segemehl
+        tmp_dir: /tmp/
+
+    sort_segemehl_by_pos (sam_to_sorted_bam):
+        _depends: s2c
+        genome-faidx: *genome_faidx
+        temp-sort-dir: /tmp/
+
+    count_genes_segemehl (htseq_count):
+        _depends: sort_segemehl_by_pos
+        feature-file: *gencode_v19_annotation_gtf
+        order: pos
+        stranded: 'yes'
+        mode: intersection-strict
+        type: exon
+        idattr: gene_id
+
+    cufflinks_segemehl (cufflinks):
+        _depends: sort_segemehl_by_pos
+        library-type: fr-secondstrand
+        mask-file: *gencode_v19_annotation_gtf
 
 ################################################################################
 ## Tools Section                                                              ##
@@ -181,16 +181,17 @@ tools:
         exit_code: 0
 
     # URL: http://www.htslib.org/
+    # NOTE: uap requires samtools version 1.0 or greater
     samtools:
         path: samtools
-        get_version: ''
-        exit_code: 1
+        get_version: '--version'
+        exit_code: 0
 
-#    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
-#    segemehl: 
-#        path: segemehl.x
-#        get_version: ''
-#        exit_code: 255
+    # URL: http://www.bioinf.uni-leipzig.de/Software/segemehl/
+    segemehl: 
+        path: segemehl.x
+        get_version: ''
+        exit_code: 255
 
     # URL: http://ccb.jhu.edu/software/tophat/index.shtml
     tophat2:

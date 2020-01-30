@@ -18,7 +18,6 @@ class RawUrlSource(AbstractSourceStep):
         self.require_tool('cp')
         self.require_tool('curl')
         self.require_tool('dd')
-        self.require_tool('mkdir')
         self.require_tool('pigz')
 
         self.add_option('run-download-info', dict, optional = False,
@@ -34,6 +33,9 @@ class RawUrlSource(AbstractSourceStep):
                         "    secure-hash: <secure-hash>\n"
                         "    uncompress: <uncompress>\n"
                         "    url: <url>")
+
+        # Options for dd
+        self.add_option('dd-blocksize', str, optional = True, default = "256k")
 
     def runs(self, run_ids_connections_files):
         # Sanity check the 'file-download-map'
@@ -85,9 +87,9 @@ class RawUrlSource(AbstractSourceStep):
             root, ext = os.path.splitext(url_filename)
             is_gzipped = True if ext in ['.gz', '.gzip'] else False
             if not is_gzipped and downloads['uncompress']:
-                raise StandardError("Uncompression of non-gzipped file %s requested."
+                logger.error("Uncompression of non-gzipped file %s requested."
                                     % url_filename)
-
+                sys.exit(1)
             # Handle the filename to have the proper ending
             filename = root if downloads['uncompress'] and is_gzipped \
                        else url_filename
@@ -98,8 +100,9 @@ class RawUrlSource(AbstractSourceStep):
 
             if is_gzipped and downloads['uncompress'] and \
                ext in ['.gz', '.gzip']:
-                raise StandardError("The filename %s should NOT end on '.gz' or "
-                                    "'.gzip'." % conf_filename)
+                logger.error("The filename %s should NOT end on '.gz' or "
+                             "'.gzip'." % conf_filename)
+                sys.exit(1)
             filename = conf_filename
 
             # Get directory to move downloaded file to
@@ -112,13 +115,15 @@ class RawUrlSource(AbstractSourceStep):
                 if os.path.exists(path):
                     # Fail if it is not a directory
                     if not os.path.isdir(path):
-                        raise StandardError(
+                        logger.error(
                             "Path %s already exists but is not a directory" % path)
+                        sys.exit(1)
                 else:
                     # Create the directory
                     with run.new_exec_group() as mkdir_exec_group:
                         mkdir = [self.get_tool('mkdir'), '-p', path]
                         mkdir_exec_group.add_command(mkdir)
+
                 out_file = run.add_output_file('raw', final_abspath, [] )
 
                 temp_filename = run.add_temporary_file(suffix = url_filename)
@@ -149,7 +154,7 @@ class RawUrlSource(AbstractSourceStep):
                                     '--processes', '1',
                                     temp_filename]
                             dd_out = [self.get_tool('dd'),
-                                      'bs=4M',
+                                      'bs=%s' % self.get_option('dd-blocksize'),
                                       'of=%s' % out_file]
                             pipe.add_command(pigz)
                             pipe.add_command(dd_out)

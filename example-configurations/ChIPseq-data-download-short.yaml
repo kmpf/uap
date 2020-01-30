@@ -1,0 +1,129 @@
+# This configuration downloads the sequencing data analysed in:
+# High-Resolution Profiling of Histone Methylations in the Human Genome
+# Barski et al., Cell, 2007
+
+################################################################################
+## Cluster Section                                                            ##
+## =====================                                                      ##
+##                                                                            ##
+## - uncomment/adapt as required                                              ##
+################################################################################
+
+# cluster:
+#     # example for SLURM grid engine
+#     default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+#     # example for UGE/SGE respectively OGS
+#     default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+#     default_pre_job_command: "echo 'Run Started!'"
+#     default_post_job_command: "echo 'Run Finished!'"
+#     default_job_quota: 5
+
+################################################################################
+## Destination Path Section                                                   ##
+## ========================                                                   ##
+##                                                                            ##
+## - directory where analysis results get stored                              ##
+################################################################################
+
+destination_path: example-out/2007-Barski_et_al_download
+
+################################################################################
+## Steps Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define analysis steps here                                               ##
+################################################################################
+
+steps:
+    ##############################################################
+    ## Download Steps                                           ##
+    ##                                                          ##
+    ## - only get H3K4me1 and H3K4me3 data from Barski et al.   ##
+    ##############################################################
+
+    SRR001414_download (raw_url_source):
+        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001414/SRR001414.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001419_download (raw_url_source):
+        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001419/SRR001419.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001420_download (raw_url_source):
+        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001420/SRR001420.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001421_download (raw_url_source):
+        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001421/SRR001421.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001430_download (raw_url_source):
+        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001430/SRR001430.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001431_download (raw_url_source):
+        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001431/SRR001431.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+    SRR001432_download (raw_url_source):
+        url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001432/SRR001432.fastq.gz
+        path: example-out/2007-Barski_et_al_download
+        uncompress: yes
+
+################################################################################
+## Tools Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define used tools here                                                   ##
+## - for module system usage see documentation                                ##
+################################################################################
+
+tools:
+    ##################
+    # External Tools #
+    ##################
+
+    # URL: http://zlib.net/pigz/
+    pigz: 
+        path: pigz
+        get_version: --version
+        exit_code: 0
+                
+    ##################
+    # Internal Tools #
+    ##################
+
+    compare_secure_hashes:
+        path: ../tools/compare_secure_hashes.py
+        get_version: --version
+        exit_code: 0
+
+    ##############
+    # Unix Tools #
+    ##############
+
+    cp:
+        path: cp
+        get_version: --version
+        exit_code: 0
+
+    curl:
+        path: curl
+        get_version: --version
+        exit_code: 0
+
+    dd:
+        path: dd
+        get_version: --version
+        exit_code: 0
+
+    mkdir:
+        path: mkdir
+        get_version: --version
+        exit_code: 0

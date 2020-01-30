@@ -36,9 +36,10 @@ class Bowtie2GenerateIndex(AbstractStep):
 
         self.add_option('index-basename', str, optional = False,
                         description="Base name used for the bowtie2 index.")
+        # Options:
         self.add_option('large-index', bool, optional = True,
                         description="Force bowtie2-build to build a large index,"
-                        " even if the reference is less than ~ 4 billion "
+                        " even if the reference is less than 4 billion "
                         "nucleotides long.")
         self.add_option('noauto', bool, optional = True,
                         description="Disable the default behavior whereby "
@@ -83,9 +84,10 @@ class Bowtie2GenerateIndex(AbstractStep):
                         "sample. Suffix sorting becomes quadratic-time in the "
                         "worst case (where the worst case is an extremely "
                         "repetitive reference). Default: off.")
+        # Do not allow --noref/--justref as it changes which files are generated
         self.add_option('offrate', int, optional = True,
-                        description="To map alignments back to positions on the "
-                        "reference sequences, it's necessary to annotate "
+                        description="To map alignments back to positions on "
+                        "the reference sequences, it's necessary to annotate "
                         "('mark') some or all of the Burrows-Wheeler rows with "
                         "their corresponding location on the genome. "
                         "-o/--offrate governs how many rows get marked: the "
@@ -102,6 +104,11 @@ class Bowtie2GenerateIndex(AbstractStep):
                         "A larger <int> yields a larger lookup table but faster "
                         "query times. The ftab has size 4^(<int>+1) bytes. The "
                         "default setting is 10 (ftab is 4MB).")
+        self.add_option('threads', int, optional = True,
+                        description = "By default bowtie2-build is using only "
+                        "one thread. Increasing the number of threads will "
+                        "speed up the index building considerably in most "
+                        "cases.")
         self.add_option('seed', int, optional = True,
                         description="Use <int> as the seed for pseudo-random "
                         "number generator.")
@@ -111,12 +118,14 @@ class Bowtie2GenerateIndex(AbstractStep):
                         "ignore the rest.")
 
         # Options for dd
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        self.add_option('dd-blocksize', str, optional = True, default = "2M")
+        # Options for pigz
+        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
     def runs(self, run_ids_connections_files):
         # Compile the list of options
         options = ['large-index', 'noauto', 'packed', 'bmax', 'bmaxdivn', 'dcv',
-                   'nodc', 'offrate', 'ftabchars', 'seed', 'cutoff']
+                   'nodc', 'offrate', 'ftabchars', 'threads', 'seed', 'cutoff']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
@@ -129,6 +138,15 @@ class Bowtie2GenerateIndex(AbstractStep):
             else:
                 option_list.append('--%s' % option)
                 option_list.append(str(self.get_option(option)))
+
+        # 'threads' option can overwrite default # of cores for cufflinks
+        # and the cores variable
+        if 'threads' not in set_options:
+            option_list.append('--threads')
+            option_list.append(str(self.get_cores()))
+        else:
+            self.set_cores(self.get_option('threads'))
+
 
         for run_id in run_ids_connections_files.keys():
             # Get the basename
@@ -169,6 +187,9 @@ class Bowtie2GenerateIndex(AbstractStep):
                                          'if=%s' % input_path]
                                 # 2.2 command: Uncompress data
                                 pigz = [self.get_tool('pigz'),
+                                        '--processes', str(self.get_cores()),
+                                        '--blocksize',
+                                        self.get_option('pigz-blocksize'),
                                         '--decompress',
                                         '--stdout']
                                 # 2.3 Write file chunks to fifo

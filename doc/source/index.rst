@@ -11,6 +11,11 @@
 uap -- Robust, Consistent, and Reproducible Data Analysis
 #########################################################
 
+**Authors:**
+
+Christoph Kämpf, Michael Specht, Sven-Holger Puppel, Alexander Scholz,
+Gero Doose, Kristin Reiche, Jana Hertel, Jörg Hackermüller
+
 **Description:**
 
   **uap** executes, controls and keeps track of the analysis of large data sets.
@@ -35,7 +40,8 @@ uap -- Robust, Consistent, and Reproducible Data Analysis
   * Unix-like operating systems.
   * High Performance Compute (HPC) cluster systems such as |uge_link|,
     |oge_link| and |slurm_link|.
-
+  * see :doc:`platforms` for detailed information
+    
 **Important Information**
 
   **uap** does **NOT** include all tools necessary for the data analysis.
@@ -54,10 +60,11 @@ Table of contents
    configuration
    interaction
    extension
+   platforms
    annotation
    steps
    api
-
+   developers
 
 *******
 Remarks
