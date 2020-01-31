@@ -60,6 +60,10 @@ class ConnectionsCollector(object):
             raise UAPError('files musst to be a list but is a %s' %
                     file.__class__.__name__)
         run_id = self._init_run_id(run_id)
+        if not isinstance(connection, str):
+            raise UAPError('The passed connection musst be a string.')
+        if not connection.startswith('in/'):
+            raise UAPError('Input connections muss start with "in/".')
         self.connections[run_id].setdefault(connection, list())
         self.connections[run_id][connection].extend(files)
         self._by_cons_none_empty.setdefault(connection, set())
@@ -68,6 +72,55 @@ class ConnectionsCollector(object):
         self._con_of_all_runs = None # reset cache
         logger.debug("Found %s to connect to %s in run %s." %
                 (self.step_name, connection, run_id))
+
+    def connect(self, parent, child, connections=None):
+        '''
+        Makes connections between parent and child step and returns
+        the number made connections. If no connections are passed
+        it connects all equally named connections. The passed
+        connections need to be of the format as in the pipline
+        configuration file.
+        '''
+        if connections is None:
+            # get equally named connections
+            pout = parent.get_out_connections(strip_prefix=True)
+            ins = child.get_in_connections(strip_prefix=True)
+            conns = pout.intersection(ins)
+            if len(conns) == 0:
+                logger.warn('There are no default connections between '
+                        '%s and its dependency %s.' %
+                        (parent.get_step_name(), self.get_step_name()))
+                return 0
+            make_connections = {'in/%s' % conn : 'out/%s' % conn
+                    for conn in conns}
+        elif isinstance(connections, dict):
+            # extract connections from config
+            make_connections = dict()
+            parent_name = parent.get_step_name()
+            pre_len = len(parent_name)
+            for in_conn, out_conns in connections.items():
+                if not isinstance(out_conns, list):
+                    out_conns = [out_conns]
+                for out_conn in out_conns:
+                    if out_conn.startswith(parent_name):
+                        make_connections[in_conn] = 'out%s'%out_conn[pre_len:]
+        else:
+            raise UAPError('The passed connections need to be a dictionay.')
+
+        # make the connections
+        connected = 0
+        for parent_run_id in parent.get_runs():
+            self.switch_run_id(parent_run_id)
+            parent_run = parent.get_run(parent_run_id)
+            for in_conn, out_conn in make_connections.items():
+                if out_conn not in parent_run.get_out_connections():
+                    continue
+                output_files = parent_run\
+                        .get_output_files_abspath_for_out_connection(out_conn)
+                self.add_connection(in_conn, output_files)
+                connected += 1
+
+        return connected
 
     def get_connection(self, connection, run_id=None):
         '''
@@ -173,14 +226,6 @@ class ConnectionsCollector(object):
             else:
                 self._con_of_all_runs = set()
         return connection in self._con_of_all_runs
-
-    def add_default_ins(self, out_connection, files):
-        '''
-        Takes ``out_connection`` of the parent step to make and save
-        the default ins.
-        '''
-        in_connection = out_connection.replace('out/', 'in/')
-        self.add_connection(in_connection, files)
 
     def __getitem__(self, run_id):
         if run_id not in self.connections.keys():

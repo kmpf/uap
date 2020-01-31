@@ -24,6 +24,7 @@
  * introduce --profiling option to analyse uap runtime (#132)
  * introduce --legacy option for submit-to-cluster to use none array jobs
  * optional step connections (#35)
+ * much improved connection checks (#138)
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings

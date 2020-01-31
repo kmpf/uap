@@ -1183,7 +1183,7 @@ class AbstractStep(object):
             connections = connections.union(self._optional_connections)
         return connections
 
-    def get_in_connections(self, with_optional=True):
+    def get_in_connections(self, with_optional=True, strip_prefix=False):
         """
         Return all in-connections for this step
         """
@@ -1193,10 +1193,14 @@ class AbstractStep(object):
         in_connections = set()
         for connection in connections:
             if connection[0:3] == "in/":
-                in_connections.add(connection)
+                if strip_prefix is True:
+                    con = connection[3:]
+                else:
+                    con = connection
+                in_connections.add(con)
         return in_connections
 
-    def get_out_connections(self, with_optional=True):
+    def get_out_connections(self, with_optional=True, strip_prefix=False):
         """
         Return all out-connections for this step
         """
@@ -1206,7 +1210,11 @@ class AbstractStep(object):
         out_connections = set()
         for connection in connections:
             if connection[0:4] == "out/":
-                out_connections.add(connection)
+                if strip_prefix is True:
+                    con = connection[4:]
+                else:
+                    con = connection
+                out_connections.add(con)
         return out_connections
 
     def require_tool(self, tool):
@@ -1351,43 +1359,48 @@ class AbstractStep(object):
 
         cc = ConnectionsCollector(self.get_step_name())
         self._options.setdefault('_connect', dict())
-        cons = self._options['_connect'].items()
 
         # Check if set in-connections are defined in the step class
-        for in_connection, _ in cons:
+        # and collect out connections for later check
+        set_out_connections = set()
+        used_out_connections = set()
+        for in_connection, out in self._options['_connect'].items():
             if in_connection not in self.get_in_connections():
                 raise UAPError("'_connect': unknown input connection %s "
                              "found." % in_connection)
+            out = out if isinstance(out, list) else [out]
+            set_out_connections = set_out_connections.union(set(out))
 
         # For each parent step ...
         for parent in self.get_dependencies():
-            # ... and each parent step run ...
-            for parent_run_id in parent.get_runs():
-                cc.switch_run_id(parent_run_id)
-                parent_run = parent.get_run(parent_run_id)
+            connected = cc.connect(parent, self, self._options['_connect'])
+            if not connected:
+                # add connections with the same name
+                logger.debug('Parent %s not connected to dependening %s -> '
+                        'connection equally named connections.'%
+                         (parent.get_step_name(), self.get_step_name()))
+                connected = cc.connect(parent, self)
+            if not connected:
+                raise UAPError('No connections could be made between '
+                        '%s and its dependency %s.' %
+                        (self.get_step_name(), parent.get_step_name()))
 
-                # Workaround: Set empty connections
-                for _con_in, parent_out_connection_to_bend in cons:
-                    if parent_out_connection_to_bend == 'empty':
-                        cc.add_empty(_con_in)
+            # check if all required connections are sattisfied
+            required_connections = self.get_in_connections(with_optional=False)
+            for rc in required_connections:
+                if rc not in cc.existing_connections:
+                    logger.warn('The required connection %s of step %s is not '
+                        'satisfied. Please supplie a run with the connection '
+                        'or set optional=True for the connection in the step '
+                        'constructor. Will attempt to presume anayway.'%
+                        (rc, self.get_step_type()))
 
-                # ... and each connection
-                for parent_out_connection in parent_run.get_out_connections():
-                    output_files = parent_run\
-                            .get_output_files_abspath_for_out_connection(
-                                parent_out_connection)
-
-                    this_parent_out_connection = '%s/%s' % (
-                            parent.get_step_name(), parent_out_connection[4:])
-
-                    for in_connection, out in cons:
-                        out = out if isinstance(out, list) else [out]
-                        if this_parent_out_connection in out:
-                            cc.add_connection(in_connection, output_files)
-                            break
-
-                    if cc.used_current_run_id is False:
-                        cc.add_default_ins(parent_out_connection, output_files)
+            # check if all set out connections were recognized
+            unrecognized = set_out_connections - used_out_connections
+            if len(unrecognized) > 0:
+                raise UAPError('The following connections set in %s were not '
+                        'recognized: %s.' %
+                        (self.get_step_name(), list(unrecognized)))
 
         return cc
 
