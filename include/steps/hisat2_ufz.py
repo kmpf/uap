@@ -16,7 +16,7 @@ class Hisat2UFZ(AbstractStep):
 
     def __init__(self, pipeline):
 
-        super(Hisat2, self).__init__(pipeline)
+        super(Hisat2UFZ, self).__init__(pipeline)
 
         self.set_cores(6) # consider to adjust this default number
 

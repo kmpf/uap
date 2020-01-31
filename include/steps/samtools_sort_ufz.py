@@ -22,7 +22,7 @@ class SamtoolsSortUFZ(AbstractStep):
     '''
 
     def __init__(self, pipeline):
-        super(SamtoolsSort, self).__init__(pipeline)
+        super(SamtoolsSortUFZ, self).__init__(pipeline)
         
         self.set_cores(6)
         
