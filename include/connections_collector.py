@@ -90,8 +90,10 @@ class ConnectionsCollector(object):
             conns = parent_out_conns.intersection(ins)
             if len(conns) == 0:
                 logger.warn('There are no default connections between '
-                        '%s and its dependency %s.' %
-                        (parent_name, self.get_step_name()))
+                        '%s and its dependency %s. The parent out connections '
+                        'are %s and the child in connections are %s.'%
+                        (parent_name, child.get_step_name(),
+                                parent_out_conns, ins))
                 return 0
             make_connections = [
                 ('in/%s'%conn, 'out/%s'%conn, '%s/%s'%(parent_name, conn))
@@ -100,20 +102,20 @@ class ConnectionsCollector(object):
         elif isinstance(connections, dict):
             # extract connections from config
             make_connections = list()
-            pre_len = len(parent_name)
+            pre_len = len(parent_name)+1
             for in_conn, out_conns in connections.items():
                 if not isinstance(out_conns, list):
                     out_conns = [out_conns]
                 for out_conn in out_conns:
                     if out_conn.startswith(parent_name):
-                        p_out = 'out%s'%out_conn[pre_len:]
-                        if out_conn not in parent_out_conns:
+                        stripped_out_conn = out_conn[pre_len:]
+                        p_out = 'out/%s'%stripped_out_conn
+                        if stripped_out_conn not in parent_out_conns:
                             avail = list(parent_out_conns)
                             raise UAPError('The connection "%s" set in "%s" '
                                     'is not an out connection of "%s". ' 
                                     'Available out connections are: %s' %
                                     (out_conn, child_name, parent_name, avail))
-                        p_out = 'out%s'%out_conn[pre_len:]
                         make_connections.append((in_conn, p_out, out_conn))
         else:
             raise UAPError('The passed connections need to be a dictionay.')
