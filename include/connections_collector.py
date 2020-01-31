@@ -93,7 +93,7 @@ class ConnectionsCollector(object):
                         '%s and its dependency %s. The parent out connections '
                         'are %s and the child in connections are %s.'%
                         (parent_name, child.get_step_name(),
-                                parent_out_conns, ins))
+                                list(parent_out_conns), list(ins)))
                 return 0
             make_connections = [
                 ('in/%s'%conn, 'out/%s'%conn, '%s/%s'%(parent_name, conn))
