@@ -23,10 +23,10 @@ class StringtieMerge(AbstractStep):
         self.set_cores(2)
 
         # all .gft assemblies from all samples that have been produced with stringtie
-        self.add_connection('in/assembling')
+        self.add_connection('in/features')
         self.add_connection('in/reference')
         # merged assembly 'merged.gft'
-        self.add_connection('out/assembling') # merged.gtf
+        self.add_connection('out/features') # merged.gtf
         self.add_connection('out/assemblies') # input assemblies txt file
         self.add_connection('out/log_stderr')
         self.add_connection('out/run_log')
@@ -102,9 +102,9 @@ class StringtieMerge(AbstractStep):
         # get all paths to the stringtie assemblies from each sample
 
         stringtie_sample_gtf = []
-        assembling_runs = cc.get_runs_with_connections('in/assembling')
+        assembling_runs = cc.get_runs_with_connections('in/features')
         for run_id in assembling_runs:
-            stringtie_sample_gtf.append(cc[run_id]['in/assembling'][0])
+            stringtie_sample_gtf.append(cc[run_id]['in/features'][0])
 
 
 
@@ -125,7 +125,7 @@ class StringtieMerge(AbstractStep):
         with run.new_exec_group() as exec_group:
             exec_group.add_command(assemblies, stdout_path = assemblies_file)
             with exec_group.add_pipeline() as stringtie_pipe:
-                res = run.add_output_file('assembling', 
+                res = run.add_output_file('features', 
                                           '%s-stringtieMerge-merged.gtf' % 
                                           run_id, input_files)
 

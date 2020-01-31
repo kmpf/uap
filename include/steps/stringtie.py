@@ -153,7 +153,7 @@ class Stringtie(AbstractStep):
 
         # [Options for 'dd':]
 	self.add_option('fifo', bool, optional = True, default = False,
-			description='Enable the FIFO functionality for splitting large input files.')	
+			description='Enable the FIFO functionality for splitting large input files.')
         self.add_option('dd-blocksize', str, optional = True, default = "2M",
 			description='Provide the blocksize for dd tool.')
 
@@ -251,7 +251,7 @@ class Stringtie(AbstractStep):
                 # 1. initialize the stringtie command on input BAM file
                 stringtie = [self.get_tool('stringtie'), alignments[0]]
 
-            stringtie.extend(['-o', assembling, '-A', abundances]
+            stringtie.extend(['-o', assembling, '-A', abundances])
             if con_ref_assembly is not None:
                 cov_refs = run.add_output_file(
                     'coverage',
@@ -268,7 +268,7 @@ class Stringtie(AbstractStep):
                                 'be used if a reference is provided with -G.')
             stringtie.extend(option_list)
 
-            exec_group.add_command(stringtie, stdout_path=log_stderr,
+            exec_group.add_command(stringtie, stdout_path=log_stdout,
                     stderr_path=log_stderr)
 
             if self.is_option_set_in_config('B') and self.get_option('B'):
@@ -281,9 +281,9 @@ class Stringtie(AbstractStep):
 
                 for connection in connections:
                     is_produced = ''.join([run.get_output_directory_du_jour_placeholder(),
-                                           '/', connection])
+                                           '/', connection, '.ctab'])
 
-                    out_file = run_id + '-' + connection
+                    out_file = run_id + '-' + connection + '.ctab'
                     is_wanted = run.add_output_file(connection,
                                                     out_file,
                                                     alignments)
