@@ -70,57 +70,68 @@ class ConnectionsCollector(object):
         self._by_cons_none_empty[connection].add(run_id)
         self.existing_connections.add(connection)
         self._con_of_all_runs = None # reset cache
-        logger.debug("Found %s to connect to %s in run %s." %
+        logger.debug("Found %s to connect %s with run %s." %
                 (self.step_name, connection, run_id))
 
     def connect(self, parent, child, connections=None):
         '''
         Makes connections between parent and child step and returns
-        the number made connections. If no connections are passed
-        it connects all equally named connections. The passed
-        connections need to be of the format as in the pipline
-        configuration file.
+        the utilized parent connections as "parent/name".
+        The passed connections need to be in the format as in the
+        pipline configuration file. If no connections are passed it
+        connects all equally named connections.
         '''
+        parent_name = parent.get_step_name()
+        parent_out_conns = parent.get_out_connections(strip_prefix=True)
+        child_name = child.get_step_name()
         if connections is None:
             # get equally named connections
-            pout = parent.get_out_connections(strip_prefix=True)
             ins = child.get_in_connections(strip_prefix=True)
-            conns = pout.intersection(ins)
+            conns = parent_out_conns.intersection(ins)
             if len(conns) == 0:
                 logger.warn('There are no default connections between '
                         '%s and its dependency %s.' %
-                        (parent.get_step_name(), self.get_step_name()))
+                        (parent_name, self.get_step_name()))
                 return 0
-            make_connections = {'in/%s' % conn : 'out/%s' % conn
-                    for conn in conns}
+            make_connections = [
+                ('in/%s'%conn, 'out/%s'%conn, '%s/%s'%(parent_name, conn))
+                for conn in conns
+            ]
         elif isinstance(connections, dict):
             # extract connections from config
-            make_connections = dict()
-            parent_name = parent.get_step_name()
+            make_connections = list()
             pre_len = len(parent_name)
             for in_conn, out_conns in connections.items():
                 if not isinstance(out_conns, list):
                     out_conns = [out_conns]
                 for out_conn in out_conns:
                     if out_conn.startswith(parent_name):
-                        make_connections[in_conn] = 'out%s'%out_conn[pre_len:]
+                        p_out = 'out%s'%out_conn[pre_len:]
+                        if out_conn not in parent_out_conns:
+                            avail = list(parent_out_conns)
+                            raise UAPError('The connection "%s" set in "%s" '
+                                    'is not an out connection of "%s". ' 
+                                    'Available out connections are: %s' %
+                                    (out_conn, child_name, parent_name, avail))
+                        p_out = 'out%s'%out_conn[pre_len:]
+                        make_connections.append((in_conn, p_out, out_conn))
         else:
             raise UAPError('The passed connections need to be a dictionay.')
 
         # make the connections
-        connected = 0
+        used_conns = set()
         for parent_run_id in parent.get_runs():
             self.switch_run_id(parent_run_id)
             parent_run = parent.get_run(parent_run_id)
-            for in_conn, out_conn in make_connections.items():
+            for in_conn, out_conn, parent_con in make_connections:
                 if out_conn not in parent_run.get_out_connections():
                     continue
                 output_files = parent_run\
                         .get_output_files_abspath_for_out_connection(out_conn)
                 self.add_connection(in_conn, output_files)
-                connected += 1
+                used_conns.add(parent_con)
 
-        return connected
+        return used_conns
 
     def get_connection(self, connection, run_id=None):
         '''

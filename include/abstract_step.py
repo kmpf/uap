@@ -1361,46 +1361,51 @@ class AbstractStep(object):
         self._options.setdefault('_connect', dict())
 
         # Check if set in-connections are defined in the step class
-        # and collect out connections for later check
+        # and collect out connections for later check.
         set_out_connections = set()
         used_out_connections = set()
-        for in_connection, out in self._options['_connect'].items():
-            if in_connection not in self.get_in_connections():
+        for in_conn, out_conn in self._options['_connect'].items():
+            if in_conn not in self.get_in_connections():
                 raise UAPError("'_connect': unknown input connection %s "
-                             "found." % in_connection)
-            out = out if isinstance(out, list) else [out]
-            set_out_connections = set_out_connections.union(set(out))
+                             "found." % in_conn)
+            out_conn = out_conn if isinstance(out_conn, list) else [out_conn]
+            set_out_connections = set_out_connections.union(set(out_conn))
 
         # For each parent step ...
         for parent in self.get_dependencies():
-            connected = cc.connect(parent, self, self._options['_connect'])
-            if not connected:
-                # add connections with the same name
+            logger.debug('Connecting "%s" to "%s".' %
+                    (parent.get_step_name(), self.get_step_name()))
+            # ... look for connection to add
+            used_conns = cc.connect(parent, self, self._options['_connect'])
+            if not used_conns:
+                # ... or add connections with the same name.
                 logger.debug('Parent %s not connected to dependening %s -> '
                         'connection equally named connections.'%
                          (parent.get_step_name(), self.get_step_name()))
-                connected = cc.connect(parent, self)
-            if not connected:
+                used_conns = cc.connect(parent, self)
+            if not used_conns:
                 raise UAPError('No connections could be made between '
                         '%s and its dependency %s.' %
                         (self.get_step_name(), parent.get_step_name()))
+            used_out_connections = used_out_connections.union(used_conns)
 
-            # check if all required connections are sattisfied
-            required_connections = self.get_in_connections(with_optional=False)
-            for rc in required_connections:
-                if rc not in cc.existing_connections:
-                    logger.warn('The required connection %s of step %s is not '
-                        'satisfied. Please supplie a run with the connection '
-                        'or set optional=True for the connection in the step '
-                        'constructor. Will attempt to presume anayway.'%
-                        (rc, self.get_step_type()))
+        # Check if all required connections are sattisfied.
+        required_connections = self.get_in_connections(with_optional=False)
+        for rc in required_connections:
+            if rc not in cc.existing_connections:
+                logger.warn('The required connection "%s" of step "%s" is '
+                    'not satisfied. Please supplie a run with the '
+                    'connection or set optional=True for the connection in '
+                    'the step constructor. '
+                    'The UAP will attempt to presume anayway.'%
+                    (rc, self.get_step_type()))
 
-            # check if all set out connections were recognized
-            unrecognized = set_out_connections - used_out_connections
-            if len(unrecognized) > 0:
-                raise UAPError('The following connections set in %s were not '
-                        'recognized: %s.' %
-                        (self.get_step_name(), list(unrecognized)))
+        # Check if all set out connections were recognized.
+        unrecognized = set_out_connections - used_out_connections
+        if len(unrecognized) > 0:
+            raise UAPError('The following connections set in %s were not '
+                    'recognized: %s.' %
+                    (self.get_step_name(), list(unrecognized)))
 
         return cc
 

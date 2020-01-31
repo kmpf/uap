@@ -5,6 +5,7 @@
  * invoce uap from anywhere (#114)
  * avoid depricated pip wrapper (#122)
  * one parent step can now be used for multiple inputs (#125)
+ * reviced connection checks (#138)
 
 **Features**
  * steps now run within their temp directory (#29, #31)
@@ -24,12 +25,12 @@
  * introduce --profiling option to analyse uap runtime (#132)
  * introduce --legacy option for submit-to-cluster to use none array jobs
  * optional step connections (#35)
- * much improved connection checks (#138)
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
  * `stringtieMerge` option `run_id` changed to `output_prefix`
  * step connection documentation (#137)
+ * use common names for stringtie gtf connections
 
 ## 1.1 (20.01.2020)
 
