@@ -291,7 +291,9 @@ class Run(object):
         cmd_by_eg['tool_versions'] = dict()
         for tool in tools:
             tool_info = step.get_pipeline().tool_versions[tool]
-            cmd_by_eg['tool_versions'][tool] = tool_info['response']
+            ignore = step.get_pipeline().config['tools']['ignore_version']
+            if tool_info['ignore_version'] is not True:
+                cmd_by_eg['tool_versions'][tool] = tool_info['response']
 
         # Set step state back to original state
         step._state = previous_state

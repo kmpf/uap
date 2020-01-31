@@ -282,6 +282,7 @@ class Pipeline(object):
             self.config['tools'][tool].setdefault('path', tool)
             self.config['tools'][tool].setdefault('get_version', '--version')
             self.config['tools'][tool].setdefault('exit_code', 0)
+            self.config['tools'][tool].setdefault('ignore_version', False)
             if 'module_name' in self.config['tools'][tool]:
                 mn = self.config['tools'][tool]['module_name']
                 cmd = '%s python load %s' % (self.config['lmod']['path'], mn)
@@ -302,6 +303,7 @@ class Pipeline(object):
             self.config['tools'][tool].setdefault('path', [uap_python, tool_path])
             self.config['tools'][tool].setdefault('get_version', '--help')
             self.config['tools'][tool].setdefault('exit_code', 0)
+            self.config['tools'][tool].setdefault('ignore_version', False)
 
         if not 'destination_path' in self.config:
             raise UAPError("%s: Missing key: destination_path"

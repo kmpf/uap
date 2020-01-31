@@ -338,12 +338,15 @@ An example tool configuration looks like this:
         cat:
             path: cat
             get_version: --version
-            module_load:
 
         # you have to specify a path if the tool can not be found in $PATH
         some-tool:
             path: /path/to/some-tool
             get_version: --version
+
+       # if the output is not sesetive to the tool version it can be ignored
+       mv:
+          ignore_version: True
 
        pigz:
            path: pigz
@@ -362,8 +365,8 @@ version by calling the program without command-line arguments.
 get the version information.
 ``exit_code`` is the value returned by ``echo $?`` after trying to determine
 the version e.g. by running ``pigz --version``.
-If not set ``exit_code`` defaults to 0, ``get_version`` to ``--version`` and
-``path`` to the tool name.
+If not set ``exit_code`` defaults to 0, ``get_version`` to ``--version``,
+``ignore_version`` to ``False`` and ``path`` to the tool name.
 
 To use |lmod_link| to load an unload a tool you can specify the
 ``module_name`` option:
