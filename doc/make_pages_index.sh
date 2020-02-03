@@ -11,6 +11,7 @@ printf '
 
 for file in $(ls -1); do
     [[ "$file" == "index.html" ]] && continue
+    [[ ! -d "$file" ]] && continue
     printf '<li><a href=%s>%s</a></li>' "$file" "$file" >> index.html
 done
 
