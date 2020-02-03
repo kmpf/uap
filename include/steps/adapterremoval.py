@@ -31,12 +31,15 @@ class AdapterRemoval(AbstractStep):
         self.add_connection('in/first_read')
         self.add_connection('in/second_read', optional=True)
 
-        self.add_connection('out/collapsed')
-        self.add_connection('out/collapsed.truncated')
+        self.add_connection('out/collapsed', optional=True)
+        self.add_connection('out/collapsed.truncated', optional=True)
         self.add_connection('out/discarded')
-        self.add_connection('out/truncated')
-        self.add_connection('out/pair1.truncated', optional=True)
-        self.add_connection('out/pair2.truncated', optional=True)
+        self.add_connection('out/truncated', optional=True, format='fastq',
+            description='Truncated single end reads.')
+        self.add_connection('out/pair1.truncated', optional=True, format='fastq',
+            description='Truncated first read of paired end reads.')
+        self.add_connection('out/pair2.truncated', optional=True, format='fastq',
+            description='Truncated first secind of paired end reads.')
         self.add_connection('out/singleton.truncated', optional=True)
         self.add_connection('out/settings')
         self.add_connection('out/log_stderr')
