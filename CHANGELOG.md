@@ -32,6 +32,7 @@
  * `stringtieMerge` option `run_id` changed to `output_prefix`
  * step connection documentation (#137)
  * use common names for stringtie gtf connections
+ * hisat2 now takes `library_type` option
 
 ## 1.1 (20.01.2020)
 
