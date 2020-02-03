@@ -15,6 +15,14 @@ class StringtieMerge(AbstractStep):
 
     '''
     # stringtie --merge <gtf.list> > outputpat/outputname
+
+    StringTie is a fast and highly efficient assembler of RNA-Seq alignments into potential
+    transcripts. merge is a mode of the StringTie tool that is used to assemble transcripts from multiple input files (assemblies). It generates a unified non-redundant set of isoforms.
+
+    NOTE: This step implements the merging part of stringtie. If you want
+    stringtie to assemble transcripts from multiple BAM files please use step stringtie!
+
+    https://ccb.jhu.edu/software/stringtie/
     '''
 
     def __init__(self, pipeline):
@@ -23,10 +31,13 @@ class StringtieMerge(AbstractStep):
         self.set_cores(2)
 
         # all .gft assemblies from all samples that have been produced with stringtie
-        self.add_connection('in/features')
-        self.add_connection('in/reference')
+        self.add_connection('in/features', format=['gtf', 'gff3'],
+                description='Feature annotations to be merged.')
+        self.add_connection('in/reference', format=['gtf', 'gff3'], optional=True,
+                description='Reference assembly. Can also be passed with option G '
+                            'or left out for denovo assembling.')
         # merged assembly 'merged.gft'
-        self.add_connection('out/features') # merged.gtf
+        self.add_connection('out/features', format='gtf') # merged.gtf
         self.add_connection('out/assemblies') # input assemblies txt file
         self.add_connection('out/log_stderr')
         self.add_connection('out/run_log')
@@ -51,6 +62,8 @@ class StringtieMerge(AbstractStep):
                         description='minimum isoform fraction (default: 0.01)')
         self.add_option('g', int, optional=True,
                         description='gap between transcripts to merge together (default: 250)')
+        self.add_option('i', bool, optional=True,
+                        description = 'keep merged transcripts with retained introns; by default')
         self.add_option('l', str, optional=True,
                         description='name prefix for output transcripts (default: MSTRG)')
 
@@ -68,7 +81,7 @@ class StringtieMerge(AbstractStep):
 
 
         # compile list of options
-        options=['m', 'c', 'F', 'T', 'f', 'g', 'l']
+        options=['m', 'c', 'F', 'T', 'f', 'g', 'i', 'l']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
