@@ -27,6 +27,7 @@ class BwaBacktrack(AbstractStep):
         bwa aln <bwa-index> <second-read.fastq> > <second-read.sai>        
         bwa sampe <bwa-index> <first-read.sai> <second-read.sai> \
                   <first-read.fastq> <second-read.fastq> > <sam-output>
+
     '''
     
     def __init__(self, pipeline):
@@ -120,10 +121,10 @@ class BwaBacktrack(AbstractStep):
                         "aln-2 are usually applied to specify which end should "
                         "be mapped. Typical command lines for mapping pair-end "
                         "data in the BAM format are:\n"
-                        " bwa aln ref.fa -b1 reads.bam > 1.sai\n"
-                        " bwa aln ref.fa -b2 reads.bam > 2.sai \n"
-                        " bwa sampe ref.fa 1.sai 2.sai reads.bam reads.bam > "
-                        "aln.sam")
+                        "     bwa aln ref.fa -b1 reads.bam > 1.sai\n"
+                        "     bwa aln ref.fa -b2 reads.bam > 2.sai \n"
+                        "     bwa sampe ref.fa 1.sai 2.sai reads.bam reads.bam > "
+                        "aln.sam\n")
         self.add_option('aln-0', bool, optional = True,
                         description = "When aln-b is specified, only use single-"
                         "end reads in mapping.")

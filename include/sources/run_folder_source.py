@@ -36,11 +36,11 @@ class RunFolderSource(AbstractSourceStep):
         self.add_option('project_name', str, default='*', optional=True,
                         description="Name of the project. If provided, this is appended"
                         "to the path string. This option has the same meaning as 'project',"
-                        "however, the prefix 'Project_' is not added. If 'project' and "
+                        "however, the prefix 'Project\_' is not added. If 'project' and "
                         "'project_name' are provided, 'project_name' is choosen.")
         self.add_option('samples', str, default='Sample_*', optional=True,
                         description='Pattern for the sample directory names inside '
-                        'path/[Project_]project[_name]')
+                        'path/[Project\_]project[_name]')
         self.add_option('first_read', str, default = '_R1',
                         description = "Part of the file name that marks all "
                         "files containing sequencing data of the first read. "
