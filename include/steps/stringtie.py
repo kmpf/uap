@@ -178,20 +178,17 @@ class Stringtie(AbstractStep):
                 option_list.append('-%s' % option)
                 option_list.append(value)
 
-        if self.is_option_set_in_config('fr') and self.get_option('fr'):
+        if self.get_option('fr') is not None:
             option_list.append('--fr')
 
-        if self.is_option_set_in_config('rf') and self.get_option('rf'):
+        if self.get_option('rf') is not None:
             option_list.append('--rf')
 
         # look for reference assembly in in-connections
-        if self.is_option_set_in_config('G'):
-            ref_assembly = os.path.abspath(self.get_option('G'))
-            if not os.path.isfile(ref_assembly):
-                raise UAPError('[Stringtie]: %s is no file.' %
-                        self.get_option('G'))
-        else:
-            ref_assembly = None
+        ref_assembly = os.path.abspath(self.get_option('G'))
+        if ref_assembly is not None and not os.path.isfile(ref_assembly):
+            raise UAPError('[Stringtie]: %s is no file.' %
+                    self.get_option('G'))
         con_ref_assembly = cc.look_for_unique('in/features', ref_assembly)
         ref_per_run = cc.all_runs_have_connection('in/features')
 
@@ -271,7 +268,7 @@ class Stringtie(AbstractStep):
             exec_group.add_command(stringtie, stdout_path=log_stdout,
                     stderr_path=log_stderr)
 
-            if self.is_option_set_in_config('B') and self.get_option('B'):
+            if self.get_option('B') is not None:
                 # rename the ballgown output
                 connections = ['e2t',
                                'e_data',

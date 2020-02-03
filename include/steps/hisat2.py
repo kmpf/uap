@@ -375,12 +375,11 @@ class Hisat2(AbstractStep):
                         hisat2 = [self.get_tool('hisat2')]
 
                         for flag in flags:
-                            if self.is_option_set_in_config(flag):
-                                if self.get_option(flag) is True:
-                                    if flag in ['q', 'f', 'r', 'c']:
-                                        hisat2.extend(['-' + flag])
-                                    else:
-                                        hisat2.extend(['--' + flag])
+                            if self.get_option(flag) is True:
+                                if flag in ['q', 'f', 'r', 'c']:
+                                    hisat2.extend(['-' + flag])
+                                else:
+                                    hisat2.extend(['--' + flag])
 
                         lt = self.get_option('library_type')
                         hisat2.append('--%s' % lt)
