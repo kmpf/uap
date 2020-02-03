@@ -24,11 +24,11 @@ class Cutadapt(AbstractStep):
         self.set_cores(4)
 
         self.add_connection('in/first_read')
-        self.add_connection('in/second_read')
+        self.add_connection('in/second_read', optional=True)
         self.add_connection('out/first_read')
-        self.add_connection('out/second_read')
+        self.add_connection('out/second_read', optional=True)
         self.add_connection('out/log_first_read')
-        self.add_connection('out/log_second_read')
+        self.add_connection('out/log_second_read', optional=True)
 
         # Step was tested for cat (GNU coreutils) release 8.25
         self.require_tool('cat')
@@ -193,11 +193,26 @@ class Cutadapt(AbstractStep):
         self.add_option('dd-blocksize', str, optional = True, default = "2M")
         self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
-    def runs(self, run_ids_connections_files):
+    def runs(self, cc):
 
-        read_types = {'first_read': 'R1', 'second_read': 'R2'}
+        read_types = {'first_read': 'R1'}
 
-        paired_end_info = dict()
+        paired_end = cc.connection_exists('in/second_read')
+        if not cc.all_runs_have_connection('in/first_read'):
+            read_name = '' if paired_end else ' first'
+            run_ids = list(cc.get_runs_without_any('in/first_read'))
+            if len(run_ids)>5:
+                run_ids = run_ids[0:5] + ['...']
+            raise UAPError('[cutadapt] No%s read passed by runs '
+                           '%s.' % (read_name, list(run_ids)))
+        if paired_end:
+            if not cc.all_runs_have_connection('in/second_read'):
+                run_ids = list(cc.get_runs_without_any('in/second_read'))
+                if len(run_ids)>5:
+                    run_ids = run_ids[0:5] + ['...']
+                raise UAPError('[cutadapt] No%s read passed by runs '
+                               '%s.' % (read_name, list(run_ids)))
+            read_types['second_read'] = 'R2'
 
         options = ["error-rate", "no-indels", "times",
                    "overlap", "match-read-wildcards", "discard-trimmed",
@@ -220,174 +235,171 @@ class Cutadapt(AbstractStep):
                 option_list.append(str(self.get_option(option)))
 
 
-        for run_id in run_ids_connections_files.keys():
-            with self.declare_run(run_id) as run:
-                for read in read_types:
-                    connection = 'in/%s' % read
-                    input_paths = run_ids_connections_files[run_id][connection]
-                    if input_paths == [None]:
-                        run.add_empty_output_connection("%s" % read)
-                        run.add_empty_output_connection("log_%s" % read)
-                    else:
-                        # make sure that adapter-R1/adapter-R2 or adapter-file are
-                        # correctly set
-                        # this kind of mutual exclusive option checking is a bit
-                        # tedious, so we do it here.
-                        if read == 'second_read':
-                            if ( not self.is_option_set_in_config('adapter-R2') and
-                                 not self.is_option_set_in_config('adapter-file') ):
-                                raise UAPError(
-                                    "Option 'adapter-R2' or 'adapter-file' "
-                                    "required because sample %s is paired end!"
-                                    % run_id)
+        for run_id in cc.keys():
+            run = self.declare_run(run_id)
+            for read in read_types:
+                connection = 'in/%s' % read
+                input_paths = cc[run_id][connection]
 
-                        if ( self.is_option_set_in_config('adapter-file') and
-                             self.is_option_set_in_config('adapter-R1') ):
-                            raise UAPError(
-                                "Option 'adapter-R1' and 'adapter-file' "
-                                "are both set but are mutually exclusive!")
-                        if ( not self.is_option_set_in_config('adapter-file') and
-                             not self.is_option_set_in_config('adapter-R1') ):
-                            raise UAPError(
-                                "Option 'adapter-R1' or 'adapter-file' "
-                                "required to call cutadapt for sample %s!"
-                                % run_id)
-                        temp_fifos = list()
-                        exec_group = run.new_exec_group()
-                        for input_path in input_paths:
-                            # 1. Create temporary fifo for every input file
-                            temp_fifo = run.add_temporary_file(
-                                "fifo-%s" % os.path.basename(input_path) )
-                            temp_fifos.append(temp_fifo)
-                            mkfifo = [self.get_tool('mkfifo'), temp_fifo]
-                            exec_group.add_command(mkfifo)
-                            # 2. Output files to fifo
-                            if input_path.endswith('fastq.gz'):
-                                with exec_group.add_pipeline() as pigz_pipe:
-                                    # 2.1 command: Read file in 4MB chunks
-                                    dd_in = [
-                                        self.get_tool('dd'),
-                                        'ibs=%s' %
-                                        self.get_option('dd-blocksize'),
-                                        'if=%s' % input_path
-                                    ]
-                                    # 2.2 command: Uncompress file to fifo
-                                    pigz = [self.get_tool('pigz'),
-                                            '--decompress',
-                                            '--processes', str(self.get_cores()),
-                                            '--blocksize', self.get_option('pigz-blocksize'),
-                                            '--stdout']
-                                    # 2.3 command: Write file in 4MB chunks to
-                                    #              fifo
-                                    dd_out = [
-                                        self.get_tool('dd'),
-                                        'obs=%s' %
-                                        self.get_option('dd-blocksize'),
-                                        'of=%s' % temp_fifo
-                                    ]
+                # make sure that adapter-R1/adapter-R2 or adapter-file are
+                # correctly set
+                # this kind of mutual exclusive option checking is a bit
+                # tedious, so we do it here.
+                if read == 'second_read':
+                    if ( not self.is_option_set_in_config('adapter-R2') and
+                         not self.is_option_set_in_config('adapter-file') ):
+                        raise UAPError(
+                            "Option 'adapter-R2' or 'adapter-file' "
+                            "required because sample %s is paired end!"
+                            % run_id)
 
-                                    pigz_pipe.add_command(dd_in)
-                                    pigz_pipe.add_command(pigz)
-                                    pigz_pipe.add_command(dd_out)
-
-                            elif input_path.endswith('fastq'):
-                                # 2.1 command: Read file in 4MB chunks and
-                                #              write to fifo in 4MB chunks
-                                dd_in = [
-                                    self.get_tool('dd'),
-                                    'bs=%s' % self.get_option('dd-blocksize'),
-                                    'if=%s' % input_path,
-                                    'of=%s' % temp_fifo
-                                ]
-                                exec_group.add_command(dd_in)
-                            else:
-                                raise UAPError("File %s does not end with any "
-                                             "expected suffix (fastq.gz or "
-                                             "fastq). Please fix that issue.")
-                        # 3. Read data from fifos
-                        with exec_group.add_pipeline() as cutadapt_pipe:
-                            # 3.1 command: Read from ALL fifos
-                            cat = [self.get_tool('cat')]
-                            cat.extend(temp_fifos)
-                            cutadapt_pipe.add_command(cat)
-
-                            # 3.2 command: Fix qnames if user wants us to
-                            if self.get_option('fix_qnames') == True:
-                                fix_qnames = [self.get_tool('fix_qnames')]
-                                cutadapt_pipe.add_command(fix_qnames)
-
-                            # Let's get the correct adapter sequences or
-                            # adapter sequence fasta file
-                            adapter = None
-                            # Do we have adapter sequences as input?
-                            if self.is_option_set_in_config('adapter-%s' \
-                                                            % read_types[read]):
-                                # Get adapter sequence
-                                adapter = self.get_option(
-                                    'adapter-%s' % read_types[read])
-
-                                # add index to adapter sequence if necessary
-                                if '((INDEX))' in adapter:
-                                    index = self.find_upstream_info_for_input_paths(
-                                        input_paths,
-                                        'index-%s' % read_types[read])
-                                    adapter = adapter.replace('((INDEX))', index)
-
-                                # create reverse complement if necessary
-                                if self.get_option('use_reverse_complement'):
-                                    complements = string.maketrans('acgtACGT',
-                                                                   'tgcaTGCA')
-                                    adapter = adapter.translate(complements)[::-1]
-
-                                # make sure the adapter is looking good
-                                if re.search('^[ACGT]+$', adapter) == None:
-                                    raise UAPError("Unable to come up with a "
-                                                 "legit-looking adapter: %s"
-                                                 % adapter)
-                            # Or do we have a adapter sequence fasta file?
-                            elif self.is_option_set_in_config('adapter-file'):
-                                adapter = "file:" + self.get_option(
-                                    'adapter-file')
-                                if not os.path.exists(
-                                        self.get_option('adapter-file')):
-                                    raise UAPError(
-                                        "File %s containing adapter sequences "
-                                        "does not exist."
-                                        % self.get_option('adapter-file'))
-
-
-                            # 3.3 command: Clip adapters
-                            cutadapt = [self.get_tool('cutadapt'),
-                                        self.get_option('adapter-type'),
-                                        adapter, '-']
-                            cutadapt.extend(option_list)
-
-                            cutadapt_log_file = run.add_output_file(
-                                    'log_%s' % read,
-                                    '%s-cutadapt-%s-log.txt'
-                                    % (run_id, read_types[read]),
-                                    input_paths)
-
-                            # 3.4 command: Compress output
+                if ( self.is_option_set_in_config('adapter-file') and
+                     self.is_option_set_in_config('adapter-R1') ):
+                    raise UAPError(
+                        "Option 'adapter-R1' and 'adapter-file' "
+                        "are both set but are mutually exclusive!")
+                if ( not self.is_option_set_in_config('adapter-file') and
+                     not self.is_option_set_in_config('adapter-R1') ):
+                    raise UAPError(
+                        "Option 'adapter-R1' or 'adapter-file' "
+                        "required to call cutadapt for sample %s!"
+                        % run_id)
+                temp_fifos = list()
+                exec_group = run.new_exec_group()
+                for input_path in input_paths:
+                    # 1. Create temporary fifo for every input file
+                    temp_fifo = run.add_temporary_file(
+                        "fifo-%s" % os.path.basename(input_path) )
+                    temp_fifos.append(temp_fifo)
+                    mkfifo = [self.get_tool('mkfifo'), temp_fifo]
+                    exec_group.add_command(mkfifo)
+                    # 2. Output files to fifo
+                    if input_path.endswith('fastq.gz'):
+                        with exec_group.add_pipeline() as pigz_pipe:
+                            # 2.1 command: Read file in 4MB chunks
+                            dd_in = [
+                                self.get_tool('dd'),
+                                'ibs=%s' %
+                                self.get_option('dd-blocksize'),
+                                'if=%s' % input_path
+                            ]
+                            # 2.2 command: Uncompress file to fifo
                             pigz = [self.get_tool('pigz'),
+                                    '--decompress',
                                     '--processes', str(self.get_cores()),
                                     '--blocksize', self.get_option('pigz-blocksize'),
                                     '--stdout']
-                            # 3.5 command: Write to output file in 4MB chunks
-                            clipped_fastq_file = run.add_output_file(
-                                "%s" % read,
-                                "%s_%s.fastq.gz" %
-                                (run_id, read_types[read]),
-                                input_paths)
-
-                            dd = [
+                            # 2.3 command: Write file in 4MB chunks to
+                            #              fifo
+                            dd_out = [
                                 self.get_tool('dd'),
-                                'obs=%s' % self.get_option('dd-blocksize'),
-                                'of=%s' % clipped_fastq_file
+                                'obs=%s' %
+                                self.get_option('dd-blocksize'),
+                                'of=%s' % temp_fifo
                             ]
 
-                            cutadapt_pipe.add_command(cutadapt,
-                                                      stderr_path =\
-                                                      cutadapt_log_file)
-                            cutadapt_pipe.add_command(pigz)
-                            cutadapt_pipe.add_command(dd)
+                            pigz_pipe.add_command(dd_in)
+                            pigz_pipe.add_command(pigz)
+                            pigz_pipe.add_command(dd_out)
+
+                    elif input_path.endswith('fastq'):
+                        # 2.1 command: Read file in 4MB chunks and
+                        #              write to fifo in 4MB chunks
+                        dd_in = [
+                            self.get_tool('dd'),
+                            'bs=%s' % self.get_option('dd-blocksize'),
+                            'if=%s' % input_path,
+                            'of=%s' % temp_fifo
+                        ]
+                        exec_group.add_command(dd_in)
+                    else:
+                        raise UAPError("File %s does not end with any "
+                                     "expected suffix (fastq.gz or "
+                                     "fastq). Please fix that issue.")
+                # 3. Read data from fifos
+                with exec_group.add_pipeline() as cutadapt_pipe:
+                    # 3.1 command: Read from ALL fifos
+                    cat = [self.get_tool('cat')]
+                    cat.extend(temp_fifos)
+                    cutadapt_pipe.add_command(cat)
+
+                    # 3.2 command: Fix qnames if user wants us to
+                    if self.get_option('fix_qnames') == True:
+                        fix_qnames = [self.get_tool('fix_qnames')]
+                        cutadapt_pipe.add_command(fix_qnames)
+
+                    # Let's get the correct adapter sequences or
+                    # adapter sequence fasta file
+                    adapter = None
+                    # Do we have adapter sequences as input?
+                    if self.is_option_set_in_config('adapter-%s' \
+                                                    % read_types[read]):
+                        # Get adapter sequence
+                        adapter = self.get_option(
+                            'adapter-%s' % read_types[read])
+
+                        # add index to adapter sequence if necessary
+                        if '((INDEX))' in adapter:
+                            index = self.find_upstream_info_for_input_paths(
+                                input_paths,
+                                'index-%s' % read_types[read])
+                            adapter = adapter.replace('((INDEX))', index)
+
+                        # create reverse complement if necessary
+                        if self.get_option('use_reverse_complement'):
+                            complements = string.maketrans('acgtACGT',
+                                                           'tgcaTGCA')
+                            adapter = adapter.translate(complements)[::-1]
+
+                        # make sure the adapter is looking good
+                        if re.search('^[ACGT]+$', adapter) == None:
+                            raise UAPError("Unable to come up with a "
+                                         "legit-looking adapter: %s"
+                                         % adapter)
+                    # Or do we have a adapter sequence fasta file?
+                    elif self.is_option_set_in_config('adapter-file'):
+                        adapter = "file:" + self.get_option(
+                            'adapter-file')
+                        if not os.path.exists(
+                                self.get_option('adapter-file')):
+                            raise UAPError(
+                                "File %s containing adapter sequences "
+                                "does not exist."
+                                % self.get_option('adapter-file'))
+
+
+                    # 3.3 command: Clip adapters
+                    cutadapt = [self.get_tool('cutadapt'),
+                                self.get_option('adapter-type'),
+                                adapter, '-']
+                    cutadapt.extend(option_list)
+
+                    cutadapt_log_file = run.add_output_file(
+                            'log_%s' % read,
+                            '%s-cutadapt-%s-log.txt'
+                            % (run_id, read_types[read]),
+                            input_paths)
+
+                    # 3.4 command: Compress output
+                    pigz = [self.get_tool('pigz'),
+                            '--processes', str(self.get_cores()),
+                            '--blocksize', self.get_option('pigz-blocksize'),
+                            '--stdout']
+                    # 3.5 command: Write to output file in 4MB chunks
+                    clipped_fastq_file = run.add_output_file(
+                        "%s" % read,
+                        "%s_%s.fastq.gz" %
+                        (run_id, read_types[read]),
+                        input_paths)
+
+                    dd = [
+                        self.get_tool('dd'),
+                        'obs=%s' % self.get_option('dd-blocksize'),
+                        'of=%s' % clipped_fastq_file
+                    ]
+
+                    cutadapt_pipe.add_command(cutadapt,
+                                              stderr_path =\
+                                              cutadapt_log_file)
+                    cutadapt_pipe.add_command(pigz)
+                    cutadapt_pipe.add_command(dd)
