@@ -25,6 +25,7 @@
  * pass reference assembly through `in/reference` connection to `stringtieMerge` or `stringtie`
  * introduce --profiling option to analyse uap runtime (#132)
  * introduce --legacy option for submit-to-cluster to use none array jobs
+ * introduce --path option to retrieve the UAP installation path
  * optional step connections (#35)
  * improved single end support and sensitivity (#139)
  * forward None values for options to step declaration (#140)
