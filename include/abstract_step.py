@@ -259,8 +259,11 @@ class AbstractStep(object):
                 (key, self.get_step_name()))
         is_set = key in self._options
         if is_set:
-            is_set = self._options[key] is not None
-        return key in self._options
+            if isinstance(self._options[key], list):
+                is_set = any([v is not None for v in self._options[key]])
+            else:
+                is_set = self._options[key] is not None
+        return is_set
 
     def is_volatile(self):
         return self._options['_volatile']
