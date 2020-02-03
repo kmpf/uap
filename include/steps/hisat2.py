@@ -14,7 +14,7 @@ class Hisat2(AbstractStep):
     human genomes (as well as to a single reference genome).
 
     https://ccb.jhu.edu/software/hisat2/index.shtml
-    must be version 2.1 or higher 
+    must be version 2.1 or higher
     metrics and summary file are automatically produced
     '''
 
@@ -342,16 +342,32 @@ class Hisat2(AbstractStep):
             raise UAPError("Could not find index file: %s.*" %
                          self.get_option('index'))
 
+        paired_end = cc.connection_exists('in/second_read')
+
+        if not cc.all_runs_have_connection('in/first_read'):
+            read_name = '' if paired_end else ' first'
+            run_ids = list(cc.get_runs_without_any('in/first_read'))
+            if len(run_ids)>5:
+                run_ids = run_ids[0:5] + ['...']
+            raise UAPError('[Hisat2] No%s read passed by runs '
+                           '%s.' % (read_name, list(run_ids)))
+
+        if paired_end and not cc.all_runs_have_connection('in/second_read'):
+            run_ids = list(cc.get_runs_without_any('in/second_read'))
+            if len(run_ids)>5:
+                run_ids = run_ids[0:5] + ['...']
+            raise UAPError('[Hisat2] No second read passed by runs '
+                           '%s.' % run_ids)
+
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 # Get list of files for first/second read
                 fr_input = run_ids_connections_files[run_id]['in/first_read'][0]
                 input_paths = [fr_input]
                 is_paired_end = False
-                if 'in/second_read' in run_ids_connections_files[run_id]: 
+                if paired_end:
                     sr_input = run_ids_connections_files[run_id]['in/second_read'][0]
                     input_paths.append(sr_input)
-                    is_paired_end = True
 
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as hisat2_pipe:
@@ -378,7 +394,7 @@ class Hisat2(AbstractStep):
                         hisat2.extend(['-p', str(self.get_option('cores') - 2),
                                        '-x', os.path.abspath(self.get_option('index'))])
 
-                        if is_paired_end:
+                        if paired_end:
                             if self.get_option('rna-strandness') == 'F':
                                 hisat2.extend(['--rna-strandness', 'FR'])
                             elif self.get_option('rna-strandness') == 'R':
