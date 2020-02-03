@@ -780,7 +780,7 @@ class AbstractStep(object):
                 # if the ping process was already killed, it's gone anyway
                 pass
             # don't remove the ping file, rename it so we can inspect it later
-            ping_file_suffix = misc.str_to_sha1_b62(
+            ping_file_suffix = misc.str_to_sha256_b62(
                 run.get_temp_output_directory())[:6]
             if os.path.exists(executing_ping_path):
                 try:
@@ -834,31 +834,31 @@ class AbstractStep(object):
                         # will overwrite the file.
                         if os.path.exists(source_path):
                             # Calculate SHA1 hash for output files
-                            sha1sum = hashlib.sha1()
+                            sha256sum = hashlib.sha256()
                             try:
                                 with open(source_path, 'rb') as f:
                                     # the below exception is raised for large files
                                     # this workaround reads the file in chunks and
-                                    # updates the sha1sum
+                                    # updates the sha256sum
                                     while True:
                                         # read file in 2MB chunks
                                         buf = f.read(2*1024*1024)
                                         if not buf:
                                             break
-                                        sha1sum.update(buf)
+                                        sha256sum.update(buf)
                             except:
                                 raise UAPError("Error while calculating SHA1sum "
                                              "of %s" % source_path)
 
-                            # hexadecimal version of sha1sum
-                            sha1sum = sha1sum.hexdigest()
+                            # hexadecimal version of sha256sum
+                            sha256sum = sha256sum.hexdigest()
 
                             os.rename(source_path, destination_path)
                             for path in [source_path, destination_path]:
                                 if path in known_paths.keys():
                                     if known_paths[path]['designation'] == \
                                        'output':
-                                       known_paths[path]['sha1'] = sha1sum
+                                       known_paths[path]['sha256'] = sha256sum
                                     if known_paths[path]['type'] != \
                                        'step_file':
                                         logger.debug("Set %s 'type' info to "

@@ -15,7 +15,7 @@ import posixpath
 from os import path
 from subprocess import Popen, PIPE
 try:
-    from hashlib import sha1 as sha
+    from hashlib import sha256 as sha
 except ImportError:
     from sha import sha
 

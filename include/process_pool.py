@@ -423,7 +423,7 @@ class ProcessPool(object):
                     # write report
                     with open(report_path, 'w') as freport:
                         report = dict()
-                        report['sha1'] = checksum.hexdigest()
+                        report['sha256'] = checksum.hexdigest()
                         report['tail'] = tail
                         report['length'] = length
                         report['lines'] = newline_count
@@ -449,7 +449,7 @@ class ProcessPool(object):
             if fout_path is not None:
                 fdout = os.open(fout_path, os.O_WRONLY|os.O_CREAT|os.O_TRUNC)
 
-            checksum = hashlib.sha1()
+            checksum = hashlib.sha256()
             tail = ''
             length = 0
             newline_count = 0

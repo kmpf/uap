@@ -386,13 +386,13 @@ def create_hash_from_annotation(log):
         hashtag = "%s/%s/%d/%s" % (log['step']['name'],
                                    log['run']['run_id'],
                                    pid, suffix)
-        return misc.str_to_sha1(hashtag)
+        return misc.str_to_sha256(hashtag)
 
     def file_hash(path):
         if path in log['step']['known_paths']:
             if 'real_path' in log['step']['known_paths'][path]:
                 path = log['step']['known_paths'][path]['real_path']
-        return misc.str_to_sha1(path)
+        return misc.str_to_sha256(path)
 
     pipe_hash = dict()
     pipe_hash['nodes'] = dict()
@@ -419,7 +419,7 @@ def create_hash_from_annotation(log):
                 if 'size' in log['step']['known_paths'][path]:
                     label += "\\nFilesize: %s" % misc.bytes_to_str(
                         log['step']['known_paths'][path]['size'])
-        pipe_hash['nodes'][misc.str_to_sha1(path)] = {
+        pipe_hash['nodes'][misc.str_to_sha256(path)] = {
             'label': label,
             'fillcolor': color
         }
@@ -664,7 +664,7 @@ def create_hash_from_annotation(log):
             step_file_nodes[file_hash(path)] = path_info['designation']
 
     task_name = "%s/%s" % (log['step']['name'], log['run']['run_id'])
-    cluster_hash = misc.str_to_sha1(task_name)
+    cluster_hash = misc.str_to_sha256(task_name)
     pipe_hash['clusters'][cluster_hash] = dict()
     pipe_hash['clusters'][cluster_hash]['task_name'] = task_name
     pipe_hash['clusters'][cluster_hash]['group'] = list()

@@ -102,11 +102,11 @@ def natsorted(l):
     alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
     return sorted(l, key=alphanum_key)
 
-def str_to_sha1(s):
-    return hashlib.sha1(s).hexdigest()
+def str_to_sha256(s):
+    return hashlib.sha256(s).hexdigest()
 
-def str_to_sha1_b62(s):
-    digest = hashlib.sha1(s).digest()
+def str_to_sha256_b62(s):
+    digest = hashlib.sha256(s).digest()
     number = 0
     for c in digest:
         number <<= 8

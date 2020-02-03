@@ -297,7 +297,7 @@ class Run(object):
 
         # Set step state back to original state
         step._state = previous_state
-        return misc.str_to_sha1_b62(json.dumps(cmd_by_eg))[0:8]
+        return misc.str_to_sha256_b62(json.dumps(cmd_by_eg))[0:8]
 
     def get_output_directory(self):
         '''
@@ -615,7 +615,7 @@ class Run(object):
         temp_placeholder = str()
 
         while True:
-            hashtag = misc.str_to_sha1_b62('%s.%s.%s' % (prefix, count, suffix))
+            hashtag = misc.str_to_sha256_b62('%s.%s.%s' % (prefix, count, suffix))
             temp_name = prefix + hashtag + suffix
             temp_placeholder = os.path.join(
                 self.get_output_directory_du_jour_placeholder(), temp_name)
@@ -915,7 +915,7 @@ class Run(object):
         annotation_yaml = yaml.dump(log, default_flow_style = False)
         annotation_path = os.path.join(
             path, ".%s-annotation-%s.yaml" %
-            (self.get_run_id(), misc.str_to_sha1_b62(annotation_yaml)[:6]))
+            (self.get_run_id(), misc.str_to_sha256_b62(annotation_yaml)[:6]))
 
         # overwrite the annotation if it already exists
         with open(annotation_path, 'w') as f:
