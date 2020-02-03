@@ -30,15 +30,14 @@ li a {
   display: block;
   width: 100%;
 
-  -webkit-transition: font-size 0.3s ease, background-color 0.3s ease;
-  -moz-transition: font-size 0.3s ease, background-color 0.3s ease;
-  -o-transition: font-size 0.3s ease, background-color 0.3s ease;
-  -ms-transition: font-size 0.3s ease, background-color 0.3s ease;
-  transition: font-size 0.3s ease, background-color 0.3s ease;
+  -webkit-transition: border-color 0.3s ease, background-color 0.3s ease;
+  -moz-transition: border-color 0.3s ease, background-color 0.3s ease;
+  -o-transition: border-color 0.3s ease, background-color 0.3s ease;
+  -ms-transition: border-color 0.3s ease, background-color 0.3s ease;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
 }
 
 li a:hover {
-  font-size: 30px;
-  background: #f6f6f6;
+  background: #F6FAFE;
 }
 
