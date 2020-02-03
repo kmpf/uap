@@ -1376,6 +1376,11 @@ class AbstractStep(object):
             out_conn = out_conn if isinstance(out_conn, list) else [out_conn]
             set_out_connections = set_out_connections.union(set(out_conn))
 
+        if 'empty' in set_out_connections:
+            logger.warn('[%s] "empty" in _connect is depricated and will be '
+                        'ignored.' % self.get_step_name())
+            set_out_connections.discard('empty')
+
         # For each parent step ...
         for parent in self.get_dependencies():
             logger.debug('Connecting "%s" to "%s".' %
