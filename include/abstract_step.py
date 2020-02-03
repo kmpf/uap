@@ -211,8 +211,7 @@ class AbstractStep(object):
                     if info['optional'] == False:
                         raise UAPError(
                             "Required option not set in %s: %s." % (self, key))
-                else:
-                    self._options[key] = value
+                self._options[key] = value
 
         self._options.setdefault('_volatile', False)
 
@@ -258,6 +257,9 @@ class AbstractStep(object):
             raise UAPError(
                 "Cannot query undefined option %s in step %s." %
                 (key, self.get_step_name()))
+        is_set = key in self._options
+        if is_set:
+            is_set = self._options[key] is not None
         return key in self._options
 
     def is_volatile(self):
