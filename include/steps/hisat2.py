@@ -321,7 +321,7 @@ class Hisat2(AbstractStep):
                         description="seed rand. gen. arbitrarily instead of \
                         using read attributes")
 
-    def runs(self, run_ids_connections_files):
+    def runs(self, cc):
         flags = ['q', 'qseq', 'skip', 'f', 'c', 'ignore-quals', 'nofw', 'dta',
                  'norc', 'no-mixed',  'no-discordant', 'quiet', 'qc-filter',
                  'non-deterministic', 'no-temp-splicesite', 'no-softclip',
@@ -359,14 +359,14 @@ class Hisat2(AbstractStep):
             raise UAPError('[Hisat2] No second read passed by runs '
                            '%s.' % run_ids)
 
-        for run_id in run_ids_connections_files.keys():
+        for run_id in cc.keys():
             with self.declare_run(run_id) as run:
                 # Get list of files for first/second read
-                fr_input = run_ids_connections_files[run_id]['in/first_read'][0]
+                fr_input = cc[run_id]['in/first_read'][0]
                 input_paths = [fr_input]
                 is_paired_end = False
                 if paired_end:
-                    sr_input = run_ids_connections_files[run_id]['in/second_read'][0]
+                    sr_input = cc[run_id]['in/second_read'][0]
                     input_paths.append(sr_input)
 
                 with run.new_exec_group() as exec_group:
