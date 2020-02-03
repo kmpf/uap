@@ -18,7 +18,7 @@ Command-Line Usage of **uap**
 Therefore, **uap** provides help information on the command-line::
 
     $ uap -h
-    usage: uap [-h] [-v] [--debugging] [--profiling] [--version]
+    usage: uap [-h] [-v] [--path] [--debugging] [--profiling] [--version]
                [<project-config>.yaml]
                {fix-problems,render,run-locally,status,steps,submit-to-cluster,run-info,volatilize,runtime-info}
                ...
@@ -33,6 +33,7 @@ Therefore, **uap** provides help information on the command-line::
     optional arguments:
       -h, --help            show this help message and exit
       -v, --verbose         Increase output verbosity
+      --path                Report the path of the UAP installation and exit.
       --debugging           Print traceback on UAPError.
       --profiling           Enable profiling save report in uap.cprof.
       --version             Display version information.
