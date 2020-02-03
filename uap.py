@@ -86,6 +86,12 @@ def main():
         help="Increase output verbosity")
 
     parser.add_argument(
+        "--path",
+        action="version",
+        version=uap_path,
+        help="Report the path of the UAP installation and exit.")
+
+    parser.add_argument(
         "--debugging",
         dest="debugging",
         action="store_true",
