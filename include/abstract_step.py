@@ -1366,8 +1366,8 @@ class AbstractStep(object):
         used_out_connections = set()
         for in_conn, out_conn in self._options['_connect'].items():
             if in_conn not in self.get_in_connections():
-                raise UAPError("'_connect': unknown input connection %s "
-                             "found." % in_conn)
+                raise UAPError('_connect: unknown input connection "%s" '
+                             'found.' % in_conn)
             out_conn = out_conn if isinstance(out_conn, list) else [out_conn]
             set_out_connections = set_out_connections.union(set(out_conn))
 
@@ -1379,13 +1379,13 @@ class AbstractStep(object):
             used_conns = cc.connect(parent, self, self._options['_connect'])
             if not used_conns:
                 # ... or add connections with the same name.
-                logger.debug('Parent %s not connected to dependening %s -> '
-                        'connection equally named connections.'%
+                logger.debug('Parent "%s" not connected to child "%s". '
+                        'Hence connecting equally named connections.'%
                          (parent.get_step_name(), self.get_step_name()))
                 used_conns = cc.connect(parent, self)
             if not used_conns:
                 raise UAPError('No connections could be made between '
-                        '%s and its dependency %s.' %
+                        '"%s" and its dependency "%s".' %
                         (self.get_step_name(), parent.get_step_name()))
             used_out_connections = used_out_connections.union(used_conns)
 
@@ -1393,17 +1393,16 @@ class AbstractStep(object):
         required_connections = self.get_in_connections(with_optional=False)
         for rc in required_connections:
             if rc not in cc.existing_connections:
-                logger.warn('The required connection "%s" of step "%s" is '
-                    'not satisfied. Please supplie a run with the '
-                    'connection or set optional=True for the connection in '
-                    'the step constructor. '
-                    'The UAP will attempt to presume anayway.'%
-                    (rc, self.get_step_type()))
+                logger.warn('_connect: The required connection "%s" of step '
+                    '"%s" is not satisfied. Hint: To remove this warning pass '
+                    'optional=True to the add_connection method in the step '
+                    'constructor __init__ of "%s".' %
+                    (rc, self.get_step_type(), self.get_step_type()))
 
         # Check if all set out connections were recognized.
         unrecognized = set_out_connections - used_out_connections
         if len(unrecognized) > 0:
-            raise UAPError('The following connections set in %s were not '
+            raise UAPError('The following connections set in "%s" were not '
                     'recognized: %s.' %
                     (self.get_step_name(), list(unrecognized)))
 
