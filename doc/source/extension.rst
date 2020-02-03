@@ -220,7 +220,8 @@ Step 4: ``runs`` Method
 =======================
 
 The ``runs`` method is where all the work is done.
-This method gets handed over an instance of :ref:`api:ConnectionsCollector`
+This method gets handed over an instance of the
+:ref:`ConnectionsCollector <ConnectionsCollector>`
 which can be used like a dictionary of dictionaries.
 The keys of the first dictionary are the run IDs (often resembling the samples).
 The values of the first dictionary is another dictionary.

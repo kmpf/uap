@@ -103,7 +103,6 @@ Connections: Propagation of Data
 **Connections** are like tubes that connect steps.
 A step can have any number of connections.
 Run have to assign output file(s) to each connection of the step.
-If a run can not assign files to a connection it has to define it as empty.
 Downstream steps can access the connections to get the information which run
 created which file.
 The names of the connections can be arbitrarily chosen.

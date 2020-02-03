@@ -61,6 +61,8 @@ misc
 connections_collector
 =====================
 
+.. _ConnectionsCollector:
+
 .. automodule:: connections_collector
 
 .. autoclass:: ConnectionsCollector
