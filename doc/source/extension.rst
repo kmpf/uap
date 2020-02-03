@@ -109,16 +109,16 @@ Connections via ``add_connection(...)``:
   If a step defines an output connection ``out/something`` and a subsequent
   step defines an input connection named ``in/something``, then the files
   beloging to ``out/something`` will be available via the connection
-  ``in/something``.
+  ``in/something``. Additional parameters are ``optional``, ``format`` and
+  ``decription``. The passed vaues will be reflected in the documentation
+  and optional connections are not checked as extensively by the uap.
 
   Please name connection in a way that they describe the data itself and
   **NOT** the data type.
   For instance, use ``in/genome`` over ``in/fasta``.
-  The data type of the received input data should be checked by the steps
+  The data type of the received input data can be documented with the
+  ``format`` option and should be checked by the steps
   to make sure to execute the correct commands.
-
-  **TODO**: Reanimate the constraints feature. It would often save some lines
-  of code to be able to define constraints on the connections.
 
 Options via ``self.add_option()``:
   Options allow to influence the commands executed by a step.
