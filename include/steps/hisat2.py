@@ -23,7 +23,7 @@ class Hisat2(AbstractStep):
         self.set_cores(12)
 
         self.add_connection('in/first_read')
-        self.add_connection('in/second_read')
+        self.add_connection('in/second_read', optional=True)
         self.add_connection('out/alignments')
         self.add_connection('out/log_stderr')
         self.add_connection('out/metrics')

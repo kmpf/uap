@@ -17,7 +17,7 @@ class Salmon(AbstractStep):
 
         # input connections
         self.add_connection('in/first_read')
-        self.add_connection('in/second_read')
+        self.add_connection('in/second_read', optional=True)
 
         # output connections
         self.add_connection('out/cmd_info.json')

@@ -19,7 +19,7 @@ class Kallisto(AbstractStep):
 
         # input connections
         self.add_connection('in/first_read')
-        self.add_connection('in/second_read')
+        self.add_connection('in/second_read', optional=True)
         self.add_connection('in/kallisto-index')
 
         # output connections
