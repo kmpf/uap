@@ -28,6 +28,7 @@ class SamtoolsSort(AbstractStep):
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
 
+        self.require_tool('dd')
         self.require_tool('samtools')
         # in case of sam output to compress 
         self.require_tool('pigz')
@@ -57,6 +58,10 @@ class SamtoolsSort(AbstractStep):
                         description="workaround to specify cores for grid \
                                     engine and threads ie")
 
+        # [Options for 'dd':]
+        self.add_option('dd-blocksize', str, optional=True, default=None,
+                description='Read data with ``dd`` and set the blocksize.')
+
 
     def runs(self, run_ids_connections_files):
         self.set_cores(self.get_option('cores'))
@@ -70,6 +75,9 @@ class SamtoolsSort(AbstractStep):
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
                     raise UAPError("Expected exactly one alignments file.")
+                else:
+                    is_gzipped = True if os.path.splitext(input_paths[0])[1]\
+                                 in ['.gz', '.gzip'] else False
 
                 if self.is_option_set_in_config('temp-sort-dir'):
                     if not os.path.isdir(self.get_option('temp-sort-dir')):
@@ -85,6 +93,22 @@ class SamtoolsSort(AbstractStep):
 
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as pipe:
+                        # 0 use dd to read the data
+                        if self.is_option_set_in_config('dd-blocksize'):
+                            dd_in = [
+                                self.get_tool('dd'),
+                                'ibs=%s' % self.get_option('dd-blocksize'),
+                                'if=%s' % input_paths[0]
+                            ]
+                            pipe.add_command(dd_in)
+
+                            # 0.1 command: Uncompress file to fifo
+                            if is_gzipped:
+                                pigz = [self.get_tool('pigz'),
+                                        '--decompress',
+                                        '--processes', '1',
+                                        '--stdout']
+                                pipe.add_command(pigz)
                         # 1 command: Sort BAM input
                         samtools_sort = [
                             self.get_tool('samtools'), 'sort',
@@ -115,22 +139,28 @@ class SamtoolsSort(AbstractStep):
 
 
                         suffix = self.get_option('O')
-                        if suffix in ['CRAM', 'BAM']:
-                            out_path = run.add_output_file(
-                                'alignments',
-                                '%s.sorted.%s'  % (run_id, suffix.lower()),
-                                input_paths)                            
-                            samtools_sort.extend(input_paths)
-                            pipe.add_command(samtools_sort, stdout_path= out_path)
+                        postfix = '' if suffix in ['CRAM', 'BAM'] else '.gz'
+                        out_path = run.add_output_file(
+                            'alignments',
+                            '%s.sorted.%s%s'  % (run_id, suffix.lower(), postfix),
+                            input_paths)                            
 
-                        # is sam needs to be compressed    
+                        if self.is_option_set_in_config('dd-blocksize'):
+                            samtools_sort.append('-')
+                            pipe.add_command(samtools_sort)
+                            samtools_sort = [
+                                self.get_tool('dd'),
+                                'obs=%s' % self.get_option('dd-blocksize')
+                            ]
                         else:
                             samtools_sort.extend(input_paths)
+
+                        if suffix in ['CRAM', 'BAM']:
+                            # write output directly
+                            pipe.add_command(samtools_sort, stdout_path=out_path)
+                        else:
+                            # output is sam needs to be compressed    
                             pipe.add_command(samtools_sort)
-                            out_path = run.add_output_file(
-                                'alignments',
-                                '%s.sorted.sam.gz'   % run_id,
-                                input_paths)                            
 
                             pigz = [self.get_tool('pigz'),
                                     '--stdout']
