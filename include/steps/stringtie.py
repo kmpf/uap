@@ -35,7 +35,7 @@ class Stringtie(AbstractStep):
         self.set_cores(6)
 
         self.add_connection('in/alignments', format='bam')
-        self.add_connection('in/features', format='gtf, gff3', optional=True,
+        self.add_connection('in/features', format=['gtf', 'gff3'], optional=True,
                 description='Reference assembly. Can also be passed with option G '
                             'or left out for denovo assembling.')
         self.add_connection('out/features', format='gtf',
