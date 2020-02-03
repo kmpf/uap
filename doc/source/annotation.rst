@@ -19,7 +19,7 @@ Also, the Git SHA1 hash of the **uap** repository at the time of
 data processing is included.
 The executed commands are listed.
 Annotation contains information about inter-process streams and output files,
-including SHA1 checksums, file sizes, and line counts as well.
+including SHA1 and SHA256 checksums, file sizes, and line counts as well.
 
 
 Upon successful completion of a task, an extensive YAML-formatted annotation 
@@ -50,5 +50,5 @@ known_paths
 -----------
 
 Contains information about all directories/files used during processing a run.
-uap calculates the SHA1 hexdigest for each known file with the designation 'output' aka.
+uap calculates the SHA256 hexdigest for each known file with the designation 'output' aka.
 output/result files. 

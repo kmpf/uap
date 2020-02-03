@@ -833,7 +833,7 @@ class AbstractStep(object):
                         # TODO: if the destination path already exists, this
                         # will overwrite the file.
                         if os.path.exists(source_path):
-                            # Calculate SHA1 hash for output files
+                            # Calculate SHA256 hash for output files
                             sha256sum = hashlib.sha256()
                             try:
                                 with open(source_path, 'rb') as f:
@@ -847,7 +847,7 @@ class AbstractStep(object):
                                             break
                                         sha256sum.update(buf)
                             except:
-                                raise UAPError("Error while calculating SHA1sum "
+                                raise UAPError("Error while calculating SHA256sum "
                                              "of %s" % source_path)
 
                             # hexadecimal version of sha256sum

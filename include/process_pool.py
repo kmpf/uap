@@ -272,7 +272,7 @@ class ProcessPool(object):
 
         Use *stdout_path* and *stderr_path* to redirect *stdout* and *stderr*
         streams to files. In any case, the output of both streams gets watched,
-        the process pool calculates SHA1 checksums automatically and also keeps
+        the process pool calculates SHA256 checksums automatically and also keeps
         the last 1024 bytes of every stream. This may be useful if a process
         crashes and writes error messages to *stderr* in which case you can see
         them even if you didn't redirect *stderr* to a log file.
