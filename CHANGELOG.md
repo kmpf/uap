@@ -6,6 +6,7 @@
  * avoid depricated pip wrapper (#122)
  * one parent step can now be used for multiple inputs (#125)
  * reviced connection checks (#138)
+ * update from brkoen sha1 to sha256 (#141)
 
 **Features**
  * steps now run within their temp directory (#29, #31)
