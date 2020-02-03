@@ -28,7 +28,10 @@ class Hisat2(AbstractStep):
         self.add_connection('out/log_stderr')
         self.add_connection('out/metrics')
         self.add_connection('out/summary')
-        self.add_connection('out/unaligned')
+        self.add_connection('out/unaligned', optional=True, format='fastq.gz',
+                description='Unpaired reads that didn\'t align.')
+        self.add_connection('out/aligned', optional=True, format='fastq.gz',
+                description='Unpaired reads that aligned.')
 
         self.require_tool('pigz')
         self.require_tool('hisat2')
@@ -40,37 +43,51 @@ class Hisat2(AbstractStep):
         self.add_option('cores', int, default=12)
 
         # Input:
-        self.add_option('q', bool, default=None, optional=True,
+        self.add_option('q', bool, default=False, optional=True,
                         description="query input files are FASTQ .fq/.fastq \
                         (default)")
 
-        self.add_option('qseq', bool, default=None, optional=True,
+        self.add_option('qseq', bool, default=False, optional=True,
                         description="query input files are in Illumina's \
                         qseq format")
 
-        self.add_option('f', bool, default=None, optional=True,
+        self.add_option('f', bool, default=False, optional=True,
                         description="query input files are (multi-)FASTA \
                         .fa/.mfa")
 
-        # r?
+        self.add_option('r', bool, default=False, optional=True,
+                        description="query input files are \
+                        raw one-sequence-per-line")
 
-        self.add_option('c', bool, default=None, optional=True,
+        self.add_option('c', bool, default=False, optional=True,
                         description="<m1>, <m2>, <r> are sequences \
                         themselves, not files")
 
-        # s, u, 5, 3, phred33, phred64, int-quals
+        self.add_option('skip', int, optional=True,
+                        description="skip the first <int> reads/pairs \
+                        in the input (none)")
+        self.add_option('upto', int, optional=True,
+                        description="stop after first <int> reads/pairs \
+                        (no limit)")
+        self.add_option('trim5', int, optional=True,
+                        description="trim <int> bases from 5'/left end \
+                        of reads (0)")
+        self.add_option('trim3', int, optional=True,
+                        description="trim <int> bases from 3'/right end \
+                        of reads (0)")
+        self.add_option('phred33', bool, optional=True, default=False,
+                        description="qualities are Phred+33 (default)")
+        self.add_option('phred64', bool, optional=True, default=False,
+                        description="qualities are Phred+64")
+        self.add_option('int-quals', bool, optional=True, default=False,
+                        description="qualities encoded as space-delimited \
+                        integers")
 
         # Presets:?
 
         # Alignment:
 
         # N, L, i?
-        self.add_option('trim5', str, optional=True,
-                        description="trim 5 prime")
-
-        self.add_option('trim3', str, optional=True,
-                        description="trim 3 prime")
-
 
         self.add_option('ignore-quals', bool, default=None, optional=True,
                         description="treat all quality values as 30 on Phred \
@@ -124,11 +141,11 @@ class Hisat2(AbstractStep):
                         optional=True, description="provide a list of novel \
                         splice sites")
 
-        self.add_option('no-temp-splicesite', bool, default=None,
+        self.add_option('no-temp-splicesite', bool, default=False,
                         optional=True, description="disable the use of splice \
                         sites found")
 
-        self.add_option('no-spliced-alignment', bool, default=None,
+        self.add_option('no-spliced-alignment', bool, default=False,
                         optional=True, description="disable spliced alignment")
 
         # note to self just allow R F U and if paired in extend accordingly
@@ -139,11 +156,11 @@ class Hisat2(AbstractStep):
                         description="Specify strand-specific information \
                         (unstranded); paired and are extended F->FR, R->RF")
 
-        self.add_option('tmo', bool, default=None, optional=True,
+        self.add_option('tmo', bool, default=False, optional=True,
                         description="Reports only those alignments within \
                         known transcriptome")
 
-        self.add_option('dta', bool, default=None, optional=True,
+        self.add_option('dta', bool, default=False, optional=True,
                         description="Reports alignments tailored for \
                         transcript assemblers")
 
@@ -162,6 +179,9 @@ class Hisat2(AbstractStep):
         self.add_option('sp', str, default=None, optional=True,
                         description="max and min penalties for soft-clipping; \
                         lower qual = lower penalty <1,2>")
+
+        self.add_option('no-softclip', bool, optional=True,
+                        description='no soft-clipping')
 
         self.add_option('np', str, default=None, optional=True,
                         description="penalty for non-A/C/G/Ts in read/ref (1)")
@@ -196,15 +216,17 @@ class Hisat2(AbstractStep):
 
         # I, X?
 
-        self.add_option('fr', bool, default=None, optional=False,
-                        description="-1, -2 mates align fw/rev, rev/fw, \
-                        fw/fw (--fr)")
-        self.add_option('rf', bool, default=None, optional=False,
-                        description="-1, -2 mates align fw/rev, rev/fw, \
-                        fw/fw (--fr)")
-        self.add_option('ff', bool, default=None, optional=False,
-                        description="-1, -2 mates align fw/rev, rev/fw, \
-                        fw/fw (--fr)")
+        self.add_option('minins', int, optional=True,
+                        description='minimum fragment length (0), only valid with '
+                        '--no-spliced-alignment')
+
+        self.add_option('maxins', int, optional=True,
+                        description='maximum fragment length (500), only valid with '
+                        '--no-spliced-alignment')
+
+        self.add_option('library_type', str, optional=False,
+                        choices=['fr', 'rf', 'ff'], default='fr',
+                        description='-1, -2 mates align fw/rev, rev/fw, fw/fw (--fr)')
 
         self.add_option('no-mixed', bool, default=None, optional=True,
                         description="suppress unpaired alignments for paired \
@@ -216,31 +238,46 @@ class Hisat2(AbstractStep):
 
         # no-dovetail, no-contain, no-overlap?
 
+        ################
+        # Performance: #
+        ################
+
+        self.add_option('offrate', int, optional=True,
+                        description='override offrate of index; must be >= index\'s offrate')
+        self.add_option('reorder', bool, optional=True,
+                        description='force SAM output order to match order of input reads')
+        self.add_option('mm', bool, optional=True,
+                        description='use memory-mapped I/O for index; many \'hisat2\'s can share')
+
         ###########
         # Output: #
         ###########
 
         # t, un, al, un-conc, al-conc?
 
-        self.add_option('un-gz', bool, default=None, optional=True,
-                        description="write unpaired reads that didn't align \
-                        to <path>, gzip compress output")
+        self.add_option('un-gz', bool, default=False, optional=True,
+                        description='write unpaired reads that didn\'t align \
+                        to gzip compress output connection "out/unaligned"')
 
-        self.add_option('quiet', bool, default=None, optional=True,
+        self.add_option('al-gz', bool, default=False, optional=True,
+                        description='write unpaired reads that aligned \
+                        to gzip compress output connection "out/aligned"')
+
+        self.add_option('quiet', bool, default=False, optional=True,
                         description="print nothing to stderr except serious \
                         errors")
 
         # met-file, met-stderr, met?
 
-        self.add_option('new-summary', bool, default=None, optional=True,
+        self.add_option('new-summary', bool, default=False, optional=True,
                         description="print alignment summary in a new style, \
                         which is more machine-friendly")
 
-        self.add_option('no-head', bool, default=None, optional=True,
+        self.add_option('no-head', bool, default=False, optional=True,
                         description="supppress header lines, i.e. lines \
                         starting with @")
 
-        self.add_option('no-sq', bool, default=None, optional=True,
+        self.add_option('no-sq', bool, default=False, optional=True,
                         description="supppress @SQ header lines")
 
         self.add_option('rg-id', str, default=None, optional=True,
@@ -251,17 +288,17 @@ class Hisat2(AbstractStep):
                         SAM header. (Note: @RG line only printed when --rg-id \
                         is set.)")
 
-        self.add_option('omit-sec-seq', bool, default=None, optional=True,
+        self.add_option('omit-sec-seq', bool, default=False, optional=True,
                         description="put '*' in SEQ and QUAL fields for \
                         secondary alignments")
 
         # notice: params add-chrname and remove-chrname
         # available from version 2.0.4
-        self.add_option('add-chrname', bool, default=None, optional=True,
+        self.add_option('add-chrname', bool, default=False, optional=True,
                         description="Add 'chr' to reference names in \
                         alignment (e.g., 18 to chr18)")
 
-        self.add_option('remove-chrname', bool, default=None, optional=True,
+        self.add_option('remove-chrname', bool, default=False, optional=True,
                         description="Remove 'chr' from reference names in \
                         alignment (e.g., chr18 to 18)")
 
@@ -273,41 +310,32 @@ class Hisat2(AbstractStep):
         # Other: #
         ##########
 
-        self.add_option('qc-filter', bool, default=None, optional=True,
+        self.add_option('qc-filter', bool, default=False, optional=True,
                         description="filter out reads that are bad according \
                         to QSEQ filter")
 
-        # seed?
+        self.add_option('seed', int, optional=True,
+                        description='seed for random number generator (0)')
 
-        self.add_option('non-deterministic', bool, default=None, optional=True,
+        self.add_option('non-deterministic', bool, default=False, optional=True,
                         description="seed rand. gen. arbitrarily instead of \
                         using read attributes")
 
-
-
     def runs(self, run_ids_connections_files):
-        flags = ["q", "qseq", "f", "c", "ignore-quals", "nofw", "dta",
-                 "norc", "no-mixed",  "no-discordant", "quiet", "qc-filter",
-                 "non-deterministic", "no-temp-splicesite",
-                 "no-spliced-alignment", "tmo", "no-head", "no-sq",
-                 "omit-sec-seq", "remove-chrname", "add-chrname", "new-summary",
-                 'fr', 'rf', 'ff']
+        flags = ['q', 'qseq', 'skip', 'f', 'c', 'ignore-quals', 'nofw', 'dta',
+                 'norc', 'no-mixed',  'no-discordant', 'quiet', 'qc-filter',
+                 'non-deterministic', 'no-temp-splicesite', 'no-softclip',
+                 'no-spliced-alignment', 'tmo', 'no-head', 'no-sq',
+                 'omit-sec-seq', 'remove-chrname', 'add-chrname', 'new-summary']
 
-        strflags = ["n-ceil", "ma", "mp", "sp", "np", "rdg", "score-min", "k",
-                    "rfg", "rg", "pen-cansplice", "pen-noncansplice",
-                    "pen-canintronlen", "pen-noncanintronlen", "min-intronlen",
-                    "max-intronlen", "known-splicesite-infile",
-                    "novel-splicesite-outfile", "novel-splicesite-infile", "trim5", "trim3"]
+        strflags = ['n-ceil', 'ma', 'mp', 'sp', 'np', 'rdg', 'score-min', 'k',
+                    'skip', 'rfg', 'rg', 'pen-cansplice', 'pen-noncansplice',
+                    'pen-canintronlen', 'pen-noncanintronlen', 'min-intronlen',
+                    'max-intronlen', 'known-splicesite-infile',
+                    'minins', 'maxins', 'seed', 'trim5', 'trim3',
+                    'novel-splicesite-outfile', 'novel-splicesite-infile']
 
         self.set_cores(self.get_option('cores'))
-
-        res = [self.get_option('fr'),
-               self.get_option('rf'),
-               self.get_option('ff')]
-
-        if sum(res) > 1:
-            message = "too many stranded flags fr, rf, ff: %s"
-            raise StandardError(message % (res))
 
         # Check if option values are valid
         if not os.path.exists(self.get_option('index') + '.1.ht2'):
@@ -318,17 +346,12 @@ class Hisat2(AbstractStep):
             with self.declare_run(run_id) as run:
                 # Get list of files for first/second read
                 fr_input = run_ids_connections_files[run_id]['in/first_read'][0]
-                sr_input = None
+                input_paths = [fr_input]
+                is_paired_end = False
                 if 'in/second_read' in run_ids_connections_files[run_id]: 
                     sr_input = run_ids_connections_files[run_id]['in/second_read'][0]
-
-                is_paired_end = True
-                input_paths = [fr_input]
-
-                if sr_input is None:
-                    is_paired_end = False
-                else:
                     input_paths.append(sr_input)
+                    is_paired_end = True
 
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as hisat2_pipe:
@@ -343,12 +366,15 @@ class Hisat2(AbstractStep):
                                     else:
                                         hisat2.extend(['--' + flag])
 
+                        lt = self.get_option('library_type')
+                        hisat2.append('--%s' % lt)
+
                         for flag in strflags:
                             if self.is_option_set_in_config(flag):
                                 hisat2.extend(['--' + flag,
-                                              self.get_option(flag)])
+                                              str(self.get_option(flag))])
 
-                        # why -2?
+                        # Leave 2 cores available for pigz compressing the output.
                         hisat2.extend(['-p', str(self.get_option('cores') - 2),
                                        '-x', os.path.abspath(self.get_option('index'))])
 
@@ -385,13 +411,19 @@ class Hisat2(AbstractStep):
                             input_paths)
                         hisat2.extend(['--met-file', metrics])
 
-                        if self.is_option_set_in_config('un-gz'):
-                            if self.get_option('un-gz') is True:
-                                unaligned = run.add_output_file(
-                                    'unaligned',
-                                    '%s-hisat2-unaligned.fastq.gz' % run_id,
-                                    input_paths)
-                                hisat2.extend(['--un-gz', unaligned])
+                        if self.get_option('un-gz') is True:
+                            unaligned = run.add_output_file(
+                                'unaligned',
+                                '%s-hisat2-unaligned.fastq.gz' % run_id,
+                                input_paths)
+                            hisat2.extend(['--un-gz', unaligned])
+
+                        if self.get_option('al-gz') is True:
+                            unaligned = run.add_output_file(
+                                'aligned',
+                                '%s-hisat2-aligned.fastq.gz' % run_id,
+                                input_paths)
+                            hisat2.extend(['--al-gz', aligned])
 
                         hisat2_pipe.add_command(hisat2, stderr_path=log_stderr)
                         res = run.add_output_file(
