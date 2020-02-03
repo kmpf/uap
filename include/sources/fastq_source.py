@@ -25,7 +25,7 @@ class FastqSource(AbstractSourceStep):
         super(FastqSource, self).__init__(pipeline)
 
         self.add_connection('out/first_read')
-        self.add_connection('out/second_read')
+        self.add_connection('out/second_read', optional=True)
 
         self.add_option('pattern', str, optional = True,
             description = "A file name pattern, for example "
@@ -40,7 +40,7 @@ class FastqSource(AbstractSourceStep):
                 "multiple capture groups in the regular expression.")
 
         self.add_option('paired_end', bool, description = "Specify whether "
-            "the samples are paired end or not.")
+            "the samples are paired end or not.", optional = True)
 
         self.add_option('indices', str, dict, optional = True,
             description = "path to a CSV file or a dictionary of sample_id: "
@@ -50,17 +50,17 @@ class FastqSource(AbstractSourceStep):
             description = "This optional prefix is prepended to every sample "
                 "name.")
 
-        self.add_option('sample_to_files_map', dict, str, optional=True,
+        self.add_option('sample_to_files_map', dict, str, optional = True,
             description = "A listing of sample names and their "
                 "associated files. This must be provided as a YAML "
                 "dictionary.")
 
-        self.add_option('first_read', str,
+        self.add_option('first_read', str, optional = False,
             description = "Part of the file name that marks all "
                 "files containing sequencing data of the first read. "
                 "Example: 'R1.fastq' or '_1.fastq'")
 
-        self.add_option('second_read', str, default = "",
+        self.add_option('second_read', str, optional = True, default = None,
             description = "Part of the file name that marks all "
                 "files containing sequencing data of the second read. "
                 "Example: 'R2.fastq' or '_2.fastq'")
@@ -68,11 +68,15 @@ class FastqSource(AbstractSourceStep):
     def runs(self, run_ids_connections_files):
         # found_files holds the runIDs and their related files
         found_files = dict()
-        read_types = dict()
-        if self.get_option('first_read'):
-            read_types['first_read'] = self.get_option('first_read')
+        read_types = {'first_read':self.get_option('first_read')}
 
-        if self.get_option('second_read'):
+        paired_end = self.is_option_set_in_config('second_read')
+        if self.is_option_set_in_config('paired_end'):
+            if paired_end and not self.get_option('paired_end'):
+                raise UAPError('Second read passed but paired_end set to False.')
+            elif not paired_end and self.get_option('paired_end'):
+                raise UAPError('No second read passed but paired_end set to True.')
+        if paired_end:
             read_types['second_read'] = self.get_option('second_read')
 
         if self.is_option_set_in_config('group') and self.is_option_set_in_config('pattern'):
@@ -131,23 +135,15 @@ class FastqSource(AbstractSourceStep):
         # declare a run for every sample
         for run_id in found_files.keys():
             with self.declare_run(run_id) as run:
-                run.add_public_info("paired_end", self.get_option("paired_end"))
+                run.add_public_info("paired_end", paired_end)
                 for read in ['first_read', 'second_read']:
                     if read in read_types.keys():
                         for path in found_files[run_id][read_types[read]]:
                             run.add_output_file(read, path, [])
-                    # always set the out connection even for zero files
-                    else:
-                        run.add_empty_output_connection(read)
 
                 # save public information
-                if self.get_option("paired_end") and not self.is_option_set_in_config("second_read"):
-                    raise StandardError("Required option 'second_read' needs to "
-                        "be set because 'paired_end: %s' "
-                        % self.get_option("paired_end"))
-                if self.is_option_set_in_config("first_read"):
-                    run.add_public_info("first_read", self.get_option("first_read"))
-                if self.is_option_set_in_config("second_read"):
+                run.add_public_info("first_read", self.get_option("first_read"))
+                if paired_end:
                     run.add_public_info("second_read", self.get_option("second_read"))
 
         # determine index information...

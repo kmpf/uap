@@ -48,7 +48,7 @@ class Run(object):
         self._public_info = dict()
         self._input_files = set()
         self._output_files = dict()
-        for out_connection in self._step.get_out_connections():
+        for out_connection in self._step.get_out_connections(with_optional=False):
             self.add_out_connection(out_connection)
         '''
         Dictionary containing the output files for each outgoing connection and
@@ -598,6 +598,8 @@ class Run(object):
                 ": %s" % in_paths)
 
         self._input_files.union(set(in_paths))
+        logger.debug('Adding files %s as for connection %s in %s for run %s.' %
+                (out_path, out_connection, str(self.get_step()), self.get_run_id()))
         self._output_files[out_connection][out_path] = in_paths
         return out_path
 
@@ -727,6 +729,8 @@ class Run(object):
                          "to the constructor of %s."
                          % (out_connection, str(self._step), out_connection,
                                  self._step.__module__))
+        logger.debug('Adding %s to %s in run %s.' %
+                (out_connection, str(self.get_step()), self.get_run_id()))
         self._output_files[out_connection] = dict()
         return out_connection
 
