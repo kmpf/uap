@@ -50,6 +50,7 @@ pages:
     - rm -r public/$CI_COMMIT_REF_SLUG || echo "First doc for $CI_COMMIT_REF_SLUG"
     - sphinx-build -b html doc/source public/$CI_COMMIT_REF_SLUG
     - cp -r doc/supp public
+    - rm -r piblic/supp public/fav
     - doc/make_pages_index.sh public
   cache:
     key: pages-cache
