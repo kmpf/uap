@@ -316,6 +316,36 @@ class AbstractStep(object):
     def declare_runs(self):
         # fetch all incoming run IDs which produce reads...
         self.runs( self.get_run_ids_in_connections_input_files() )
+        self.check_required_out_connections()
+
+    def check_required_out_connections(self):
+        '''
+        This functions tests if all required out connections
+        were set by all runs.
+        '''
+        required_out = self.get_out_connections(with_optional=False)
+        bad_runs = 0
+        for run_id, run in self._runs.items():
+            used_conns = set()
+            for connection, content in run._output_files.items():
+                used = any([fl is not None for fl in content.keys()])
+                if used:
+                    used_conns.add(connection)
+            missings = required_out - used_conns
+            if missings:
+                bad_runs += 1
+                logger.warn('Run "%s" of step "%s" misses the required '
+                        'connections %s. To remove this warning pass '
+                        'optional=True to the add_connection method in the '
+                        'step constructor __init__ of "%s".' %
+                        (run_id, self.get_step_name(), list(missings),
+                                self.get_step_type()))
+            if bad_runs > 3:
+                logger.warn('...\nEmitting connection test for further '
+                    'runs of "%s".' % self.get_step_name())
+        if bad_runs:
+            logger.warn('[Deprication] Unmet required connections '
+                    'may trigger an error in future version of the UAP.')
 
     def get_output_directory(self):
         '''
@@ -1404,10 +1434,13 @@ class AbstractStep(object):
         for rc in required_connections:
             if rc not in cc.existing_connections:
                 logger.warn('_connect: The required connection "%s" of step '
-                    '"%s" is not satisfied. Hint: To remove this warning pass '
+                    '"%s" is not satisfied. To remove this warning pass '
                     'optional=True to the add_connection method in the step '
                     'constructor __init__ of "%s".' %
                     (rc, self.get_step_type(), self.get_step_type()))
+        if required_connections - cc.existing_connections:
+            logger.warn('[Deprication] Unmet required connections may trigger '
+                'an error in future version of the UAP.')
 
         # Check if all set out connections were recognized.
         unrecognized = set_out_connections - used_out_connections

@@ -5,7 +5,7 @@
  * invoce uap from anywhere (#114)
  * avoid depricated pip wrapper (#122)
  * one parent step can now be used for multiple inputs (#125)
- * reviced connection checks (#138)
+ * reviced connection checks (#138, #142)
  * update from brkoen sha1 to sha256 (#141)
 
 **Features**
