@@ -14,7 +14,6 @@ public/
 doc/doctrees
 doc/html
 doc/build
-doc/source/steps.rst
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

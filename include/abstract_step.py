@@ -1431,14 +1431,13 @@ class AbstractStep(object):
 
         # Check if all required connections are sattisfied.
         required_connections = self.get_in_connections(with_optional=False)
-        for rc in required_connections:
-            if rc not in cc.existing_connections:
-                logger.warn('_connect: The required connection "%s" of step '
-                    '"%s" is not satisfied. To remove this warning pass '
-                    'optional=True to the add_connection method in the step '
-                    'constructor __init__ of "%s".' %
-                    (rc, self.get_step_type(), self.get_step_type()))
-        if required_connections - cc.existing_connections:
+        missing required_connections - cc.existing_connections
+        if missing:
+            logger.warn('_connect: The required connection %s of step '
+                '"%s" is not satisfied. To remove this warning pass '
+                'optional=True to the add_connection method in the step '
+                'constructor __init__ of "%s".' %
+                (missing, self.get_step_type(), self.get_step_type()))
             logger.warn('[Deprication] Unmet required connections may trigger '
                 'an error in future version of the UAP.')
 
