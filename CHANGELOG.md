@@ -28,7 +28,7 @@
  * object `ConnectionsCollector` for handling input from multiple steps (#47)
  * introduce --profiling option to analyse uap runtime (#132)
  * introduce --path option to retrieve the UAP installation path
- * optional step connections (#35)
+ * optional step connections (#35, #37)
  * improved single end support and sensitivity to respective connections (#38, #139)
  * forward None values for options to step declaration (#140)
 
