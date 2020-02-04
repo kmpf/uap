@@ -11,7 +11,8 @@
 **Features**
  * steps now run within their temp directory (#29, #31)
  * use relative paths; uap output can now be moved (#115)
- * slurm jobs as array per step (#105)
+ * slurm jobs as array job per step (#105)
+ * introduce --legacy option for submit-to-cluster to use none array jobs
  * error handling and --debugging option (#118)
  * platform info in annotation file (#62)
  * output hash now sensitive to tool versions (#116)
@@ -25,7 +26,6 @@
  * object `ConnectionsCollector` for handling input from multiple steps (#47)
  * pass reference assembly through `in/reference` connection to `stringtieMerge` or `stringtie`
  * introduce --profiling option to analyse uap runtime (#132)
- * introduce --legacy option for submit-to-cluster to use none array jobs
  * introduce --path option to retrieve the UAP installation path
  * optional step connections (#35)
  * improved single end support and sensitivity (#139)
