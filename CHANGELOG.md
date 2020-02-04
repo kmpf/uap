@@ -20,23 +20,24 @@
  * shorter lmod config (#104)
  * uap tools musst not be referenced in config (#119)
  * uap path in PATH environmental variable not required (#107)
- * default job quota is 0 -> no quota (#105)
- * `_depends` amended implicitly through `_connect` (#127)
+ * default job quota is now 0, which is no quota (#105)
+ * dependencies are now completed through selected connections (#127)
  * reference assembly `-G` is optional for `stringtieMerge` and `stringtie` (#124)
+ * input connection for reference assembly in `stringtieMerge` or `stringtie`
  * object `ConnectionsCollector` for handling input from multiple steps (#47)
- * pass reference assembly through `in/reference` connection to `stringtieMerge` or `stringtie`
  * introduce --profiling option to analyse uap runtime (#132)
  * introduce --path option to retrieve the UAP installation path
  * optional step connections (#35)
- * improved single end support and sensitivity (#139)
+ * improved single end support and sensitivity to respective connections (#139)
  * forward None values for options to step declaration (#140)
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
  * `stringtieMerge` option `run_id` changed to `output_prefix`
  * step connection documentation (#137)
- * use common names for stringtie gtf connections
+ * use common names for stringtie gtf connections `in/features`
  * hisat2 now takes `library_type` option
+ * complete merge with https://github.com/yigbt/uap
 
 ## 1.1 (20.01.2020)
 
