@@ -61,11 +61,6 @@ class FastqScreen(AbstractStep):
         self.require_tool('rm')
 
     def runs(self, run_ids_connections_files):
-        '''
-        self.runs() should be a replacement for declare_runs() and execute_runs()
-        All information given here should end up in the step object which is
-        provided to this method.
-        '''
         self.set_cores(self.get_option('cores'))
 
         read_types = {'first_read': '_R1'}

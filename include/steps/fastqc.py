@@ -96,11 +96,6 @@ class Fastqc(AbstractStep):
         self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
     def runs(self, run_ids_connections_files):
-        '''
-        self.runs() should be a replacement for declare_runs() and execute_runs()
-        All information given here should end up in the step object which is
-        provided to this method.
-        '''
 
         options = ['casava', 'nofilter', 'java', 'nogroup', 'format', 'contaminants',
                    'adapters', 'limits', 'kmers', 'dir']
