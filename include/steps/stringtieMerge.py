@@ -40,7 +40,6 @@ class StringtieMerge(AbstractStep):
         self.add_connection('out/features', format='gtf') # merged.gtf
         self.add_connection('out/assemblies') # input assemblies txt file
         self.add_connection('out/log_stderr')
-        self.add_connection('out/run_log')
 
         self.require_tool('stringtie')
         self.require_tool('printf')
