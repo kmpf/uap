@@ -4,7 +4,7 @@ slurm:
     submit: 'sbatch'
     stat: 'squeue'
     template: 'cluster/submit-scripts/sbatch-template.sh'
-    hold_jid: '--dependency=afterany:%s'
+    hold_jid: '--dependency=afterany:%s --kill-on-invalid-dep=yes'
     hold_jid_separator: ':'
     array_job: '--array=1-%s'
     array_job_wquota: '--array=1-%s%%%s'
