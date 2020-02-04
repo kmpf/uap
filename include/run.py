@@ -266,6 +266,19 @@ class Run(object):
         step._state = abst.AbstractStep.states.DECLARING
 
         cmd_by_eg = dict()
+        # get tool version texts
+        tools = sorted(step._tools.keys())
+        cmd_by_eg['tool_versions'] = dict()
+        tool_paths = dict()
+        tool_conf = step.get_pipeline().config['tools']
+        for tool in tools:
+            tool_info = step.get_pipeline().tool_versions[tool]
+            if tool != tool_conf[tool]['path']:
+                tool_paths[tool] = tool_conf[tool]['path']
+            if tool_conf[tool]['ignore_version'] is not True:
+                cmd_by_eg['tool_versions'][tool] = tool_info['response']
+
+        # get commands
         eg_count = 0
         for exec_group in self.get_exec_groups():
             eg_count += 1
@@ -278,22 +291,17 @@ class Run(object):
                     pipe_count += 1
                     cmd_by_eg[eg_count]['Pipe %s' % pipe_count] = list()
                     for command in poc.get_commands():
+                        cmd_list = command.get_command()
+                        # replace tool paths by tool names
+                        for tool, path in tool_paths.items():
+                            cmd_list = [element.replace(path, tool)
+                                    for element in cmd_list]
                         cmd_by_eg[eg_count]['Pipe %s' % pipe_count].append(
-                            command.get_command())
+                                cmd_list)
                 # ... or a command
                 elif isinstance(poc, command_info.CommandInfo):
                     cmd_count += 1
                     cmd_by_eg[eg_count]['Cmd %s' % cmd_count] = poc.get_command()
-
-
-        # get tool version texts
-        tools = step._tools.keys()
-        cmd_by_eg['tool_versions'] = dict()
-        for tool in tools:
-            tool_info = step.get_pipeline().tool_versions[tool]
-            ignore = step.get_pipeline().config['tools'][tool]['ignore_version']
-            if ignore is not True:
-                cmd_by_eg['tool_versions'][tool] = tool_info['response']
 
         # Set step state back to original state
         step._state = previous_state

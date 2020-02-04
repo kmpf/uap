@@ -16,6 +16,7 @@
  * error handling and --debugging option (#118)
  * platform info in annotation file (#62)
  * output hash now sensitive to tool versions (#116)
+ * ouptu hash robust against tool location and order
  * tool versions can optionally be ignored with `ignore_version`
  * shorter lmod config (#104)
  * uap tools musst not be referenced in config (#119)
