@@ -5,7 +5,7 @@
  * invoce uap from anywhere (#114)
  * avoid depricated pip wrapper (#122)
  * one parent step can now be used for multiple inputs (#125)
- * reviced connection checks (#138, #142)
+ * reviced connection checks (#37, #138, #142)
  * update from brkoen sha1 to sha256 (#141)
 
 **Features**
@@ -28,7 +28,7 @@
  * object `ConnectionsCollector` for handling input from multiple steps (#47)
  * introduce --profiling option to analyse uap runtime (#132)
  * introduce --path option to retrieve the UAP installation path
- * optional step connections (#35, #37)
+ * optional step connections (#35)
  * improved single end support and sensitivity to respective connections (#38, #139)
  * forward None values for options to step declaration (#140)
 
