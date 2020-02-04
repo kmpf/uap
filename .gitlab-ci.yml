@@ -41,6 +41,11 @@ steptests:
     - python3 scripts/uap_test.py run-tests --uap-test-dir . --uap-path ../uap
   dependencies:
     - prepare
+  artifacts:
+    name: output
+    when: always
+    paths:
+      - uap_test/output
 
 pages:
   stage: test
