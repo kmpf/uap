@@ -344,7 +344,7 @@ class AbstractStep(object):
                 logger.warn('...\nEmitting connection test for further '
                     'runs of "%s".' % self.get_step_name())
         if bad_runs:
-            logger.warn('[Deprication] Unmet required connections '
+            logger.warn('[Deprecation] Unmet required connections '
                     'may trigger an error in future version of the UAP.')
 
     def get_output_directory(self):
@@ -1438,7 +1438,7 @@ class AbstractStep(object):
                 'optional=True to the add_connection method in the step '
                 'constructor __init__ of "%s".' %
                 (missing, self.get_step_type(), self.get_step_type()))
-            logger.warn('[Deprication] Unmet required connections may trigger '
+            logger.warn('[Deprecation] Unmet required connections may trigger '
                 'an error in future version of the UAP.')
 
         # Check if all set out connections were recognized.
