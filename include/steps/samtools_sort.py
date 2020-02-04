@@ -59,7 +59,9 @@ class SamtoolsSort(AbstractStep):
                                     engine and threads ie")
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional=True, default=None,
+	self.add_option('fifo', bool, optional=True, default=False,
+                description='Enable the FIFO functionality for splitting large input files.')
+        self.add_option('dd-blocksize', str, optional=True, default='4096k',
                 description='Read data with ``dd`` and set the blocksize.')
 
 
@@ -94,7 +96,7 @@ class SamtoolsSort(AbstractStep):
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as pipe:
                         # 0 use dd to read the data
-                        if self.is_option_set_in_config('dd-blocksize'):
+                        if self.get_option('fifo'):
                             dd_in = [
                                 self.get_tool('dd'),
                                 'ibs=%s' % self.get_option('dd-blocksize'),
@@ -145,7 +147,7 @@ class SamtoolsSort(AbstractStep):
                             '%s.sorted.%s%s'  % (run_id, suffix.lower(), postfix),
                             input_paths)                            
 
-                        if self.is_option_set_in_config('dd-blocksize'):
+                        if self.get_option('fifo'):
                             samtools_sort.append('-')
                             pipe.add_command(samtools_sort)
                             samtools_sort = [
