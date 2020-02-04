@@ -29,7 +29,7 @@
  * introduce --profiling option to analyse uap runtime (#132)
  * introduce --path option to retrieve the UAP installation path
  * optional step connections (#35)
- * improved single end support and sensitivity to respective connections (#139)
+ * improved single end support and sensitivity to respective connections (#38, #139)
  * forward None values for options to step declaration (#140)
 
 **additional stuff**
@@ -39,6 +39,7 @@
  * use common names for stringtie gtf connections `in/features`
  * hisat2 now takes `library_type` option
  * complete merge with https://github.com/yigbt/uap
+ * kill subsequent slurm jobs after error (#76)
 
 ## 1.1 (20.01.2020)
 
