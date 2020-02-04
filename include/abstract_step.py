@@ -1431,7 +1431,7 @@ class AbstractStep(object):
 
         # Check if all required connections are sattisfied.
         required_connections = self.get_in_connections(with_optional=False)
-        missing required_connections - cc.existing_connections
+        missing = required_connections - cc.existing_connections
         if missing:
             logger.warn('_connect: The required connection %s of step '
                 '"%s" is not satisfied. To remove this warning pass '
