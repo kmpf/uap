@@ -122,8 +122,8 @@ Connections via ``add_connection(...)``:
   parameter should be passed with their respective keyword:
 
   1. ``tag``
-       The name of the connection. It musst start with ``in/`` to declare an
-       input connection or ``out/`` to declare an output connection.
+        The name of the connection. It musst start with ``in/`` to declare an
+        input connection or ``out/`` to declare an output connection.
 
   2. ``optional`` (Boolean, default ``False``)
         Defines if the connection is mandatory (``False``) or optional
@@ -131,10 +131,12 @@ Connections via ``add_connection(...)``:
         rigorously.
 
   3. ``format``
-       Descripes the expected file formats to aid the user.
+        Descripes the expected file formats to aid the user.
 
   4. ``description``
-       Descripes the content to aid the user.
+        Descripes the content to aid the user. The string is used in
+        for the documentation with |sphinx| and |reStructuredText|
+        markups can be used.
 
 
 Options via ``self.add_option()``:
@@ -166,6 +168,8 @@ Options via ``self.add_option()``:
 
   6. ``description``
          The description of the functionality of the option.
+         The string is used in for the documentation with |sphinx|
+         and |reStructuredText| markups can be used.
 
 
 
@@ -498,3 +502,12 @@ Please provide a step option to adjust the ``dd`` blocksize (this option
 is usually called ``dd-blocksize``).
 Create your steps in a way that they perform the least filesystem operations.
 Some systems might be very sensitive to huge numbers of read-write operations.
+
+
+.. |sphinx| raw:: html
+
+   <a href="https://www.sphinx-doc.org/" target="_blank">sphinx</a>
+
+.. |reStructuredText| raw:: html
+
+   <a href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html" target="_blank">reStructuredText</a>
