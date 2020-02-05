@@ -35,7 +35,7 @@ class FastqScreen(AbstractStep):
 
         self.add_option('cores', int, default=cores)
 
-        self.add_option('nohits', bool, default=False,
+        self.add_option('nohits', bool, default=False, optional=True,
                         description="Writes to a file the sequences that did \
                         not map to any of the specified genomes. This option \
                         is equivalent to specifying --tag --filter 0000 \
@@ -43,7 +43,7 @@ class FastqScreen(AbstractStep):
                         screened).  By default the whole input file will be \
                         mapped, unless overridden by --subset.")
 
-        self.add_option('subset', int, default=False,
+        self.add_option('subset', int, default=False, optional=True,
                         description="Don't use the whole sequence file, but \
                         create a temporary dataset of this specified number \
                         of reads. The dataset created will be of approximately \
