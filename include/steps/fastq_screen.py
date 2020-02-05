@@ -43,7 +43,7 @@ class FastqScreen(AbstractStep):
                         screened).  By default the whole input file will be \
                         mapped, unless overridden by --subset.")
 
-        self.add_option('subset', int, default=False, optional=True,
+        self.add_option('subset', int, optional=True,
                         description="Don't use the whole sequence file, but \
                         create a temporary dataset of this specified number \
                         of reads. The dataset created will be of approximately \
@@ -52,7 +52,7 @@ class FastqScreen(AbstractStep):
                         then the whole dataset will be used. Subsets will \
                         be taken evenly from throughout the whole original \
                         dataset. By Default FastQ Screen runs with this \
-                        parameter set to 100000. To process an entire dataset \
+                        parameter set to 100,000. To process an entire dataset \
                         however, adjust --subset to 0.")
 
         self.require_tool('fastq_screen')
