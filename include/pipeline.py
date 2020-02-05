@@ -313,8 +313,14 @@ class Pipeline(object):
                          % (self.get_config_filepath(),
                             self.config['destination_path'])
             )
-        if not os.path.exists("%s-out" % self.config['id']):
-            os.symlink(self.config['destination_path'], '%s-out' % self.config['id'])
+        symlink = "%s-out" % self.config['id']
+        if not os.path.exists(symlink):
+            try:
+                os.stat(symlink)
+                os.symlink(self.config['destination_path'], symlink)
+            except OSError, e:
+                logger.warn('File %s seems to be a broken symlink and will '
+                            'not be overwritten.' % symlink)
 
         if not 'cluster' in self.config or self.config['cluster'] is None:
             self.config['cluster'] = dict()
