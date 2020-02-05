@@ -206,12 +206,10 @@ class AbstractStep(object):
         # options have been set
         for key, info in self._defined_options.items():
             if key not in self._options:
-                value = info['default']
-                if value == None:
-                    if info['optional'] == False:
-                        raise UAPError(
-                            "Required option not set in %s: %s." % (self, key))
-                self._options[key] = value
+                self._options[key] = info['default']
+            elif info['optional'] is not True:
+                raise UAPError(
+                    "Required option not set in %s: %s." % (self, key))
 
         self._options.setdefault('_volatile', False)
 
