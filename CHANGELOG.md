@@ -7,6 +7,7 @@
  * one parent step can now be used for multiple inputs (#125)
  * reviced connection checks (#37, #138, #142)
  * update from brkoen sha1 to sha256 (#141)
+ * required options stay required even if default is set (#144)
 
 **Features**
  * steps now run within their temp directory (#29, #31)
