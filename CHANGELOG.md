@@ -2,12 +2,12 @@
 
 **Fixes**
  * completing slurm jobs are not considered running (#100)
- * invoce uap from anywhere (#114)
- * avoid depricated pip wrapper (#122)
+ * invoke uap from anywhere (#114)
+ * avoid deprecated pip wrapper (#122)
  * one parent step can now be used for multiple inputs (#125)
- * reviced connection checks (#37, #138, #142)
- * update from brkoen sha1 to sha256 (#141)
- * required options stay required even if default is set (#144)
+ * revised connection checks (#37, #138, #142)
+ * update from broken sha1 to sha256 (#141)
+ * required options stay required even if a default is set (#144)
 
 **Features**
  * steps now run within their temp directory (#29, #31)
@@ -17,17 +17,17 @@
  * error handling and --debugging option (#118)
  * platform info in annotation file (#62)
  * output hash now sensitive to tool versions (#116)
- * ouptu hash robust against tool location and order
+ * output hash robust against tool location and order
  * tool versions can optionally be ignored with `ignore_version`
  * shorter lmod config (#104)
- * uap tools musst not be referenced in config (#119)
+ * uap tools must not be referenced in config (#119)
  * uap path in PATH environmental variable not required (#107)
  * default job quota is now 0, which is no quota (#105)
  * dependencies are now completed through selected connections (#127)
  * reference assembly `-G` is optional for `stringtieMerge` and `stringtie` (#124)
  * input connection for reference assembly in `stringtieMerge` or `stringtie`
  * object `ConnectionsCollector` for handling input from multiple steps (#47)
- * introduce --profiling option to analyse uap runtime (#132)
+ * introduce --profiling option to analyze uap runtime (#132)
  * introduce --path option to retrieve the UAP installation path
  * optional step connections (#35)
  * improved single end support and sensitivity to respective connections (#38, #139)
