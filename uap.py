@@ -369,6 +369,20 @@ def main():
         help="Specify the cluster type. Default: [auto].")
 
     submit_to_cluster_parser.add_argument(
+        "--first-error",
+        dest="first_error",
+        action="store_true",
+        default=False,
+        help="Print stderr of the first failed cluster job.")
+
+    submit_to_cluster_parser.add_argument(
+        "--job-ids",
+        dest="job_ids",
+        action="store_true",
+        default=False,
+        help="Prints space seperated cluster job ids of all submitted jobs.")
+
+    submit_to_cluster_parser.add_argument(
         "--legacy",
         dest="legacy",
         action="store_true",

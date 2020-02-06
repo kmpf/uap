@@ -3,6 +3,7 @@ slurm:
     identity_answer: 'slurm'
     submit: 'sbatch'
     stat: 'squeue'
+    last_error: 'cluster/util_scripts/slurm_first_error.sh'
     template: 'cluster/submit-scripts/sbatch-template.sh'
     default_options: '--cpus-per-task=#{CORES} --kill-on-invalid-dep=yes'
     hold_jid: '--dependency=afterok:%s'
@@ -20,6 +21,7 @@ qstat:
     identity_answer: ['SGE', 'UGE', 'OGS']
     submit: 'qsub'
     stat: 'qstat'
+    last_error: ''
     template: 'cluster/submit-scripts/qsub-template.sh'
     default_options: ''
     hold_jid: '-hold_jid'
