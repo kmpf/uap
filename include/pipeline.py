@@ -45,7 +45,7 @@ class Pipeline(object):
 
     def __init__(self, **kwargs):
         self.caught_signal = None
-        self.cluster_type = None
+        self._cluster_type = None
         self.git_version = None
         self.git_diff = None
         self.git_tag = None
@@ -337,10 +337,12 @@ class Pipeline(object):
         if not 'cluster' in self.config or self.config['cluster'] is None:
             self.config['cluster'] = dict()
 
-        for i in ['default_pre_job_command', 'default_post_job_command']:
+        for i in ['default_submit_options', 'default_pre_job_command',
+                'default_post_job_command']:
             self.config['cluster'].setdefault(i, '')
-        self.config['cluster'].setdefault('default_submit_options',
-                self.get_cluster_command('default_options'))
+        if self.get_cluster_type() is not None:
+            self.config['cluster'].setdefault('default_submit_options',
+                    self.get_cluster_command('default_options'))
         self.config['cluster'].setdefault('default_job_quota', 0) # no quota
 
         self.build_steps()
@@ -778,23 +780,27 @@ class Pipeline(object):
                         return cluster_type
                 except OSError:
                     pass
+        logger.warn('Cluster type could not be detected.')
         return None
 
     def get_cluster_type(self):
-        return self.cluster_type
+        return self._cluster_type
 
     def set_cluster_type(self, cluster_type):
-        if not cluster_type in self.get_cluster_config():
-            logger.info("No cluster type detected.")
-            self.cluster_type = None
-        self.cluster_type = cluster_type
+        if cluster_type is not None and not cluster_type in self.get_cluster_config():
+            raise UAPError ('Cluster type "%s" not configured.' % cluster_type)
+        self._cluster_type = cluster_type
 
     '''
     Shorthand to retrieve a cluster-type-dependent command or filename
     (cc == cluster command).
     '''
     def get_cluster_command(self, key):
-        return self.get_cluster_config()[self.get_cluster_type()][key]
+        ct = self.get_cluster_type()
+        if key not in self.get_cluster_config()[ct].keys():
+            raise UAPError('The option "%s" is not available for the cluster "%s".' %
+                    (key, ct))
+        return self.get_cluster_config()[ct][key]
 
     '''
     Shorthand to retrieve a cluster-type-dependent command line part (this is a
