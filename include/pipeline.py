@@ -121,7 +121,7 @@ class Pipeline(object):
         '''
 
         self.config_path, self.config_name = os.path.split(args.config.name)
-        self._config_filepath = config_name
+        self._config_filepath = self.config_name
         '''
         Name of the YAML configuration file
         '''
@@ -158,6 +158,7 @@ class Pipeline(object):
 
         self.file_dependencies_reverse = dict()
         '''
+
         This dict stores file dependencies within this pipeline, but regardless
         of step, output file tag or run ID. This dict has, for all input
         files required by the pipeline, a set of output files which are generated
