@@ -28,8 +28,8 @@ class HtSeqCount(AbstractStep):
         )
 
         # the feature file provided by another step (e.g. cuffmerge)
-        self.add_connection('in/features',
-                            constraints = {'total_files': 1}
+        self.add_connection('in/features', optional=True, format='gtf',
+            description='reference assembly', constraints = {'total_files': 1}
         )
 
         # the counts per alignment
@@ -98,7 +98,7 @@ class HtSeqCount(AbstractStep):
 
             input_paths = cc[run_id]['in/alignments']
             if ref_per_run is True:
-                features_path = connection['in/features'][0]
+                features_path = cc['in/features'][0]
 
             # Is the alignment gzipped?
             root, ext = os.path.splitext(input_paths[0])
