@@ -95,13 +95,12 @@ def main(args):
     # -> during submission, there is a list of N previous job ids in
     #    which every item holds one of the previously submitted tasks
 
-    def submit_step(step, dependent_steps = []):
+    def submit_step(step_name, dependent_steps = []):
         '''
         This method reads and modifies the necessary submit script for a given
         step. It applies job quotas. Finally, it starts the submit command.
         '''
         step = p.get_step(step_name)
-        size = quotas[step_name] if step_name in quotas else quotas['default']
 
         ##########################
         # Assemble submit script #

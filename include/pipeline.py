@@ -337,9 +337,10 @@ class Pipeline(object):
         if not 'cluster' in self.config or self.config['cluster'] is None:
             self.config['cluster'] = dict()
 
-        for i in ['default_submit_options', 'default_pre_job_command',
-                  'default_post_job_command']:
+        for i in ['default_pre_job_command', 'default_post_job_command']:
             self.config['cluster'].setdefault(i, '')
+        self.config['cluster'].setdefault('default_submit_options',
+                self.get_cluster_command('default_options'))
         self.config['cluster'].setdefault('default_job_quota', 0) # no quota
 
         self.build_steps()
