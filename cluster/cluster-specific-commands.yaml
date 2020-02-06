@@ -5,7 +5,7 @@ slurm:
     stat: 'squeue'
     template: 'cluster/submit-scripts/sbatch-template.sh'
     default_options: '--cpus-per-task=#{CORES} --kill-on-invalid-dep=yes'
-    hold_jid: '--dependency=afterany:%s'
+    hold_jid: '--dependency=afterok:%s'
     hold_jid_separator: ':'
     array_job: '--array=1-%s'
     array_job_wquota: '--array=1-%s%%%s'
