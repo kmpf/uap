@@ -264,7 +264,7 @@ class Pipeline(object):
         self.config = yaml.load(config_file, Loader=yaml.FullLoader)
 
         for key in self.config.keys():
-            if key not in self.known_config.keys():
+            if key not in self.known_config_keys:
                 raise UAPError('The key "%s" set in "%s" is unknown.' %
                         (key, self.config_path))
 
