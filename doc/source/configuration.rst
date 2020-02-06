@@ -29,6 +29,7 @@ although technically, they are keys):
   * ``constants`` -- defines constants for later use (define repeatedly used
     values as constants to increase readability of the following sections)
   * ``steps`` -- defines the source and processing steps and their order
+  * ``lmod`` -- if lmod is used paths can be specified here to ignor user env
   * ``tools`` -- defines all tools used in the analysis and how to determine
     their versions (for later reference)
 
