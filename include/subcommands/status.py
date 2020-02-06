@@ -31,6 +31,8 @@ def main(args):
     elif args.job_ids:
         ids = p.get_cluster_job_ids()
         print(' '.join(ids))
+        return
+
     elif len( args.run ) >= 1:
         # print run infos of one or more specific tasks
         for task_id in args.run:
