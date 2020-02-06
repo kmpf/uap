@@ -810,13 +810,13 @@ class AbstractStep(object):
         ping_file_suffix = misc.str_to_sha256_b62(
             run.get_temp_output_directory())[:6]
 
-        def take_care_of_ping_files():
+        def take_care_of_ping_files(signum, frame):
             '''
             Moves and copies ping files in case of an error.
             '''
             self._move_ping_files(executing_ping_path, queued_ping_path,
                     ping_file_suffix, keep_failed=True)
-            signal.SIG_DFL()
+            signal.SIG_DFL(signum, frame)
 
         signal.signal(signal.SIGTERM, take_care_of_ping_files)
         signal.signal(signal.SIGINT, take_care_of_ping_files)
@@ -839,9 +839,10 @@ class AbstractStep(object):
             # pool to wrap up. This way, we can try to get process stats before
             # shutting everything down.
             process_pool.ProcessPool.kill()
-            take_care_of_ping_files()
             # Store the exception, re-raise it later
             caught_exception = sys.exc_info()
+            self._move_ping_files(executing_ping_path, queued_ping_path,
+                    ping_file_suffix, keep_failed=True)
         finally:
             self._state = AbstractStep.states.POSTPROCESS # changes relative paths
             os.chdir(base_working_dir)

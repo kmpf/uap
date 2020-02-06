@@ -21,6 +21,7 @@ def main(args):
         print("Catching %s!" % process_pool.ProcessPool.SIGNAL_NAMES[signum])
         p.caught_signal = signum
         process_pool.ProcessPool.kill()
+        signal.SIG_DFL(signum, frame)
         
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)

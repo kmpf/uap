@@ -671,7 +671,8 @@ class ProcessPool(object):
                 raise
 
         if something_went_wrong:
-            log = "Pipeline crashed. PID: %s" % pid
+            log = "Pipeline crashed (PID: %s) while writing in %s" % \
+                (pid, self.get_run().get_temp_output_directory())
             self.log(log)
             raise UAPError(log)
 
