@@ -624,6 +624,20 @@ class Pipeline(object):
                 # are no reason to crash the entire thing
                 pass
 
+    def get_cluster_job_ids(self):
+        '''
+        The argument less method returns a set the cluster job ids of all
+        subbmited jobs.
+        '''
+        ids = set()
+        for task in self.all_tasks_topologically_sorted:
+            queued_ping_file = task.get_run().get_queued_ping_file()
+            if os.path.exists(queued_ping_file):
+                with open(queued_ping_file, 'r') as fl:
+                    info = yaml.load(fl, Loader=yaml.FullLoader)
+                ids.add(info['job_id'])
+        return ids
+
     def check_ping_files(self, print_more_warnings = False,
                          print_details = False, fix_problems = False):
         run_problems = list()

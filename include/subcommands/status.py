@@ -28,6 +28,9 @@ def main(args):
         # print all sources (i. e. instances of AbstractSourceStep)
         p.print_source_runs()
 
+    elif args.job_ids:
+        ids = p.get_cluster_job_ids()
+        print(' '.join(ids))
     elif len( args.run ) >= 1:
         # print run infos of one or more specific tasks
         for task_id in args.run:

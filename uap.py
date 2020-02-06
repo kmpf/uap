@@ -286,6 +286,13 @@ def main():
         help="Specify the cluster type. Default: [auto].")
 
     status_parser.add_argument(
+        "--job-ids",
+        dest="job_ids",
+        action="store_true",
+        default=False,
+        help="Prints space seperated cluster job ids of all submitted jobs.")
+
+    status_parser.add_argument(
         "--summarize",
         dest="summarize",
         action="store_true",

@@ -34,6 +34,7 @@
  * forward None values for options to step declaration (#140)
  * raise exeption if an unknown configuration key is used
  * configure cluster default options (#76)
+ * introduce --job-ids as option for status to report config specifc jobs (#58)
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
