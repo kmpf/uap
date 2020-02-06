@@ -45,7 +45,7 @@ def main(args):
 
     output_data = [
         ['# uap runtime-info', time.strftime("%c"), p.git_hash_tag],
-        ['# uap  config', p.get_config_filepath()],
+        ['# uap  config', p.args.config.name],
         ['# step', 'CPUs [%]', 'requested CPUs', 'RAM [MB]', 'Duration [s]', 'total start time', 'total end time'],
         ['step', 'cpu_percent', 'requested_cpu', 'ram_mb', 'duration_seconds', 'total_start_time', 'total_end_time']
     ]

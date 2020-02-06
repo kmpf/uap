@@ -87,7 +87,7 @@ def main(args):
         print("Set default quota to %s" % quotas['default'])
     except:
         print("No default quota defined in %s. Set default quota to '5'." %
-              p.get_config_filepath())
+              p.args.config.name)
         quotas['default'] = 5
     # read quotas
     # -> for every step, a quota can be defined (with a default quota
@@ -144,9 +144,9 @@ def main(args):
                 "'" + "' '".join(task_names) + "'")
         submit_script = submit_script.replace("#{CORES}", str(step._cores))
 
-        config_file_path = p.get_config_filepath()
-        uap_cmd = os.path.join(p.get_uap_path(), 'uap')
-        command = [uap_cmd, config_file_path, 'run-locally']
+        config_file_path = p.args.config.name
+        command = os.path.join(p.get_uap_path(), 'uap')
+        command.extend([config_file_path, 'run-locally'])
 
         task_id = p.get_cluster_command('array_task_id')
         command.append('"${array_jobs[$' + task_id + ']}"')

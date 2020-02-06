@@ -83,16 +83,16 @@ class Pipeline(object):
         check if we got passed an 'arguments' parameter
         this parameter should contain a argparse.Namespace object
         """
-        args = None
+        self.args = None
         if 'arguments' in kwargs:
-            args = kwargs['arguments']
+            self.args = kwargs['arguments']
 
 
         '''
         Absolute path to the directory of the uap executable.
         It is used to circumvent path issues.
         '''
-        self._uap_path = args.uap_path
+        self._uap_path = self.args.uap_path
 
 
         '''
@@ -106,10 +106,10 @@ class Pipeline(object):
 
         try:
             # set cluster type
-            if args.cluster == 'auto':
+            if self.args.cluster == 'auto':
                 self.set_cluster_type(self.autodetect_cluster_type())
             else:
-                self.set_cluster_type(args.cluster)
+                self.set_cluster_type(self.args.cluster)
         except AttributeError:
             # cluster type is not an applicable parameter here, and that's fine
             # (we're probably in run-locally.py)
@@ -120,8 +120,7 @@ class Pipeline(object):
         User working directory.
         '''
 
-        self.config_path, self.config_name = os.path.split(args.config.name)
-        self._config_filepath = self.config_name
+        self.config_path, self.config_name = os.path.split(self.args.config.name)
         '''
         Name of the YAML configuration file
         '''
@@ -207,7 +206,7 @@ class Pipeline(object):
         A set of accepted keys in the config.
         '''
 
-        self.read_config(args.config)
+        self.read_config(self.args.config)
         self.setup_lmod()
 
         self.tool_versions = {}
@@ -234,7 +233,7 @@ class Pipeline(object):
                 # Fail if multiple tasks with the same name exist
                 if str(task) in self.task_for_task_id:
                     raise UAPError("%s: Duplicate task ID %s." %
-                                 (self.get_config_filepath(), str(task)))
+                                 (self.config_name, str(task)))
                 self.task_for_task_id[str(task)] = task
 
     def get_uap_path(self):
@@ -245,9 +244,6 @@ class Pipeline(object):
         Working directory of the pipeline that coinsides with the config path.
         '''
         return self._config_path
-
-    def get_config_filepath(self):
-        return self._config_filepath
 
     def get_cluster_config(self):
         return self._cluster_config
@@ -266,7 +262,7 @@ class Pipeline(object):
         for key in self.config.keys():
             if key not in self.known_config_keys:
                 raise UAPError('The key "%s" set in "%s" is unknown.' %
-                        (key, self.config_path))
+                        (key, self.args.config.name))
 
         # Make self.config['destination_path'] an absolute path if necessary
         if not os.path.isabs(self.config['destination_path']):
@@ -274,7 +270,7 @@ class Pipeline(object):
                 self.get_config_path(),self.config['destination_path'])
 
         if not 'id' in self.config:
-            self.config['id'] = self.get_config_filepath()
+            self.config['id'] = self.config_name
 
         if 'lmod' not in self.config or self.config['lmod'] is None:
             self.config['lmod'] = dict()
@@ -319,10 +315,10 @@ class Pipeline(object):
 
         if not 'destination_path' in self.config:
             raise UAPError("%s: Missing key: destination_path"
-                         % self.get_config_filepath())
+                         % self.config_name)
         if not os.path.exists(self.config['destination_path']):
             raise UAPError("%s: Destination path does not exist: %s"
-                         % (self.get_config_filepath(),
+                         % (self.config_name,
                             self.config['destination_path'])
             )
         symlink = "%s-out" % self.config['id']
@@ -353,7 +349,7 @@ class Pipeline(object):
     def build_steps(self):
         self.steps = {}
         if not 'steps' in self.config:
-            raise UAPError("%s: Missing key: steps" % self.get_config_filepath())
+            raise UAPError("%s: Missing key: steps" % self.config_name)
         re_simple_key = re.compile('^[a-zA-Z0-9_]+$')
         re_complex_key = re.compile('^([a-zA-Z0-9_]+)\s+\(([a-zA-Z0-9_]+)\)$')
 
@@ -378,7 +374,7 @@ class Pipeline(object):
                 # A step cannot be named 'temp' because we need the out/temp
                 # directory to store temporary files.
                 raise UAPError("%s: A step name cannot be 'temp'."
-                             % self.get_config_filepath())
+                             % self.config_name)
             step_class = abstract_step.AbstractStep.get_step_class_for_key(module_name)
             step = step_class(self)
 
@@ -393,7 +389,7 @@ class Pipeline(object):
                 if not parent_step in self.steps.keys():
                     raise UAPError("%s: Step %s specifies an undefined "
                                  "dependency: %s."
-                                 % (self.get_config_filepath(),
+                                 % (self.config_name,
                                     step_name, parent_step))
                 step.add_dependency(self.steps[parent_step])
 
@@ -418,7 +414,7 @@ class Pipeline(object):
                     next_steps.append(step_name)
             if len(next_steps) == 0:
                 raise UAPError("%s: There is a cycle in the step dependencies."
-                             % self.get_config_filepath())
+                             % self.config_name)
             for step_name in misc.natsorted(next_steps):
                 self.topological_step_order.append(step_name)
                 assigned_steps.add(step_name)
@@ -495,7 +491,7 @@ class Pipeline(object):
                 raise UAPError(
                     "%s: Error while executing '%s' for %s: %s "
                     "Error no.: %s Error message: %s" %
-                    (self.get_config_filepath(), info_key, tool_id,
+                    (self.config_name, info_key, tool_id,
                      " ".join(command), e.errno, e.strerror)
                 )
 
@@ -570,7 +566,7 @@ class Pipeline(object):
                 raise UAPError("%s: Error while checking Tool %s "
                              "Error no.: %s Error message: %s\ncommand: %s "
                              "\nSTDOUT-ERR: %s\n" %
-                             (self.get_config_filepath(), info['path'],
+                             (self.config_name, info['path'],
                               e.errno, e.strerror, command, subprocess.PIPE))
             proc.wait()
             exit_code = None
@@ -590,7 +586,7 @@ class Pipeline(object):
                 raise UAPError(
                     "%s: Tool check failed for %s: %s - exit code is: %d "
                     "(expected %d) (response %s)"
-                    % (self.get_config_filepath(), tool_id, ' '.join(command),
+                    % (self.config_name, tool_id, ' '.join(command),
                        exit_code, expected_exit_code, tool_check_info['response'])
                 )
             # Execute clean-up command (if configured)
@@ -730,11 +726,11 @@ class Pipeline(object):
         if show_hint:
             if print_more_warnings and not print_details or not fix_problems:
                 print("Hint: Run 'uap %s fix-problems --details' to see the "
-                      "details."  % self.get_config_filepath())
+                      "details."  % self.args.config.name)
             if not fix_problems:
                 print("Hint: Run 'uap %s fix-problems --srsly' to fix these "
                       "problems (that is, delete all problematic ping files)."
-                      % self.get_config_filepath())
+                      % self.args.config.name)
 
     def check_volatile_files(self, details = False, srsly = False):
         collected_files = set()
@@ -751,7 +747,7 @@ class Pipeline(object):
                   "output files." % (misc.bytes_to_str(total_size),
                                      len(collected_files)))
             print("Call 'uap %s volatilize --srsly' to purge the files."
-                  % self.get_config_filepath())
+                  % self.args.config.name)
 
     def autodetect_cluster_type(self):
         cluster_config = self.get_cluster_config()

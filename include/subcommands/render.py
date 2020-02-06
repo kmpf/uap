@@ -135,7 +135,7 @@ def main(args):
 
 
 def render_graph_for_all_steps(p, args):
-    configuration_path = p.get_config_filepath()
+    configuration_path = p.config_name
     if args.simple:
         dot_file = configuration_path.replace('.yaml', '.simple.dot')
         svg_file = configuration_path.replace('.yaml', '.simple.svg')
