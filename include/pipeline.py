@@ -120,7 +120,7 @@ class Pipeline(object):
         User working directory.
         '''
 
-        config_path, config_name = os.path.split(args.config.name)
+        self.config_path, self.config_name = os.path.split(args.config.name)
         self._config_filepath = config_name
         '''
         Name of the YAML configuration file
@@ -200,6 +200,12 @@ class Pipeline(object):
         This dict stores tasks per step name.
         '''
 
+        self.known_config_keys = set(['destination_path', 'constants', 'cluster',
+                'steps', 'lmod', 'tools'])
+        '''
+        A set of accepted keys in the config.
+        '''
+
         self.read_config(args.config)
         self.setup_lmod()
 
@@ -255,6 +261,11 @@ class Pipeline(object):
     def read_config(self, config_file):
         # yaml.load works fine, even for duplicate dictionary keys (WTF)
         self.config = yaml.load(config_file, Loader=yaml.FullLoader)
+
+        for key in self.config.keys():
+            if key not in self.known_config.keys():
+                raise UAPError('The key "%s" set in "%s" is unknown.' %
+                        (key, self.config_path))
 
         # Make self.config['destination_path'] an absolute path if necessary
         if not os.path.isabs(self.config['destination_path']):

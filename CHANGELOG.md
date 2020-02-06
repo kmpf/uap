@@ -32,6 +32,7 @@
  * optional step connections (#35)
  * improved single end support and sensitivity to respective connections (#38, #139)
  * forward None values for options to step declaration (#140)
+ * raise exeption if an unknown configuration key is used
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
