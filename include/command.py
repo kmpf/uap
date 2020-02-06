@@ -24,7 +24,7 @@ class CommandInfo(object):
                     self._tool = _[-1]
                 pass
             elif not isinstance(_, str):
-                raise UAPError("Non-string element %s in command %s" % (_, command))
+                raise TypeError("Non-string element %s in command %s" % (_, command))
             self._command.append(_)
 
     def replace_output_dir_du_jour(func):

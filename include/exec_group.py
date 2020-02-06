@@ -26,10 +26,14 @@ class ExecGroup(object):
         return pipeline
 
     def add_command(self, command, stdout_path=None, stderr_path=None):
-        command = command_info.CommandInfo(self, command,
-                                           stdout_path = stdout_path,
-                                           stderr_path = stderr_path
-                                       )
+        try:
+            command = command_info.CommandInfo(self, command,
+                                               stdout_path = stdout_path,
+                                               stderr_path = stderr_path
+                                           )
+        except TypeError, e:
+            raise UAPError('During declaration of step "%s": %s' %
+                    (str(self._run.get_step()), e.message))
         self._pipes_and_commands.append(command)
         return command
 
