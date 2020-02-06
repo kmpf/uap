@@ -28,6 +28,7 @@ import tempfile
 import textwrap
 import time
 import traceback
+from shutil import copyfile
 # 2. related third party imports
 import fscache
 import psutil
@@ -699,6 +700,33 @@ class AbstractStep(object):
                 return self.get_pipeline().states.QUEUED
         return run_state
 
+    def _move_ping_files(self, executing_ping_path, queued_ping_path, suffix,
+            keep_failed=False):
+        # don't remove the ping file, rename it so we can inspect it later
+        if os.path.exists(executing_ping_path):
+            try:
+                out_w_suffix = executing_ping_path + '.' + suffix
+                if keep_failed is True:
+                    os.rename(executing_ping_path,
+                              executing_ping_path + '.failed')
+                    copyfile(executing_ping_path + '.failed', out_w_suffix)
+                else:
+                    os.rename(executing_ping_path, out_w_suffix)
+            except OSError:
+                pass
+        # remove the queued ping file
+        if os.path.exists(queued_ping_path):
+            try:
+                out_w_suffix = queued_ping_path + '.' + suffix
+                if keep_failed is True:
+                    os.rename(queued_ping_path,
+                              queued_ping_path + '.failed')
+                    copyfile(queued_ping_path + '.failed', out_w_suffix)
+                else:
+                    os.rename(queued_ping_path, out_w_suffix)
+            except OSError:
+                pass
+
     def run(self, run_id):
         '''
         Create a temporary output directory and execute a run. After the run
@@ -779,6 +807,20 @@ class AbstractStep(object):
             finally:
                 os._exit(0)
 
+        ping_file_suffix = misc.str_to_sha256_b62(
+            run.get_temp_output_directory())[:6]
+
+        def take_care_of_ping_files():
+            '''
+            Moves and copies ping files in case of an error.
+            '''
+            self._move_ping_files(executing_ping_path, queued_ping_path,
+                    ping_file_suffix, keep_failed=True)
+            signal.SIG_DFL()
+
+        signal.signal(signal.SIGTERM, take_care_of_ping_files)
+        signal.signal(signal.SIGINT, take_care_of_ping_files)
+
         self.start_time = datetime.datetime.now()
         self.get_pipeline().notify(
             "[INFO] [%s] starting %s/%s on %s" %
@@ -790,12 +832,14 @@ class AbstractStep(object):
         os.chdir(run.get_temp_output_directory())
         try:
             self.execute(run_id, run)
+            self._move_ping_files(executing_ping_path, queued_ping_path, ping_file_suffix)
         except Exception as e:
             print("%s: %s" % (type(e).__name__, sys.exc_info()))
             # Oh my. We have a situation. This is awkward. Tell the process
             # pool to wrap up. This way, we can try to get process stats before
             # shutting everything down.
             process_pool.ProcessPool.kill()
+            take_care_of_ping_files()
             # Store the exception, re-raise it later
             caught_exception = sys.exc_info()
         finally:
@@ -807,22 +851,6 @@ class AbstractStep(object):
             except OSError:
                 # if the ping process was already killed, it's gone anyway
                 pass
-            # don't remove the ping file, rename it so we can inspect it later
-            ping_file_suffix = misc.str_to_sha256_b62(
-                run.get_temp_output_directory())[:6]
-            if os.path.exists(executing_ping_path):
-                try:
-                    os.rename(executing_ping_path,
-                              executing_ping_path + '.' + ping_file_suffix)
-                except OSError:
-                    pass
-            # remove the queued ping file
-            if os.path.exists(queued_ping_path):
-                try:
-                    os.rename(queued_ping_path,
-                              queued_ping_path + '.' + ping_file_suffix)
-                except OSError:
-                    pass
 
         # TODO: Clean this up. Re-think exceptions and task state transisitions.
 
