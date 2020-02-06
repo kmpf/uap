@@ -126,7 +126,7 @@ class Pipeline(object):
         Name of the YAML configuration file
         '''
 
-        self._config_path = os.path.abspath(config_path)
+        self._config_path = os.path.abspath(self.config_path)
         '''
         Path of the YAML configuration file
         '''
