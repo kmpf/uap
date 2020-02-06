@@ -328,9 +328,9 @@ class Pipeline(object):
         symlink = "%s-out" % self.config['id']
         if not os.path.exists(symlink):
             try:
-                os.stat(symlink)
                 os.symlink(self.config['destination_path'], symlink)
             except OSError, e:
+                logger.warn(e)
                 logger.warn('File %s seems to be a broken symlink and will '
                             'not be overwritten.' % symlink)
 
