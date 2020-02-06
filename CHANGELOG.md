@@ -8,6 +8,7 @@
  * revised connection checks (#37, #138, #142)
  * update from broken sha1 to sha256 (#141)
  * required options stay required even if a default is set (#144)
+ * fail cluster job if UAP fails (#60)
 
 **Features**
  * steps now run within their temp directory (#29, #31)
