@@ -35,6 +35,16 @@ class Bowtie2(AbstractStep):
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/alignments')
+        self.add_connection('out/unaligned', optional=True,
+                description=' unpaired reads that didn\'t align')
+        self.add_connection('out/al', optional=True,
+                description='unpaired reads that aligned at least once')
+        self.add_connection('out/un-conc', optional=True,
+                description='pairs that didn\'t align concordantly')
+        self.add_connection('out/al-conc', optional=True,
+                description='pairs that aligned concordantly at least once')
+        self.add_connection('out/met-file', optional=True,
+                description='metrics file')
 
         # Step was tested for dd (coreutils) release 8.25
         self.require_tool('dd')
@@ -186,27 +196,24 @@ class Bowtie2(AbstractStep):
         # output
         self.add_option('time', bool, optional=True,
                         description="print wall-clock time taken by search phases")
-        # Options --un|al|un-conc|al-conc|un-gz|met-file
-        # would produce output connections that are not default and known previously
-        # This should be solved via temp. files
-        # For now these options are ignored
-        # which of these is written anyway??
-        #self.add_option('un', str, optional=True,
-        #                description="Path to write unpaired reads that didn't align")
-        #self.add_option('al', str, optional=True,
-        #                description="Path to write unpaired reads that aligned at least "
-        #                "once to")
-        #self.add_option('un-conc', str, optional=True,
-        #                description="Path to write pairs that didn't align concordantly")
-        #self.add_option('al-conc', str, optional=True,
-        #                description="write pairs that aligned concordantly at least once to")
+
+        self.add_option('unaligned', bool, optional=True, default=False,
+                        description="Write unpaired reads that didn't align to connection out/unaligned")
+        self.add_option('al', str, optional=True,
+                        description="Write unpaired reads that aligned at least "
+                        "once to connection out/al")
+        self.add_option('un-conc', str, optional=True,
+                        description="Write pairs that didn't align concordantly to connection out/un-conc")
+        self.add_option('al-conc', str, optional=True,
+                        description="write pairs that aligned concordantly at least once to out/al-conc")
+
         self.add_option('compress_add_output', bool, optional=True,
                         description="Ads -gz to the 4 options above to produce "
                         "compressed output.")
         self.add_option('quiet', bool, optional=True,
                         description="print nothing to stderr except serious errors")
-        #self.add_option('met-file', str, optional=True,
-        #                description="send metrics to file at")
+        self.add_option('met-file', bool, optional=True, default=False
+                        description="send metrics to file to connection out/met-file")
         self.add_option('met-stderr', bool, optional=True,
                         description="send metrics to stderr")
         self.add_option('met', int, optional=True,
@@ -229,7 +236,7 @@ class Bowtie2(AbstractStep):
 
         # performance
         # reset self.set_cores to this one!
-        self.add_option('threads', int, optional=True,
+        self.add_option('cores', int, optional=True,
                         description="number of alignment threads to launch "
                         "(default=1)")
         self.add_option('reorder', bool, optional=True,
@@ -273,7 +280,7 @@ class Bowtie2(AbstractStep):
                     # all non-bolean options:
                     'skip', 'upto', 'trim5', 'trim3', 'n-ceil',
                     'dpad', 'gbar', 'ma', 'mp', 'np', 'rdg', 'rfg', 'score-min',
-                    'minins', 'maxins', 'met', 'rg-id', 'rg', 'threads', 'seed']
+                    'minins', 'maxins', 'met', 'rg-id', 'rg', 'cores', 'seed']
 
 
         ## 2nd all options that require a value, given with -
@@ -296,11 +303,11 @@ class Bowtie2(AbstractStep):
 
         # threads option can overwrite default # of cores for bowtie
         # and the cores variable
-        if 'threads' not in set_options1:
+        if 'cores' not in set_options1:
             option_list.append('--threads')
             option_list.append(str(self.get_cores()))
         else:
-            self.set_cores(self.get_option('threads'))
+            self.set_cores(self.get_option('cores'))
 
         # collect set - options
         set_options2 = [option for option in options2 if \
@@ -320,6 +327,30 @@ class Bowtie2(AbstractStep):
 
                 input_paths = [ y for x in [fr_input, sr_input] \
                                for y in x if y !=None ]
+
+                if self.get_option('unaligned'):
+                    out_file = run.add_output_file(
+                        'unaligned',
+                        '%s-bowtie2-unaligned.fastq' % run_id,
+                        input_paths)
+                    bowtie2.extend(['--un', out_file])
+
+                if self.get_option('met-file'):
+                    out_file = run.add_output_file(
+                        'met-file',
+                        '%s-bowtie2-met-file.txt' % run_id,
+                        input_paths)
+                    bowtie2.extend(['--met-file', out_file])
+
+                output_options = ['al', 'un-conc', 'al-conc']
+                    if self.get_option(opt):
+                        out_file = run.add_output_file(
+                            opt,
+                            '%s-bowtie2-%s.txt' % (opt, run_id),
+                            input_paths)
+                        bowtie2.extend(['--%s' % opt, out_file])
+
+                for opt in output_options:
 
                 # Do we have paired end data and is it exactly one ?
                 is_paired_end = True
