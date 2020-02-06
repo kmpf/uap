@@ -212,7 +212,7 @@ class Bowtie2(AbstractStep):
                         "compressed output.")
         self.add_option('quiet', bool, optional=True,
                         description="print nothing to stderr except serious errors")
-        self.add_option('met-file', bool, optional=True, default=False
+        self.add_option('met-file', bool, optional=True, default=False,
                         description="send metrics to file to connection out/met-file")
         self.add_option('met-stderr', bool, optional=True,
                         description="send metrics to stderr")
@@ -343,14 +343,13 @@ class Bowtie2(AbstractStep):
                     bowtie2.extend(['--met-file', out_file])
 
                 output_options = ['al', 'un-conc', 'al-conc']
+                for opt in output_options:
                     if self.get_option(opt):
                         out_file = run.add_output_file(
                             opt,
                             '%s-bowtie2-%s.txt' % (opt, run_id),
                             input_paths)
                         bowtie2.extend(['--%s' % opt, out_file])
-
-                for opt in output_options:
 
                 # Do we have paired end data and is it exactly one ?
                 is_paired_end = True
