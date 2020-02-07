@@ -706,12 +706,7 @@ class AbstractStep(object):
         if os.path.exists(executing_ping_path):
             try:
                 out_w_suffix = executing_ping_path + '.' + suffix
-                if keep_failed is True:
-                    os.rename(executing_ping_path,
-                              executing_ping_path + '.failed')
-                    copyfile(executing_ping_path + '.failed', out_w_suffix)
-                else:
-                    os.rename(executing_ping_path, out_w_suffix)
+                os.rename(executing_ping_path, out_w_suffix)
             except OSError:
                 pass
         # remove the queued ping file
