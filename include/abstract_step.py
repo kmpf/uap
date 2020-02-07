@@ -339,7 +339,7 @@ class AbstractStep(object):
                         'step constructor __init__ of "%s".' %
                         (run_id, self.get_step_name(), list(missings),
                                 self.get_step_type()))
-            if bad_runs > 3:
+            if bad_runs == 5:
                 logger.warn('... Emitting connection test for further '
                     'runs of "%s".' % self.get_step_name())
                 break
