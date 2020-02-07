@@ -24,8 +24,8 @@ class FastqScreen(AbstractStep):
         self.add_connection('out/fqc_report')
         self.add_connection('out/fqc_image')
         self.add_connection('out/fqc_html')
-        self.add_connection('out/tagged')
-        self.add_connection('out/tagged_filter')
+        self.add_connection('out/tagged', optional=True)
+        self.add_connection('out/tagged_filter', optional=True)
         self.add_connection('out/log_stdout')
         self.add_connection('out/log_stderr')
 
