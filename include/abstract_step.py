@@ -1467,8 +1467,8 @@ class AbstractStep(object):
         # Check if all set out connections were recognized.
         unrecognized = set_out_connections - used_out_connections
         if len(unrecognized) > 0:
-            raise UAPError('The following connections set in "%s" were not '
-                    'recognized: %s.' %
+            raise UAPError('For the following connections into step "%s" '
+                    'no parent run could be found: %s.' %
                     (self.get_step_name(), list(unrecognized)))
 
         return cc
