@@ -647,6 +647,7 @@ class Pipeline(object):
                          print_details = False, fix_problems = False):
         run_problems = list()
         queue_problems = list()
+        failed_problems = list()
         check_queue = True
 
         try:
@@ -683,6 +684,7 @@ class Pipeline(object):
         for task in self.all_tasks_topologically_sorted:
             exec_ping_file = task.get_run().get_executing_ping_file()
             queued_ping_file = task.get_run().get_queued_ping_file()
+            failed_queued_ping_file = queued_ping_file + '.failed'
             if os.path.exists(exec_ping_file):
                 info = yaml.load(open(exec_ping_file, 'r'), Loader=yaml.FullLoader)
                 start_time = info['start_time']
@@ -699,6 +701,11 @@ class Pipeline(object):
                 info = yaml.load(open(queued_ping_file, 'r'), Loader=yaml.FullLoader)
                 if not str(info['job_id']) in running_jids:
                     queue_problems.append((task, queued_ping_file,
+                                           info['submit_time']))
+            if os.path.exists(failed_queued_ping_file):
+                info = yaml.load(open(failed_queued_ping_file, 'r'), Loader=yaml.FullLoader)
+                if not str(info['job_id']) in running_jids:
+                    failed_problems.append((task, failed_queued_ping_file,
                                            info['submit_time']))
 
         show_hint = False
@@ -734,9 +741,24 @@ class Pipeline(object):
                     print("submitted at %13s: %s" % (start_time, task))
                 print("")
 
+        if len(failed_problems) > 0:
+            show_hint = True
+            label = "Warning: %d tasks were queued that failed." % len(failed_problems)
+            print(label)
+            if print_details:
+                print('-' * len(label))
+                failed_problems = sorted(failed_problems, key=itemgetter(2), reverse=True)
+                for problem in failed_problems:
+                    task = problem[0]
+                    path = problem[1]
+                    start_time = problem[2]
+                    print("submitted at %13s: %s" % (start_time, task))
+                print("")
+
         if fix_problems:
             all_problems = run_problems
             all_problems.extend(queue_problems)
+            all_problems.extend(failed_problems)
             for problem in all_problems:
                 path = problem[1]
                 print("Now deleting %s..." % path)
