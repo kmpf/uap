@@ -199,11 +199,11 @@ def main(args):
         size = len(tasks)
         if quotas[step_name] == 0:
             submit_script_args += p.get_cluster_command_cli_option('array_job',
-                    str(size))
+                    str(size-1))
         else:
             submit_script_args += p.get_cluster_command_cli_option(
                     'array_job_wquota',
-                    (str(size), str(quotas[step_name])))
+                    (str(size-1), str(quotas[step_name])))
         submit_script_args += p.get_cluster_command_cli_option(
             'set_job_name', step_name)
 
