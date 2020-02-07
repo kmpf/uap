@@ -20,8 +20,11 @@ else
     cmd="scontrol show job $stderrJob"
     printf '\e[31mOutput of: %s\e[0m\n' "$cmd"
     printf -v esc '\e'
-    eval "$cmd" | sed "s/\([^ ,]*\)=/\x0${esc}[34m\1: ${esc}[0m/g"
-    stderrFile="$(eval "$cmd -o" | sed -E 's/.* StdErr=(.*) StdIn=.*/\1/')"
+    eval "$cmd" |
+        grep -B99 -m1 "^$" | # in case JobId==ArrayJobId
+        sed "s/\([^ ,]*\)=/\x0${esc}[34m\1: ${esc}[0m/g"
+    stderrFile="$(eval "$cmd -o" | head -n1 |
+        sed -E 's/.* StdErr=(.*) StdIn=.*/\1/')"
     printf '\e[31mContent of: %s\e[0m\n' "$stderrFile"
     cat "$stderrFile"
 fi
