@@ -124,7 +124,7 @@ class FastqSample(AbstractStep):
 
                             for option, value in config_options.iteritems():
                                 if option in self.possible_options:
-                                    if option == 'o':
+                                    if option == 'o' or value is None:
                                         continue
                                     fastqsample.extend(['-%s' % (option),
                                                        str(value)])
