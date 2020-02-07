@@ -14,7 +14,7 @@ done | grep "JobState=FAILED .* StdErr=" |
 
 
 if [[ -z "$stderrJob" ]]; then
-    >&2 printf 'No failed job could be found with scontrol for the jobs: %s\n' "$*"
+    >&2 printf 'No failed job could be found with scontrol.\n'
 else
     printf 'The first job that failed was %s.\n' "$stderrJob"
     cmd="scontrol show job $stderrJob"
