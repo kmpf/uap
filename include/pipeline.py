@@ -9,6 +9,8 @@ import re
 import subprocess
 import sys
 import yaml
+import multiprocessing
+import traceback
 
 import abstract_step
 import misc
@@ -28,6 +30,129 @@ class ConfigurationException(Exception):
     def __str__(self):
         return repr(self.value)
 
+
+def exec_pre_post_calls(tool_id, info_key, info_command,
+                        tool_check_info):
+    if isinstance(info_command, str):
+        info_command = [info_command]
+    for command in info_command:
+        if isinstance(command, str):
+            command = command.split()
+        for argument in command:
+            if not isinstance(argument, str):
+                raise UAPError(
+                    "The command to be launched '%s' contains non-string "
+                    "argument '%s'. Therefore the command will fail. Please "
+                    "fix this type issue." % (command, argument))
+        logger.info("Executing command: %s" % " ".join(command))
+        try:
+            proc = subprocess.Popen(
+                command,
+                stdin = None,
+                stdout = subprocess.PIPE,
+                stderr = subprocess.PIPE,
+                close_fds = True)
+
+        except OSError as e:
+            raise UAPError(
+                "Error while executing '%s' for %s: %s "
+                "Error no.: %s Error message: %s" %
+                (info_key, tool_id,
+                 " ".join(command), e.errno, e.strerror)
+            )
+
+        command_call = info_key
+        command_exit_code = '%s-exit-code' % info_key
+        command_response = '%s-respone' % info_key
+        (output, error) = proc.communicate()
+        if info_key in ['module_load', 'module_unload']:
+            logger.info("Try '%s' for '%s': %s" % (
+                info_key, tool_id, " ".join(command))
+            )
+            try:
+                exec output
+            except NameError as e:
+                msg = "Error while loading module '%s': \n%s"
+                raise UAPError(msg % (tool_id, error))
+
+            tool_check_info.update({
+                command_call : (' '.join(command)).strip(),
+                command_exit_code : proc.returncode
+            })
+            sys.stderr.write(error)
+            sys.stderr.flush()
+        else:
+            tool_check_info.update({
+                command_call : (' '.join(command)).strip(),
+                command_exit_code : proc.returncode,
+                command_response : (output + error)
+            })
+
+    return tool_check_info
+
+def check_tool(args):
+    '''
+    A top-level function to be used a multiprocessing pool to retrieve tool
+    information in parallel.
+    '''
+    try:
+        tool_id, info = args
+        tool_check_info = dict()
+
+        # Load module(s) and execute command if configured
+        for pre_cmd in (x for x in ('module_load', 'pre_command')
+                         if x in info):
+            tool_check_info = exec_pre_post_calls(
+                tool_id, pre_cmd, info[pre_cmd], tool_check_info)
+
+        # Execute command to check if tool is available
+        command = info['path']
+        if isinstance(command, str):
+            command = [command]
+        elif not isinstance(command, list):
+            raise TypeError('Unsupported format for path of tool "%s": %s' %
+                    (tool_id, info['path']))
+        command.append(info['get_version'])
+        logger.info("Executing command: %s" % " ".join(command))
+        try:
+            proc = subprocess.Popen(
+                command,
+                stdin = subprocess.PIPE,
+                stdout = subprocess.PIPE,
+                stderr = subprocess.PIPE,
+                close_fds = True)
+            proc.stdin.close()
+        except OSError as e:
+            raise UAPError("Error while checking Tool %s "
+                         "Error no.: %s Error message: %s\ncommand: %s "
+                         "\nSTDOUT-ERR: %s\n" %
+                         (info['path'], e.errno, e.strerror, command,
+                                 subprocess.PIPE))
+        proc.wait()
+        exit_code = None
+        exit_code = proc.returncode
+        tool_check_info.update({
+            'command': (' '.join(command)).strip(),
+            'exit_code': exit_code,
+            'response': (proc.stdout.read() + proc.stderr.read()).strip()
+        })
+        expected_exit_code = info['exit_code']
+        if exit_code != expected_exit_code:
+            raise UAPError(
+                "%s: Tool check failed for %s: %s - exit code is: %d "
+                "(expected %d) (response %s)"
+                % (self.config_name, tool_id, ' '.join(command),
+                   exit_code, expected_exit_code, tool_check_info['response'])
+            )
+        # Execute clean-up command (if configured)
+        for info_key in (x for x in ('module_unload', 'post_command')
+                         if x in info):
+            tool_check_info = exec_pre_post_calls(
+                tool_id, info_key, info[info_key], tool_check_info)
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        raise
+    return tool_id, tool_check_info
 
 class Pipeline(object):
     '''
@@ -471,60 +596,6 @@ class Pipeline(object):
                     "fix this type issue." % (command, argument))
         return
 
-    def exec_pre_post_calls(self, tool_id, info_key, info_command,
-                            tool_check_info):
-        if info_command.__class__ == str:
-            info_command = [info_command]
-        for command in info_command:
-            if type(command) is str:
-                command = command.split()
-            self.check_command(command)
-            logger.info("Executing command: %s" % " ".join(command))
-            try:
-                proc = subprocess.Popen(
-                    command,
-                    stdin = None,
-                    stdout = subprocess.PIPE,
-                    stderr = subprocess.PIPE,
-                    close_fds = True)
-
-            except OSError as e:
-                raise UAPError(
-                    "%s: Error while executing '%s' for %s: %s "
-                    "Error no.: %s Error message: %s" %
-                    (self.config_name, info_key, tool_id,
-                     " ".join(command), e.errno, e.strerror)
-                )
-
-            command_call = info_key
-            command_exit_code = '%s-exit-code' % info_key
-            command_response = '%s-respone' % info_key
-            (output, error) = proc.communicate()
-            if info_key in ['module_load', 'module_unload']:
-                logger.info("Try '%s' for '%s': %s" % (
-                    info_key, tool_id, " ".join(command))
-                )
-                try:
-                    exec output
-                except NameError as e:
-                    msg = "Error while loading module '%s': \n%s"
-                    raise UAPError(msg % (tool_id, error))
-
-                tool_check_info.update({
-                    command_call : (' '.join(command)).strip(),
-                    command_exit_code : proc.returncode
-                })
-                sys.stderr.write(error)
-                sys.stderr.flush()
-            else:
-                tool_check_info.update({
-                    command_call : (' '.join(command)).strip(),
-                    command_exit_code : proc.returncode,
-                    command_response : (output + error)
-                })
-
-        return tool_check_info
-
     def setup_lmod(self):
         '''
         If lmod is configured this functions sets the required environmental variables.
@@ -539,64 +610,11 @@ class Pipeline(object):
         '''
         if not 'tools' in self.config:
             return
-        for tool_id, info in self.config['tools'].items():
-            tool_check_info = dict()
-
-            # Load module(s) and execute command if configured
-            for pre_cmd in (x for x in ('module_load', 'pre_command')
-                             if x in info):
-                tool_check_info = self.exec_pre_post_calls(
-                    tool_id, pre_cmd, info[pre_cmd], tool_check_info)
-
-            # Execute command to check if tool is available
-            command = [copy.deepcopy(info['path'])]
-            if info['path'].__class__ == list:
-                command = copy.deepcopy(info['path'])
-            self.check_command(command)
-            if 'get_version' in info:
-                command.append(info['get_version'])
-            try:
-                proc = subprocess.Popen(
-                    command,
-                    stdin = subprocess.PIPE,
-                    stdout = subprocess.PIPE,
-                    stderr = subprocess.PIPE,
-                    close_fds = True)
-                proc.stdin.close()
-            except OSError as e:
-                raise UAPError("%s: Error while checking Tool %s "
-                             "Error no.: %s Error message: %s\ncommand: %s "
-                             "\nSTDOUT-ERR: %s\n" %
-                             (self.config_name, info['path'],
-                              e.errno, e.strerror, command, subprocess.PIPE))
-            proc.wait()
-            exit_code = None
-            exit_code = proc.returncode
-            tool_check_info.update({
-                'command': (' '.join(command)).strip(),
-                'exit_code': exit_code,
-                'response': (proc.stdout.read() + proc.stderr.read()).strip()
-            })
-            # print("Command: %s" % tool_check_info['command'])
-            # print("Exit Code: %s" % tool_check_info['exit_code'])
-            # print("Response: %s" % tool_check_info['response'])
-            expected_exit_code = 0
-            if 'exit_code' in info:
-                expected_exit_code = info['exit_code']
-            if exit_code != expected_exit_code:
-                raise UAPError(
-                    "%s: Tool check failed for %s: %s - exit code is: %d "
-                    "(expected %d) (response %s)"
-                    % (self.config_name, tool_id, ' '.join(command),
-                       exit_code, expected_exit_code, tool_check_info['response'])
-                )
-            # Execute clean-up command (if configured)
-            for info_key in (x for x in ('module_unload', 'post_command')
-                             if x in info):
-                tool_check_info = self.exec_pre_post_calls(
-                    tool_id, info_key, info[info_key], tool_check_info)
-            # Store captured information
+        pool = multiprocessing.Pool()
+        for tool_id, tool_check_info in \
+                pool.imap_unordered(check_tool, self.config['tools'].items()):
             self.tool_versions[tool_id] = tool_check_info
+        pool.close()
 
     def notify(self, message, attachment = None):
         '''
