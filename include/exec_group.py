@@ -9,6 +9,8 @@ import misc
 import pipeline_info
 import run
 
+from uaperrors import UAPError
+
 class ExecGroup(object):
     def __init__(self, run):
         self._run = run
