@@ -151,7 +151,7 @@ class Run(object):
 
     def is_source(self):
         return True if isinstance(self._step, abst.AbstractSourceStep) else False
-    
+
     def replace_output_dir_du_jour(func):
         def inner(self, *args, **kwargs):
             # Collect info to replace du_jour placeholder with temp_out_dir
@@ -624,12 +624,11 @@ class Run(object):
         count = len(self._temp_paths)
         temp_placeholder = str()
 
+        count = 0
         while True:
-            hashtag = misc.str_to_sha256_b62('%s.%s.%s' % (prefix, count, suffix))
-            temp_name = prefix + hashtag + suffix
+            temp_name = prefix + '-' + str(count) + suffix
             temp_placeholder = os.path.join(
                 self.get_output_directory_du_jour_placeholder(), temp_name)
-
             if not temp_placeholder in self._temp_paths:
                 break
             else:
@@ -903,7 +902,7 @@ class Run(object):
             os.unlink(self.get_submit_script_file())
         log['run']['known_paths'] = self.get_known_paths()
         log['config'] = self.get_step().get_pipeline().config
-        
+
         log['tool_versions'] = {}
         for tool in self.get_step()._tools.keys():
             log['tool_versions'][tool] = self.get_step().get_pipeline()\

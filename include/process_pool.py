@@ -393,7 +393,7 @@ class ProcessPool(object):
         self.copy_processes_for_pid[pid] = list()
 
         for which in ['stdout', 'stderr']:
-            report_path = self.get_run().add_temporary_file("%s-report" % which)
+            report_path = self.get_run().add_temporary_file("%s-report" % which, '.txt')
             sink_path = stdout_path if which == 'stdout' else stderr_path
             listener_pid = self._do_launch_copy_process(
                 proc.stdout if which == 'stdout' else proc.stderr,
