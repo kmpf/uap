@@ -340,8 +340,9 @@ class AbstractStep(object):
                         (run_id, self.get_step_name(), list(missings),
                                 self.get_step_type()))
             if bad_runs > 3:
-                logger.warn('...\nEmitting connection test for further '
+                logger.warn('... Emitting connection test for further '
                     'runs of "%s".' % self.get_step_name())
+                break
         if bad_runs:
             logger.warn('[Deprecation] Unmet required connections '
                     'may trigger an error in future version of the UAP.')
