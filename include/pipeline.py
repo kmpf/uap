@@ -264,11 +264,6 @@ class Pipeline(object):
                 raise UAPError('The key "%s" set in "%s" is unknown.' %
                         (key, self.args.config.name))
 
-        # Make self.config['destination_path'] an absolute path if necessary
-        if not os.path.isabs(self.config['destination_path']):
-            self.config['destination_path'] = os.path.join(
-                self.get_config_path(),self.config['destination_path'])
-
         if not 'id' in self.config:
             self.config['id'] = self.config_name
 
@@ -321,6 +316,12 @@ class Pipeline(object):
                          % (self.config_name,
                             self.config['destination_path'])
             )
+
+        # Make self.config['destination_path'] an absolute path if necessary
+        if not os.path.isabs(self.config['destination_path']):
+            self.config['destination_path'] = os.path.normpath(os.path.join(
+                self.get_config_path(), self.config['destination_path']))
+
         symlink = "%s-out" % self.config['id']
         if not os.path.exists(symlink):
             try:
