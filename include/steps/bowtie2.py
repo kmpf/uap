@@ -35,6 +35,7 @@ class Bowtie2(AbstractStep):
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/alignments')
+        self.add_connection('out/log_stderr')
         self.add_connection('out/unaligned', optional=True,
                 description=' unpaired reads that didn\'t align')
         self.add_connection('out/al', optional=True,
@@ -351,6 +352,13 @@ class Bowtie2(AbstractStep):
                             input_paths)
                         bowtie2.extend(['--%s' % opt, out_file])
 
+                log_stderr = run.add_output_file(
+                        'log_stderr',
+                        '%s-bowtie2-log_stderr.txt' % run_id,
+                        input_paths)
+
+
+
                 # Do we have paired end data and is it exactly one ?
                 is_paired_end = True
                 if sr_input == [None]:
@@ -435,7 +443,7 @@ class Bowtie2(AbstractStep):
                         else:
                             bowtie2.extend(['-U', ','.join(fr_temp_fifos)])
 
-                        bowtie2_pipe.add_command(bowtie2)
+                        bowtie2_pipe.add_command(bowtie2, stderr_path=log_stderr)
                         # Compress bowtie2 output
                         pigz = [self.get_tool('pigz'),
                                 '--processes', str(self.get_cores()),
