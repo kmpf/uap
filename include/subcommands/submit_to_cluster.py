@@ -265,10 +265,10 @@ def main(args):
         queued_ping_info['submit_time'] = datetime.datetime.now()
         for task in tasks:
             queued_ping_info['run_id'] = task.run_id
-            ping_file = task.run_id).get_queued_ping_file()
-            if os.path.exists(ping_file++'.failed'):
+            ping_file = step.get_run(task.run_id).get_queued_ping_file()
+            if os.path.exists(ping_file+'.failed'):
                 os.unlink(ping_file+'.failed')
-            with open(step.get_run(ping_file, 'w') as f:
+            with open(ping_file, 'w') as f:
                 f.write(yaml.dump(queued_ping_info, default_flow_style = False))
 
         print("%s (%s)" % (job_id, step_name))
