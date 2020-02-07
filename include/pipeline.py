@@ -743,7 +743,7 @@ class Pipeline(object):
 
         if len(failed_problems) > 0:
             show_hint = True
-            label = "Warning: %d tasks were queued that failed." % len(failed_problems)
+            label = "Warning: %d tasks were queued and failed to execute." % len(failed_problems)
             print(label)
             if print_details:
                 print('-' * len(label))
