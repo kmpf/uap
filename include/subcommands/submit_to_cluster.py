@@ -168,7 +168,7 @@ def main(args):
 
         task_names = [str(task) for task in tasks_left[step_name]]
         submit_script = submit_script.replace("#{ARRAY_JOBS}",
-                "'" + "' '".join(task_names) + "'")
+                " ".join(task_names))
         submit_script = submit_script.replace("#{CORES}", str(step._cores))
 
         config_file_path = p.args.config.name
