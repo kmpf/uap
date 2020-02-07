@@ -702,7 +702,7 @@ class AbstractStep(object):
         return run_state
 
     def _move_ping_files(self, executing_ping_path, queued_ping_path, suffix,
-            keep_failed=False):
+            keep_failed):
         # don't remove the ping file, rename it so we can inspect it later
         if os.path.exists(executing_ping_path):
             try:
@@ -715,6 +715,9 @@ class AbstractStep(object):
             try:
                 out_w_suffix = queued_ping_path + '.' + suffix
                 if keep_failed is True:
+                    logger.info('The queue ping file "%s" receives the '
+                        'suffix ".fail" from host %s.' %
+                        (queued_ping_path, socket.gethostname()))
                     os.rename(queued_ping_path,
                               queued_ping_path + '.failed')
                     copyfile(queued_ping_path + '.failed', out_w_suffix)
@@ -792,6 +795,7 @@ class AbstractStep(object):
 
         executing_ping_pid = os.fork()
         if executing_ping_pid == 0:
+            # this is the chid process
             try:
                 signal.signal(signal.SIGTERM, signal.SIG_DFL)
                 signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -828,7 +832,6 @@ class AbstractStep(object):
         os.chdir(run.get_temp_output_directory())
         try:
             self.execute(run_id, run)
-            self._move_ping_files(executing_ping_path, queued_ping_path, ping_file_suffix)
         except Exception as e:
             print("%s: %s" % (type(e).__name__, sys.exc_info()))
             # Oh my. We have a situation. This is awkward. Tell the process
@@ -837,8 +840,15 @@ class AbstractStep(object):
             process_pool.ProcessPool.kill()
             # Store the exception, re-raise it later
             caught_exception = sys.exc_info()
+            signal.signal(signal.SIGTERM, signal.SIG_DFL)
+            signal.signal(signal.SIGINT, signal.SIG_DFL)
             self._move_ping_files(executing_ping_path, queued_ping_path,
                     ping_file_suffix, keep_failed=True)
+        else:
+            signal.signal(signal.SIGTERM, signal.SIG_DFL)
+            signal.signal(signal.SIGINT, signal.SIG_DFL)
+            self._move_ping_files(executing_ping_path, queued_ping_path,
+                    ping_file_suffix, keep_failed=False)
         finally:
             self._state = AbstractStep.states.POSTPROCESS # changes relative paths
             os.chdir(base_working_dir)
