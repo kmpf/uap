@@ -113,9 +113,6 @@ class FastqScreen(AbstractStep):
                                 run.add_output_file("tagged_filter", file_pattern, [input_path])
 
                                 fastq_screen.extend(['--nohits'])
-                            else:
-                                run.add_empty_output_connection("tagged")
-                                run.add_empty_output_connection("tagged_filter")
 
                             fastq_screen.extend(['--outdir', run.get_output_directory_du_jour_placeholder(), input_path])
                             fastq_screen_exec_group.add_command(fastq_screen, stdout_path=log_stdout, stderr_path=log_stderr)

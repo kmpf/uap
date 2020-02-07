@@ -109,7 +109,7 @@ class Run(object):
         if connection in self.get_out_connections():
             return connection
         else:
-            raise UAPError("Connection %s not declared for step %s" %
+            raise KeyError("Connection %s not declared for step %s" %
                          (connection, self.get_step()))
 
     @property
