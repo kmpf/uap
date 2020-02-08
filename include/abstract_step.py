@@ -823,9 +823,11 @@ class AbstractStep(object):
         original_term_handler = signal.getsignal(signal.SIGTERM)
         original_int_handler = signal.getsignal(signal.SIGINT)
         def ping_on_term(signum, frame):
+            logger.debug('Recived SIGTERM and moving ping files...')
             self._move_ping_files(executing_ping_path, queued_ping_path)
             original_term_handler(signum, frame)
         def ping_on_int(signum, frame):
+            logger.debug('Recived SIGINT and moving ping files...')
             self._move_ping_files(executing_ping_path, queued_ping_path)
             original_int_handler(signum, frame)
 
