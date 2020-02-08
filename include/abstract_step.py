@@ -708,23 +708,36 @@ class AbstractStep(object):
             try:
                 out_w_suffix = executing_ping_path + '.' + suffix
                 os.rename(executing_ping_path, out_w_suffix)
-            except OSError:
+                logger.debug('The run ping file "%s" was moved to "%s" '
+                             'by host %s.' %
+                             (executing_ping_path, out_w_suffix,
+                                     socket.gethostname()))
+            except OSError as e:
+                logger.debug('The run ping file "%s" could not be moved: %s' %
+                             (executing_ping_path, str(e)))
                 pass
+        else:
+            logger.debug('This run ping file was not found: %s' %
+                         executing_ping_path)
         # remove the queued ping file
         if os.path.exists(queued_ping_path):
             try:
                 out_w_suffix = queued_ping_path + '.' + suffix
-                if keep_failed is True:
-                    logger.info('The queue ping file "%s" receives the '
-                        'suffix ".fail" from host %s.' %
-                        (queued_ping_path, socket.gethostname()))
-                    os.rename(queued_ping_path,
-                              queued_ping_path + '.last')
-                    copyfile(queued_ping_path + '.last', out_w_suffix)
-                else:
-                    os.rename(queued_ping_path, out_w_suffix)
-            except OSError:
+                os.rename(queued_ping_path,
+                          queued_ping_path + '.last')
+                copyfile(queued_ping_path + '.last', out_w_suffix)
+                logger.debug('The queued ping file "%s" recived the ".last" '
+                             'suffix and was copied to "%s" by host %s.' %
+                             (queued_ping_path, out_w_suffix,
+                                     socket.gethostname()))
+            except OSError as e:
+                logger.debug('The queued ping file "%s" could not be moved '
+                             'or copied: %s' % (queued_ping_path, str(e)))
                 pass
+        else:
+            logger.debug('This queued ping file was not found: %s' %
+                    queued_ping_path)
+
 
     def run(self, run_id):
         '''
@@ -807,19 +820,13 @@ class AbstractStep(object):
             finally:
                 os._exit(0)
 
-        def ping_move():
-            '''
-            Moves and copies ping files.
-            '''
-            self._move_ping_files(executing_ping_path, queued_ping_path)
-
         original_term_handler = signal.getsignal(signal.SIGTERM)
         original_int_handler = signal.getsignal(signal.SIGINT)
         def ping_on_term(signum, frame):
-            ping_move()
+            self._move_ping_files(executing_ping_path, queued_ping_path)
             original_term_handler(signum, frame)
         def ping_on_int(signum, frame):
-            ping_move()
+            self._move_ping_files(executing_ping_path, queued_ping_path)
             original_int_handler(signum, frame)
 
         signal.signal(signal.SIGTERM, ping_on_term)
@@ -847,7 +854,7 @@ class AbstractStep(object):
         finally:
             signal.signal(signal.SIGTERM, original_term_handler)
             signal.signal(signal.SIGINT, original_int_handler)
-            ping_move()
+            self._move_ping_files(executing_ping_path, queued_ping_path)
             self._state = AbstractStep.states.POSTPROCESS # changes relative paths
             os.chdir(base_working_dir)
             try:

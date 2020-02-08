@@ -666,7 +666,7 @@ class Pipeline(object):
                          print_details = False, fix_problems = False):
         run_problems = list()
         queue_problems = list()
-        failed_problems = list()
+        last_problems = list()
         check_queue = True
 
         try:
