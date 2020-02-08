@@ -599,6 +599,8 @@ class AbstractStep(object):
                 # Check that inpath was last modified before outpath
                 if AbstractStep.fsc.getmtime(pv_inpath) > \
                    AbstractStep.fsc.getmtime(pv_outpath):
+                    logger.info('"%s" was changed befor its dependency "%s".' %
+                            (outpath, inpaths))
                     return False
             return True
 
