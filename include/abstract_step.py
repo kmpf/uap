@@ -701,9 +701,9 @@ class AbstractStep(object):
                 return self.get_pipeline().states.QUEUED
         return run_state
 
-    def _move_ping_files(self, executing_ping_path, queued_ping_path, suffix,
-            keep_failed):
+    def _move_ping_files(self, executing_ping_path, queued_ping_path):
         # don't remove the ping file, rename it so we can inspect it later
+        suffix = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         if os.path.exists(executing_ping_path):
             try:
                 out_w_suffix = executing_ping_path + '.' + suffix
@@ -807,15 +807,11 @@ class AbstractStep(object):
             finally:
                 os._exit(0)
 
-        ping_file_suffix = misc.str_to_sha256_b62(
-            run.get_temp_output_directory())[:6]
-
         def ping_move():
             '''
             Moves and copies ping files.
             '''
-            self._move_ping_files(executing_ping_path, queued_ping_path,
-                    ping_file_suffix, keep_failed=True)
+            self._move_ping_files(executing_ping_path, queued_ping_path)
 
         original_term_handler = signal.getsignal(signal.SIGTERM)
         original_int_handler = signal.getsignal(signal.SIGINT)
