@@ -175,6 +175,8 @@ def main(args):
         command = [os.path.join(p.get_uap_path(), 'uap')]
         if p.args.debugging:
             command.append('--debugging')
+        if p.args.verbose > 1:
+            command.append('-'+'v'*(p.args.verbose-1))
         command.extend([config_file_path, 'run-locally'])
 
         task_id = p.get_cluster_command('array_task_id')
