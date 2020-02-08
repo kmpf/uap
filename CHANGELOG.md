@@ -38,7 +38,9 @@
  * introduce --job-ids as option for status to report config specifc jobs (#58)
  * introduce --first-error option for submit-to-cluster for faster debugging (#61)
  * move ping files on job error or interruption (#147)
+ * chronological naming for log files
  * parallel tool check for major performance gain (#82)
+ * propagate verbosity level to cluster jobs
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
