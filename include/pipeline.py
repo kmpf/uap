@@ -2,6 +2,7 @@ import base64
 import copy
 import datetime
 import json
+import signal
 from logging import getLogger
 from operator import itemgetter
 import os
@@ -95,6 +96,7 @@ def check_tool(args):
     A top-level function to be used a multiprocessing pool to retrieve tool
     information in parallel.
     '''
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
     try:
         tool_id, info = args
         tool_check_info = dict()
@@ -611,10 +613,16 @@ class Pipeline(object):
         if not 'tools' in self.config:
             return
         pool = multiprocessing.Pool()
+        def kill_pool(signum, frame):
+            pool.close()
+            raise UAPError('Keybord interrupt during tool check.')
+        original_int_handler = signal.getsignal(signal.SIGINT)
+        signal.signal(signal.SIGINT, kill_pool)
         for tool_id, tool_check_info in \
                 pool.imap_unordered(check_tool, self.config['tools'].items()):
             self.tool_versions[tool_id] = tool_check_info
         pool.close()
+        signal.signal(signal.SIGINT, original_int_handler)
 
     def notify(self, message, attachment = None):
         '''
