@@ -7,14 +7,14 @@ shopt -s lastpipe
 
 for jobid in "$@"; do
     scontrol show job -o $jobid
-done | grep "JobState=FAILED .* StdErr=" |
+done | grep -v "JobState=COMPLETED" |
     sed -E 's/^JobId=([0-9]*) .*EndTime=([^ ]*) .*/\2 \1/g' |
     sort -u | head -n1 | sed 's/[^ ]* //' |
     read stderrJob
 
 
 if [[ -z "$stderrJob" ]]; then
-    >&2 printf 'No failed job could be found with scontrol.\n'
+    >&2 printf 'All found jobs were "COMPLETED".\n'
 else
     printf 'The first job that failed was %s.\n' "$stderrJob"
     cmd="scontrol show job $stderrJob"
