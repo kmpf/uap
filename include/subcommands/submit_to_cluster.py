@@ -266,8 +266,8 @@ def main(args):
         for task in tasks:
             queued_ping_info['run_id'] = task.run_id
             ping_file = step.get_run(task.run_id).get_queued_ping_file()
-            if os.path.exists(ping_file+'.failed'):
-                os.unlink(ping_file+'.failed')
+            if os.path.exists(ping_file+'.last'):
+                os.unlink(ping_file+'.last')
             with open(ping_file, 'w') as f:
                 f.write(yaml.dump(queued_ping_info, default_flow_style = False))
 

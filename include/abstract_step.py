@@ -719,8 +719,8 @@ class AbstractStep(object):
                         'suffix ".fail" from host %s.' %
                         (queued_ping_path, socket.gethostname()))
                     os.rename(queued_ping_path,
-                              queued_ping_path + '.failed')
-                    copyfile(queued_ping_path + '.failed', out_w_suffix)
+                              queued_ping_path + '.last')
+                    copyfile(queued_ping_path + '.last', out_w_suffix)
                 else:
                     os.rename(queued_ping_path, out_w_suffix)
             except OSError:
@@ -810,16 +810,24 @@ class AbstractStep(object):
         ping_file_suffix = misc.str_to_sha256_b62(
             run.get_temp_output_directory())[:6]
 
-        def take_care_of_ping_files(signum, frame):
+        def ping_move():
             '''
-            Moves and copies ping files in case of an error.
+            Moves and copies ping files.
             '''
             self._move_ping_files(executing_ping_path, queued_ping_path,
                     ping_file_suffix, keep_failed=True)
-            signal.SIG_DFL(signum, frame)
 
-        signal.signal(signal.SIGTERM, take_care_of_ping_files)
-        signal.signal(signal.SIGINT, take_care_of_ping_files)
+        original_term_handler = signal.getsignal(signal.SIGTERM)
+        original_int_handler = signal.getsignal(signal.SIGINT)
+        def ping_on_term(signum, frame):
+            ping_move()
+            original_term_handler(signum, frame)
+        def ping_on_int(signum, frame):
+            ping_move()
+            original_int_handler(signum, frame)
+
+        signal.signal(signal.SIGTERM, ping_on_term)
+        signal.signal(signal.SIGINT, ping_on_int)
 
         self.start_time = datetime.datetime.now()
         self.get_pipeline().notify(
@@ -840,16 +848,10 @@ class AbstractStep(object):
             process_pool.ProcessPool.kill()
             # Store the exception, re-raise it later
             caught_exception = sys.exc_info()
-            signal.signal(signal.SIGTERM, signal.SIG_DFL)
-            signal.signal(signal.SIGINT, signal.SIG_DFL)
-            self._move_ping_files(executing_ping_path, queued_ping_path,
-                    ping_file_suffix, keep_failed=True)
-        else:
-            signal.signal(signal.SIGTERM, signal.SIG_DFL)
-            signal.signal(signal.SIGINT, signal.SIG_DFL)
-            self._move_ping_files(executing_ping_path, queued_ping_path,
-                    ping_file_suffix, keep_failed=False)
         finally:
+            signal.signal(signal.SIGTERM, original_term_handler)
+            signal.signal(signal.SIGINT, original_int_handler)
+            ping_move()
             self._state = AbstractStep.states.POSTPROCESS # changes relative paths
             os.chdir(base_working_dir)
             try:
@@ -988,8 +990,9 @@ class AbstractStep(object):
             # finally, remove the temporary directory if it's empty
             try:
                 os.rmdir(temp_directory)
-            except OSError:
-                pass
+            except OSError as e:
+                logger.info('Coult not remove temp dir "%s": %s' %
+                        (temp_directory, e))
 
             # step has completed successfully, now determine how many jobs are
             # still left but first invalidate the FS cache because things have

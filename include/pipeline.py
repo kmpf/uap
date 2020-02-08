@@ -651,7 +651,7 @@ class Pipeline(object):
         ids = set()
         for task in self.all_tasks_topologically_sorted:
             queued_ping_file = task.get_run().get_queued_ping_file()
-            failed_qpf = queued_ping_file + '.failed'
+            failed_qpf = queued_ping_file + '.last'
             if os.path.exists(queued_ping_file):
                 with open(queued_ping_file, 'r') as fl:
                     info = yaml.load(fl, Loader=yaml.FullLoader)
@@ -703,7 +703,7 @@ class Pipeline(object):
         for task in self.all_tasks_topologically_sorted:
             exec_ping_file = task.get_run().get_executing_ping_file()
             queued_ping_file = task.get_run().get_queued_ping_file()
-            failed_queued_ping_file = queued_ping_file + '.failed'
+            failed_queued_ping_file = queued_ping_file + '.last'
             if os.path.exists(exec_ping_file):
                 info = yaml.load(open(exec_ping_file, 'r'), Loader=yaml.FullLoader)
                 start_time = info['start_time']

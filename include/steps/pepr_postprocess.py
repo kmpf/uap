@@ -92,7 +92,7 @@ class PePrPostprocess(AbstractStep):
                                                       file_input_peaks)
             if self.get_option('remove-artefacts') == True:
                 file_passed_peaks += '.passed'
-                file_failed_peaks += '.failed'
+                file_failed_peaks += '.last'
             if self.get_option('narrow-peak-boundary') == True:
                 file_passed_peaks += '.boundary_refined'
                 file_failed_peaks += '.boundary_refined'
