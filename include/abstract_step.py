@@ -1456,6 +1456,9 @@ class AbstractStep(object):
 
         # For each parent step ...
         for parent in self.get_dependencies():
+            if not parent.get_runs():
+                raise UAPError('The step "%s" produced no runs.' %
+                        parent.get_step_name())
             logger.debug('Connecting "%s" to "%s".' %
                     (parent.get_step_name(), self.get_step_name()))
             # ... look for connection to add
