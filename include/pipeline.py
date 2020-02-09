@@ -771,7 +771,7 @@ class Pipeline(object):
 
         if len(last_problems) > 0:
             show_hint = True
-            label = "%d tasks were queued and stopped." % len(last_problems)
+            label = "Info: %d tasks were queued and ran." % len(last_problems)
             print(label)
             if print_details:
                 print('-' * len(label))
