@@ -37,10 +37,9 @@
  * configure cluster default options (#76)
  * introduce --job-ids as option for status to report config specifc jobs (#58)
  * introduce --first-error option for submit-to-cluster for faster debugging (#61)
- * move ping files on job error or interruption (#147)
- * chronological naming for log files
  * parallel tool check for major performance gain (#82)
  * propagate verbosity level to cluster jobs
+ * regulate job message output with verbosity level
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
@@ -49,7 +48,8 @@
  * use common names for stringtie gtf connections `in/features`
  * hisat2 now takes `library_type` option
  * complete merge with https://github.com/yigbt/uap
- * kill subsequent slurm jobs after error (#76)
+ * chronological naming for log files
+ * move ping files on job error or interruption (#147)
 
 ## 1.1 (20.01.2020)
 
