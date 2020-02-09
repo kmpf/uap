@@ -376,7 +376,7 @@ class AbstractStep(object):
     def execute(self, run_id, run):
         # get run_info objects
         with self.get_run(run_id) as run:
-            print("Run ID: %s" % run_id)
+            logger.info("Run ID: %s" % run_id)
             # for each exec_group in that run ...
             for exec_group in run.get_exec_groups():
                 # ... create a process pool
