@@ -84,6 +84,7 @@ class ConnectionsCollector(object):
         parent_name = parent.get_step_name()
         parent_out_conns = parent.get_out_connections(strip_prefix=True)
         child_name = child.get_step_name()
+        musst_connect = set()
         if connections is None:
             # get equally named connections
             ins = child.get_in_connections(strip_prefix=True)
@@ -92,8 +93,8 @@ class ConnectionsCollector(object):
                 logger.warn('There are no default connections between '
                         '%s and its dependency %s. The parent out connections '
                         'are %s and the child in connections are %s.'%
-                        (parent_name, child.get_step_name(),
-                                list(parent_out_conns), list(ins)))
+                        (parent_name, child_name, list(parent_out_conns),
+                                list(ins)))
                 return 0
             make_connections = [
                 ('in/%s'%conn, 'out/%s'%conn, '%s/%s'%(parent_name, conn))
@@ -117,6 +118,7 @@ class ConnectionsCollector(object):
                                     'Available out connections are: %s' %
                                     (out_conn, child_name, parent_name, avail))
                         make_connections.append((in_conn, p_out, out_conn))
+                        musst_connect.add(out_conn)
         else:
             raise UAPError('The passed connections need to be a dictionay.')
 
@@ -132,6 +134,12 @@ class ConnectionsCollector(object):
                         .get_output_files_abspath_for_out_connection(out_conn)
                 self.add_connection(in_conn, output_files)
                 used_conns.add(parent_con)
+
+        missing = musst_connect - used_conns
+        if missing:
+            raise UAPError('The connection(s) %s required by the step "%s" are '
+                           'optional output of step "%s" and not produced.' %
+                           (list(missing), child_name, parent_name))
 
         return used_conns
 
