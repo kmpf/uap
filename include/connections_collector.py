@@ -108,7 +108,7 @@ class ConnectionsCollector(object):
                 if not isinstance(out_conns, list):
                     out_conns = [out_conns]
                 for out_conn in out_conns:
-                    if out_conn.startswith(parent_name):
+                    if out_conn.startswith(parent_name + '/'):
                         stripped_out_conn = out_conn[pre_len:]
                         p_out = 'out/%s'%stripped_out_conn
                         if stripped_out_conn not in parent_out_conns:
