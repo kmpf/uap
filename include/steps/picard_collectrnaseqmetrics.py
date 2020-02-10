@@ -18,11 +18,11 @@ class PicardCollectRnaSeqMetrics(AbstractStep):
     Usage example:
 
     java -jar picard.jar CollectRnaSeqMetrics \
-    	   I=input.bam \
-           O=output.RNA_Metrics \
-	   REF_FLAT=ref_flat.txt \
-	   STRAND=SECOND_READ_TRANSCRIPTION_STRAND \
-	   RIBOSOMAL_INTERVALS=ribosomal.interval_list
+           I=input.bam \
+           O=output.RNA_Metrics
+           REF_FLAT=ref_flat.txt \
+           STRAND=SECOND_READ_TRANSCRIPTION_STRAND \
+           RIBOSOMAL_INTERVALS=ribosomal.interval_list
 
        https://broadinstitute.github.io/picard/command-line-overview.html#CollectRnaSeqMetrics
 
@@ -34,7 +34,7 @@ class PicardCollectRnaSeqMetrics(AbstractStep):
         self.set_cores(1)
 
         self.add_connection('in/alignments')
-	self.add_connection('in/refFlat')
+        self.add_connection('in/refFlat', optional=True)
         self.add_connection('out/metrics')
 
         self.require_tool('picard-tools')

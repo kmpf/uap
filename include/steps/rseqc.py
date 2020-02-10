@@ -41,8 +41,6 @@ class RSeQC(AbstractStep):
         self.add_connection('out/junction_plot')
         self.add_connection('out/junction_xls')
 
-        self.add_connection('out/splice_junction')
-
         self.add_connection('out/junction_annotation_stdout')
         self.add_connection('out/junction_annotation_stderr')
 
