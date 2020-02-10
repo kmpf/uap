@@ -838,7 +838,7 @@ class AbstractStep(object):
 
         self.start_time = datetime.datetime.now()
         self.get_pipeline().notify(
-            "[INFO] [%s] starting %s/%s on %s" %
+            "[START] [%s] starting %s/%s on %s" %
             (self.get_pipeline().config['id'], str(self), run_id,
              socket.gethostname()))
         caught_exception = None
