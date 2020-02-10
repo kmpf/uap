@@ -965,7 +965,7 @@ class AbstractStep(object):
             message = "[BAD] %s/%s failed on %s after %s\n" % \
                       (str(self), run_id, socket.gethostname(),
                        misc.duration_to_str(self.end_time - self.start_time))
-            message += "\nHere are the details:\n" + annotation_str
+            message += "Here are the details: " + annotation_path + '\n'
             attachment = None
             if os.path.exists(annotation_path + '.png'):
                 attachment = dict()
