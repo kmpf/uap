@@ -380,7 +380,7 @@ class ProcessPool(object):
             'pid': pid,
             'hints': hints
         }
-        message = "Launched %s in %s as PID %d.\n" % \
+        message = "Launched %s in %s as PID %d." % \
                 (' '.join(args), os.getcwd(), pid)
         self.log(message)
         logger.debug(message)
@@ -529,7 +529,7 @@ class ProcessPool(object):
             try:
                 # wait for the next child process to exit
                 pid, exit_code_with_signal = os.wait()
-                logger.info("PID: %s, Exit code: %s\n" %
+                logger.info("PID: %s, Exit code: %s" %
                                  (pid, exit_code_with_signal))
                 sys.stderr.flush()
                 if pid == watcher_pid:

@@ -33,7 +33,7 @@ class Bowtie2(AbstractStep):
         self.set_cores(6)
 
         self.add_connection('in/first_read')
-        self.add_connection('in/second_read')
+        self.add_connection('in/second_read', optional=True)
         self.add_connection('out/alignments')
         self.add_connection('out/log_stderr')
         self.add_connection('out/unaligned', optional=True,
@@ -260,7 +260,7 @@ class Bowtie2(AbstractStep):
         self.add_option('dd-blocksize', str, optional = True, default = "2M")
         self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
-    def runs(self, run_ids_connections_files):
+    def runs(self, cc):
 
         # Check if option values are valid
         if not os.path.exists(self.get_option('index') + '.1.bt2'):
@@ -318,16 +318,19 @@ class Bowtie2(AbstractStep):
             option_list.append('--%s' % option)
             option_list.append(str(self.get_option(option)))
 
-
-
-        for run_id in run_ids_connections_files.keys():
+        for run_id in cc.keys():
             with self.declare_run(run_id) as run:
                 # Get list of files for first/second read
-                fr_input = run_ids_connections_files[run_id]['in/first_read']
-                sr_input = run_ids_connections_files[run_id]['in/second_read']
-
-                input_paths = [ y for x in [fr_input, sr_input] \
-                               for y in x if y !=None ]
+                fr_input = cc[run_id]['in/first_read']
+                input_paths = fr_input
+                if 'in/second_read' in cc[run_id].keys():
+                    is_paired_end = True
+                    sr_input = cc[run_id]['in/second_read']
+                    input_paths.extend(sr_input)
+                else:
+                    sr_input = []
+                    is_paired_end = False
+                bowtie2 = [self.get_tool('bowtie2')]
 
                 if self.get_option('unaligned'):
                     out_file = run.add_output_file(
@@ -357,12 +360,6 @@ class Bowtie2(AbstractStep):
                         '%s-bowtie2-log_stderr.txt' % run_id,
                         input_paths)
 
-
-
-                # Do we have paired end data and is it exactly one ?
-                is_paired_end = True
-                if sr_input == [None]:
-                    is_paired_end = False
 
                 # Tophat is run in this exec group
                 with run.new_exec_group() as exec_group:
@@ -423,10 +420,9 @@ class Bowtie2(AbstractStep):
                         exec_group, fr_temp_fifos = prepare_input(
                             input_path, exec_group, fr_temp_fifos)
                     # And if we handle paired end data
-                    if is_paired_end:
-                        for input_path in sr_input:
-                            exec_group, sr_temp_fifos = prepare_input(
-                                input_path, exec_group, sr_temp_fifos)
+                    for input_path in sr_input:
+                        exec_group, sr_temp_fifos = prepare_input(
+                            input_path, exec_group, sr_temp_fifos)
 
                     # 3. Map reads using bowtie2
                     with exec_group.add_pipeline() as bowtie2_pipe:

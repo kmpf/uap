@@ -246,6 +246,8 @@ class ConnectionsCollector(object):
                 self._con_of_all_runs = set(con_list[0])
             else:
                 self._con_of_all_runs = set()
+        if isinstance(connection, list):
+            return all(conn in self._con_of_all_runs for con in connection)
         return connection in self._con_of_all_runs
 
     def __getitem__(self, run_id):
