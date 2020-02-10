@@ -40,6 +40,7 @@
  * parallel tool check for major performance gain (#82)
  * revised run-locally message output and regulation with verbosity level
  * print stderr of failed processes in UAP log
+ * propagate verbosity level to cluster jobs
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
@@ -50,7 +51,6 @@
  * complete merge with https://github.com/yigbt/uap
  * chronological naming for log files
  * move ping files on job error or interruption (#147)
- * highest verbosity level to cluster jobs
 
 ## 1.1 (20.01.2020)
 

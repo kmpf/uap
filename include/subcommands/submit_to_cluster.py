@@ -172,9 +172,11 @@ def main(args):
         submit_script = submit_script.replace("#{CORES}", str(step._cores))
 
         config_file_path = p.args.config.name
-        command = [os.path.join(p.get_uap_path(), 'uap'), '-vvv']
+        command = [os.path.join(p.get_uap_path(), 'uap')]
         if p.args.debugging:
             command.append('--debugging')
+        if p.args.verbose > 1:
+            command.append('-' + 'v'*(p.args.verbose-1))
         command.extend([config_file_path, 'run-locally'])
 
         task_id = p.get_cluster_command('array_task_id')
