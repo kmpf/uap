@@ -533,8 +533,11 @@ class ProcessPool(object):
             try:
                 # wait for the next child process to exit
                 pid, exit_code_with_signal = os.wait()
-                logger.info("PID: %s, Exit code: %s" %
-                                 (pid, exit_code_with_signal))
+                name = 'unkown name'
+                if pid in self.proc_details.keys():
+                    name = self.proc_details[pid]['name']
+                logger.info("PID %s (%s), Exit code: %s" %
+                                 (pid, name, exit_code_with_signal))
                 if pid == watcher_pid:
                     ProcessPool.process_watcher_pid = None
                     try:
@@ -582,29 +585,29 @@ class ProcessPool(object):
                         if signal_number in ProcessPool.SIGNAL_NAMES:
                             self.proc_details[pid]['signal_name'] = ProcessPool.SIGNAL_NAMES[signal_number]
 
-                    # now kill it's preceding process, if this is from a pipeline
+                    # now kill it's listeners
+                    pidlist = list()
+                    if pid in self.copy_processes_for_pid.keys():
+                        pidlist.extend(self.copy_processes_for_pid[pid])
+                    # ... and preceding process, if this is from a pipeline
                     if 'use_stdin_of' in self.proc_details[pid]:
-                        pidlist = list()
-                        pidlist.append(self.copy_processes_for_pid\
-                                       [self.proc_details[pid]['use_stdin_of']]\
-                                       [0])
-                        pidlist.append(self.copy_processes_for_pid\
-                                       [self.proc_details[pid]['use_stdin_of']]\
-                                       [1])
-                        pidlist.append(self.proc_details[pid]['use_stdin_of'])
-                        for kpid in pidlist:
-                            self.log("Now killing %d, the predecessor of %d." %
-                                     (kpid, pid))
-                            self.ok_to_fail.add(kpid)
-                            try:
-                                os.kill(kpid, signal.SIGPIPE)
-                            except OSError as e:
-                                if e.errno == errno.ESRCH:
-                                    self.log("Couldn't kill %d: no such "
-                                             "process." % kpid)
-                                    pass
-                                else:
-                                    raise
+                        preceding = self.proc_details[pid]['use_stdin_of']
+                        pidlist.append(preceding)
+                    for kpid in pidlist:
+                        self.log("Now killing %d, the predecessor of %d (%s)." %
+                                 (kpid, pid, self.proc_details[pid]['name']))
+                        if kpid in self.proc_details.keys():
+                            logger.debug('PID %s is "%s".' % (kpid, self.proc_details[kpid]['name']))
+                        self.ok_to_fail.add(kpid)
+                        try:
+                            os.kill(kpid, signal.SIGPIPE)
+                        except OSError as e:
+                            if e.errno == errno.ESRCH:
+                                self.log("Couldn't kill %d: no such "
+                                         "process." % kpid)
+                                pass
+                            else:
+                                raise
 
                     if pid in self.copy_process_reports:
                         was_reporter = True
@@ -796,8 +799,11 @@ class ProcessPool(object):
                         delay = 10
                     time.sleep(delay)
             except Exception as e:
-                logger.error("PID (%s) Process Watcher Exception: %s" %
-                      (pid, type(e).__name__, e))
+                name = 'unkown name'
+                if pid in self.proc_details.keys():
+                    name = self.proc_details[pid]['name']
+                logger.error("PID %s (%s) Process Watcher Exception: %s" %
+                      (pid, name, type(e).__name__, e))
             finally:
                 os._exit(0)
         else:
@@ -814,18 +820,21 @@ class ProcessPool(object):
         signal.signal(signal.SIGALRM, timeout_handler)
         signal.alarm(ProcessPool.SIGTERM_TIMEOUT)
         if ProcessPool.current_instance is not None:
-            for pid in ProcessPool.current_instance.copy_processes_for_pid.keys():
+            self = ProcessPool.current_instance
+            for pid in self.copy_processes_for_pid.keys():
                 try:
                     os.kill(pid, signal.SIGTERM)
                 except Exception as e:
-                    if type(e) == OSError and e.errno == 3:
+                    if type(e) == OSError and e.errno == errno.ESRCH:
                         logger.debug('Trying to kill already dead process %s.'
                                 % pid)
                         return
-                    logger.error("PID (%s) threw %s: %s" %
-                            (pid, type(e).__name__, e))
+                    name = 'unkown name'
+                    if pid in self.proc_details.keys():
+                        name = self.proc_details[pid]['name']
+                    logger.error("While trying to kill PID %s (%s) there was %s: %s" %
+                            (pid, name, type(e).__name__, e))
                     logger.debug(traceback.format_exc())
-                    pass
 
     @classmethod
     def kill_all_child_processes(cls):
