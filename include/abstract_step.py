@@ -592,6 +592,10 @@ class AbstractStep(object):
                 pv_inpaths.append(change_to_volatile_if_need_be(inpath))
 
             if not AbstractStep.fsc.exists(pv_outpath):
+                if not inpaths and os.path.islink(pv_outpath):
+                    # these are probably files of a broken source step
+                    raise UAPError('The input "%s" seems to be a broken '
+                                   'symlink.' % pv_outpath)
                 return False
             for pv_inpath in pv_inpaths:
                 if not AbstractStep.fsc.exists(pv_inpath):
@@ -600,7 +604,7 @@ class AbstractStep(object):
                 if AbstractStep.fsc.getmtime(pv_inpath) > \
                    AbstractStep.fsc.getmtime(pv_outpath):
                     logger.info('"%s" was changed befor its dependency "%s".' %
-                            (outpath, inpaths))
+                            (pv_outpath, pv_inpaths))
                     return False
             return True
 
