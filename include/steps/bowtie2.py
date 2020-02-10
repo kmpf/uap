@@ -315,7 +315,7 @@ class Bowtie2(AbstractStep):
                         self.is_option_set_in_config(option)]
 
         for option in set_options2:
-            option_list.append('-%s' % option)
+            option_list.append('--%s' % option)
             option_list.append(str(self.get_option(option)))
 
 
