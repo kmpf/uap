@@ -629,7 +629,7 @@ class Pipeline(object):
         prints a notification to the screen and optionally delivers the
         message on additional channels (as defined by the configuration)
         '''
-        print(message.split("\n")[0])
+        print(message)
         if 'notify' in self.config:
             try:
                 notify = self.config['notify']
