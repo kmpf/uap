@@ -58,7 +58,7 @@ class Task(object):
         '''
         task_state = self.get_task_state()
         if task_state == self.pipeline.states.FINISHED:
-            print("Skipping task: %s is already finished." % self)
+            self.pipeline.notify("Skipping task: %s is already finished." % self)
             return
         if task_state == self.pipeline.states.WAITING:
             raise UAPError("%s cannot be run yet." % self)
@@ -70,7 +70,7 @@ class Task(object):
         '''
         task_state = self.get_task_state()
         if task_state != self.pipeline.states.FINISHED:
-            print("Skipping task: %s its not finished yet." % self)
+            self.pipeline.notify("Skipping task: %s its not finished yet." % self)
             return
         self.step.generate_report(self.run_id)
 
@@ -137,7 +137,7 @@ class Task(object):
                 if path_a_can_be_removed:
                     result.add(path_a)
                     if srsly:
-                        print("Now volatilizing %s: %s" %
+                        self.pipeline.notify("Now volatilizing %s: %s" %
                               (str(self), os.path.basename(path_a)))
                         info = dict()
                         info['self'] = dict()
