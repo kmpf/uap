@@ -633,7 +633,7 @@ class Pipeline(object):
         if 'notify' in self.config:
             try:
                 notify = self.config['notify']
-                match = re.search('^(http://[a-z\.]+:\d+)/([a-z0-9]+)$', notify)
+                match = re.search('^(http://[^/]+)/([a-z0-9]+)$', notify)
                 if match:
                     host = match.group(1)
                     token = match.group(2)
