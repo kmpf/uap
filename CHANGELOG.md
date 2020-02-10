@@ -39,6 +39,7 @@
  * introduce --first-error option for submit-to-cluster for faster debugging (#61)
  * parallel tool check for major performance gain (#82)
  * revised run-locally message output and regulation with verbosity level
+ * print stderr of failed processes in UAP log
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
