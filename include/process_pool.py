@@ -525,19 +525,22 @@ class ProcessPool(object):
                                   .add_temporary_file('watcher-report')
         watcher_pid = self._launch_process_watcher(watcher_report_path)
         ProcessPool.process_watcher_pid = watcher_pid
-        something_went_wrong = False
         pid = None
+        first_failed_pid = None
+        failed_pids = set()
         while True:
             if len(self.running_procs) == 0:
                 break
             try:
                 # wait for the next child process to exit
                 pid, exit_code_with_signal = os.wait()
+                signal_number = exit_code_with_signal & 255
+                exit_code = exit_code_with_signal >> 8
                 name = 'unkown name'
                 if pid in self.proc_details.keys():
                     name = self.proc_details[pid]['name']
-                logger.info("PID %s (%s), Exit code: %s" %
-                                 (pid, name, exit_code_with_signal))
+                logger.info("PID %s (%s), Signal: %s, Exit code: %s" %
+                                 (pid, name, signal_number, exit_code))
                 if pid == watcher_pid:
                     ProcessPool.process_watcher_pid = None
                     try:
@@ -562,8 +565,6 @@ class ProcessPool(object):
                 if pid in self.proc_details:
                     self.proc_details[pid]['end_time'] = datetime.datetime.now()
 
-                signal_number = exit_code_with_signal & 255
-                exit_code = exit_code_with_signal >> 8
                 what_happened = "has exited with exit code %d" % exit_code
                 if signal_number > 0:
                     what_happened = "has received signal %d" % signal_number
@@ -586,14 +587,8 @@ class ProcessPool(object):
                             self.proc_details[pid]['signal_name'] = ProcessPool.SIGNAL_NAMES[signal_number]
 
                     # now kill it's listeners
-                    pidlist = list()
-                    if pid in self.copy_processes_for_pid.keys():
-                        pidlist.extend(self.copy_processes_for_pid[pid])
-                    # ... and preceding process, if this is from a pipeline
                     if 'use_stdin_of' in self.proc_details[pid]:
-                        preceding = self.proc_details[pid]['use_stdin_of']
-                        pidlist.append(preceding)
-                    for kpid in pidlist:
+                        kpid = self.proc_details[pid]['use_stdin_of']
                         self.log("Now killing %d, the predecessor of %d (%s)." %
                                  (kpid, pid, self.proc_details[pid]['name']))
                         if kpid in self.proc_details.keys():
@@ -610,7 +605,8 @@ class ProcessPool(object):
                                 raise
 
                     if pid in self.copy_process_reports:
-                        was_reporter = True
+                        if first_failed_pid is None:
+                            was_reporter = True
                         report_path = self.copy_process_reports[pid]
                         report = None
                         if os.path.exists(report_path):
@@ -619,7 +615,7 @@ class ProcessPool(object):
 
                             if report is not None:
                                 self.proc_details[pid].update(report)
-                    else:
+                    elif first_failed_pid is None:
                         was_reporter = False
 
             except TimeoutException as e:
@@ -645,11 +641,22 @@ class ProcessPool(object):
                     if not pid in self.ok_to_fail:
                         # Oops, something went wrong. See what happens and
                         # terminate all child processes in a few seconds.
-                        something_went_wrong = True
+                        if first_failed_pid is None:
+                            first_failed_pid = pid
+                        failed_pids.add(pid)
                         signal.signal(signal.SIGALRM, timeout_handler)
-                        self.log("Terminating all children in %d seconds..." %
-                                 ProcessPool.SIGTERM_TIMEOUT)
+                        name = 'unkown'
+                        if pid in self.proc_details.keys():
+                            name = self.proc_details[pid]['name']
+                        self.log('Terminating all children of "%s" in %d seconds...' %
+                                 (name, ProcessPool.SIGTERM_TIMEOUT))
                         signal.alarm(ProcessPool.SIGTERM_TIMEOUT)
+                    else:
+                        name = 'unkown name'
+                        if pid in self.proc_details.keys():
+                            name = self.proc_details[pid]['name']
+                        logger.debug('PID %s (%s) is ok to fail.' %
+                                (pid, name))
 
         # now wait for the watcher process, if it still exists
         try:
@@ -661,7 +668,6 @@ class ProcessPool(object):
                 logger.warn("Couldn't load watcher report from %s." %
                       watcher_report_path)
                 logger.debug("Reading the watcher failed with: %s" % e)
-                pass
         except OSError as e:
             if e.errno == errno.ESRCH:
                 pass
@@ -670,19 +676,28 @@ class ProcessPool(object):
             else:
                 raise
 
-        if something_went_wrong:
+        if first_failed_pid:
             if was_reporter:
-                log = 'Reporter process %s exit with code %s' % \
-                        (pid, exit_code_with_signal)
+                log = 'Reporter crashed %s exit with code %s' % \
+                        (first_failed_pid, exit_code_with_signal)
                 if report is not None:
                     log += ' while writing into "%s".' % \
-                            self.proc_details[pid]['report_path']
-                logger.warn(log)
+                            self.proc_details[first_failed_pid]['report_path']
             else:
-                log = "Pipeline crashed (PID: %s) while writing in %s" % \
-                    (pid, self.get_run().get_temp_output_directory())
-                self.log(log)
-                raise UAPError(log)
+                for pid in failed_pids:
+                    name = 'unkown name'
+                    if pid in self.proc_details.keys():
+                        name = self.proc_details[pid]['name']
+                    log = "Pipeline crashed (PID: %s, %s) while writing in %s" % \
+                        (pid, name,
+                                self.get_run().get_temp_output_directory())
+                    stderr_listener = self.copy_processes_for_pid[pid][1]
+                    report = self.proc_details[stderr_listener]['tail']
+                    if report and report != '':
+                        logger.error('stderr tail of %s (%s):\n%s' %
+                                (pid, name, report))
+            self.log(log)
+            raise UAPError(log)
 
     def _launch_process_watcher(self, watcher_report_path):
         '''
