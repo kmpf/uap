@@ -646,6 +646,9 @@ class Pipeline(object):
                     proc.stdin.write(json.dumps(data))
                     proc.stdin.close()
                     proc.wait()
+                else:
+                    logger.warn('Cloud not split patter into host/token to notify: %s' %
+                            self.config['notify'])
             except:
                 # swallow all exception that happen here, failing notifications
                 # are no reason to crash the entire thing
