@@ -697,10 +697,16 @@ bowtie2
 
 **Input Connection**
   - **in/first_read**
-  - **in/second_read**
+  - **in/second_read** (optional)
 
 **Output Connection**
+  - **out/met-file** (optional) - metrics file
   - **out/alignments**
+  - **out/log_stderr**
+  - **out/al-conc** (optional) - pairs that aligned concordantly at least once
+  - **out/unaligned** (optional) -  unpaired reads that didn't align
+  - **out/un-conc** (optional) - pairs that didn't align concordantly
+  - **out/al** (optional) - unpaired reads that aligned at least once
 
 
 .. graphviz::
@@ -714,10 +720,22 @@ bowtie2
       bowtie2 [style=filled, fillcolor="#fce94f"];
       in_0 [label="first_read"];
       in_0 -> bowtie2;
-      in_1 [label="second_read"];
+      in_1 [label="second_read", style=filled, fillcolor="#a7a7a7"];
       in_1 -> bowtie2;
-      out_2 [label="alignments"];
+      out_2 [label="al", style=filled, fillcolor="#a7a7a7"];
       bowtie2 -> out_2;
+      out_3 [label="al-conc", style=filled, fillcolor="#a7a7a7"];
+      bowtie2 -> out_3;
+      out_4 [label="alignments"];
+      bowtie2 -> out_4;
+      out_5 [label="log_stderr"];
+      bowtie2 -> out_5;
+      out_6 [label="met-file", style=filled, fillcolor="#a7a7a7"];
+      bowtie2 -> out_6;
+      out_7 [label="un-conc", style=filled, fillcolor="#a7a7a7"];
+      bowtie2 -> out_7;
+      out_8 [label="unaligned", style=filled, fillcolor="#a7a7a7"];
+      bowtie2 -> out_8;
    }
 
 **Options:**
@@ -729,9 +747,15 @@ bowtie2
 
   - **R** (int, optional) -- for reads w/ repetitive seeds, try <int> sets of seeds (default=2)
 
+  - **al** (str, optional) -- Write unpaired reads that aligned at least once to connection out/al
+
+  - **al-conc** (str, optional) -- write pairs that aligned concordantly at least once to out/al-conc
+
   - **all** (bool, optional) -- report all alignments; very slow, MAPQ not meaningful
 
   - **compress_add_output** (bool, optional) -- Ads -gz to the 4 options above to produce compressed output.
+
+  - **cores** (int, optional) -- number of alignment threads to launch (default=1)
 
   - **dd-blocksize** (str, optional)    - default value: 2M
 
@@ -745,6 +769,7 @@ bowtie2
 
   - **ff** (bool, optional) -- -1, -2 mates align fw/fw
 
+  - **fifo** (bool, optional)
   - **fr** (bool, optional) -- -1, -2 mates align fw/rev (default)
 
   - **gbar** (int, optional) -- disallow gaps within <int> nucs of read extremes (default=4)
@@ -766,6 +791,8 @@ bowtie2
   - **maxins** (int, optional) -- maximum fragment length (default=500)
 
   - **met** (int, optional) -- report internal counters & metrics every <int> secs (default=1)
+
+  - **met-file** (bool, optional) -- send metrics to file to connection out/met-file
 
   - **met-stderr** (bool, optional) -- send metrics to stderr
 
@@ -837,13 +864,15 @@ bowtie2
 
   - **skip** (int, optional) -- Skip the first <int> reads/pairs in the input. Default: none
 
-  - **threads** (int, optional) -- number of alignment threads to launch (default=1)
-
   - **time** (bool, optional) -- print wall-clock time taken by search phases
 
   - **trim3** (int, optional) -- Trim <int> bases from 3'/right end of reads(default=0)
 
   - **trim5** (int, optional) -- Trim <int> bases from 5'/left end of reads (default=0)
+
+  - **un-conc** (str, optional) -- Write pairs that didn't align concordantly to connection out/un-conc
+
+  - **unaligned** (bool, optional) -- Write unpaired reads that didn't align to connection out/unaligned
 
   - **upto** (int, optional) -- Stop after the first <int> reads/pairs in the input. Default: no limit.
 
@@ -2478,13 +2507,13 @@ fastq_screen
   - **in/first_read**
 
 **Output Connection**
-  - **out/tagged**
+  - **out/tagged** (optional)
   - **out/fqc_report**
   - **out/fqc_image**
   - **out/fqc_html**
   - **out/log_stderr**
   - **out/log_stdout**
-  - **out/tagged_filter**
+  - **out/tagged_filter** (optional)
 
 
 .. graphviz::
@@ -2508,9 +2537,9 @@ fastq_screen
       fastq_screen -> out_4;
       out_5 [label="log_stdout"];
       fastq_screen -> out_5;
-      out_6 [label="tagged"];
+      out_6 [label="tagged", style=filled, fillcolor="#a7a7a7"];
       fastq_screen -> out_6;
-      out_7 [label="tagged_filter"];
+      out_7 [label="tagged_filter", style=filled, fillcolor="#a7a7a7"];
       fastq_screen -> out_7;
    }
 
@@ -2519,9 +2548,9 @@ fastq_screen
 
   - **cores** (int, required)    - default value: 10
 
-  - **nohits** (bool, required) -- Writes to a file the sequences that did                         not map to any of the specified genomes. This option                         is equivalent to specifying --tag --filter 0000                         (number of zeros corresponds to the number of genomes                         screened).  By default the whole input file will be                         mapped, unless overridden by --subset.
+  - **nohits** (bool, optional) -- Writes to a file the sequences that did                         not map to any of the specified genomes. This option                         is equivalent to specifying --tag --filter 0000                         (number of zeros corresponds to the number of genomes                         screened).  By default the whole input file will be                         mapped, unless overridden by --subset.
 
-  - **subset** (int, required) -- Don't use the whole sequence file, but                         create a temporary dataset of this specified number                         of reads. The dataset created will be of approximately                         (within a factor of 2) of this size. If the real                         dataset is smaller than twice the specified size                         then the whole dataset will be used. Subsets will                         be taken evenly from throughout the whole original                         dataset. By Default FastQ Screen runs with this                         parameter set to 100000. To process an entire dataset                         however, adjust --subset to 0.
+  - **subset** (int, optional) -- Don't use the whole sequence file, but                         create a temporary dataset of this specified number                         of reads. The dataset created will be of approximately                         (within a factor of 2) of this size. If the real                         dataset is smaller than twice the specified size                         then the whole dataset will be used. Subsets will                         be taken evenly from throughout the whole original                         dataset. By Default FastQ Screen runs with this                         parameter set to 100,000. To process an entire dataset                         however, adjust --subset to 0.
 
 
 **Required tools:** bowtie2, fastq_screen, mv, rm
@@ -3450,7 +3479,7 @@ htseq_count
 
 **Input Connection**
   - **in/alignments**
-  - **in/features**
+  - **in/features** (optional) Format: **gtf** - reference assembly
 
 **Output Connection**
   - **out/counts**
@@ -3467,7 +3496,7 @@ htseq_count
       htseq_count [style=filled, fillcolor="#fce94f"];
       in_0 [label="alignments"];
       in_0 -> htseq_count;
-      in_1 [label="features"];
+      in_1 [label="features", style=filled, fillcolor="#a7a7a7"];
       in_1 -> htseq_count;
       out_2 [label="counts"];
       htseq_count -> out_2;
@@ -4524,14 +4553,15 @@ picard_collectrnaseqmetrics
     The sequence input must be a valid SAM/BAM file containing RNAseq data aligned by an RNAseq-aware genome aligner such a STAR or TopHat. The tool also requires a REF_FLAT file, a tab-delimited file containing information about the location of RNA transcripts, exon start and stop sites, etc. For more information on the REF_FLAT format, see the following description. Build-specific REF_FLAT files can be obtained here.
     Usage example:
 
-    java -jar picard.jar CollectRnaSeqMetrics     	   I=input.bam            O=output.RNA_Metrics 	   REF_FLAT=ref_flat.txt 	   STRAND=SECOND_READ_TRANSCRIPTION_STRAND 	   RIBOSOMAL_INTERVALS=ribosomal.interval_list
+    java -jar picard.jar CollectRnaSeqMetrics            I=input.bam            O=output.RNA_Metrics
+           REF_FLAT=ref_flat.txt            STRAND=SECOND_READ_TRANSCRIPTION_STRAND            RIBOSOMAL_INTERVALS=ribosomal.interval_list
 
        https://broadinstitute.github.io/picard/command-line-overview.html#CollectRnaSeqMetrics
 
 
 **Input Connection**
   - **in/alignments**
-  - **in/refFlat**
+  - **in/refFlat** (optional)
 
 **Output Connection**
   - **out/metrics**
@@ -4548,7 +4578,7 @@ picard_collectrnaseqmetrics
       picard_collectrnaseqmetrics [style=filled, fillcolor="#fce94f"];
       in_0 [label="alignments"];
       in_0 -> picard_collectrnaseqmetrics;
-      in_1 [label="refFlat"];
+      in_1 [label="refFlat", style=filled, fillcolor="#a7a7a7"];
       in_1 -> picard_collectrnaseqmetrics;
       out_2 [label="metrics"];
       picard_collectrnaseqmetrics -> out_2;
@@ -4855,6 +4885,59 @@ picard_merge_sam_bam_files
 **Required tools:** ln, picard-tools
 
 **CPU Cores:** 12
+
+.. index:: piranha
+
+piranha
+=======
+
+
+
+    Piranha is a peak-caller for CLIP- and RIP-Seq data.
+    It takes input in BED or BAM format and identifies regions of statistically significant read enrichment.
+    Additional covariates may optionally be provided to further inform the peak-calling process.
+
+    This is for the release: Piranha 1.2.0
+
+    http://smithlabresearch.org/software/piranha/
+
+**Input Connection**
+  - **in/features**
+
+**Output Connection**
+  - **out/features**
+
+
+.. graphviz::
+
+   digraph foo {
+      rankdir = LR;
+      splines = true;
+      graph [fontname = Helvetica, fontsize = 12, size = "14, 11", nodesep = 0.2, ranksep = 0.3];
+      node [fontname = Helvetica, fontsize = 12, shape = rect];
+      edge [fontname = Helvetica, fontsize = 12];
+      piranha [style=filled, fillcolor="#fce94f"];
+      in_0 [label="features"];
+      in_0 -> piranha;
+      out_1 [label="features"];
+      piranha -> out_1;
+   }
+
+**Options:**
+  - **bin_size_reponse** (int, optional) -- indicates that the response (first input file) is raw reads and should be binned into bins of this size
+
+  - **dist** (str, optional) -- Distribution type. Currently supports Poisson,NegativeBinomial, ZeroTruncatedPoisson, ZeroTruncatedNegativeBinomial (default with no covariates), PoissonRegression, NegativeBinomialRegression, ZeroTruncatedPoissonRegression, ZeroTruncatedNegativeBinomialRegression (default with covariates)
+    - possible values: 'Poisson', 'NegativeBinomial', 'ZeroTruncatedPoisson', 'ZeroTruncatedNegativeBinomial', 'PoissonRegression', 'NegativeBinomialRegression', 'ZeroTruncatedPoissonRegression', 'ZeroTruncatedNegativeBinomialRegression'
+
+
+  - **p_threshold** (float, optional) -- significance threshold for sites
+
+  - **sort** (bool, optional) -- indicates that input is unsorted and Piranha should sort it for you
+
+
+**Required tools:** bamtools, piranha
+
+**CPU Cores:** 1
 
 .. index:: pizzly
 
@@ -5449,7 +5532,6 @@ rseqc
   - **out/geneBody_coverage_stderr**
   - **out/bam_stat**
   - **out/DupRate_pos**
-  - **out/splice_junction**
   - **out/junction_plot**
   - **out/junction_bed**
   - **out/DupRate_plot_r**
@@ -5544,8 +5626,6 @@ rseqc
       rseqc -> out_28;
       out_29 [label="read_distribution"];
       rseqc -> out_29;
-      out_30 [label="splice_junction"];
-      rseqc -> out_30;
    }
 
 **Options:**
@@ -6084,6 +6164,9 @@ samtools_sort
     - default value: 1
 
   - **dd-blocksize** (str, optional) -- Read data with ``dd`` and set the blocksize.
+    - default value: 4096k
+
+  - **fifo** (bool, optional) -- Enable the FIFO functionality for splitting large input files.
 
   - **l** (str, optional) -- Set compression level, from 0 (uncompressed) to 9 (best)
 
@@ -7098,7 +7181,6 @@ stringtieMerge
 **Output Connection**
   - **out/log_stderr**
   - **out/assemblies**
-  - **out/run_log**
   - **out/features** Format: **gtf**
 
 
@@ -7121,8 +7203,6 @@ stringtieMerge
       stringtieMerge -> out_3;
       out_4 [label="log_stderr"];
       stringtieMerge -> out_4;
-      out_5 [label="run_log"];
-      stringtieMerge -> out_5;
    }
 
 **Options:**
