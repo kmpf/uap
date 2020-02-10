@@ -592,7 +592,7 @@ class AbstractStep(object):
                 pv_inpaths.append(change_to_volatile_if_need_be(inpath))
 
             if not AbstractStep.fsc.exists(pv_outpath):
-                if not inpaths and os.path.islink(pv_outpath):
+                if not inpaths and AbstractStep.fsc.islink(pv_outpath):
                     # these are probably files of a broken source step
                     raise UAPError('The input "%s" seems to be a broken '
                                    'symlink.' % pv_outpath)
