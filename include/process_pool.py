@@ -429,7 +429,7 @@ class ProcessPool(object):
                         report['lines'] = newline_count
                         freport.write(yaml.dump(report))
                 except (IOError, LookupError) as e:
-                    logger.error("Exception (%s): %s" % (type(e).__name__, sys.exc_info() ))
+                    logger.error("Exception (%s): %s" % (type(e).__name__, e))
                     logger.debug(traceback.format_exc())
                     pass
 
@@ -783,9 +783,9 @@ class ProcessPool(object):
                     if iterations == 30:
                         delay = 10
                     time.sleep(delay)
-            except:
+            except Exception as e:
                 logger.error("PID (%s) Process Watcher Exception: %s" %
-                      (os.get_pid(), sys.exc_info()))
+                      (pid, type(e).__name__, e))
             finally:
                 os._exit(0)
         else:
@@ -807,7 +807,7 @@ class ProcessPool(object):
                     os.kill(pid, signal.SIGTERM)
                 except Exception as e:
                     logger.error("PID (%s) threw %s: %s" %
-                          (pid, type(e).__name__, sys.exc_info()))
+                            (pid, type(e).__name__, e))
                     logger.debug(traceback.format_exc())
                     pass
 
