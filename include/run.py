@@ -614,7 +614,7 @@ class Run(object):
         return out_path
 
     @replace_output_dir_du_jour
-    def add_temporary_file(self, prefix = '', suffix = '', designation = None):
+    def add_temporary_file(self, prefix = 'temp', suffix = '', designation = None):
         '''
         Returns the name of a temporary file (created by tempfile library).
         Name and output directory placeholder are concatenated. The concatenated
