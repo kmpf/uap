@@ -649,6 +649,8 @@ class Pipeline(object):
             except:
                 # swallow all exception that happen here, failing notifications
                 # are no reason to crash the entire thing
+                logger.warn('Notification of "%s" failed with:' %
+                        (self.config['notify'], sys.exc_info()[0]))
                 pass
 
     def get_cluster_job_ids(self):
