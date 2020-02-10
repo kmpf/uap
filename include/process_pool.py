@@ -296,7 +296,7 @@ class ProcessPool(object):
         Append a message to the pipeline log.
         '''
         formatted_message = "[%s] %s" % (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), message)
-        #sys.stderr.write(formatted_message + "\n")
+        logger.info(formatted_message)
         self.log_entries.append(formatted_message)
 
     def get_log(self):
@@ -378,7 +378,9 @@ class ProcessPool(object):
             'start_time': datetime.datetime.now(),
             'args': args,
             'pid': pid,
-            'hints': hints
+            'hints': hints,
+            'stdout_path': stdout_path,
+            'stderr_path': stderr_path
         }
         message = "Launched %s in %s as PID %d." % \
                 (' '.join(args), os.getcwd(), pid)
@@ -429,7 +431,8 @@ class ProcessPool(object):
                         report['lines'] = newline_count
                         freport.write(yaml.dump(report))
                 except (IOError, LookupError) as e:
-                    logger.error("Exception (%s): %s" % (type(e).__name__, e))
+                    logger.error("Eror while writing %s (%s): %s" %
+                            (report_path, type(e).__name__, e))
                     logger.debug(traceback.format_exc())
                     pass
 
@@ -504,7 +507,8 @@ class ProcessPool(object):
                 'name': '[stream listener for %s of PID %d]' % (which, parent_pid),
                 'start_time': datetime.datetime.now(),
                 'pid': pid,
-                'listener_for': [parent_pid, which]
+                'listener_for': [parent_pid, which],
+                'report_path': report_path
             }
             self.log("Launched a copy process with PID %d to capture %s of PID %d." % (pid, which, parent_pid))
             if fout_path is not None:
@@ -531,7 +535,6 @@ class ProcessPool(object):
                 pid, exit_code_with_signal = os.wait()
                 logger.info("PID: %s, Exit code: %s" %
                                  (pid, exit_code_with_signal))
-                sys.stderr.flush()
                 if pid == watcher_pid:
                     ProcessPool.process_watcher_pid = None
                     try:
@@ -542,7 +545,6 @@ class ProcessPool(object):
                               watcher_report_path)
                         logger.debug("Reading the watcher failed with: %s" % e)
                         raise
-                        pass
                     # the process watcher has terminated, which is cool, I guess
                     # (if it's the last child process, anyway)
                     continue
@@ -551,11 +553,9 @@ class ProcessPool(object):
                     # remove pid from self.running_procs
                     self.running_procs.remove(pid)
                 except KeyError as e:
-                    logger.error("Key error(%s): %s" % (e.args, e.message))
                     if pid != os.getpid():
-                        logger.debug("Note: Caught a process which we "
+                        logger.error("Note: Caught a process which we "
                                          "didn't know: %d.\n" % pid)
-                        sys.stderr.flush()
                 if pid in self.proc_details:
                     self.proc_details[pid]['end_time'] = datetime.datetime.now()
 
@@ -607,13 +607,17 @@ class ProcessPool(object):
                                     raise
 
                     if pid in self.copy_process_reports:
+                        was_reporter = True
                         report_path = self.copy_process_reports[pid]
+                        report = None
                         if os.path.exists(report_path):
                             with open(report_path, 'r') as f:
                                 report = yaml.load(f, Loader=yaml.FullLoader)
 
                             if report is not None:
                                 self.proc_details[pid].update(report)
+                    else:
+                        was_reporter = False
 
             except TimeoutException as e:
                 logger.error("TimeoutException (%s): %s" % (e.args, e.message))
@@ -664,10 +668,18 @@ class ProcessPool(object):
                 raise
 
         if something_went_wrong:
-            log = "Pipeline crashed (PID: %s) while writing in %s" % \
-                (pid, self.get_run().get_temp_output_directory())
-            self.log(log)
-            raise UAPError(log)
+            if was_reporter:
+                log = 'Reporter process %s exit with code %s' % \
+                        (pid, exit_code_with_signal)
+                if report is not None:
+                    log += ' while writing into "%s".' % \
+                            self.proc_details[pid]['report_path']
+                logger.warn(log)
+            else:
+                log = "Pipeline crashed (PID: %s) while writing in %s" % \
+                    (pid, self.get_run().get_temp_output_directory())
+                self.log(log)
+                raise UAPError(log)
 
     def _launch_process_watcher(self, watcher_report_path):
         '''
@@ -806,6 +818,10 @@ class ProcessPool(object):
                 try:
                     os.kill(pid, signal.SIGTERM)
                 except Exception as e:
+                    if type(e) == OSError and e.errno == 3:
+                        logger.debug('Trying to kill already dead process %s.'
+                                % pid)
+                        return
                     logger.error("PID (%s) threw %s: %s" %
                             (pid, type(e).__name__, e))
                     logger.debug(traceback.format_exc())
