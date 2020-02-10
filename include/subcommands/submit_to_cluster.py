@@ -209,14 +209,12 @@ def main(args):
         submit_script_args += p.get_cluster_command_cli_option(
             'set_job_name', step_name)
 
+        out_file = os.path.join(step.get_output_directory(),
+                '.' + long_task_id_with_date + '.uapout')
         submit_script_args.append(p.get_cluster_command('set_stderr'))
-        submit_script_args.append(
-            os.path.join(step.get_output_directory(),
-                         '.' + long_task_id_with_date + '.stderr'))
+        submit_script_args.append(out_file)
         submit_script_args.append(p.get_cluster_command('set_stdout'))
-        submit_script_args.append(
-            os.path.join(step.get_output_directory(),
-                         '.' + long_task_id_with_date + '.stdout'))
+        submit_script_args.append(out_file)
 
         if len(dependent_steps) > 0:
             submit_script_args += p.get_cluster_command_cli_option(
