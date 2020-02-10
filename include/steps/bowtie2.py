@@ -257,6 +257,11 @@ class Bowtie2(AbstractStep):
 
 
         # Options for dd
+        self.add_option('fifo', bool, optional = True, default = False,
+                description='Use dd and pigz to pipe into bowtie2 with fifos. '
+                            'This does not work reliably with bowtie <= 2.3.4.2 '
+                            'due to a race condition '
+                            '(http://seqanswers.com/forums/showthread.php?t=16540).')
         self.add_option('dd-blocksize', str, optional = True, default = "2M")
         self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
@@ -281,7 +286,7 @@ class Bowtie2(AbstractStep):
                     # all non-bolean options:
                     'skip', 'upto', 'trim5', 'trim3', 'n-ceil',
                     'dpad', 'gbar', 'ma', 'mp', 'np', 'rdg', 'rfg', 'score-min',
-                    'minins', 'maxins', 'met', 'rg-id', 'rg', 'cores', 'seed']
+                    'minins', 'maxins', 'met', 'rg-id', 'rg', 'seed']
 
 
         ## 2nd all options that require a value, given with -
@@ -315,14 +320,14 @@ class Bowtie2(AbstractStep):
                         self.is_option_set_in_config(option)]
 
         for option in set_options2:
-            option_list.append('--%s' % option)
+            option_list.append('-%s' % option)
             option_list.append(str(self.get_option(option)))
 
         for run_id in cc.keys():
             with self.declare_run(run_id) as run:
                 # Get list of files for first/second read
                 fr_input = cc[run_id]['in/first_read']
-                input_paths = fr_input
+                input_paths = fr_input[:]
                 if 'in/second_read' in cc[run_id].keys():
                     is_paired_end = True
                     sr_input = cc[run_id]['in/second_read']
@@ -330,56 +335,28 @@ class Bowtie2(AbstractStep):
                 else:
                     sr_input = []
                     is_paired_end = False
-                bowtie2 = [self.get_tool('bowtie2')]
-
-                if self.get_option('unaligned'):
-                    out_file = run.add_output_file(
-                        'unaligned',
-                        '%s-bowtie2-unaligned.fastq' % run_id,
-                        input_paths)
-                    bowtie2.extend(['--un', out_file])
-
-                if self.get_option('met-file'):
-                    out_file = run.add_output_file(
-                        'met-file',
-                        '%s-bowtie2-met-file.txt' % run_id,
-                        input_paths)
-                    bowtie2.extend(['--met-file', out_file])
-
-                output_options = ['al', 'un-conc', 'al-conc']
-                for opt in output_options:
-                    if self.get_option(opt):
-                        out_file = run.add_output_file(
-                            opt,
-                            '%s-bowtie2-%s.txt' % (opt, run_id),
-                            input_paths)
-                        bowtie2.extend(['--%s' % opt, out_file])
-
-                log_stderr = run.add_output_file(
-                        'log_stderr',
-                        '%s-bowtie2-log_stderr.txt' % run_id,
-                        input_paths)
-
 
                 # Tophat is run in this exec group
                 with run.new_exec_group() as exec_group:
+                    # 1.
                     # Lists of fifos
                     fr_temp_fifos = list()
                     sr_temp_fifos = list()
-                    # 1.
 
                     def prepare_input(input_path, exec_group, temp_fifos):
+                        if not self.get_option('fifo'):
+                            temp_fifos.append(input_path)
+                            return (exec_group, temp_fifos)
                         # Create temporary fifo
                         temp_fifo = run.add_temporary_file(
                             'in-fifo-%s' %
                             os.path.basename(input_path) )
                         mkfifo = [self.get_tool('mkfifo'), temp_fifo]
                         exec_group.add_command(mkfifo)
-                        temp_fifos.append(temp_fifo)
                         # Is input gzipped fasta?
                         is_fastq_gz = False
-                        if len([_ for _ in ['fq.gz', 'fastq.gz']\
-                                if input_path.endswith(_)]) == 1:
+                        if any(input_path.endswith(suff)
+                                for suff in ['.fq.gz', '.fastq.gz']):
                             is_fastq_gz = True
                         # If yes we need to decompress it
                         if is_fastq_gz:
@@ -413,7 +390,7 @@ class Bowtie2(AbstractStep):
                                 'of=%s' % temp_fifo
                             ]
                             exec_group.add_command(dd)
-
+                        temp_fifos.append(temp_fifo)
                         return (exec_group, temp_fifos)
 
                     for input_path in fr_input:
@@ -432,6 +409,34 @@ class Bowtie2(AbstractStep):
                         bowtie2.extend(option_list)
                         bowtie2.extend(['-x', self.get_option('index')])
 
+                        if self.get_option('unaligned'):
+                            out_file = run.add_output_file(
+                                'unaligned',
+                                '%s-bowtie2-unaligned.fastq' % run_id,
+                                input_paths)
+                            bowtie2.extend(['--un', out_file])
+
+                        if self.get_option('met-file'):
+                            out_file = run.add_output_file(
+                                'met-file',
+                                '%s-bowtie2-met-file.txt' % run_id,
+                                input_paths)
+                            bowtie2.extend(['--met-file', out_file])
+
+                        output_options = ['al', 'un-conc', 'al-conc']
+                        for opt in output_options:
+                            if self.get_option(opt):
+                                out_file = run.add_output_file(
+                                    opt,
+                                    '%s-bowtie2-%s.txt' % (opt, run_id),
+                                    input_paths)
+                                bowtie2.extend(['--%s' % opt, out_file])
+
+                        log_stderr = run.add_output_file(
+                                'log_stderr',
+                                '%s-bowtie2-log_stderr.txt' % run_id,
+                                input_paths)
+
                         if is_paired_end:
                             bowtie2.extend([
                                 '-1', ','.join(fr_temp_fifos),
@@ -439,22 +444,26 @@ class Bowtie2(AbstractStep):
                         else:
                             bowtie2.extend(['-U', ','.join(fr_temp_fifos)])
 
-                        bowtie2_pipe.add_command(bowtie2, stderr_path=log_stderr)
-                        # Compress bowtie2 output
-                        pigz = [self.get_tool('pigz'),
-                                '--processes', str(self.get_cores()),
-                                '--blocksize', self.get_option('pigz-blocksize'),
-                                '--stdout']
-                        bowtie2_pipe.add_command(pigz)
-                        # Write bowtie2 output to file
-                        dd = [
-                            self.get_tool('dd'),
-                            'obs=%s' % self.get_option('dd-blocksize'),
-                            'of=%s' %
-                            run.add_output_file(
+                        out_file = run.add_output_file(
                                 'alignments',
                                 '%s-bowtie2-results.sam.gz' % run_id,
                                 input_paths
                             )
-                        ]
-                        bowtie2_pipe.add_command(dd)
+                        if not self.get_option('fifo'):
+                            bowtie2.extend(['-S', out_file])
+                            bowtie2_pipe.add_command(bowtie2, stderr_path=log_stderr)
+                        else:
+                            bowtie2_pipe.add_command(bowtie2, stderr_path=log_stderr)
+                            # Compress bowtie2 output
+                            pigz = [self.get_tool('pigz'),
+                                    '--processes', str(self.get_cores()),
+                                    '--blocksize', self.get_option('pigz-blocksize'),
+                                    '--stdout']
+                            bowtie2_pipe.add_command(pigz)
+                            # Write bowtie2 output to file
+                            dd = [
+                                self.get_tool('dd'),
+                                'obs=%s' % self.get_option('dd-blocksize'),
+                                'of=%s' % out_file
+                            ]
+                            bowtie2_pipe.add_command(dd)
