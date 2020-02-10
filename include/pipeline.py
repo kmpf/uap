@@ -633,7 +633,7 @@ class Pipeline(object):
         if 'notify' in self.config:
             try:
                 notify = self.config['notify']
-                match = re.search('^(http://[^/]+)/([a-z0-9]+)$', notify)
+                match = re.search('^(https?://[^/]+)/([a-z0-9]+)$', notify)
                 if match:
                     host = match.group(1)
                     token = match.group(2)
@@ -647,7 +647,7 @@ class Pipeline(object):
                     proc.stdin.close()
                     proc.wait()
                 else:
-                    logger.warn('Cloud not split patter into host/token to notify: %s' %
+                    logger.warn('Cloud not split patter into http(s)://host/token to notify: %s' %
                             self.config['notify'])
             except:
                 # swallow all exception that happen here, failing notifications
