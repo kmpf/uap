@@ -38,7 +38,7 @@
  * introduce --job-ids as option for status to report config specifc jobs (#58)
  * introduce --first-error option for submit-to-cluster for faster debugging (#61)
  * parallel tool check for major performance gain (#82)
- * regulate job message output with verbosity level
+ * revised run-locally message output and regulation with verbosity level
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
