@@ -727,7 +727,9 @@ class ProcessPool(object):
                         name = self.proc_details[pid]['name']
                         names[pid] = '%d (%s)' % (pid, name)
                 procs[super_pid] = psutil.Process(super_pid)
+                names[super_pid] = '%d (uap)' % super_pid
                 procs[os.getpid()] = psutil.Process(os.getpid())
+                names[os.getpid()] = '%d (watcher)' % os.getpid()
                 for pid in self.running_procs:
                     try:
                         procs[pid] = psutil.Process(pid)
