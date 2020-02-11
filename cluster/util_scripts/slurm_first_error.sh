@@ -16,7 +16,7 @@ done | grep -v "JobState=COMPLETED" | grep -v "JobState=RUNNING" |
 if [[ -z "$stderrJob" ]]; then
     >&2 printf 'All found jobs were "RUNNING" or "COMPLETED".\n'
 else
-    printf 'The first job that did not "COMPLETED" was %s.\n' "$stderrJob"
+    printf 'The first job that is not "RUNNING" or "COMPLETED" is %s.\n' "$stderrJob"
     cmd="scontrol show job $stderrJob"
     printf '\e[31mOutput of: %s\e[0m\n' "$cmd"
     printf -v esc '\e'
