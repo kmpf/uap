@@ -147,6 +147,11 @@ class AdapterRemoval(AbstractStep):
 
         self.__treat_as_paired = cc.connection_exists('in/second_read')
 
+        if self.get_option('seed') is not None and self.get_option('cores')>1:
+            logger.warn('AdapterRemoval can not work deterministically on '
+                        'multiple threads. Please set `seed` to None or '
+                        '`cores` to 1.')
+
         if not cc.all_runs_have_connection('in/first_read'):
             read_name = '' if self.__treat_as_paired else ' first'
             run_ids = list(cc.get_runs_without_any('in/first_read'))
