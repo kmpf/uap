@@ -40,6 +40,7 @@
  * parallel tool check for major performance gain (#82)
  * revised run-locally message output and regulation with verbosity level
  * print stderr of failed processes in UAP log
+ * watcher report with proc names printed on verbosity level 3 (-vv)
  * propagate verbosity level to cluster jobs
 
 **additional stuff**
