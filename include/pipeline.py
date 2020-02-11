@@ -141,9 +141,9 @@ def check_tool(args):
         expected_exit_code = info['exit_code']
         if exit_code != expected_exit_code:
             raise UAPError(
-                "%s: Tool check failed for %s: %s - exit code is: %d "
+                "Tool check failed for %s: %s - exit code is: %d "
                 "(expected %d) (response %s)"
-                % (self.config_name, tool_id, ' '.join(command),
+                % (tool_id, ' '.join(command),
                    exit_code, expected_exit_code, tool_check_info['response'])
             )
         # Execute clean-up command (if configured)
