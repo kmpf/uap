@@ -140,7 +140,6 @@ class AdapterRemoval(AbstractStep):
 
         self.add_option('identify-adapters', bool, default=None, optional=True)
         self.add_option('seed', int, default=22595, optional=True)
-        self.add_option('threads', int, default=1, optional=True)
 
     def runs(self, cc):
 
@@ -203,8 +202,8 @@ class AdapterRemoval(AbstractStep):
 
                 ar.extend(['--gzip'])
 
-                if self.is_option_set_in_config('threads'):
-                    ar.extend(['--threads', str(self.get_option('threads'))])
+                if self.is_option_set_in_config('cores') and self.is_option_set_in_config('cores')>1:
+                    ar.extend(['--threads', str(self.get_option('cores'))])
 
                 if self.is_option_set_in_config('qualitybase'):
                     ar.extend(['--qualitybase',
