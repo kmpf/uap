@@ -560,7 +560,7 @@ class ProcessPool(object):
                     self.running_procs.remove(pid)
                 except KeyError as e:
                     if pid != os.getpid():
-                        logger.error("Note: Caught a process which we "
+                        logger.error("Internal: Caught a process which we "
                                          "didn't know: %d.\n" % pid)
                 if pid in self.proc_details:
                     self.proc_details[pid]['end_time'] = datetime.datetime.now()
@@ -586,7 +586,7 @@ class ProcessPool(object):
                         if signal_number in ProcessPool.SIGNAL_NAMES:
                             self.proc_details[pid]['signal_name'] = ProcessPool.SIGNAL_NAMES[signal_number]
 
-                    # now kill it's listeners
+                    # now kill it's predecessor
                     if 'use_stdin_of' in self.proc_details[pid]:
                         kpid = self.proc_details[pid]['use_stdin_of']
                         self.log("Now killing %d, the predecessor of %d (%s)." %
@@ -655,8 +655,9 @@ class ProcessPool(object):
                         name = 'unkown name'
                         if pid in self.proc_details.keys():
                             name = self.proc_details[pid]['name']
-                        logger.debug('PID %s (%s) is ok to fail.' %
-                                (pid, name))
+                        logger.debug('PID %s (%s) was expected to fail '
+                                     'because the kill signal was send.' %
+                                     (pid, name))
 
         # now wait for the watcher process, if it still exists
         try:
@@ -675,6 +676,9 @@ class ProcessPool(object):
                 pass
             else:
                 raise
+
+        logger.debug('Watcher report:\n%s' %
+                     yaml.dump(self.process_watcher_report))
 
         if first_failed_pid:
             if was_reporter:
@@ -717,6 +721,11 @@ class ProcessPool(object):
                 signal.signal(signal.SIGINT, signal.SIG_IGN)
                 called_cpu_stat_for_childpid = set()
                 procs = {}
+                names = {}
+                for pid in self.proc_details.keys():
+                    if 'name' in self.proc_details[pid]:
+                        name = self.proc_details[pid]['name']
+                        names[pid] = '%d (%s)' % (pid, name)
                 procs[super_pid] = psutil.Process(super_pid)
                 procs[os.getpid()] = psutil.Process(os.getpid())
                 for pid in self.running_procs:
@@ -751,6 +760,10 @@ class ProcessPool(object):
                     sum_data = dict()
                     for pid in pid_list:
                         proc = procs[pid]
+                        if pid in names.keys():
+                            name = names[pid]
+                        else:
+                            name = pid
                         try:
                             data = dict()
                             data['cpu_percent'] = proc.cpu_percent(interval = None)
@@ -774,10 +787,10 @@ class ProcessPool(object):
                                     except psutil.NoSuchProcess:
                                         pass
 
-                            if not pid in max_data:
-                                max_data[pid] = copy.deepcopy(data)
+                            if name not in max_data:
+                                max_data[name] = copy.deepcopy(data)
                             for k, v in data.items():
-                                max_data[pid][k] = max(max_data[pid][k], v)
+                                max_data[name][k] = max(max_data[name][k], v)
 
                             if len(sum_data) == 0:
                                 for k, v in data.items():
