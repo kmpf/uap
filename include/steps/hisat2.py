@@ -434,7 +434,7 @@ class Hisat2(AbstractStep):
                             hisat2.extend(['--un-gz', unaligned])
 
                         if self.get_option('al-gz') is True:
-                            unaligned = run.add_output_file(
+                            aligned = run.add_output_file(
                                 'aligned',
                                 '%s-hisat2-aligned.fastq.gz' % run_id,
                                 input_paths)

@@ -169,7 +169,8 @@ class deepToolsBamPEFragmentSize(AbstractStep):
                 try:
                     input_paths = run_ids_connections_files[run_id]['in/alignments']
                 except KeyError:
-                    raise UAPError("No input sample named %s" % sample)
+                    raise UAPError('No files found for run-id %s and connection '
+                    '"in/alignments". Please check your configuration.' % run_id)
                 for f in input_paths:
                     label = run_id
                     if len(input_paths) > 1:

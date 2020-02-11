@@ -187,7 +187,7 @@ class deepToolsPlotFingerprint(AbstractStep):
                 bamfiles = run_ids_connections_files[sample]['in/alignments']
                 if not len(bamfiles) == 1:
                     raise UAPError("Expected a single file for input run %s "
-                                 "received %s" % (sample, ", ".join(bamfile)))
+                                 "received %s" % (sample, bamfiles))
                 if not bamfiles[0].endswith(".bam"):
                     raise UAPError("Not a BAM file: %s" % bamfiles[0])
 

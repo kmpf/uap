@@ -15,6 +15,7 @@ import yaml
 
 import pipeline
 import misc
+import process_pool
 from uaperrors import UAPError
 '''
 This script uses graphviz to produce graphs that display information about the

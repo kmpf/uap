@@ -207,6 +207,7 @@ class Cutadapt(AbstractStep):
                            '%s.' % (read_name, list(run_ids)))
         if paired_end:
             if not cc.all_runs_have_connection('in/second_read'):
+                read_name = ' second'
                 run_ids = list(cc.get_runs_without_any('in/second_read'))
                 if len(run_ids)>5:
                     run_ids = run_ids[0:5] + ['...']
@@ -347,7 +348,7 @@ class Cutadapt(AbstractStep):
 
                         # create reverse complement if necessary
                         if self.get_option('use_reverse_complement'):
-                            complements = string.maketrans('acgtACGT',
+                            complements = adapter.maketrans('acgtACGT',
                                                            'tgcaTGCA')
                             adapter = adapter.translate(complements)[::-1]
 

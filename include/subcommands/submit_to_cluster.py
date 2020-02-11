@@ -12,6 +12,7 @@ import yaml
 import abstract_step
 import fscache
 import pipeline
+import submit_to_cluster_legacy
 from uaperrors import UAPError
 '''
 By default, this script submits all tasks to a compute cluster via a

@@ -7,7 +7,8 @@ import os
 import yaml
 
 from abstract_step import *
-import pipeline
+import misc
+from uaperrors import UAPError
 
 logger = logging.getLogger("uap_logger")
 

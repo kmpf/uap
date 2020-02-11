@@ -223,7 +223,7 @@ class deepToolsMultiBamSummary(AbstractStep):
             labels = list()
             for f in input_paths:
                 if not f.endswith(".bam"):
-                    raise UAPError("Not a BAM file: %s" % bam_files[i])
+                    raise UAPError("Not a BAM file: %s" % f)
                 if len(input_paths) > 1:
                     labels.append("%s-%s" % (run_id, input_paths.index(f)))
                 else:

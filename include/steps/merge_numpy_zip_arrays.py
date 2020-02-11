@@ -35,7 +35,7 @@ class mergeNumpyZipArrays(AbstractStep):
             labels = list()
             for f in input_paths:
                 if not f.endswith(".bam"):
-                    raise UAPError("Not a BAM file: %s" % bam_files[i])
+                    raise UAPError("Not a BAM file: %s" % f)
                 if len(input_paths) > 1:
                     labels.append("%s-%s" % (run_id, input_paths.index(f)))
                 else:
@@ -45,6 +45,7 @@ class mergeNumpyZipArrays(AbstractStep):
                 # Let's compile the command
                 with run.new_exec_group() as multi_bam_summary_eg:
                     # 1. multiBamSummary command
+                    # TODO: where is subcommand coming from???
                     multi_bam_summary = [
                         self.get_tool('multiBamSummary'), subcommand]
                     ## Append list of input BAM files
@@ -70,6 +71,7 @@ class mergeNumpyZipArrays(AbstractStep):
                     multi_bam_summary.extend(['--numberOfProcessors',
                                               str(self.get_cores())])
                     ## Append list of options
+                    # TODO: optionlist dont exists!!!
                     multi_bam_summary.extend(option_list)
 
                     # Add multiBamSummary to execution group

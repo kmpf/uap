@@ -192,8 +192,8 @@ class Stringtie(AbstractStep):
         con_ref_assembly = cc.look_for_unique('in/features', ref_assembly)
         ref_per_run = cc.all_runs_have_connection('in/features')
 
-        allignment_runs = cc.get_runs_with_connections('in/alignments')
-        for run_id in allignment_runs:
+        alignment_runs = cc.get_runs_with_connections('in/alignments')
+        for run_id in alignment_runs:
             connection = cc[run_id]
             if ref_per_run is True:
                 con_ref_assembly = connection['in/features'][0]
@@ -238,7 +238,7 @@ class Stringtie(AbstractStep):
                 # 2. read BAM and output to FIFO
                 dd_bam = [self.get_tool('dd'),
                           'bs=%s' % self.get_option('dd-blocksize'),
-                          'if=%s' % input_paths[0],
+                          'if=%s' % alignments[0],
                           'of=%s' % fifo_path_bam]
                 exec_group.add_command(dd_bam)
 

@@ -46,7 +46,7 @@ class ConnectionsCollector(object):
         run_id = self._init_run_id(run_id)
         self.connections[run_id][connection] = [None]
         self._by_cons_empty.setdefault(connection, set())
-        self._by_cons_empty[connection].add(un_id)
+        self._by_cons_empty[connection].add(run_id)
         self.existing_connections.add(connection)
         self._con_of_all_runs = None # reset cache
         logger.debug("Found connection %s which is declared empty" %
@@ -247,7 +247,7 @@ class ConnectionsCollector(object):
             else:
                 self._con_of_all_runs = set()
         if isinstance(connection, list):
-            return all(conn in self._con_of_all_runs for con in connection)
+            return all(con in self._con_of_all_runs for con in connection)
         return connection in self._con_of_all_runs
 
     def __getitem__(self, run_id):

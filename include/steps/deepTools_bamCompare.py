@@ -278,7 +278,7 @@ class deepToolsBamCompare(AbstractStep):
                     files=run_ids_connections_files[sample]['in/alignments']
                 except KeyError as e:
                     raise UAPError('No files found for sample %s and connection '
-                    '"in/alignments". Please check your configuration.')
+                    '"in/alignments". Please check your configuration.' % sample)
                 if not len(files) == 1 or not files[0].endswith('.bam'):
                     raise UAPError("Expected exactly one BAM file, got %s"
                                  % ", ".join(files))

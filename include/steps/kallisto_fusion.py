@@ -144,7 +144,7 @@ class Kallisto(AbstractStep):
 
                     for optn in optns:
                         if self.is_option_set_in_config(optn) and self.get_option(optn):
-                            kallisto.append('--' + flag)
+                            kallisto.append('--' + optn)
 
                     param_optns = ['bootstrap-samples', 'seed',
                                 'fragment-length', 'sd']

@@ -7,6 +7,8 @@ import os
 import re
 import yaml
 
+import misc
+
 class FastqSource(AbstractSourceStep):
 
     '''
@@ -181,5 +183,5 @@ class FastqSource(AbstractSourceStep):
                                 run.add_public_info('index-R1', idx[0])
                             else:
                                 raise StandardError("Index %s is not a valid index in %s"
-                                                    % idx.join('-'), indices_path)
+                                                    % idx.join('-'), index)
 

@@ -107,7 +107,7 @@ class FixCutadapt(AbstractStep):
                         else:
                             raise UAPError("File %s does not end with any "
                                          "expected suffix (fastq.gz or fastq). "
-                                         "Please fix that issue." % input_path)
+                                         "Please fix that issue." % input_paths[0])
                 # 3. Start fix_cutadapt
                 fix_cutadapt = [self.get_tool('fix_cutadapt'),
                                 temp_fifos["first_read_in"], 
