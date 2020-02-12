@@ -386,8 +386,6 @@ class ProcessPool(object):
         message = "Launched %s in %s as PID %d (%s)." % \
                 (' '.join(args), os.getcwd(), pid, name)
         self.log(message)
-        logger.debug(message)
-        sys.stderr.flush()
 
         pipe = None
         if keep_stdout_open:
