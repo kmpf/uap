@@ -137,6 +137,11 @@ class Stringtie(AbstractStep):
                             'The \*.ctab files will be supplied to child steps through '
                             'additional connections ``out/e2t``, ``out/e_data``, '
                             '``out/i2t``, ``out/i_data`` and ``out/t_data``.')
+        # -b
+        self.add_option('b', bool, optional=True,
+                description='enable output of Ballgown table files '
+                            'but these files will be created under '
+                            'the directory path given as <dir_path>')
         # -x <seqid_list>
         self.add_option('x', str, optional = True,
                         description = 'Ignore all read alignments (and thus do not attempt to '
@@ -185,8 +190,8 @@ class Stringtie(AbstractStep):
             option_list.append('--rf')
 
         # look for reference assembly in in-connections
-        ref_assembly = os.path.abspath(self.get_option('G'))
-        if ref_assembly is not None and not os.path.isfile(ref_assembly):
+        ref_assembly = self.get_option('G')
+        if ref_assembly is not None and not os.path.isfile(os.path.abspath(ref_assembly)):
             raise UAPError('[Stringtie]: %s is no file.' %
                     self.get_option('G'))
         con_ref_assembly = cc.look_for_unique('in/features', ref_assembly)
