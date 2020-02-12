@@ -419,7 +419,7 @@ class ProcessPool(object):
         pid = os.fork()
         if pid == 0:
 
-            def write_report_and_exit():
+            def write_report_and_exit(signum, frame):
                 try:
                     # write report
                     with open(report_path, 'w') as freport:
@@ -433,16 +433,12 @@ class ProcessPool(object):
                     logger.error("Eror while writing %s (%s): %s" %
                             (report_path, type(e).__name__, e))
                     logger.debug(traceback.format_exc())
-                    pass
+                finally:
+                    os._exit(0)
 
-                os._exit(0)
-
-            def sigpipe_handler(signum, frame):
-                write_report_and_exit()
-
-            signal.signal(signal.SIGTERM, sigpipe_handler)
-            signal.signal(signal.SIGINT, sigpipe_handler)
-            signal.signal(signal.SIGPIPE, sigpipe_handler)
+            signal.signal(signal.SIGTERM, write_report_and_exit)
+            signal.signal(signal.SIGINT, write_report_and_exit)
+            signal.signal(signal.SIGPIPE, write_report_and_exit)
             os.setsid()
             if pipe is not None:
                 os.close(pipe[0])
@@ -496,9 +492,7 @@ class ProcessPool(object):
             if pipe is not None:
                 os.close(pipe[1])
 
-            write_report_and_exit()
-
-            os._exit(0)
+            write_report_and_exit(None, None)
         else:
             self.running_procs.add(pid)
             self.proc_order.append(pid)
