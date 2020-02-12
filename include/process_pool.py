@@ -520,6 +520,7 @@ class ProcessPool(object):
         ProcessPool.process_watcher_pid = watcher_pid
         pid = None
         first_failed_pid = None
+        was_reporter = None
         failed_pids = set()
         while True:
             if len(self.running_procs) == 0:

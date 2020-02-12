@@ -125,8 +125,8 @@ class gffCompare(AbstractStep):
                     '%s.stats' % run_id,
                     [input_paths])
 
-                loci_file = run.add_output_file(
-                    'loci',
+                tracking_file = run.add_output_file(
+                    'tracking',
                     '%s.tracking' % run_id,
                     [input_paths])
 
@@ -138,12 +138,11 @@ class gffCompare(AbstractStep):
                 with run.new_exec_group() as exec_group:
 
                    # exec_group.add_command(loci, stdout_path = loci_file)
-                
                     with exec_group.add_pipeline() as pipe:
                         gffCompare = [self.get_tool('gffcompare'), '-o' , base]
 
                         gffCompare.extend(option_list)
-                        gffCompare.append(assembling)                        
-                        
+                        gffCompare.append(assembling)
+
                         pipe.add_command(gffCompare, stdout_path=combined, stderr_path=log_stderr)
 
