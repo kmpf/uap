@@ -202,12 +202,12 @@ class AdapterRemoval(AbstractStep):
                 if self.__treat_as_paired:
                     ar.extend(['--adapter2', self.get_option('adapter2')])
 
-                basename = run.get_output_directory_du_jour_placeholder() + '/' + run_id
-                ar.extend(['--basename', basename])
+                ar.extend(['--basename', run_id])
 
                 ar.extend(['--gzip'])
 
-                if self.is_option_set_in_config('cores') and self.get_option('cores')>1:
+                if self.is_option_set_in_config('cores') \
+                and self.get_option('cores')>1:
                     ar.extend(['--threads', str(self.get_option('cores'))])
 
                 if self.is_option_set_in_config('qualitybase'):
@@ -283,7 +283,7 @@ class AdapterRemoval(AbstractStep):
                         iswanted = run.add_output_file(connection,
                                                        out_file,
                                                        output_fileset)
-                        isproduced = run.get_output_directory_du_jour_placeholder() + '/' + run_id + '.' + connection + '.gz'
+                        isproduced = run_id + '.' + connection + '.gz'
 
                         mv_exec_group.add_command([self.get_tool('mv'),
                                                    isproduced, iswanted])
