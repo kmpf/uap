@@ -7,7 +7,6 @@ import logging
 import string
 import sys
 import yaml
-import time
 
 '''
 Adjust sys.path so everything we need can be found
@@ -509,9 +508,6 @@ def main():
             raise
         else:
             sys.exit(1)
-    finally:
-        # prevent atexit error
-        time.sleep(0.1)
 
 def _configure_logger(verbosity):
     logger = logging.getLogger("uap_logger")
