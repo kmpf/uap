@@ -268,8 +268,9 @@ class Stringtie(AbstractStep):
             elif self.is_option_set_in_config('B') \
                     or self.is_option_set_in_config('b') \
                     or self.is_option_set_in_config('e'):
-                        UAPError('[stringtie] Options -B, -b and -e can only '
-                                'be used if a reference is provided with -G.')
+                        raise UAPError('[stringtie] Options -B, -b and -e can '
+                                       'only be used if a reference is '
+                                       'provided with -G.')
             stringtie.extend(option_list)
 
             exec_group.add_command(stringtie, stdout_path=log_stdout,
