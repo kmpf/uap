@@ -192,7 +192,7 @@ class Stringtie(AbstractStep):
         # look for reference assembly in in-connections
         ref_assembly = self.get_option('G')
         if ref_assembly is not None:
-            ref_assembly = os.path.isfile(os.path.abspath(ref_assembly)
+            ref_assembly = os.path.abspath(ref_assembly)
             if not os.path.isfile(ref_assembly):
                 raise UAPError('[Stringtie]: %s is no file.' %
                         self.get_option('G'))
