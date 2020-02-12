@@ -190,7 +190,7 @@ class AbstractStep(object):
                     raise UAPError(
                         "Unknown option in %s (%s): %s." %
                         (self.get_step_name(), self.get_step_type(), key))
-                if type(value) not in self._defined_options[key]['types']:
+                if value is not None and type(value) not in self._defined_options[key]['types']:
                     raise UAPError(
                         "Invalid type for option %s - it's %s and should be "
                         "one of %s." % (key, type(value),
