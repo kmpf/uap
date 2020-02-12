@@ -622,6 +622,7 @@ class Pipeline(object):
                 pool.imap_unordered(check_tool, self.config['tools'].items()):
             self.tool_versions[tool_id] = tool_check_info
         pool.close()
+        pool.join()
         signal.signal(signal.SIGINT, original_int_handler)
 
     def notify(self, message, attachment = None):
