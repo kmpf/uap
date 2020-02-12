@@ -373,8 +373,9 @@ class ProcessPool(object):
 
         self.running_procs.add(pid)
         self.proc_order.append(pid)
+        name = os.path.basename(program_name)
         self.proc_details[pid] = {
-            'name': os.path.basename(program_name),
+            'name': name,
             'start_time': datetime.datetime.now(),
             'args': args,
             'pid': pid,
@@ -382,8 +383,8 @@ class ProcessPool(object):
             'stdout_path': stdout_path,
             'stderr_path': stderr_path
         }
-        message = "Launched %s in %s as PID %d." % \
-                (' '.join(args), os.getcwd(), pid)
+        message = "Launched %s in %s as PID %d (%s)." % \
+                (' '.join(args), os.getcwd(), pid, name)
         self.log(message)
         logger.debug(message)
         sys.stderr.flush()
