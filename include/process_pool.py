@@ -560,8 +560,8 @@ class ProcessPool(object):
                     self.running_procs.remove(pid)
                 except KeyError as e:
                     if pid != os.getpid():
-                        logger.error("Internal: Caught a process which we "
-                                         "didn't know: %d.\n" % pid)
+                        logger.debug("Caught a process which we "
+                                     "didn't know: %d.\n" % pid)
                 if pid in self.proc_details:
                     self.proc_details[pid]['end_time'] = datetime.datetime.now()
 
