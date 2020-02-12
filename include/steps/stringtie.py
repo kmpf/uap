@@ -191,9 +191,11 @@ class Stringtie(AbstractStep):
 
         # look for reference assembly in in-connections
         ref_assembly = self.get_option('G')
-        if ref_assembly is not None and not os.path.isfile(os.path.abspath(ref_assembly)):
-            raise UAPError('[Stringtie]: %s is no file.' %
-                    self.get_option('G'))
+        if ref_assembly is not None:
+            ref_assembly = os.path.isfile(os.path.abspath(ref_assembly)
+            if not os.path.isfile(ref_assembly):
+                raise UAPError('[Stringtie]: %s is no file.' %
+                        self.get_option('G'))
         con_ref_assembly = cc.look_for_unique('in/features', ref_assembly)
         ref_per_run = cc.all_runs_have_connection('in/features')
 
