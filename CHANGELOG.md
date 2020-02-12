@@ -42,6 +42,7 @@
  * print stderr of failed processes in UAP log
  * watcher report with proc names printed on verbosity level 3 (-vv)
  * propagate verbosity level to cluster jobs
+ * allow empty step options to set None values/unset defaults
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
