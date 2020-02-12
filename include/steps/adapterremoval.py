@@ -207,7 +207,7 @@ class AdapterRemoval(AbstractStep):
 
                 ar.extend(['--gzip'])
 
-                if self.is_option_set_in_config('cores') and self.is_option_set_in_config('cores')>1:
+                if self.is_option_set_in_config('cores') and self.get_option('cores')>1:
                     ar.extend(['--threads', str(self.get_option('cores'))])
 
                 if self.is_option_set_in_config('qualitybase'):
