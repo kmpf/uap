@@ -1361,6 +1361,7 @@ class AbstractStep(object):
 
         info = dict()
         info['types'] = option_types
+        info['types string'] = ', '.join(t.__name__ for t in option_types)
         for _ in ['optional', 'default', 'description', 'choices']:
             info[_] = kwargs[_]
 
