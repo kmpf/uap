@@ -751,9 +751,14 @@ class ProcessPool(object):
                 iterations = 0
                 delay = 0.5
                 max_data = dict()
+                first_call = None
                 while True:
                     pid_list = copy.deepcopy(procs.keys())
                     sum_data = dict()
+                    if first_call is None:
+                        first_call = True
+                    elif first_call is True:
+                        first_call = False
                     for pid in pid_list:
                         proc = procs[pid]
                         if pid in names.keys():
@@ -803,7 +808,7 @@ class ProcessPool(object):
                     for k, v in sum_data.items():
                         max_data['sum'][k] = max(max_data['sum'][k], v)
 
-                    if len(procs) <= 2:
+                    if len(procs) <= 2 and not first_call:
                         # there's nothing more to watch, write report and exit
                         # (now there's only the controlling python process and
                         # the process watcher itself
