@@ -769,11 +769,11 @@ class ProcessPool(object):
                             data = dict()
                             with proc.oneshot():
                                 data['cpu_percent'] = proc.cpu_percent(interval = None)
+                                data['threads'] = len(proc.threads())
                                 data['memory_percent'] = proc.memory_percent()
                                 memory_info = proc.memory_info()
                                 data['rss'] = memory_info.rss
                                 data['vms'] = memory_info.vms
-                                data['threads'] = len(proc.threads())
 
                             # add values for all children
                             if pid != super_pid:
@@ -813,11 +813,11 @@ class ProcessPool(object):
 
                     cpu_data = psutil.cpu_times()._asdict()
                     total = sum(cpu_data.values())/100
-                    if not 'cpu_percents' in max_data:
-                        max_data['cpu_percents'] = {k:v/total for k, v in cpu_data.items()}
+                    if not 'cpu percentages' in max_data:
+                        max_data['cpu percentages'] = {k:v/total for k, v in cpu_data.items()}
                     else:
                         for k, v in cpu_data.items():
-                            max_data['cpu_percents'][k] = max(max_data['cpu_percents'][k], v/total)
+                            max_data['cpu percentages'][k] = max(max_data['cpu percentages'][k], v/total)
 
                     if len(procs) <= 2 and not first_call:
                         # there's nothing more to watch, write report and exit
