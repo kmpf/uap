@@ -826,6 +826,18 @@ class ProcessPool(object):
                         for k, v in cpu_data.items():
                             max_data['cpu percentages'][k] = max(max_data['cpu percentages'][k], v/total)
 
+                    io_data = psutil.disk_io_counters()._asdict()
+                    if not first_call:
+                        max_data['io stats'] = {k:io_data[k]-first_io[k] for k in io_data.keys()}
+                    else:
+                        first_io = io_data
+
+                    net_data = psutil.net_io_counters()._asdict()
+                    if not first_call:
+                        max_data['net stats'] = {k:net_data[k]-first_net[k] for k in net_data.keys()}
+                    else:
+                        first_net = net_data
+
                     if len(procs) <= 2 and not first_call:
                         # there's nothing more to watch, write report and exit
                         # (now there's only the controlling python process and
@@ -834,6 +846,8 @@ class ProcessPool(object):
                             for key in field.keys():
                                 if key in ['rss', 'vms']:
                                     field[key + ' unit'] = human_readable_size(field[key])
+                                elif 'bytes' in key:
+                                    field[key.replace('bytes', 'data')] = human_readable_size(field[key])
                         with open(watcher_report_path, 'w') as f:
                             report = dict()
                             report['max'] = max_data
