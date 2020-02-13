@@ -44,6 +44,7 @@
  * propagate verbosity level to cluster jobs
  * allow empty step options to set None values/unset defaults
  * io and net stats in annotation file (#34)
+ * if config has wrong options pass -v to display all available options
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
