@@ -340,7 +340,7 @@ def main():
         dest="details",
         action="store_true",
         default=False,
-        help="Displays dexription per step.")
+        help="Display description per step.")
 
     steps_parser.add_argument(
         "--show",
