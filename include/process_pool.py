@@ -764,6 +764,8 @@ class ProcessPool(object):
                     sum_data = dict()
                     if first_call is None:
                         first_call = True
+                        first_io = psutil.disk_io_counters()._asdict()
+                        first_net = psutil.net_io_counters()._asdict()
                     elif first_call is True:
                         first_call = False
                     for pid in pid_list:
@@ -820,39 +822,37 @@ class ProcessPool(object):
 
                     cpu_data = psutil.cpu_times()._asdict()
                     total = sum(cpu_data.values())/100
-                    if not 'cpu percentages' in max_data:
-                        max_data['cpu percentages'] = {k:v/total for k, v in cpu_data.items()}
+                    if not 'host cpu percentages' in max_data:
+                        max_data['host cpu percentages'] = \
+                            {k:v/total for k, v in cpu_data.items()}
                     else:
                         for k, v in cpu_data.items():
-                            max_data['cpu percentages'][k] = max(max_data['cpu percentages'][k], v/total)
-
-                    io_data = psutil.disk_io_counters()._asdict()
-                    if not first_call:
-                        max_data['io stats'] = {k:io_data[k]-first_io[k] for k in io_data.keys()}
-                    else:
-                        first_io = io_data
-
-                    net_data = psutil.net_io_counters()._asdict()
-                    if not first_call:
-                        max_data['net stats'] = {k:net_data[k]-first_net[k] for k in net_data.keys()}
-                    else:
-                        first_net = net_data
+                            max_data['host cpu percentages'][k] = \
+                                max(max_data['host cpu percentages'][k], v/total)
 
                     if len(procs) <= 2 and not first_call:
                         # there's nothing more to watch, write report and exit
                         # (now there's only the controlling python process and
                         # the process watcher itself
+                        report = dict()
+                        io_data = psutil.disk_io_counters()._asdict()
+                        report['host io stats'] = \
+                            {k:io_data[k]-first_io[k] for k in io_data.keys()}
+                        net_data = psutil.net_io_counters()._asdict()
+                        report['host net stats'] = \
+                            {k:net_data[k]-first_net[k] for k in net_data.keys()}
+                        for field in report.values():
+                            for key in field.keys():
+                                if 'bytes' in key:
+                                    field[key.replace('bytes', 'data')] = \
+                                        human_readable_size(field[key])
                         for field in max_data.values():
                             for key in field.keys():
                                 if key in ['rss', 'vms']:
                                     field[key + ' unit'] = human_readable_size(field[key])
-                                elif 'bytes' in key:
-                                    field[key.replace('bytes', 'data')] = human_readable_size(field[key])
+                        report['max'] = max_data
                         with open(watcher_report_path, 'w') as f:
-                            report = dict()
-                            report['max'] = max_data
                             f.write(yaml.dump(report, default_flow_style = False))
-
                         os._exit(0)
 
                     iterations += 1
