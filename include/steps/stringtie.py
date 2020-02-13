@@ -14,7 +14,8 @@ logger = getLogger('uap_logger')
 
 class Stringtie(AbstractStep):
 
-    '''StringTie is a fast and highly efficient assembler of RNA-Seq alignments into potential
+    '''
+    StringTie is a fast and highly efficient assembler of RNA-Seq alignments into potential
     transcripts. It uses a novel network flow algorithm as well as an optional de novo assembly step
     to assemble and quantitate full-length transcripts representing multiple splice variants for
     each gene locus. Its input can include not only the alignments of raw reads used by other

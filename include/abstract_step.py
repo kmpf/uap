@@ -1255,7 +1255,8 @@ class AbstractStep(object):
         if format is not None:
             self._connection_formats[connection] = format
         if description is not None:
-            self._connection_descriptions[connection] = description
+            self._connection_descriptions[connection] = \
+                    re.sub('\s+', ' ', description)
         if constraints is not None:
             self._connection_restrictions[connection] = constraints
 

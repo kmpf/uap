@@ -336,6 +336,13 @@ def main():
         parents=[common_parser])
 
     steps_parser.add_argument(
+        "--details",
+        dest="details",
+        action="store_true",
+        default=False,
+        help="Displays dexription per step.")
+
+    steps_parser.add_argument(
         "--show",
         dest="step",
         type=str,
