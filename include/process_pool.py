@@ -407,7 +407,7 @@ class ProcessPool(object):
 
             if sink_path is not None:
                 self.proc_details[listener_pid]['sink'] = os.path.basename(sink_path)
-                self.proc_details[listener_pid]['sink_full_path'] = sink_path
+                self.proc_details[listener_pid]['sink_full_path'] = os.path.abspath(sink_path)
 
         if keep_stdout_open:
             os.close(pipe[1])
