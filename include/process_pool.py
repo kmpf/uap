@@ -708,6 +708,13 @@ class ProcessPool(object):
         '''
         super_pid = os.getpid()
 
+        def human_readable_size(size, decimal_places=1):
+            for unit in ['B','KB','MB','GB','TB']:
+                if size < 1024.0:
+                    break
+                size /= 1024.0
+            return "%%.%df %%s" % decimal_places % (size, unit)
+
         watcher_pid = os.fork()
         if watcher_pid == 0:
             try:
@@ -823,6 +830,10 @@ class ProcessPool(object):
                         # there's nothing more to watch, write report and exit
                         # (now there's only the controlling python process and
                         # the process watcher itself
+                        for field in max_data.values():
+                            for key in field.keys():
+                                if key in ['rss', 'vms']:
+                                    field[key + ' unit'] = human_readable_size(field[key])
                         with open(watcher_report_path, 'w') as f:
                             report = dict()
                             report['max'] = max_data
