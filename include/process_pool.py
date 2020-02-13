@@ -773,6 +773,7 @@ class ProcessPool(object):
                                 memory_info = proc.memory_info()
                                 data['rss'] = memory_info.rss
                                 data['vms'] = memory_info.vms
+                                data['threads'] = len(proc.threads())
 
                             # add values for all children
                             if pid != super_pid:
