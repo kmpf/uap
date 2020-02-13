@@ -419,7 +419,7 @@ class ProcessPool(object):
         pid = os.fork()
         if pid == 0:
 
-            def write_report_and_exit(signum, frame):
+            def write_report_and_exit(signum=None, frame=None):
                 try:
                     # write report
                     with open(report_path, 'w') as freport:
@@ -465,7 +465,7 @@ class ProcessPool(object):
                     tail = block[-ProcessPool.TAIL_LENGTH:]
                 else:
                     keep_length = ProcessPool.TAIL_LENGTH - len(block)
-                    tail = tail[0:keep_length] + block
+                    tail = tail[-keep_length:] + block
 
                 # update length
                 length += len(block)
@@ -492,7 +492,7 @@ class ProcessPool(object):
             if pipe is not None:
                 os.close(pipe[1])
 
-            write_report_and_exit(None, None)
+            write_report_and_exit()
         else:
             self.running_procs.add(pid)
             self.proc_order.append(pid)
