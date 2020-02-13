@@ -1334,8 +1334,7 @@ class AbstractStep(object):
         """
         if not 'optional' in kwargs:
             kwargs['optional'] = False
-        for _ in ['default', 'label', 'description', 'group', 'tools',
-                  'choices']:
+        for _ in ['default', 'description', 'choices']:
             if not _ in kwargs:
                 kwargs[_] = None
 
@@ -1362,8 +1361,7 @@ class AbstractStep(object):
 
         info = dict()
         info['types'] = option_types
-        for _ in ['optional', 'default', 'label', 'description', 'group',
-                  'tools', 'choices']:
+        for _ in ['optional', 'default', 'description', 'choices']:
             info[_] = kwargs[_]
 
         self._defined_options[key] = info
