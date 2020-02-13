@@ -806,6 +806,8 @@ class Pipeline(object):
                 print("Hint: Run 'uap %s fix-problems --srsly' to fix these "
                       "problems (that is, delete all problematic ping files)."
                       % self.args.config.name)
+        else:
+            print('No ping files of not running jobs were found.')
 
     def check_volatile_files(self, details = False, srsly = False):
         collected_files = set()
