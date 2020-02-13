@@ -808,6 +808,14 @@ class ProcessPool(object):
                     for k, v in sum_data.items():
                         max_data['sum'][k] = max(max_data['sum'][k], v)
 
+                    cpu_data = psutil.cpu_times()._asdict()
+                    total = sum(cpu_data.values())/100
+                    if not 'cpu_percents' in max_data:
+                        max_data['cpu_percents'] = {k:v/total for k, v in cpu_data.items()}
+                    else:
+                        for k, v in cpu_data.items():
+                            max_data['cpu_percents'][k] = max(max_data['cpu_percents'][k], v/total)
+
                     if len(procs) <= 2 and not first_call:
                         # there's nothing more to watch, write report and exit
                         # (now there's only the controlling python process and
