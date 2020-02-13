@@ -767,24 +767,26 @@ class ProcessPool(object):
                             name = pid
                         try:
                             data = dict()
-                            data['cpu_percent'] = proc.cpu_percent(interval = None)
-                            data['memory_percent'] = proc.memory_percent()
-                            memory_info = proc.memory_info()
-                            data['rss'] = memory_info.rss
-                            data['vms'] = memory_info.vms
+                            with proc.oneshot():
+                                data['cpu_percent'] = proc.cpu_percent(interval = None)
+                                data['memory_percent'] = proc.memory_percent()
+                                memory_info = proc.memory_info()
+                                data['rss'] = memory_info.rss
+                                data['vms'] = memory_info.vms
 
                             # add values for all children
                             if pid != super_pid:
                                 for p in proc.children(recursive = True):
                                     try:
-                                        v = p.cpu_percent(interval = None)
-                                        if p.pid in called_cpu_stat_for_childpid:
-                                            data['cpu_percent'] += v
-                                        called_cpu_stat_for_childpid.add(p.pid)
-                                        data['memory_percent'] += p.memory_percent()
-                                        memory_info = p.memory_info()
-                                        data['rss'] += memory_info.rss
-                                        data['vms'] += memory_info.vms
+                                        with p.oneshot():
+                                            v = p.cpu_percent(interval = None)
+                                            if p.pid in called_cpu_stat_for_childpid:
+                                                data['cpu_percent'] += v
+                                            called_cpu_stat_for_childpid.add(p.pid)
+                                            data['memory_percent'] += p.memory_percent()
+                                            memory_info = p.memory_info()
+                                            data['rss'] += memory_info.rss
+                                            data['vms'] += memory_info.vms
                                     except psutil.NoSuchProcess:
                                         pass
 
