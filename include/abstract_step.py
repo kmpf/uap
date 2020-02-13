@@ -1364,6 +1364,13 @@ class AbstractStep(object):
         for _ in ['optional', 'default', 'description', 'choices']:
             info[_] = kwargs[_]
 
+        if info['description'] is not None:
+            if not isinstance(info['description'], str):
+                raise UAPError('The description of option %s in step %s is not a string.' %
+                        (key, self))
+            # collapse whites spaces
+            info['description'] = re.sub('\s+', ' ', info['description'])
+
         self._defined_options[key] = info
 
     def find_upstream_info_for_input_paths_as_set(self, input_paths,
