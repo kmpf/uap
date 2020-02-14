@@ -1361,8 +1361,7 @@ class AbstractStep(object):
                     % (self, key, type(kwargs['default']), option_types))
 
         info = dict()
-        info['types'] = option_types
-        info['types string'] = ', '.join(t.__name__ for t in option_types)
+        info['types'] = type_tuple(option_types)
         for _ in ['optional', 'default', 'description', 'choices']:
             info[_] = kwargs[_]
 
@@ -1627,3 +1626,15 @@ class AbstractSourceStep(AbstractStep):
 
     def __init__(self, pipeline):
         super(AbstractSourceStep, self).__init__(pipeline)
+
+def type_presenter(dumper, data):
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data.__name__)
+yaml.add_representer(type, type_presenter)
+
+class type_tuple(tuple):
+    pass
+
+def type_tuple_presenter(dumper, data):
+    strings = [ty.__name__ for ty in data]
+    return dumper.represent_scalar('tag:yaml.org,2002:str', ', '.join(strings))
+yaml.add_representer(type_tuple, type_tuple_presenter)

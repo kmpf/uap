@@ -33,9 +33,6 @@ def main(args):
                 step = step_class(None)
                 print('General Information:')
                 print(step.__doc__)
-                for option in step._defined_options.values():
-                    option['types'] = option['types string']
-                    del option['types string']
                 report = OrderedDict([
                     ('In Connections', connections_dict(step, 'in')),
                     ('Out Connections', connections_dict(step, 'out')),
@@ -97,8 +94,16 @@ def ordered_dict_presenter(dumper, data):
     return dumper.represent_dict(data.items())
 yaml.add_representer(OrderedDict, ordered_dict_presenter)
 
-class MyDumper(yaml.Dumper):
+class type_tuple(tuple):
+    pass
 
+def type_tuple_presenter(dumper, data):
+    strings = [ty.__name__ for ty in data]
+    return dumper.represent_scalar('tag:yaml.org,2002:str', ', '.join(strings))
+yaml.add_representer(type_tuple, type_tuple_presenter)
+
+class MyDumper(yaml.Dumper):
+    # ensures indentation of lists
     def increase_indent(self, flow=False, indentless=False):
         return super(MyDumper, self).increase_indent(flow, False)
 
