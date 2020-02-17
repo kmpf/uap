@@ -59,7 +59,7 @@ class AbstractStep(object):
                           '_cluster_submit_options', '_cluster_pre_job_command',
                           '_cluster_post_job_command', '_cluster_job_quota']
 
-    states = misc.Enum(['DEFAULT', 'EXECUTING', 'POSTPROCESS'])
+    states = misc.Enum(['DEFAULT', 'EXECUTING'])
 
     def __init__(self, pipeline):
 
@@ -876,7 +876,7 @@ class AbstractStep(object):
             signal.signal(signal.SIGTERM, original_term_handler)
             signal.signal(signal.SIGINT, original_int_handler)
             self._move_ping_files(executing_ping_path, queued_ping_path)
-            self._state = AbstractStep.states.POSTPROCESS # changes relative paths
+            self._state = AbstractStep.states.DEFAULT # changes relative paths
             os.chdir(base_working_dir)
             try:
                 os.kill(executing_ping_pid, signal.SIGTERM)
@@ -888,11 +888,6 @@ class AbstractStep(object):
         # TODO: Clean this up. Re-think exceptions and task state transisitions.
 
         self.end_time = datetime.datetime.now()
-
-        print(self)
-        print(run_id)
-        print(self.get_pipeline().caught_signal)
-        print(caught_exception)
 
         if (not self.get_pipeline().caught_signal) and (caught_exception is None):
             # if we're here, we can assume the step has finished successfully
