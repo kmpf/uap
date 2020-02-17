@@ -667,7 +667,6 @@ class AbstractStep(object):
         elif max_level == 1:
             return self.get_pipeline().states.READY
         else:
-            print('%s: %s' % (run_id, max_level))
             return self.get_pipeline().states.WAITING
 
     def get_run_state(self, run_id):
