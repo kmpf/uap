@@ -716,7 +716,7 @@ class AbstractStep(object):
                     anno_data = yaml.load(fl, Loader=yaml.FullLoader)
             except IOError:
                 logger.warn('The task "%s/%s" seems finished but the annotation '
-                            'file could not be loaded: %s. It will be '
+                            'file could not be read: %s. It will be '
                             'considered as ""CHANGED.' %
                             (self, run_id, anno_file))
                 return p.states.CHANGED
@@ -1128,7 +1128,7 @@ class AbstractStep(object):
     def get_run_info_str(self, finished_run=None):
         count = {}
         for run_id in self.get_run_ids():
-            run_id == self.finished_run:
+            if run_id == finished_run:
                 state = self.get_pipeline().states.FINISHED
             else:
                 state = self.get_run_state(run_id)
