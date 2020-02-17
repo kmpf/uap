@@ -717,7 +717,7 @@ class AbstractStep(object):
             except IOError:
                 logger.warn('The task "%s/%s" seems finished but the annotation '
                             'file could not be read: %s. It will be '
-                            'considered as ""CHANGED.' %
+                            'considered as "CHANGED".' %
                             (self, run_id, anno_file))
                 return p.states.CHANGED
             old_struct = anno_data['run']['structure']
