@@ -59,7 +59,7 @@ class AbstractStep(object):
                           '_cluster_submit_options', '_cluster_pre_job_command',
                           '_cluster_post_job_command', '_cluster_job_quota']
 
-    states = misc.Enum(['DEFAULT', 'DECLARING', 'EXECUTING', 'POSTPROCESS'])
+    states = misc.Enum(['DEFAULT', 'EXECUTING', 'POSTPROCESS'])
 
     def __init__(self, pipeline):
 
@@ -420,10 +420,7 @@ class AbstractStep(object):
                 return dict()
 
             self._runs = dict()
-
-            self._state = AbstractStep.states.DECLARING
             self.declare_runs()
-            self._state = AbstractStep.states.DEFAULT
 
             # define file dependencies
             for run_id in self._runs.keys():
@@ -670,6 +667,7 @@ class AbstractStep(object):
         elif max_level == 1:
             return self.get_pipeline().states.READY
         else:
+            print('%s: %s' % (run_id, max_level))
             return self.get_pipeline().states.WAITING
 
     def get_run_state(self, run_id):
@@ -890,6 +888,11 @@ class AbstractStep(object):
         # TODO: Clean this up. Re-think exceptions and task state transisitions.
 
         self.end_time = datetime.datetime.now()
+
+        print(self)
+        print(run_id)
+        print(self.get_pipeline().caught_signal)
+        print(caught_exception)
 
         if (not self.get_pipeline().caught_signal) and (caught_exception is None):
             # if we're here, we can assume the step has finished successfully

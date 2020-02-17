@@ -210,15 +210,11 @@ class Run(object):
         Returns this steps output directory according to its current
         state:
 
-         - if we are currently calling a step's declare_runs()
-           method, this will return None
          - if we are currently calling a step's execute() method,
            this will return the current directory
          - otherwise, it will return the real output directory
         '''
-        if self.get_step()._state == abst.AbstractStep.states.DECLARING:
-            return None
-        elif self.get_step()._state == abst.AbstractStep.states.EXECUTING:
+        if self.get_step()._state == abst.AbstractStep.states.EXECUTING:
             return '.'
         else:
             return self.get_output_directory()
@@ -251,11 +247,6 @@ class Run(object):
         '''
 
         step = self.get_step()
-        # Store step state
-        previous_state = step._state
-        # Set step state to DECLARING to avoid circular dependencies
-        step._state = abst.AbstractStep.states.DECLARING
-
         cmd_by_eg = dict()
         # get tool version texts
         tools = sorted(step._tools.keys())
@@ -302,8 +293,6 @@ class Run(object):
             cmd_by_eg['parent hash'] = misc.str_to_sha256(
                     json.dumps(parent_struct, sort_keys=True))
 
-        # Set step state back to original state
-        step._state = previous_state
         return cmd_by_eg
 
     def get_parent_runs(self):
