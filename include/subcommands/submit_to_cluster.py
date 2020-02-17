@@ -102,6 +102,8 @@ def main(args):
             if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
                 print("Skipping %s because it is already %s..." % (str(task), state.lower()))
                 continue
+            if state == p.states.CHANGED and args.ignore:
+                print("Skipping %s because it's changes are ignored.\n" % task)
             if state == p.states.CHANGED and not args.force:
                 raise UAPError("Task %s is finished but its config changed. "
                         "Run 'uap %s status --details' to see what changed or "

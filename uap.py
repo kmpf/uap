@@ -261,6 +261,13 @@ def main():
         help="Force to overwrite changed tasks.")
 
     run_locally_parser.add_argument(
+        "--ignore",
+        dest="ignore",
+        action="store_true",
+        default=False,
+        help="Ignore chages of tasks and consider them finished.")
+
+    run_locally_parser.add_argument(
         "run",
         nargs='*',
         default=list(),
@@ -417,6 +424,13 @@ def main():
         action="store_true",
         default=False,
         help="Force to overwrite changed tasks.")
+
+    submit_to_cluster_parser.add_argument(
+        "--ignore",
+        dest="ignore",
+        action="store_true",
+        default=False,
+        help="Ignore chages of tasks and consider them finished.")
 
     submit_to_cluster_parser.add_argument(
         "run",
