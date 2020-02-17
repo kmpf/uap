@@ -114,20 +114,6 @@ class Run(object):
             raise KeyError("Connection %s not declared for step %s" %
                          (connection, self.get_step()))
 
-    @property
-    def annotation_file(self):
-        afl = glob.glob( os.path.join(
-            self.get_output_directory(),
-            ".%s-annotation-*.yaml" % self.get_run_id()))
-        if not afl:
-            print(self.get_output_directory())
-            return ""
-        elif len(afl) != 1:
-            raise StandardError("Found multiple annotation files: %s" %
-                                ", ".join(afl))
-        elif os.path.isfile(afl[0]):
-            return afl[0]
-
     def _get_ping_file(self, key):
         if self._ping_files[key] == None:
             self._ping_files[key] = os.path.join(
