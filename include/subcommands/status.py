@@ -154,6 +154,7 @@ def main(args):
 
         if p.states.CHANGED in tasks_for_status.keys():
             if args.details:
+                print('')
                 for task in tasks_for_status[p.states.CHANGED]:
                     heading = 'changes in task %s' % task
                     print(heading)
@@ -177,6 +178,9 @@ def main(args):
                         p.args.config.name)
             print("If you want to force overwrite of the changed runs, run "
                   "'uap %s run-locally --force' or 'uap %s submit-to-cluster --force'." %
+                  (p.args.config.name, p.args.config.name))
+            print("If you want to ignore the changes and consider the runs finished, run "
+                  "'uap %s run-locally --irgnore' or 'uap %s submit-to-cluster --irgnore'." %
                   (p.args.config.name, p.args.config.name))
     # now check ping files and print some warnings and instructions if
     # something's fishy

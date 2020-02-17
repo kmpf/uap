@@ -866,9 +866,8 @@ class AbstractStep(object):
 
         self.start_time = datetime.datetime.now()
         self.get_pipeline().notify(
-            "[START] [%s] starting %s/%s on %s" %
-            (self.get_pipeline().config['id'], str(self), run_id,
-             socket.gethostname()))
+            "[START] starting %s/%s on %s" %
+            (self, run_id, socket.gethostname()))
         caught_exception = None
         self._state = AbstractStep.states.EXECUTING
         base_working_dir = os.getcwd()
