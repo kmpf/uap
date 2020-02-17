@@ -8,6 +8,7 @@ import pydoc
 import string
 from cStringIO  import StringIO
 import yaml
+from deepdiff import DeepDiff
 
 import pipeline
 from uaperrors import UAPError
@@ -150,6 +151,24 @@ def main(args):
                                  _.lower()) for _ in p.states.order \
                                         if _ in tasks_for_status])))
             pydoc.pager("\n".join(output))
+
+        if p.states.CHANGED in tasks_for_status.keys():
+            if args.details:
+                for task in tasks_for_status[p.states.CHANGED]:
+                    heading = 'changes in task %s' % task
+                    print(heading)
+                    print('-'*len(heading))
+                    run = task.get_run()
+                    anno_file = run.get_annotation_path()
+                    with open(anno_file, 'r') as fl:
+                        anno_data = yaml.load(fl, Loader=yaml.FullLoader)
+                    old_strcut = anno_data['run']['structure']
+                    new_struct = run.get_run_structure()
+                    diff =  DeepDiff(old_strcut, new_struct)
+                    print(yaml.dump(dict(diff)))
+            else:
+                print("Some tasks changed. Run 'uap %s status --details' to see the details." %
+                        p.args.config.name)
     # now check ping files and print some warnings and instructions if
     # something's fishy
     p.check_ping_files(print_more_warnings = True if args.verbose > 0 else False)

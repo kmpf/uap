@@ -286,6 +286,14 @@ def main():
         help="Specify the cluster type. Default: [auto].")
 
     status_parser.add_argument(
+        "--details",
+        dest="details",
+        action="store_true",
+        default=False,
+        help="Displays information about changed tasks.")
+
+
+    status_parser.add_argument(
         "--job-ids",
         dest="job_ids",
         action="store_true",
