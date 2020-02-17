@@ -99,7 +99,7 @@ class HtSeqCount(AbstractStep):
             input_paths = cc[run_id]['in/alignments']
             if ref_per_run is True:
                 features_path = cc['in/features'][0]
-                input_paths.append(features_path)
+            input_paths.append(features_path)
 
             # Is the alignment gzipped?
             root, ext = os.path.splitext(input_paths[0])

@@ -45,33 +45,6 @@ def main(args):
         return
     p = pipeline.Pipeline(arguments=args)
 
-    if args.job_ids:
-        ids = p.get_cluster_job_ids()
-        print(' '.join(ids))
-        return
-    elif args.first_error:
-        report_script = p.get_cluster_command('last_error')
-        cmd = [os.path.join(args.uap_path, report_script)]
-        if report_script == '':
-            raise UAPError('A first error report script is not implemented '
-                    'for the cluster "%s".' % p.get_cluster_type())
-        elif not os.path.exists(cmd[0]):
-            raise UAPError('The configured report script "%s" does not exist.'
-                    % cmd[0])
-        ids = p.get_cluster_job_ids()
-        if len(ids)==0:
-            raise UAPError('No jobs found.')
-        cmd.extend(ids)
-        try:
-            process = subprocess.call(cmd)
-        except OSError as e:
-            if e.errno == os.errno.ENOENT:
-                raise UAPError('The configured first error report script "%s" '
-                        'closed with an error.' % report_script)
-            else:
-                raise e
-        return
-
     task_wish_list = None
     if len(args.run) >= 1:
         task_wish_list = list()
