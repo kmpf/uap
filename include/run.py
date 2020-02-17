@@ -9,6 +9,7 @@ import stat
 import string
 import tempfile
 import platform
+import subprocess
 
 import yaml
 
@@ -253,9 +254,10 @@ class Run(object):
 
         return self._temp_directory
 
-    def get_execution_hashtag(self):
+    def get_run_structure(self):
         '''
-        Creates a hash tag based on the commands to be executed.
+        Creates a dictionary with the structure of commands to
+        be executed and the used tool versions.
 
         This causes runs to be marked for rerunning if the commands to be
         executed change.
@@ -278,36 +280,36 @@ class Run(object):
             if tool != tool_conf[tool]['path']:
                 tool_paths[tool] = tool_conf[tool]['path']
             if tool_conf[tool]['ignore_version'] is not True:
-                cmd_by_eg['tool_versions'][tool] = tool_info['response']
+                real_tool_path = tool_info['used_path']
+                response = tool_info['response'].replace(real_tool_path, tool)
+                cmd_by_eg['tool_versions'][tool] = response
 
         # get commands
-        eg_count = 0
-        for exec_group in self.get_exec_groups():
-            eg_count += 1
-            cmd_by_eg[eg_count] = dict()
-            pipe_count, cmd_count = (0, 0)
-            for poc in exec_group.get_pipes_and_commands():
+        for eg_count, exec_group in enumerate(self.get_exec_groups()):
+            eg_name = 'execution group %d' % eg_count
+            cmd_by_eg[eg_name] = dict()
+            for pipe_count, poc in enumerate(exec_group.get_pipes_and_commands()):
                 # for each pipe or command (poc)
                 # check if it is a pipeline ...
                 if isinstance(poc, pipeline_info.PipelineInfo):
                     pipe_count += 1
-                    cmd_by_eg[eg_count]['Pipe %s' % pipe_count] = list()
+                    cmd_by_eg[eg_name]['pipe %s' % pipe_count] = list()
                     for command in poc.get_commands():
                         cmd_list = command.get_command()
                         # replace tool paths by tool names
                         for tool, path in tool_paths.items():
                             cmd_list = [element.replace(path, tool)
                                     for element in cmd_list]
-                        cmd_by_eg[eg_count]['Pipe %s' % pipe_count].append(
-                                cmd_list)
+                        cmd_by_eg[eg_name]['pipe %s' % pipe_count].append(
+                                subprocess.list2cmdline(cmd_list))
                 # ... or a command
                 elif isinstance(poc, command_info.CommandInfo):
-                    cmd_count += 1
-                    cmd_by_eg[eg_count]['Cmd %s' % cmd_count] = poc.get_command()
+                    cmd_by_eg[eg_name]['command %s' % pipe_count] = \
+                            subprocess.list2cmdline(poc.get_command())
 
         # Set step state back to original state
         step._state = previous_state
-        return misc.str_to_sha256_b62(json.dumps(cmd_by_eg))[0:8]
+        return cmd_by_eg
 
     def get_output_directory(self):
         '''
@@ -900,6 +902,7 @@ class Run(object):
             # ... finally delete it
             os.unlink(self.get_submit_script_file())
         log['run']['known_paths'] = self.get_known_paths()
+        log['run']['structure'] = self.get_run_structure()
         log['config'] = self.get_step().get_pipeline().config
 
         log['tool_versions'] = {}

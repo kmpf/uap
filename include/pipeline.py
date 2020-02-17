@@ -12,6 +12,7 @@ import sys
 import yaml
 import multiprocessing
 import traceback
+from distutils.spawn import find_executable
 
 import abstract_step
 import misc
@@ -110,8 +111,11 @@ def check_tool(args):
         # Execute command to check if tool is available
         command = info['path']
         if isinstance(command, str):
+            used_path = find_executable(info['path'])
             command = [command]
-        elif not isinstance(command, list):
+        elif isinstance(command, list):
+            used_path = find_executable(info['path'][0])
+        else:
             raise TypeError('Unsupported format for path of tool "%s": %s' %
                     (tool_id, info['path']))
         command.append(info['get_version'])
@@ -136,7 +140,8 @@ def check_tool(args):
         tool_check_info.update({
             'command': (' '.join(command)).strip(),
             'exit_code': exit_code,
-            'response': (proc.stdout.read() + proc.stderr.read()).strip()
+            'response': (proc.stdout.read() + proc.stderr.read()).strip(),
+            'used_path': used_path
         })
         expected_exit_code = info['exit_code']
         if exit_code != expected_exit_code:
