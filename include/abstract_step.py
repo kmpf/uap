@@ -29,6 +29,7 @@ import textwrap
 import time
 import traceback
 from shutil import copyfile
+from deepdiff import DeepDiff
 # 2. related third party imports
 import fscache
 import psutil
@@ -685,6 +686,9 @@ class AbstractStep(object):
         If a run is **waiting**, this will:
           - return **queued** if a *queued ping file* is found
 
+        If a run is **finished**, this will:
+          - return **changed** if the command structure changed
+
         Otherwise, it will just return the value obtained from
         *get_run_state_basic()*.
 
@@ -707,6 +711,14 @@ class AbstractStep(object):
         elif run_state == self.get_pipeline().states.WAITING:
             if AbstractStep.fsc.exists( run.get_queued_ping_file() ):
                 return self.get_pipeline().states.QUEUED
+        elif run_state == self.get_pipeline().states.FINISHED:
+            anno_file = run.get_annotation_path()
+            with open(anno_file, 'r') as fl:
+                anno_data = yaml.load(fl, Loader=yaml.FullLoader)
+            old_strcut = anno_data['run']['structure']
+            new_struct = run.get_run_structure()
+            if DeepDiff(old_strcut, new_struct):
+                return self.get_pipeline().states.CHANGED
         return run_state
 
     def _move_ping_files(self, executing_ping_path, queued_ping_path):

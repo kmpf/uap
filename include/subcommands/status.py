@@ -102,6 +102,7 @@ def main(args):
         - ``[q]ueued``
         - ``[e]xecuting``
         - ``[f]inished``
+        - ``[c]hanged``
         '''
         output = list()
         tasks_for_status = {}

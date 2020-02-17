@@ -741,12 +741,18 @@ class Run(object):
             log['signal'] = self.get_step().get_pipeline().caught_signal
 
         annotation_yaml = yaml.dump(log, default_flow_style = False)
-        annotation_path = os.path.join(
-            path, "%s-annotation.yaml" % self.get_run_id()
-        )
+        annotation_path = self.get_annotation_path(path)
 
         # overwrite the annotation if it already exists
         with open(annotation_path, 'w') as f:
             f.write(annotation_yaml)
 
         return annotation_path, annotation_yaml
+
+    def get_annotation_path(self, path=None):
+        if path is None:
+            path = self.get_output_directory()
+        annotation_path = os.path.join(
+            path, "%s-annotation.yaml" % self.get_run_id()
+        )
+        return annotation_path

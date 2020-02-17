@@ -16,4 +16,4 @@ if [[ -n "$missing" ]]; then
 fi
 
 virtualenv python_env
-./python_env/bin/pip install pyyaml numpy biopython psutil cpython scipy
+./python_env/bin/pip install pyyaml numpy biopython psutil cpython scipy deepdiff
