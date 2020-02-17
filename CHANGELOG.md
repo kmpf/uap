@@ -45,6 +45,11 @@
  * allow empty step options to set None values/unset defaults
  * io and net stats in annotation file (#34)
  * if config has wrong options pass -v to display all available options
+ * new "changed" state for tasks based on commands and tool versions
+ * sha256 blockchain to determine "changed" state
+ * status --details to view changes of tasks
+ * --force to overwrite changed tasks
+ * --ignore to ignore changes in tasks and consider them finished
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
@@ -55,6 +60,7 @@
  * complete merge with https://github.com/yigbt/uap
  * chronological naming for log files
  * move ping files on job error or interruption (#147)
+ * no hash in output directories
 
 ## 1.1 (20.01.2020)
 
