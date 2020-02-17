@@ -1023,25 +1023,6 @@ class AbstractStep(object):
 
             self._reset()
 
-    def get_parents(self, run_id):
-        '''
-        Returns all tasks that produce input for this task.
-        '''
-        task_id = '%s/%s' % (self, run_id)
-        input_files = set()
-        if task_id in self.get_pipeline().input_files_for_task_id:
-            input_files = self.get_pipeline().input_files_for_task_id[task_id]
-        parents = set()
-        # Only source steps do have empty strings in the input files list
-        # so we can safely exclude them here
-        for inpath in [x for x in input_files if x != '']:
-            task_id = self.get_pipeline().task_id_for_output_file[inpath]
-            if task_id in self.get_pipeline().task_for_task_id:
-                task = self.get_pipeline().task_for_task_id[task_id]
-                if task.step._options['_volatile'] == True:
-                    parents.add(task)
-        return parents
-
     def reports(self, run_id, out_connection_output_files):
         '''
         Abstract method this must be implemented by actual step.

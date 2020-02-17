@@ -10,6 +10,7 @@ import string
 import tempfile
 import platform
 import subprocess
+from deepdiff import DeepHash
 
 import yaml
 
@@ -306,10 +307,36 @@ class Run(object):
                 elif isinstance(poc, command_info.CommandInfo):
                     cmd_by_eg[eg_name]['command %s' % pipe_count] = \
                             subprocess.list2cmdline(poc.get_command())
+        parents = self.get_parent_runs()
+        if parents:
+            parent_struct = dict()
+            for prun in parents:
+                task_id = '%s/%s' % (prun.get_step().get_step_name(), prun.get_run_id())
+                parent_struct[task_id] = prun.get_run_structure()
+            cmd_by_eg['parent hash'] = misc.str_to_sha256(
+                    json.dumps(parent_struct, sort_keys=True))
 
         # Set step state back to original state
         step._state = previous_state
         return cmd_by_eg
+
+    def get_parent_runs(self):
+        """
+        Returns the parent runs.
+        """
+        p = self.get_step().get_pipeline()
+        task_id = '%s/%s' % (self.get_step(), self.get_run_id())
+        input_files = set()
+        if task_id in p.input_files_for_task_id:
+            input_files = p.input_files_for_task_id[task_id]
+        parents = set()
+        # Only source steps do have empty strings in the input files list
+        # so we can safely exclude them here
+        for inpath in [x for x in input_files if x != '']:
+            task_id = p.task_id_for_output_file[inpath]
+            if task_id in p.task_for_task_id:
+                parents.add(p.task_for_task_id[task_id].get_run())
+        return parents
 
     def get_output_directory(self):
         '''
