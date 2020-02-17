@@ -717,6 +717,7 @@ class ProcessPool(object):
 
         watcher_pid = os.fork()
         if watcher_pid == 0:
+            os.nice(10)
             try:
                 signal.signal(signal.SIGTERM, signal.SIG_DFL)
                 signal.signal(signal.SIGINT, signal.SIG_IGN)
