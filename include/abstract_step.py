@@ -982,25 +982,8 @@ class AbstractStep(object):
             self.get_pipeline().notify(message, attachment)
             if caught_exception is not None:
                 raise caught_exception[1], None, caught_exception[2]
-        else:
-            # create a symbolic link to the annotation for every output file
-            for tag in run._output_files.keys():
-                for out_path in run._output_files[tag].keys():
-                    if out_path != None:
-                        destination_path = os.path.join(
-                            run.get_output_directory(),
-                            '.' + os.path.basename(out_path) +
-                            '.annotation.yaml')
-                        # overwrite the symbolic link if it already exists
-                        if os.path.exists(destination_path):
-                            logger.info("Now deleting: %s" % destination_path)
-                            os.unlink(destination_path)
-                        oldwd = os.getcwd()
-                        os.chdir(os.path.dirname(destination_path))
-                        os.symlink(os.path.basename(annotation_path),
-                                   os.path.basename(destination_path))
-                        os.chdir(oldwd)
 
+        else:
             # finally, remove the temporary directory if it's empty
             try:
                 os.rmdir(temp_directory)

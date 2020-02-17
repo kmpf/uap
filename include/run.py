@@ -928,8 +928,8 @@ class Run(object):
 
         annotation_yaml = yaml.dump(log, default_flow_style = False)
         annotation_path = os.path.join(
-            path, ".%s-annotation-%s.yaml" %
-            (self.get_run_id(), misc.str_to_sha256_b62(annotation_yaml)[:6]))
+            path, "%s-annotation.yaml" % self.get_run_id()
+        )
 
         # overwrite the annotation if it already exists
         with open(annotation_path, 'w') as f:
