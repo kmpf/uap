@@ -315,7 +315,7 @@ class Run(object):
         '''
         return os.path.join(
             self.get_step().get_output_directory(),
-            '%s-%s' % (self.get_run_id(), self.get_execution_hashtag())
+            self.get_run_id()
         )
 
     def get_basic_state(self):
