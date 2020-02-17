@@ -176,10 +176,10 @@ def main(args):
             else:
                 print("Some tasks changed. Run 'uap %s status --details' to see the details." %
                         p.args.config.name)
-            print("If you want to force overwrite of the changed runs, run "
+            print("If you want to force overwrite of the changed runs, run\n"
                   "'uap %s run-locally --force' or 'uap %s submit-to-cluster --force'." %
                   (p.args.config.name, p.args.config.name))
-            print("If you want to ignore the changes and consider the runs finished, run "
+            print("If you want to ignore the changes and consider the runs finished, run\n"
                   "'uap %s run-locally --irgnore' or 'uap %s submit-to-cluster --irgnore'." %
                   (p.args.config.name, p.args.config.name))
     # now check ping files and print some warnings and instructions if
