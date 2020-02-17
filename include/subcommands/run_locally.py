@@ -53,24 +53,27 @@ def main(args):
         if task_state == p.states.FINISHED:
             sys.stderr.write("Skipping %s because it's already finished.\n" %
                              task)
-            continue
-        if task_state == p.states.CHANGED:
+        elif task_state == p.states.CHANGED:
             if args.ignore:
                 sys.stderr.write("Skipping %s because it's changes are "
                                  "ignored.\n" % task)
-                continue
             elif not args.force:
                 raise UAPError("Task %s is finished but its config changed. "
                         "Run 'uap %s status --details' to see what changed or "
                         "'uap %s run-locally --force' to force overwrite "
                         "of the results." %
                         (task, args.config.name, args.config.name))
-        elif task_state != p.states.READY:
+            else:
+                task.run()
+        elif task_state == p.states.READY:
+            task.run()
+        elif task_state == p.states.QUEUED:
+            task.run()
+        else:
             raise UAPError("Unexpected basic task state for %s: %s\n"
                          "Expected state to be 'READY'. Probably an upstream "
                          "run crashed." %
                          (task, task_state))
-        task.run()
 
 if __name__ == '__main__':
     try:
