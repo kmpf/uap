@@ -887,7 +887,6 @@ class Run(object):
             # ... read it and store it ...
             with open(script, 'r') as f:
                 log['step']['submit_script'] = f.read()
-        log['step']['known_paths'] = self.get_known_paths()
         log['step']['cores'] = self.get_step()._cores
         log['run'] = {}
         log['run']['run_info'] = self.as_dict()
