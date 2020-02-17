@@ -113,7 +113,7 @@ def main(args):
             tasks_for_status[state].append(task)
             if not group_by_status:
                 output.append(
-                    "[%s] %s" % (task.get_task_state()[0].lower(), task))
+                    "[%s] %s" % (state[0].lower(), task))
                 #print("[%s] %s" % (task.get_task_state()[0].lower(), task))
         if group_by_status:
             for status in p.states.order:
@@ -140,7 +140,7 @@ def main(args):
                     for task in tasks_for_status[status]:
                         output.append("[%s] %s"
                                      % (
-                                         task.get_task_state()[0].lower(),
+                                         status[0].lower(),
                                          task))
                     output.append('')
             output.append("runs: %d total, %s"
