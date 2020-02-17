@@ -254,6 +254,13 @@ def main():
         parents=[common_parser])
 
     run_locally_parser.add_argument(
+        "--force",
+        dest="force",
+        action="store_true",
+        default=False,
+        help="Force to overwrite changed tasks.")
+
+    run_locally_parser.add_argument(
         "run",
         nargs='*',
         default=list(),
@@ -403,6 +410,13 @@ def main():
         action="store_true",
         default=False,
         help="Use none array cluster submission.")
+
+    submit_to_cluster_parser.add_argument(
+        "--force",
+        dest="force",
+        action="store_true",
+        default=False,
+        help="Force to overwrite changed tasks.")
 
     submit_to_cluster_parser.add_argument(
         "run",

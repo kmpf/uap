@@ -102,6 +102,12 @@ def main(args):
             if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
                 print("Skipping %s because it is already %s..." % (str(task), state.lower()))
                 continue
+            if state == p.states.CHANGED and not args.force:
+                raise UAPError("Task %s is finished but its config changed. "
+                        "Run 'uap %s status --details' to see what changed or "
+                        "'uap %s submit-to-cluster --force' to force overwrite "
+                        "of the results." %
+                        (task, args.config.name, args.config.name))
             if step_name not in steps_left:
                 steps_left.append(step_name)
             tasks_left[step_name].append(task)
@@ -179,6 +185,8 @@ def main(args):
         if p.args.verbose > 1:
             command.append('-' + 'v'*(p.args.verbose-1))
         command.extend([config_file_path, 'run-locally'])
+        if p.args.force:
+            command.append('--force')
 
         task_id = p.get_cluster_command('array_task_id')
         command.append('"${array_jobs[$' + task_id + ']}"')

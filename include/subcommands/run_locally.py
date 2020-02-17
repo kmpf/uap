@@ -49,11 +49,20 @@ def main(args):
             
     # execute all tasks
     for task in task_list:
-        basic_task_state = task.get_task_state_basic()
+        basic_task_state = task.get_task_state()
         if basic_task_state == p.states.FINISHED:
             sys.stderr.write("Skipping %s because it's already finished.\n" %
                              task)
             continue
+        if basic_task_state == p.states.CHANGED:
+            if args.force:
+                task.run()
+            else:
+                raise UAPError("Task %s is finished but its config changed. "
+                        "Run 'uap %s status --details' to see what changed or "
+                        "'uap %s run-locally --force' to force overwrite "
+                        "of the results." %
+                        (task, args.config.name, args.config.name))
         if basic_task_state == p.states.READY:
             task.run()
         else:
