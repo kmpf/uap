@@ -160,12 +160,17 @@ def main(args):
                     print('-'*len(heading))
                     run = task.get_run()
                     anno_file = run.get_annotation_path()
-                    with open(anno_file, 'r') as fl:
-                        anno_data = yaml.load(fl, Loader=yaml.FullLoader)
-                    old_strcut = anno_data['run']['structure']
-                    new_struct = run.get_run_structure()
-                    diff =  DeepDiff(old_strcut, new_struct)
-                    print(yaml.dump(dict(diff)))
+                    try:
+                        with open(anno_file, 'r') as fl:
+                            anno_data = yaml.load(fl, Loader=yaml.FullLoader)
+                    except IOError:
+                        print('The annotation file could not be loaded: %s.' %
+                                anno_file)
+                    else:
+                        old_strcut = anno_data['run']['structure']
+                        new_struct = run.get_run_structure()
+                        diff =  DeepDiff(old_strcut, new_struct)
+                        print(yaml.dump(dict(diff)))
             else:
                 print("Some tasks changed. Run 'uap %s status --details' to see the details." %
                         p.args.config.name)

@@ -711,8 +711,15 @@ class AbstractStep(object):
                 return p.states.QUEUED
         elif run_state == p.states.FINISHED:
             anno_file = run.get_annotation_path()
-            with open(anno_file, 'r') as fl:
-                anno_data = yaml.load(fl, Loader=yaml.FullLoader)
+            try:
+                with open(anno_file, 'r') as fl:
+                    anno_data = yaml.load(fl, Loader=yaml.FullLoader)
+            except IOError:
+                logger.warn('The task "%s/%s" seems finished but the annotation '
+                            'file could not be loaded: %s. It will be '
+                            'considered as ""CHANGED.' %
+                            (self, run_id, anno_file))
+                return p.states.CHANGED
             old_struct = anno_data['run']['structure']
             tool_conf = p.config['tools']
             for tool, version in old_struct['tool_versions'].items():
@@ -1011,7 +1018,7 @@ class AbstractStep(object):
             # changed by now...
             AbstractStep.fsc = fscache.FSCache()
 
-            remaining_task_info = self.get_run_info_str()
+            remaining_task_info = self.get_run_info_str(run_id)
 
             message = "[OK] %s/%s successfully finished on %s after %s\n" % \
                       (str(self), run_id, socket.gethostname(),
@@ -1118,12 +1125,13 @@ class AbstractStep(object):
         return self._post_command
 
 
-    def get_run_info_str(self):
+    def get_run_info_str(self, finished_run=None):
         count = {}
-        for _ in self.get_run_ids():
-#            sys.stderr.write("cur_run_id: %s\n" % _)
-            state = self.get_run_state(_)
-#            sys.stderr.write("state: %s\n" % state)
+        for run_id in self.get_run_ids():
+            run_id == self.finished_run:
+                state = self.get_pipeline().states.FINISHED
+            else:
+                state = self.get_run_state(run_id)
             if not state in count:
                 count[state] = 0
             count[state] += 1
