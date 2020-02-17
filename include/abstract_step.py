@@ -695,27 +695,33 @@ class AbstractStep(object):
         '''
         run = self.get_run(run_id)
         run_state = self.get_run_state_basic(run_id)
-        if run_state == self.get_pipeline().states.READY:
+        p = self.get_pipeline()
+        if run_state == p.states.READY:
             if AbstractStep.fsc.exists( run.get_executing_ping_file() ):
                 # here, we just check whether the executing ping file exists,
                 # it doesn't matter whether it's been stale for a year
                 # (the user will get notified that there are stale ping files
                 # and can fix it with ./fix-problems.py, it's probably better
                 # to fix this explicitly
-                return self.get_pipeline().states.EXECUTING
+                return p.states.EXECUTING
             if AbstractStep.fsc.exists( run.get_queued_ping_file() ):
-                return self.get_pipeline().states.QUEUED
-        elif run_state == self.get_pipeline().states.WAITING:
+                return p.states.QUEUED
+        elif run_state == p.states.WAITING:
             if AbstractStep.fsc.exists( run.get_queued_ping_file() ):
-                return self.get_pipeline().states.QUEUED
-        elif run_state == self.get_pipeline().states.FINISHED:
+                return p.states.QUEUED
+        elif run_state == p.states.FINISHED:
             anno_file = run.get_annotation_path()
             with open(anno_file, 'r') as fl:
                 anno_data = yaml.load(fl, Loader=yaml.FullLoader)
-            old_strcut = anno_data['run']['structure']
+            old_struct = anno_data['run']['structure']
+            tool_conf = p.config['tools']
+            for tool, version in old_struct['tool_versions'].items():
+                if tool in tool_conf.keys() \
+                and tool_conf[tool]['ignore_version']:
+                    del old_struct['tool_versions'][tool]
             new_struct = run.get_run_structure()
-            if DeepDiff(old_strcut, new_struct):
-                return self.get_pipeline().states.CHANGED
+            if DeepDiff(old_struct, new_struct):
+                return p.states.CHANGED
         return run_state
 
     def _move_ping_files(self, executing_ping_path, queued_ping_path):
