@@ -723,11 +723,6 @@ class AbstractStep(object):
                             (self, run_id, anno_file))
                 return p.states.CHANGED
             old_struct = anno_data['run']['structure']
-            tool_conf = p.config['tools']
-            for tool, version in old_struct['tool_versions'].items():
-                if tool in tool_conf.keys() \
-                and tool_conf[tool]['ignore_version']:
-                    del old_struct['tool_versions'][tool]
             new_struct = run.get_run_structure()
             if DeepDiff(old_struct, new_struct):
                 return p.states.CHANGED
