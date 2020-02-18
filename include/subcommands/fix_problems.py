@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
 import sys
+import os
 import logging
 import string
 import yaml
 
 import pipeline
+from uaperrors import UAPError
 '''
 This script checks if anything went wrong with some tasks of the pipeline. It can
 display more information if the '--details' is given and it can solve the problem
