@@ -790,6 +790,7 @@ class Pipeline(object):
                 print("")
 
         if len(bad_problems) > 0:
+            show_hint = True
             label = "Warning: %d tasks were queued and failed." % len(bad_problems)
             print(label)
             if print_details:
@@ -816,13 +817,12 @@ class Pipeline(object):
             if print_more_warnings and not print_details or not fix_problems:
                 print("Hint: Run 'uap %s fix-problems --details' to see the "
                       "details."  % self.args.config.name)
+                print("Hint: Run 'uap %s fix-problems --first-error' to see "
+                      "what failed first.")
             if not fix_problems:
                 print("Hint: Run 'uap %s fix-problems --srsly' to fix these "
                       "problems (that is, delete all problematic ping files)."
                       % self.args.config.name)
-            if print_more_warnings and not fix_problems and bad_problems:
-                print("Hint: Run 'uap %s fix-problems --first-error' to see "
-                      "what failed first.")
         else:
             print('No problematic ping files were found.')
 

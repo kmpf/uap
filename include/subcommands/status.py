@@ -216,7 +216,7 @@ def main(args):
                             print(yaml.dump(failed))
                         else:
                             print('No failed commands found. Was the job cancelled?')
-                            print("Run 'uap %s fix-problems --first-erro' to investigate.'"
+                            print("Run 'uap %s fix-problems --first-error' to investigate.'"
                                     % p.args.config.name)
             else:
                 print("Some tasks are bad. Run 'uap %s status --details' to see the details." %
