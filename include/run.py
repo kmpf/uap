@@ -487,9 +487,13 @@ class Run(object):
         NOTE: Included additional stat checks to detect FIFOs as well as other
         special files.
         '''
-        for _ in self.get_temp_paths()[::-1]:
+        for tmp_file in self.get_temp_paths()[::-1]:
             # Check file type
-            pathmode = os.stat(_).st_mode
+            if not os.path.exists(tmp_file):
+                logger.debug("Set %s 'type' info to 'missing'" % tmp_file)
+                self.get_known_paths()[tmp_file]['type'] = 'missing'
+                continue
+            pathmode = os.stat(tmp_file).st_mode
             isdir = False if stat.S_ISDIR(pathmode) == 0 else True
             ischaracter = False if stat.S_ISCHR(pathmode) == 0 else True
             isblock = False if stat.S_ISBLK(pathmode) == 0 else True
@@ -498,20 +502,20 @@ class Run(object):
             islink = False if stat.S_ISLNK(pathmode) == 0 else True
             issock = False if stat.S_ISSOCK(pathmode) == 0 else True
             # Update 'type' value
-            if _ in self.get_known_paths().keys():
+            if tmp_file in self.get_known_paths().keys():
                 if isfile:
-                    logger.debug("Set %s 'type' info to 'file'" % _)
-                    self.get_known_paths()[_]['type'] = 'file'
+                    logger.debug("Set %s 'type' info to 'file'" % tmp_file)
+                    self.get_known_paths()[tmp_file]['type'] = 'file'
                 elif isdir:
-                    logger.debug("Set %s 'type' info to 'directory'" % _)
-                    self.get_known_paths()[_]['type'] = 'directory'
+                    logger.debug("Set %s 'type' info to 'directory'" % tmp_file)
+                    self.get_known_paths()[tmp_file]['type'] = 'directory'
                 elif isfifo:
-                    logger.debug("Set %s 'type' info to 'fifo'" % _)
-                    self.get_known_paths()[_]['type'] = 'fifo'
-            if os.path.isdir(_) and isdir:
+                    logger.debug("Set %s 'type' info to 'fifo'" % tmp_file)
+                    self.get_known_paths()[tmp_file]['type'] = 'fifo'
+            if os.path.isdir(tmp_file) and isdir:
                 try:
-                    logger.info("Now deleting directory: %s" % _)
-                    os.rmdir(_)
+                    logger.info("Now deleting directory: %s" % tmp_file)
+                    os.rmdir(tmp_file)
                 except OSError as e:
                     logger.error("errno: %s" % e.errno)
                     logger.error("strerror: %s" % e.strerror)
@@ -519,8 +523,8 @@ class Run(object):
                     pass
             else:
                 try:
-                    logger.info("Now deleting: %s" % _)
-                    os.unlink(_)
+                    logger.info("Now deleting: %s" % tmp_file)
+                    os.unlink(tmp_file)
                 except OSError as e:
                     pass
 
