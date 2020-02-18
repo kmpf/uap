@@ -83,6 +83,11 @@ def main(args):
                         "'uap %s submit-to-cluster --force' to force overwrite "
                         "of the results." %
                         (task, args.config.name, args.config.name))
+            if state == p.states.BAD and not args.force:
+                raise UAPError("Task %s is BAD. Resolve this problem with "
+                        "'uap %s fix-problems' or fore an overwrite with "
+                        "'uap %s submit-to-cluster --force'." %
+                        (task, args.config.name, args.config.name))
             if step_name not in steps_left:
                 steps_left.append(step_name)
             tasks_left[step_name].append(task)
@@ -250,8 +255,8 @@ def main(args):
         for task in tasks:
             queued_ping_info['run_id'] = task.run_id
             ping_file = step.get_run(task.run_id).get_queued_ping_file()
-            if os.path.exists(ping_file+'.last'):
-                os.unlink(ping_file+'.last')
+            if os.path.exists(ping_file+'.bad'):
+                os.unlink(ping_file+'.bad')
             with open(ping_file, 'w') as f:
                 f.write(yaml.dump(queued_ping_info, default_flow_style = False))
 
@@ -286,7 +291,7 @@ def main(args):
                         print("Couldn't determine job_id of %s while trying to load %s." %
                             (parent_task, parent_queued_ping_path))
                         raise
-                elif parent_state in [p.states.READY, p.states.WAITING]:
+                elif parent_state in [p.states.READY, p.states.WAITING, p.states.BAD, p.states.CHANGED]:
                     print("Cannot submit %s because a parent job "
                         "%s is %s when it should be queued, running, "
                         "or finished and the task selection as defined by "

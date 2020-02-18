@@ -171,7 +171,7 @@ class Pipeline(object):
     '''
 
     states = misc.Enum(['WAITING', 'READY', 'QUEUED', 'EXECUTING', 'FINISHED',
-                        'CHANGED'])
+                        'BAD', 'CHANGED'])
     '''
     Possible states a task can be in.
     '''
@@ -671,7 +671,7 @@ class Pipeline(object):
         ids = set()
         for task in self.all_tasks_topologically_sorted:
             queued_ping_file = task.get_run().get_queued_ping_file()
-            failed_qpf = queued_ping_file + '.last'
+            failed_qpf = queued_ping_file + '.bad' # alternative location
             if os.path.exists(queued_ping_file):
                 with open(queued_ping_file, 'r') as fl:
                     info = yaml.load(fl, Loader=yaml.FullLoader)
@@ -686,7 +686,7 @@ class Pipeline(object):
                          print_details = False, fix_problems = False):
         run_problems = list()
         queue_problems = list()
-        last_problems = list()
+        bad_problems = list()
         check_queue = True
 
         try:
@@ -723,7 +723,7 @@ class Pipeline(object):
         for task in self.all_tasks_topologically_sorted:
             exec_ping_file = task.get_run().get_executing_ping_file()
             queued_ping_file = task.get_run().get_queued_ping_file()
-            last_queued_ping_file = queued_ping_file + '.last'
+            bad_queued_ping_file = queued_ping_file + '.bad'
             if os.path.exists(exec_ping_file):
                 info = yaml.load(open(exec_ping_file, 'r'), Loader=yaml.FullLoader)
                 start_time = info['start_time']
@@ -741,10 +741,10 @@ class Pipeline(object):
                 if not str(info['job_id']) in running_jids:
                     queue_problems.append((task, queued_ping_file,
                                            info['submit_time'], info['job_id']))
-            if os.path.exists(last_queued_ping_file):
-                info = yaml.load(open(last_queued_ping_file, 'r'), Loader=yaml.FullLoader)
+            if os.path.exists(bad_queued_ping_file):
+                info = yaml.load(open(bad_queued_ping_file, 'r'), Loader=yaml.FullLoader)
                 if not str(info['job_id']) in running_jids:
-                    last_problems.append((task, last_queued_ping_file,
+                    bad_problems.append((task, bad_queued_ping_file,
                                            info['submit_time'], info['job_id']))
 
         show_hint = False
@@ -781,13 +781,13 @@ class Pipeline(object):
                     print("submitted job %s at %13s: %s" % (job_id, start_time, task))
                 print("")
 
-        if len(last_problems) > 0:
-            label = "Info: %d tasks were queued and ran." % len(last_problems)
+        if len(bad_problems) > 0:
+            label = "Warning: %d tasks were queued and failed." % len(bad_problems)
             print(label)
             if print_details:
                 print('-' * len(label))
-                last_problems = sorted(last_problems, key=itemgetter(2), reverse=True)
-                for problem in last_problems:
+                bad_problems = sorted(bad_problems, key=itemgetter(2), reverse=True)
+                for problem in bad_problems:
                     task = problem[0]
                     path = problem[1]
                     start_time = problem[2]
@@ -798,6 +798,7 @@ class Pipeline(object):
         if fix_problems:
             all_problems = run_problems
             all_problems.extend(queue_problems)
+            all_problems.extend(bad_problems)
             for problem in all_problems:
                 path = problem[1]
                 print("Now deleting %s..." % path)
@@ -811,6 +812,9 @@ class Pipeline(object):
                 print("Hint: Run 'uap %s fix-problems --srsly' to fix these "
                       "problems (that is, delete all problematic ping files)."
                       % self.args.config.name)
+            if print_more_warnings and not fix_problems and bad_problems:
+                print("Hint: Run 'uap %s fix-problems --first-error' to see "
+                      "what failed first.")
         else:
             print('No problematic ping files were found.')
 

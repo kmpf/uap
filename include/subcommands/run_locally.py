@@ -65,6 +65,14 @@ def main(args):
                         (task, args.config.name, args.config.name))
             else:
                 task.run()
+        elif task_state == p.states.BAD:
+            if not args.force:
+                raise UAPError("Task %s is BAD. Resolve this problem with "
+                        "'uap %s fix-problems' or fore an overwrite with "
+                        "'uap %s run-locally --force'." %
+                        (task, args.config.name, args.config.name))
+            else:
+                task.run()
         elif task_state == p.states.READY:
             task.run()
         elif task_state == p.states.QUEUED:

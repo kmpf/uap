@@ -267,6 +267,20 @@ def main(args):
         if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
             print("Skipping %s because it is already %s..." % (str(task), state.lower()))
             continue
+        if state == p.states.CHANGED and args.ignore:
+            print("Skipping %s because it's changes are ignored.\n" % task)
+            continue
+        if state == p.states.CHANGED and not args.force:
+            raise UAPError("Task %s is finished but its config changed. "
+                    "Run 'uap %s status --details' to see what changed or "
+                    "'uap %s submit-to-cluster --force' to force overwrite "
+                    "of the results." %
+                    (task, args.config.name, args.config.name))
+        if state == p.states.BAD and not args.force:
+            raise UAPError("Task %s is BAD. Resolve this problem with "
+                    "'uap %s fix-problems' or fore an overwrite with "
+                    "'uap %s submit-to-cluster --force'." %
+                    (task, args.config.name, args.config.name))
         if state == p.states.READY:
             submit_task(task)
         if state == p.states.WAITING:
@@ -285,7 +299,7 @@ def main(args):
                         print("Couldn't determine job_id of %s while trying to load %s." %
                             (parent_task, parent_queued_ping_path))
                         raise
-                elif parent_state in [p.states.READY, p.states.WAITING]:
+                elif parent_state in [p.states.READY, p.states.WAITING, p.states.BAD, p.states.CHANGED]:
                     skip_this = True
                     print("Cannot submit %s because its "
                         "parent %s is %s when it should be queued, running, "
