@@ -366,8 +366,7 @@ class Pipeline(object):
                     self.tasks_in_step[step_name].append(task)
                 # Fail if multiple tasks with the same name exist
                 if str(task) in self.task_for_task_id:
-                    raise UAPError("%s: Duplicate task ID %s." %
-                                 (self.config_name, str(task)))
+                    raise UAPError("Duplicate task ID %s." % task)
                 self.task_for_task_id[str(task)] = task
 
     def get_uap_path(self):
@@ -389,8 +388,7 @@ class Pipeline(object):
 
         for key in self.config.keys():
             if key not in self.known_config_keys:
-                raise UAPError('The key "%s" set in "%s" is unknown.' %
-                        (key, self.args.config.name))
+                raise UAPError('The key "%s" set in config is unknown.' % key)
 
         if not 'id' in self.config:
             self.config['id'] = self.config_name
@@ -437,8 +435,7 @@ class Pipeline(object):
             self.config['tools'][tool].setdefault('ignore_version', False)
 
         if not 'destination_path' in self.config:
-            raise UAPError("%s: Missing key: destination_path"
-                         % self.config_name)
+            raise UAPError("Missing key: destination_path")
         if not os.path.exists(self.config['destination_path']):
             raise UAPError("Destination path does not exist: %s" %
                             self.config['destination_path'])
@@ -479,7 +476,7 @@ class Pipeline(object):
     def build_steps(self):
         self.steps = {}
         if not 'steps' in self.config:
-            raise UAPError("%s: Missing key: steps" % self.config_name)
+            raise UAPError("Missing key: steps")
         re_simple_key = re.compile('^[a-zA-Z0-9_]+$')
         re_complex_key = re.compile('^([a-zA-Z0-9_]+)\s+\(([a-zA-Z0-9_]+)\)$')
 
@@ -503,8 +500,7 @@ class Pipeline(object):
             if step_name == 'temp':
                 # A step cannot be named 'temp' because we need the out/temp
                 # directory to store temporary files.
-                raise UAPError("%s: A step name cannot be 'temp'."
-                             % self.config_name)
+                raise UAPError("A step name cannot be 'temp'.")
             step_class = abstract_step.AbstractStep.get_step_class_for_key(module_name)
             step = step_class(self)
 
@@ -517,10 +513,9 @@ class Pipeline(object):
         for step_name, step in self.steps.items():
             for parent_step in step._options['_depends']:
                 if not parent_step in self.steps.keys():
-                    raise UAPError("%s: Step %s specifies an undefined "
+                    raise UAPError("Step %s specifies an undefined "
                                  "dependency: %s."
-                                 % (self.config_name,
-                                    step_name, parent_step))
+                                 % (step_name, parent_step))
                 step.add_dependency(self.steps[parent_step])
 
         # step three: perform topological sort
@@ -543,8 +538,7 @@ class Pipeline(object):
                 if is_ready:
                     next_steps.append(step_name)
             if len(next_steps) == 0:
-                raise UAPError("%s: There is a cycle in the step dependencies."
-                             % self.config_name)
+                raise UAPError("There is a cycle in the step dependencies.")
             for step_name in misc.natsorted(next_steps):
                 self.topological_step_order.append(step_name)
                 assigned_steps.add(step_name)
