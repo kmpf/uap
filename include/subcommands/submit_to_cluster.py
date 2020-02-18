@@ -157,14 +157,15 @@ def main(args):
         submit_script = submit_script.replace("#{ARRAY_JOBS}",
                 " ".join("'" + task + "'" for task in task_names))
         submit_script = submit_script.replace("#{CORES}", str(step._cores))
+        p.args.config.seek(0)
+        submit_script = submit_script.replace("#{UAP_CONFIG}", p.args.config.read())
 
-        config_file_path = p.args.config.name
         command = [os.path.join(p.get_uap_path(), 'uap')]
         if p.args.debugging:
             command.append('--debugging')
         if p.args.verbose > 1:
             command.append('-' + 'v'*(p.args.verbose-1))
-        command.extend([config_file_path, 'run-locally'])
+        command.extend(['$config', 'run-locally'])
         if p.args.force:
             command.append('--force')
 

@@ -63,6 +63,7 @@
  * chronological naming for log files
  * move ping files on job error or interruption (#147)
  * no hash in output directories
+ * copy annotation file on cluster submit script
 
 ## 1.1 (20.01.2020)
 
