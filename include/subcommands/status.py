@@ -103,6 +103,7 @@ def main(args):
         - ``[w]aiting``
         - ``[q]ueued``
         - ``[e]xecuting``
+        - ``[b]ad``
         - ``[f]inished``
         - ``[c]hanged``
         '''
@@ -178,11 +179,45 @@ def main(args):
             else:
                 print("Some tasks changed. Run 'uap %s status --details' to see the details." %
                         p.args.config.name)
-            print("If you want to force overwrite of the changed runs, run\n"
+            print("If you want to force overwrite of the changed tasks, run\n"
                   "'uap %s run-locally --force' or 'uap %s submit-to-cluster --force'." %
                   (p.args.config.name, p.args.config.name))
-            print("If you want to ignore the changes and consider the runs finished, run\n"
+            print("If you want to ignore the changes and consider the tasks finished, run\n"
                   "'uap %s run-locally --irgnore' or 'uap %s submit-to-cluster --irgnore'." %
+                  (p.args.config.name, p.args.config.name))
+
+        if p.states.BAD in tasks_for_status.keys():
+            if args.details:
+                print('')
+                for task in tasks_for_status[p.states.BAD]:
+                    heading = 'sterr in task %s' % task
+                    print(heading)
+                    print('-'*len(heading))
+                    run = task.get_run()
+                    anno_file = run.get_annotation_path()
+                    try:
+                        with open(anno_file, 'r') as fl:
+                            anno_data = yaml.load(fl, Loader=yaml.FullLoader)
+                    except IOError:
+                        print('The annotation file could not be read: %s.' %
+                                anno_file)
+                    else:
+                        try:
+                            procs = anno_data['pipeline_log']['processes']
+                            failed = dict()
+                            for proc in procs:
+                                if proc['exit_code'] == 0:
+                                    continue
+                                failed[proc['name']] = proc['stderr_copy']['tail']
+                        except KeyError as e:
+                            raise UAPError('The annotation file "%s" seems badly '
+                                    'formated: %s' % (anno_file, e))
+                        print(yaml.dump(failed))
+            else:
+                print("Some tasks are bad. Run 'uap %s status --details' to see the details." %
+                        p.args.config.name)
+            print("If you want to force overwrite of the bad tasks, run\n"
+                  "'uap %s run-locally --force' or 'uap %s submit-to-cluster --force'." %
                   (p.args.config.name, p.args.config.name))
     # now check ping files and print some warnings and instructions if
     # something's fishy

@@ -975,10 +975,7 @@ class AbstractStep(object):
 
         run.add_known_paths(known_paths)
         annotation_path, annotation_str = run.write_annotation_file(
-            run.get_output_directory() \
-            if ((self.get_pipeline().caught_signal is None) and \
-                (caught_exception is None)) \
-            else run.get_temp_output_directory())
+            run.get_output_directory())
 
         self._state = AbstractStep.states.DEFAULT
 

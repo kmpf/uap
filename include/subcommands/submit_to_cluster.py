@@ -8,7 +8,6 @@ import os
 import re
 import subprocess
 import yaml
-from tqdm import tqdm
 
 import abstract_step
 import fscache
@@ -269,7 +268,7 @@ def main(args):
 
     # After defining submit_task() let's walk through steps_left
 
-    for step_name in tqdm(steps_left, desc='steps'):
+    for step_name in steps_left:
         step = p.get_step(step_name)
         if not step_name in quotas.keys():
             quotas[step_name] = quotas['default']

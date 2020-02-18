@@ -47,10 +47,10 @@
  * if config has wrong options pass -v to display all available options
  * new "changed" state for tasks based on commands and tool versions
  * sha256 blockchain to determine "changed" state
- * status --details to view changes of tasks
  * --force to overwrite changed tasks
  * --ignore to ignore changes in tasks and consider them finished
  * new BAD state for tasks when UAP caught the error
+ * status --details to view changes of tasks and errors of bad tasks
  * show status of some tatsks with tqdm
 
 **additional stuff**
