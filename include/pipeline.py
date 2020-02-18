@@ -446,10 +446,8 @@ class Pipeline(object):
             raise UAPError("%s: Missing key: destination_path"
                          % self.config_name)
         if not os.path.exists(self.config['destination_path']):
-            raise UAPError("%s: Destination path does not exist: %s"
-                         % (self.config_name,
+            raise UAPError("Destination path does not exist: %s" %
                             self.config['destination_path'])
-            )
 
         # Make self.config['destination_path'] an absolute path if necessary
         if not os.path.isabs(self.config['destination_path']):

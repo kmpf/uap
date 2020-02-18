@@ -157,8 +157,7 @@ def main(args):
         submit_script = submit_script.replace("#{ARRAY_JOBS}",
                 " ".join("'" + task + "'" for task in task_names))
         submit_script = submit_script.replace("#{CORES}", str(step._cores))
-        p.args.config.seek(0)
-        submit_script = submit_script.replace("#{UAP_CONFIG}", p.args.config.read())
+        submit_script = submit_script.replace("#{UAP_CONFIG}", yaml.dump(p.config))
 
         command = [os.path.join(p.get_uap_path(), 'uap')]
         if p.args.debugging:
