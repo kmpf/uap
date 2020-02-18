@@ -81,7 +81,7 @@ class SamtoolsIndex(AbstractStep):
                                 '%s.csi' % base,
                                 input_paths
                             )
-                        samtools_index.append(bam_link)
+                        samtools_index.append(input_bam)
                         index_exgr.add_command(samtools_index)
                     # Calculate samtools idxstats
                     with run.new_exec_group() as idxstats_exgr:
