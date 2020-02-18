@@ -616,8 +616,7 @@ class Pipeline(object):
             show_status = True
         else:
             show_status = False
-        original_int_handler = signal.getsignal(signal.SIGINT)
-        signal.signal(signal.SIGINT, kill_pool)
+        original_int_handler = signal.signal(signal.SIGINT, kill_pool)
         for tool_id, tool_check_info in \
                 tqdm(pool.imap_unordered(check_tool, self.config['tools'].items()),
                         total=len(self.config['tools']),

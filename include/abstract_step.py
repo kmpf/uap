@@ -828,20 +828,20 @@ class AbstractStep(object):
         executing_ping_info['cwd'] = os.getcwd()
         executing_ping_info['temp_directory'] = run.get_temp_output_directory()
 
-        original_term_handler = signal.getsignal(signal.SIGTERM)
-        original_int_handler = signal.getsignal(signal.SIGINT)
         def ping_on_term(signum, frame):
             logger.warn('Recived SIGTERM and moving execution ping file...')
             self.move_ping_file(executing_ping_path)
             self.move_ping_file(queued_ping_path, bad_copy=True)
             original_term_handler(signum, frame)
+            raise UAPError('Recived TERM signal (canceled job).')
         def ping_on_int(signum, frame):
             logger.warn('Recived SIGINT and moving execution ping file...')
             self.move_ping_file(executing_ping_path)
             self.move_ping_file(queued_ping_path, bad_copy=True)
             original_int_handler(signum, frame)
-        signal.signal(signal.SIGTERM, ping_on_term)
-        signal.signal(signal.SIGINT, ping_on_int)
+            raise UAPError('Recived INT signal (keybord interrupt).')
+        original_term_handler = signal.signal(signal.SIGTERM, ping_on_term)
+        original_int_handler = signal.signal(signal.SIGINT, ping_on_int)
 
         with open(executing_ping_path, 'w') as f:
             f.write(yaml.dump(executing_ping_info, default_flow_style = False))
@@ -961,14 +961,11 @@ class AbstractStep(object):
                                                      "'step_file'" % path)
                                         known_paths[path]['type'] = 'step_file'
                         else:
-                            caught_exception = (
-                                None,
-                                StandardError(
-                                    "The step failed to produce an announced "\
-                                    "output file: %s. "\
-                                    "\nSource file doesn't exists: %s" %
-                                    (out_file, source_path)),
-                                None)
+                            caught_error = UAPError('The step failed to produce an '
+                                                    'announced output file: "%s".\n'
+                                                    'Source file doesn\'t exists: "%s"'
+                                                    % (out_file, source_path))
+                            caught_exception = (StandardError, caught_error, None)
 
         for path, path_info in known_paths.items():
             # Get the file size
@@ -977,12 +974,12 @@ class AbstractStep(object):
 
         run.add_known_paths(known_paths)
         error = None
-        if caught_exception is None \
-        and self.get_pipeline().caught_signal is not None:
+        if self.get_pipeline().caught_signal is not None:
             error = 'Pipeline stopped because it caugh the signal %s' % \
                     self.get_pipeline().caught_signal
         elif caught_exception is not None:
-            error = str(caught_exception)
+            error = ''.join(traceback.format_exception(
+                    *caught_exception)[-2:]).strip()
         annotation_path, annotation_str = run.write_annotation_file(
             run.get_output_directory(), error=error)
 

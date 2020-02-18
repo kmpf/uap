@@ -159,7 +159,7 @@ def main(args):
         submit_script = submit_script.replace("#{CORES}", str(step._cores))
         submit_script = submit_script.replace("#{UAP_CONFIG}", yaml.dump(p.config))
 
-        command = [os.path.join(p.get_uap_path(), 'uap')]
+        command = ['exec', os.path.join(p.get_uap_path(), 'uap')]
         if p.args.debugging:
             command.append('--debugging')
         if p.args.verbose > 1:
