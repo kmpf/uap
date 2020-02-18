@@ -698,6 +698,8 @@ class AbstractStep(object):
         '''
         run = self.get_run(run_id)
         p = self.get_pipeline()
+        if isinstance(run.get_step(), AbstractSourceStep):
+            return self.get_run_state_basic(run_id)
         if AbstractStep.fsc.exists( run.get_executing_ping_file() ):
             # here, we just check whether the executing ping file exists,
             # it doesn't matter whether it's been stale for a year

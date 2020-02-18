@@ -94,7 +94,7 @@ def check_parents_and_run(task, states):
         if parent_state not in states:
             raise UAPError("Cannot run %s because a parent job "
                            "%s is %s when it should be in %s." %
-                           (task, parent_task, states))
+                           (task, parent_task, parent_state, states))
     task.run()
 
 if __name__ == '__main__':
