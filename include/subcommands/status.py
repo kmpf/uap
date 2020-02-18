@@ -9,6 +9,7 @@ import string
 from cStringIO  import StringIO
 import yaml
 from deepdiff import DeepDiff
+from tqdm import tqdm
 
 import pipeline
 from uaperrors import UAPError
@@ -107,7 +108,8 @@ def main(args):
         '''
         output = list()
         tasks_for_status = {}
-        for task in p.all_tasks_topologically_sorted:
+        tasks = p.all_tasks_topologically_sorted
+        for task in tqdm(tasks, desc='tasks'):
             state = task.get_task_state()
             if not state in tasks_for_status:
                 tasks_for_status[state] = list()

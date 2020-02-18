@@ -51,6 +51,7 @@
  * --force to overwrite changed tasks
  * --ignore to ignore changes in tasks and consider them finished
  * new BAD state for tasks when UAP caught the error
+ * show status of some tatsks with tqdm
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings

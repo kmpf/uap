@@ -13,6 +13,7 @@ import yaml
 import multiprocessing
 import traceback
 from distutils.spawn import find_executable
+from tqdm import tqdm
 
 import abstract_step
 import misc
@@ -622,10 +623,17 @@ class Pipeline(object):
         def kill_pool(signum, frame):
             pool.close()
             raise UAPError('Keybord interrupt during tool check.')
+        if not hasattr(self.args, 'run') or not self.args.run:
+            show_status = True
+        else:
+            show_status = False
         original_int_handler = signal.getsignal(signal.SIGINT)
         signal.signal(signal.SIGINT, kill_pool)
         for tool_id, tool_check_info in \
-                pool.imap_unordered(check_tool, self.config['tools'].items()):
+                tqdm(pool.imap_unordered(check_tool, self.config['tools'].items()),
+                        total=len(self.config['tools']),
+                        desc='tool check',
+                        disable=not show_status):
             self.tool_versions[tool_id] = tool_check_info
         pool.close()
         pool.join()
