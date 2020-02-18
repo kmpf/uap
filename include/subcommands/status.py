@@ -218,6 +218,7 @@ def main(args):
                             print('No failed commands found. Was the job cancelled?')
                             print("Run 'uap %s fix-problems --first-error' to investigate.'"
                                     % p.args.config.name)
+                            print('')
             else:
                 print("Some tasks are bad. Run 'uap %s status --details' to see the details." %
                         p.args.config.name)
