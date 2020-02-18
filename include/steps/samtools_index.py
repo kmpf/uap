@@ -28,6 +28,7 @@ class SamtoolsIndex(AbstractStep):
         self.add_connection('out/index_stats')
 
         self.require_tool('ln')
+        self.require_tool('head')
         self.require_tool('samtools')
 
         self.add_option('index_type', str, choices = ['bai', 'csi'],
@@ -56,6 +57,7 @@ class SamtoolsIndex(AbstractStep):
                     input_bam = input_paths[0]
                     base = os.path.basename(input_bam)
                     # At first create the index and a symlink to original BAM
+                    run.new_exec_group().add_command([self.get_tool('head'), '-c1'])
                     with run.new_exec_group() as index_exgr:
                         # 1. command: Create symbolic link to original bam file
                         # (use absolute path)
@@ -81,7 +83,7 @@ class SamtoolsIndex(AbstractStep):
                                 '%s.csi' % base,
                                 input_paths
                             )
-                        samtools_index.append(input_bam)
+                        samtools_index.append(bam_link)
                         index_exgr.add_command(samtools_index)
                     # Calculate samtools idxstats
                     with run.new_exec_group() as idxstats_exgr:
