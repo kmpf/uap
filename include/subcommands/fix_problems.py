@@ -5,6 +5,7 @@ import os
 import logging
 import string
 import yaml
+import subprocess
 
 import pipeline
 from uaperrors import UAPError
