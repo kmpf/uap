@@ -828,6 +828,21 @@ class AbstractStep(object):
         executing_ping_info['cwd'] = os.getcwd()
         executing_ping_info['temp_directory'] = run.get_temp_output_directory()
 
+        original_term_handler = signal.getsignal(signal.SIGTERM)
+        original_int_handler = signal.getsignal(signal.SIGINT)
+        def ping_on_term(signum, frame):
+            logger.warn('Recived SIGTERM and moving execution ping file...')
+            self.move_ping_file(executing_ping_path)
+            self.move_ping_file(queued_ping_path, bad_copy=True)
+            original_term_handler(signum, frame)
+        def ping_on_int(signum, frame):
+            logger.warn('Recived SIGINT and moving execution ping file...')
+            self.move_ping_file(executing_ping_path)
+            self.move_ping_file(queued_ping_path, bad_copy=True)
+            original_int_handler(signum, frame)
+        signal.signal(signal.SIGTERM, ping_on_term)
+        signal.signal(signal.SIGINT, ping_on_int)
+
         with open(executing_ping_path, 'w') as f:
             f.write(yaml.dump(executing_ping_info, default_flow_style = False))
 
@@ -844,22 +859,6 @@ class AbstractStep(object):
                     os.utime(executing_ping_path, None)
             finally:
                 os._exit(0)
-
-        original_term_handler = signal.getsignal(signal.SIGTERM)
-        original_int_handler = signal.getsignal(signal.SIGINT)
-        def ping_on_term(signum, frame):
-            logger.debug('Recived SIGTERM and moving execution ping file...')
-            self.move_ping_file(executing_ping_path)
-            self.move_ping_file(queued_ping_path, bad_copy=True)
-            original_term_handler(signum, frame)
-        def ping_on_int(signum, frame):
-            logger.debug('Recived SIGINT and moving execution ping file...')
-            self.move_ping_file(executing_ping_path)
-            self.move_ping_file(queued_ping_path, bad_copy=True)
-            original_int_handler(signum, frame)
-
-        signal.signal(signal.SIGTERM, ping_on_term)
-        signal.signal(signal.SIGINT, ping_on_int)
 
         self.start_time = datetime.datetime.now()
         self.get_pipeline().notify(
