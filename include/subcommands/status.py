@@ -190,10 +190,11 @@ def main(args):
             if args.details:
                 print('')
                 for task in tasks_for_status[p.states.BAD]:
-                    heading = 'stderr from task %s' % task
+                    heading = 'errors of task %s' % task
                     print(heading)
                     print('-'*len(heading))
                     run = task.get_run()
+                    found_error = False
                     anno_file = run.get_annotation_path()
                     try:
                         with open(anno_file, 'r') as fl:
@@ -213,9 +214,16 @@ def main(args):
                             raise UAPError('The annotation file "%s" seems badly '
                                     'formated: %s' % (anno_file, e))
                         if failed:
+                            found_error = True
+                            print('stderr of failed commands:')
                             print(yaml.dump(failed))
                         else:
-                            print('No failed commands found. Was the job cancelled?')
+                            print('No failed commands found in the annotation file.')
+                        if 'error' in anno_data:
+                            found_error = True
+                            print('uap error:\n%s' % anno_data['error'])
+                        if not found_error:
+                            print('No errors found.')
                             print("Run 'uap %s fix-problems --first-error' to investigate.'"
                                     % p.args.config.name)
                             print('')

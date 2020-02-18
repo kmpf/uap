@@ -691,7 +691,7 @@ class Run(object):
         result['run_id'] = self._run_id
         return result
 
-    def write_annotation_file(self, path):
+    def write_annotation_file(self, path, error=None):
         '''
         Write the YAML annotation after a successful or failed run. The
         annotation can later be used to render the process graph.
@@ -699,6 +699,8 @@ class Run(object):
 
         # now write the annotation
         log = {}
+        if error is not None:
+            log['error'] = error
         log['pid'] = os.getpid()
         log['step'] = {}
         log['step']['options'] = self.get_step().get_options()

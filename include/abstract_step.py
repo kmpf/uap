@@ -976,8 +976,14 @@ class AbstractStep(object):
                 known_paths[path]['size'] = os.path.getsize(path)
 
         run.add_known_paths(known_paths)
+        if caught_exception is None \
+        and self.get_pipeline().caught_signal is not None:
+            error = 'Pipeline stopped because it caugh the signal %s' % \
+                    self.get_pipeline().caught_signal
+        else:
+            error = str(caught_exception)
         annotation_path, annotation_str = run.write_annotation_file(
-            run.get_output_directory())
+            run.get_output_directory(), error=error)
 
         self._state = AbstractStep.states.DEFAULT
 
@@ -992,7 +998,6 @@ class AbstractStep(object):
                 attachment = dict()
                 attachment['name'] = 'details.png'
                 attachment['data'] = open(annotation_path + '.png').read()
-            # todo as: remove the following line?
             self.get_pipeline().notify(message, attachment)
             self.move_ping_file(queued_ping_path, bad_copy=True)
             if caught_exception is not None:
