@@ -334,7 +334,7 @@ class Pipeline(object):
         '''
 
         self.known_config_keys = set(['destination_path', 'constants', 'cluster',
-                'steps', 'lmod', 'tools'])
+                'steps', 'lmod', 'tools', 'base_working_directory'])
         '''
         A set of accepted keys in the config.
         '''
