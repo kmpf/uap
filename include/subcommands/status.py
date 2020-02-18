@@ -192,7 +192,7 @@ def main(args):
                 for task in tasks_for_status[p.states.BAD]:
                     heading = 'errors of task %s' % task
                     print(heading)
-                    print('-'*len(heading))
+                    print('-'*len(heading)+'\n')
                     run = task.get_run()
                     found_error = False
                     anno_file = run.get_annotation_path()
@@ -200,28 +200,28 @@ def main(args):
                         with open(anno_file, 'r') as fl:
                             anno_data = yaml.load(fl, Loader=yaml.FullLoader)
                     except IOError:
-                        print('The annotation file could not be read: %s.' %
+                        print('The annotation file could not be read: %s.\n' %
                                 anno_file)
                     else:
                         failed = dict()
                         try:
                             procs = anno_data['pipeline_log']['processes']
                             for proc in procs:
-                                if proc['exit_code'] == 0:
+                                if proc.get('exit_code', 0) == 0:
                                     continue
                                 failed[proc['name']] = proc['stderr_copy']['tail']
                         except KeyError as e:
-                            raise UAPError('The annotation file "%s" seems badly '
-                                    'formated: %s' % (anno_file, e))
+                            print('The annotation file "%s" seems badly '
+                                    'formated: %s\n' % (anno_file, e))
                         if failed:
                             found_error = True
                             print('stderr of failed commands:')
                             print(yaml.dump(failed))
                         else:
-                            print('No failed commands found in the annotation file.')
+                            print('No failed commands found in the annotation file.\n')
                         if 'error' in anno_data:
                             found_error = True
-                            print('uap error:\n%s' % anno_data['error'])
+                            print('uap error:\n%s\n' % anno_data['error'])
                         if not found_error:
                             print('No errors found.')
                             print("Run 'uap %s fix-problems --first-error' to investigate.'"
