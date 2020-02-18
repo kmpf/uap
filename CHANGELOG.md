@@ -61,8 +61,7 @@
  * hisat2 now takes `library_type` option
  * complete merge with https://github.com/yigbt/uap
  * chronological naming for log files
- * move execution ping files on job error or interruption (#147)
- * move queue ping files only on success (#147)
+ * move ping files on job error or interruption (#147)
  * no hash in output directories
 
 ## 1.1 (20.01.2020)

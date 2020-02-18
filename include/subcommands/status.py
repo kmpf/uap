@@ -202,9 +202,9 @@ def main(args):
                         print('The annotation file could not be read: %s.' %
                                 anno_file)
                     else:
+                        failed = dict()
                         try:
                             procs = anno_data['pipeline_log']['processes']
-                            failed = dict()
                             for proc in procs:
                                 if proc['exit_code'] == 0:
                                     continue
@@ -212,7 +212,12 @@ def main(args):
                         except KeyError as e:
                             raise UAPError('The annotation file "%s" seems badly '
                                     'formated: %s' % (anno_file, e))
-                        print(yaml.dump(failed))
+                        if failed:
+                            print(yaml.dump(failed))
+                        else:
+                            print('No failed commands found. Was the job cancelled?')
+                            print("Run 'uap %s fix-problems --first-erro' to investigate.'"
+                                    % p.args.config.name)
             else:
                 print("Some tasks are bad. Run 'uap %s status --details' to see the details." %
                         p.args.config.name)

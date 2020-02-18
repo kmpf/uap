@@ -51,13 +51,16 @@ def main(args):
     for task in task_list:
         task_state = task.get_task_state()
         if task_state == p.states.FINISHED:
+            task.move_ping_file()
             sys.stderr.write("Skipping %s because it's already finished.\n" %
                              task)
         elif task_state == p.states.CHANGED:
             if args.ignore:
+                task.move_ping_file()
                 sys.stderr.write("Skipping %s because it's changes are "
                                  "ignored.\n" % task)
             elif not args.force:
+                task.move_ping_file()
                 raise UAPError("Task %s is finished but its config changed. "
                         "Run 'uap %s status --details' to see what changed or "
                         "'uap %s run-locally --force' to force overwrite "
@@ -67,6 +70,7 @@ def main(args):
                 task.run()
         elif task_state == p.states.BAD:
             if not args.force:
+                task.move_ping_file()
                 raise UAPError("Task %s is BAD. Resolve this problem with "
                         "'uap %s fix-problems' or fore an overwrite with "
                         "'uap %s run-locally --force'." %
@@ -78,6 +82,7 @@ def main(args):
         elif task_state == p.states.QUEUED:
             task.run()
         else:
+            task.move_ping_file()
             raise UAPError("Unexpected basic task state for %s: %s\n"
                          "Expected state to be 'READY'. Probably an upstream "
                          "run crashed." %

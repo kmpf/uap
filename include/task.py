@@ -80,7 +80,7 @@ class Task(object):
         Return a list of input files required by this task.
         '''
         result = set()
-        run_info = self.step.get_run(self.run_id)
+        run_info = self.get_run()
         for annotation, outfiles in run_info.get_output_files_abspath().items():
             for outpath, infiles in outfiles.items():
                 if infiles != None:
@@ -93,7 +93,7 @@ class Task(object):
         Return a list of output files produced by this task.
         '''
         result = []
-        run_info = self.step.get_run(self.run_id)
+        run_info = self.get_run()
         for annotation, outfiles in run_info.get_output_files_abspath().items():
             for path in outfiles.keys():
                 result.append(path)
@@ -109,6 +109,10 @@ class Task(object):
                        [self.pipeline.task_id_for_output_file[path]])
 
         return list(result)
+
+    def move_ping_file(self):
+        ping_file = self.get_run().get_queued_ping_file()
+        slef.step.move_ping_file(ping_file)
 
     def volatilize_if_possible(self, srsly = False):
         result = set()

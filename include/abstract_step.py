@@ -734,7 +734,7 @@ class AbstractStep(object):
                 return p.states.CHANGED
         return run_state
 
-    def _move_ping_file(self, ping_path, bad_copy=False):
+    def move_ping_file(self, ping_path, bad_copy=False):
         # don't remove the ping file, rename it so we can inspect it later
         suffix = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         if os.path.exists(ping_path):
@@ -848,11 +848,13 @@ class AbstractStep(object):
         original_int_handler = signal.getsignal(signal.SIGINT)
         def ping_on_term(signum, frame):
             logger.debug('Recived SIGTERM and moving execution ping file...')
-            self._move_ping_file(executing_ping_path)
+            self.move_ping_file(executing_ping_path)
+            self.move_ping_file(queued_ping_path, bad_copy=True)
             original_term_handler(signum, frame)
         def ping_on_int(signum, frame):
             logger.debug('Recived SIGINT and moving execution ping file...')
-            self._move_ping_file(executing_ping_path)
+            self.move_ping_file(executing_ping_path)
+            self.move_ping_file(queued_ping_path, bad_copy=True)
             original_int_handler(signum, frame)
 
         signal.signal(signal.SIGTERM, ping_on_term)
@@ -880,7 +882,7 @@ class AbstractStep(object):
         finally:
             signal.signal(signal.SIGTERM, original_term_handler)
             signal.signal(signal.SIGINT, original_int_handler)
-            self._move_ping_file(executing_ping_path)
+            self.move_ping_file(executing_ping_path)
             self._state = AbstractStep.states.DEFAULT # changes relative paths
             os.chdir(base_working_dir)
             try:
@@ -992,7 +994,7 @@ class AbstractStep(object):
                 attachment['data'] = open(annotation_path + '.png').read()
             # todo as: remove the following line?
             self.get_pipeline().notify(message, attachment)
-            self._move_ping_file(queued_ping_path, bad_copy=True)
+            self.move_ping_file(queued_ping_path, bad_copy=True)
             if caught_exception is not None:
                 raise caught_exception[1], None, caught_exception[2]
 
@@ -1021,7 +1023,7 @@ class AbstractStep(object):
                 attachment['name'] = 'details.png'
                 attachment['data'] = open(annotation_path + '.png').read()
             self.get_pipeline().notify(message, attachment)
-            self._move_ping_file(queued_ping_path)
+            self.move_ping_file(queued_ping_path)
 
             self._reset()
 
