@@ -46,7 +46,6 @@ class AdapterRemoval(AbstractStep):
         self.add_connection('out/log_stdout')
 
         self.require_tool('adapterremoval')
-        self.require_tool('pwd')
         self.require_tool('mv')
 
         self.add_option('cores', int, optional=True, default=1,
