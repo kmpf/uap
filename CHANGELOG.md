@@ -52,7 +52,8 @@
  * new BAD state for tasks when UAP caught the error
  * status --details to view changes of tasks and errors of bad tasks
  * show status of some uap processes with tqdm
- * config can be changed withpu effecting submitted tasks
+ * config can be changed without effecting submitted tasks
+ * task error logged in annotation and reported in status --details
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
