@@ -976,19 +976,19 @@ class AbstractStep(object):
                 known_paths[path]['size'] = os.path.getsize(path)
 
         run.add_known_paths(known_paths)
+        error = None
         if caught_exception is None \
         and self.get_pipeline().caught_signal is not None:
             error = 'Pipeline stopped because it caugh the signal %s' % \
                     self.get_pipeline().caught_signal
-        else:
+        elif caught_exception is not None:
             error = str(caught_exception)
         annotation_path, annotation_str = run.write_annotation_file(
             run.get_output_directory(), error=error)
 
         self._state = AbstractStep.states.DEFAULT
 
-        if self.get_pipeline().caught_signal is not None or \
-           caught_exception is not None:
+        if error:
             message = "[BAD] %s/%s failed on %s after %s\n" % \
                       (str(self), run_id, socket.gethostname(),
                        misc.duration_to_str(self.end_time - self.start_time))
