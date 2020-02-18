@@ -673,18 +673,21 @@ class AbstractStep(object):
         Returns run state of a run.
 
         Determine the run state (that is, not *basic* but *extended* run state)
-        of a run, building on the value returned by *get_run_state_basic()*.
+        of a run.
 
-        If a run is **ready**, this will:
-          - return **executing** if an up-to-date *executing ping file* is found
-          - otherwise return **queued** if a *queued ping file* is found
-          - otherwise return **bad** if a *bad queued ping file* is found
+        Return **executing** if an up-to-date *executing ping file* is found.
+        Return **queued** if a *queued ping file* is found.
+        Return **bad** if a bad *queued ping file* is found.
 
-        If a run is **waiting**, this will:
-          - return **queued** if a *queued ping file* is found
+        Otherwise if a run is **ready**, this will:
+          - otherwiese return **ready**
 
-        If a run is **finished**, this will:
+        Otherwise if a run is **waiting**, this will:
+          - otherwise return **waiting**
+
+        Otherwise if a run is **finished**, this will:
           - return **changed** if the command structure changed
+          - otherwise return **finished**
 
         Otherwise, it will just return the value obtained from
         *get_run_state_basic()*.
@@ -694,24 +697,26 @@ class AbstractStep(object):
         lying around.
         '''
         run = self.get_run(run_id)
-        run_state = self.get_run_state_basic(run_id)
         p = self.get_pipeline()
-        if run_state == p.states.READY:
-            if AbstractStep.fsc.exists( run.get_executing_ping_file() ):
-                # here, we just check whether the executing ping file exists,
-                # it doesn't matter whether it's been stale for a year
-                # (the user will get notified that there are stale ping files
-                # and can fix it with ./fix-problems.py, it's probably better
-                # to fix this explicitly
-                return p.states.EXECUTING
+        if AbstractStep.fsc.exists( run.get_executing_ping_file() ):
+            # here, we just check whether the executing ping file exists,
+            # it doesn't matter whether it's been stale for a year
+            # (the user will get notified that there are stale ping files
+            # and can fix it with ./fix-problems.py, it's probably better
+            # to fix this explicitly
+            return p.states.EXECUTING
+        if AbstractStep.fsc.exists( run.get_queued_ping_file() ):
+            return p.states.QUEUED
+        elif AbstractStep.fsc.exists( run.get_queued_ping_file() + '.bad' ):
+            return p.states.BAD
+
+        run_state = self.get_run_state_basic(run_id)
+
+        if run_state == p.states.FINISHED:
             if AbstractStep.fsc.exists( run.get_queued_ping_file() ):
                 return p.states.QUEUED
             elif AbstractStep.fsc.exists( run.get_queued_ping_file() + '.bad' ):
                 return p.states.BAD
-        elif run_state == p.states.WAITING:
-            if AbstractStep.fsc.exists( run.get_queued_ping_file() ):
-                return p.states.QUEUED
-        elif run_state == p.states.FINISHED:
             anno_file = run.get_annotation_path()
             try:
                 with open(anno_file, 'r') as fl:
