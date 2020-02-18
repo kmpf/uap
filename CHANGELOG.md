@@ -52,6 +52,7 @@
  * new BAD state for tasks when UAP caught the error
  * status --details to view changes of tasks and errors of bad tasks
  * show status of some uap processes with tqdm
+ * config can be changed withpu effecting submitted tasks
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
@@ -63,7 +64,6 @@
  * chronological naming for log files
  * move ping files on job error or interruption (#147)
  * no hash in output directories
- * copy annotation file on cluster submit script
 
 ## 1.1 (20.01.2020)
 
