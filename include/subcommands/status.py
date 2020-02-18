@@ -190,7 +190,7 @@ def main(args):
             if args.details:
                 print('')
                 for task in tasks_for_status[p.states.BAD]:
-                    heading = 'sterr in task %s' % task
+                    heading = 'stderr from task %s' % task
                     print(heading)
                     print('-'*len(heading))
                     run = task.get_run()
