@@ -254,16 +254,15 @@ class Pipeline(object):
         User working directory.
         '''
 
-        self.config_path, self.config_name = os.path.split(self.args.config.name)
+        self._config_path, self.config_name = os.path.split(self.args.config.name)
         '''
         Name of the YAML configuration file
         '''
 
-        self._config_path = os.path.abspath(self.config_path)
+        self._config_path = os.path.abspath(self._config_path)
         '''
         Path of the YAML configuration file
         '''
-        os.chdir(self._config_path)
 
         self.config = dict()
         '''
@@ -341,6 +340,7 @@ class Pipeline(object):
         '''
 
         self.read_config(self.args.config)
+        os.chdir(self.config['base_working_directory'])
         self.setup_lmod()
 
         self.tool_versions = {}
@@ -372,12 +372,6 @@ class Pipeline(object):
 
     def get_uap_path(self):
         return self._uap_path
-
-    def get_config_path(self):
-        '''
-        Working directory of the pipeline that coinsides with the config path.
-        '''
-        return self._config_path
 
     def get_cluster_config(self):
         return self._cluster_config
@@ -450,9 +444,12 @@ class Pipeline(object):
                             self.config['destination_path'])
 
         # Make self.config['destination_path'] an absolute path if necessary
+        self.config.setdefault('base_working_directory', self._config_path)
         if not os.path.isabs(self.config['destination_path']):
             self.config['destination_path'] = os.path.normpath(os.path.join(
-                self.get_config_path(), self.config['destination_path']))
+                self.config['base_working_directory'],
+                self.config['destination_path']
+            ))
 
         symlink = "%s-out" % self.config['id']
         if not os.path.exists(symlink):
