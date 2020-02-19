@@ -686,14 +686,13 @@ class ProcessPool(object):
                     name = 'unkown name'
                     if pid in self.proc_details.keys():
                         name = self.proc_details[pid]['name']
-                    log = "Pipeline crashed (PID: %s, %s) while writing in %s" % \
-                        (pid, name,
-                                self.get_run().get_temp_output_directory())
                     stderr_listener = self.copy_processes_for_pid[pid][1]
                     report = self.proc_details[stderr_listener]['tail']
                     if report and report != '':
                         logger.error('stderr tail of %s (%s):\n%s' %
                                 (pid, name, report))
+                log = "Pipeline crashed while working in %s" % \
+                       self.get_run().get_temp_output_directory()
             self.log(log)
             raise UAPError(log)
 
