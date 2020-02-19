@@ -83,11 +83,6 @@ def main(args):
                         "'uap %s submit-to-cluster --force' to force overwrite "
                         "of the results." %
                         (task, args.config.name, args.config.name))
-            if state == p.states.BAD and not args.force:
-                raise UAPError("Task %s is BAD. Resolve this problem with "
-                        "'uap %s fix-problems' or fore an overwrite with "
-                        "'uap %s submit-to-cluster --force'." %
-                        (task, args.config.name, args.config.name))
             if step_name not in steps_left:
                 steps_left.append(step_name)
             tasks_left[step_name].append(task)
@@ -296,10 +291,8 @@ def main(args):
                             (parent_task, parent_queued_ping_path))
                         raise
                 elif parent_state in [p.states.READY, p.states.WAITING, p.states.BAD, p.states.CHANGED]:
-                    print("Cannot submit %s because a parent job "
-                        "%s is %s when it should be queued, running, "
-                        "or finished and the task selection as defined by "
-                        "your command-line arguments do not request it to "
-                        "submitted." % (step_name, parent_task, parent_state.lower()))
+                    print("Cannot submit %s because its "
+                        "parent %s is %s when it should be queued, running, "
+                        "or finished." % (task, parent_task, parent_state.lower()))
                     continue
         submit_step(step_name, parent_job_ids)

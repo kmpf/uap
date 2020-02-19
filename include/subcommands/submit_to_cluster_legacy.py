@@ -276,11 +276,6 @@ def main(args):
                     "'uap %s submit-to-cluster --force' to force overwrite "
                     "of the results." %
                     (task, args.config.name, args.config.name))
-        if state == p.states.BAD and not args.force:
-            raise UAPError("Task %s is BAD. Resolve this problem with "
-                    "'uap %s fix-problems' or fore an overwrite with "
-                    "'uap %s submit-to-cluster --force'." %
-                    (task, args.config.name, args.config.name))
         if state == p.states.READY:
             submit_task(task)
         if state == p.states.WAITING:
@@ -303,8 +298,6 @@ def main(args):
                     skip_this = True
                     print("Cannot submit %s because its "
                         "parent %s is %s when it should be queued, running, "
-                        "or finished and the task selection as defined by "
-                        "your command-line arguments do not request it to "
-                        "submitted." % (task, parent_task, parent_state.lower()))
+                        "or finished." % (task, parent_task, parent_state.lower()))
             if not skip_this:
                 submit_task(task, parent_job_ids)

@@ -45,6 +45,7 @@ def main(args):
         finished_states = [p.states.FINISHED, p.states.CHANGED]
     else:
         finished_states = [p.states.FINISHED]
+    accepted_states = [p.states.BAD, p.states.READY, p.states.QUEUED]
     for task in task_list:
         task_state = task.get_task_state()
         if task_state in finished_states:
@@ -61,18 +62,7 @@ def main(args):
                         (task, args.config.name, args.config.name))
             else:
                 check_parents_and_run(task, finished_states)
-        elif task_state == p.states.BAD:
-            if not args.force:
-                task.move_ping_file()
-                raise UAPError("Task %s is BAD. Resolve this problem with "
-                        "'uap %s fix-problems' or fore an overwrite with "
-                        "'uap %s run-locally --force'." %
-                        (task, args.config.name, args.config.name))
-            else:
-                check_parents_and_run(task, finished_states)
-        elif task_state == p.states.READY:
-            check_parents_and_run(task, finished_states)
-        elif task_state == p.states.QUEUED:
+        elif task_state in accepted_states:
             check_parents_and_run(task, finished_states)
         else:
             task.move_ping_file()
