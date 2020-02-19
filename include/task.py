@@ -112,7 +112,7 @@ class Task(object):
 
     def move_ping_file(self):
         ping_file = self.get_run().get_queued_ping_file()
-        slef.step.move_ping_file(ping_file)
+        self.step.move_ping_file(ping_file)
 
     def volatilize_if_possible(self, srsly = False):
         result = set()
