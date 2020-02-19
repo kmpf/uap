@@ -63,6 +63,7 @@ def main(args):
                 check_parents_and_run(task, finished_states)
         elif task_state == p.states.BAD:
             if not args.force:
+                task.move_ping_file()
                 raise UAPError("Task %s is BAD. Resolve this problem with "
                         "'uap %s fix-problems' or fore an overwrite with "
                         "'uap %s run-locally --force'." %
@@ -85,9 +86,11 @@ def check_parents_and_run(task, states):
     for parent_task in parents:
         parent_state = parent_task.get_task_state()
         if parent_state not in states:
+            task.move_ping_file()
+            should = ' or '.join(states)
             raise UAPError("Cannot run %s because a parent job "
                            "%s is %s when it should be in %s." %
-                           (task, parent_task, parent_state, states))
+                           (task, parent_task, parent_state, should))
     task.run()
 
 if __name__ == '__main__':
