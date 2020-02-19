@@ -453,8 +453,8 @@ class Run(object):
                 count += 1
 
 
-        logger.info("Temporary file (#%s): %s" %
-              (len(self._temp_paths) + 1, temp_name) )
+        logger.debug("Temporary file (#%s) in run %s: %s" %
+              (len(self._temp_paths) + 1, self.get_run_id(), temp_name) )
 
         # _known_paths dict is logged
         known_paths = dict()
