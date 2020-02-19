@@ -680,6 +680,7 @@ class AbstractStep(object):
         Return **bad** if a bad *queued ping file* is found.
 
         Otherwise if a run is **ready**, this will:
+          - return **bad** if there is an error in the annotation file
           - otherwiese return **ready**
 
         Otherwise if a run is **waiting**, this will:
@@ -714,11 +715,17 @@ class AbstractStep(object):
 
         run_state = self.get_run_state_basic(run_id)
 
-        if run_state == p.states.FINISHED:
-            if AbstractStep.fsc.exists( run.get_queued_ping_file() ):
-                return p.states.QUEUED
-            elif AbstractStep.fsc.exists( run.get_queued_ping_file() + '.bad' ):
-                return p.states.BAD
+        if run_state == p.states.READY:
+            anno_file = run.get_annotation_path()
+            try:
+                with open(anno_file, 'r') as fl:
+                    anno_data = yaml.load(fl, Loader=yaml.FullLoader)
+            except IOError:
+                pass
+            else:
+                if anno_data.get('error') is not None:
+                    return p.states.BAD
+        elif run_state == p.states.FINISHED:
             anno_file = run.get_annotation_path()
             try:
                 with open(anno_file, 'r') as fl:
