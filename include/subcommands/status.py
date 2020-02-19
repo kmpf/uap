@@ -10,6 +10,7 @@ from cStringIO  import StringIO
 import yaml
 from deepdiff import DeepDiff
 from tqdm import tqdm
+from subprocess import list2cmdline
 
 import pipeline
 from uaperrors import UAPError
@@ -214,13 +215,17 @@ def main(args):
                             for proc in procs:
                                 if proc.get('exit_code', 0) == 0:
                                     continue
-                                failed[proc['name']] = proc['stderr_copy']['tail']
+                                failed[proc['name']] = {
+                                    'command':list2cmdline(proc['args']),
+                                    'exit code':proc['exit_code'],
+                                    'stderr':proc['stderr_copy']['tail']
+                                }
                         except KeyError as e:
                             print('The annotation file "%s" seems badly '
                                     'formated: %s\n' % (anno_file, e))
                         if failed:
                             found_error = True
-                            print('stderr of failed commands:')
+                            print('failed commands:')
                             print(yaml.dump(failed))
                         else:
                             print('No failed commands found in the annotation file.\n')
