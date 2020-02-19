@@ -702,15 +702,12 @@ class AbstractStep(object):
         if isinstance(run.get_step(), AbstractSourceStep):
             return self.get_run_state_basic(run_id)
         if AbstractStep.fsc.exists( run.get_executing_ping_file() ):
-            # here, we just check whether the executing ping file exists,
-            # it doesn't matter whether it's been stale for a year
-            # (the user will get notified that there are stale ping files
-            # and can fix it with ./fix-problems.py, it's probably better
-            # to fix this explicitly
+            if run.is_stale():
+                return p.states.BAD
             return p.states.EXECUTING
         if AbstractStep.fsc.exists( run.get_queued_ping_file() ):
             return p.states.QUEUED
-        elif AbstractStep.fsc.exists( run.get_queued_ping_file() + '.bad' ):
+        if AbstractStep.fsc.exists( run.get_queued_ping_file() + '.bad' ):
             return p.states.BAD
 
         run_state = self.get_run_state_basic(run_id)

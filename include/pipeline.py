@@ -717,20 +717,17 @@ class Pipeline(object):
 
         now = datetime.datetime.now()
         for task in self.all_tasks_topologically_sorted:
-            exec_ping_file = task.get_run().get_executing_ping_file()
             queued_ping_file = task.get_run().get_queued_ping_file()
             bad_queued_ping_file = queued_ping_file + '.bad'
-            if os.path.exists(exec_ping_file):
+            exec_ping_file = task.get_run().get_executing_ping_file()
+            stale = task.get_run().is_stale()
+            if stale:
                 info = yaml.load(open(exec_ping_file, 'r'), Loader=yaml.FullLoader)
                 start_time = info['start_time']
                 last_activity = datetime.datetime.fromtimestamp(
                     abstract_step.AbstractStep.fsc.getmtime(exec_ping_file))
-                last_activity_difference = now - last_activity
-                if last_activity_difference.total_seconds() > \
-                   abstract_step.AbstractStep.PING_TIMEOUT:
-                    run_problems.append((task, exec_ping_file,
-                                         last_activity_difference,
-                                         last_activity - start_time))
+                run_problems.append((task, exec_ping_file, stale,
+                                     last_activity - start_time))
 
             if os.path.exists(queued_ping_file) and check_queue:
                 info = yaml.load(open(queued_ping_file, 'r'), Loader=yaml.FullLoader)

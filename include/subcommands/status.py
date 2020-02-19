@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 import pipeline
 from uaperrors import UAPError
+import misc
 
 '''
 By default, this script displays information about all tasks of the pipeline
@@ -196,6 +197,10 @@ def main(args):
                     run = task.get_run()
                     found_error = False
                     anno_file = run.get_annotation_path()
+                    stale = run.is_stale()
+                    if stale:
+                        print('Marked as executing but did not show activity '
+                              'for %s.\n' % misc.duration_to_str(stale))
                     try:
                         with open(anno_file, 'r') as fl:
                             anno_data = yaml.load(fl, Loader=yaml.FullLoader)

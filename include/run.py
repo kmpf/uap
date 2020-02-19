@@ -764,3 +764,19 @@ class Run(object):
             path, "%s-annotation.yaml" % self.get_run_id()
         )
         return annotation_path
+
+    def is_stale(self, exec_ping_file=None):
+        """
+        Returns time of inactivity if the ping file exists and is stale.
+        """
+        if exec_ping_file is None:
+            exec_ping_file = self.get_executing_ping_file()
+        if abst.AbstractStep.fsc.exists(exec_ping_file):
+            last_activity = datetime.datetime.fromtimestamp(
+                    abst.AbstractStep.fsc.getmtime(exec_ping_file))
+            now = datetime.datetime.now()
+            last_activity_difference = now - last_activity
+            if last_activity_difference.total_seconds() > \
+                    abst.AbstractStep.PING_TIMEOUT:
+                        return last_activity_difference
+        return False
