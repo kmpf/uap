@@ -611,9 +611,10 @@ class Pipeline(object):
         def kill_pool(signum, frame):
             pool.close()
             raise UAPError('Keybord interrupt during tool check.')
-        if not hasattr(self.args, 'run') or not self.args.run:
-            show_status = True
-        else:
+        show_status = True
+        if hasattr(self.args, 'run') and self.args.run:
+            show_status = False
+        elif logger.getEffectiveLevel() <= 20:
             show_status = False
         original_int_handler = signal.signal(signal.SIGINT, kill_pool)
         for tool_id, tool_check_info in \
