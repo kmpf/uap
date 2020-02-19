@@ -28,7 +28,7 @@ qstat:
     hold_jid: '-hold_jid'
     hold_jid_separator: ';'
     array_job: '-t 0-%s'
-    array_job_wquota: '-t 0-%s -tc %s'
+    array_job_wquota: ['-t 0-%s', '-tc %s']
     array_out_index: ''
     array_task_id: 'SGE_TASK_ID'
     set_job_name: '-N'
