@@ -707,6 +707,7 @@ class Pipeline(object):
         if check_queue:
             for line in stat_output.split("\n"):
                 if 'COMPLETING' in line:
+                    # this is sluem specific and if a closing job is stuck
                     continue
                 try:
                     jid = int(line.strip().split(' ')[0].split('_')[0])
@@ -722,23 +723,39 @@ class Pipeline(object):
             exec_ping_file = task.get_run().get_executing_ping_file()
             stale = task.get_run().is_stale()
             if stale:
-                info = yaml.load(open(exec_ping_file, 'r'), Loader=yaml.FullLoader)
-                start_time = info['start_time']
-                last_activity = datetime.datetime.fromtimestamp(
-                    abstract_step.AbstractStep.fsc.getmtime(exec_ping_file))
-                run_problems.append((task, exec_ping_file, stale,
-                                     last_activity - start_time))
-
-            if os.path.exists(queued_ping_file) and check_queue:
-                info = yaml.load(open(queued_ping_file, 'r'), Loader=yaml.FullLoader)
-                if not str(info['job_id']) in running_jids:
-                    queue_problems.append((task, queued_ping_file,
-                                           info['submit_time'], info['job_id']))
-            if os.path.exists(bad_queued_ping_file):
-                info = yaml.load(open(bad_queued_ping_file, 'r'), Loader=yaml.FullLoader)
-                if not str(info['job_id']) in running_jids:
-                    bad_problems.append((task, bad_queued_ping_file,
-                                           info['submit_time'], info['job_id']))
+                try:
+                    info = yaml.load(open(exec_ping_file, 'r'),
+                            Loader=yaml.FullLoader)
+                except IOError as e:
+                    if os.path.exists(exec_ping_file):
+                        raise e
+                else:
+                    start_time = info['start_time']
+                    last_activity = datetime.datetime.fromtimestamp(
+                        abstract_step.AbstractStep.fsc.getmtime(exec_ping_file))
+                    run_problems.append((task, exec_ping_file, stale,
+                                         last_activity - start_time))
+            if check_queue:
+                try:
+                    info = yaml.load(open(queued_ping_file, 'r'),
+                            Loader=yaml.FullLoader)
+                except IOError as e:
+                    if os.path.exists(queued_ping_file):
+                        raise e
+                else:
+                    if not str(info['job_id']) in running_jids:
+                        queue_problems.append((task, queued_ping_file,
+                                               info['submit_time'],
+                                               info['job_id']))
+            try:
+                info = yaml.load(open(bad_queued_ping_file, 'r'),
+                        Loader=yaml.FullLoader)
+            except IOError as e:
+                if os.path.exists(bad_queued_ping_file):
+                    raise e
+            else:
+                bad_problems.append((task, bad_queued_ping_file,
+                                       info['submit_time'], info['job_id']))
 
         show_hint = False
 

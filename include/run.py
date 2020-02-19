@@ -775,8 +775,8 @@ class Run(object):
             last_activity = datetime.fromtimestamp(
                     abst.AbstractStep.fsc.getmtime(exec_ping_file))
             now = datetime.now()
-            last_activity_difference = now - last_activity
-            if last_activity_difference.total_seconds() > \
+            inactivity = now - last_activity
+            if inactivity.total_seconds() > \
                     abst.AbstractStep.PING_TIMEOUT:
-                        return last_activity_difference
+                        return inactivity
         return False
