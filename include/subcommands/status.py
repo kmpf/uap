@@ -221,12 +221,14 @@ def main(args):
                             print('No failed commands found in the annotation file.\n')
                         if 'error' in anno_data:
                             found_error = True
-                            print('uap error:\n%s\n' % anno_data['error'])
+                            print('error:\n%s\n' % anno_data['error'])
                         if not found_error:
                             print('No errors found.')
                             print("Run 'uap %s fix-problems --first-error' to investigate.'"
                                     % p.args.config.name)
                             print('')
+                        host = anno_data.get('system', dict()).get('hostname', 'unknown')
+                        print('host: %s\n' % host)
             else:
                 print("Some tasks are bad. Run 'uap %s status --details' to see the details." %
                         p.args.config.name)
