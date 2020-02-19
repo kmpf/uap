@@ -802,8 +802,8 @@ class Pipeline(object):
             if print_more_warnings and not print_details or not fix_problems:
                 print("Hint: Run 'uap %s fix-problems --details' to see the "
                       "details."  % self.args.config.name)
-                print("Hint: Run 'uap %s fix-problems --first-error' to see "
-                      "what failed first." % self.args.config.name)
+                print("Hint: Run 'uap %s fix-problems --first-error' to "
+                      "investigate what happended." % self.args.config.name)
             if not fix_problems:
                 print("Hint: Run 'uap %s fix-problems --srsly' to fix these "
                       "problems (that is, delete all problematic ping files)."

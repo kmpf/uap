@@ -772,9 +772,9 @@ class Run(object):
         if exec_ping_file is None:
             exec_ping_file = self.get_executing_ping_file()
         if abst.AbstractStep.fsc.exists(exec_ping_file):
-            last_activity = datetime.datetime.fromtimestamp(
+            last_activity = datetime.fromtimestamp(
                     abst.AbstractStep.fsc.getmtime(exec_ping_file))
-            now = datetime.datetime.now()
+            now = datetime.now()
             last_activity_difference = now - last_activity
             if last_activity_difference.total_seconds() > \
                     abst.AbstractStep.PING_TIMEOUT:
