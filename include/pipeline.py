@@ -792,8 +792,7 @@ class Pipeline(object):
                 print("")
 
         if len(bad_problems) > 0:
-            show_hint = True
-            label = "Warning: %d tasks were queued and failed." % len(bad_problems)
+            label = "Info: Found %d queue files of failed tasks." % len(bad_problems)
             print(label)
             if print_details:
                 print('-' * len(label))
@@ -819,6 +818,7 @@ class Pipeline(object):
             if print_more_warnings and not print_details or not fix_problems:
                 print("Hint: Run 'uap %s fix-problems --details' to see the "
                       "details."  % self.args.config.name)
+            if print_more_warnings and not fix_problems:
                 print("Hint: Run 'uap %s fix-problems --first-error' to "
                       "investigate what happended." % self.args.config.name)
             if not fix_problems:
