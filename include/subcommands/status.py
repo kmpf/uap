@@ -228,7 +228,10 @@ def main(args):
                                     % p.args.config.name)
                             print('')
                         host = anno_data.get('system', dict()).get('hostname', 'unknown')
-                        print('host: %s\n' % host)
+                        time = anno_data.get('end_time', 'unknown')
+                        print('host: %s' % host)
+                        print('time: %s' % time)
+                        print('')
             else:
                 print("Some tasks are bad. Run 'uap %s status --details' to see the details." %
                         p.args.config.name)
