@@ -901,18 +901,18 @@ class Pipeline(object):
     def get_cluster_command_cli_option(self, key, value):
         result = self.get_cluster_config()[self.get_cluster_type()][key]
         if isinstance(result, list):
-            nval = sum('%s' in part for part in result)
+            nval = sum(part.count('%s') for part in result)
             value = tuple([value]) if not isinstance(value, tuple) else value
             if len(value) != nval:
-                raise UAPError('The option %s is a list and requires a tuple '
+                raise UAPError('The option %s requires a tuple '
                                'of %d values to be placed into %s but the '
                                'values are %s.' % (key, nval, result, value))
             options = list()
             i = 0
             for part in result:
                 if '%s' in part:
-                    options.append(part % value[i])
-                    i += 1
+                    options.append(part % value[i:i+part.count('%s')])
+                    i += part.count('%s')
                 else:
                     options.append(part)
             return options
