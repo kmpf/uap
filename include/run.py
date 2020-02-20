@@ -699,8 +699,6 @@ class Run(object):
 
         # now write the annotation
         log = {}
-        if error is not None:
-            log['error'] = error
         log['pid'] = os.getpid()
         log['step'] = {}
         log['step']['options'] = self.get_step().get_options()
@@ -725,6 +723,8 @@ class Run(object):
             os.unlink(self.get_submit_script_file())
         log['run']['known_paths'] = self.get_known_paths()
         log['run']['structure'] = self.get_run_structure()
+        if error is not None:
+            log['run']['error'] = error
         log['config'] = self.get_step().get_pipeline().config
 
         log['tool_versions'] = {}

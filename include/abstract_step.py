@@ -720,7 +720,7 @@ class AbstractStep(object):
             except IOError:
                 pass
             else:
-                if anno_data.get('error') is not None:
+                if anno_data.get('run', dict()).get('error') is not None:
                     return p.states.BAD
         elif run_state == p.states.FINISHED:
             anno_file = run.get_annotation_path()
