@@ -53,7 +53,6 @@ def main(args):
             print(yaml.dump(report, default_flow_style = False))
         
     elif args.graph:
-        args.no_tool_checks = True
         p = pipeline.Pipeline(arguments=args)
         step_order = p.topological_step_order
         indents = [0 for _ in step_order]
