@@ -151,10 +151,10 @@ Here is the help message::
                                             [--cluster CLUSTER] [--details]
                                             [--job-ids] [--summarize] [--graph]
                                             [--sources] [-r [RUN [RUN ...]]]
-  
+
   This script displays by default information about all runs of the pipeline as configured in '<project-config>.yaml'. But the displayed information can be narrowed down via command line options.
   IMPORTANT: Hints given by this script are just valid if the jobs were submitted to the cluster.
-  
+
   optional arguments:
     -h, --help            show this help message and exit
     --even-if-dirty       This option must be set if the local git repository contains uncommited changes.
@@ -339,6 +339,8 @@ This subcommands usage information::
 
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml run-locally -h
   usage: uap [<project-config>.yaml] run-locally [-h] [--even-if-dirty]
+                                                 [--no-tool-checks] [--force]
+                                                 [--ignore]
                                                  [run [run ...]]
 
   This command  starts 'uap' on the local machine. It can be used to start:
@@ -355,13 +357,15 @@ This subcommands usage information::
   $ uap <project-config>.yaml status
 
   positional arguments:
-    run              These runs are processed on the local machine.
+    run               These runs are processed on the local machine.
 
   optional arguments:
-    -h, --help       show this help message and exit
-    --even-if-dirty  This option must be set if the local git repository
-                     contains uncommited changes.
-                     Otherwise uap will not run.
+    -h, --help        show this help message and exit
+    --even-if-dirty   This option must be set if the local git repository contains uncommited changes.
+                      Otherwise uap will not run.
+    --no-tool-checks  This option disables the otherwise mandatory checks for tool availability and version
+    --force           Force to overwrite changed tasks.
+    --ignore          Ignore chages of tasks and consider them finished.
 
 .. NOTE:: Why is it safe to cancel the pipeline?
     The pipeline is written in a way which expects processes to fail or
@@ -393,27 +397,26 @@ Here is the usage information::
 
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml submit-to-cluster -h
   usage: uap [<project-config>.yaml] submit-to-cluster [-h] [--even-if-dirty]
+                                                       [--no-tool-checks]
                                                        [--cluster CLUSTER]
+                                                       [--legacy] [--force]
+                                                       [--ignore]
                                                        [run [run ...]]
 
-  This script submits all runs configured in <project-config>.yaml to a cluster.
-  The configuration for the available cluster types is stored at
-  /<path-to-uap>/cluster/cluster-specific-commands.yaml.
-  The list of runs can be narrowed down to specific steps. All runs of the
-  specified step will be submitted to the cluster. Also, individual runs IDs
-  (step/run) can be used for submission.
+  This script submits all runs configured in <project-config>.yaml to a cluster. The configuration for the available cluster types is stored at /<path-to-uap>/cluster/cluster-specific-commands.yaml. The list of runs can be narrowed down to specific steps. All runs of the specified step will be submitted to the cluster. Also, individual runs IDs (step/run) can be used for submission.
 
   positional arguments:
     run                Submit only these runs to the cluster.
 
   optional arguments:
     -h, --help         show this help message and exit
-    --even-if-dirty    This option must be set if the local git repository
-                       contains uncommited changes.
+    --even-if-dirty    This option must be set if the local git repository contains uncommited changes.
                        Otherwise uap will not run.
+    --no-tool-checks   This option disables the otherwise mandatory checks for tool availability and version
     --cluster CLUSTER  Specify the cluster type. Default: [auto].
     --legacy           Use none array cluster submission.
-
+    --force            Force to overwrite changed tasks.
+    --ignore           Ignore chages of tasks and consider them finished.
 
 .. _uap-fix-problems:
 
@@ -431,7 +434,7 @@ Here is the usage information::
                                                   [--cluster CLUSTER]
                                                   [--first-error] [--details]
                                                   [--srsly]
-  
+
   optional arguments:
     -h, --help         show this help message and exit
     --even-if-dirty    This option must be set if the local git repository contains uncommited changes.
