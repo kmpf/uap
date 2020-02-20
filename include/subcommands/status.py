@@ -98,7 +98,9 @@ def main(args):
 #            sys.stderr.write("still alive!\n")
 #            sys.stderr.write("run_info: %s\n" % step.get_run_info_str())
 
-            line = "%s%s%s [%s]" % (''.join(_).replace("─└", "─┴"), step.get_step_name(), original_step_name_label, step.get_run_info_str())
+            line = "%s%s%s [%s]" % (''.join(_).replace("─└", "─┴"),
+                    step.get_step_name(), original_step_name_label,
+                    step.get_run_info_str(progress=True))
             print(line)
     else:
         # print all runs

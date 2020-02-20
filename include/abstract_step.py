@@ -30,6 +30,7 @@ import time
 import traceback
 from shutil import copyfile
 from deepdiff import DeepDiff
+from tqdm import tqdm
 # 2. related third party imports
 import fscache
 import psutil
@@ -1125,9 +1126,11 @@ class AbstractStep(object):
         return self._post_command
 
 
-    def get_run_info_str(self, finished_run=None):
+    def get_run_info_str(self, finished_run=None, progress=False):
         count = {}
-        for run_id in self.get_run_ids():
+        run_ids = self.get_run_ids()
+        for run_id in tqdm(run_ids, total=len(run_ids), desc='runs',
+                           disable=not progress, leave=False):
             if run_id == finished_run:
                 state = self.get_pipeline().states.FINISHED
             else:
