@@ -10,9 +10,11 @@
  * required options stay required even if a default is set (#144)
  * fail cluster job if UAP fails (#60)
  * no costly tool check if not needed (#82)
- * more stable `status` whil jobs are running
+ * more stable `status` while jobs are running
  * make signal traps work on cluster
  * do not mix up lines in stderr tail of failed tasks
+ * run-info uses list2cmdline for accurate command representation
+ * run-locally checks parent task states befor running
 
 **Features**
  * steps now run within their temp directory (#29, #31)
@@ -49,7 +51,8 @@
  * propagate verbosity level to cluster jobs
  * allow empty step options to set None values/unset defaults
  * io and net stats in annotation file (#34)
- * if config has wrong options pass -v to display all available options
+ * if step config has wrong options pass -v to display all available options
+ * log comprehensible command structure in annotation file
  * new CHANGED state for tasks based on commands and tool versions
  * sha256 blockchain to determine CHANGED state
  * new BAD state for tasks when UAP caught an error
@@ -73,7 +76,6 @@
  * chronological naming for log files
  * move ping files on job error or interruption (#147)
  * no hash in output directories
- * run-locally checks parent tasks
  * nothing is written outside of `destination_path` (no `config.yaml-out` link)
  * only one annotation and no symlinks in output directory
  * multiple executions do not accumulate files in output directory
