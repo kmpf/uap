@@ -4,6 +4,7 @@
 import sys
 import logging
 import yaml
+from subprocess import list2cmdline
 
 import pipeline
 import pipeline_info
@@ -19,6 +20,7 @@ down via command line options.
 logger = logging.getLogger("uap_logger")
 
 def main(args):
+    args.no_tool_checks = True
     p = pipeline.Pipeline(arguments=args)
     group_by_status = True
 
@@ -36,7 +38,6 @@ def main(args):
             run_id = parts[1]
             run = p.steps[step_name].get_run(run_id)
             report = run.as_dict()
-            report['state'] = p.steps[step_name].get_run_state(run_id)
             shebang = "#!/usr/bin/env bash"
             print(shebang + "\n")
             report_header = "%s/%s -- Report" % (step_name, run_id)
@@ -65,12 +66,12 @@ def main(args):
                         # ... create a pipeline ...
                         pipe = list()
                         for command in poc.get_commands():
-                            pipe.append( " ".join(command.get_command()) )
+                            pipe.append(list2cmdline(command.get_command()))
                         print( " | ".join(pipe) + "\n" )
                         pipe_count += 1
                     elif isinstance(poc, command_info.CommandInfo):
                         cmd_header = goc_header + " -- %d. Command" % cmd_count
                         print("# " + cmd_header)
                         print("# " + "-" * len(cmd_header) + "\n")
-                        print(" ".join(poc.get_command()) + "\n")
+                        print(list2cmdline(poc.get_command()) + "\n")
                         cmd_count
