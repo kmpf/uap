@@ -159,7 +159,7 @@ def main(args):
             command.append('--debugging')
         if p.args.verbose > 1:
             command.append('-' + 'v'*(p.args.verbose-1))
-        command.extend(['$config', 'run-locally'])
+        command.extend(['<(cat <&123)', 'run-locally'])
         if p.args.force:
             command.append('--force')
 

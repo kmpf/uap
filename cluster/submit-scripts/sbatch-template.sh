@@ -13,11 +13,13 @@ set -e
 ############
 
 config=$(mktemp)
-cat << EOF > $config
+cat << 'EOF' > $config
 
 #{UAP_CONFIG}
 
 EOF
+exec 123< $config
+rm $config
 
 array_jobs=(#{ARRAY_JOBS})
 
