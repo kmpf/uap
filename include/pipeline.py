@@ -340,7 +340,6 @@ class Pipeline(object):
         '''
 
         self.read_config(self.args.config)
-        os.chdir(self.config['base_working_directory'])
         self.setup_lmod()
 
         self.tool_versions = {}
@@ -395,6 +394,9 @@ class Pipeline(object):
         if not 'id' in self.config:
             self.config['id'] = self.config_name
 
+        self.config.setdefault('base_working_directory', self._config_path)
+        os.chdir(self.config['base_working_directory'])
+
         if 'lmod' not in self.config or self.config['lmod'] is None:
             self.config['lmod'] = dict()
         if os.environ.has_key('LMOD_CMD'):
@@ -442,22 +444,8 @@ class Pipeline(object):
             raise UAPError("Destination path does not exist: %s" %
                             self.config['destination_path'])
 
-        # Make self.config['destination_path'] an absolute path if necessary
-        self.config.setdefault('base_working_directory', self._config_path)
-        if not os.path.isabs(self.config['destination_path']):
-            self.config['destination_path'] = os.path.normpath(os.path.join(
-                self.config['base_working_directory'],
-                self.config['destination_path']
-            ))
-
-        symlink = "%s-out" % self.config['id']
-        if not os.path.exists(symlink):
-            try:
-                os.symlink(self.config['destination_path'], symlink)
-            except OSError, e:
-                logger.warn(e)
-                logger.warn('File %s seems to be a broken symlink and will '
-                            'not be overwritten.' % symlink)
+        self.config['destination_path'] = \
+                os.path.abspath(self.config['destination_path'])
 
         if not 'cluster' in self.config or self.config['cluster'] is None:
             self.config['cluster'] = dict()
