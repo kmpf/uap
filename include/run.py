@@ -246,22 +246,23 @@ class Run(object):
         executed change.
         '''
 
-        step = self.get_step()
         cmd_by_eg = dict()
-        # get tool version texts
-        tools = sorted(step._tools.keys())
+        p = self.get_step().get_pipeline()
+
+        # get tool version texts and paths
+        tools = sorted(self.get_step()._tools.keys())
         cmd_by_eg['tool_versions'] = dict()
         tool_paths = dict()
-        if step.get_pipeline().tool_versions:
-            tool_conf = step.get_pipeline().config['tools']
-            for tool in tools:
-                tool_info = step.get_pipeline().tool_versions[tool]
-                if tool != tool_conf[tool]['path']:
-                    tool_paths[tool] = tool_conf[tool]['path']
-                if tool_conf[tool]['ignore_version'] is not True:
-                    real_tool_path = tool_info['used_path']
-                    response = tool_info['response'].replace(real_tool_path, tool)
-                    cmd_by_eg['tool_versions'][tool] = response
+        tool_conf = p.config['tools']
+        for tool in tools:
+            if tool != tool_conf[tool]['path']:
+                tool_paths[tool] = tool_conf[tool]['path']
+            if not tool_conf[tool]['ignore_version'] \
+            and not p.args.no_tool_checks:
+                tool_info = p.tool_versions[tool]
+                real_tool_path = tool_info['used_path']
+                response = tool_info['response'].replace(real_tool_path, tool)
+                cmd_by_eg['tool_versions'][tool] = response
 
         # get commands
         for eg_count, exec_group in enumerate(self.get_exec_groups()):
