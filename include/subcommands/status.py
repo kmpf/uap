@@ -41,6 +41,7 @@ def main(args):
 
     elif len( args.run ) >= 1:
         # print run infos of one or more specific tasks
+        args.no_tool_checks = True
         p = pipeline.Pipeline(arguments=args)
         for task_id in args.run:
             parts = task_id.split('/')
@@ -49,7 +50,6 @@ def main(args):
             step_name = parts[0]
             run_id = parts[1]
             report = p.steps[step_name].get_run(run_id).as_dict()
-            report['state'] = p.steps[step_name].get_run_state(run_id)
             print(yaml.dump(report, default_flow_style = False))
         
     elif args.graph:
