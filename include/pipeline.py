@@ -348,7 +348,6 @@ class Pipeline(object):
             self.check_tools()
 
         # collect all tasks
-        sys.stderr.write('Declaring steps...\n')
         for step_name in self.topological_step_order:
             step = self.get_step(step_name)
             self.tasks_in_step[step_name] = list()
