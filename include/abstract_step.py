@@ -1448,7 +1448,8 @@ class AbstractStep(object):
         for in_conn, out_conn in self._options['_connect'].items():
             if in_conn not in self.get_in_connections():
                 raise UAPError('_connect: unknown input connection "%s" '
-                             'found.' % in_conn)
+                             'found. Available connections are %s' %
+                             (in_conn, list(self.get_in_connections())))
             out_conn = out_conn if isinstance(out_conn, list) else [out_conn]
             set_out_connections = set_out_connections.union(set(out_conn))
 
