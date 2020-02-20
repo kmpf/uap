@@ -332,6 +332,7 @@ class Pipeline(object):
         This dict stores tasks per step name.
         '''
 
+
         self.known_config_keys = set(['destination_path', 'constants', 'cluster',
                 'steps', 'lmod', 'tools', 'base_working_directory', 'id'])
         '''
@@ -343,9 +344,11 @@ class Pipeline(object):
         self.setup_lmod()
 
         self.tool_versions = {}
-        self.check_tools()
+        if not self.args.no_tool_checks:
+            self.check_tools()
 
         # collect all tasks
+        sys.stderr.write('Declaring steps...\n')
         for step_name in self.topological_step_order:
             step = self.get_step(step_name)
             self.tasks_in_step[step_name] = list()
@@ -614,6 +617,7 @@ class Pipeline(object):
         show_status = True
         if hasattr(self.args, 'run') and self.args.run:
             show_status = False
+            sys.stderr.write('Running tool check...\n')
         elif logger.getEffectiveLevel() <= 20:
             show_status = False
         original_int_handler = signal.signal(signal.SIGINT, kill_pool)

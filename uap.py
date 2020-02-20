@@ -58,6 +58,14 @@ def main():
         "contains uncommited changes.\n"
         "Otherwise uap will not run.")
 
+    common_parser.add_argument(
+        "--no-tool-checks",
+        dest="no_tool_checks",
+        action="store_true",
+        default=False,
+        help="This option disables the otherwise mandatory checks for "
+	"tool availability")
+
     # Definition of the final parser
 
     parser = argparse.ArgumentParser(

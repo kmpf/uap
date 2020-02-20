@@ -14,7 +14,6 @@ from logging import getLogger
 logger = getLogger('uap_logger')
 
 from abstract_step import AbstractSourceStep, AbstractStep
-from pipeline import Pipeline
 
 def main(args):
 

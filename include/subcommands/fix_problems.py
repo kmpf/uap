@@ -18,6 +18,7 @@ if '--srsly' is given.
 logger = logging.getLogger("uap_logger")
 
 def main(args):
+    args.no_tool_checks = True
     p = pipeline.Pipeline(arguments=args)
  
     if args.first_error:

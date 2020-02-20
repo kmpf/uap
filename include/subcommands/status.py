@@ -26,20 +26,22 @@ down via command line options.
 logger = logging.getLogger("uap_logger")
 
 def main(args):
-    p = pipeline.Pipeline(arguments=args)
-    group_by_status = True
 
     if args.sources:
         # print all sources (i. e. instances of AbstractSourceStep)
-        p.print_source_runs()
+        args.no_tool_checks = True
+        pipeline.Pipeline(arguments=args).print_source_runs()
 
     elif args.job_ids:
+        args.no_tool_checks = True
+        p = pipeline.Pipeline(arguments=args)
         ids = p.get_cluster_job_ids()
         print(' '.join(ids))
         return
 
     elif len( args.run ) >= 1:
         # print run infos of one or more specific tasks
+        p = pipeline.Pipeline(arguments=args)
         for task_id in args.run:
             parts = task_id.split('/')
             if len(parts) != 2:
@@ -51,6 +53,8 @@ def main(args):
             print(yaml.dump(report, default_flow_style = False))
         
     elif args.graph:
+        args.no_tool_checks = True
+        p = pipeline.Pipeline(arguments=args)
         step_order = p.topological_step_order
         indents = [0 for _ in step_order]
         for index, line in enumerate(step_order):
@@ -109,53 +113,51 @@ def main(args):
         - ``[f]inished``
         - ``[c]hanged``
         '''
+        p = pipeline.Pipeline(arguments=args)
         output = list()
         tasks_for_status = {}
         tasks = p.all_tasks_topologically_sorted
+
         for task in tqdm(tasks, desc='tasks'):
             state = task.get_task_state()
             if not state in tasks_for_status:
                 tasks_for_status[state] = list()
             tasks_for_status[state].append(task)
-            if not group_by_status:
-                output.append(
-                    "[%s] %s" % (state[0].lower(), task))
-                #print("[%s] %s" % (task.get_task_state()[0].lower(), task))
-        if group_by_status:
-            for status in p.states.order:
-                if not status in tasks_for_status:
-                    continue
-                heading = "%s runs" % string.capwords(status)
-                output.append(heading)
-                output.append('-' * len(heading))
-                if args.summarize:
-                    step_count = dict()
-                    step_order = list()
-                    for task in tasks_for_status[status]:
-                        if not str(task.step) in step_count:
-                            step_count[str(task.step)] = 0
-                            step_order.append(str(task.step))
-                        step_count[str(task.step)] += 1
-                    for step_name in step_order:
-                        output.append("[%s]%4d %s"
-                                     % (status.lower()[0],
-                                        step_count[step_name],
-                                        step_name)
-                                 )
-                else:
-                    for task in tasks_for_status[status]:
-                        output.append("[%s] %s"
-                                     % (
-                                         status[0].lower(),
-                                         task))
-                    output.append('')
-            output.append("runs: %d total, %s"
-                          % (len(p.all_tasks_topologically_sorted),
-                             ', '.join(["%d %s" % (
-                                 len(tasks_for_status[_]),
-                                 _.lower()) for _ in p.states.order \
-                                        if _ in tasks_for_status])))
-            pydoc.pager("\n".join(output))
+
+        for status in p.states.order:
+            if not status in tasks_for_status:
+                continue
+            heading = "%s runs" % string.capwords(status)
+            output.append(heading)
+            output.append('-' * len(heading))
+            if args.summarize:
+                step_count = dict()
+                step_order = list()
+                for task in tasks_for_status[status]:
+                    if not str(task.step) in step_count:
+                        step_count[str(task.step)] = 0
+                        step_order.append(str(task.step))
+                    step_count[str(task.step)] += 1
+                for step_name in step_order:
+                    output.append("[%s]%4d %s"
+                                 % (status.lower()[0],
+                                    step_count[step_name],
+                                    step_name)
+                             )
+            else:
+                for task in tasks_for_status[status]:
+                    output.append("[%s] %s"
+                                 % (
+                                     status[0].lower(),
+                                     task))
+                output.append('')
+        output.append("runs: %d total, %s"
+                      % (len(p.all_tasks_topologically_sorted),
+                         ', '.join(["%d %s" % (
+                             len(tasks_for_status[_]),
+                             _.lower()) for _ in p.states.order \
+                                    if _ in tasks_for_status])))
+        pydoc.pager("\n".join(output))
 
         if p.states.CHANGED in tasks_for_status.keys():
             if args.details:
@@ -224,25 +226,26 @@ def main(args):
                         except KeyError as e:
                             print('The annotation file "%s" seems badly '
                                     'formated: %s\n' % (anno_file, e))
+                        else:
+                            host = anno_data.get('system', dict()).get('hostname', 'unknown')
+                            time = anno_data.get('end_time', 'unknown')
+                            print('host: %s' % host)
+                            print('time: %s' % time)
+                            print('')
                         if failed:
                             found_error = True
-                            print('failed commands:')
+                            print('#### failed commands')
                             print(yaml.dump(failed))
                         else:
                             print('No failed commands found in the annotation file.\n')
                         if 'error' in run_data:
                             found_error = True
-                            print('error:\n%s\n' %  run_data['error'])
+                            print('#### error\n%s\n' %  run_data['error'])
                         if not found_error:
                             print('No errors found.')
                             print("Run 'uap %s fix-problems --first-error' to investigate.'"
                                     % p.args.config.name)
                             print('')
-                        host = anno_data.get('system', dict()).get('hostname', 'unknown')
-                        time = anno_data.get('end_time', 'unknown')
-                        print('host: %s' % host)
-                        print('time: %s' % time)
-                        print('')
             else:
                 print("Some tasks are bad. Run 'uap %s status --details' to see the details." %
                         p.args.config.name)

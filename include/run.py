@@ -252,15 +252,16 @@ class Run(object):
         tools = sorted(step._tools.keys())
         cmd_by_eg['tool_versions'] = dict()
         tool_paths = dict()
-        tool_conf = step.get_pipeline().config['tools']
-        for tool in tools:
-            tool_info = step.get_pipeline().tool_versions[tool]
-            if tool != tool_conf[tool]['path']:
-                tool_paths[tool] = tool_conf[tool]['path']
-            if tool_conf[tool]['ignore_version'] is not True:
-                real_tool_path = tool_info['used_path']
-                response = tool_info['response'].replace(real_tool_path, tool)
-                cmd_by_eg['tool_versions'][tool] = response
+        if step.get_pipeline().tool_versions:
+            tool_conf = step.get_pipeline().config['tools']
+            for tool in tools:
+                tool_info = step.get_pipeline().tool_versions[tool]
+                if tool != tool_conf[tool]['path']:
+                    tool_paths[tool] = tool_conf[tool]['path']
+                if tool_conf[tool]['ignore_version'] is not True:
+                    real_tool_path = tool_info['used_path']
+                    response = tool_info['response'].replace(real_tool_path, tool)
+                    cmd_by_eg['tool_versions'][tool] = response
 
         # get commands
         for eg_count, exec_group in enumerate(self.get_exec_groups()):
