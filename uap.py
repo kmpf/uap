@@ -575,30 +575,29 @@ def _configure_logger(verbosity):
         ch.setFormatter(info_formatter)
         # set logger logging level
         logger.setLevel(logging.ERROR)
-        logger.info("[uap] Set log level to ERROR\n")
+        lvl = 'ERROR'
     elif verbosity == 1:
         # add formatter to ch
         ch.setFormatter(info_formatter)
         # set logger logging level
         logger.setLevel(logging.WARNING)
-        logger.info("[uap] Set log level to WARNING\n")
+        lvl = 'WARNING'
     elif verbosity == 2:
         # add formatter to ch
         ch.setFormatter(info_formatter)
         # set logger logging level
         logger.setLevel(logging.INFO)
-        logger.info("[uap] Set log level to INFO\n")
+        lvl = 'INFO'
     elif verbosity >= 3:
         # add formatter to ch
         ch.setFormatter(debug_formatter)
         # set logger logging level
         logger.setLevel(logging.DEBUG)
-        logger.info("[uap] Set log level to DEBUG\n")
-
-    sys.stderr.flush()
+        lvl = 'DEBUG'
 
     # add ch to logger
     logger.addHandler(ch)
+    logger.info("Set log level to %s" % lvl)
 
     return logger
 
