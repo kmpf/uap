@@ -9,6 +9,10 @@
  * update from broken sha1 to sha256 (#141)
  * required options stay required even if a default is set (#144)
  * fail cluster job if UAP fails (#60)
+ * no costly tool check if not needed (#82)
+ * more stable `status` whil jobs are running
+ * make signal traps work on cluster
+ * do not mix up lines in stderr tail of failed tasks
 
 **Features**
  * steps now run within their temp directory (#29, #31)
@@ -31,6 +35,7 @@
  * introduce --profiling option to analyze uap runtime (#132)
  * introduce --path option to retrieve the UAP installation path
  * optional step connections (#35)
+ * new connection information in command line `steps` doc
  * improved single end support and sensitivity to respective connections (#38, #139)
  * forward None values for options to step declaration (#140)
  * raise exeption if an unknown configuration key is used
@@ -38,22 +43,25 @@
  * introduce --job-ids as option for status to report config specifc jobs (#58)
  * introduce --first-error option for fix-problems for faster debugging (#61)
  * parallel tool check for major performance gain (#82)
- * revised run-locally message output and regulation with verbosity level
+ * revised message output and regulation with verbosity level
  * print stderr of failed processes in UAP log
  * watcher report with proc names printed on verbosity level 3 (-vv)
  * propagate verbosity level to cluster jobs
  * allow empty step options to set None values/unset defaults
  * io and net stats in annotation file (#34)
  * if config has wrong options pass -v to display all available options
- * new "changed" state for tasks based on commands and tool versions
- * sha256 blockchain to determine "changed" state
+ * new CHANGED state for tasks based on commands and tool versions
+ * sha256 blockchain to determine CHANGED state
+ * new BAD state for tasks when UAP caught an error
+ * status --details to view changes of tasks and errors of bad tasks
  * --force to overwrite changed tasks
  * --ignore to ignore changes in tasks and consider them finished
- * new BAD state for tasks when UAP caught the error
- * status --details to view changes of tasks and errors of bad tasks
  * show status of some uap processes with tqdm
  * config can be changed without effecting submitted tasks
  * task error logged in annotation and reported in status --details
+ * `base_working_directory` can be configured and paths set relatively to it
+ * status bar during tool check and task status
+ * improved resource monitoring report in annotation file
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
@@ -66,6 +74,9 @@
  * move ping files on job error or interruption (#147)
  * no hash in output directories
  * run-locally checks parent tasks
+ * nothing is written outside of `destination_path` (no `config.yaml-out` link)
+ * only one annotation and no symlinks in output directory
+ * multiple executions do not accumulate files in output directory
 
 ## 1.1 (20.01.2020)
 
