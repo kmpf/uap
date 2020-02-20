@@ -59,6 +59,19 @@ to store the created files.
     destination_path: "/path/to/workflow/output"
 
 
+``base_working_directory`` Section
+----------------------------
+
+The value of ``base_working_directory`` is the directory where **uap**
+changes to before declaring all steps and it defaults to the location
+of the configuration file. All configured paths can be set relatively
+to this directory.
+
+.. code-block:: yaml
+
+    base_working_directory: "/path/to/workflow/output"
+
+
 ``constants`` Section
 ---------------------
 
