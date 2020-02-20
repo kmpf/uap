@@ -705,16 +705,15 @@ class Run(object):
         log['step']['name'] = self.get_step().get_step_name()
         # if a submit script was used ...
         script = self.get_step().get_submit_script_file()
+        script_path = os.path.relpath(script, path)
         if os.path.exists(script):
-            # ... read it and store it ...
-            with open(script, 'r') as f:
-                log['step']['submit_script'] = f.read()
+            log['step']['submit_script'] = script_path
         log['step']['cores'] = self.get_step()._cores
         log['run'] = {}
         log['run']['run_info'] = self.as_dict()
         log['run']['run_id'] = self.get_run_id()
         log['run']['temp_directory'] = self.get_temp_output_directory()
-        # if a submit script was used ...
+        # if a run submit script was used ...
         if os.path.exists(self.get_submit_script_file()):
             # ... read it and store it ...
             with open(self.get_submit_script_file(), 'r') as f:
