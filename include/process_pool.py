@@ -514,8 +514,8 @@ class ProcessPool(object):
         '''
         self.log("Now launching process watcher and waiting for all child "
                  "processes to exit.")
-        watcher_report_path = self.get_run()\
-                                  .add_temporary_file('watcher-report')
+        watcher_report_path = \
+            self.get_run().add_temporary_file('watcher-report', suffix='.yaml')
         watcher_pid = self._launch_process_watcher(watcher_report_path)
         ProcessPool.process_watcher_pid = watcher_pid
         pid = None
