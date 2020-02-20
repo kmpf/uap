@@ -386,6 +386,7 @@ class Pipeline(object):
     def read_config(self, config_file):
         # yaml.load works fine, even for duplicate dictionary keys (WTF)
         self.config = yaml.load(config_file, Loader=yaml.FullLoader)
+        config_file.close()
 
         for key in self.config.keys():
             if key not in self.known_config_keys:
