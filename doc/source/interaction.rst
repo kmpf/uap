@@ -159,7 +159,7 @@ Here is the help message::
     -h, --help            show this help message and exit
     --even-if-dirty       This option must be set if the local git repository contains uncommited changes.
                           Otherwise uap will not run.
-    --no-tool-checks      This option disables the otherwise mandatory checks for tool availability
+    --no-tool-checks      This option disables the otherwise mandatory checks for tool availability and version
     --cluster CLUSTER     Specify the cluster type. Default: [auto].
     --details             Displays information about changed tasks.
     --job-ids             Prints space seperated cluster job ids of all submitted jobs.
@@ -436,7 +436,7 @@ Here is the usage information::
     -h, --help         show this help message and exit
     --even-if-dirty    This option must be set if the local git repository contains uncommited changes.
                        Otherwise uap will not run.
-    --no-tool-checks   This option disables the otherwise mandatory checks for tool availability
+    --no-tool-checks   This option disables the otherwise mandatory checks for tool availability and version
     --cluster CLUSTER  Specify the cluster type. Default: [auto].
     --first-error      Print stderr of the first failed cluster job.
     --details          Displays information about the files causing problems.

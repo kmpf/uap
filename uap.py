@@ -64,7 +64,7 @@ def main():
         action="store_true",
         default=False,
         help="This option disables the otherwise mandatory checks for "
-	"tool availability")
+	"tool availability and version")
 
     # Definition of the final parser
 
