@@ -144,7 +144,6 @@ its :ref:`uap_status`::
 
   $ cd <uap-path>/example-configurations/
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
-  [uap] Set log level to ERROR
   [uap][ERROR]: index_mycoplasma_genitalium_ASM2732v1_genome.yaml: Destination path does not exist: genomes/bacteria/Mycoplasma_genitalium/
   
 Oops, the ``destination_path`` does not exist (see :ref:`config-file-destination-path`).
@@ -174,6 +173,8 @@ A run is always in one of these states:
 * ``[q]ueued``
 * ``[e]xecuting``
 * ``[f]inished``
+* ``[c]hanged``
+* ``[b]ad``
 
 If the command still fails, please check that the tools defined in
 ``index_mycoplasma_genitalium_ASM2732v1_genome.yaml`` are available in your
@@ -234,7 +235,6 @@ Most examples require the human genome so you might turn your head towards the
 ``index_homo_sapiens_hg19_genome.yaml`` workflow from her::
 
   $ uap index_homo_sapiens_hg19_genome.yaml status
-  [uap] Set log level to ERROR
   [uap][ERROR]: Output directory (genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes) does not exist. Please create it.
   $ mkdir -p genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
   $ uap index_homo_sapiens_hg19_genome.yaml run-locally

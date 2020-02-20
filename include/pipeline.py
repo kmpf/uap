@@ -486,7 +486,7 @@ class Pipeline(object):
         for step_key, step_description in self.config['steps'].items():
 
             # the step keys in the configuration may be either:
-            # - MODULE_NAME 
+            # - MODULE_NAME
             # - DIFFERENT_STEP_NAME\s+\(MODULE_NAME\)
             step_name = None
             module_name = None
@@ -866,7 +866,7 @@ class Pipeline(object):
                                  % (self._cluster_config_path,
                                     key, cluster_type)
                              )
-            # Now that we know let's test for that cluster    
+            # Now that we know let's test for that cluster
             if not isinstance(identity['answer'], list):
                 identity['answer'] = [identity['answer']]
             for answer in identity['answer']:

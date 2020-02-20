@@ -89,6 +89,12 @@ scripts:
     annotation files created by this process.
     A full Git diff is *included* as well.
 
+``--no-tool-check``
+    This disables the tool version check and can speed up, e.g., job
+    submisstion with ``submit-to-cluster`` but is not recommended to
+    use in ``status`` sice missing tool version may render a task
+    state ``changed``.
+
 ``--debugging``
     If this parameter apperas **uap** will print a traceback on any
     error that occures instead of just the error message.
@@ -141,22 +147,22 @@ Here is the help message::
 
   $ uap <project-config>.yaml status -h
   usage: uap [<project-config>.yaml] status [-h] [--even-if-dirty]
-                                            [--cluster CLUSTER] [--summarize]
-                                            [--graph] [--sources]
-                                            [-r [RUN [RUN ...]]]
-
-  This script displays by default information about all runs of the pipeline as
-  configured in '<project-config>.yaml'. But the displayed information can be
-  narrowed down via command line options.
-  IMPORTANT: Hints given by this script are just valid if the jobs were
-  submitted to the cluster.
-
+                                            [--no-tool-checks]
+                                            [--cluster CLUSTER] [--details]
+                                            [--job-ids] [--summarize] [--graph]
+                                            [--sources] [-r [RUN [RUN ...]]]
+  
+  This script displays by default information about all runs of the pipeline as configured in '<project-config>.yaml'. But the displayed information can be narrowed down via command line options.
+  IMPORTANT: Hints given by this script are just valid if the jobs were submitted to the cluster.
+  
   optional arguments:
     -h, --help            show this help message and exit
-    --even-if-dirty       This option must be set if the local git repository
-                          contains uncommited changes.
+    --even-if-dirty       This option must be set if the local git repository contains uncommited changes.
                           Otherwise uap will not run.
+    --no-tool-checks      This option disables the otherwise mandatory checks for tool availability
     --cluster CLUSTER     Specify the cluster type. Default: [auto].
+    --details             Displays information about changed tasks.
+    --job-ids             Prints space seperated cluster job ids of all submitted jobs.
     --summarize           Displays summarized information of the analysis.
     --graph               Displays the dependency graph of the analysis.
     --sources             Displays only information about the source runs.
@@ -174,6 +180,9 @@ At any time, each run is in one of the following states:
   (only available if you use a compute cluster)
 * ``[e]xecuting`` -- the run is currently running on this or another machine
 * ``[f]inished`` -- all output files are in place and up-to-date
+* ``[c]hanged`` -- all output files are in place but the configuration,
+  parent or the commands to execute changed
+* ``[b]ad`` -- an error was caught during execution
 
 
 
@@ -229,7 +238,6 @@ run ID on the command line::
 
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status -r \
     bowtie2_index/Mycoplasma_genitalium_index-download
-  [uap] Set log level to ERROR
   output_directory: genomes/bacteria/Mycoplasma_genitalium/bowtie2_index/Mycoplasma_genitalium_index-download-ZsvbSjtK
   output_files:
     out/bowtie_index:
@@ -243,7 +251,6 @@ run ID on the command line::
   private_info: {}
   public_info: {}
   run_id: Mycoplasma_genitalium_index-download
-  state: FINISHED
 
 This is the known data for run
 ``bowtie2_index/Mycoplasma_genitalium_index-download``.
@@ -253,7 +260,6 @@ input files they depend on as well as the run ID and the run state.
 Source steps can be viewed separately by specifying ``--sources``::
 
     $ uap <project-config>.yaml status --sources
-    [uap] Set log level to ERROR
     M_genitalium_genome/download
 
 .. _uap-run-info:
@@ -271,7 +277,6 @@ subcommand.
 An example output showing the download of the *Mycoplasma genitalium* genome::
 
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml run-info --even -r M_genitalium_genome/download
-  [uap] Set log level to ERROR
   #!/usr/bin/env bash
 
   # M_genitalium_genome/download -- Report
@@ -284,7 +289,6 @@ An example output showing the download of the *Mycoplasma genitalium* genome::
   # private_info: {}
   # public_info: {}
   # run_id: download
-  # state: FINISHED
   #
   # M_genitalium_genome/download -- Commands
   # ========================================
@@ -423,29 +427,20 @@ Here is the usage information::
 
   $ uap <project-config>.yaml fix-problems -h
   usage: uap [<project-config>.yaml] fix-problems [-h] [--even-if-dirty]
+                                                  [--no-tool-checks]
                                                   [--cluster CLUSTER]
-                                                  [--details] [--srsly]
-
+                                                  [--first-error] [--details]
+                                                  [--srsly]
+  
   optional arguments:
     -h, --help         show this help message and exit
-    --even-if-dirty    This option must be set if the local git repository
-                       contains uncommited changes.
+    --even-if-dirty    This option must be set if the local git repository contains uncommited changes.
                        Otherwise uap will not run.
+    --no-tool-checks   This option disables the otherwise mandatory checks for tool availability
     --cluster CLUSTER  Specify the cluster type. Default: [auto].
+    --first-error      Print stderr of the first failed cluster job.
     --details          Displays information about the files causing problems.
     --srsly            Delete problematic files.
-    usage: uap [<project-config>.yaml] fix-problems [-h] [--even-if-dirty]
-                                                    [--cluster CLUSTER]
-                                                    [--details] [--srsly]
-
-    optional arguments:
-      -h, --help         show this help message and exit
-      --even-if-dirty    Must be set if the local git repository contains
-                         uncommited changes. Otherwise the pipeline will not start.
-      --cluster CLUSTER  Specify the cluster type (sge, slurm), defaults to auto.
-      --details          Displays information about problematic files which need
-                         to be deleted to fix problem.
-      --srsly            Deletes problematic files.
 
 
 **uap** writes temporary files to indicate if a job is queued or executed.
@@ -459,6 +454,7 @@ The hint given by ``status`` would look like::
 
   Warning: There are 10 tasks marked as queued, but they do not seem to be queued
   Hint: Run 'uap <project-config>.yaml fix-problems --details' to see the details.
+  Hint: Run 'uap <project-config>.yaml fix-problems --first-error' to investigate what happended.
   Hint: Run 'uap <project-config>.yaml fix-problems --srsly' to fix these problems
         (that is, delete all problematic ping files).
 
