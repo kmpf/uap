@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 ##################
 # Submit Options #
 ##################
@@ -11,6 +9,8 @@ set -e
 ############
 # Commands #
 ############
+
+set -e
 
 config=$(mktemp)
 cat << 'EOF' > $config
