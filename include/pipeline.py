@@ -605,7 +605,7 @@ class Pipeline(object):
         show_status = True
         if hasattr(self.args, 'run') and self.args.run:
             show_status = False
-            sys.stderr.write('Running tool check...\n')
+            sys.stderr.write('[uap] Running tool check...\n')
         elif logger.getEffectiveLevel() <= 20:
             show_status = False
         original_int_handler = signal.signal(signal.SIGINT, kill_pool)
