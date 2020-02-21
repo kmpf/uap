@@ -224,9 +224,21 @@ class Hisat2(AbstractStep):
                         description='maximum fragment length (500), only valid with '
                         '--no-spliced-alignment')
 
-        self.add_option('library_type', str, optional=False,
-                        choices=['fr', 'rf', 'ff'], default='fr',
-                        description='-1, -2 mates align fw/rev, rev/fw, fw/fw (--fr)')
+        self.add_option('library_type', str, optional=True,
+                        choices=['fr', 'rf', 'ff'], default=None,
+                        description='-1, -2 mates align fr (fw/rev), rf '
+                                    '(rev/fw), ff (fw/fw) (default fr).')
+
+        self.add_option('fr', bool, default=None, optional=True,
+                        description="-1, -2 mates align fw/rev, rev/fw, \
+                                    fw/fw (--fr)")
+        self.add_option('rf', bool, default=None, optional=True,
+                        description="-1, -2 mates align fw/rev, rev/fw, \
+                        fw/fw (--fr)")
+        self.add_option('ff', bool, default=None, optional=True,
+                        description="-1, -2 mates align fw/rev, rev/fw, \
+                        fw/fw (--fr)")
+
 
         self.add_option('no-mixed', bool, default=None, optional=True,
                         description="suppress unpaired alignments for paired \
@@ -359,6 +371,26 @@ class Hisat2(AbstractStep):
             raise UAPError('[Hisat2] No second read passed by runs '
                            '%s.' % run_ids)
 
+        res = [(self.get_option('fr'), 'fr'),
+               (self.get_option('rf'), 'rf'),
+               (self.get_option('ff'), 'ff')]
+        library_types = [flag for is_set, flag in res if is_set]
+        if len(library_types) > 1:
+            message = "too many stranded flags fr, rf, ff: %s"
+            raise StandardError(message % (res))
+
+        library_type = self.get_option('library_type')
+
+        if paired_end and library_types and library_type:
+            raise UAPError('[hisat2] Option "library_type: %s" and the flag %s '
+                    'are set. Please specify only one.' %
+                    (library_type, library_types[0]))
+        elif paired_end and library_types:
+            library_type = library_types[0]
+        elif not paired_end and (library_types or library_type):
+            raise UAPError('[hisat2] Library type %s is specified for single '
+                           'end reads.' % library_types[0])
+
         for run_id in cc.keys():
             with self.declare_run(run_id) as run:
                 # Get list of files for first/second read
@@ -381,8 +413,8 @@ class Hisat2(AbstractStep):
                                 else:
                                     hisat2.extend(['--' + flag])
 
-                        lt = self.get_option('library_type')
-                        hisat2.append('--%s' % lt)
+                        if paired_end:
+                            hisat2.append('--%s' % library_type)
 
                         for flag in strflags:
                             if self.is_option_set_in_config(flag):
