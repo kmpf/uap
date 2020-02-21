@@ -150,7 +150,8 @@ Here is the help message::
                                             [--no-tool-checks]
                                             [--cluster CLUSTER] [--details]
                                             [--job-ids] [--summarize] [--graph]
-                                            [--sources] [-r [RUN [RUN ...]]]
+                                            [--hash] [--sources]
+                                            [-r [RUN [RUN ...]]]
 
   This script displays by default information about all runs of the pipeline as configured in '<project-config>.yaml'. But the displayed information can be narrowed down via command line options.
   IMPORTANT: Hints given by this script are just valid if the jobs were submitted to the cluster.
@@ -165,6 +166,7 @@ Here is the help message::
     --job-ids             Prints space seperated cluster job ids of all submitted jobs.
     --summarize           Displays summarized information of the analysis.
     --graph               Displays the dependency graph of the analysis.
+    --hash                Compare sha256sums of existing files with the logged values.
     --sources             Displays only information about the source runs.
     -r [RUN [RUN ...]], --run [RUN [RUN ...]]
                           The status of these runs are displayed.
