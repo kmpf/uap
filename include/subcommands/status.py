@@ -145,7 +145,7 @@ def main(args):
                 if bad_file is None:
                     print('has no output files')
                 elif not bad_file:
-                    print('the sha256sum correct')
+                    print('the sha256sum(s) correct')
     else:
         # print all runs
         '''
