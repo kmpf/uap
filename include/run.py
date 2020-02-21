@@ -557,9 +557,9 @@ class Run(object):
         An empty output connection has 'None' as output file and 'None' as input
         file.
         '''
-        logger.warn('[Deprecation] add_empty_output_connection is depricated. '
+        logger.warn('[Deprecation] %s: add_empty_output_connection is depricated. '
                 'Please make the connection "out/%s" optional and do not add '
-                'anything instead.' % tag)
+                'anything instead.' % (self.get_step().get_step_type(), tag))
         # make sure tag was declared with an outgoing connection
         if 'out/' + tag not in self._step.get_out_connections():
             raise UAPError("Invalid output_file tag '%s' in %s. "
