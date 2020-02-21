@@ -123,7 +123,7 @@ class Fastqc(AbstractStep):
             with self.declare_run(run_id) as run:
                 for read in read_types:
                     connection = 'in/%s' % read
-                    if connection not in run_ids_connections_files[run_id]
+                    if connection not in run_ids_connections_files[run_id] \
                     or run_ids_connections_files[run_id][connection] == [None]:
                         run.add_empty_output_connection("%s_fastqc_report" %
                                                         read)

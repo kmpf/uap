@@ -232,7 +232,8 @@ class AbstractStep(object):
             in_cons = in_cons if isinstance(in_cons, list) else [in_cons]
             for parent_cons in in_cons:
                 parent = parent_cons.split("/")[0]
-                self._options['_depends'].add(parent)
+                if parent != 'empty':
+                    self._options['_depends'].add(parent)
 
     def get_options(self):
         '''
