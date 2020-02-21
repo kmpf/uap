@@ -10,7 +10,7 @@ import string
 import tempfile
 import platform
 import subprocess
-from deepdiff import DeepHash
+from deepdiff import DeepHash, DeepDiff
 
 import yaml
 
@@ -303,6 +303,14 @@ class Run(object):
                     json.dumps(parent_struct, sort_keys=True))
 
         return cmd_by_eg
+
+    def get_changes(self):
+        anno_file = self.get_annotation_path()
+        with open(anno_file, 'r') as fl:
+            anno_data = yaml.load(fl, Loader=yaml.FullLoader)
+        old_struct = anno_data['run']['structure']
+        new_struct = self.get_run_structure()
+        return DeepDiff(old_struct, new_struct)
 
     def get_parent_runs(self):
         """

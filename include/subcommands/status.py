@@ -8,7 +8,6 @@ import pydoc
 import string
 from cStringIO  import StringIO
 import yaml
-from deepdiff import DeepDiff
 from tqdm import tqdm
 from subprocess import list2cmdline
 
@@ -174,16 +173,12 @@ def main(args):
                     run = task.get_run()
                     anno_file = run.get_annotation_path()
                     try:
-                        with open(anno_file, 'r') as fl:
-                            anno_data = yaml.load(fl, Loader=yaml.FullLoader)
+                        changes = run.get_changes()
                     except IOError:
                         print('The annotation file could not be read: %s.' %
                                 anno_file)
                     else:
-                        old_strcut = anno_data['run']['structure']
-                        new_struct = run.get_run_structure()
-                        diff =  DeepDiff(old_strcut, new_struct)
-                        print(yaml.dump(dict(diff)))
+                        print(yaml.dump(dict(changes)))
                     print('')
             else:
                 print("Some tasks changed. Run 'uap %s status --details' to see the details." %

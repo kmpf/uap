@@ -29,7 +29,6 @@ import textwrap
 import time
 import traceback
 from shutil import copyfile
-from deepdiff import DeepDiff
 from tqdm import tqdm
 # 2. related third party imports
 import fscache
@@ -724,19 +723,15 @@ class AbstractStep(object):
                 if anno_data.get('run', dict()).get('error') is not None:
                     return p.states.BAD
         elif run_state == p.states.FINISHED:
-            anno_file = run.get_annotation_path()
             try:
-                with open(anno_file, 'r') as fl:
-                    anno_data = yaml.load(fl, Loader=yaml.FullLoader)
+                changes = run.get_changes()
             except IOError:
+                changes = True
                 logger.warn('The task "%s/%s" seems finished but the annotation '
                             'file could not be read: %s. It will be '
                             'considered as "CHANGED".' %
                             (self, run_id, anno_file))
-                return p.states.CHANGED
-            old_struct = anno_data['run']['structure']
-            new_struct = run.get_run_structure()
-            if DeepDiff(old_struct, new_struct):
+            if changes:
                 return p.states.CHANGED
         return run_state
 
