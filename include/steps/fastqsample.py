@@ -24,9 +24,9 @@ class FastqSample(AbstractStep):
         self.set_cores(1)  # muss auch in den Decorator
 
         self.add_connection('in/first_read')
-        self.add_connection('in/second_read')
+        self.add_connection('in/second_read', optional=True)
         self.add_connection('out/first_read')
-        self.add_connection('out/second_read')
+        self.add_connection('out/second_read', optional=True)
 
         self.require_tool('fastq-sample')
         self.require_tool('pigz')
@@ -82,11 +82,9 @@ class FastqSample(AbstractStep):
 
                 for read in read_types:
                     connection = 'in/%s' % read
-                    input_paths = run_ids_connections_files[run_id][connection]
+                    input_paths = run_ids_connections_files[run_id].get(connection)
 
-                    if input_paths == [None]:
-                        run.add_empty_output_connection("second_read")
-                    else:
+                    if input_paths:
                         for input_path in input_paths:
                             # Get base name of input file
                             root, ext = os.path.splitext(

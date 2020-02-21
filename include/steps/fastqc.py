@@ -22,13 +22,13 @@ class Fastqc(AbstractStep):
         self.set_cores(4)
 
         self.add_connection('in/first_read')
-        self.add_connection('in/second_read')
+        self.add_connection('in/second_read', optional=True)
         self.add_connection('out/first_read_fastqc_report')
         self.add_connection('out/first_read_fastqc_report_webpage')
         self.add_connection('out/first_read_log_stderr')
-        self.add_connection('out/second_read_fastqc_report')
-        self.add_connection('out/second_read_fastqc_report_webpage')
-        self.add_connection('out/second_read_log_stderr')
+        self.add_connection('out/second_read_fastqc_report', optional=True)
+        self.add_connection('out/second_read_fastqc_report_webpage', optional=True)
+        self.add_connection('out/second_read_log_stderr', optional=True)
         self.require_tool('fastqc')
         # Step was tested for mkdir (GNU coreutils) release 8.25
         self.require_tool('mkdir')
@@ -123,13 +123,8 @@ class Fastqc(AbstractStep):
             with self.declare_run(run_id) as run:
                 for read in read_types:
                     connection = 'in/%s' % read
-                    if connection not in run_ids_connections_files[run_id] \
-                    or run_ids_connections_files[run_id][connection] == [None]:
-                        run.add_empty_output_connection("%s_fastqc_report" %
-                                                        read)
-                        run.add_empty_output_connection("%s_log_stderr" % read)
-                    else:
-                        input_paths = run_ids_connections_files[run_id][connection]
+                    input_paths = run_ids_connections_files[run_id].get(connection)
+                    if input_paths:
                         for input_path in input_paths:
                             # Get base name of input file
                             root, ext = os.path.splitext(os.path.basename(

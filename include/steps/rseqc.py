@@ -31,11 +31,11 @@ class RSeQC(AbstractStep):
         self.add_connection('out/geneBody_coverage_stdout')
         self.add_connection('out/geneBody_coverage_stderr')
 
-        self.add_connection('out/inner_distance_freq')
-        self.add_connection('out/inner_distance_plot')
-        self.add_connection('out/inner_distance')
-        self.add_connection('out/inner_distance_stdout')
-        self.add_connection('out/inner_distance_stderr')
+        self.add_connection('out/inner_distance_freq', optional=True)
+        self.add_connection('out/inner_distance_plot', optional=True)
+        self.add_connection('out/inner_distance', optional=True)
+        self.add_connection('out/inner_distance_stdout', optional=True)
+        self.add_connection('out/inner_distance_stderr', optional=True)
 
         self.add_connection('out/junction_bed')
         self.add_connection('out/junction_plot')
@@ -185,13 +185,6 @@ class RSeQC(AbstractStep):
                         exec_group.add_command(inner_distance,
                                                stdout_path=log_stdout,
                                                stderr_path=log_stderr)
-                    else:
-
-                        run.add_empty_output_connection('inner_distance_freq')
-                        run.add_empty_output_connection('inner_distance_plot')
-                        run.add_empty_output_connection('inner_distance')
-                        run.add_empty_output_connection('inner_distance_stdout')
-                        run.add_empty_output_connection('inner_distance_stderr')
 
                 with run.new_exec_group() as exec_group:
                     junction_annotation = [
