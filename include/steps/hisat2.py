@@ -387,9 +387,12 @@ class Hisat2(AbstractStep):
                     (library_type, library_types[0]))
         elif paired_end and library_types:
             library_type = library_types[0]
-        elif not paired_end and (library_types or library_type):
+        elif not paired_end and library_types:
             raise UAPError('[hisat2] Library type %s is specified for single '
                            'end reads.' % library_types[0])
+        elif not paired_end and library_type:
+            raise UAPError('[hisat2] Library type %s is specified for single '
+                           'end reads.' % library_type)
 
         for run_id in cc.keys():
             with self.declare_run(run_id) as run:
