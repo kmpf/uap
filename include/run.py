@@ -724,6 +724,8 @@ class Run(object):
             os.unlink(self.get_submit_script_file())
         log['run']['known_paths'] = self.get_known_paths()
         log['run']['structure'] = self.get_run_structure()
+        log['run']['hostname'] = platform.node()
+        log['run']['platform'] = platform.platform()
         if error is not None:
             log['run']['error'] = error
         log['config'] = self.get_step().get_pipeline().config
@@ -744,6 +746,7 @@ class Run(object):
         log['system'] = {}
         log['system']['hostname'] = platform.node()
         log['system']['platform'] = platform.platform()
+        log['system']['user'] = os.environ.get('USER')
 
 
         if self.get_step().get_pipeline().caught_signal is not None:

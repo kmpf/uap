@@ -232,7 +232,7 @@ def main(args):
                             print('The annotation file "%s" seems badly '
                                     'formated: %s\n' % (anno_file, e))
                         else:
-                            host = anno_data.get('system', dict()).get('hostname', 'unknown')
+                            host = anno_data.get('run', dict()).get('hostname', 'unknown')
                             time = anno_data.get('end_time', 'unknown')
                             print('host: %s' % host)
                             print('time: %s' % time)
