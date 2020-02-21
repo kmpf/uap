@@ -598,7 +598,7 @@ class Pipeline(object):
         '''
         if not 'tools' in self.config:
             return
-        pool = multiprocessing.Pool()
+        pool = multiprocessing.Pool(4)
         def kill_pool(signum, frame):
             pool.close()
             raise UAPError('Keybord interrupt during tool check.')
