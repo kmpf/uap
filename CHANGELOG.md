@@ -49,7 +49,6 @@
  * revised message output and regulation with verbosity level
  * print stderr of failed processes in UAP log
  * watcher report with proc names printed on verbosity level 3 (-vv)
- * propagate verbosity level to cluster jobs
  * allow empty step options to set None values/unset defaults
  * io and net stats in annotation file (#34)
  * if step config has wrong options pass -v to display all available options
@@ -82,6 +81,7 @@
  * only one annotation and no symlinks in output directory
  * multiple executions do not accumulate files in output directory
  * log uap version in annotation
+ * always use highest verbosity level on cluster jobs
 
 ## 1.1 (20.01.2020)
 

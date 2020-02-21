@@ -154,11 +154,9 @@ def main(args):
         submit_script = submit_script.replace("#{CORES}", str(step._cores))
         submit_script = submit_script.replace("#{UAP_CONFIG}", yaml.dump(p.config))
 
-        command = ['exec', os.path.join(p.get_uap_path(), 'uap')]
+        command = ['exec', os.path.join(p.get_uap_path(), 'uap'), '-vv']
         if p.args.debugging:
             command.append('--debugging')
-        if p.args.verbose > 1:
-            command.append('-' + 'v'*(p.args.verbose-1))
         command.extend(['<(cat <&123)', 'run-locally'])
         if p.args.force:
             command.append('--force')
