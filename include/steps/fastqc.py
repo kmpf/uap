@@ -123,12 +123,13 @@ class Fastqc(AbstractStep):
             with self.declare_run(run_id) as run:
                 for read in read_types:
                     connection = 'in/%s' % read
-                    input_paths = run_ids_connections_files[run_id][connection]
-                    if input_paths == [None]:
+                    if connection not in run_ids_connections_files[run_id]
+                    or run_ids_connections_files[run_id][connection] == [None]:
                         run.add_empty_output_connection("%s_fastqc_report" %
                                                         read)
                         run.add_empty_output_connection("%s_log_stderr" % read)
                     else:
+                        input_paths = run_ids_connections_files[run_id][connection]
                         for input_path in input_paths:
                             # Get base name of input file
                             root, ext = os.path.splitext(os.path.basename(
