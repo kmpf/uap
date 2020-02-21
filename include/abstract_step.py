@@ -712,9 +712,9 @@ class AbstractStep(object):
             return p.states.BAD
 
         run_state = self.get_run_state_basic(run_id)
+        anno_file = run.get_annotation_path()
 
         if run_state == p.states.READY:
-            anno_file = run.get_annotation_path()
             try:
                 with open(anno_file, 'r') as fl:
                     anno_data = yaml.load(fl, Loader=yaml.FullLoader)
@@ -724,13 +724,18 @@ class AbstractStep(object):
                 if anno_data.get('run', dict()).get('error') is not None:
                     return p.states.BAD
         elif run_state == p.states.FINISHED:
+            changes = False
             try:
-                changes = run.get_changes()
+                with open(anno_file, 'r') as fl:
+                    anno_data = yaml.load(fl, Loader=yaml.FullLoader)
             except IOError as e:
                 changes = True
-                logger.warn('The task "%s/%s" seems finished but: %s' %
+                logger.warn('The task "%s/%s" seems finished but the '
+                            'annotation file could not be read: %s' %
                             (self, run_id, e))
-            if changes:
+            for bad_file in run.file_changes(anno_data):
+                break
+            if changes or bad_file or run.get_changes(anno_data):
                 return p.states.CHANGED
         return run_state
 

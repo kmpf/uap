@@ -132,58 +132,20 @@ def main(args):
             elif state in [p.states.FINISHED, p.states.CHANGED]:
                 title = '%s is %s and ' % (task, state.lower())
                 sys.stdout.write(title)
-                header = title + 'has changed files'
-                header += '\n' + '-'*len(header) + '\n'
+                header = 'has changed files'
+                header += '\n' + '-'*len(title+header) + '\n'
                 good = True
-                anno_file = task.get_run().get_annotation_path()
-                try:
-                    with open(anno_file, 'r') as fl:
-                        anno_data = yaml.load(fl, Loader=yaml.FullLoader)
-                except IOError:
-                    print('The annotation file of task %s could not be '
-                          'read: %s.' % (task, anno_file))
-                    continue
-                old_dest = anno_data['config']['destination_path']
-                if 'known_paths' not in anno_data['run'] \
-                or not anno_data['run']['known_paths']:
+                for bad_file in task.get_run().file_changes(do_hash=True):
+                    if bad_file is None or isinstance(bad_file, bool):
+                        break
+                    if good:
+                        sys.stdout.write(header)
+                        good = False
+                    print(bad_file)
+                if bad_file is None:
                     print('has no output files')
-                    continue
-                has_output = False
-                for path, file in anno_data['run']['known_paths'].items():
-                    if file['type'] != 'step_file' \
-                    or file['designation'] != 'output' \
-                    or 'real_path' in file:
-                        continue
-                    has_output = True
-                    path = path.replace(old_dest, new_dest)
-                    if not os.path.exists(path):
-                        if good is True:
-                            sys.stdout.write(header)
-                            good = False
-                        print('missing: %s' % path)
-                        continue
-                    old_size = file['size']
-                    new_size = os.path.getsize(path)
-                    if new_size != old_size:
-                        if good is True:
-                            sys.stdout.write(header)
-                            good = False
-                        print('size changed from %s B to %s B: %s' %
-                              (old_size, new_size, path))
-                        continue
-                    old_hash = file['sha256']
-                    new_hash = misc.sha256sum_of(path)
-                    if new_hash != old_hash:
-                        if good is True:
-                            sys.stdout.write(header)
-                            good = False
-                        print('sha256sum changed from %s to %s: %s' %
-                              (old_hash, new_hash, path))
-                        continue
-                if has_output:
+                elif not bad_file:
                     print('the sha256sum correct')
-                else:
-                    print('has no output files')
     else:
         # print all runs
         '''
@@ -250,13 +212,21 @@ def main(args):
                     print(heading)
                     print('-'*len(heading))
                     run = task.get_run()
+                    anno_file = run.get_annotation_path()
                     try:
-                        changes = run.get_changes()
+                        with open(anno_file, 'r') as fl:
+                            anno_data = yaml.load(fl, Loader=yaml.FullLoader)
                     except IOError:
                         print('The annotation file could not be read: %s.' %
                                 anno_file)
                     else:
-                        print(yaml.dump(dict(changes)))
+                        changes = run.get_changes(anno_data)
+                        if changes:
+                            print(yaml.dump(dict(changes)))
+                        for line in run.file_changes(anno_data, do_hash=True):
+                            if line is None or isinstance(line, bool):
+                                break
+                            print(line)
                     print('')
             else:
                 print("Some tasks changed. Run 'uap %s status --details' to see the details." %

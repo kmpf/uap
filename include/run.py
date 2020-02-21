@@ -317,6 +317,61 @@ class Run(object):
         new_struct = self.get_run_structure()
         return DeepDiff(old_struct, new_struct)
 
+    def file_changes(self, anno_data=None, do_hash=False):
+        if anno_data is None:
+            anno_file = self.get_annotation_path()
+            try:
+                with open(anno_file, 'r') as fl:
+                    anno_data = yaml.load(fl, Loader=yaml.FullLoader)
+            except IOError as e:
+                raise IOError('The annotation file "%s" could not be read: %s.'
+                              % (anno_file, e))
+        new_dest = self.get_step().get_pipeline().config['destination_path']
+        old_dest = anno_data['config']['destination_path']
+        end_time = anno_data['end_time']
+        if 'known_paths' not in anno_data['run'] \
+        or not anno_data['run']['known_paths']:
+            yield None
+        has_bad_file = False
+        for path, file in anno_data['run']['known_paths'].items():
+            if file['type'] != 'step_file' \
+            or file['designation'] != 'output' \
+            or 'real_path' in file:
+                continue
+            path = path.replace(old_dest, new_dest)
+            if not os.path.exists(path):
+                has_bad_file = True
+                yield '%s is missing' % path
+                continue
+            change_str = ''
+            change_time = datetime.fromtimestamp(os.path.getmtime(path))
+            if change_time > end_time:
+                change_str = ' and was changed after %s' % end_time
+            old_size = file['size']
+            new_size = os.path.getsize(path)
+            if new_size != old_size:
+                has_bad_file = True
+                yield '%s size changed from %s B to %s B%s' % \
+                      (path, old_size, new_size, change_str)
+                continue
+            if do_hash:
+                old_hash = file['sha256']
+                new_hash = misc.sha256sum_of(path)
+                if new_hash != old_hash:
+                    has_bad_file = True
+                    yield '%s sha256sum changed from %s to %s%s' % \
+                          (path, old_hash, new_hash, change_str)
+                    continue
+                elif change_str:
+                    has_bad_file = True
+                    yield '%s sha256sum is correct%s' % \
+                          (path, change_str)
+                    continue
+            elif change_str:
+                    has_bad_file = True
+                    yield path + change_str[len(' and'):]
+        yield has_bad_file
+
     def get_parent_runs(self):
         """
         Returns the parent runs.
