@@ -66,6 +66,7 @@
  * `base_working_directory` can be configured and paths set relatively to it
  * status bar during tool check and task status
  * improved resource monitoring report in annotation file
+ * introduce status --hash to validate sha256sum of output files
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
@@ -80,6 +81,7 @@
  * nothing is written outside of `destination_path` (no `config.yaml-out` link)
  * only one annotation and no symlinks in output directory
  * multiple executions do not accumulate files in output directory
+ * log uap version in annotation
 
 ## 1.1 (20.01.2020)
 

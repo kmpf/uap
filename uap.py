@@ -12,6 +12,7 @@ import yaml
 Adjust sys.path so everything we need can be found
 '''
 
+uap_version = 2.0
 if uap_path not in sys.path:
     sys.path.append(uap_path)
 include_path = '%s/include' % uap_path
@@ -117,7 +118,7 @@ def main():
         "--version",
         dest="version",
         action="version",
-        version="%(prog)s 1.1",
+        version="%%(prog)s %s" % uap_version,
         help = "Display version information.")
 
     subparsers = parser.add_subparsers(
@@ -345,6 +346,13 @@ def main():
         help="Displays the dependency graph of the analysis.")
 
     status_parser.add_argument(
+        "--hash",
+        dest="hash",
+        action="store_true",
+        default=False,
+        help="Compare hash sums of existing files with the logged values.")
+
+    status_parser.add_argument(
         "--sources",
         dest="sources",
         action="store_true",
@@ -537,6 +545,7 @@ def main():
     args = parser.parse_args()
     # Add the path to this very file
     args.uap_path = uap_path
+    args.uap_version = uap_version
 
     # create logger object
     logger = _configure_logger(args.verbose)

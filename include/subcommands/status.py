@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import sys
+import os
 from contextlib import closing
 import logging
 import pydoc
@@ -17,7 +18,7 @@ import misc
 
 '''
 By default, this script displays information about all tasks of the pipeline
-configured in 'config.yaml'. But the displayed information can be narrowed 
+configured in 'config.yaml'. But the displayed information can be narrowed
 down via command line options.
 
 '''
@@ -38,7 +39,7 @@ def main(args):
         print(' '.join(ids))
         return
 
-    elif len( args.run ) >= 1:
+    elif args.run and not args.hash:
         # print run infos of one or more specific tasks
         args.no_tool_checks = True
         p = pipeline.Pipeline(arguments=args)
@@ -50,7 +51,7 @@ def main(args):
             run_id = parts[1]
             report = p.steps[step_name].get_run(run_id).as_dict()
             print(yaml.dump(report, default_flow_style = False))
-        
+
     elif args.graph:
         p = pipeline.Pipeline(arguments=args)
         step_order = p.topological_step_order
@@ -105,6 +106,84 @@ def main(args):
                         step.get_step_name(), original_step_name_label,
                         step.get_run_info_str(progress=True))
             print(line)
+        # now check ping files and print some warnings and instructions if
+        # something's fishy
+        p.check_ping_files(print_more_warnings = True if args.verbose > 0 else False)
+
+        # Now check whether we can volatilize files, but don't do it.
+        p.check_volatile_files()
+    elif args.hash:
+        p = pipeline.Pipeline(arguments=args)
+        new_dest = p.config['destination_path']
+        tasks = list()
+        for task_id in args.run:
+            if task_id not in p.task_for_task_id.keys():
+                raise UAPError('Task ID "%s" is not recognized.' % task_id)
+            tasks.append(p.task_for_task_id[task_id])
+        if not args.run:
+            tasks = p.all_tasks_topologically_sorted
+        for task in tasks:
+            state = task.get_task_state()
+            if state in [p.states.READY, p.states.EXECUTING, p.states.BAD]:
+                print('%s is %s' % (task, state.lower()))
+            elif state == p.states.WAITING:
+                parents = [str(parent) for parent in task.get_parent_tasks()]
+                print('%s is %s for %s' % (task, state.lower(), parents))
+            elif state in [p.states.FINISHED, p.states.CHANGED]:
+                title = '%s is %s and ' % (task, state.lower())
+                sys.stdout.write(title)
+                header = title + 'has changed files'
+                header += '\n' + '-'*len(header) + '\n'
+                good = True
+                anno_file = task.get_run().get_annotation_path()
+                try:
+                    with open(anno_file, 'r') as fl:
+                        anno_data = yaml.load(fl, Loader=yaml.FullLoader)
+                except IOError:
+                    print('The annotation file of task %s could not be '
+                          'read: %s.' % (task, anno_file))
+                    continue
+                old_dest = anno_data['config']['destination_path']
+                if 'known_paths' not in anno_data['run'] \
+                or not anno_data['run']['known_paths']:
+                    print('has no output files')
+                    continue
+                has_output = False
+                for path, file in anno_data['run']['known_paths'].items():
+                    if file['type'] != 'step_file' \
+                    or file['designation'] != 'output' \
+                    or 'real_path' in file:
+                        continue
+                    has_output = True
+                    path = path.replace(old_dest, new_dest)
+                    if not os.path.exists(path):
+                        if good is True:
+                            sys.stdout.write(header)
+                            good = False
+                        print('missing: %s' % path)
+                        continue
+                    old_size = file['size']
+                    new_size = os.path.getsize(path)
+                    if new_size != old_size:
+                        if good is True:
+                            sys.stdout.write(header)
+                            good = False
+                        print('size changed from %s B to %s B: %s' %
+                              (old_size, new_size, path))
+                        continue
+                    old_hash = file['sha256']
+                    new_hash = misc.sha256sum_of(path)
+                    if new_hash != old_hash:
+                        if good is True:
+                            sys.stdout.write(header)
+                            good = False
+                        print('sha256sum changed from %s to %s: %s' %
+                              (old_hash, new_hash, path))
+                        continue
+                if has_output:
+                    print('the sha256sum correct')
+                else:
+                    print('has no output files')
     else:
         # print all runs
         '''
@@ -171,7 +250,6 @@ def main(args):
                     print(heading)
                     print('-'*len(heading))
                     run = task.get_run()
-                    anno_file = run.get_annotation_path()
                     try:
                         changes = run.get_changes()
                     except IOError:
@@ -249,10 +327,10 @@ def main(args):
             else:
                 print("Some tasks are bad. Run 'uap %s status --details' to see the details." %
                         p.args.config.name)
-    # now check ping files and print some warnings and instructions if
-    # something's fishy
-    p.check_ping_files(print_more_warnings = True if args.verbose > 0 else False)
-    
-    # Now check whether we can volatilize files, but don't do it.
-    p.check_volatile_files()
-    
+        # now check ping files and print some warnings and instructions if
+        # something's fishy
+        p.check_ping_files(print_more_warnings = True if args.verbose > 0 else False)
+
+        # Now check whether we can volatilize files, but don't do it.
+        p.check_volatile_files()
+

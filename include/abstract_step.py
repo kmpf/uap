@@ -725,12 +725,10 @@ class AbstractStep(object):
         elif run_state == p.states.FINISHED:
             try:
                 changes = run.get_changes()
-            except IOError:
+            except IOError as e:
                 changes = True
-                logger.warn('The task "%s/%s" seems finished but the annotation '
-                            'file could not be read: %s. It will be '
-                            'considered as "CHANGED".' %
-                            (self, run_id, anno_file))
+                logger.warn('The task "%s/%s" seems finished but: %s' %
+                            (self, run_id, e))
             if changes:
                 return p.states.CHANGED
         return run_state
@@ -930,24 +928,8 @@ class AbstractStep(object):
                         # will overwrite the file.
                         if os.path.exists(source_path):
                             # Calculate SHA256 hash for output files
-                            sha256sum = hashlib.sha256()
-                            try:
-                                with open(source_path, 'rb') as f:
-                                    # the below exception is raised for large files
-                                    # this workaround reads the file in chunks and
-                                    # updates the sha256sum
-                                    while True:
-                                        # read file in 2MB chunks
-                                        buf = f.read(2*1024*1024)
-                                        if not buf:
-                                            break
-                                        sha256sum.update(buf)
-                            except:
-                                raise UAPError("Error while calculating SHA256sum "
-                                             "of %s" % source_path)
-
-                            # hexadecimal version of sha256sum
-                            sha256sum = sha256sum.hexdigest()
+                            sha256sum = misc.sha256sum_of(source_path)
+                            size = os.path.getsize(source_path)
 
                             os.rename(source_path, destination_path)
                             for path in [source_path, destination_path]:
@@ -955,6 +937,7 @@ class AbstractStep(object):
                                     if known_paths[path]['designation'] == \
                                        'output':
                                        known_paths[path]['sha256'] = sha256sum
+                                       known_paths[path]['size'] = size
                                     if known_paths[path]['type'] != \
                                        'step_file':
                                         logger.debug("Set %s 'type' info to "

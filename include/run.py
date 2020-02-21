@@ -304,10 +304,15 @@ class Run(object):
 
         return cmd_by_eg
 
-    def get_changes(self):
-        anno_file = self.get_annotation_path()
-        with open(anno_file, 'r') as fl:
-            anno_data = yaml.load(fl, Loader=yaml.FullLoader)
+    def get_changes(self, anno_data=None):
+        if anno_data is None:
+            anno_file = self.get_annotation_path()
+            try:
+                with open(anno_file, 'r') as fl:
+                    anno_data = yaml.load(fl, Loader=yaml.FullLoader)
+            except IOError as e:
+                raise IOError('The annotation file "%s" could not be read: %s.'
+                              % (anno_file, e))
         old_struct = anno_data['run']['structure']
         new_struct = self.get_run_structure()
         return DeepDiff(old_struct, new_struct)
@@ -743,6 +748,7 @@ class Run(object):
         log['run']['structure'] = self.get_run_structure()
         log['run']['hostname'] = platform.node()
         log['run']['platform'] = platform.platform()
+        log['run']['user'] = os.environ.get('USER')
         if error is not None:
             log['run']['error'] = error
         log['config'] = self.get_step().get_pipeline().config
@@ -757,13 +763,10 @@ class Run(object):
 
 
 
+        log['uap_version'] = self.get_step().get_pipeline().args.uap_version
         log['git_tag'] = self.get_step().get_pipeline().git_tag
         log['git_diff'] = self.get_step().get_pipeline().git_diff
         log['git_version'] = self.get_step().get_pipeline().git_version
-        log['system'] = {}
-        log['system']['hostname'] = platform.node()
-        log['system']['platform'] = platform.platform()
-        log['system']['user'] = os.environ.get('USER')
 
 
         if self.get_step().get_pipeline().caught_signal is not None:

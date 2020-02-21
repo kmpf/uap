@@ -603,7 +603,8 @@ class Pipeline(object):
             pool.close()
             raise UAPError('Keybord interrupt during tool check.')
         show_status = True
-        if hasattr(self.args, 'run') and self.args.run:
+        if hasattr(self.args, 'run') and self.args.run \
+        and not hasattr(self.args, 'hash'):
             show_status = False
             sys.stderr.write('[uap] Running tool check...\n')
         elif logger.getEffectiveLevel() <= 20:

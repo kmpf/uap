@@ -168,3 +168,25 @@ def append_suffix_to_path(path, suffix):
         extension = ''
     filename = basename + '-' + suffix + extension
     return os.path.join(dirname, filename)
+
+def sha256sum_of(file):
+    """
+    Returns hexdigits of the sha256sum of the passed file.
+    """
+    sha256sum = hashlib.sha256()
+    try:
+        with open(file, 'rb') as f:
+            # the below exception is raised for large files
+            # this workaround reads the file in chunks and
+            # updates the sha256sum
+            while True:
+                # read file in 2MB chunks
+                buf = f.read(2*1024*1024)
+                if not buf:
+                    break
+                sha256sum.update(buf)
+    except:
+        raise UAPError("Error while calculating SHA256sum "
+                     "of %s" % file)
+
+    return sha256sum.hexdigest()
