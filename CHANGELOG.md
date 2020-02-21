@@ -15,6 +15,7 @@
  * do not mix up lines in stderr tail of failed tasks
  * run-info uses list2cmdline for accurate command representation
  * run-locally checks parent task states befor running
+ * include output file list to detect output changes
 
 **Features**
  * steps now run within their temp directory (#29, #31)

@@ -286,6 +286,13 @@ class Run(object):
                 elif isinstance(poc, command_info.CommandInfo):
                     cmd_by_eg[eg_name]['command %s' % pipe_count] = \
                             subprocess.list2cmdline(poc.get_command())
+
+        # get output files
+        cmd_by_eg['output'] = dict()
+        for connection, files in self.get_output_files().items():
+            if files:
+                cmd_by_eg['output'][connection] = files.keys()
+        # get parent hash
         parents = self.get_parent_runs()
         if parents:
             parent_struct = dict()
@@ -403,6 +410,8 @@ class Run(object):
                          "directory separator: %s." % out_path)
         elif isinstance(self._step, abst.AbstractSourceStep):
             out_path = os.path.abspath(out_path)
+        else:
+            out_path = os.path.normpath(out_path)
         # make sure tag was declared with an outgoing connection
         if 'out/' + tag not in self._output_files:
             self.add_out_connection('out/' + tag)
