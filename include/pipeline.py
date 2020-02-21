@@ -342,10 +342,6 @@ class Pipeline(object):
         self.read_config(self.args.config)
         self.setup_lmod()
 
-        self.tool_versions = {}
-        if not self.args.no_tool_checks:
-            self.check_tools()
-
         # collect all tasks
         for step_name in self.topological_step_order:
             step = self.get_step(step_name)
@@ -368,6 +364,10 @@ class Pipeline(object):
                 if str(task) in self.task_for_task_id:
                     raise UAPError("Duplicate task ID %s." % task)
                 self.task_for_task_id[str(task)] = task
+
+        self.tool_versions = {}
+        if not self.args.no_tool_checks:
+            self.check_tools()
 
     def get_uap_path(self):
         return self._uap_path
