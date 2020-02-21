@@ -339,16 +339,16 @@ class Run(object):
             or 'real_path' in file:
                 continue
             path = path.replace(old_dest, new_dest)
-            if not os.path.exists(path):
+            if not abst.AbstractStep.fsc.exists(path):
                 has_bad_file = True
                 yield '%s is missing' % path
                 continue
             change_str = ''
-            change_time = datetime.fromtimestamp(os.path.getmtime(path))
+            change_time = datetime.fromtimestamp(abst.AbstractStep.fsc.getmtime(path))
             if change_time > end_time:
                 change_str = ' and was changed after %s' % end_time
             old_size = file['size']
-            new_size = os.path.getsize(path)
+            new_size = abst.AbstractStep.fsc.getsize(path)
             if new_size != old_size:
                 has_bad_file = True
                 yield '%s size changed from %s B to %s B%s' % \
