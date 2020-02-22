@@ -79,6 +79,11 @@ class Run(object):
         '''
         self._known_paths = dict()
 
+        self._cached_anno_data = None
+        '''
+        Caches anno data read from file.
+        '''
+
     def __enter__(self):
         return self
 
@@ -304,28 +309,20 @@ class Run(object):
 
         return cmd_by_eg
 
-    def get_changes(self, anno_data=None):
-        if anno_data is None:
-            anno_file = self.get_annotation_path()
-            try:
-                with open(anno_file, 'r') as fl:
-                    anno_data = yaml.load(fl, Loader=yaml.FullLoader)
-            except IOError as e:
-                raise IOError('The annotation file "%s" could not be read: %s.'
-                              % (anno_file, e))
+    def get_changes(self):
+        anno_data = self.written_anno_data()
+        if not anno_data:
+            logger.warn('Cannot report changes for "%s/%s" without annotation '
+                        'file.' % (self.get_step().get_step_name(), self))
+            return dict()
         old_struct = anno_data['run']['structure']
         new_struct = self.get_run_structure()
         return DeepDiff(old_struct, new_struct)
 
-    def file_changes(self, anno_data=None, do_hash=False):
-        if anno_data is None:
-            anno_file = self.get_annotation_path()
-            try:
-                with open(anno_file, 'r') as fl:
-                    anno_data = yaml.load(fl, Loader=yaml.FullLoader)
-            except IOError as e:
-                raise IOError('The annotation file "%s" could not be read: %s.'
-                              % (anno_file, e))
+    def file_changes(self, do_hash=False):
+        anno_data = self.written_anno_data()
+        if not anno_data:
+            raise StopIteration
         new_dest = self.get_step().get_pipeline().config['destination_path']
         old_dest = anno_data['config']['destination_path']
         end_time = anno_data['end_time']
@@ -770,6 +767,24 @@ class Run(object):
         result['run_id'] = self._run_id
         return result
 
+    def written_anno_data(self):
+        if not self._cached_anno_data:
+            anno_file = self.get_annotation_path()
+            try:
+                with open(anno_file, 'r') as fl:
+                    self._cached_anno_data = \
+                            yaml.load(fl, Loader=yaml.FullLoader)
+            except IOError as e:
+                if not os.path.exists(anno_file):
+                    self._cached_anno_data = False
+                else:
+                    logger.warn('The annotation file "%s" could not be read: '
+                                '%s' % anno_file)
+        return self._cached_anno_data
+
+    def reset_anno_cache(self):
+        self._cached_anno_data = None
+
     def write_annotation_file(self, path, error=None):
         '''
         Write the YAML annotation after a successful or failed run. The
@@ -834,7 +849,9 @@ class Run(object):
         with open(annotation_path, 'w') as f:
             f.write(annotation_yaml)
 
-        return annotation_path, annotation_yaml
+        self.reset_anno_cache()
+
+        return annotation_path
 
     def get_annotation_path(self, path=None):
         if path is None:

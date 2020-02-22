@@ -712,30 +712,21 @@ class AbstractStep(object):
             return p.states.BAD
 
         run_state = self.get_run_state_basic(run_id)
-        anno_file = run.get_annotation_path()
 
         if run_state == p.states.READY:
-            try:
-                with open(anno_file, 'r') as fl:
-                    anno_data = yaml.load(fl, Loader=yaml.FullLoader)
-            except IOError:
-                pass
-            else:
-                if anno_data.get('run', dict()).get('error') is not None:
-                    return p.states.BAD
+            anno_data = run.written_anno_data()
+            if anno_data and anno_data.get('run', dict()).get('error') is not None:
+                return p.states.BAD
         elif run_state == p.states.FINISHED:
-            changes = False
-            try:
-                with open(anno_file, 'r') as fl:
-                    anno_data = yaml.load(fl, Loader=yaml.FullLoader)
-            except IOError as e:
-                changes = True
+            if not run.written_anno_data():
                 logger.warn('The task "%s/%s" seems finished but the '
                             'annotation file could not be read: %s' %
                             (self, run_id, e))
-            for bad_file in run.file_changes(anno_data):
-                break
-            if changes or bad_file or run.get_changes(anno_data):
+                return p.states.CHANGED
+            for bad_file in run.file_changes():
+                if bad_file:
+                    return p.states.CHANGED
+            if run.get_changes():
                 return p.states.CHANGED
         return run_state
 
@@ -969,7 +960,7 @@ class AbstractStep(object):
         elif caught_exception is not None:
             error = ''.join(traceback.format_exception(
                     *caught_exception)[-2:]).strip()
-        annotation_path, annotation_str = run.write_annotation_file(
+        annotation_path = run.write_annotation_file(
             run.get_output_directory(), error=error)
 
         self._state = AbstractStep.states.DEFAULT

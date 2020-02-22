@@ -213,17 +213,15 @@ def main(args):
                     print('-'*len(heading))
                     run = task.get_run()
                     anno_file = run.get_annotation_path()
-                    try:
-                        with open(anno_file, 'r') as fl:
-                            anno_data = yaml.load(fl, Loader=yaml.FullLoader)
-                    except IOError:
+                    anno_data = run.written_anno_data()
+                    if not anno_data:
                         print('The annotation file could not be read: %s.' %
                                 anno_file)
                     else:
-                        changes = run.get_changes(anno_data)
+                        changes = run.get_changes()
                         if changes:
                             print(yaml.dump(dict(changes)))
-                        for line in run.file_changes(anno_data, do_hash=True):
+                        for line in run.file_changes(do_hash=True):
                             if line is None or isinstance(line, bool):
                                 break
                             print(line)
@@ -252,10 +250,8 @@ def main(args):
                     if stale:
                         print('Marked as executing but did not show activity '
                               'for %s.\n' % misc.duration_to_str(stale))
-                    try:
-                        with open(anno_file, 'r') as fl:
-                            anno_data = yaml.load(fl, Loader=yaml.FullLoader)
-                    except IOError:
+                    anno_data = run.written_anno_data()
+                    if not anno_data:
                         print('The annotation file could not be read: %s.\n' %
                                 anno_file)
                     else:
