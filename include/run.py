@@ -382,6 +382,7 @@ class Run(object):
                     has_changed_deps = True
                     yield 'input file %s was changed' % in_file
             if has_changed_deps:
+                has_bad_file = True
                 if change_str:
                     change_str = ', has changed input' + change_str
                 else:
