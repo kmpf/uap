@@ -688,8 +688,7 @@ class Run(object):
                 directory = self.get_output_directory_du_jour()
                 full_path = out_path
                 try:
-                    head, tail = os.path.split(out_path)
-                    if directory != None and out_path != None and head == "":
+                    if directory and out_path and directory != '.':
                         full_path = os.path.join(directory, out_path)
                 except AttributeError:
                     pass
