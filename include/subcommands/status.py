@@ -127,7 +127,8 @@ def main(args):
             if state in [p.states.READY, p.states.EXECUTING, p.states.BAD]:
                 print('%s is %s' % (task, state.lower()))
             elif state == p.states.WAITING:
-                parents = [str(parent) for parent in task.get_parent_tasks()]
+                parents = [str(parent) for parent in task.get_parent_tasks()
+                        if parent.get_task_state() != p.states.FINISHED]
                 print('%s is %s for %s' % (task, state.lower(), parents))
             elif state in [p.states.FINISHED, p.states.CHANGED]:
                 title = '%s is %s and ' % (task, state.lower())
@@ -204,6 +205,14 @@ def main(args):
                                     if _ in tasks_for_status])))
         pydoc.pager("\n".join(output))
 
+        if p.states.WAITING in tasks_for_status.keys():
+            if args.details:
+                print('')
+                for task in tasks_for_status[p.states.WAITING]:
+                    parents = [str(parent) for parent in task.get_parent_tasks()
+                            if parent.get_task_state() != p.states.FINISHED]
+                    print('%s is waiting for %s' % (task, parents))
+
         if p.states.CHANGED in tasks_for_status.keys():
             if args.details:
                 print('')
@@ -212,13 +221,12 @@ def main(args):
                     print(heading)
                     print('-'*len(heading))
                     run = task.get_run()
-                    anno_file = run.get_annotation_path()
                     anno_data = run.written_anno_data()
                     has_date_change = False
                     has_only_date_change = True
-                    if not anno_data:
-                        print('The annotation file could not be read: %s.' %
-                                anno_file)
+                    if anno_data:
+                        has_only_date_change = False
+                        print('No annotation file.')
                     else:
                         changes = run.get_changes()
                         if changes:

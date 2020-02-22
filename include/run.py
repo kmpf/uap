@@ -451,6 +451,9 @@ class Run(object):
                 return states.QUEUED
             if abst.AbstractStep.fsc.exists(self.get_queued_ping_file() + '.bad'):
                 return states.BAD
+            for parent in self.get_parent_runs():
+                if parent.get_cached_state() != states.FINISHED:
+                    return states.WAITING
 
             output_files = [(out_file, input_files)
                     for files in self.get_output_files_abspath().values()
@@ -461,16 +464,14 @@ class Run(object):
                 all_exist = all(abst.AbstractStep.fsc.exists(out_file
                                 + abst.AbstractStep.VOLATILE_SUFFIX)
                                 for out_file, _ in output_files)
+
+            anno_data = self.written_anno_data()
             if not all_exist:
-                for parent in self.get_parent_runs():
-                    if parent.get_cached_state() != states.FINISHED:
-                        return states.WAITING
-                anno_data = self.written_anno_data()
                 if anno_data and anno_data.get('run', dict()).get('error') is not None:
                     return states.BAD
                 return states.READY
             else:
-                if not self.written_anno_data():
+                if not anno_data:
                     logger.warn('The task "%s/%s" seems finished but the '
                                 'annotation file could not be read: %s' %
                                 (self, run_id, e))
