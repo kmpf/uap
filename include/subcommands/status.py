@@ -226,7 +226,7 @@ def main(args):
                     anno_data = run.written_anno_data()
                     has_date_change = False
                     has_only_date_change = True
-                    if anno_data:
+                    if not anno_data:
                         has_only_date_change = False
                         print('No annotation file.')
                     else:
