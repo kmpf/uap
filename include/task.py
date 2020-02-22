@@ -39,17 +39,11 @@ class Task(object):
         '''
         return self.step.get_run(self.run_id)
 
-    def get_task_state_basic(self):
-        '''
-        Proxy method for step.get_run_state().
-        '''
-        return self.step.get_run_state_basic(self.run_id)
-
     def get_task_state(self):
         '''
-        Proxy method for step.get_run_state().
+        Proxy method for run.get_state().
         '''
-        return self.step.get_run_state(self.run_id)
+        return self.get_run().get_state()
 
     def run(self):
         '''

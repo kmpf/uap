@@ -170,8 +170,8 @@ def render_graph_for_all_steps(p, args):
     for step_name, step in p.get_steps().items():
         total_runs = len(step.get_run_ids())
         finished_runs = 0
-        for _ in step.get_run_ids():
-            if step.get_run_state(_) == p.states.FINISHED:
+        for run in step.get_runs():
+            if run.get_state() == p.states.FINISHED:
                 finished_runs += 1
 
         f.write("subgraph cluster_%s {\n" % step_name)

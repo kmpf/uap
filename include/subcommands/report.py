@@ -40,7 +40,7 @@ def main(args):
 
     # try to generate reports for all tasks
     for task in task_list:
-        basic_task_state = task.get_task_state_basic()
+        basic_task_state = task.get_task_state()
         if basic_task_state == p.states.FINISHED:
             try:
                 task.generate_report()

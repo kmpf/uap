@@ -83,6 +83,7 @@
  * multiple executions do not accumulate files in output directory
  * log uap version in annotation
  * always use highest verbosity level on cluster jobs
+ * run states overhaul
 
 ## 1.1 (20.01.2020)
 

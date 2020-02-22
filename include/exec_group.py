@@ -7,7 +7,6 @@ import abstract_step
 import command as command_info
 import misc
 import pipeline_info
-import run
 
 from uaperrors import UAPError
 

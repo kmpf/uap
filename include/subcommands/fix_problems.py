@@ -54,12 +54,15 @@ def main(args):
         if args.srsly and not ask_user(question):
             return
         split_at = ' sha256sum is correct and was changed after '
+        split_at_v = ' is volatilized and was changed after '
         changes = list()
         for task in tqdm(tasks, desc='tasks'):
             for bad_file in task.get_run().file_changes(do_hash=True):
                 if not isinstance(bad_file, str):
                     break
                 bad_file = bad_file.split(split_at)
+                if len(bad_file) == 1:
+                    bad_file = bad_file[0].split(split_at_v)
                 if len(bad_file) == 1:
                     continue
                 date = task.get_run().written_anno_data()['end_time']

@@ -41,12 +41,23 @@ import command as command_info
 import misc
 import process_pool
 import pipeline_info
-import run as run_module
+from run import Run
 
 abs_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(abs_path, 'steps'))
 sys.path.insert(0, os.path.join(abs_path, 'sources'))
 logger=getLogger('uap_logger')
+
+class Gloals(object):
+
+    fsc = fscache.FSCache()
+
+    PING_TIMEOUT = 300
+    PING_RENEW = 30
+    VOLATILE_SUFFIX = '.volatile.placeholder.yaml'
+    UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK', '_connect',
+                          '_cluster_submit_options', '_cluster_pre_job_command',
+                          '_cluster_post_job_command', '_cluster_job_quota']
 
 class AbstractStep(object):
 
@@ -145,7 +156,7 @@ class AbstractStep(object):
         if run_id in self._runs:
             raise UAPError(
                 "Cannot declare the same run ID twice: %s." % run_id)
-        run = run_module.Run(self, run_id)
+        run = Run(self, run_id)
         self.add_run(run)
         return run
 
@@ -473,263 +484,6 @@ class AbstractStep(object):
         '''
         return self.__module__
 
-    def get_run_state_basic(self, run_id):
-        '''
-        Determines basic run state of a run.
-
-        Determine the basic run state of a run, which is, at any time, one of
-        **waiting**, **ready**, or **finished**.
-
-        These states are determined from the current configuration and the
-        timestamps of result files present in the file system. In addition to
-        these three basic states, there are two additional states which are
-        less reliable (see *get_run_state()*).
-        '''
-
-        def volatile_path_good(volatile_path, recurse = True):
-            '''
-            This function receives a volatile path and tries to load the
-            placeholder YAML data structure. It then checks all downstream
-            paths, which may in turn be volatile placeholder files.
-            It then checks all upstream paths, which may in turn be volatile
-            placeholder files.
-            '''
-
-            # reconstruct original path from volatile placeholder path
-            path = volatile_path[:-len(AbstractStep.VOLATILE_SUFFIX)]
-
-            if AbstractStep.fsc.exists(path):
-                # the original file still exists, ignore volatile placeholder
-                return False
-
-            if not path in self.get_pipeline().task_id_for_output_file:
-                # there is no task which creates the output file
-                return False
-
-            task_id = self.get_pipeline().task_id_for_output_file[path]
-
-            task = self.get_pipeline().task_for_task_id[task_id]
-            if not task.step.is_volatile():
-                # the task is not declared volatile
-                return False
-
-            if not AbstractStep.fsc.exists(volatile_path):
-                # the volatile placeholder does not exist
-                return False
-
-            if not recurse:
-                return True
-
-            try:
-                # try to parse the YAML contents
-                info = AbstractStep.fsc.load_yaml_from_file(volatile_path)
-            except yaml.scanner.ScannerError:
-                # error scanning YAML
-                return False
-
-            # now check whether all downstream files are in place and up-to-date
-            # also check whether all downstream files as defined in
-            # file_dependencies_reverse are covered
-
-            uncovered_files = set()
-            if path in self.get_pipeline().file_dependencies_reverse:
-                uncovered_files = self.get_pipeline().\
-                                  file_dependencies_reverse[path]
-
-            for downstream_path, downstream_info in info['downstream'].items():
-                if downstream_path in self.get_pipeline().task_id_for_output_file:
-                    # only check this downstream file if there's a task which
-                    # creates it, otherwise, it may be a file which is no more
-                    # used
-                    pv_downstream_path = change_to_volatile_if_need_be(
-                        downstream_path, recurse = False)
-                    if not AbstractStep.fsc.exists(pv_downstream_path):
-                        return False
-                    if not AbstractStep.fsc.getmtime(pv_downstream_path) >= \
-                       info['self']['mtime']:
-                        return False
-                    if downstream_path in uncovered_files:
-                        uncovered_files.remove(downstream_path)
-                    if pv_downstream_path.endswith(AbstractStep.VOLATILE_SUFFIX):
-                        if not volatile_path_good(pv_downstream_path, recurse):
-                            return False
-
-            if len(uncovered_files) > 0:
-                # there are still files defined which are not covered by the
-                # placeholder
-                return False
-
-            return True
-
-        def change_to_volatile_if_need_be(path, recurse = True):
-            """
-            Changes the file path to volatile path if necessary."""
-            if path != None:
-                if not AbstractStep.fsc.exists(path):
-                    # the real output file does not exist
-                    volatile_path = path + AbstractStep.VOLATILE_SUFFIX
-                    if volatile_path_good(volatile_path, recurse):
-                        return volatile_path
-                return path
-
-        def is_path_up_to_date(outpath, inpaths):
-            """
-            First, replace paths with volatile paths if the step is marked
-            as volatile and the real path is missing.
-            But, only consider volatile placeholders if all child tasks
-            are finished. That means if a child of a volatile
-            step needs to be run because it has been added or an existing step
-            has been modified, the volatile placeholders are ignored, thus
-            turning the task from 'finished' to 'ready' or 'waiting'
-            Hint: The pv_ prefix is for 'possibly volatile'
-            """
-            pv_outpath = outpath
-            pv_inpaths = list()
-
-            if outpath in self.get_pipeline().task_id_for_output_file:
-                pv_outpath = change_to_volatile_if_need_be(outpath)
-
-            for inpath in inpaths:
-                pv_inpaths.append(change_to_volatile_if_need_be(inpath))
-
-            if not AbstractStep.fsc.exists(pv_outpath):
-                if not inpaths and AbstractStep.fsc.islink(pv_outpath):
-                    # these are probably files of a broken source step
-                    raise UAPError('The input "%s" seems to be a broken '
-                                   'symlink.' % pv_outpath)
-                return False
-            for pv_inpath in pv_inpaths:
-                if not AbstractStep.fsc.exists(pv_inpath):
-                    return False
-                # Check that inpath was last modified before outpath
-                if AbstractStep.fsc.getmtime(pv_inpath) > \
-                   AbstractStep.fsc.getmtime(pv_outpath):
-                    logger.info('"%s" was changed befor its dependency "%s".' %
-                            (pv_outpath, pv_inpaths))
-                    return False
-            return True
-
-        def up_to_dateness_level(path, level = 0):
-
-            dep_paths = self.get_pipeline().file_dependencies.get(path)
-            if path is not None and dep_paths is not None:
-                result = level
-                if not is_path_up_to_date(path, dep_paths):
-                    result = level + 1
-                for dep_path in dep_paths:
-                    recursive_result = up_to_dateness_level(dep_path, level + 1)
-                    if recursive_result > level + 1:
-                        result = max(result, recursive_result)
-                return result
-            else:
-                return level
-
-        """
-        - finished: all output files exist AND up to date (recursively)
-        - ready: NOT all output files exist AND all input files exist AND up to
-                 date (recursively)
-        - waiting: otherwise
-        - if it's ready, it might be executing or queued -> check execute and
-          queue ping
-        - if it's waiting, it might be queued -> check queue ping
-
-        the ping works like this (this example is for execute, same goes for
-        queued):
-          - there's a ping file for every task ( = step + run)
-          - it contains information about when, how, where the job was started
-            etc.
-          - its timestamp gets renewed every 30 seconds (touch)
-          - as soon as the job has finished, the execute ping file is removed,
-            this should also work if the job crashes (however, it cannot work
-            if the controlling script receives SIGKILL
-          - if its timestamp is no more than 5 minutes old, it is regarded as
-            currently executing
-          - otherwise, a warning is printed because the ping file is probably
-            stale (no automatic cleanup is performed, manual intervention is
-            necessary)
-          - warning: this requires all involved systems or the file system to
-            be time-synchronized
-        """
-
-        run_info = self.get_runs()
-        max_level = 0
-        for tag, output_files in run_info[run_id].get_output_files_abspath().items():
-
-            # output_files can be None if the connection is empty
-            for output_file, input_files in output_files.items():
-                if output_file != None and input_files != None:
-#                    sys.stderr.write("outputfile: %s\n" % output_file)
-                    max_level = max(
-                        max_level, up_to_dateness_level(output_file))
-
-        if max_level == 0:
-            return self.get_pipeline().states.FINISHED
-        elif max_level == 1:
-            return self.get_pipeline().states.READY
-        else:
-            return self.get_pipeline().states.WAITING
-
-    def get_run_state(self, run_id):
-        '''
-        Returns run state of a run.
-
-        Determine the run state (that is, not *basic* but *extended* run state)
-        of a run.
-
-        Return **executing** if an up-to-date *executing ping file* is found.
-        Return **queued** if a *queued ping file* is found.
-        Return **bad** if a bad *queued ping file* is found.
-
-        Otherwise if a run is **ready**, this will:
-          - return **bad** if there is an error in the annotation file
-          - otherwiese return **ready**
-
-        Otherwise if a run is **waiting**, this will:
-          - otherwise return **waiting**
-
-        Otherwise if a run is **finished**, this will:
-          - return **changed** if the command structure changed
-          - otherwise return **finished**
-
-        Otherwise, it will just return the value obtained from
-        *get_run_state_basic()*.
-
-        Attention: The status indicators **executing** and **queued** may be
-        temporarily wrong due to the possiblity of having out-of-date ping files
-        lying around.
-        '''
-        run = self.get_run(run_id)
-        p = self.get_pipeline()
-        if isinstance(run.get_step(), AbstractSourceStep):
-            return self.get_run_state_basic(run_id)
-        if AbstractStep.fsc.exists( run.get_executing_ping_file() ):
-            if run.is_stale():
-                return p.states.BAD
-            return p.states.EXECUTING
-        if AbstractStep.fsc.exists( run.get_queued_ping_file() ):
-            return p.states.QUEUED
-        if AbstractStep.fsc.exists( run.get_queued_ping_file() + '.bad' ):
-            return p.states.BAD
-
-        run_state = self.get_run_state_basic(run_id)
-
-        if run_state == p.states.READY:
-            anno_data = run.written_anno_data()
-            if anno_data and anno_data.get('run', dict()).get('error') is not None:
-                return p.states.BAD
-        elif run_state == p.states.FINISHED:
-            if not run.written_anno_data():
-                logger.warn('The task "%s/%s" seems finished but the '
-                            'annotation file could not be read: %s' %
-                            (self, run_id, e))
-                return p.states.CHANGED
-            for bad_file in run.file_changes():
-                if bad_file:
-                    return p.states.CHANGED
-            if run.get_changes():
-                return p.states.CHANGED
-        return run_state
-
     def move_ping_file(self, ping_path, bad_copy=False):
         # don't remove the ping file, rename it so we can inspect it later
         suffix = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
@@ -964,6 +718,7 @@ class AbstractStep(object):
             run.get_output_directory(), error=error)
 
         self._state = AbstractStep.states.DEFAULT
+        run.reset_state_cache()
 
         if error:
             message = "[BAD] %s/%s failed on %s after %s\n" % \
@@ -993,7 +748,7 @@ class AbstractStep(object):
             # changed by now...
             AbstractStep.fsc = fscache.FSCache()
 
-            remaining_task_info = self.get_run_info_str(run_id)
+            remaining_task_info = self.get_run_info_str(run)
 
             message = "[OK] %s/%s successfully finished on %s after %s\n" % \
                       (str(self), run_id, socket.gethostname(),
@@ -1103,13 +858,15 @@ class AbstractStep(object):
 
     def get_run_info_str(self, finished_run=None, progress=False):
         count = {}
-        run_ids = self.get_run_ids()
-        for run_id in tqdm(run_ids, total=len(run_ids), desc='runs',
-                           disable=not progress, leave=False):
-            if run_id == finished_run:
+        runs = self.get_runs()
+        for run in tqdm(runs, total=len(runs), desc='runs',
+                        disable=not progress, leave=False):
+            if run == finished_run:
                 state = self.get_pipeline().states.FINISHED
             else:
-                state = self.get_run_state(run_id)
+                if isinstance(run, str):
+                    run = self.get_run(run)
+                state = run.get_cached_state()
             if not state in count:
                 count[state] = 0
             count[state] += 1

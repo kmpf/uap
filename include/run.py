@@ -83,6 +83,10 @@ class Run(object):
         '''
         Caches anno data read from file.
         '''
+        self._cached_state = None
+        '''
+        Caches last state.
+        '''
 
     def __enter__(self):
         return self
@@ -319,6 +323,20 @@ class Run(object):
         new_struct = self.get_run_structure()
         return DeepDiff(old_struct, new_struct)
 
+    def dependencies(self):
+        """
+        Returns a dict with a set of input files for each output file.
+        """
+        connections = self.get_output_files_abspath()
+        dependencies = dict()
+        for deps in connections.values():
+            for out_file, input_files in deps.items():
+                if not input_files or input_files == [None]:
+                    continue
+                dependencies.setdefault(out_file, set())
+                dependencies[out_file].update(set(input_files))
+        return dependencies
+
     def file_changes(self, do_hash=False):
         anno_data = self.written_anno_data()
         if not anno_data:
@@ -326,33 +344,78 @@ class Run(object):
         new_dest = self.get_step().get_pipeline().config['destination_path']
         old_dest = anno_data['config']['destination_path']
         end_time = anno_data['end_time']
-        if 'known_paths' not in anno_data['run'] \
-        or not anno_data['run']['known_paths']:
-            yield None
+        is_volatile = self.get_step().is_volatile()
         has_bad_file = False
-        for path, file in anno_data['run']['known_paths'].items():
-            if file['type'] != 'step_file' \
-            or file['designation'] != 'output' \
-            or 'real_path' in file:
-                continue
-            path = path.replace(old_dest, new_dest)
+        for path, input_files in self.dependencies().items():
+
+            # existence and volatility
+            v_path = path + abst.AbstractStep.VOLATILE_SUFFIX
             if not abst.AbstractStep.fsc.exists(path):
-                has_bad_file = True
-                yield '%s is missing' % path
-                continue
+                if not is_volatile or not abst.AbstractStep.fsc.exists(v_path):
+                    has_bad_file = True
+                    yield '%s is missing' % path
+                    continue
+                elif is_volatile:
+                    path = v_path
+                else:
+                    # is marked volatile but not volatilized yet
+                    is_volatile = False
+
+            # modification time
             change_str = ''
-            change_time = datetime.fromtimestamp(abst.AbstractStep.fsc.getmtime(path))
-            if change_time > end_time:
+            mod_time = datetime.fromtimestamp(abst.AbstractStep.fsc.getmtime(path))
+            if mod_time > end_time:
                 change_str = ' and was changed after %s' % end_time
-            old_size = file['size']
+
+            # chaged dependencies
+            has_changed_deps = False
+            for in_file in input_files:
+                v_in = in_file + abst.AbstractStep.VOLATILE_SUFFIX
+                if not abst.AbstractStep.fsc.exists(in_file):
+                    if not abst.AbstractStep.fsc.exists(v_in):
+                        has_changed_deps = True
+                        yield 'input file %s is missing' % in_file
+                    else:
+                        in_file = v_in
+                if abst.AbstractStep.fsc.getmtime(in_file) > \
+                abst.AbstractStep.fsc.getmtime(path):
+                    has_changed_deps = True
+                    yield 'input file %s was changed' % in_file
+            if has_changed_deps:
+                if change_str:
+                    change_str = ', has changed input' + change_str
+                else:
+                    change_str = ' and has changed input'
+
+            # stop here if volatile
+            if is_volatile and change_str:
+                has_bad_file = True
+                yield path + ' is volatilized' + change_str
+                continue
+            elif is_volatile:
+                continue
+
+            # is it logged in the annotation file
+            old_path = path.replace(new_dest, old_dest)
+            if old_path not in anno_data['run']['known_paths']:
+                raise UAPError('An output file was not found in the '
+                    'annotation file. Are you sure the task did not change?\n'
+                    'Annotation: %s\nMissing file: %s' %
+                    (anno_file, old_path))
+            meta_data = anno_data['run']['known_paths'][old_path]
+
+            # size changes
+            old_size = meta_data['size']
             new_size = abst.AbstractStep.fsc.getsize(path)
             if new_size != old_size:
                 has_bad_file = True
                 yield '%s size changed from %s B to %s B%s' % \
                       (path, old_size, new_size, change_str)
                 continue
+
+            # hash sum
             if do_hash:
-                old_hash = file['sha256']
+                old_hash = meta_data['sha256']
                 new_hash = misc.sha256sum_of(path)
                 if new_hash != old_hash:
                     has_bad_file = True
@@ -360,14 +423,76 @@ class Run(object):
                           (path, old_hash, new_hash, change_str)
                     continue
                 elif change_str:
-                    has_bad_file = True
                     yield '%s sha256sum is correct%s' % \
                           (path, change_str)
                     continue
+
+            # what changed
             elif change_str:
-                    has_bad_file = True
-                    yield path + change_str[len(' and'):]
+                has_bad_file = True
+                if change_str.startswith(' and'):
+                    change_str = change_str[len(' and'):]
+                elif change_str.startswith(' ,'):
+                    change_str = change_str[len(' ,'):]
+                yield path + change_str
         yield has_bad_file
+
+    def get_state(self, do_hash=False):
+
+        states = self.get_step().get_pipeline().states
+        def state_getter():
+            if isinstance(self.get_step(), abst.AbstractSourceStep):
+                return states.FINISHED
+            if abst.AbstractStep.fsc.exists(self.get_executing_ping_file()):
+                if self.is_stale():
+                    return states.BAD
+                return states.EXECUTING
+            if abst.AbstractStep.fsc.exists(self.get_queued_ping_file()):
+                return states.QUEUED
+            if abst.AbstractStep.fsc.exists(self.get_queued_ping_file() + '.bad'):
+                return states.BAD
+
+            output_files = [(out_file, input_files)
+                    for files in self.get_output_files_abspath().values()
+                    for out_file, input_files in files.items()]
+            all_exist = all(abst.AbstractStep.fsc.exists(out_file)
+                            for out_file, _ in output_files)
+            if not all_exist and self.get_step().is_volatile():
+                all_exist = all(abst.AbstractStep.fsc.exists(out_file
+                                + abst.AbstractStep.VOLATILE_SUFFIX)
+                                for out_file, _ in output_files)
+            if not all_exist:
+                for parent in self.get_parent_runs():
+                    if parent.get_cached_state() != states.FINISHED:
+                        return states.WAITING
+                anno_data = self.written_anno_data()
+                if anno_data and anno_data.get('run', dict()).get('error') is not None:
+                    return states.BAD
+                return states.READY
+            else:
+                if not self.written_anno_data():
+                    logger.warn('The task "%s/%s" seems finished but the '
+                                'annotation file could not be read: %s' %
+                                (self, run_id, e))
+                    return states.CHANGED
+                for bad_file in self.file_changes(do_hash=do_hash):
+                    if bad_file:
+                        return states.CHANGED
+                if self.get_changes():
+                    return states.CHANGED
+                return states.FINISHED
+
+        self._cached_state = state_getter()
+        return self._cached_state
+
+    def get_cached_state(self):
+        if self._cached_state is not None:
+            return self._cached_state
+        else:
+            return self.get_state()
+
+    def reset_state_cache(self):
+        self._cached_state = None
 
     def get_parent_runs(self):
         """
@@ -685,7 +810,7 @@ class Run(object):
         for connection in self._output_files.keys():
             result[connection] = dict()
             for out_path, in_paths in self._output_files[connection].items():
-                directory = self.get_output_directory_du_jour()
+                directory = self.get_output_directory()
                 full_path = out_path
                 try:
                     if directory and out_path and directory != '.':
