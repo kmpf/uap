@@ -169,7 +169,7 @@ def main():
         dest="srsly",
         action="store_true",
         default=False,
-        help="Delete problematic files.")
+        help="Delete problematic files or do change modification dates.")
 
     fix_problems_parser.set_defaults(func=fix_problems.main)
 

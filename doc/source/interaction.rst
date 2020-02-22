@@ -434,18 +434,21 @@ Here is the usage information::
   usage: uap [<project-config>.yaml] fix-problems [-h] [--even-if-dirty]
                                                   [--no-tool-checks]
                                                   [--cluster CLUSTER]
-                                                  [--first-error] [--details]
-                                                  [--srsly]
-
+                                                  [--first-error]
+                                                  [--file-modification-date]
+                                                  [--details] [--srsly]
+  
   optional arguments:
-    -h, --help         show this help message and exit
-    --even-if-dirty    This option must be set if the local git repository contains uncommited changes.
-                       Otherwise uap will not run.
-    --no-tool-checks   This option disables the otherwise mandatory checks for tool availability and version
-    --cluster CLUSTER  Specify the cluster type. Default: [auto].
-    --first-error      Print stderr of the first failed cluster job.
-    --details          Displays information about the files causing problems.
-    --srsly            Delete problematic files.
+    -h, --help            show this help message and exit
+    --even-if-dirty       This option must be set if the local git repository contains uncommited changes.
+                          Otherwise uap will not run.
+    --no-tool-checks      This option disables the otherwise mandatory checks for tool availability and version
+    --cluster CLUSTER     Specify the cluster type. Default: [auto].
+    --first-error         Print stderr of the first failed cluster job.
+    --file-modification-date
+                          If the sha256sum of the result is correct, reset the modification date.
+    --details             Displays information about the files causing problems.
+    --srsly               Delete problematic files.
 
 
 **uap** writes temporary files to indicate if a job is queued or executed.
@@ -454,18 +457,13 @@ Sometimes (especially on the compute cluster) jobs fail, without even starting
 This leaves the temporary file, written on job submission, indicating that a run
 was queued on the cluster without process (because it already failed).
 The ``status`` subcommand will inform the user if ``fix-problems`` needs to be
-executed to clean up the mess.
-The hint given by ``status`` would look like::
+executed to clean up these files.
 
-  Warning: There are 10 tasks marked as queued, but they do not seem to be queued
-  Hint: Run 'uap <project-config>.yaml fix-problems --details' to see the details.
-  Hint: Run 'uap <project-config>.yaml fix-problems --first-error' to investigate what happended.
-  Hint: Run 'uap <project-config>.yaml fix-problems --srsly' to fix these problems
-        (that is, delete all problematic ping files).
-
-Be nice and do as you've told.
-Now you are able to resubmit your runs to the cluster.
-You've fixed the problem, haven't you?
+In another scenario the output of the **uap** was copied to a new location.
+This may have changed the modification dates the output files and the **uap**
+will not consider them finished if the order of modification contradicts
+the dependencies. ``--file-modification-date`` changes them to when the task completed
+but only if the sha256sums are still correct and the ``--srsly`` argument is passed.
 
 .. _uap-volatilize:
 
