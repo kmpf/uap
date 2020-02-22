@@ -214,17 +214,28 @@ def main(args):
                     run = task.get_run()
                     anno_file = run.get_annotation_path()
                     anno_data = run.written_anno_data()
+                    has_date_change = False
+                    has_only_date_change = True
                     if not anno_data:
                         print('The annotation file could not be read: %s.' %
                                 anno_file)
                     else:
                         changes = run.get_changes()
                         if changes:
+                            has_only_date_change = False
                             print(yaml.dump(dict(changes)))
-                        for line in run.file_changes(do_hash=True):
+                        for line in run.file_changes():
                             if line is None or isinstance(line, bool):
                                 break
+                            if ' was changed after' in line:
+                                has_date_change = True
+                            else:
+                                has_only_date_change = False
                             print(line)
+                    if has_date_change and has_only_date_change:
+                        print("\nThis may be fixed with "
+                             "'uap %s fix-problems --file-modification-date'." %
+                             p.args.config.name)
                     print('')
             else:
                 print("Some tasks changed. Run 'uap %s status --details' to see the details." %

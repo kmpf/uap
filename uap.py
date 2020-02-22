@@ -150,6 +150,12 @@ def main():
         default=False,
         help="Print stderr of the first failed cluster job.")
 
+    fix_problems_parser.add_argument(
+        "--file-modification-date",
+        dest="file_modification_date",
+        action="store_true",
+        default=False,
+        help="If the sha256sum of the result is correct, reset the modification date.")
 
     fix_problems_parser.add_argument(
         "--details",
