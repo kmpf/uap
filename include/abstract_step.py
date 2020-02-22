@@ -1429,7 +1429,7 @@ class AbstractStep(object):
             set_out_connections = set_out_connections.union(set(out_conn))
 
         if 'empty' in set_out_connections:
-            logger.warn('[%s] "empty" in _connect is depricated and will be '
+            logger.warn('[%s] "empty" in _connect is deprecated and will be '
                         'ignored.' % self.get_step_name())
             set_out_connections.discard('empty')
 
