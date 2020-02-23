@@ -473,7 +473,7 @@ class Run(object):
             return states.BAD
         has_volitile_parent = False
         for parent in self.get_parent_runs():
-            pstate = parent.get_state()
+            pstate = parent.get_state(do_hash=do_hash)
             if pstate not in [states.FINISHED, states.VOLATILIZED]:
                 return states.WAITING
             if pstate == states.VOLATILIZED:
