@@ -11,6 +11,7 @@ from cStringIO  import StringIO
 import yaml
 from tqdm import tqdm
 from subprocess import list2cmdline
+import signal
 
 import pipeline
 from uaperrors import UAPError
@@ -26,6 +27,10 @@ down via command line options.
 logger = logging.getLogger("uap_logger")
 
 def main(args):
+
+    def exit(signum, frame):
+        sys.exit(1)
+    signal.signal(signal.SIGPIPE, exit)
 
     if args.sources:
         # print all sources (i. e. instances of AbstractSourceStep)
