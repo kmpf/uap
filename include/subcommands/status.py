@@ -131,10 +131,10 @@ def main(args):
                     message += ' and sha256sum(s) correct'
                 print(message)
 
-            if state == p.states.READY:
+            elif state == p.states.READY:
                 print('%s has all inputs and is ready to start running' % task)
 
-            if state == p.states.EXECUTING:
+            elif state == p.states.EXECUTING:
                 exec_ping_file = task.get_run().get_executing_ping_file()
                 try:
                     with open(exec_ping_file, 'r') as buff:
@@ -149,7 +149,7 @@ def main(args):
                     print('%s is executing since %s' %
                             (task, info['start_time']))
 
-            if state == p.states.QUEUED:
+            elif state == p.states.QUEUED:
                 queued_ping_file = task.get_run().get_queued_ping_file()
                 try:
                     with open(queued_ping_file, 'r') as buff:
@@ -163,16 +163,16 @@ def main(args):
                     print('%s is queued with id %s since %s' %
                             (task, info['job_id'], info['submit_time']))
 
-            if state == p.states.VOLATILIZED:
+            elif state == p.states.VOLATILIZED:
                 print('%s was volatilized and must be re-run if the data is '
                       'needed' % task)
 
-            if state == p.states.WAITING:
+            elif state == p.states.WAITING:
                 parents = [str(parent) for parent in task.get_parent_tasks()
                         if parent.get_task_state() != p.states.FINISHED]
                 print('%s is waiting for %s' % (task, parents))
 
-            if state == p.states.CHANGED:
+            elif state == p.states.CHANGED:
                 heading = 'changes in task %s' % task
                 print(heading)
                 print('-'*len(heading))
@@ -201,7 +201,7 @@ def main(args):
                          p.args.config.name)
                 print('')
 
-            if state == p.states.BAD:
+            elif state == p.states.BAD:
                 heading = 'errors of task %s' % task
                 print(heading)
                 print('-'*len(heading)+'\n')
@@ -252,6 +252,9 @@ def main(args):
                         print("Run 'uap %s fix-problems --first-error' to investigate.'"
                                 % p.args.config.name)
                         print('')
+
+            else:
+                print('%s has unknown state "%s"' % (task, state.lower()))
     else:
         # print all runs
         '''
