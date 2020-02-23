@@ -718,7 +718,6 @@ class AbstractStep(object):
             run.get_output_directory(), error=error)
 
         self._state = AbstractStep.states.DEFAULT
-        run.reset_state_cache()
 
         if error:
             message = "[BAD] %s/%s failed on %s after %s\n" % \
@@ -747,8 +746,9 @@ class AbstractStep(object):
             # still left but first invalidate the FS cache because things have
             # changed by now...
             AbstractStep.fsc = fscache.FSCache()
+            run._cached_state = self.get_pipeline().states.FINISHED
 
-            remaining_task_info = self.get_run_info_str(run)
+            remaining_task_info = self.get_run_info_str()
 
             message = "[OK] %s/%s successfully finished on %s after %s\n" % \
                       (str(self), run_id, socket.gethostname(),
@@ -856,17 +856,14 @@ class AbstractStep(object):
         return self._post_command
 
 
-    def get_run_info_str(self, finished_run=None, progress=False):
+    def get_run_info_str(self, progress=False):
         count = {}
         runs = self.get_runs()
         for run in tqdm(runs, total=len(runs), desc='runs',
                         disable=not progress, leave=False):
-            if run == finished_run:
-                state = self.get_pipeline().states.FINISHED
-            else:
-                if isinstance(run, str):
-                    run = self.get_run(run)
-                state = run.get_cached_state()
+            if isinstance(run, str):
+                run = self.get_run(run)
+            state = run.get_state()
             if not state in count:
                 count[state] = 0
             count[state] += 1

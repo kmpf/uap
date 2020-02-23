@@ -438,7 +438,7 @@ class Run(object):
                 yield path + change_str
         yield has_bad_file
 
-    def get_state(self, do_hash=False):
+    def get_state(self, do_hash=False, reset=False):
 
         states = self.get_step().get_pipeline().states
         def state_getter():
@@ -453,7 +453,7 @@ class Run(object):
             if abst.AbstractStep.fsc.exists(self.get_queued_ping_file() + '.bad'):
                 return states.BAD
             for parent in self.get_parent_runs():
-                if parent.get_cached_state() != states.FINISHED:
+                if parent.get_state() != states.FINISHED:
                     return states.WAITING
 
             output_files = [(out_file, input_files)
@@ -484,14 +484,9 @@ class Run(object):
                     return states.CHANGED
                 return states.FINISHED
 
-        self._cached_state = state_getter()
+        if reset or self._cached_state is None:
+            self._cached_state = state_getter()
         return self._cached_state
-
-    def get_cached_state(self):
-        if self._cached_state is not None:
-            return self._cached_state
-        else:
-            return self.get_state()
 
     def reset_state_cache(self):
         self._cached_state = None
