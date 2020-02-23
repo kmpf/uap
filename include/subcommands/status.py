@@ -122,9 +122,9 @@ def main(args):
             tasks.append(p.task_for_task_id[task_id])
         if not args.run:
             tasks = p.all_tasks_topologically_sorted
-        for task in tasks:
+        for i, task in enumerate(tasks):
             state = task.get_task_state(do_hash=args.hash)
-
+            sys.stdout.write('[%d/%d] ' % (i+1, len(tasks)))
             if state == p.states.FINISHED:
                 message = '%s is finished' % task
                 if args.hash:
