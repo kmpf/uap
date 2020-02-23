@@ -56,6 +56,7 @@
  * new CHANGED state for tasks based on commands and tool versions
  * sha256 blockchain to determine CHANGED state
  * new BAD state for tasks when UAP caught an error
+ * new VILATILIZED state if a step has been volatilized
  * status --details to view changes of tasks and errors of bad tasks
  * --force to overwrite changed tasks
  * --ignore to ignore changes in tasks and consider them finished
@@ -84,6 +85,7 @@
  * log uap version in annotation
  * always use highest verbosity level on cluster jobs
  * run states overhaul
+ * caching is now run specific
 
 ## 1.1 (20.01.2020)
 
