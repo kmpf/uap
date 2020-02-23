@@ -68,6 +68,7 @@
  * improved resource monitoring report in annotation file
  * introduce status --hash to validate sha256sum of output files
  * introduce fix-problems --file-modification-date to fix output after copy
+ * configuration can be read from anny annotation file
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings

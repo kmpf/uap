@@ -391,6 +391,12 @@ class Pipeline(object):
         # yaml.load works fine, even for duplicate dictionary keys (WTF)
         self.config = yaml.load(config_file, Loader=yaml.FullLoader)
         config_file.close()
+        if 'config' in self.config.keys():
+            self.config = self.config['config']
+            dest = os.path.join(self._config_path, '..', '..')
+            self.config['destination_path'] = os.path.abspath(dest)
+            print('[uap] Reading config from annotation file with destination '
+                  '%s' % self.config['destination_path'])
 
         for key in self.config.keys():
             if key not in self.known_config_keys:
@@ -435,13 +441,21 @@ class Pipeline(object):
             if not tool_file.endswith('.py') or not os.path.isfile(tool_path):
                 continue
             tool = tool_file[:-3]
+            auto_add = False
             if not tool in self.config['tools'] or \
                     not isinstance(self.config['tools'][tool], dict):
+                        auto_add = True
                         self.config['tools'][tool] = dict()
-            self.config['tools'][tool].setdefault('path', [uap_python, tool_path])
+            elif self.config['tools'][tool].get('atomatically_configured'):
+                auto_add = True
+            if auto_add:
+                self.config['tools'][tool]['path'] = [uap_python, tool_path]
+            else:
+                self.config['tools'][tool].setdefault('path', [uap_python, tool_path])
             self.config['tools'][tool].setdefault('get_version', '--help')
             self.config['tools'][tool].setdefault('exit_code', 0)
             self.config['tools'][tool].setdefault('ignore_version', False)
+            self.config['tools'][tool].setdefault('atomatically_configured', auto_add)
 
         if not 'destination_path' in self.config:
             raise UAPError("Missing key: destination_path")
