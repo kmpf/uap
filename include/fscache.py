@@ -1,5 +1,6 @@
 import os
 import yaml
+import misc
 
 class FSCache:
     '''
@@ -37,6 +38,17 @@ class FSCache:
         f.close()
         self.cache['load_yaml_from_file'][path] = data
         return data
+
+    def sha256sum_of(self, path):
+        if not 'sha256sums' in self.cache:
+            self.cache['sha256sums'] = dict()
+
+        if path in self.cache['sha256sums']:
+            return self.cache['sha256sums'][path]
+
+        sha = misc.sha256sum_of(path)
+        self.cache['sha256sums'][path] = sha
+        return sha
 
     def clear(self):
         self.cache = dict()

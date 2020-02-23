@@ -356,7 +356,7 @@ def main():
         dest="hash",
         action="store_true",
         default=False,
-        help="Compare sha256sums of existing files with the logged values.")
+        help="Validate sha256sums to detect file changes.")
 
     status_parser.add_argument(
         "--sources",

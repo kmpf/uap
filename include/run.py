@@ -384,7 +384,7 @@ class Run(object):
             change_str = ''
             mod_time = datetime.fromtimestamp(self.fsc.getmtime(path))
             if mod_time > end_time:
-                change_str = ' and was changed after %s' % end_time
+                change_str = ' and modification date after %s' % end_time
 
             # chaged dependencies
             has_changed_deps = False
@@ -407,7 +407,7 @@ class Run(object):
                 if parent_fsc.getmtime(in_file) > \
                 self.fsc.getmtime(path):
                     has_changed_deps = True
-                    yield 'input file %s was changed' % in_file
+                    yield 'input file %s was modified' % in_file
             if has_changed_deps:
                 has_bad_file = True
                 if change_str:
@@ -444,7 +444,7 @@ class Run(object):
             # hash sum
             if do_hash:
                 old_hash = meta_data['sha256']
-                new_hash = misc.sha256sum_of(path)
+                new_hash = self.fsc.sha256sum_of(path)
                 if new_hash != old_hash:
                     has_bad_file = True
                     yield '%s sha256sum changed from %s to %s%s' % \

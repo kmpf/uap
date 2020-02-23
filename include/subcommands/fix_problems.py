@@ -51,8 +51,8 @@ def main(args):
         tasks = p.all_tasks_topologically_sorted
         question = 'This will change the modification dates of all output ' \
                    'files with valid sha256sum. Do you want to proceed?'
-        split_at = ' sha256sum is correct and was changed after '
-        split_at_v = ' is volatilized and was changed after '
+        split_at = ' sha256sum is correct and modification date after '
+        split_at_v = ' is volatilized and modification date after '
         changes = list()
         for task in tqdm(tasks, desc='tasks'):
             for bad_file in task.get_run().file_changes(do_hash=True):

@@ -841,14 +841,14 @@ class AbstractStep(object):
         return self._post_command
 
 
-    def get_run_info_str(self, progress=False):
+    def get_run_info_str(self, progress=False, do_hash=False):
         count = {}
         runs = self.get_runs()
         for run in tqdm(runs, total=len(runs), desc='runs',
                         disable=not progress, leave=False):
             if isinstance(run, str):
                 run = self.get_run(run)
-            state = run.get_state()
+            state = run.get_state(do_hash=do_hash)
             if not state in count:
                 count[state] = 0
             count[state] += 1

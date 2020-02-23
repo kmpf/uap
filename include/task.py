@@ -39,11 +39,11 @@ class Task(object):
         '''
         return self.step.get_run(self.run_id)
 
-    def get_task_state(self):
+    def get_task_state(self, do_hash=False):
         '''
         Proxy method for run.get_state().
         '''
-        return self.get_run().get_state()
+        return self.get_run().get_state(do_hash=do_hash)
 
     def run(self):
         '''
