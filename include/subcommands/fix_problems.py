@@ -51,8 +51,6 @@ def main(args):
         tasks = p.all_tasks_topologically_sorted
         question = 'This will change the modification dates of all output ' \
                    'files with valid sha256sum. Do you want to proceed?'
-        if args.srsly and not ask_user(question):
-            return
         split_at = ' sha256sum is correct and was changed after '
         split_at_v = ' is volatilized and was changed after '
         changes = list()
@@ -79,21 +77,6 @@ def main(args):
     else:
         p.check_ping_files(print_more_warnings = True,
                 print_details = args.details, fix_problems = args.srsly)
-
-def ask_user(question):
-    check = str(raw_input("%s (y/n): " % question)).lower().strip()
-    try:
-        if check[0] == 'y':
-            return True
-        elif check[0] == 'n':
-            return False
-        else:
-            print('Invalid Input')
-            return ask_user(question)
-    except Exception as error:
-        print("Please enter valid inputs")
-        print(error)
-        return ask_user(question)
 
 def timestamp(date):
     return (date - datetime.fromtimestamp(0)).total_seconds()
