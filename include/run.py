@@ -479,24 +479,32 @@ class Run(object):
             return states.QUEUED
         if self.fsc.exists(self.get_queued_ping_file() + '.bad'):
             return states.BAD
+        has_volitile_parent = False
         for parent in self.get_parent_runs():
-            if parent.get_state() != states.FINISHED:
+            pstate = parent.get_state()
+            if pstate not in [states.FINISHED, states.VOLATILIZED]:
                 return states.WAITING
+            if pstate == states.VOLATILIZED:
+                has_volitile_parent = True
 
         output_files = [(out_file, input_files)
                 for files in self.get_output_files_abspath().values()
                 for out_file, input_files in files.items()]
         all_exist = all(self.fsc.exists(out_file)
                         for out_file, _ in output_files)
+        is_volatilized = False
         if not all_exist and self.get_step().is_volatile():
             all_exist = all(self.fsc.exists(out_file
                             + abst.AbstractStep.VOLATILE_SUFFIX)
                             for out_file, _ in output_files)
+            is_volatilized = True
 
         anno_data = self.written_anno_data()
         if not all_exist:
             if anno_data and anno_data.get('run', dict()).get('error') is not None:
                 return states.BAD
+            elif has_volitile_parent:
+                return states.WAITING
             return states.READY
         else:
             if not anno_data:
@@ -509,6 +517,8 @@ class Run(object):
             for bad_file in self.file_changes(do_hash=do_hash):
                 if bad_file:
                     return states.CHANGED
+            if is_volatilized:
+                return states.VOLATILIZED
             return states.FINISHED
 
     def get_parent_runs(self):

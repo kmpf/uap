@@ -28,7 +28,7 @@ def main(args):
     #task_list = copy.deepcopy(p.all_tasks_topologically_sorted)
     task_list = p.all_tasks_topologically_sorted
 
-    if len(args.run) >= 1:
+    if args.run:
         # execute the specified tasks
         task_list = list()
         for task_id in args.run:
@@ -41,17 +41,23 @@ def main(args):
                         task_list.append(task)
             
     # execute all tasks
+    finished_states = [p.states.FINISHED]
     if args.ignore:
-        finished_states = [p.states.FINISHED, p.states.CHANGED]
-    else:
-        finished_states = [p.states.FINISHED]
-    accepted_states = [p.states.BAD, p.states.READY, p.states.QUEUED]
+        finished_states += [p.states.CHANGED]
+
+    accepted_states = [p.states.BAD, p.states.READY, p.states.QUEUED,
+            p.states.VOLATILIZED]
     for task in task_list:
         task_state = task.get_task_state()
         if task_state in finished_states:
             task.move_ping_file()
             sys.stderr.write("Skipping %s because it's already %s.\n" %
                              (task, task_state))
+        if task_state == p.states.VOLATILIZED and not args.run:
+            task.move_ping_file()
+            sys.stderr.write("Skipping %s because it's already %s and not "
+                             "specified with -r %s.\n" %
+                             (task, task_state, task))
         elif task_state == p.states.CHANGED:
             if not args.force:
                 task.move_ping_file()

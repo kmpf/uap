@@ -171,7 +171,7 @@ class Pipeline(object):
     '''
 
     states = misc.Enum(['WAITING', 'READY', 'QUEUED', 'EXECUTING', 'FINISHED',
-                        'BAD', 'CHANGED'])
+                        'BAD', 'CHANGED', 'VOLATILIZED'])
     '''
     Possible states a task can be in.
     '''

@@ -63,7 +63,7 @@ def main(args):
     except OSError:
         raise UAPError("Couldn't open %s." % template_path)
 
-    steps_left = list()
+    steps_left = set()
     tasks_left = dict()
     for step_name in p.topological_step_order:
         tasks_left[step_name] = list()
@@ -75,6 +75,10 @@ def main(args):
             if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
                 print("Skipping %s because it is already %s..." % (str(task), state.lower()))
                 continue
+            if state == p.states.VOLATILIZED and not task_wish_list:
+                print("Skipping %s because it is already %s and not requested "
+                      "with -r %s..." % (str(task), state.lower(), step_name))
+                continue
             if state == p.states.CHANGED and args.ignore:
                 print("Skipping %s because it's changes are ignored.\n" % task)
             if state == p.states.CHANGED and not args.force:
@@ -83,8 +87,7 @@ def main(args):
                         "'uap %s submit-to-cluster --force' to force overwrite "
                         "of the results." %
                         (task, args.config.name, args.config.name))
-            if step_name not in steps_left:
-                steps_left.append(step_name)
+            steps_left.add(step_name)
             tasks_left[step_name].append(task)
 
     print("Now attempting to submit %d jobs..." % len(steps_left))

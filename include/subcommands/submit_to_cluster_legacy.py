@@ -267,6 +267,10 @@ def main(args):
         if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
             print("Skipping %s because it is already %s..." % (str(task), state.lower()))
             continue
+        if state == p.states.VOLATILIZED and not task_wish_list:
+            print("Skipping %s because it is already %s and not requested "
+                  "with -r %s..." % (str(task), state.lower(), step_name))
+            continue
         if state == p.states.CHANGED and args.ignore:
             print("Skipping %s because it's changes are ignored.\n" % task)
             continue
