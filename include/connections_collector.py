@@ -57,11 +57,11 @@ class ConnectionsCollector(object):
         Saves the names in ``files`` for a new ``connection``.
         '''
         if not isinstance(files, list):
-            raise UAPError('files musst to be a list but is a %s' %
+            raise UAPError('files must to be a list but is a %s' %
                     file.__class__.__name__)
         run_id = self._init_run_id(run_id)
         if not isinstance(connection, str):
-            raise UAPError('The passed connection musst be a string.')
+            raise UAPError('The passed connection must be a string.')
         if not connection.startswith('in/'):
             raise UAPError('Input connections muss start with "in/".')
         self.connections[run_id].setdefault(connection, list())
@@ -84,7 +84,7 @@ class ConnectionsCollector(object):
         parent_name = parent.get_step_name()
         parent_out_conns = parent.get_out_connections(strip_prefix=True)
         child_name = child.get_step_name()
-        musst_connect = set()
+        must_connect = set()
         if connections is None:
             # get equally named connections
             ins = child.get_in_connections(strip_prefix=True)
@@ -118,7 +118,7 @@ class ConnectionsCollector(object):
                                     'Available out connections are: %s' %
                                     (out_conn, child_name, parent_name, avail))
                         make_connections.append((in_conn, p_out, out_conn))
-                        musst_connect.add(out_conn)
+                        must_connect.add(out_conn)
         else:
             raise UAPError('The passed connections need to be a dictionay.')
 
@@ -135,7 +135,7 @@ class ConnectionsCollector(object):
                 self.add_connection(in_conn, output_files)
                 used_conns.add(parent_con)
 
-        missing = musst_connect - used_conns
+        missing = must_connect - used_conns
         if missing:
             raise UAPError('The connection(s) %s required by the step "%s" are '
                            'optional output of step "%s" and not produced.' %
