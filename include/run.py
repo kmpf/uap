@@ -364,14 +364,12 @@ class Run(object):
         end_time = anno_data['end_time']
         p = self.get_step().get_pipeline()
         is_volatile = self.get_step().is_volatile()
-        has_bad_file = False
         for path, input_files in self.dependencies().items():
 
             # existence and volatility
             v_path = path + abst.AbstractStep.VOLATILE_SUFFIX
             if not self.fsc.exists(path):
                 if not is_volatile or not self.fsc.exists(v_path):
-                    has_bad_file = True
                     yield '%s is missing' % path
                     continue
                 elif is_volatile:
@@ -409,7 +407,6 @@ class Run(object):
                     has_changed_deps = True
                     yield 'input file %s was modified' % in_file
             if has_changed_deps:
-                has_bad_file = True
                 if change_str:
                     change_str = ', has changed input' + change_str
                 else:
@@ -417,7 +414,6 @@ class Run(object):
 
             # stop here if volatile
             if is_volatile and change_str:
-                has_bad_file = True
                 yield path + ' is volatilized' + change_str
                 continue
             elif is_volatile:
@@ -436,7 +432,6 @@ class Run(object):
             old_size = meta_data['size']
             new_size = self.fsc.getsize(path)
             if new_size != old_size:
-                has_bad_file = True
                 yield '%s size changed from %s B to %s B%s' % \
                       (path, old_size, new_size, change_str)
                 continue
@@ -446,7 +441,6 @@ class Run(object):
                 old_hash = meta_data['sha256']
                 new_hash = self.fsc.sha256sum_of(path)
                 if new_hash != old_hash:
-                    has_bad_file = True
                     yield '%s sha256sum changed from %s to %s%s' % \
                           (path, old_hash, new_hash, change_str)
                     continue
@@ -457,13 +451,11 @@ class Run(object):
 
             # what changed
             elif change_str:
-                has_bad_file = True
                 if change_str.startswith(' and'):
                     change_str = change_str[len(' and'):]
                 elif change_str.startswith(' ,'):
                     change_str = change_str[len(' ,'):]
                 yield path + change_str
-        yield has_bad_file
 
     @cache
     def get_state(self, do_hash=False, reset=False):
