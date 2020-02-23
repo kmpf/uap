@@ -301,6 +301,11 @@ class Pipeline(object):
         This dict stores a task ID for every output file created by the pipeline.
         '''
 
+        self.task_for_output_file = dict()
+        '''
+        This dict stores a task ID for every output file created by the pipeline.
+        '''
+
         self.task_ids_for_input_file = dict()
         '''
         This dict stores a set of task IDs for every input file used in the
@@ -574,6 +579,16 @@ class Pipeline(object):
         if not task_id in self.input_files_for_task_id:
             self.input_files_for_task_id[task_id] = set()
         self.input_files_for_task_id[task_id].add(input_path)
+
+    def get_task_for_file(self, path):
+        '''
+        Returns the task for a given output file path.
+        '''
+        task_id = self.task_id_for_output_file.get(path)
+        if task_id:
+            return self.task_for_task_id[task_id]
+        else:
+            return None
 
     def check_command(self, command):
         for argument in command:

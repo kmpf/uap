@@ -99,8 +99,7 @@ class Task(object):
         '''
         result = set()
         for path in self.input_files():
-            result.add(self.pipeline.task_for_task_id\
-                       [self.pipeline.task_id_for_output_file[path]])
+            result.add(self.pipeline.get_task_for_file(path))
 
         return list(result)
 
@@ -112,9 +111,10 @@ class Task(object):
         result = set()
         if not self.step.is_volatile():
             return result
+        fsc = self.get_run().fsc
         for path_a in self.output_files():
             if not path_a: continue
-            if AbstractStep.fsc.exists(path_a):
+            if fsc.exists(path_a):
                 # now check whether we can volatilize path A
                 path_a_can_be_removed = True
                 path_a_dependent_files = list()
@@ -124,9 +124,7 @@ class Task(object):
                         # don't check whether the output file B exists,
                         # it might also be volatile, rather check whether the
                         # task which creates B is finished
-                        path_b_task = self.pipeline.task_for_task_id\
-                                      [self.pipeline.task_id_for_output_file\
-                                       [path_b]]
+                        path_b_task = self.pipeline.get_task_for_file(path_b)
                         if path_b_task.get_task_state() != \
                            self.pipeline.states.FINISHED:
                             path_a_can_be_removed = False
@@ -139,15 +137,14 @@ class Task(object):
                               (str(self), os.path.basename(path_a)))
                         info = dict()
                         info['self'] = dict()
-                        info['self']['size'] = AbstractStep.fsc.getsize(path_a)
-                        info['self']['mtime'] = AbstractStep.fsc.\
-                                                getmtime(path_a)
+                        info['self']['size'] = fsc.getsize(path_a)
+                        info['self']['mtime'] = fsc.getmtime(path_a)
                         info['downstream'] = dict()
                         for path_b in path_a_dependent_files:
                             info['downstream'][path_b] = dict()
-                            if AbstractStep.fsc.exists(path_b):
-                                info['downstream'][path_b]['size'] = AbstractStep.fsc.getsize(path_b)
-                                info['downstream'][path_b]['mtime'] = AbstractStep.fsc.getmtime(path_b)
+                            if fsc.exists(path_b):
+                                info['downstream'][path_b]['size'] = fsc.getsize(path_b)
+                                info['downstream'][path_b]['mtime'] = fsc.getmtime(path_b)
                             else:
                                 downstream_info = yaml.load(open(path_b + AbstractStep.VOLATILE_SUFFIX, 'r'), Loader=yaml.FullLoader)
                                 info['downstream'][path_b]['size'] = downstream_info['self']['size']

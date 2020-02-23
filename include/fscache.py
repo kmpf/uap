@@ -38,6 +38,9 @@ class FSCache:
         self.cache['load_yaml_from_file'][path] = data
         return data
 
+    def clear(self):
+        self.cache = dict()
+
     def __getattr__(self, name):
 
         def method(*args):

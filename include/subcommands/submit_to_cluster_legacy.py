@@ -249,7 +249,7 @@ def main(args):
             if len(dependent_tasks) > 0:
                 print(" - with dependent tasks: " + ', '.join(dependent_tasks))
 
-            abstract_step.AbstractStep.fsc = fscache.FSCache()
+            task.get_run().reset_fsc()
 
     # After defining submit_task() let's walk through tasks_left
 

@@ -2,6 +2,7 @@ import sys
 from datetime import datetime
 import glob
 import json
+import fscache
 from logging import getLogger
 import os
 import random
@@ -11,6 +12,7 @@ import tempfile
 import platform
 import subprocess
 from deepdiff import DeepHash, DeepDiff
+import inspect
 
 import yaml
 
@@ -35,9 +37,14 @@ class Run(object):
     The run has typically no information about input connections only about
     input files.
     '''
+
     def __init__(self, step, run_id):
         if '/' in run_id:
             raise UAPError("Error: A run ID must not contain a slash: %s." % run_id)
+        self.fsc = fscache.FSCache()
+        '''
+        A cache.
+        '''
         self._step = step
         '''
         Step this run belongs to.
@@ -79,20 +86,31 @@ class Run(object):
         '''
         self._known_paths = dict()
 
-        self._cached_anno_data = None
+    def cache(func):
         '''
-        Caches anno data read from file.
+        A decorator to cache a functions return value with self.fsc.
         '''
-        self._cached_state = None
-        '''
-        Caches last state.
-        '''
+        function_name = [func.func_name, inspect.getargspec(func)]
+        def inner(self, *args, **kwargs):
+            key = str(function_name + [args, kwargs])
+            cache = self.fsc.cache
+            if key in cache:
+                result = cache[key]
+            else:
+                result = func(self, *args, **kwargs)
+                cache[key] = result
+            return result
+        return inner
+
 
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
         pass
+
+    def reset_fsc(self):
+        self.fsc.clear()
 
     def new_exec_group(self):
         eg = exec_group.ExecGroup(self)
@@ -344,14 +362,15 @@ class Run(object):
         new_dest = self.get_step().get_pipeline().config['destination_path']
         old_dest = anno_data['config']['destination_path']
         end_time = anno_data['end_time']
+        p = self.get_step().get_pipeline()
         is_volatile = self.get_step().is_volatile()
         has_bad_file = False
         for path, input_files in self.dependencies().items():
 
             # existence and volatility
             v_path = path + abst.AbstractStep.VOLATILE_SUFFIX
-            if not abst.AbstractStep.fsc.exists(path):
-                if not is_volatile or not abst.AbstractStep.fsc.exists(v_path):
+            if not self.fsc.exists(path):
+                if not is_volatile or not self.fsc.exists(v_path):
                     has_bad_file = True
                     yield '%s is missing' % path
                     continue
@@ -363,22 +382,30 @@ class Run(object):
 
             # modification time
             change_str = ''
-            mod_time = datetime.fromtimestamp(abst.AbstractStep.fsc.getmtime(path))
+            mod_time = datetime.fromtimestamp(self.fsc.getmtime(path))
             if mod_time > end_time:
                 change_str = ' and was changed after %s' % end_time
 
             # chaged dependencies
             has_changed_deps = False
             for in_file in input_files:
+                parent_task = p.get_task_for_file(in_file)
+                if parent_task:
+                    parent_volitile = parent_task.step.is_volatile()
+                    parent_fsc = parent_task.get_run().fsc
+                else:
+                    # the parent was probably a source step
+                    parent_volitile = False
+                    parent_fsc = self.fsc
                 v_in = in_file + abst.AbstractStep.VOLATILE_SUFFIX
-                if not abst.AbstractStep.fsc.exists(in_file):
-                    if not abst.AbstractStep.fsc.exists(v_in):
+                if not parent_fsc.exists(in_file) and parent_volitile:
+                    if not parent_fsc.exists(v_in):
                         has_changed_deps = True
                         yield 'input file %s is missing' % in_file
                     else:
                         in_file = v_in
-                if abst.AbstractStep.fsc.getmtime(in_file) > \
-                abst.AbstractStep.fsc.getmtime(path):
+                if parent_fsc.getmtime(in_file) > \
+                self.fsc.getmtime(path):
                     has_changed_deps = True
                     yield 'input file %s was changed' % in_file
             if has_changed_deps:
@@ -407,7 +434,7 @@ class Run(object):
 
             # size changes
             old_size = meta_data['size']
-            new_size = abst.AbstractStep.fsc.getsize(path)
+            new_size = self.fsc.getsize(path)
             if new_size != old_size:
                 has_bad_file = True
                 yield '%s size changed from %s B to %s B%s' % \
@@ -438,58 +465,51 @@ class Run(object):
                 yield path + change_str
         yield has_bad_file
 
+    @cache
     def get_state(self, do_hash=False, reset=False):
 
         states = self.get_step().get_pipeline().states
-        def state_getter():
-            if isinstance(self.get_step(), abst.AbstractSourceStep):
-                return states.FINISHED
-            if abst.AbstractStep.fsc.exists(self.get_executing_ping_file()):
-                if self.is_stale():
-                    return states.BAD
-                return states.EXECUTING
-            if abst.AbstractStep.fsc.exists(self.get_queued_ping_file()):
-                return states.QUEUED
-            if abst.AbstractStep.fsc.exists(self.get_queued_ping_file() + '.bad'):
+        if isinstance(self.get_step(), abst.AbstractSourceStep):
+            return states.FINISHED
+        if self.fsc.exists(self.get_executing_ping_file()):
+            if self.is_stale():
                 return states.BAD
-            for parent in self.get_parent_runs():
-                if parent.get_state() != states.FINISHED:
-                    return states.WAITING
+            return states.EXECUTING
+        if self.fsc.exists(self.get_queued_ping_file()):
+            return states.QUEUED
+        if self.fsc.exists(self.get_queued_ping_file() + '.bad'):
+            return states.BAD
+        for parent in self.get_parent_runs():
+            if parent.get_state() != states.FINISHED:
+                return states.WAITING
 
-            output_files = [(out_file, input_files)
-                    for files in self.get_output_files_abspath().values()
-                    for out_file, input_files in files.items()]
-            all_exist = all(abst.AbstractStep.fsc.exists(out_file)
+        output_files = [(out_file, input_files)
+                for files in self.get_output_files_abspath().values()
+                for out_file, input_files in files.items()]
+        all_exist = all(self.fsc.exists(out_file)
+                        for out_file, _ in output_files)
+        if not all_exist and self.get_step().is_volatile():
+            all_exist = all(self.fsc.exists(out_file
+                            + abst.AbstractStep.VOLATILE_SUFFIX)
                             for out_file, _ in output_files)
-            if not all_exist and self.get_step().is_volatile():
-                all_exist = all(abst.AbstractStep.fsc.exists(out_file
-                                + abst.AbstractStep.VOLATILE_SUFFIX)
-                                for out_file, _ in output_files)
 
-            anno_data = self.written_anno_data()
-            if not all_exist:
-                if anno_data and anno_data.get('run', dict()).get('error') is not None:
-                    return states.BAD
-                return states.READY
-            else:
-                if not anno_data:
-                    logger.warn('The task "%s/%s" seems finished but the '
-                                'annotation file could not be read: %s' %
-                                (self, run_id, e))
+        anno_data = self.written_anno_data()
+        if not all_exist:
+            if anno_data and anno_data.get('run', dict()).get('error') is not None:
+                return states.BAD
+            return states.READY
+        else:
+            if not anno_data:
+                logger.warn('The task "%s/%s" seems finished but the '
+                            'annotation file could not be read.' %
+                            (self.get_step(), self._run_id))
+                return states.CHANGED
+            if self.get_changes():
+                return states.CHANGED
+            for bad_file in self.file_changes(do_hash=do_hash):
+                if bad_file:
                     return states.CHANGED
-                for bad_file in self.file_changes(do_hash=do_hash):
-                    if bad_file:
-                        return states.CHANGED
-                if self.get_changes():
-                    return states.CHANGED
-                return states.FINISHED
-
-        if reset or self._cached_state is None:
-            self._cached_state = state_getter()
-        return self._cached_state
-
-    def reset_state_cache(self):
-        self._cached_state = None
+            return states.FINISHED
 
     def get_parent_runs(self):
         """
@@ -888,23 +908,19 @@ class Run(object):
         result['run_id'] = self._run_id
         return result
 
+    @cache
     def written_anno_data(self):
-        if not self._cached_anno_data:
-            anno_file = self.get_annotation_path()
-            try:
-                with open(anno_file, 'r') as fl:
-                    self._cached_anno_data = \
-                            yaml.load(fl, Loader=yaml.FullLoader)
-            except IOError as e:
-                if not os.path.exists(anno_file):
-                    self._cached_anno_data = False
-                else:
-                    logger.warn('The annotation file "%s" could not be read: '
-                                '%s' % anno_file)
-        return self._cached_anno_data
-
-    def reset_anno_cache(self):
-        self._cached_anno_data = None
+        anno_file = self.get_annotation_path()
+        try:
+            with open(anno_file, 'r') as fl:
+                return yaml.load(fl, Loader=yaml.FullLoader)
+        except IOError as e:
+            if not os.path.exists(anno_file):
+                return False
+            else:
+                logger.warn('The annotation file "%s" could not be read.'
+                            % anno_file)
+                return None
 
     def write_annotation_file(self, path, error=None):
         '''
@@ -970,8 +986,6 @@ class Run(object):
         with open(annotation_path, 'w') as f:
             f.write(annotation_yaml)
 
-        self.reset_anno_cache()
-
         return annotation_path
 
     def get_annotation_path(self, path=None):
@@ -988,9 +1002,9 @@ class Run(object):
         """
         if exec_ping_file is None:
             exec_ping_file = self.get_executing_ping_file()
-        if abst.AbstractStep.fsc.exists(exec_ping_file):
+        if self.fsc.exists(exec_ping_file):
             last_activity = datetime.fromtimestamp(
-                    abst.AbstractStep.fsc.getmtime(exec_ping_file))
+                    self.fsc.getmtime(exec_ping_file))
             now = datetime.now()
             inactivity = now - last_activity
             if inactivity.total_seconds() > \

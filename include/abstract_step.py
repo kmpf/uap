@@ -31,7 +31,6 @@ import traceback
 from shutil import copyfile
 from tqdm import tqdm
 # 2. related third party imports
-import fscache
 import psutil
 import yaml
 # 3. local application/library specific imports
@@ -48,20 +47,8 @@ sys.path.insert(0, os.path.join(abs_path, 'steps'))
 sys.path.insert(0, os.path.join(abs_path, 'sources'))
 logger=getLogger('uap_logger')
 
-class Gloals(object):
-
-    fsc = fscache.FSCache()
-
-    PING_TIMEOUT = 300
-    PING_RENEW = 30
-    VOLATILE_SUFFIX = '.volatile.placeholder.yaml'
-    UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK', '_connect',
-                          '_cluster_submit_options', '_cluster_pre_job_command',
-                          '_cluster_post_job_command', '_cluster_job_quota']
 
 class AbstractStep(object):
-
-    fsc = fscache.FSCache()
 
     PING_TIMEOUT = 300
     PING_RENEW = 30
@@ -719,6 +706,10 @@ class AbstractStep(object):
 
         self._state = AbstractStep.states.DEFAULT
 
+        # step has completed invalidate the FS cache because things have
+        # changed by now...
+        run.reset_fsc()
+
         if error:
             message = "[BAD] %s/%s failed on %s after %s\n" % \
                       (str(self), run_id, socket.gethostname(),
@@ -741,12 +732,6 @@ class AbstractStep(object):
             except OSError as e:
                 logger.info('Coult not remove temp dir "%s": %s' %
                         (temp_directory, e))
-
-            # step has completed successfully, now determine how many jobs are
-            # still left but first invalidate the FS cache because things have
-            # changed by now...
-            AbstractStep.fsc = fscache.FSCache()
-            run._cached_state = self.get_pipeline().states.FINISHED
 
             remaining_task_info = self.get_run_info_str()
 
