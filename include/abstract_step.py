@@ -732,6 +732,12 @@ class AbstractStep(object):
             except OSError as e:
                 logger.info('Coult not remove temp dir "%s": %s' %
                         (temp_directory, e))
+            temp = os.path.normpath(os.path.join(temp_directory, '..'))
+            try:
+                os.rmdir(temp)
+            except OSError:
+                # there may still be tasks in process
+                pass
 
             remaining_task_info = self.get_run_info_str()
 
