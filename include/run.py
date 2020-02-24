@@ -396,8 +396,8 @@ class Run(object):
                     parent_volitile = False
                     parent_fsc = self.fsc
                 v_in = in_file + abst.AbstractStep.VOLATILE_SUFFIX
-                if not parent_fsc.exists(in_file) and parent_volitile:
-                    if not parent_fsc.exists(v_in):
+                if not parent_fsc.exists(in_file):
+                    if not parent_volitile or not parent_fsc.exists(v_in):
                         has_changed_deps = True
                         yield 'input file %s is missing' % in_file
                     else:
