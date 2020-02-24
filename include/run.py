@@ -264,6 +264,7 @@ class Run(object):
 
         return self._temp_directory
 
+    @cache
     def get_run_structure(self):
         '''
         Creates a dictionary with the structure of commands to
