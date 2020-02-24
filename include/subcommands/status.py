@@ -92,34 +92,26 @@ def main(args):
                 for y in range(y0, y1):
                     lines[y][x] = "│"
 
-        for index, _ in enumerate(lines):
+        # write step names and states
+        for index, line in enumerate(lines):
             original_step_name_label = ''
             step = p.steps[step_order[index]]
             if step.get_step_name() != step.get_step_type():
                 original_step_name_label = ' (%s)' % step.get_step_type()
 
-#            sys.stderr.write("step_name: %s\n" % step.get_step_name())
-#            sys.stderr.write("index: %d\n" % index)
-#            sys.stderr.write("still alive!\n")
-#            sys.stderr.write("run_info: %s\n" % step.get_run_info_str())
-
             if args.no_tool_checks:
-                line = "%s%s%s" % (''.join(_).replace("─└", "─┴"),
+                line = "%s%s%s" % (''.join(line).replace("─└", "─┴"),
                         step.get_step_name(), original_step_name_label)
             else:
-                line = "%s%s%s [%s]" % (''.join(_).replace("─└", "─┴"),
+                line = "%s%s%s [%s]" % (''.join(line).replace("─└", "─┴"),
                         step.get_step_name(), original_step_name_label,
                         step.get_run_info_str(progress=True, do_hash=args.hash))
             print(line)
-        # now check ping files and print some warnings and instructions if
-        # something's fishy
-        p.check_ping_files(print_more_warnings = True if args.verbose > 0 else False)
 
-        # Now check whether we can volatilize files, but don't do it.
-        p.check_volatile_files()
     elif args.details:
         p = pipeline.Pipeline(arguments=args)
         new_dest = p.config['destination_path']
+        observed_states = set()
         tasks = list()
         for task_id in args.run:
             if task_id not in p.task_for_task_id.keys():
@@ -130,6 +122,7 @@ def main(args):
         for i, task in enumerate(tasks):
             state = task.get_task_state(do_hash=args.hash)
             sys.stdout.write('[%d/%d] ' % (i+1, len(tasks)))
+            observed_states.add(state)
             if state == p.states.FINISHED:
                 message = '%s is finished' % task
                 if args.hash:
@@ -203,7 +196,7 @@ def main(args):
                     print("\nThis may be fixed with "
                          "'uap %s fix-problems --file-modification-date "
                          "--srsly'." %
-                         p.args.config.name)
+                         args.config.name)
                 print('')
 
             elif state == p.states.BAD:
@@ -255,11 +248,27 @@ def main(args):
                     if not found_error:
                         print('No errors found.')
                         print("Run 'uap %s fix-problems --first-error' to investigate.'"
-                                % p.args.config.name)
+                                % args.config.name)
                         print('')
 
             else:
                 print('%s has unknown state "%s"' % (task, state.lower()))
+
+        if p.stats.CHANGED in observed_states:
+            print("If you want to force overwrite of the changed tasks, run\n"
+                  "'uap %s run-locally --force' or 'uap %s submit-to-cluster --force'." %
+                  (args.config.name, args.config.name))
+            print("If you want to ignore the changes and consider the tasks finished, run\n"
+                  "'uap %s run-locally --irgnore' or 'uap %s submit-to-cluster --irgnore'." %
+                  (args.config.name, args.config.name))
+
+        # now check ping files and print some warnings and instructions if
+        # something's fishy
+        p.check_ping_files(print_more_warnings = True if args.verbose > 0 else False)
+
+        # Now check whether we can volatilize files, but don't do it.
+        p.check_volatile_files()
+
     else:
         # print all runs
         '''
@@ -271,6 +280,7 @@ def main(args):
         - ``[b]ad``
         - ``[f]inished``
         - ``[c]hanged``
+        - ``[v]olatilized``
         '''
         p = pipeline.Pipeline(arguments=args)
         output = list()
@@ -318,13 +328,11 @@ def main(args):
                                     if _ in tasks_for_status])))
         pydoc.pager("\n".join(output))
 
-        if p.states.CHANGED in tasks_for_status.keys():
-            print("If you want to force overwrite of the changed tasks, run\n"
-                  "'uap %s run-locally --force' or 'uap %s submit-to-cluster --force'." %
-                  (p.args.config.name, p.args.config.name))
-            print("If you want to ignore the changes and consider the tasks finished, run\n"
-                  "'uap %s run-locally --irgnore' or 'uap %s submit-to-cluster --irgnore'." %
-                  (p.args.config.name, p.args.config.name))
+        if p.stats.CHANGED in tasks_for_status.keys() \
+        or p.states.BAD in tasks_for_status.keys() \
+        or p.statse.WAITING in tasks_for_status.keys():
+            print("\nRun 'uap %s status --details' to inspect states." %
+                    args.config.name)
 
         # now check ping files and print some warnings and instructions if
         # something's fishy

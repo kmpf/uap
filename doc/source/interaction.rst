@@ -162,11 +162,11 @@ Here is the help message::
                           Otherwise uap will not run.
     --no-tool-checks      This option disables the otherwise mandatory checks for tool availability and version
     --cluster CLUSTER     Specify the cluster type. Default: [auto].
-    --details             Displays information about changed tasks.
+    --details             Displays more information about task states.
     --job-ids             Prints space seperated cluster job ids of all submitted jobs.
     --summarize           Displays summarized information of the analysis.
     --graph               Displays the dependency graph of the analysis.
-    --hash                Compare sha256sums of existing files with the logged values.
+    --hash                Validate sha256sums to detect file changes.
     --sources             Displays only information about the source runs.
     -r [RUN [RUN ...]], --run [RUN [RUN ...]]
                           The status of these runs are displayed.
@@ -185,7 +185,7 @@ At any time, each run is in one of the following states:
 * ``[c]hanged`` -- all output files are in place but the configuration,
   parent or the commands to execute changed
 * ``[b]ad`` -- an error was caught during execution
-
+* ``[v]olatilized`` -- the output was uap-volatilize_
 
 
 Here is an example output::
@@ -437,7 +437,7 @@ Here is the usage information::
                                                   [--first-error]
                                                   [--file-modification-date]
                                                   [--details] [--srsly]
-  
+
   optional arguments:
     -h, --help            show this help message and exit
     --even-if-dirty       This option must be set if the local git repository contains uncommited changes.

@@ -327,7 +327,7 @@ def main():
         dest="details",
         action="store_true",
         default=False,
-        help="Displays information about changed tasks.")
+        help="Displays more information about task states.")
 
 
     status_parser.add_argument(
