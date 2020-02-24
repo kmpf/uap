@@ -254,7 +254,7 @@ def main(args):
             else:
                 print('%s has unknown state "%s"' % (task, state.lower()))
 
-        if p.stats.CHANGED in observed_states:
+        if p.states.CHANGED in observed_states:
             print("If you want to force overwrite of the changed tasks, run\n"
                   "'uap %s run-locally --force' or 'uap %s submit-to-cluster --force'." %
                   (args.config.name, args.config.name))
