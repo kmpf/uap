@@ -328,9 +328,9 @@ def main(args):
                                     if _ in tasks_for_status])))
         pydoc.pager("\n".join(output))
 
-        if p.stats.CHANGED in tasks_for_status.keys() \
+        if p.states.CHANGED in tasks_for_status.keys() \
         or p.states.BAD in tasks_for_status.keys() \
-        or p.statse.WAITING in tasks_for_status.keys():
+        or p.states.WAITING in tasks_for_status.keys():
             print("\nRun 'uap %s status --details' to inspect states." %
                     args.config.name)
 
