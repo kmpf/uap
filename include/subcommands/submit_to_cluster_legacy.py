@@ -275,7 +275,7 @@ def main(args):
             print("Skipping %s because it's changes are ignored.\n" % task)
             continue
         if state == p.states.CHANGED and not args.force:
-            raise UAPError("Task %s is finished but its config changed. "
+            raise UAPError("Task %s has changed. "
                     "Run 'uap %s status --details' to see what changed or "
                     "'uap %s submit-to-cluster --force' to force overwrite "
                     "of the results." %

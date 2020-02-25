@@ -61,7 +61,7 @@ def main(args):
         elif task_state == p.states.CHANGED:
             if not args.force:
                 task.move_ping_file()
-                raise UAPError("Task %s is finished but its config changed. "
+                raise UAPError("Task %s has changed. "
                         "Run 'uap %s status --details' to see what changed or "
                         "'uap %s run-locally --force' to force overwrite "
                         "of the results." %
