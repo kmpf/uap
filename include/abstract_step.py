@@ -689,6 +689,11 @@ class AbstractStep(object):
         if caught_exception is None:
             try:
                 pool = multiprocessing.Pool(self.get_cores())
+                def stop(signum, frame):
+                    original_term_handler(signum, frame)
+                    raise UAPError('Interrupted during output hashing.')
+                original_term_handler = signal.signal(signal.SIGTERM, stop)
+                original_int_handler = signal.signal(signal.SIGINT, stop)
                 for hashsum, path in pool.imap(misc.sha_and_file,
                         to_be_hashed):
                     run.fsc.sha256sum_of(path, value=hashsum)
@@ -698,6 +703,8 @@ class AbstractStep(object):
                     logger.error("%s: %s" % (type(e).__name__, e))
                 caught_exception = sys.exc_info()
             finally:
+                signal.signal(signal.SIGTERM, original_term_handler)
+                signal.signal(signal.SIGINT, original_int_handler)
                 pool.close()
 
         for path, path_info in known_paths.items():
