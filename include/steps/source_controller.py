@@ -27,7 +27,7 @@ class SourceController(AbstractStep):
                 description='Number of threads used to calculate the hash sums.')
 
     def runs(self, cc):
-
+        self.set_cores(self.get_option('cores'))
         group = self.declare_run('links')
         execg = group.new_exec_group()
         for run_id, files in cc.connection_items('in/raw'):
