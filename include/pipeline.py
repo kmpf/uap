@@ -539,12 +539,19 @@ class Pipeline(object):
             next_steps = []
             for step_name in unassigned_steps:
                 is_ready = True
-                for dep in self.steps[step_name].dependencies:
+                step = self.steps[step_name]
+                for dep in step.dependencies:
                     dep_name = dep.get_step_name()
                     if not dep_name in assigned_steps:
                         is_ready = False
                         break
-                if is_ready:
+                if is_ready and step.get_step_type == 'source_controller':
+                    # make sure source_controller attempt to run first
+                    self.topological_step_order.append(step_name)
+                    assigned_steps.add(step_name)
+                    unassigned_steps.remove(step_name)
+                    continue
+                elif is_ready:
                     next_steps.append(step_name)
             if len(next_steps) == 0:
                 raise UAPError("There is a cycle in the step dependencies.")
