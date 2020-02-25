@@ -154,6 +154,14 @@ class ConnectionsCollector(object):
                     (run_id, self.step_name, connection))
         return cons[run_id]
 
+    def connection_items(self, connection):
+        '''
+        Returns all (run_id, [files]) pairs for the given connection.
+        '''
+        for run_id, conns in self.items():
+            if connection in conns:
+                yield run_id, conns[connection]
+
     def _runs_with_connection(self, connection, with_empty=True):
         runs = set()
         if connection in self._by_cons_none_empty.keys():

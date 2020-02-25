@@ -326,7 +326,8 @@ class Run(object):
         parents = self.get_parent_runs()
         for prun in parents:
             task_id = '%s/%s' % (prun.get_step().get_step_name(), prun.get_run_id())
-            hashsum = misc.str_to_sha256(json.dumps(parent_struct, sort_keys=True))
+            hashsum = misc.str_to_sha256(json.dumps(prun.get_run_structure(),
+                    sort_keys=True))
             cmd_by_eg['parent hashes'][task_id] = hashsum
 
         return cmd_by_eg
@@ -369,7 +370,7 @@ class Run(object):
             old_path = path.replace(new_dest, old_dest)
             if old_path not in anno_data['run']['known_paths']:
                 yield '%s not logged in the annotation file %s' % \
-                        (old_path, anno_file)
+                      (old_path, os.path.basename(self.get_annotation_path()))
                 continue
             meta_data = anno_data['run']['known_paths'][old_path]
 
@@ -408,6 +409,7 @@ class Run(object):
                     if not parent_volitile or not parent_fsc.exists(v_in):
                         has_changed_deps = True
                         yield 'input file %s is missing' % in_file
+                        continue
                     else:
                         in_file = v_in
                 if parent_fsc.getmtime(in_file) > \

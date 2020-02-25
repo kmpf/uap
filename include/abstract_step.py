@@ -12,7 +12,7 @@ steps can introduce files from outside the destination path into the pipeline.
 # 1. standard library imports
 import sys
 import copy
-import datetime
+from datetime import datetime
 import hashlib
 import inspect
 from logging import getLogger
@@ -474,7 +474,7 @@ class AbstractStep(object):
 
     def move_ping_file(self, ping_path, bad_copy=False):
         # don't remove the ping file, rename it so we can inspect it later
-        suffix = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        suffix = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         if os.path.exists(ping_path):
             try:
                 out_w_suffix = ping_path + '.' + suffix
@@ -559,7 +559,7 @@ class AbstractStep(object):
 
         # now write the run ping file
         executing_ping_info = dict()
-        executing_ping_info['start_time'] = datetime.datetime.now()
+        executing_ping_info['start_time'] = datetime.now()
         executing_ping_info['host'] = socket.gethostname()
         executing_ping_info['pid'] = os.getpid()
         executing_ping_info['cwd'] = os.getcwd()
@@ -597,7 +597,7 @@ class AbstractStep(object):
             finally:
                 os._exit(0)
 
-        self.start_time = datetime.datetime.now()
+        self.start_time = datetime.now()
         self.get_pipeline().notify(
             "[START] starting %s/%s on %s" %
             (self, run_id, socket.gethostname()))
@@ -629,7 +629,7 @@ class AbstractStep(object):
                 # if the ping process was already killed, it's gone anyway
                 pass
 
-        self.end_time = datetime.datetime.now()
+        self.end_time = datetime.now()
         # step has completed invalidate the FS cache because things have
         # changed by now...
         run.reset_fsc()
@@ -656,16 +656,15 @@ class AbstractStep(object):
                             run.get_temp_output_directory(),
                             os.path.basename(out_file)
                         )
-                        destination_path = os.path.join(
+                        path = os.path.join(
                             run.get_output_directory(),
                             os.path.basename(out_file))
                         # first, delete a possibly existing volatile placeholder
                         # file
-                        destination_path_volatile = destination_path + \
-                                                    AbstractStep.VOLATILE_SUFFIX
-                        if os.path.exists(destination_path_volatile):
-                            logger.info("Now deleting: %s" % destination_path_volatile)
-                            os.unlink(destination_path_volatile)
+                        path_volatile = path + AbstractStep.VOLATILE_SUFFIX
+                        if os.path.exists(path_volatile):
+                            logger.info("Now deleting: %s" % path_volatile)
+                            os.unlink(path_volatile)
                         if run.fsc.exists(source_path):
 
                             os.rename(source_path, path)
@@ -674,7 +673,7 @@ class AbstractStep(object):
                             if known_paths[path]['designation'] == 'output':
                                 to_be_hashed.add(path)
                                 size = run.fsc.getsize(path)
-                                mtime = run.fsc.getmtime(path)
+                                mtime = datetime.fromtimestamp(run.fsc.getmtime(path))
                                 known_paths[path]['size'] = size
                                 known_paths[path]['modification time'] = mtime
                             if known_paths[path]['type'] != 'step_file':
@@ -689,15 +688,17 @@ class AbstractStep(object):
 
         if caught_exception is None:
             try:
-                with multiprocessing.Pool(self.get_cores()) as pool:
-                    for hashsum, path in pool.imap(misc.sha_and_file,
-                            to_be_hashed):
-                        run.fsc.sha256sum_of(path, value=hashsum)
-                        known_paths[path]['sha256'] = hashsum
+                pool = multiprocessing.Pool(self.get_cores())
+                for hashsum, path in pool.imap(misc.sha_and_file,
+                        to_be_hashed):
+                    run.fsc.sha256sum_of(path, value=hashsum)
+                    known_paths[path]['sha256'] = hashsum
             except Exception as e:
                 if type(e) != UAPError:
                     logger.error("%s: %s" % (type(e).__name__, e))
                 caught_exception = sys.exc_info()
+            finally:
+                pool.close()
 
         for path, path_info in known_paths.items():
             # Get the file size
