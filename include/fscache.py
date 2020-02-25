@@ -39,9 +39,13 @@ class FSCache:
         self.cache['load_yaml_from_file'][path] = data
         return data
 
-    def sha256sum_of(self, path):
+    def sha256sum_of(self, path, value=None):
         if not 'sha256sums' in self.cache:
             self.cache['sha256sums'] = dict()
+
+        if value is not None:
+            self.cache['sha256sums'][path] = value
+            return value
 
         if path in self.cache['sha256sums']:
             return self.cache['sha256sums'][path]

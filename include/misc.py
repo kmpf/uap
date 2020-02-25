@@ -190,3 +190,6 @@ def sha256sum_of(file):
                      "of %s" % file)
 
     return sha256sum.hexdigest()
+
+def sha_and_file(file):
+    return file, sha256sum_of(file)

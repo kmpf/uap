@@ -30,6 +30,7 @@ import time
 import traceback
 from shutil import copyfile
 from tqdm import tqdm
+import multiprocessing
 # 2. related third party imports
 import psutil
 import yaml
@@ -642,6 +643,7 @@ class AbstractStep(object):
             # import pdb
             # pdb.set_trace()
 
+            to_be_hashed = set()
             for tag in run.get_output_files().keys():
                 for out_file in run.get_output_files()[tag].keys():
                     # don't try to rename files if they were not meant to exist
@@ -667,12 +669,12 @@ class AbstractStep(object):
                         if run.fsc.exists(source_path):
 
                             os.rename(source_path, path)
+                            known_paths.pop(source_path, None)
                             known_paths.setdefault(path, dict())
                             if known_paths[path]['designation'] == 'output':
-                                sha256sum = run.fsc.sha256sum_of(path)
+                                to_be_hashed.add(path)
                                 size = run.fsc.getsize(path)
                                 mtime = run.fsc.getmtime(path)
-                                known_paths[path]['sha256'] = sha256sum
                                 known_paths[path]['size'] = size
                                 known_paths[path]['modification time'] = mtime
                             if known_paths[path]['type'] != 'step_file':
@@ -683,12 +685,24 @@ class AbstractStep(object):
                                                     'announced output file: "%s".\n'
                                                     'Source file doesn\'t exists: "%s"'
                                                     % (out_file, source_path))
-                            caught_exception = (StandardError, caught_error, None)
+                            caught_exception = (UAPError, caught_error, None)
+
+        if caught_exception is None:
+            try:
+                with multiprocessing.Pool(self.get_cores()) as pool:
+                    for hashsum, path in pool.imap(misc.sha_and_file,
+                            to_be_hashed):
+                        run.fsc.sha256sum_of(path, value=hashsum)
+                        known_paths[path]['sha256'] = hashsum
+            except Exception as e:
+                if type(e) != UAPError:
+                    logger.error("%s: %s" % (type(e).__name__, e))
+                caught_exception = sys.exc_info()
 
         for path, path_info in known_paths.items():
             # Get the file size
             if os.path.exists(path):
-                known_paths[path]['size'] = os.path.getsize(path)
+                known_paths[path]['size'] = run.fsc.getsize(path)
 
         run.add_known_paths(known_paths)
         error = None
@@ -920,6 +934,9 @@ class AbstractStep(object):
         """
         Specify the number of CPU cores this step will use.
         """
+        if not isinstance(cores, int) or cores < 1:
+            raise UAPError('[%s] Cores need to be a positive integer, not %s.'
+                    % (self.get_step_name(), cores))
         self._cores = cores
 
     def get_cores(self):

@@ -940,7 +940,7 @@ class Run(object):
         script_path = os.path.relpath(script, path)
         if os.path.exists(script):
             log['step']['submit_script'] = script_path
-        log['step']['cores'] = self.get_step()._cores
+        log['step']['cores'] = self.get_step().get_cores()
         log['run'] = {}
         log['run']['run_info'] = self.as_dict()
         log['run']['run_id'] = self.get_run_id()
