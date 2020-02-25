@@ -903,11 +903,10 @@ class Run(object):
         '''
         return (key in self._private_info)
 
-    def as_dict(self, output=True):
+    def as_dict(self):
         result = dict()
         result['output_directory'] = self.get_output_directory()
-        if output:
-            result['output_files'] = self._output_files
+        result['output_files'] = self._output_files
         result['private_info'] = self._private_info
         result['public_info'] = self._public_info
         result['run_id'] = self._run_id
@@ -948,6 +947,9 @@ class Run(object):
         log['run'] = {}
         log['run']['run_info'] = self.as_dict(output=False)
         log['run']['run_id'] = self.get_run_id()
+        log['run']['output_directory'] = self.get_output_directory()
+        log['run']['private_info'] = self._private_info
+        log['run']['public_info'] = self._public_info
         log['run']['temp_directory'] = self.get_temp_output_directory()
         # if a run submit script was used ...
         if os.path.exists(self.get_submit_script_file()):
