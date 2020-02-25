@@ -945,7 +945,7 @@ class Run(object):
             log['step']['submit_script'] = script_path
         log['step']['cores'] = self.get_step().get_cores()
         log['run'] = {}
-        log['run']['run_info'] = self.as_dict(output=False)
+        log['run']['run_info'] = self.as_dict()
         log['run']['run_id'] = self.get_run_id()
         log['run']['output_directory'] = self.get_output_directory()
         log['run']['private_info'] = self._private_info
