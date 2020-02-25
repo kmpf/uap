@@ -691,8 +691,9 @@ class AbstractStep(object):
             try:
                 pool = multiprocessing.Pool(self.get_cores())
                 def stop(signum, frame):
+                    logger.debug("Catching %s!" %
+                            process_pool.ProcessPool.SIGNAL_NAMES[signum])
                     pool.close()
-                    original_term_handler(signum, frame)
                     raise UAPError('Interrupted during output hashing.')
                 original_term_handler = signal.signal(signal.SIGTERM, stop)
                 original_int_handler = signal.signal(signal.SIGINT, stop)
