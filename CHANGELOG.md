@@ -88,6 +88,7 @@
  * always use highest verbosity level on cluster jobs
  * run states overhaul
  * caching is now run specific
+ * use all cores to hash output files
 
 ## 1.1 (20.01.2020)
 
