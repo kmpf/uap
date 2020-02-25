@@ -664,27 +664,20 @@ class AbstractStep(object):
                         if os.path.exists(destination_path_volatile):
                             logger.info("Now deleting: %s" % destination_path_volatile)
                             os.unlink(destination_path_volatile)
-                        # TODO: if the destination path already exists, this
-                        # will overwrite the file.
                         if run.fsc.exists(source_path):
-                            # Calculate SHA256 hash for output files
-                            sha256sum = run.fsc.sha256sum_of(source_path)
-                            size = run.fsc.getsize(source_path)
-                            mtime = run.fsc.getmtime(source_path)
 
-                            os.rename(source_path, destination_path)
-                            for path in [source_path, destination_path]:
-                                if path in known_paths.keys():
-                                    if known_paths[path]['designation'] == \
-                                       'output':
-                                       known_paths[path]['sha256'] = sha256sum
-                                       known_paths[path]['size'] = size
-                                       known_paths[path]['modification time'] = mtime
-                                    if known_paths[path]['type'] != \
-                                       'step_file':
-                                        logger.debug("Set %s 'type' info to "
-                                                     "'step_file'" % path)
-                                        known_paths[path]['type'] = 'step_file'
+                            os.rename(source_path, path)
+                            known_paths.setdefault(path, dict())
+                            if known_paths[path]['designation'] == 'output':
+                                sha256sum = run.fsc.sha256sum_of(path)
+                                size = run.fsc.getsize(path)
+                                mtime = run.fsc.getmtime(path)
+                                known_paths[path]['sha256'] = sha256sum
+                                known_paths[path]['size'] = size
+                                known_paths[path]['modification time'] = mtime
+                            if known_paths[path]['type'] != 'step_file':
+                                logger.debug("Set %s 'type' info to 'step_file'" % path)
+                                known_paths[path]['type'] = 'step_file'
                         else:
                             caught_error = UAPError('The step failed to produce an '
                                                     'announced output file: "%s".\n'
