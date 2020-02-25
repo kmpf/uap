@@ -100,12 +100,11 @@ def main(args):
                 original_step_name_label = ' (%s)' % step.get_step_type()
 
             if args.no_tool_checks:
-                line = "%s%s%s" % (''.join(line).replace("─└", "─┴"),
-                        step.get_step_name(), original_step_name_label)
+                run_info = '%d runs' % len(step.get_runs())
             else:
-                line = "%s%s%s [%s]" % (''.join(line).replace("─└", "─┴"),
-                        step.get_step_name(), original_step_name_label,
-                        step.get_run_info_str(progress=True, do_hash=args.hash))
+                run_info = step.get_run_info_str(progress=True, do_hash=args.hash)
+            line = "%s%s%s [%s]" % (''.join(line).replace("─└", "─┴"),
+                    step.get_step_name(), original_step_name_label, run_info)
             print(line)
 
     elif args.details:
