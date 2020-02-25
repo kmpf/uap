@@ -69,6 +69,7 @@
  * introduce status --hash to validate sha256sum of output files
  * introduce fix-problems --file-modification-date to fix output after copy
  * configuration can be read from anny annotation file
+ * implement `source_controller` step to detect changes in source inputs
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
