@@ -335,9 +335,8 @@ class Run(object):
     def get_changes(self):
         anno_data = self.written_anno_data()
         if not anno_data:
-            logger.warn('Cannot report changes for "%s/%s" without annotation '
-                        'file.' % (self.get_step().get_step_name(), self))
-            return dict()
+            return {'Error':'Missing annotation file %s' %
+                    self.get_annotation_path()}
         old_struct = anno_data['run']['structure']
         new_struct = self.get_run_structure()
         return DeepDiff(old_struct, new_struct)
@@ -472,6 +471,14 @@ class Run(object):
             return states.QUEUED
         if self.fsc.exists(self.get_queued_ping_file() + '.bad'):
             return states.BAD
+
+        anno_data = self.written_anno_data()
+        if anno_data:
+            if anno_data.get('run', dict()).get('error'):
+                return states.BAD
+            if self.get_changes():
+                return states.CHANGED
+
         has_volitile_parent = False
         for parent in self.get_parent_runs():
             pstate = parent.get_state(do_hash=do_hash)
@@ -492,20 +499,12 @@ class Run(object):
                             for out_file, _ in output_files)
             is_volatilized = True
 
-        anno_data = self.written_anno_data()
         if not all_exist:
-            if anno_data and anno_data.get('run', dict()).get('error') is not None:
-                return states.BAD
-            elif has_volitile_parent:
+            if has_volitile_parent:
                 return states.WAITING
             return states.READY
         else:
             if not anno_data:
-                logger.warn('The task "%s/%s" seems finished but the '
-                            'annotation file could not be read.' %
-                            (self.get_step(), self._run_id))
-                return states.CHANGED
-            if self.get_changes():
                 return states.CHANGED
             for bad_file in self.file_changes(do_hash=do_hash):
                 if bad_file:
