@@ -686,6 +686,7 @@ class AbstractStep(object):
                                                     % (out_file, source_path))
                             caught_exception = (UAPError, caught_error, None)
 
+        pool = None
         if caught_exception is None:
             try:
                 pool = multiprocessing.Pool(self.get_cores())
@@ -769,6 +770,9 @@ class AbstractStep(object):
             self.move_ping_file(queued_ping_path)
 
             self._reset()
+
+        if pool is not None:
+            pool.join()
 
     def reports(self, run_id, out_connection_output_files):
         '''
