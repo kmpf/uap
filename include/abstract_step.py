@@ -628,9 +628,11 @@ class AbstractStep(object):
                 # if the ping process was already killed, it's gone anyway
                 pass
 
-        # TODO: Clean this up. Re-think exceptions and task state transisitions.
-
         self.end_time = datetime.datetime.now()
+        # step has completed invalidate the FS cache because things have
+        # changed by now...
+        run.reset_fsc()
+
 
         if (not self.get_pipeline().caught_signal) and (caught_exception is None):
             # if we're here, we can assume the step has finished successfully
@@ -664,10 +666,10 @@ class AbstractStep(object):
                             os.unlink(destination_path_volatile)
                         # TODO: if the destination path already exists, this
                         # will overwrite the file.
-                        if os.path.exists(source_path):
+                        if run.fsc.exists(source_path):
                             # Calculate SHA256 hash for output files
-                            sha256sum = misc.sha256sum_of(source_path)
-                            size = os.path.getsize(source_path)
+                            sha256sum = run.fsc.sha256sum_of(source_path)
+                            size = run.fsc.getsize(source_path)
 
                             os.rename(source_path, destination_path)
                             for path in [source_path, destination_path]:
@@ -705,10 +707,6 @@ class AbstractStep(object):
             run.get_output_directory(), error=error)
 
         self._state = AbstractStep.states.DEFAULT
-
-        # step has completed invalidate the FS cache because things have
-        # changed by now...
-        run.reset_fsc()
 
         if error:
             message = "[BAD] %s/%s failed on %s after %s\n" % \
