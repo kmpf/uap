@@ -5,6 +5,7 @@ import json
 from logging import getLogger
 import os
 import re
+import signal
 
 logger=getLogger('uap_logger')
 
@@ -192,4 +193,8 @@ def sha256sum_of(file):
     return sha256sum.hexdigest()
 
 def sha_and_file(file):
+    '''
+    Designed to be run in multiprocessing.Pool().imap.
+    '''
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
     return sha256sum_of(file), file
