@@ -275,6 +275,7 @@ class Run(object):
         '''
 
         cmd_by_eg = dict()
+        cmd_by_eg['run_id'] = self.get_run_id()
         p = self.get_step().get_pipeline()
 
         # get tool version texts and paths
@@ -902,10 +903,11 @@ class Run(object):
         '''
         return (key in self._private_info)
 
-    def as_dict(self):
+    def as_dict(self, output=True):
         result = dict()
         result['output_directory'] = self.get_output_directory()
-        result['output_files'] = self._output_files
+        if output:
+            result['output_files'] = self._output_files
         result['private_info'] = self._private_info
         result['public_info'] = self._public_info
         result['run_id'] = self._run_id
@@ -944,7 +946,7 @@ class Run(object):
             log['step']['submit_script'] = script_path
         log['step']['cores'] = self.get_step().get_cores()
         log['run'] = {}
-        log['run']['run_info'] = self.as_dict()
+        log['run']['run_info'] = self.as_dict(output=False)
         log['run']['run_id'] = self.get_run_id()
         log['run']['temp_directory'] = self.get_temp_output_directory()
         # if a run submit script was used ...
