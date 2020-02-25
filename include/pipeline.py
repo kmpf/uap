@@ -546,11 +546,9 @@ class Pipeline(object):
                         is_ready = False
                         break
                 if is_ready and step.get_step_type == 'source_controller':
-                    # make sure source_controller attempt to run first
-                    self.topological_step_order.append(step_name)
-                    assigned_steps.add(step_name)
-                    unassigned_steps.remove(step_name)
-                    continue
+                    # make sure source_controller attempts to run first
+                    next_steps = [step_name]
+                    break
                 elif is_ready:
                     next_steps.append(step_name)
             if len(next_steps) == 0:
