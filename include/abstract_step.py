@@ -693,7 +693,7 @@ class AbstractStep(object):
                 def stop(signum, frame):
                     logger.debug("Catching %s!" %
                             process_pool.ProcessPool.SIGNAL_NAMES[signum])
-                    pool.close()
+                    pool.terminate()
                     raise UAPError('Interrupted during output hashing.')
                 original_term_handler = signal.signal(signal.SIGTERM, stop)
                 original_int_handler = signal.signal(signal.SIGINT, stop)
@@ -702,13 +702,15 @@ class AbstractStep(object):
                     run.fsc.sha256sum_of(path, value=hashsum)
                     known_paths[path]['sha256'] = hashsum
             except Exception as e:
+                pool.terminate()
                 if type(e) != UAPError:
                     logger.error("%s: %s" % (type(e).__name__, e))
                 caught_exception = sys.exc_info()
+            else:
+                pool.close()
             finally:
                 signal.signal(signal.SIGTERM, original_term_handler)
                 signal.signal(signal.SIGINT, original_int_handler)
-                pool.close()
 
         for path, path_info in known_paths.items():
             # Get the file size
