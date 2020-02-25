@@ -367,6 +367,14 @@ class Run(object):
         is_volatile = self.get_step().is_volatile()
         for path, input_files in self.dependencies().items():
 
+            # is it logged in the annotation file
+            old_path = path.replace(new_dest, old_dest)
+            if old_path not in anno_data['run']['known_paths']:
+                yield '%s not logged in the annotation file %s' % \
+                        (old_path, anno_file)
+                continue
+            meta_data = anno_data['run']['known_paths'][old_path]
+
             # existence and volatility
             v_path = path + abst.AbstractStep.VOLATILE_SUFFIX
             if not self.fsc.exists(path):
@@ -381,9 +389,10 @@ class Run(object):
 
             # modification time
             change_str = ''
-            mod_time = datetime.fromtimestamp(self.fsc.getmtime(path))
-            if mod_time > end_time:
-                change_str = ' and modification date after %s' % end_time
+            new_mtime = datetime.fromtimestamp(self.fsc.getmtime(path))
+            old_mtime = meta_data['modification_time']
+            if new_mtime > old_mtime:
+                change_str = ' and modification date after %s' % old_mtime
 
             # chaged dependencies
             has_changed_deps = False
@@ -419,15 +428,6 @@ class Run(object):
                 continue
             elif is_volatile:
                 continue
-
-            # is it logged in the annotation file
-            old_path = path.replace(new_dest, old_dest)
-            if old_path not in anno_data['run']['known_paths']:
-                raise UAPError('An output file was not found in the '
-                    'annotation file. Are you sure the task did not change?\n'
-                    'Annotation: %s\nMissing file: %s' %
-                    (anno_file, old_path))
-            meta_data = anno_data['run']['known_paths'][old_path]
 
             # size changes
             old_size = meta_data['size']

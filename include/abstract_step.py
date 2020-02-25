@@ -670,6 +670,7 @@ class AbstractStep(object):
                             # Calculate SHA256 hash for output files
                             sha256sum = run.fsc.sha256sum_of(source_path)
                             size = run.fsc.getsize(source_path)
+                            mtime = run.fsc.getmtime(source_path)
 
                             os.rename(source_path, destination_path)
                             for path in [source_path, destination_path]:
@@ -678,6 +679,7 @@ class AbstractStep(object):
                                        'output':
                                        known_paths[path]['sha256'] = sha256sum
                                        known_paths[path]['size'] = size
+                                       known_paths[path]['modification_time'] = mtime
                                     if known_paths[path]['type'] != \
                                        'step_file':
                                         logger.debug("Set %s 'type' info to "
