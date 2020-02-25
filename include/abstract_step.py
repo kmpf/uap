@@ -679,7 +679,7 @@ class AbstractStep(object):
                                        'output':
                                        known_paths[path]['sha256'] = sha256sum
                                        known_paths[path]['size'] = size
-                                       known_paths[path]['modification_time'] = mtime
+                                       known_paths[path]['modification time'] = mtime
                                     if known_paths[path]['type'] != \
                                        'step_file':
                                         logger.debug("Set %s 'type' info to "

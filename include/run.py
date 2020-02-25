@@ -389,7 +389,7 @@ class Run(object):
             # modification time
             change_str = ''
             new_mtime = datetime.fromtimestamp(self.fsc.getmtime(path))
-            old_mtime = meta_data['modification_time']
+            old_mtime = meta_data['modification time']
             if new_mtime > old_mtime:
                 change_str = ' and modification date after %s' % old_mtime
 
