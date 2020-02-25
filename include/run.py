@@ -320,15 +320,14 @@ class Run(object):
         for connection, files in self.get_output_files().items():
             if files:
                 cmd_by_eg['output'][connection] = files.keys()
+
         # get parent hash
+        cmd_by_eg['parent hashes'] = dict()
         parents = self.get_parent_runs()
-        if parents:
-            parent_struct = dict()
-            for prun in parents:
-                task_id = '%s/%s' % (prun.get_step().get_step_name(), prun.get_run_id())
-                parent_struct[task_id] = prun.get_run_structure()
-            cmd_by_eg['parent hash'] = misc.str_to_sha256(
-                    json.dumps(parent_struct, sort_keys=True))
+        for prun in parents:
+            task_id = '%s/%s' % (prun.get_step().get_step_name(), prun.get_run_id())
+            hashsum = misc.str_to_sha256(json.dumps(parent_struct, sort_keys=True))
+            cmd_by_eg['parent hashes'][task_id] = hashsum
 
         return cmd_by_eg
 
