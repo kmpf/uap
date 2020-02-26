@@ -986,6 +986,12 @@ class Run(object):
         log['run']['user'] = os.environ.get('USER')
         if error is not None:
             log['run']['error'] = error
+        try:
+            with open(self.get_queued_ping_file(), 'r') as buff:
+                info = yaml.load(buff, Loader=yaml.FullLoader)
+            log['run']['cluster job id'] = info['job_id']
+        except (IOError, KeyError):
+            pass
         log['config'] = self.get_step().get_pipeline().config
 
         log['tool_versions'] = {}
