@@ -54,7 +54,8 @@ def main(args):
             step_name = parts[0]
             run_id = parts[1]
             report = p.steps[step_name].get_run(run_id).as_dict()
-            print(yaml.dump(report, default_flow_style = False))
+            print(yaml.dump(report, Dumper=misc.UAPDumper,
+                    default_flow_style = False))
 
     elif args.graph:
         p = pipeline.Pipeline(arguments=args)

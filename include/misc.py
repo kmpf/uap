@@ -6,6 +6,8 @@ from logging import getLogger
 import os
 import re
 import signal
+import yaml
+from collections import OrderedDict
 
 logger=getLogger('uap_logger')
 
@@ -198,3 +200,27 @@ def sha_and_file(file):
     '''
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     return sha256sum_of(file), file
+
+class UAPDumper(yaml.Dumper):
+    # ensures indentation of lists
+    def increase_indent(self, flow=False, indentless=False):
+        return super(UAPDumper, self).increase_indent(flow, False)
+
+class literal(str):
+    pass
+
+def literal_presenter(dumper, data):
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+UAPDumper.add_representer(literal, literal_presenter)
+
+def ordered_dict_presenter(dumper, data):
+    return dumper.represent_dict(data.items())
+UAPDumper.add_representer(OrderedDict, ordered_dict_presenter)
+
+class type_tuple(tuple):
+    pass
+
+def type_tuple_presenter(dumper, data):
+    strings = [ty.__name__ for ty in data]
+    return dumper.represent_scalar('tag:yaml.org,2002:str', ', '.join(strings))
+UAPDumper.add_representer(type_tuple, type_tuple_presenter)

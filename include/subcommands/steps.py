@@ -11,6 +11,7 @@ import re
 
 from uaperrors import UAPError
 from logging import getLogger
+from misc import UAPDumper
 logger = getLogger('uap_logger')
 
 from abstract_step import AbstractSourceStep, AbstractStep
@@ -39,7 +40,7 @@ def main(args):
                     ('Available Options', step._defined_options),
                     ('CPU Cores', step.get_cores())
                 ])
-                print(yaml.dump(report, Dumper=MyDumper, default_flow_style=False))
+                print(yaml.dump(report, Dumper=UAPDumper, default_flow_style=False))
 
         if not is_step:
             raise UAPError("'%s' is neither a source nor a processing step"
@@ -82,29 +83,6 @@ def main(args):
                 else:
                     print("- %s" % s)
 
-class literal(str):
-    pass
-
-def literal_presenter(dumper, data):
-    return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
-yaml.add_representer(literal, literal_presenter)
-
-def ordered_dict_presenter(dumper, data):
-    return dumper.represent_dict(data.items())
-yaml.add_representer(OrderedDict, ordered_dict_presenter)
-
-class type_tuple(tuple):
-    pass
-
-def type_tuple_presenter(dumper, data):
-    strings = [ty.__name__ for ty in data]
-    return dumper.represent_scalar('tag:yaml.org,2002:str', ', '.join(strings))
-yaml.add_representer(type_tuple, type_tuple_presenter)
-
-class MyDumper(yaml.Dumper):
-    # ensures indentation of lists
-    def increase_indent(self, flow=False, indentless=False):
-        return super(MyDumper, self).increase_indent(flow, False)
 
 def is_key_a_step(key, step_type, state=False):
     '''
