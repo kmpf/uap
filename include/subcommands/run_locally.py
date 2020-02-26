@@ -40,7 +40,7 @@ def main(args):
                 for task in p.all_tasks_topologically_sorted:
                     if str(task)[0:len(task_id)] == task_id:
                         task_list.append(task)
-            
+
     # execute all tasks
     finished_states = [p.states.FINISHED]
     if args.ignore:
@@ -68,9 +68,9 @@ def main(args):
                         "of the results." %
                         (task, args.config.name, args.config.name))
             else:
-                check_parents_and_run(task, finished_states)
+                check_parents_and_run(task, finished_states, [p.states.BAD])
         elif task_state in accepted_states:
-            check_parents_and_run(task, finished_states)
+            check_parents_and_run(task, finished_states, [p.states.BAD])
         else:
             task.move_ping_file()
             raise UAPError("Unexpected task state for %s: %s\n"
@@ -78,13 +78,17 @@ def main(args):
                          "run crashed." %
                          (task, task_state))
 
-def check_parents_and_run(task, states):
+def check_parents_and_run(task, states, bad):
     parents = task.get_parent_tasks()
     for parent_task in parents:
         parent_state = parent_task.get_task_state()
-        if parent_state not in states:
+        if parent_state in bad:
+            task.move_ping_file(bad_copy=False)
+            raise UAPError('The parent task %s is %s.' %
+                    (parent_task, parent_state))
+        elif parent_state not in states:
             should = ' or '.join(states)
-            error =  "Cannot run %s because a parent job " \
+            error =  "Cannot run %s because a parent task " \
                      "%s is %s when it should be %s." % \
                      (task, parent_task, parent_state, should)
             log_task_error(task, error)
