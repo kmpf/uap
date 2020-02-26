@@ -1,5 +1,5 @@
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 import glob
 import json
 import fscache
@@ -403,7 +403,8 @@ class Run(object):
             change_str = ''
             new_mtime = datetime.fromtimestamp(self.fsc.getmtime(path))
             old_mtime = meta_data['modification time']
-            if new_mtime > old_mtime:
+            diff = new_mtime - old_mtime
+            if diff > timedelta(seconds=1):
                 change_str = ' and modification date after %s' % old_mtime
 
             # chaged dependencies
