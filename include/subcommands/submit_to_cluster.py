@@ -87,8 +87,9 @@ def main(args):
                         "'uap %s submit-to-cluster --force' to force overwrite "
                         "of the results." %
                         (task, args.config.name, args.config.name))
-            steps_left.append(step_name)
             tasks_left[step_name].append(task)
+            if step_name not in steps_left:
+                steps_left.append(step_name)
 
     quotas = dict()
 
