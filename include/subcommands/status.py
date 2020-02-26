@@ -185,7 +185,8 @@ def main(args):
                     if changes:
                         has_only_date_change = False
                         print(yaml.dump(dict(changes)))
-                    for line in run.file_changes(do_hash=args.hash):
+                    for line in run.file_changes(do_hash=args.hash,
+                            report_correct=True):
                         if ' modification date after' in line:
                             has_date_change = True
                         else:

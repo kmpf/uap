@@ -356,7 +356,7 @@ class Run(object):
                 dependencies[out_file].update(set(input_files))
         return dependencies
 
-    def file_changes(self, do_hash=False):
+    def file_changes(self, do_hash=False, report_correct=False):
         anno_data = self.written_anno_data()
         if not anno_data:
             raise StopIteration
@@ -439,14 +439,14 @@ class Run(object):
                 continue
 
             # hash sum
-            if do_hash:
+            if do_hash is True:
                 old_hash = meta_data['sha256']
                 new_hash = self.fsc.sha256sum_of(path)
                 if new_hash != old_hash:
                     yield '%s sha256sum changed from %s to %s%s' % \
                           (path, old_hash, new_hash, change_str)
                     continue
-                elif change_str:
+                elif change_str or report_correct is True:
                     yield '%s sha256sum is correct%s' % \
                           (path, change_str)
                     continue
