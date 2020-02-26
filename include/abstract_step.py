@@ -499,7 +499,7 @@ class AbstractStep(object):
                                          socket.gethostname()))
                 else:
                     os.unlink(ping_path)
-                    logger.debug('The run ping file "%s" was removed by %s.'
+                    logger.debug('The run ping file "%s" was removed by %s.' %
                                  (ping_path, socket.gethostname()))
             except OSError as e:
                 logger.debug('The run ping file "%s" could not be moved: %s' %
