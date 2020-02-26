@@ -238,7 +238,7 @@ def main(args):
                         print('')
                     if failed:
                         found_error = True
-                        print('#### failed commands')
+                        print('## FAILED COMMANDS ##')
                         print(yaml.dump(failed, Dumper=misc.UAPDumper,
                                 default_flow_style = False))
                     else:
@@ -246,7 +246,7 @@ def main(args):
                     run_data = anno_data.get('run', [])
                     if 'error' in run_data:
                         found_error = True
-                        print('# ERROR #\n%s\n' %  run_data['error'])
+                        print('## ERROR ##\n%s\n' %  run_data['error'])
                     if not found_error:
                         print('No errors found.')
                         print("Run 'uap %s fix-problems --first-error' to investigate.'"
