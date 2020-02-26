@@ -68,9 +68,9 @@ def main(args):
                         "of the results." %
                         (task, args.config.name, args.config.name))
             else:
-                check_parents_and_run(task, finished_states, [p.states.BAD])
+                check_parents_and_run(task, finished_states, args.debugging)
         elif task_state in accepted_states:
-            check_parents_and_run(task, finished_states, [p.states.BAD])
+            check_parents_and_run(task, finished_states, args.debugging)
         else:
             task.move_ping_file()
             raise UAPError("Unexpected task state for %s: %s\n"
@@ -78,28 +78,27 @@ def main(args):
                          "run crashed." %
                          (task, task_state))
 
-def check_parents_and_run(task, states, bad):
+def check_parents_and_run(task, states, turn_bad):
     parents = task.get_parent_tasks()
     for parent_task in parents:
         parent_state = parent_task.get_task_state()
-        if parent_state in bad:
-            task.move_ping_file(bad_copy=False)
-            raise UAPError('The parent task %s is %s.' %
-                    (parent_task, parent_state))
-        elif parent_state not in states:
+        if parent_state not in states:
             should = ' or '.join(states)
-            error =  "Cannot run %s because a parent task " \
+            error =  "Cannot run %s because a parent job " \
                      "%s is %s when it should be %s." % \
                      (task, parent_task, parent_state, should)
             log_task_error(task, error)
     task.run()
 
-def log_task_error(task, error):
-    run = task.get_run()
-    run.get_step().start_time = datetime.now()
-    run.get_step().end_time = datetime.now()
-    run.write_annotation_file(error=error)
-    task.move_ping_file()
+def log_task_error(task, error, turn_bad):
+    if turn_bad:
+        run = task.get_run()
+        run.get_step().start_time = datetime.now()
+        run.get_step().end_time = datetime.now()
+        run.write_annotation_file(error=error)
+        task.move_ping_file()
+    else:
+        task.move_ping_file(bad_copy=False)
     raise UAPError(error)
 
 if __name__ == '__main__':
