@@ -487,7 +487,7 @@ class AbstractStep(object):
                     os.rename(ping_path, out_w_bad)
                     copyfile(out_w_bad, out_w_suffix)
                     logger.debug('The run ping file "%s" was moved to "%s" '
-                                 'and "%s" by host %s.' %
+                                 'and copied to "%s" by host %s.' %
                                  (ping_path, out_w_bad, out_w_suffix,
                                          socket.gethostname()))
                 else:
