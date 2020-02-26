@@ -267,11 +267,19 @@ class Run(object):
     @cache
     def get_run_structure(self):
         '''
-        Creates a dictionary with the structure of commands to
-        be executed and the used tool versions.
+        Returns a dictionary with all information known at
+        run declaratuon time, relevant for its result
+        and nothing more.
 
-        This causes runs to be marked for rerunning if the commands to be
-        executed change.
+        Included are:
+         - tool versions
+         - commands and structure
+         - output connections and files
+         - parent run names and hashsum of their run_structure
+
+        Should not include:
+         - any absolute paths
+         - parent hashes of source steps (absolute paths)
         '''
 
         cmd_by_eg = dict()
