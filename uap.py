@@ -105,7 +105,7 @@ def main():
         dest="debugging",
         action="store_true",
         default=False,
-        help="Print traceback on UAPError.")
+        help="Print traceback on UAPError and keep backup of all ping files.")
 
     parser.add_argument(
         "--profiling",

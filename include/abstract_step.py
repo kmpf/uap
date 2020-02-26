@@ -476,8 +476,12 @@ class AbstractStep(object):
         '''
         return self.__module__
 
-    def remove_ping_file(self, ping_path, bad_copy=False, backup=False):
+    def remove_ping_file(self, ping_path, bad_copy=False):
         # don't remove the ping file, rename it so we can inspect it later
+        try:
+            backup = self.get_pipeline().args.debugging
+        except AttributeError:
+            backup = False
         suffix = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         if os.path.exists(ping_path):
             try:
