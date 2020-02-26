@@ -82,12 +82,19 @@ def check_parents_and_run(task, states):
     for parent_task in parents:
         parent_state = parent_task.get_task_state()
         if parent_state not in states:
-            task.move_ping_file()
             should = ' or '.join(states)
-            raise UAPError("Cannot run %s because a parent job "
-                           "%s is %s when it should be in %s." %
-                           (task, parent_task, parent_state, should))
+            error =  "Cannot run %s because a parent job " \
+                     "%s is %s when it should be %s." % \
+                     (task, parent_task, parent_state, should)
+            log_task_error(task, error)
     task.run()
+
+def log_task_error(task, error):
+    run = task.get_run()
+    if not os.path.exists(run.get_annotation_path()):
+        run.get_run().write_annotation_file(error=error)
+    task.move_ping_file()
+    raise UAPError(error)
 
 if __name__ == '__main__':
     try:

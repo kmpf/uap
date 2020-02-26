@@ -297,3 +297,4 @@ def main(args):
                         "or finished." % (task, parent_task, parent_state.lower()))
                     continue
         submit_step(step_name, parent_job_ids)
+        step.reset_run_caches()
