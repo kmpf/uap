@@ -92,7 +92,7 @@ def check_parents_and_run(task, states):
 def log_task_error(task, error):
     run = task.get_run()
     if not os.path.exists(run.get_annotation_path()):
-        run.get_run().write_annotation_file(error=error)
+        run.write_annotation_file(error=error)
     task.move_ping_file()
     raise UAPError(error)
 

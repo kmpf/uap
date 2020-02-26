@@ -90,17 +90,12 @@ def main(args):
             steps_left.add(step_name)
             tasks_left[step_name].append(task)
 
-    print("Now attempting to submit %d jobs..." % len(steps_left))
-
     quotas = dict()
 
     try:
         quotas['default'] = p.config['cluster']['default_job_quota']
-        print("Set default quota to %s" % quotas['default'])
     except:
-        print("No default quota defined in %s. Set default quota to '5'." %
-              p.args.config.name)
-        quotas['default'] = 5
+        quotas['default'] = 0
     # read quotas
     # -> for every step, a quota can be defined (with a default quota
     #    in place for steps which have no defined quota)
@@ -213,10 +208,11 @@ def main(args):
         ##################
         # Submit the run #
         ##################
-        print("Submitting step %s with %s cores per job"
-              % (step_name, str(step._cores)))
-        print("Submit command: %s" % " ".join(submit_script_args))
-        print("=>")
+        sys.stdout.write("[%d/%d %s] submitting with %s cores per job, quota %s"
+              % (step_num+1, len(steps_left), step_name, str(step._cores),
+                      quotas[step_name]))
+        if dependent_steps:
+            sys.stdout.write(", dependencies %s" % ', '.join(dependent_steps))
         # Store submit script in the run_output_dir
         submit_script_path = step.get_submit_script_file()
         with open(submit_script_path, 'w') as f:
@@ -240,10 +236,10 @@ def main(args):
         process.stdin.write(submit_script)
         process.stdin.close()
         process.wait()
-        response = process.stdout.read()
-        print("GOT A RESPONSE: %s" % response)
+        response = process.stdout.read().strip()
         job_id = re.search(
             p.get_cluster_command('parse_job_id'), response).group(1)
+        sys.stdout.write(" and job id %s.\n" % job_id)
 
         if job_id == None or len(job_id) == 0:
             raise StandardError("Error: We couldn't parse a job_id from this:\n" + response)
@@ -260,21 +256,16 @@ def main(args):
             with open(ping_file, 'w') as f:
                 f.write(yaml.dump(queued_ping_info, default_flow_style = False))
 
-        print("%s (%s)" % (job_id, step_name))
-        if len(dependent_steps) > 0:
-            print(" - with dependent steps: " + ', '.join(dependent_steps))
-
         task.get_run().reset_fsc()
 
     # After defining submit_task() let's walk through steps_left
 
-    for step_name in steps_left:
+    for step_num, step_name in enumerate(steps_left):
         step = p.get_step(step_name)
         if not step_name in quotas.keys():
             quotas[step_name] = quotas['default']
             if step._options['_cluster_job_quota']:
                 quotas[step_name] = step._options['_cluster_job_quota']
-            print("Set job quota for %s to %s" % (step_name, quotas[step_name]))
         parents = step.get_dependencies()
         parent_job_ids = set()
         for parent in parents:
