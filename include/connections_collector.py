@@ -277,4 +277,10 @@ class ConnectionsCollector(object):
         '''
         Emulates dict.items().
         '''
-        return self.connections.items()
+        return sorted(self.connections.items())
+
+    def iteritems(self):
+        '''
+        Emulates dict.iteritems().
+        '''
+        return iter(sorted(self.connections.items()))
