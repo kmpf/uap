@@ -326,6 +326,8 @@ class Run(object):
         cmd_by_eg['parent hashes'] = dict()
         parents = self.get_parent_runs()
         for prun in parents:
+            if isinstance(prun.get_step(), abst.AbstractSourceStep):
+                continue
             task_id = '%s/%s' % (prun.get_step().get_step_name(), prun.get_run_id())
             hashsum = misc.str_to_sha256(json.dumps(prun.get_run_structure(),
                     sort_keys=True))
