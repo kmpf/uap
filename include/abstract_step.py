@@ -476,7 +476,7 @@ class AbstractStep(object):
         '''
         return self.__module__
 
-    def move_ping_file(self, ping_path, bad_copy=False):
+    def remove_ping_file(self, ping_path, bad_copy=False, backup=False):
         # don't remove the ping file, rename it so we can inspect it later
         suffix = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         if os.path.exists(ping_path):
@@ -485,17 +485,22 @@ class AbstractStep(object):
                 if bad_copy:
                     out_w_bad = ping_path + '.bad'
                     os.rename(ping_path, out_w_bad)
-                    copyfile(out_w_bad, out_w_suffix)
+                    if backup:
+                        copyfile(out_w_bad, out_w_suffix)
                     logger.debug('The run ping file "%s" was moved to "%s" '
                                  'and copied to "%s" by host %s.' %
                                  (ping_path, out_w_bad, out_w_suffix,
                                          socket.gethostname()))
-                else:
+                elif backup:
                     os.rename(ping_path, out_w_suffix)
                     logger.debug('The run ping file "%s" was moved to "%s" '
                                  'by host %s.' %
                                  (ping_path, out_w_suffix,
                                          socket.gethostname()))
+                else:
+                    os.unlink(ping_path)
+                    logger.debug('The run ping file "%s" was removed by %s.'
+                                 (ping_path, socket.gethostname()))
             except OSError as e:
                 logger.debug('The run ping file "%s" could not be moved: %s' %
                              (ping_path, str(e)))
@@ -571,14 +576,14 @@ class AbstractStep(object):
 
         def ping_on_term(signum, frame):
             logger.warn('Recived SIGTERM and moving execution ping file...')
-            self.move_ping_file(executing_ping_path)
-            self.move_ping_file(queued_ping_path, bad_copy=True)
+            self.remove_ping_file(executing_ping_path)
+            self.remove_ping_file(queued_ping_path, bad_copy=True)
             original_term_handler(signum, frame)
             raise UAPError('Recived TERM signal (canceled job).')
         def ping_on_int(signum, frame):
             logger.warn('Recived SIGINT and moving execution ping file...')
-            self.move_ping_file(executing_ping_path)
-            self.move_ping_file(queued_ping_path, bad_copy=True)
+            self.remove_ping_file(executing_ping_path)
+            self.remove_ping_file(queued_ping_path, bad_copy=True)
             original_int_handler(signum, frame)
             raise UAPError('Recived INT signal (keybord interrupt).')
         original_term_handler = signal.signal(signal.SIGTERM, ping_on_term)
@@ -623,7 +628,7 @@ class AbstractStep(object):
         finally:
             signal.signal(signal.SIGTERM, original_term_handler)
             signal.signal(signal.SIGINT, original_int_handler)
-            self.move_ping_file(executing_ping_path)
+            self.remove_ping_file(executing_ping_path)
             self._state = AbstractStep.states.DEFAULT # changes relative paths
             os.chdir(base_working_dir)
             try:
@@ -745,7 +750,7 @@ class AbstractStep(object):
                 attachment['name'] = 'details.png'
                 attachment['data'] = open(annotation_path + '.png').read()
             self.get_pipeline().notify(message, attachment)
-            self.move_ping_file(queued_ping_path, bad_copy=True)
+            self.remove_ping_file(queued_ping_path, bad_copy=True)
             if caught_exception is not None:
                 raise caught_exception[1], None, caught_exception[2]
 
@@ -775,7 +780,7 @@ class AbstractStep(object):
                 attachment['name'] = 'details.png'
                 attachment['data'] = open(annotation_path + '.png').read()
             self.get_pipeline().notify(message, attachment)
-            self.move_ping_file(queued_ping_path)
+            self.remove_ping_file(queued_ping_path)
 
             self._reset()
 

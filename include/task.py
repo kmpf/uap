@@ -109,7 +109,7 @@ class Task(object):
         and optionally keeps "bad_copy" to mark the task as BAD.
         '''
         ping_file = self.get_run().get_queued_ping_file()
-        self.step.move_ping_file(ping_file, bad_copy=bad_copy)
+        self.step.remove_ping_file(ping_file, bad_copy=bad_copy)
 
     def volatilize_if_possible(self, srsly = False):
         result = set()
