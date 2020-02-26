@@ -184,7 +184,8 @@ def main(args):
                     changes = run.get_changes()
                     if changes:
                         has_only_date_change = False
-                        print(yaml.dump(dict(changes)))
+                        print(yaml.dump(dict(changes), Dumper=misc.UAPDumper,
+                                default_flow_style = False))
                     for line in run.file_changes(do_hash=args.hash,
                             report_correct=True):
                         if ' modification date after' in line:
@@ -239,7 +240,8 @@ def main(args):
                     if failed:
                         found_error = True
                         print('#### failed commands')
-                        print(yaml.dump(failed))
+                        print(yaml.dump(failed, Dumper=misc.UAPDumper,
+                                default_flow_style = False))
                     else:
                         print('No failed commands found in the annotation file.\n')
                     if 'error' in run_data:
