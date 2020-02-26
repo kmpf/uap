@@ -7,6 +7,7 @@ import os
 import signal
 import socket
 import yaml
+from datetime import datetime
 
 import misc
 import pipeline
@@ -72,7 +73,7 @@ def main(args):
             check_parents_and_run(task, finished_states)
         else:
             task.move_ping_file()
-            raise UAPError("Unexpected basic task state for %s: %s\n"
+            raise UAPError("Unexpected task state for %s: %s\n"
                          "Expected state to be 'READY'. Probably an upstream "
                          "run crashed." %
                          (task, task_state))
@@ -91,8 +92,9 @@ def check_parents_and_run(task, states):
 
 def log_task_error(task, error):
     run = task.get_run()
-    if not os.path.exists(run.get_annotation_path()):
-        run.write_annotation_file(error=error)
+    run.get_step().start_time = datetime.now()
+    run.get_step().end_time = datetime.now()
+    run.write_annotation_file(error=error)
     task.move_ping_file()
     raise UAPError(error)
 
