@@ -13,6 +13,7 @@ import platform
 import subprocess
 from deepdiff import DeepHash, DeepDiff
 import inspect
+from functools import wraps
 
 import yaml
 
@@ -91,6 +92,7 @@ class Run(object):
         A decorator to cache a functions return value with self.fsc.
         '''
         function_name = [func.func_name, inspect.getargspec(func)]
+        @wraps(func)
         def inner(self, *args, **kwargs):
             key = str(function_name + [args, kwargs])
             cache = self.fsc.cache
