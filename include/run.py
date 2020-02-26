@@ -477,11 +477,15 @@ class Run(object):
         states = self.get_step().get_pipeline().states
         if isinstance(self.get_step(), abst.AbstractSourceStep):
             return states.FINISHED
-        if self.fsc.exists(self.get_executing_ping_file()):
+        ex_ping_file = self.get_executing_ping_file()
+        if self.fsc.exists(ex_ping_file):
+            logger.debug('Found execution ping file: %s' % ex_ping_file)
             if self.is_stale():
                 return states.BAD
             return states.EXECUTING
-        if self.fsc.exists(self.get_queued_ping_file()):
+        qu_ping_file = self.get_queued_ping_file()
+        if self.fsc.exists(qu_ping_file):
+            logger.debug('Found queue ping file: %s' % qu_ping_file)
             return states.QUEUED
         if self.fsc.exists(self.get_queued_ping_file() + '.bad'):
             return states.BAD
@@ -941,11 +945,13 @@ class Run(object):
                             % anno_file)
                 return None
 
-    def write_annotation_file(self, path, error=None):
+    def write_annotation_file(self, path=None, error=None):
         '''
         Write the YAML annotation after a successful or failed run. The
         annotation can later be used to render the process graph.
         '''
+        if path is None:
+            path = self.get_output_directory()
 
         # now write the annotation
         log = {}
