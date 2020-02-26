@@ -907,11 +907,14 @@ class Run(object):
 
     def as_dict(self):
         result = dict()
+        result['run_id'] = self._run_id
         result['output_directory'] = self.get_output_directory()
+        result['annotation_file'] = self.get_annotation_path()
         result['output_files'] = self._output_files
         result['private_info'] = self._private_info
         result['public_info'] = self._public_info
-        result['run_id'] = self._run_id
+        result.update(self.get_run_structure())
+        del result['output']
         return result
 
     @cache
@@ -947,7 +950,6 @@ class Run(object):
             log['step']['submit_script'] = script_path
         log['step']['cores'] = self.get_step().get_cores()
         log['run'] = {}
-        log['run']['run_info'] = self.as_dict()
         log['run']['run_id'] = self.get_run_id()
         log['run']['output_directory'] = self.get_output_directory()
         log['run']['private_info'] = self._private_info
