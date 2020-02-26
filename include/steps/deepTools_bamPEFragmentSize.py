@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -19,7 +19,7 @@ class deepToolsBamPEFragmentSize(AbstractStep):
     http://deeptools.readthedocs.io/en/latest/content/tools/bamPEFragmentSize.html
 
     Usage example::
-    
+
         bamPEFragmentSize [-h] [--bamfiles bam files [bam files ...]]
                           [--histogram FILE] [--numberOfProcessors INT]
                           [--samplesLabel SAMPLESLABEL [SAMPLESLABEL ...]]
@@ -27,12 +27,12 @@ class deepToolsBamPEFragmentSize(AbstractStep):
                           [--maxFragmentLength MAXFRAGMENTLENGTH] [--logScale]
                           [--binSize INT] [--distanceBetweenBins INT]
                           [--blackListFileName BED file] [--verbose] [--version]
- 
+
     '''
 
     def __init__(self, pipeline):
         super(deepToolsBamPEFragmentSize, self).__init__(pipeline)
-        
+
         self.set_cores(10)
 
         self.add_connection('in/alignments')
@@ -120,7 +120,7 @@ class deepToolsBamPEFragmentSize(AbstractStep):
                         bamPEFragmentSize.extend(labels)
                         if self.is_option_set_in_config('logScale'):
                             bamPEFragmentSize.append('--logScale')
-                        
+
                     ## Append list of options
                     bamPEFragmentSize.extend(option_list)
 
@@ -132,7 +132,7 @@ class deepToolsBamPEFragmentSize(AbstractStep):
                             input_paths))
 
 
-                
+
         run_id = str()
         input_paths = list()
         labels = list()
@@ -141,21 +141,21 @@ class deepToolsBamPEFragmentSize(AbstractStep):
 
             for run_id, samples in runIds_samples.iteritems():
                 if not isinstance(run_id, str):
-                    raise UAPError("Not a string run ID (%s) for samples (%s)"
+                    raise StepError(self, "Not a string run ID (%s) for samples (%s)"
                                  % (run_id, ", ".join(samples)))
                 if not isinstance(samples, list):
-                    raise UAPError("Not a list of samples. Type: %s, Value: %s"
+                    raise StepError(self, "Not a list of samples. Type: %s, Value: %s"
                                  % (type(samples), samples))
 
                 for sample in samples:
                     try:
                         bam_files = run_ids_connections_files[sample]['in/alignments']
                     except KeyError:
-                        raise UAPError("No input sample named %s" % sample)
+                        raise StepError(self, "No input sample named %s" % sample)
 
                     for i in range(len(bam_files)):
                         if not bam_files[i].endswith(".bam"):
-                            raise UAPError("Not a BAM file: %s" % bam_files[i])
+                            raise StepError(self, "Not a BAM file: %s" % bam_files[i])
                         input_paths.append(bam_files[i])
                         if i > 0:
                             labels.append("%s-%s" % (sample, i))
@@ -169,7 +169,7 @@ class deepToolsBamPEFragmentSize(AbstractStep):
                 try:
                     input_paths = run_ids_connections_files[run_id]['in/alignments']
                 except KeyError:
-                    raise UAPError('No files found for run-id %s and connection '
+                    raise StepError(self, 'No files found for run-id %s and connection '
                     '"in/alignments". Please check your configuration.' % run_id)
                 for f in input_paths:
                     label = run_id

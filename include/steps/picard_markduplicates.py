@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -62,7 +62,7 @@ class PicardMarkDuplicates(AbstractStep):
 
     If desired, duplicates can be removed using the REMOVE_DUPLICATE and
     REMOVE_SEQUENCING_DUPLICATES options.
-    
+
     Usage example::
 
         java -jar picard.jar MarkDuplicates \
@@ -80,7 +80,7 @@ class PicardMarkDuplicates(AbstractStep):
         super(PicardMarkDuplicates, self).__init__(pipeline)
 
         self.set_cores(12)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
         self.add_connection('out/metrics')
@@ -90,7 +90,7 @@ class PicardMarkDuplicates(AbstractStep):
 
         # [Standard Picard Options:]
 
-        self.add_option('TMP_DIR', str, optional = True, 
+        self.add_option('TMP_DIR', str, optional = True,
                         description = 'A file. Default value: null. This option '
                         'may be specified 0 or more times.')
         self.add_option('VERBOSITY', str, optional = True,
@@ -301,7 +301,7 @@ class PicardMarkDuplicates(AbstractStep):
             'READ_ONE_BARCODE_TAG', 'READ_TWO_BARCODE_TAG',
             'TAG_DUPLICATE_SET_MEMBERS', 'REMOVE_SEQUENCING_DUPLICATES',
             'TAGGING_POLICY', 'REMOVE_DUPLICATES', 'ASSUME_SORT_ORDER',
-            'DUPLICATE_SCORING_STRATEGY', 
+            'DUPLICATE_SCORING_STRATEGY',
             'PROGRAM_RECORD_ID', 'PROGRAM_GROUP_VERSION',
             'PROGRAM_GROUP_COMMAND_LINE', 'PROGRAM_GROUP_NAME',
             'COMMENT', 'ASSUME_SORTED',
@@ -331,9 +331,9 @@ class PicardMarkDuplicates(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    raise UAPError("Expected exactly one alignments file.")
+                    raise StepError(self, "Expected exactly one alignments file.")
                 elif os.path.splitext(input_paths[0])[1] not in ['.sam', '.bam']:
-                    raise UAPError(
+                    raise StepError(self,
                         "The file %s seems not to be a SAM or BAM file. At "
                         "least the suffix is wrong." % input_paths[0]
                     )

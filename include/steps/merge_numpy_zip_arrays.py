@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -12,14 +12,14 @@ class mergeNumpyZipArrays(AbstractStep):
     the output of deepTools multiBamSummary subcommand.
 
     Usage example::
-    
+
         merge_numpy_arrays.py [-h] [file-1.npz file-2.npz ... file-n.npz]  files
 
     '''
 
     def __init__(self, pipeline):
         super(mergeNumpyZipArrays, self).__init__(pipeline)
-        
+
         self.set_cores(10)
 
         self.add_connection('in/read-coverage')
@@ -35,7 +35,7 @@ class mergeNumpyZipArrays(AbstractStep):
             labels = list()
             for f in input_paths:
                 if not f.endswith(".bam"):
-                    raise UAPError("Not a BAM file: %s" % f)
+                    raise StepError(self, "Not a BAM file: %s" % f)
                 if len(input_paths) > 1:
                     labels.append("%s-%s" % (run_id, input_paths.index(f)))
                 else:

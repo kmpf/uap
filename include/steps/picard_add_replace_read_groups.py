@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from logging import getLogger
 import os
@@ -152,9 +152,9 @@ class PicardAddOrReplaceReadGroups(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    raise UAPError("Expected exactly one alignments file.")
+                    raise StepError(self, "Expected exactly one alignments file.")
                 elif os.path.splitext(input_paths[0])[1] not in ['.sam', '.bam']:
-                    raise UAPError(
+                    raise StepError(self,
                         "The file %s seems not to be a SAM or BAM file. At "
                         "least the suffix is wrong." % input_paths[0]
                     )

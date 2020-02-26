@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -108,7 +108,7 @@ class TopHat2(AbstractStep):
 
         # Check if option values are valid
         if not os.path.exists(self.get_option('index') + '.1.bt2'):
-            raise UAPError("Could not find index file: %s.*" %
+            raise StepError(self, "Could not find index file: %s.*" %
                          self.get_option('index') )
 
 

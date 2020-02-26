@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -84,14 +84,14 @@ class HtSeqCount(AbstractStep):
         if self.is_option_set_in_config('feature-file'):
             features_path = os.path.abspath(self.get_option('feature-file'))
             if not os.path.isfile(features_path):
-                raise UAPError('[HTSeq-Count]: %s is no file.' %
+                raise StepError(self, '[HTSeq-Count]: %s is no file.' %
                         self.get_option('feature-file'))
         else:
             features_path = None
         features_path = cc.look_for_unique('in/features', features_path)
         ref_per_run = cc.all_runs_have_connection('in/features')
         if features_path is None and ref_per_run is False:
-            raise UAPError('[HTSeq-Count]: no feature file given')
+            raise StepError(self, '[HTSeq-Count]: no feature file given')
 
         allignment_runs = cc.get_runs_with_connections('in/alignments')
         for run_id in allignment_runs:
@@ -115,11 +115,11 @@ class HtSeqCount(AbstractStep):
             elif ext in ['.sam']:
                 is_sam = True
             else:
-                raise UAPError("Input file not in [SB]am format: %s" % input_paths[0])
+                raise StepError(self, "Input file not in [SB]am format: %s" % input_paths[0])
 
 
             if not (bool(is_bam) ^ bool(is_sam)):
-                raise UAPError("Alignment file '%s' is neither SAM nor BAM "
+                raise StepError(self, "Alignment file '%s' is neither SAM nor BAM "
                              "format" % input_paths[0])
 
             alignments_path = input_paths[0]
@@ -144,7 +144,7 @@ class HtSeqCount(AbstractStep):
 
                         # 3. Use samtools to generate SAM output
                         if is_bam:
-                            samtools = [self.get_tool('samtools'), 'view', 
+                            samtools = [self.get_tool('samtools'), 'view',
                                         '-']
                             pipe.add_command(samtools)
 

@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import os
 import sys
 from logging import getLogger
@@ -10,15 +10,15 @@ logger=getLogger('uap_logger')
 class MergeFastaFiles(AbstractStep):
 
     '''
-    This step concatenates all .fasta(.gz) files that belong to a certain 
-    sample. 
+    This step concatenates all .fasta(.gz) files that belong to a certain
+    sample.
     '''
-    
+
     def __init__(self, pipeline):
         super(MergeFastaFiles, self).__init__(pipeline)
-        
+
         self.set_cores(4)
-        
+
         self.add_connection('in/sequence')
         self.add_connection('out/sequence')
 
@@ -106,7 +106,7 @@ class MergeFastaFiles(AbstractStep):
                                     'of=%s' % temp_fifo
                                 ]
                                 unzip_pipe.add_command(dd_out)
-                        
+
                         elif os.path.splitext(input_path)[1] in\
                              ['.fastq', '.fq', '.fasta', '.fa', '.fna']:
                             # 2.1 command: Read file in 'dd-blocksize' chunks and
@@ -119,7 +119,7 @@ class MergeFastaFiles(AbstractStep):
                             ]
                             exec_group.add_command(dd_in)
                         else:
-                            raise UAPError("File %s does not end with any "
+                            raise StepError(self, "File %s does not end with any "
                                          "expected suffix (fastq.gz or fastq)."
                                          " Please fix that issue." %
                                          input_path)

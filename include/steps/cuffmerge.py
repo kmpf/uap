@@ -55,7 +55,7 @@ class CuffMerge(AbstractStep):
                         default = self.get_cores())
 
     def runs(self, run_ids_connections_files):
-        
+
         # compile list of options
         options=['ref-gtf', 'ref-sequence', 'num-threads']
         file_options=['ref-gtf', 'ref-sequence']
@@ -85,13 +85,13 @@ class CuffMerge(AbstractStep):
         run_id = self.get_option('run_id')
 #        run_id = 'magic'
         with self.declare_run(run_id) as run:
-            
+
             # create the filename of the assemblies.txt file
             assemblies = [self.get_tool('printf'), '\n'.join(cufflinks_sample_gtf)]
 #            print assemblies
-            
+
             assemblies_file = run.add_output_file('assemblies', '%s-cuffmerge-assemblies.txt' % run_id, cufflinks_sample_gtf)
-           
+
 #            print assemblies_file
 
             # 1. create assemblies file
@@ -116,13 +116,13 @@ class CuffMerge(AbstractStep):
                 cuffmerge.append(assemblies_file)
 #                print(cuffmerge)
                 cm_exec_group.add_command(cuffmerge, stderr_path = log_err_file)
-            
+
             result_files = {
                 'merged.gtf': features_file,
                 'logs/run.log': run_log_file,
             }
-            
-            # 4. mv output files from temp dir to final location            
+
+            # 4. mv output files from temp dir to final location
             with run.new_exec_group() as mv_exec_group:
                 for orig, dest_path in result_files.iteritems():
                      orig_path = os.path.join(cuffmerge_out_path, orig)
@@ -134,16 +134,16 @@ class CuffMerge(AbstractStep):
 #        sys.exit()
 #
 #        for run_id in run_ids_connections_files.keys():
-#            
+#
 #            with self.declare_run(run_id) as run:
 #                input_paths = run_ids_connections_files[run_id]['in/features']
 #                temp_dir = run.add_temporary_directory('cuffmerge-out')
 #
-#                
+#
 #                cuffmerge = [self.get_tool('cuffmerge'), '-o', temp_dir]
 #                cuffmerge.extend(option_list)
 #
-#                
+#
 #                # 1. Create temporary directory for cufflinks in- and output
 #                with run.new_exec_group() as exec_group:
 #                    mkdir = [self.get_tool('mkdir'), temp_dir]
@@ -173,7 +173,7 @@ class CuffMerge(AbstractStep):
 #                with run.new_exec_group() as exec_group:
 #
 ##                    print(cuffmerge)
-#                    
+#
 #                    exec_group.add_command(cuffmerge,
 #                                           stderr_path = run.add_output_file('log_stderr',
 #                                                                          '%s-cuffmerge-err.txt' % run_id,
@@ -184,9 +184,9 @@ class CuffMerge(AbstractStep):
 #                # 4. move files from temp-dir to usual uap-temp-dir, rename
 #                with run.new_exec_group() as mv_exec_group:
 #                    for orig, dest_path in result_files.iteritems():
-#                     # 3. Rename files 
+#                     # 3. Rename files
 #                     orig_path = os.path.join(temp_dir, orig)
 #                     mv = [self.get_tool('mv'), orig_path, dest_path]
 #                     mv_exec_group.add_command(mv)
 
-                    
+

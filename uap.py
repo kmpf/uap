@@ -29,7 +29,7 @@ if subcommand_path not in sys.path:
     sys.path.append(subcommand_path)
 
 from include.subcommands import *
-from uaperrors import UAPError
+from uaperrors import *
 
 def main():
     '''
@@ -563,7 +563,7 @@ def main():
                     filename='uap.cprof')
         else:
             args.func(args)
-    except UAPError as e:
+    except (UAPError, StepError) as e:
         if args.debugging is True:
             raise
         else:

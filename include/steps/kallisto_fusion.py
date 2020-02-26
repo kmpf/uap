@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from logging import getLogger
 from abstract_step import AbstractStep
@@ -49,8 +49,8 @@ class Kallisto(AbstractStep):
                         description="Number of bootstrap samples (default: 0)")
 
         self.add_option('seed', int, optional=True, default=None,
-                        description="Seed for the bootstrap sampling") 
-        
+                        description="Seed for the bootstrap sampling")
+
         self.add_option('single', int, optional=True, default=None,
                         description="Quantify single-end reads")
 
@@ -64,10 +64,10 @@ class Kallisto(AbstractStep):
 
         self.add_option('rf-stranded', bool, optional=True, default=None,
                         description="Strand specific reads, first read reverse")
-        
+
         self.add_option('fragment-length', int, optional=True, default=None,
                         description="Estimated average fragment length")
-        
+
         self.add_option('sd', int, optional=True, default=None,
                         description="Estimated standard deviation of fragment length")
 
@@ -95,7 +95,7 @@ class Kallisto(AbstractStep):
                 input_paths = [fr_input]
 
                 if sr_input is None:
-                    raise UAPError("Not paired end")
+                    raise StepError(self, "Not paired end")
                 else:
                     input_paths.append(sr_input)
 
@@ -112,16 +112,16 @@ class Kallisto(AbstractStep):
 
                 run.add_output_file(
                     'fusion.txt', 'fusion.txt', input_paths)
-                
+
                 run.add_output_file(
                     'abundance.h5', 'abundance.h5', input_paths)
 
                 run.add_output_file(
                     'abundance.tsv', 'abundance.tsv', input_paths)
-                
+
                 run.add_output_file(
                     'run_info.json', 'run_info.json', input_paths)
-                
+
                 # Assemble kallisto command
                 my_output = run.get_output_directory_du_jour_placeholder()
                 with run.new_exec_group() as exec_group:
@@ -136,11 +136,11 @@ class Kallisto(AbstractStep):
                         if connect_index_path:
                             kallisto.extend(['-i', connect_index_path])
                         else:
-                            raise UAPError(
+                            raise StepError(self,
                             "%s no kallisto index give via config or connection" % run_id)
 
-                    optns = ['fr-stranded', 'rf-stranded', 
-                            'bias', 'single-overhang', 'single'] 
+                    optns = ['fr-stranded', 'rf-stranded',
+                            'bias', 'single-overhang', 'single']
 
                     for optn in optns:
                         if self.is_option_set_in_config(optn) and self.get_option(optn):
@@ -148,12 +148,12 @@ class Kallisto(AbstractStep):
 
                     param_optns = ['bootstrap-samples', 'seed',
                                 'fragment-length', 'sd']
-                                
+
                     for param_optn in param_optns:
                         if self.is_option_set_in_config(param_optn):
                             kallisto.extend(['--' + param_optn,
                                 str(self.get_option(param_optn))])
-                    
+
                     kallisto.extend(['-o', my_output,
                                     fr_input,
                                     sr_input])

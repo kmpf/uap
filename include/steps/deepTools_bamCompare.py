@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -27,14 +27,14 @@ class deepToolsBamCompare(AbstractStep):
     http://deeptools.readthedocs.io/en/latest/content/tools/bamCompare.html
 
     Usage example::
-    
+
         bamCompare -b1 treatment.bam -b2 control.bam -o log2ratio.bw
 
     '''
 
     def __init__(self, pipeline):
         super(deepToolsBamCompare, self).__init__(pipeline)
-        
+
         self.set_cores(10)
 
         self.add_connection('in/alignments')
@@ -269,24 +269,24 @@ class deepToolsBamCompare(AbstractStep):
         # Test the user input and connection data for validity
         for samples in losl:
             if len(samples) != 2:
-                raise UAPError("Expected exactly two samples. Received %s (%s)"
+                raise StepError(self, "Expected exactly two samples. Received %s (%s)"
                              % (len(samples), ", ".join(samples)))
-            
+
             input_paths = list()
             for sample in samples:
                 try:
                     files=run_ids_connections_files[sample]['in/alignments']
                 except KeyError as e:
-                    raise UAPError('No files found for sample %s and connection '
+                    raise StepError(self, 'No files found for sample %s and connection '
                     '"in/alignments". Please check your configuration.' % sample)
                 if not len(files) == 1 or not files[0].endswith('.bam'):
-                    raise UAPError("Expected exactly one BAM file, got %s"
+                    raise StepError(self, "Expected exactly one BAM file, got %s"
                                  % ", ".join(files))
                 # Add found BAM file to input paths
                 input_paths.append(files[0])
             # Assemble new run name from input sample names
             run_id = "%s-%s" % (samples[0], samples[1])
-            
+
             # Start defining the run here:
             with self.declare_run(run_id) as run:
                 # Add output file here:

@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -8,16 +8,16 @@ logger=getLogger('uap_logger')
 
 class Segemehl2017(AbstractStep):
     '''
-    segemehl_2017 is a software to map short sequencer reads to reference genomes. 
-    Unlike other methods, segemehl is able to detect not only mismatches but 
-    also insertions and deletions. Furthermore, segemehl is not limited to a 
-    specific read length and is able to mapprimer- or polyadenylation 
+    segemehl_2017 is a software to map short sequencer reads to reference genomes.
+    Unlike other methods, segemehl is able to detect not only mismatches but
+    also insertions and deletions. Furthermore, segemehl is not limited to a
+    specific read length and is able to mapprimer- or polyadenylation
     contaminated reads correctly.
 
     This step is a wrapper for an unpublished version of segemehl that we re-
-    ceived from Steve Hoffmann on April, 24th 2017. 
-    It automatically generates the bed file containing the realigned split 
-    reads (split junctions). 
+    ceived from Steve Hoffmann on April, 24th 2017.
+    It automatically generates the bed file containing the realigned split
+    reads (split junctions).
     No need to run testrealign.x after segemehl anymore.
 
     This step creates at first two FIFOs. The first is used to provide the
@@ -29,13 +29,13 @@ class Segemehl2017(AbstractStep):
 
     The executed segemehl command is this::
 
-        segemehl -d genome_fifo -i <genome-index-file> -q <read1-fastq> 
+        segemehl -d genome_fifo -i <genome-index-file> -q <read1-fastq>
                  [-p <read2-fastq>] -u unmapped_fifo -H 1 -t 11 -s -S -D 0
                  -o /dev/stdout |  pigz --blocksize 4096 --processes 2 -c
 
     The unmapped reads are saved via these commands::
 
-        cat unmapped_fifo | pigz --blocksize 4096 --processes 2 -c > 
+        cat unmapped_fifo | pigz --blocksize 4096 --processes 2 -c >
         <unmapped-fastq>
 
     '''
@@ -82,11 +82,11 @@ class Segemehl2017(AbstractStep):
         # query == input fastq files for R1
         # mate == input fastq files for R2 (if paired end sequencing!)
 
-        self.add_option('index', str, optional=True, 
+        self.add_option('index', str, optional=True,
                         description="Path to database index for segemehl (default:none)")
-        self.add_option('index2', str, optional=True, 
+        self.add_option('index2', str, optional=True,
                         description="Path to second database index for segemehl (default:none)")
-        self.add_option('filebins', str, optional=True, 
+        self.add_option('filebins', str, optional=True,
                         description = "file bins with basename <string> for easier "
                         "data handling (default:none)")
         self.add_option('bisulfite', int, choices=[0, 1, 2], optional=True,
@@ -94,7 +94,7 @@ class Segemehl2017(AbstractStep):
                         "et al. (=1) or bs-seq/Cokus et al. protocol (=2) "
                         "(default:0)")
         ## [GENERAL]
-        self.add_option('minsize', int, optional=True, 
+        self.add_option('minsize', int, optional=True,
                         description="minimum size of queries (default:12)")
         # progressbar - we ommit this, since it will only generate larger log files
         self.add_option('brief', bool, optional = True,
@@ -109,22 +109,22 @@ class Segemehl2017(AbstractStep):
         # nomatchfilename
         self.add_option('readgroupfile', str, optional=True,
                         description = "filename to read @RG header (default:none)")
-        self.add_option('readgroupid', str, optional=True, 
+        self.add_option('readgroupid', str, optional=True,
                         description = "read group id (default:none)")
-        
+
         ## [SEEDPARAMS]
         self.add_option('differences', int, optional=True,
                         description="search seeds initially with <n> "
                         "differences (default:1)")
-        self.add_option('jump', int, optional=True, 
+        self.add_option('jump', int, optional=True,
                         description= "search seeds with jump size <n> (0=automatic) "
                         "(default:0)")
         self.add_option('nosuflinks', bool, optional = True,
                         description = "dont use suflinks (does not affect index construction, "
                         "for short reads only, increases runtime!)")
-        self.add_option('evalue', float, optional=True, 
+        self.add_option('evalue', float, optional=True,
                         description= "max evalue (default:5.000000)")
-        self.add_option('maxsplitevalue', float, optional=True, 
+        self.add_option('maxsplitevalue', float, optional=True,
                         description = "max evalue for splits (default:50.000000)")
         self.add_option('maxinterval', int, optional=True, description=
                         "maximum width of a suffix array interval, i.e. a query "
@@ -138,7 +138,7 @@ class Segemehl2017(AbstractStep):
         self.add_option('MEOP', bool, optional=True, description=
                         "output MEOP field for easier variance calling in SAM "
                         "(XE:Z:)")
-        self.add_option('nohead', bool, optional=True, 
+        self.add_option('nohead', bool, optional=True,
                         description = "do not output header")
 
         ## [SEEDEXTENSIONPARAMS]
@@ -214,7 +214,7 @@ class Segemehl2017(AbstractStep):
             else:
                 option_list.append('--%s' % option)
                 option_list.append(str(self.get_option(option)))
-        
+
         if self.get_option('threads'):
             self.set_cores(self.get_option('threads'))
 
@@ -231,27 +231,27 @@ class Segemehl2017(AbstractStep):
                 is_paired_end = False if sr_input == [None] else True
 
                 if len(fr_input) != 1 or fr_input == [None]:
-                    raise UAPError("Expected single input file for first read.")
+                    raise StepError(self, "Expected single input file for first read.")
                 if is_paired_end and len(sr_input) != 1:
-                    raise UAPError("Expected single input file for second read.")
+                    raise StepError(self, "Expected single input file for second read.")
 
                 if not os.path.isfile(self.get_option('index')):
-                    raise UAPError(
+                    raise StepError(self,
                         "The path %s provided to option 'index' is not a file."
                         % self.get_option('index') )
-                    
+
 #                if self.is_option_set_in_config('splits'):
 #                    prefix = "%s_splits" % run_id
 
 
                 if self.is_option_set_in_config('index2'):
                     if not os.path.isfile(self.get_option('index2')):
-                        raise UAPError(
+                        raise StepError(self,
                             "The path %s provided to option 'index2' is not a file."
                             % self.get_option('index2') )
 
                 if not os.path.isfile(self.get_option('database')):
-                    raise UAPError(
+                    raise StepError(self,
                         "The path %s provided to option 'database' is not a file."
                         % self.get_option('database'))
                 # SEGEMEHL can cope with gzipped files so we do not need to!!!
@@ -283,7 +283,7 @@ class Segemehl2017(AbstractStep):
                                  'if=%s' % self.get_option('database'),
                                  'of=%s' % fifo_path_genome]
                     exec_group.add_command(dd_genome)
-                
+
                     with exec_group.add_pipeline() as segemehl_pipe:
                         # 4. Start segemehl
                         sm_stderr = run.add_output_file('log',
@@ -312,7 +312,7 @@ class Segemehl2017(AbstractStep):
                         segemehl.extend(option_list)
                         segemehl_pipe.add_command(segemehl,
                                                   stderr_path = sm_stderr)
-                        
+
                         # 4.1 command: Fix QNAMES in input SAM, if need be
                         if self.get_option('fix-qnames'):
                             fix_qnames = [
@@ -325,7 +325,7 @@ class Segemehl2017(AbstractStep):
                         pigz_mapped_reads = [
                             self.get_tool('pigz'),
                             '--stdout',
-                            '--blocksize', self.get_option('dd-blocksize'), 
+                            '--blocksize', self.get_option('dd-blocksize'),
                             '--processes', str(self.get_cores())
                         ]
 
@@ -343,7 +343,7 @@ class Segemehl2017(AbstractStep):
                         cat_unmapped_reads = [self.get_tool('cat'),
                                               fifo_path_unmapped]
                         compress_unmapped_pipe.add_command(cat_unmapped_reads)
-                        
+
                         # 6.1 command: Fix QNAMES in input SAM, if need be
                         if self.get_option('fix-qnames'):
                             fix_qnames = [

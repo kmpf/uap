@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from abstract_step import *
 import glob
@@ -71,12 +71,12 @@ class StringtieMerge(AbstractStep):
 
         self.add_option('output_prefix', str, optional=True,
                         default="merge", description='Prefix used in the utput directory.')
-        
+
 
     def runs(self, cc):
-       
+
         # reset cores to number of threads
-        self.set_cores(self.get_option('p'))    
+        self.set_cores(self.get_option('p'))
 
 
         # compile list of options
@@ -100,7 +100,7 @@ class StringtieMerge(AbstractStep):
             ref_assembly = os.path.abspath(ref_assembly)
         con_ref_assembly = cc.look_for_unique('in/reference', ref_assembly)
         if cc.all_runs_have_connection('in/reference'):
-            raise UAPError('For stringtieMerge only one reference assmbly can be used.')
+            raise StepError(self, 'For stringtieMerge only one reference assmbly can be used.')
 
 
         input_files = []
@@ -121,36 +121,36 @@ class StringtieMerge(AbstractStep):
 
         run_id = self.get_option('output_prefix')
         run = self.declare_run(run_id)
-        
+
         # create the filename of the assemblies.txt file
         assemblies = [self.get_tool('printf'), '\n'.join(stringtie_sample_gtf)]
         # print assemblies
-        
+
         input_files.extend(stringtie_sample_gtf)
-        assemblies_file = run.add_output_file('assemblies', 
-                                              '%s-stringtieMerge-assemblies.txt' % 
+        assemblies_file = run.add_output_file('assemblies',
+                                              '%s-stringtieMerge-assemblies.txt' %
                                               run_id, input_files)
-       
+
 
         # 1. create assemblies file
         with run.new_exec_group() as exec_group:
             exec_group.add_command(assemblies, stdout_path = assemblies_file)
             with exec_group.add_pipeline() as stringtie_pipe:
-                res = run.add_output_file('features', 
-                                          '%s-stringtieMerge-merged.gtf' % 
+                res = run.add_output_file('features',
+                                          '%s-stringtieMerge-merged.gtf' %
                                           run_id, input_files)
 
-                log_err_file = run.add_output_file('log_stderr', 
-                                                   '%s-stringtieMerge-log_stderr.txt' % 
+                log_err_file = run.add_output_file('log_stderr',
+                                                   '%s-stringtieMerge-log_stderr.txt' %
                                                    run_id, input_files)
 
-              
+
 
                 stringtieMerge = [self.get_tool('stringtie'), '--merge']
                 stringtieMerge.extend(option_list)
-                stringtieMerge.append(assemblies_file)                        
-                stringtie_pipe.add_command(stringtieMerge, 
-                                           stderr_path = log_err_file, 
+                stringtieMerge.append(assemblies_file)
+                stringtie_pipe.add_command(stringtieMerge,
+                                           stderr_path = log_err_file,
                                            stdout_path = res)
 
-        
+

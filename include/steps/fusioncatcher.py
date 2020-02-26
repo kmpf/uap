@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import os
 import sys
 from logging import getLogger
@@ -67,7 +67,7 @@ class FusionCatcher(AbstractStep):
                 input_paths = [fr_input]
 
                 if sr_input is None:
-                    raise UAPError("Not paired end")
+                    raise StepError(self, "Not paired end")
                 else:
                     input_paths.append(sr_input)
 
@@ -115,7 +115,7 @@ class FusionCatcher(AbstractStep):
 
                     if self.is_option_set_in_config('extract-buffer-size'):
                         fusioncatcher.extend(['--extract-buffer-size=' + self.get_option('extract-buffer-size')])
-                   
+
                     exec_group.add_command(fusioncatcher,
                                            stderr_path=log_stderr,
                                            stdout_path=log_stdout)

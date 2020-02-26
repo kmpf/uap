@@ -7,7 +7,7 @@ logger = getLogger('uap_logger')
 
 class GffreadExtractTranscripts(AbstractStep):
     '''
-    extract transcripts from gtf 
+    extract transcripts from gtf
     http://ccb.jhu.edu/software/stringtie/gff.shtml
     write a fasta file with spliced exons for each GFF transcript
     gffread -w transcripts.fa -g /path/to/genome.fa transcripts.gtf
@@ -39,7 +39,7 @@ class GffreadExtractTranscripts(AbstractStep):
         rfiles = []
         with self.declare_run(run_id) as run:
             cmd = [self.get_tool('gffread'), '-w']
-            
+
             path = run.get_output_directory_du_jour_placeholder()
             cmd.append(path + '/' + self.get_option('output-fasta-name'))
 
@@ -49,7 +49,7 @@ class GffreadExtractTranscripts(AbstractStep):
                     cmd.append(connection['in/fasta'][0])
                     rfiles.append(connection['in/fasta'][0])
                     continue
-                               
+
 
             if self.is_option_set_in_config('gtf'):
                 cmd.append(os.path.abspath(self.get_option('gtf')))
@@ -60,8 +60,8 @@ class GffreadExtractTranscripts(AbstractStep):
                         rfiles.append(connection['in/anno'][0])
                         continue
 
-                    
-            
+
+
             stderr_file = "%s-gffread_extract_transcripts-log_stderr.txt" % (run_id)
             log_stderr = run.add_output_file("log_stderr",
                                              stderr_file, rfiles)

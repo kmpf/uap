@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from logging import getLogger
 import os
@@ -12,12 +12,12 @@ class MergeFastqFiles(AbstractStep):
     First and second read files are merged separately. The output files are
     gzipped.
     '''
-    
+
     def __init__(self, pipeline):
         super(MergeFastqFiles, self).__init__(pipeline)
-        
-        self.set_cores(4) 
-        
+
+        self.set_cores(4)
+
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
         self.add_connection('out/first_read')
@@ -91,7 +91,7 @@ class MergeFastqFiles(AbstractStep):
                                         self.get_option('dd-blocksize'),
                                         'of=%s' % temp_fifo
                                     ]
-                                
+
                                     unzip_pipe.add_command(dd_in)
                                     unzip_pipe.add_command(pigz)
                                     unzip_pipe.add_command(dd_out)
@@ -108,7 +108,7 @@ class MergeFastqFiles(AbstractStep):
                                 ]
                                 exec_group.add_command(dd_in)
                             else:
-                                raise UAPError("File %s does not end with any "
+                                raise StepError(self, "File %s does not end with any "
                                              "expected suffix (fastq.gz or "
                                              "fastq). Please fix that issue." %
                                              input_path)

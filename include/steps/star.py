@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from logging import getLogger
 from abstract_step import AbstractStep
@@ -73,7 +73,7 @@ class Star(AbstractStep):
                     genome_dir = os.path.abspath(str(self.get_option('genomeDir')))
                 else:
                     if 'in/genome_dir' not in run_ids_connections_files[run_id]:
-                        raise UAPError('Required parameter "GenomDir" wasnt found!')
+                        raise StepError(self, 'Required parameter "GenomDir" wasnt found!')
                     genome_dir = run_ids_connections_files[run_id]['in/genome_dir'][0]
 
                 star.extend(['--genomeDir', genome_dir])
@@ -108,7 +108,7 @@ class Star(AbstractStep):
                                     stderr_path=log_stderr)
 
                 # delete _STARtmp @ tmp directory if its not removed by STAR
-                # ADDITIONAL COMMENT: this lines makes the result ambiguous 
+                # ADDITIONAL COMMENT: this lines makes the result ambiguous
                 # because of the tmp_dir which uses the current time so
                 # the uap want to produces the results repeatedly
                 #tmp_dir = run.get_temp_output_directory() + '/_STARtmp'

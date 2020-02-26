@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from logging import getLogger
 import os
@@ -127,7 +127,7 @@ class FastxQualityStats(AbstractStep):
                                 ]
                                 exec_group.add_command(dd_in)
                             else:
-                                raise UAPError("File %s does not end with any "
+                                raise StepError(self, "File %s does not end with any "
                                              "expected suffix (fastq.gz or "
                                              "fastq). Please fix that issue.")
                         # 3. Read data from fifos and check quality stats

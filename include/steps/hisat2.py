@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -351,7 +351,7 @@ class Hisat2(AbstractStep):
 
         # Check if option values are valid
         if not os.path.exists(self.get_option('index') + '.1.ht2'):
-            raise UAPError("Could not find index file: %s.*" %
+            raise StepError(self, "Could not find index file: %s.*" %
                          self.get_option('index'))
 
         paired_end = cc.connection_exists('in/second_read')
@@ -361,14 +361,14 @@ class Hisat2(AbstractStep):
             run_ids = list(cc.get_runs_without_any('in/first_read'))
             if len(run_ids)>5:
                 run_ids = run_ids[0:5] + ['...']
-            raise UAPError('[Hisat2] No%s read passed by runs '
+            raise StepError(self, 'No%s read passed by runs '
                            '%s.' % (read_name, list(run_ids)))
 
         if paired_end and not cc.all_runs_have_connection('in/second_read'):
             run_ids = list(cc.get_runs_without_any('in/second_read'))
             if len(run_ids)>5:
                 run_ids = run_ids[0:5] + ['...']
-            raise UAPError('[Hisat2] No second read passed by runs '
+            raise StepError(self, 'No second read passed by runs '
                            '%s.' % run_ids)
 
         res = [(self.get_option('fr'), 'fr'),
@@ -382,16 +382,16 @@ class Hisat2(AbstractStep):
         library_type = self.get_option('library_type')
 
         if paired_end and library_types and library_type:
-            raise UAPError('[hisat2] Option "library_type: %s" and the flag %s '
+            raise StepError(self, 'Option "library_type: %s" and the flag %s '
                     'are set. Please specify only one.' %
                     (library_type, library_types[0]))
         elif paired_end and library_types:
             library_type = library_types[0]
         elif not paired_end and library_types:
-            raise UAPError('[hisat2] Library type %s is specified for single '
+            raise StepError(self, 'Library type %s is specified for single '
                            'end reads.' % library_types[0])
         elif not paired_end and library_type:
-            raise UAPError('[hisat2] Library type %s is specified for single '
+            raise StepError(self, 'Library type %s is specified for single '
                            'end reads.' % library_type)
 
         for run_id in cc.keys():

@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import logging
 from abstract_step import AbstractStep
 import os
@@ -66,7 +66,7 @@ class FastqSample(AbstractStep):
         isset_p = self.is_option_set_in_config('p')
 
         if isset_n and isset_p:
-            raise UAPError("Option n AND p are set in config.yaml. "
+            raise StepError(self, "Option n AND p are set in config.yaml. "
                          "Only one is allowed.")
 
         config_options = self.get_options()

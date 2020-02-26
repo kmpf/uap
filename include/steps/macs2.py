@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -15,7 +15,7 @@ class Macs2(AbstractStep):
     information of both sequencing tag position and orientation. MACS can be
     easily used for ChIP-Seq data alone, or with control sample data to increase
     the specificity.
-    
+
     https://github.com/taoliu/MACS
 
     typical command line for single-end data::
@@ -26,7 +26,7 @@ class Macs2(AbstractStep):
 
     def __init__(self, pipeline):
         super(Macs2, self).__init__(pipeline)
-        
+
         self.set_cores(4)
 
         self.add_connection('in/alignments')
@@ -296,7 +296,7 @@ class Macs2(AbstractStep):
                                     ['in/alignments']
                     control_id = "-" + control_id
                 except KeyError:
-                    raise UAPError("No control for ID '%s' found." % control_id)
+                    raise StepError(self, "No control for ID '%s' found." % control_id)
             else:
                 control_id = ""
 
@@ -307,7 +307,7 @@ class Macs2(AbstractStep):
                     treatments[tr] = run_ids_connections_files[tr]\
                                      ['in/alignments']
                 except KeyError:
-                    raise UAPError("No treatment for ID '%s' found." % tr)
+                    raise StepError(self, "No treatment for ID '%s' found." % tr)
                 # Assemble rund ID
                 run_id = "%s%s" % (tr, control_id)
 
@@ -385,7 +385,7 @@ class Macs2(AbstractStep):
                         macs2 = [self.get_tool('macs2'), 'callpeak']
                         macs2.append('--treatment')
                         macs2.extend(treatments[tr])
-                        ## Append control information 
+                        ## Append control information
                         if control_files:
                             macs2.append('--control')
                             macs2.extend(control_files)

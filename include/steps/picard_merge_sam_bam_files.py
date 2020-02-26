@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from logging import getLogger
 import os
@@ -157,13 +157,13 @@ class PicardMergeSamFiles(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif os.path.splitext(input_paths[0])[1] not in ['.sam', '.bam']:
-                    raise UAPError(
+                    raise StepError(self,
                         "The file %s seems not to be a SAM or BAM file. At "
                         "least the suffix is wrong." % input_paths[0]
                     )
                 elif self.is_option_set_in_config("INTERVALS") and \
                      not os.path.exists(self.get_option("INTERVALS")):
-                    raise UAPError("The path %s given to option 'INTERVALS' is "
+                    raise StepError(self, "The path %s given to option 'INTERVALS' is "
                                  "not pointing to a file.")
                 elif len(input_paths) == 0:
                     run.add_empty_output_connection("alignments")

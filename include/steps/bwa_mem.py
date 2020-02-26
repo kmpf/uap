@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -140,7 +140,7 @@ class BwaMem(AbstractStep):
 
         # Check if index is valid
         if not os.path.exists(self.get_option('index') + '.bwt'):
-            raise UAPError("Could not find index: %s.*" %
+            raise StepError(self, "Could not find index: %s.*" %
                          self.get_option('index') )
 
         # Compile the list of options
@@ -180,10 +180,10 @@ class BwaMem(AbstractStep):
                 # Fail if we have don't have exactly one file or
                 # an empty connection
                 if len(fr_input) != 1 or fr_input == [None]:
-                    raise UAPError("Expected single input file for first read.")
+                    raise StepError(self, "Expected single input file for first read.")
                 # Fail if we don't have exactly one file
                 if is_paired_end and len(sr_input) != 1:
-                    raise UAPError("Expected single input file for second read.")
+                    raise StepError(self, "Expected single input file for second read.")
                 input_paths = fr_input # single element list
                 if is_paired_end:
                     input_paths.extend(sr_input)
@@ -192,7 +192,7 @@ class BwaMem(AbstractStep):
                 for input_path in input_paths:
                     if len([_ for _ in ['fastq', 'fq', 'fq.gz', 'fastq.gz']\
                                if input_path.endswith(_)]) != 1:
-                        raise UAPError("%s possess unknown suffix. "
+                        raise StepError(self, "%s possess unknown suffix. "
                                      "(None of: fastq, fq, fq.gz, fastq.gz)")
                 # BWA can handle only single files for first and second read
                 # IMPORTANT: BWA handles gzipped as well as not gzipped files

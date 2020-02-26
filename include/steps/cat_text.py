@@ -12,9 +12,9 @@ class CatText(AbstractStep):
 
     def __init__(self, pipeline):
         super(CatText, self).__init__(pipeline)
-        
+
         self.set_cores(8)
-        
+
         self.add_connection('in/text')
         self.add_connection('out/text')
         self.add_option('filenameEnding', str, optional=False)
@@ -37,18 +37,18 @@ class CatText(AbstractStep):
 
             if input_paths == [None]:
                 run.add_empty_output_connection("text")
-            
+
 
             out = run.add_output_file("text",
-                                      "%s-combined.%s" %  
+                                      "%s-combined.%s" %
                                       (run_id, self.get_option('filenameEnding')),
-                                       input_paths) 
+                                       input_paths)
 
 
 
 
-#            out = run.add_output_file("text","foo", input_paths) 
-                    
+#            out = run.add_output_file("text","foo", input_paths)
+
             with run.new_exec_group() as exec_group:
                 cat = [self.get_tool('cat')]
                 if self.is_option_set_in_config('additionalFiles'):
@@ -60,7 +60,7 @@ class CatText(AbstractStep):
 
 
 
-                            
+
 
 
 

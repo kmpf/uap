@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -10,15 +10,15 @@ class BamToBedgraphAndBigwig(AbstractStep):
 
     def __init__(self, pipeline):
         super(BamToBedgraphAndBigwig, self).__init__(pipeline)
-        
+
         self.set_cores(8)
-        
+
         self.add_connection('in/alignments',
                             constraints = {'min_files_per_run': 1,
                                            'max_files_per_run': 1})
         self.add_connection('out/bedgraph')
         self.add_connection('out/bigwig')
-        
+
         self.require_tool('bedtools')
         self.require_tool('sort')
         self.require_tool('bedGraphToBigWig')
@@ -30,11 +30,11 @@ class BamToBedgraphAndBigwig(AbstractStep):
     def runs(self, run_ids_connections_files):
         # Check if chromosome sizes points to a real file
         if not os.path.isfile(self.get_option('chromosome-sizes')):
-            raise UAPError("Value for option 'chromosome-sizes' is not a "
+            raise StepError(self, "Value for option 'chromosome-sizes' is not a "
                          "file: %s" % self.get_option('chromosome-sizes'))
         if self.get_option('temp-sort-dir') and \
            not os.path.isdir(self.get_option('temp-sort-dir')):
-            raise UAPError("Value for option 'temp-sort-dir' is not a "
+            raise StepError(self, "Value for option 'temp-sort-dir' is not a "
                          "directory: %s" % self.get_option('temp-sort-dir'))
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
@@ -45,12 +45,12 @@ class BamToBedgraphAndBigwig(AbstractStep):
                     run.add_empty_output_connection("alignments")
                 # Complain if necessary
                 elif len(input_paths) != 1:
-                    raise UAPError("Expected exactly one alignments file.")
+                    raise StepError(self, "Expected exactly one alignments file.")
 
                 root, ext = os.path.splitext(os.path.basename(input_paths[0]))
                 # Complain if necessary
                 if not ext =='.bam':
-                    raise UAPError("The file %s does not appear to be any "
+                    raise StepError(self, "The file %s does not appear to be any "
                                  "of bam.gz, bam.gzip, or bam"
                                  % input_paths[0]
                     )
@@ -69,7 +69,7 @@ class BamToBedgraphAndBigwig(AbstractStep):
                         genomecov.append('-bg')
                         genomecov.append('-ibam')
                         genomecov.extend(input_paths )
-                        
+
                         pipe.add_command(genomecov)
 
                         sort = [ self.get_tool('sort'), '-k1,1', '-k2,2n']

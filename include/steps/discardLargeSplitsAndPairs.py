@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from abstract_step import *
 import process_pool
@@ -35,7 +35,7 @@ class discardLargeSplitsAndPairs (AbstractStep):
         self.require_tool('pigz')
         self.require_tool('samtools')
         self.require_tool('discardLargeSplitsAndPairs')
-        
+
         self.add_option('N_splits', str, optional = False,
                         description='Size of the skipped region within a split read (in nucleotides). Split Reads that skip more nt than this value are discarded.')
         self.add_option('M_mates', str, optional=False,
@@ -50,7 +50,7 @@ class discardLargeSplitsAndPairs (AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    raise UAPError("Expected exactly one alignments file.")
+                    raise StepError(self, "Expected exactly one alignments file.")
                 else:
                     is_gzipped = True if os.path.splitext(input_paths[0])[1]\
                                  in ['.gz', '.gzip'] else False
@@ -78,7 +78,7 @@ class discardLargeSplitsAndPairs (AbstractStep):
                                          'view', '-h', '-'
                         ]
                         pipe.add_command(samtools_view)
-                            
+
                         # 2. command: Process sam file
                         # create the names of the out connections
                         logfile = run.add_output_file('log',
@@ -97,7 +97,7 @@ class discardLargeSplitsAndPairs (AbstractStep):
                                        '--statsfile', statsfile,
                                        '--logfile', logfile,
                                        '-', outfile]
-                        # execute cmd                              
+                        # execute cmd
                         pipe.add_command(discard_cmd)
 
 
@@ -116,4 +116,4 @@ class discardLargeSplitsAndPairs (AbstractStep):
                         #                              '%s.reduced.sam.gz' % run_id,
                         #                              input_paths)
                         #pipe.add_command(pigz2, stdout_path = outfile)
-                        
+

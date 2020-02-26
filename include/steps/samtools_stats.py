@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -41,7 +41,7 @@ class SamtoolsStats(AbstractStep):
             if input_paths == [None]:
                 run.add_empty_output_connection("alignments")
             elif len(input_paths) != 1:
-                raise UAPError("Expected exactly one alignments file.")
+                raise StepError(self, "Expected exactly one alignments file.")
 
             with self.declare_run(run_id) as run:
                 for input_path in input_paths:

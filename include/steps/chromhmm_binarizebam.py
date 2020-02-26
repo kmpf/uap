@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import os
 from logging import getLogger
 from abstract_step import AbstractStep

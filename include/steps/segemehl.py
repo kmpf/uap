@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -208,25 +208,25 @@ class Segemehl(AbstractStep):
                 is_paired_end = False if sr_input == [None] else True
 
                 if len(fr_input) != 1 or fr_input == [None]:
-                    raise UAPError("Expected single input file for first read.")
+                    raise StepError(self, "Expected single input file for first read.")
                 if is_paired_end and len(sr_input) != 1:
-                    raise UAPError("Expected single input file for second read.")
+                    raise StepError(self, "Expected single input file for second read.")
 
                 if not os.path.isfile(self.get_option('index')):
-                    raise UAPError(
+                    raise StepError(self,
                         "The path %s provided to option 'index' is not a file."
                         % self.get_option('index') )
 
                 if self.is_option_set_in_config('index2'):
                     if not os.path.isfile(self.get_option('index2')):
-                        raise UAPError(
+                        raise StepError(self,
                             "The path %s provided to option 'index2' is not a file."
                             % self.get_option('index2') )
 #                    option_list.append('--index2')
 #                    option_list.append(str(self.get_option('index2')))
 
                 if not os.path.isfile(self.get_option('genome')):
-                    raise UAPError(
+                    raise StepError(self,
                         "The path %s provided to option 'genome' is not a file."
                         % self.get_option('genome'))
                 # SEGEMEHL can cope with gzipped files so we do not need to!!!

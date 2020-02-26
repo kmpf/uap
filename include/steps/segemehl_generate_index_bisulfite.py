@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -8,8 +8,8 @@ logger = getLogger('uap_logger')
 
 class SegemehlGenerateIndexBisulfite(AbstractStep):
     '''
-    The step segemehl_generate_index_bisulfite generates a pair of 
-    indexes for given reference for segemehl bisulfite sequencing 
+    The step segemehl_generate_index_bisulfite generates a pair of
+    indexes for given reference for segemehl bisulfite sequencing
     mapping.
 
     Documentation::
@@ -42,7 +42,7 @@ class SegemehlGenerateIndexBisulfite(AbstractStep):
                         description="Filename of first (CT) db index that is generated "
                         "and store to disk (efault: index-basename.ctidx).")
         # index for bisulfite mapping
-        self.add_option('generate2', str, optional = True, 
+        self.add_option('generate2', str, optional = True,
                         description="Filename of 2nd (GA) db index that is generated "
                         "and store to disk (efault: index-basename.ctidx).")
         self.add_option('bisulfite', int, optional = True, choices = [1,2],
@@ -95,7 +95,7 @@ class SegemehlGenerateIndexBisulfite(AbstractStep):
                          ['in/reference_sequence']
 
                 if refseq == [None]:
-                    raise UAPError("No reference sequence received via "
+                    raise StepError(self, "No reference sequence received via "
                                  "connection in/reference_sequence.")
 
                 # Get names of FIFOs

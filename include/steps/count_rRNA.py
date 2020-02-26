@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -13,12 +13,12 @@ class SamToFastq(AbstractStep):
 
     def __init__(self, pipeline):
         super(SamToFastq, self).__init__(pipeline)
-        
+
         self.set_cores(8)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/report_rRNA')
-        
+
 
         self.require_tool('samtools')
         self.require_tool('pigz')
@@ -31,7 +31,7 @@ class SamToFastq(AbstractStep):
 
 
     def runs(self, run_ids_connections_files):
-        
+
         for run_id in run_ids_connections_files.keys():
 
             with self.declare_run(run_id) as run:
@@ -39,22 +39,22 @@ class SamToFastq(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    raise UAPError("Expected exactly one alignments file.")
+                    raise StepError(self, "Expected exactly one alignments file.")
                 else:
                     is_gzipped = True if os.path.splitext(input_paths[0])[1]\
                                  in ['.gz', '.gzip'] else False
 
-               
+
 
                 out = run.add_output_file(
                     "report_rRNA",
                     "%s_%s-rRNA_count.txt" %  (run_id, 'R1'),
-                    input_paths) 
- 
-                    
+                    input_paths)
+
+
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as pipe:
-                        # 1.1 command: Uncompress file to no fucking fifo 
+                        # 1.1 command: Uncompress file to no fucking fifo
                         if is_gzipped:
                             pigz = [self.get_tool('pigz'),
                                     '--decompress',
@@ -77,16 +77,16 @@ class SamToFastq(AbstractStep):
 
                             cutc  = [self.get_tool('cut'), '-f', '1', '-d' , '_']
                             pipe.add_command(cutc)
-                            
+
                             sorta = [self.get_tool('sort')]
 
                             pipe.add_command(sorta)
 
                             uniq = [self.get_tool('uniq'), '-c']
                             pipe.add_command(uniq)
-                            sortb = [self.get_tool('sort')] 
+                            sortb = [self.get_tool('sort')]
                             pipe.add_command(sortb, stdout_path=out )
-                            
+
 
 
 

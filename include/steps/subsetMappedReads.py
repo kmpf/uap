@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from abstract_step import *
 import process_pool
@@ -16,7 +16,7 @@ class subsetMappedReads(AbstractStep):
     first N mapped reads and their mates (for paired end sequencing)
     are returned in .sam format. If the number of requested reads
     exceeds the number of available mapped reads, all mapped reads are
-    returned. 
+    returned.
     '''
 
     def __init__(self, pipeline):
@@ -33,7 +33,7 @@ class subsetMappedReads(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('head')
         self.require_tool('cat')
-        
+
         self.add_option('genome-faidx', str, optional = False)
         self.add_option('Nreads', str, optional=False,
                         description='Number of reads to extract from input file. ')
@@ -49,13 +49,13 @@ class subsetMappedReads(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    raise UAPError("Expected exactly one alignments file.")
+                    raise StepError(self, "Expected exactly one alignments file.")
                 else:
                     is_gzipped = True if os.path.splitext(input_paths[0])[1]\
                                  in ['.gz', '.gzip'] else False
 
                 if not self.is_option_set_in_config('Nreads'):
-                    raise UAPError("Required option 'Nreads' not set in your configuration file")
+                    raise StepError(self, "Required option 'Nreads' not set in your configuration file")
 
                 with run.new_exec_group() as exec_group:
 

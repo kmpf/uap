@@ -61,7 +61,7 @@ class Post_CufflinksSuite(AbstractStep):
                         default=False)
 
     def runs(self, run_ids_connections_files):
-        
+
         # compile list of options
         options=['remove-gencode','remove-unstranded','remove-by-gene-name',
                  'class-list','filter-by-class','filter-by-class-and-gene-name']
@@ -84,16 +84,16 @@ class Post_CufflinksSuite(AbstractStep):
         with self.declare_run(run_id) as run:
 
             input_paths = run_ids_connections_files[run_id]['in/features']
-            
-            outfile = run.add_output_file('features', 
+
+            outfile = run.add_output_file('features',
                                           '%s-filtered.gtf' % run_id, input_paths)
-            logfile = run.add_output_file('log_stderr', 
+            logfile = run.add_output_file('log_stderr',
                                           '%s-log_stderr.txt' % run_id, input_paths)
-           	
-           	
+
+
             # 1. create pipeline
             with run.new_exec_group() as pc_exec_group:
-           	
+
            	post_cufflinks_merge = [self.get_tool('post_cufflinks_merge')]
            	post_cufflinks_merge.extend(option_list)
                 post_cufflinks_merge.extend([input_paths[0]])
@@ -101,5 +101,5 @@ class Post_CufflinksSuite(AbstractStep):
            	pc_exec_group.add_command(post_cufflinks_merge,
            	                          stdout_path=outfile,
            	                          stderr_path=logfile)
-           	        
+
 

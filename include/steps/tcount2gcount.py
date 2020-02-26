@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 from logging import getLogger
 from abstract_step import AbstractStep
 import os
@@ -55,7 +55,7 @@ class Tcount2gcount(AbstractStep):
 
         for run_id in run_ids_connections_files.keys():
             if 'in/annotation' in run_ids_connections_files[run_id]:
-                continue 
+                continue
 
             with self.declare_run(run_id) as run:
                 counts = run_ids_connections_files[run_id]['in/counts'][0]
@@ -67,15 +67,15 @@ class Tcount2gcount(AbstractStep):
 
                 cmd = [self.get_tool('tcount2gcount')]
 
-                if self.is_option_set_in_config('m'): 
+                if self.is_option_set_in_config('m'):
                      cmd.extend(['-m', os.path.abspath(self.get_option('m'))])
-                else:                    
+                else:
                     if annotation:
                         cmd.extend(['-m', os.path.abspath(annotation)])
-                    else:  
-                        raise UAPError("%s no annotation give via config or connection" % run_id) 
-                    
-                if self.is_option_set_in_config('kallisto-extended'): 
+                    else:
+                        raise StepError(self, "%s no annotation give via config or connection" % run_id)
+
+                if self.is_option_set_in_config('kallisto-extended'):
                     cmd.append('--kallisto-extended')
 
                 cmd.extend(['-i', counts,

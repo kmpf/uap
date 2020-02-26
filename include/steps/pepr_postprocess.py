@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -14,7 +14,7 @@ class PePrPostprocess(AbstractStep):
 
     def __init__(self, pipeline):
         super(PePrPostprocess, self).__init__(pipeline)
-        
+
         self.set_cores(4)
 
         # Mapped Reads
@@ -30,10 +30,10 @@ class PePrPostprocess(AbstractStep):
         # Post processed peak lists
         self.add_connection('out/passed_peaks')
         self.add_connection('out/failed_peaks')
-        
+
         self.require_tool('pepr-postprocess')
         self.require_tool('ln')
-        
+
         # Options for PePr
         ## Required options
         self.add_option('chip_vs_input', dict, optional=False,
@@ -49,7 +49,7 @@ class PePrPostprocess(AbstractStep):
         self.add_option('remove-artefacts', bool, optional=True, default=True)
         self.add_option('narrow-peak-boundary', bool, optional=True,
                         default=False)
-                        
+
     def runs(self, run_ids_connections_files):
         # Compile the list of options
         options = ['remove-artefacts', 'narrow-peak-boundary']
@@ -79,12 +79,12 @@ class PePrPostprocess(AbstractStep):
             try:
                 in_files['peak'] = run_ids_connections_files[run_id]['in/peaks']
                 if in_files['peak'] == None:
-                    raise UAPError("Upstream run %s provides no peaks" % run_id)
+                    raise StepError(self, "Upstream run %s provides no peaks" % run_id)
                 elif len(in_files['peak']) != 1:
-                    raise UAPError("Expected single peak file for run %s got %s"
+                    raise StepError(self, "Expected single peak file for run %s got %s"
                                  % (run_id, len(in_files['peak'])))
             except KeyError as e:
-                raise UAPError("No run %s or it provides no peaks" % run_id)
+                raise StepError(self, "No run %s or it provides no peaks" % run_id)
 
             # Output file name is coupled to input file name
             file_input_peaks = os.path.basename(in_files['peak'][0])
@@ -96,7 +96,7 @@ class PePrPostprocess(AbstractStep):
             if self.get_option('narrow-peak-boundary') == True:
                 file_passed_peaks += '.boundary_refined'
                 file_failed_peaks += '.boundary_refined'
-                
+
             # Get the chip/input files of runs mentioned in chip_vs_input dict
             for key, opt in config_to_option.iteritems():
                 experiment = chip_vs_input[run_id]
@@ -108,11 +108,11 @@ class PePrPostprocess(AbstractStep):
                             ['in/alignments'])
                         if run_ids_connections_files[in_run_id]\
                            ['in/alignments'] == [None]:
-                            raise UAPError("Upstream run %s provides no "
+                            raise StepError(self, "Upstream run %s provides no "
                                          "alignments for run %s"
                                          % (in_run_id, run_id))
                 except KeyError as e:
-                    raise UAPError("Required key %s missing in 'chip_vs_input' "
+                    raise StepError(self, "Required key %s missing in 'chip_vs_input' "
                                  "for run %s" % (key, run_id))
 
             # Create a new run named run_id

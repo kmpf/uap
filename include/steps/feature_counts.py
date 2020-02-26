@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import os
 from logging import getLogger
 from abstract_step import AbstractStep
@@ -223,11 +223,11 @@ class FeatureCounts(AbstractStep):
                     if self.is_option_set_in_config('a'):
                         feature_path = self.get_option('a')
                     else:
-                        raise UAPError(
+                        raise StepError(self,
                             "No feature file could be found for '%s'" % run_id)
                         exit(1)
                     if not os.path.isfile(feature_path):
-                        raise UAPError("Feature file '%s' is not a file."
+                        raise StepError(self, "Feature file '%s' is not a file."
                                      % feature_path)
                         exit(1)
 

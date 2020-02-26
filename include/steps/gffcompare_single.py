@@ -11,7 +11,7 @@ from logging import getLogger
 logger=getLogger('uap_logger')
 
 class gffCompare(AbstractStep):
-    
+
     '''
     gffcompare [-r <reference_mrna.gtf> [-R]] [-G] [-T] [-V] [-s <seq_path>]
         [-o <outprefix>] [-p <cprefix>]
@@ -38,7 +38,7 @@ class gffCompare(AbstractStep):
         self.add_connection('out/combined')
         self.add_connection('out/loci')  # *.loci
         self.add_connection('out/stats')      # *.stats
-        self.add_connection('out/tracking')   # *.tracking        
+        self.add_connection('out/tracking')   # *.tracking
         self.add_connection('out/log_stderr')
 
         self.require_tool('mkdir')
@@ -70,9 +70,9 @@ class gffCompare(AbstractStep):
         self.add_option('F', bool, optional=True,
                         description='do not discard intron-redundant transfrags if they share the 5\' end (if they differ only at the 3\' end)')
         self.add_option('G', bool, optional=True,
-                        description='generic GFF input file(s): do not assume Cufflinks/Stringtie GTF input, (do not discard intron-redundant transfrags)')        
+                        description='generic GFF input file(s): do not assume Cufflinks/Stringtie GTF input, (do not discard intron-redundant transfrags)')
         self.add_option('T', bool, optional=True,
-                        description='do not generate .tmap and .refmap files for each input file')  
+                        description='do not generate .tmap and .refmap files for each input file')
 
 
     def runs(self, run_ids_connections_files):

@@ -19,7 +19,7 @@ class CollectScs(AbstractStep):
         self.add_connection('out/yaml')
 
         self.require_tool('collect_scs')
-   
+
         self.add_option('types', list, default=None, help ="genome names of alignments")
 
         self.add_option('rrna-aln-pos', str,   default=None,
@@ -40,8 +40,8 @@ class CollectScs(AbstractStep):
                 out = run.add_output_file(
                     "yaml",
                     "%s-scs.yaml" %  (run_id),
-                    input_paths) 
-       
+                    input_paths)
+
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as pipe:
                         scs = [self.get_tool('collect_scs'),
@@ -56,4 +56,4 @@ class CollectScs(AbstractStep):
 
                         pipe.add_command(scs)
 
-                        
+

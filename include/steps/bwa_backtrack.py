@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 import re
@@ -17,19 +17,19 @@ class BwaBacktrack(AbstractStep):
     http://bio-bwa.sourceforge.net/
 
     typical command line for single-end data::
-    
+
         bwa aln <bwa-index> <first-read.fastq> > <first-read.sai>
         bwa samse <bwa-index> <first-read.sai> <first-read.fastq> > <sam-output>
 
     typical command line for paired-end data::
 
         bwa aln <bwa-index> <first-read.fastq> > <first-read.sai>
-        bwa aln <bwa-index> <second-read.fastq> > <second-read.sai>        
+        bwa aln <bwa-index> <second-read.fastq> > <second-read.sai>
         bwa sampe <bwa-index> <first-read.sai> <second-read.sai> \
                   <first-read.fastq> <second-read.fastq> > <sam-output>
 
     '''
-    
+
     def __init__(self, pipeline):
         super(BwaBacktrack, self).__init__(pipeline)
         self.set_cores(8)
@@ -84,7 +84,7 @@ class BwaBacktrack(AbstractStep):
                         "(bestScore-misMsc). [3]")
         self.add_option('aln-O', int, optional = True,
                         description = "Gap open penalty [11]")
-        self.add_option('aln-E', int, optional = True, 
+        self.add_option('aln-E', int, optional = True,
                         description = "Gap extension penalty [4]")
         self.add_option('aln-R', int, optional = True,
                         description = "Proceed with suboptimal alignments if "
@@ -188,7 +188,7 @@ class BwaBacktrack(AbstractStep):
 
         # Check if index is valid
         if not os.path.exists(self.get_option('index') + '.bwt'):
-            raise UAPError("Could not find index: %s.*" %
+            raise StepError(self, "Could not find index: %s.*" %
                          self.get_option('index') )
         # Compile the list of options
         options_bwa_aln = ['aln-n', 'aln-o', 'aln-e', 'aln-d', 'aln-i', 'aln-l',
@@ -228,7 +228,7 @@ class BwaBacktrack(AbstractStep):
             option_list_bwa_aln.append(str(self.get_cores()))
         else:
             self.set_cores(self.get_option('aln-t'))
-        
+
         option_list_bwa_samse = make_option_list(set_bwa_samse_options,
                                                     prefix="samse-")
         option_list_bwa_sampe = make_option_list(set_bwa_sampe_options,
@@ -241,19 +241,19 @@ class BwaBacktrack(AbstractStep):
                 sr_input = run_ids_connections_files[run_id]['in/second_read']
 
                 input_paths = [ y for x in [fr_input, sr_input] \
-                               for y in x if y !=None ]                    
+                               for y in x if y !=None ]
 
                 # Do we have paired end data and is it exactly one ?
                 is_paired_end = False if sr_input == [None] else True
-                
-                # Fail if we don't have exactly one first read file or 
+
+                # Fail if we don't have exactly one first read file or
                 # an empty connection
                 if len(fr_input) != 1 or fr_input == [None]:
-                    raise UAPError("Expected single input file for first read.")
+                    raise StepError(self, "Expected single input file for first read.")
                 # Fail if we don't have exactly one second read file in case of
                 # paired end reads
                 if is_paired_end and len(sr_input) != 1:
-                    raise UAPError(
+                    raise StepError(self,
                         "Expected single input file for second read.")
                 input_paths = fr_input # single element list
                 if is_paired_end:
@@ -263,7 +263,7 @@ class BwaBacktrack(AbstractStep):
                 for input_path in input_paths:
                     if len([_ for _ in ['fastq', 'fq', 'fq.gz', 'fastq.gz']\
                                if input_path.endswith(_)]) != 1:
-                        raise UAPError("%s possess unknown suffix. "
+                        raise StepError(self, "%s possess unknown suffix. "
                                      "(None of: fastq, fq, fq.gz, fastq.gz)")
                 # BWA can handle only single files for first and second read
                 # IMPORTANT: BWA handles gzipped as well as not gzipped files
@@ -309,7 +309,7 @@ class BwaBacktrack(AbstractStep):
                             dd = [
                                 self.get_tool('dd'),
                                 'obs=%s' % self.get_option('dd-blocksize'),
-                                'of=%s' % temp_file                                
+                                'of=%s' % temp_file
                             ]
                             bwa_aln_pipe.add_command(dd)
 
@@ -317,10 +317,10 @@ class BwaBacktrack(AbstractStep):
 
                 temp_fr_sai, temp_sr_sai = (str(), str())
                 temp_fr_sai = execute_bwa_aln(fr_input[0])
-                # And if we handle paired end data 
+                # And if we handle paired end data
                 if is_paired_end:
                     temp_sr_sai = execute_bwa_aln(sr_input[0])
-                    
+
                 # Convert the created SAI files to SAM
                 with run.new_exec_group() as exec_group:
                     fr_sai_fifo, sr_sai_fifo = (str(), str())

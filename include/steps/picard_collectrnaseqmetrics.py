@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from logging import getLogger
 import os
@@ -98,7 +98,7 @@ class PicardCollectRnaSeqMetrics(AbstractStep):
         self.add_option('RIBOSOMAL_INTERVALS', str, optional = True)
         self.add_option('STRAND_SPECIFICITY', str, choices=['NONE', 'FIRST_READ_TRANSCRIPTION_STRAND', 'SECOND_READ_TRANSCRIPTION_STRAND'],  optional = False)
         self.add_option('MINIMUM_LENGTH', int, optional = True)
-        self.add_option('IGNORE_SEQUENCE', str, optional = True) # not implemented 
+        self.add_option('IGNORE_SEQUENCE', str, optional = True) # not implemented
 
         self.add_option('ASSUME_SORTED', bool, optional = True)
         self.add_option('RRNA_FRAGMENT_PERCENTAGE', int, optional = True)
@@ -143,9 +143,9 @@ class PicardCollectRnaSeqMetrics(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    raise UAPError("Expected exactly one alignments file.")
+                    raise StepError(self, "Expected exactly one alignments file.")
                 elif os.path.splitext(input_paths[0])[1] not in ['.sam', '.bam']:
-                    raise UAPError(
+                    raise StepError(self,
                         "The file %s seems not to be a SAM or BAM file. At "
                         "least the suffix is wrong." % input_paths[0]
                     )

@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -8,14 +8,14 @@ logger=getLogger('uap_logger')
 
 class Samtools(AbstractStep):
     '''
-    The step samtools wraps parts of the 'samtools' packages. It is intended for 
+    The step samtools wraps parts of the 'samtools' packages. It is intended for
     reformatting SAM/BAM files and not completely implemented.
 
     Feel free to add the samtools options you need!
 
     The options listed below are implemented.
-    
-    For a description/explanation about SAM flags, we refer to 
+
+    For a description/explanation about SAM flags, we refer to
     - the samtools manual page http://www.htslib.org/doc/samtools.html
     - the Picard page to explain SAM flags https://broadinstitute.github.io/picard/explain-flags.html
 
@@ -23,36 +23,36 @@ class Samtools(AbstractStep):
 
     def __init__(self, pipeline):
         super(Samtools, self).__init__(pipeline)
-        
+
         self.set_cores(8)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/alignments')
-        
+
         self.require_tool('dd')
         self.require_tool('samtools')
         self.require_tool('pigz')
 
 
-        
+
         # general samtools options
-        # -h 
+        # -h
         self.add_option('keep_header', bool, optional = True, default = True,
-                        description = 'Include the header in the output.') 
+                        description = 'Include the header in the output.')
         # -b
         self.add_option('output_bam', bool, optional = True, default = False,
                         description = 'Output in the BAM format.')
         # -t <FILE>
         self.add_option('genome-faidx', str, optional = False)
 
-        # Quality 
+        # Quality
         # -q <INT>
         self.add_option('q_mapq', int, optional = True, default = 0,
                         description = 'Skip alignments with MAPQ smaller than '
                         'this value.')
 
         ### samtools view
-        # Filter 
+        # Filter
         # -f <INT>
         self.add_option('f_keep', int, optional = True, default = 0,
                         description = 'Only output alignments with all bits set in '
@@ -63,8 +63,8 @@ class Samtools(AbstractStep):
                         'in INT present in the FLAG field.')
 
         ### samtools sort
-        # Sorting        
-        # -n 
+        # Sorting
+        # -n
         self.add_option('sort-by-name', bool, default = False,
                         description = 'Sort by read names (i.e., the QNAME field) '
                         'rather than by chromosomal coordinates.')
@@ -77,7 +77,7 @@ class Samtools(AbstractStep):
                         description = 'Blocksize for dd tool.')
 
     def runs(self, run_ids_connections_files):
-        
+
         for run_id in run_ids_connections_files.keys():
 
             with self.declare_run(run_id) as run:
@@ -85,7 +85,7 @@ class Samtools(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    raise UAPError("Expected exactly one alignments file.")
+                    raise StepError(self, "Expected exactly one alignments file.")
                 else:
                     is_gzipped = True if os.path.splitext(input_paths[0])[1]\
                                  in ['.gz', '.gzip'] else False
@@ -93,11 +93,11 @@ class Samtools(AbstractStep):
                 if self.is_option_set_in_config('temp-sort-dir'):
                     if not os.path.isdir(self.get_option('temp-sort-dir')):
                         #dir not present
-                        raise UAPError("Directory %s not found" % self.get_option('temp-sort-dir'))
+                        raise StepError(self, "Directory %s not found" % self.get_option('temp-sort-dir'))
                     if not os.access(self.get_option('temp-sort-dir'), os.W_OK):
                         #not accessible
-                        raise UAPError("Directory %s not accessible." % self.get_option('temp-sort-dir'))
-                
+                        raise StepError(self, "Directory %s not accessible." % self.get_option('temp-sort-dir'))
+
 
                     with run.new_exec_group() as exec_group:
 
@@ -122,14 +122,14 @@ class Samtools(AbstractStep):
                             # 2. command: Convert sam to bam
                             samtools_view = [
                                 self.get_tool('samtools'), 'view']
-                            
+
                             # 3. command: Sort BAM input
                             samtools_sort = [
                                 self.get_tool('samtools'), 'sort']
 
                             if self.get_option('sort-by-name'):
                                 samtools_sort.append('-n')
-                            
+
                             # add the general options
                             # header
                             if self.get_option('keep_header'):
@@ -141,7 +141,7 @@ class Samtools(AbstractStep):
                                 samtools_sort.extend(['-O', 'bam'])
                             # quality
                             if self.get_option('q_mapq') > 0:
-                                samtools_view.extend(['-q', 
+                                samtools_view.extend(['-q',
                                                      str(self.get_option('q_mapq'))])
                                 # no need to do this for samtools_sort
 
@@ -155,13 +155,13 @@ class Samtools(AbstractStep):
                                 samtools_view.extend(['-F',
                                                       str(self.get_option('F_skip'))])
 
-                            samtools_view.extend(['-t', self.get_option('genome-faidx'), 
+                            samtools_view.extend(['-t', self.get_option('genome-faidx'),
                                                   '-', '-@', str(self.get_cores())])
-                            samtools_sort.extend(['-T', 
-                                                  os.path.join(self.get_option('temp-sort-dir'), run_id), 
+                            samtools_sort.extend(['-T',
+                                                  os.path.join(self.get_option('temp-sort-dir'), run_id),
                                                   '-', '-@', str(self.get_cores())]
                             )
-                            
+
                             # add to pipe
                             pipe.add_command(samtools_view)
 

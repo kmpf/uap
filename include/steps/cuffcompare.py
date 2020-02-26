@@ -15,10 +15,10 @@ class CuffCompare(AbstractStep):
     '''
     CuffCompare is part of the 'Cufflinks suite of tools' for
     differential expr. analysis of RNA-Seq data and their
-    visualisation. This step compares a cufflinks assembly to 
-    known annotation. Cuffcompare provides classification, 
-    reference annotation mapping and various statistics for 
-    Cufflinks transfrags. For details about cuffcompare we refer 
+    visualisation. This step compares a cufflinks assembly to
+    known annotation. Cuffcompare provides classification,
+    reference annotation mapping and various statistics for
+    Cufflinks transfrags. For details about cuffcompare we refer
     to the author's webpage:
 
     http://cole-trapnell-lab.github.io/cufflinks/cuffcompare/
@@ -45,7 +45,7 @@ class CuffCompare(AbstractStep):
                         description='An optional "reference" annotation GFF file '
                         'containing a set of known mRNAs to use as a reference '
                         'for assessing the accuracy of mRNAs or gene models '
-                        'given in <input.gtf>') 
+                        'given in <input.gtf>')
         self.add_option('s', str, optional=True,
                         description='Can be a multi-fasta file with all the genomic '
                         'sequences or a directory containing multiple single-fasta '
@@ -88,7 +88,7 @@ class CuffCompare(AbstractStep):
         self.add_option('V', bool, optional=True,
                         description='verbose processing mode (showing all GFF '
                         'parsing warnings)')
-        
+
         # parameters
         self.add_option('e', int, optional=True, # -e
                         description='Max. distance (range) allowed from free ends '
@@ -104,8 +104,8 @@ class CuffCompare(AbstractStep):
         #         generation
 
         # skipped paramters are:
-        # -o <out-prefix> 
-        # -p <consensus-prefix> 
+        # -o <out-prefix>
+        # -p <consensus-prefix>
         # --> both are set by uap and can not be defined by the usr!
         self.add_option('run_id', str, optional=True,
                         description='An arbitrary name of the new '
@@ -114,15 +114,15 @@ class CuffCompare(AbstractStep):
 
 
     def runs(self, run_ids_connections_files):
-        
+
         # Compile the list of options
         options = ['r', 's', 'R', 'Q', 'M', 'N', 'C', 'F', 'G', 'V', 'e', 'd']
-            
+
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]
 
         option_list = list()
-            
+
         for option in set_options:
             if isinstance(self.get_option(option), bool):
                 if self.get_option(option):
@@ -130,7 +130,7 @@ class CuffCompare(AbstractStep):
             else:
                 option_list.append('-%s' % option)
                 option_list.append(str(self.get_option(option)))
-                
+
         for run_id in run_ids_connections_files.keys():
 
             run_id = self.get_option('run_id')
@@ -140,7 +140,7 @@ class CuffCompare(AbstractStep):
                 input_paths = run_ids_connections_files[run_id]['in/features']
                 if not input_paths:
                     raise StandardError("No input files for run %s" % (run_id))
-                    
+
                 # check whether there's exactly one feature file
                 if len(input_paths) != 1:
                     raise StandardError("Expected exactly one feature file.")
@@ -156,7 +156,7 @@ class CuffCompare(AbstractStep):
 
                 # this is the prefix without directory for uap add output file
                 prefix = '%s_cuffcompare' %  run_id
-                            
+
 
                 features_file = run.add_output_file('features',
                                                     '%s.combined.gtf' % prefix,
@@ -176,10 +176,10 @@ class CuffCompare(AbstractStep):
 
                 # create cuffcompare command
                 # i) add fix options and parameters
-                cuffcompare = [self.get_tool('cuffcompare'), 
+                cuffcompare = [self.get_tool('cuffcompare'),
                                '-o', prefixCC,
                                '-p', prefixCC,
-                               '-T', # consider if we really want to suppress the map 
+                               '-T', # consider if we really want to suppress the map
                                      # files or if we want to trace them
                                ]
                 # ii) add user defined settings

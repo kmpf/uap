@@ -74,10 +74,10 @@ class Post_Sawdust(AbstractStep):
                                          '--split-identifier-by', self.get_option('split_ident')]
 
                         if self.get_option('prf'):
-                            post_sawdust.append('--prf')    
+                            post_sawdust.append('--prf')
 
                         pipe.add_command(post_sawdust, stderr_path=log_stderr)
-                        
+
                         samtools_end = [self.get_tool('samtools'), 'view', '-Shb', '-']
 
                         pipe.add_command(samtools_end, stdout_path=stdout_path)

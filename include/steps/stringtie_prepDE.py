@@ -137,7 +137,7 @@ class StringTiePrepDE(AbstractStep):
                 stringtie_prep.extend(['-g', genematfile])
                 stringtie_prep.extend(['-t', transmatfile])
                 stringtie_prep.extend(['--legend=%s' % legendfile])
-                
+
 
                 prepDE_group.add_command(stringtie_prep,
                                          stdout_path = stdout,

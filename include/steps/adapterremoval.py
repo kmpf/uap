@@ -1,6 +1,6 @@
 from logging import getLogger
 from abstract_step import AbstractStep
-from uaperrors import UAPError
+from uaperrors import StepError
 
 logger = getLogger('uap_logger')
 
@@ -156,19 +156,19 @@ class AdapterRemoval(AbstractStep):
             run_ids = list(cc.get_runs_without_any('in/first_read'))
             if len(run_ids)>5:
                 run_ids = run_ids[0:5] + ['...']
-            raise UAPError('[adapterremoval] No%s read passed by runs '
+            raise StepError(self, '[adapterremoval] No%s read passed by runs '
                            '%s.' % (read_name, list(run_ids)))
 
         if self.__treat_as_paired and not cc.all_runs_have_connection('in/second_read'):
             run_ids = list(cc.get_runs_without_any('in/second_read'))
             if len(run_ids)>5:
                 run_ids = run_ids[0:5] + ['...']
-            raise UAPError('[adapterremoval] No second read passed by runs '
+            raise StepError(self, '[adapterremoval] No second read passed by runs '
                            '%s.' % run_ids)
 
         if self.__treat_as_paired \
             and not self.is_option_set_in_config('adapter2'):
-                raise UAPError('[adapterremoval] Paired end mode requires '
+                raise StepError(self, '[adapterremoval] Paired end mode requires '
                                'option `adapter2`.')
 
         for run_id in cc.keys():

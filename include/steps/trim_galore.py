@@ -269,7 +269,7 @@ class TrimGalore(AbstractStep):
 
             with self.declare_run(run_id) as run:
 
-                
+
 
                 # the temporary output directory
                 outdir = run.get_output_directory_du_jour_placeholder()
@@ -284,7 +284,7 @@ class TrimGalore(AbstractStep):
 
                 if not input_paths['in/second_read'][0] is None:
                     read_types['second_read'] = re.sub( "^_(.*)\.?.*$", "\g<1>", read_types['second_read'])
-                    
+
                 if input_paths['in/first_read'][0].endswith('.gz'):
                     if not input_paths['in/second_read'][0] is None:
                         run.add_output_file('first_read',
@@ -318,7 +318,7 @@ class TrimGalore(AbstractStep):
                                         input_paths['in/first_read'])
                     run.add_output_file('first_read_fastqc_html',
                                         '%s_%s_trimmed_fastqc.html' % ( run_id, read_types['first_read']),
-                                        input_paths['in/first_read']) 
+                                        input_paths['in/first_read'])
 
                 run.add_output_file('first_read_report',
                                         '%s_trimming_report.txt' % os.path.basename(input_paths['in/first_read'][0]),

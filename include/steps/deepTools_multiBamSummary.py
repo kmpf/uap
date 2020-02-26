@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -27,14 +27,14 @@ class deepToolsMultiBamSummary(AbstractStep):
     http://deeptools.readthedocs.io/en/latest/content/tools/multiBamSummary.html
 
     Usage example::
-    
+
         multiBamSummary [-h] [--version]  ...
 
     '''
 
     def __init__(self, pipeline):
         super(deepToolsMultiBamSummary, self).__init__(pipeline)
-        
+
         self.set_cores(10)
 
         self.add_connection('in/alignments')
@@ -52,7 +52,7 @@ class deepToolsMultiBamSummary(AbstractStep):
 #                        'and lists of sample names as values. For each '
 #                        'sample name a sorted, indexed BAM file is expected '
 #                        'to be the input from upstream steps.')
-        
+
         # Options for multiBamSummary bins subcommand
         ## Optional arguments:
         self.add_option('binSize', int, optional=True, description='Length in '
@@ -197,8 +197,8 @@ class deepToolsMultiBamSummary(AbstractStep):
 
         set_options = [option for option in common_options if \
                        self.is_option_set_in_config(option)]
-        
-        
+
+
         if self.is_option_set_in_config('bed-file'):
             subcommand = 'BED-file'
             set_options.extend( [option for option in bed_file_options if \
@@ -223,7 +223,7 @@ class deepToolsMultiBamSummary(AbstractStep):
             labels = list()
             for f in input_paths:
                 if not f.endswith(".bam"):
-                    raise UAPError("Not a BAM file: %s" % f)
+                    raise StepError(self, "Not a BAM file: %s" % f)
                 if len(input_paths) > 1:
                     labels.append("%s-%s" % (run_id, input_paths.index(f)))
                 else:

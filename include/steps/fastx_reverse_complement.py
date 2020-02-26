@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import logging
 from abstract_step import AbstractStep
 import os
@@ -40,7 +40,7 @@ class FastxReverseComplement(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    raise UAPError("Expected exactly one alignments file.")
+                    raise StepError(self, "Expected exactly one alignments file.")
                 else:
                     is_gzipped = True if os.path.splitext(input_paths[0])[1]\
                                  in ['.gz', '.gzip'] else False
@@ -67,7 +67,7 @@ class FastxReverseComplement(AbstractStep):
 
                         # 1. Run  fastx  for input file
                         fastx_revcom = [self.get_tool('fastx_reverse_complement')]
-                        # gzip 
+                        # gzip
                         fastx_revcom.extend(['-z'])
                         pipe.add_command(fastx_revcom, stdout_path=out)
 

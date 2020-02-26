@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -20,7 +20,7 @@ class deepToolsPlotFingerprint(AbstractStep):
     '''
     def __init__(self, pipeline):
         super(deepToolsPlotFingerprint, self).__init__(pipeline)
-        
+
         self.set_cores(10)
 
         self.add_connection('in/alignments')
@@ -28,7 +28,7 @@ class deepToolsPlotFingerprint(AbstractStep):
         self.add_connection('out/counts')
 
         self.require_tool('plotFingerprint')
-        
+
         # Required options:
         self.add_option('samples', list, optional=False,
                         description='List of lists with run names. '
@@ -186,10 +186,10 @@ class deepToolsPlotFingerprint(AbstractStep):
             for sample in samples:
                 bamfiles = run_ids_connections_files[sample]['in/alignments']
                 if not len(bamfiles) == 1:
-                    raise UAPError("Expected a single file for input run %s "
+                    raise StepError(self, "Expected a single file for input run %s "
                                  "received %s" % (sample, bamfiles))
                 if not bamfiles[0].endswith(".bam"):
-                    raise UAPError("Not a BAM file: %s" % bamfiles[0])
+                    raise StepError(self, "Not a BAM file: %s" % bamfiles[0])
 
                 input_paths.append(bamfiles[0])
                 labels.append(sample)
@@ -207,7 +207,7 @@ class deepToolsPlotFingerprint(AbstractStep):
                         'counts',
                         '%s.counts' % run_id,
                         input_paths)
-                        
+
                     plot_fingerprint = [
                         self.get_tool("plotFingerprint"),
                         '--plotFile', plotfile,
@@ -217,7 +217,7 @@ class deepToolsPlotFingerprint(AbstractStep):
                     plot_fingerprint.extend(input_paths)
                     plot_fingerprint.append('--labels')
                     plot_fingerprint.extend(labels)
-                    
+
                     plot_fingerprint.extend(option_list)
 
                     plot_fingerprint_eg.add_command(plot_fingerprint)

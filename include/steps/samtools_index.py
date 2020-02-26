@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -44,10 +44,10 @@ class SamtoolsIndex(AbstractStep):
                     run.add_empty_output_connection("indices")
                 # Fail if we haven't exactly one input file
                 elif len(input_paths) != 1:
-                    raise UAPError("Expected exactly one alignments file.")
+                    raise StepError(self, "Expected exactly one alignments file.")
                 # Fail if the input is not a bam file
                 elif os.path.splitext(input_paths[0])[1] not in ['.bam']:
-                    raise UAPError(
+                    raise StepError(self,
                         "The file %s seems not to be a BAM file. At "
                         "least the suffix is wrong." % input_paths[0]
                     )

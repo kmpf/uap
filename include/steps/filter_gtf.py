@@ -11,7 +11,7 @@ from logging import getLogger
 logger=getLogger('uap_logger')
 
 class filterGTF(AbstractStep):
-    
+
     '''
     custom script to filter merged genocde gtf from cufflinks or stringtie by classcode
     '''
@@ -42,7 +42,7 @@ class filterGTF(AbstractStep):
         self.add_option('remove-by-field-match', str, optional=True,
                         description='select gft field like gene_id, gene_name which will match against --string')
 
-        self.add_option('keep-by-class', bool, optional=False, 
+        self.add_option('keep-by-class', bool, optional=False,
                         description='"keep  gtf if any class is found in class_code field, requieres class-list-keep')
         self.add_option('class-list-keep', str, optional=True,
                         description="class codes to be kept possible '=,c,j,e,i,o,p,r,u,x,s,.'")
@@ -52,7 +52,7 @@ class filterGTF(AbstractStep):
     def runs(self, run_ids_connections_files):
 
         options=['remove-unstranded', 'class-code-only-in-transcript-feature',
-                 'remove-unwanted-chr', 'string', 'remove-by-field-match', 
+                 'remove-unwanted-chr', 'string', 'remove-by-field-match',
                  'keep-by-class', 'class-list-keep']
 
         set_options = [option for option in options if \
@@ -93,11 +93,11 @@ class filterGTF(AbstractStep):
                 with run.new_exec_group() as exec_group:
 
                    # exec_group.add_command(loci, stdout_path = loci_file)
-                
+
                     with exec_group.add_pipeline() as pipe:
                         filter_gtf = [self.get_tool('filter_gtf')]
                         filter_gtf.extend(option_list)
-                        filter_gtf.append(input_path)                        
+                        filter_gtf.append(input_path)
 
                         pipe.add_command(filter_gtf, stdout_path=assembling, stderr_path=log_stderr)
 

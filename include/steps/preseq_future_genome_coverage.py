@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from logging import getLogger
 from abstract_step import AbstractStep
@@ -80,9 +80,9 @@ class PreseqFutureGenomeCoverage(AbstractStep):
                     run.add_empty_output_connection("complexity_curve")
                     run.add_empty_output_connection("future_yield")
                 elif len(input_paths) != 1:
-                    raise UAPError("Expected exactly one alignments file.")
+                    raise StepError(self, "Expected exactly one alignments file.")
                 elif not is_bam and not is_bed:
-                    raise UAPError("Input file %s is niether BAM nor BED." %
+                    raise StepError(self, "Input file %s is niether BAM nor BED." %
                                  input_paths[0])
                 else:
                     with run.new_exec_group() as gc_group:

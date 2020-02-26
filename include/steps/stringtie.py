@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from abstract_step import *
 import glob
@@ -195,7 +195,7 @@ class Stringtie(AbstractStep):
         if ref_assembly is not None:
             ref_assembly = os.path.abspath(ref_assembly)
             if not os.path.isfile(ref_assembly):
-                raise UAPError('[Stringtie]: %s is no file.' %
+                raise StepError(self, '[Stringtie]: %s is no file.' %
                         self.get_option('G'))
         con_ref_assembly = cc.look_for_unique('in/features', ref_assembly)
         ref_per_run = cc.all_runs_have_connection('in/features')
@@ -209,7 +209,7 @@ class Stringtie(AbstractStep):
             alignments = connection['in/alignments']
             # check, if only a single input file is provided
             if len(alignments) != 1:
-                raise UAPError("Expected exactly one alignments file %s" %
+                raise StepError(self, "Expected exactly one alignments file %s" %
                         alignments)
 
             run = self.declare_run(run_id)
@@ -269,7 +269,7 @@ class Stringtie(AbstractStep):
             elif self.is_option_set_in_config('B') \
                     or self.is_option_set_in_config('b') \
                     or self.is_option_set_in_config('e'):
-                        raise UAPError('[stringtie] Options -B, -b and -e can '
+                        raise StepError(self, '[stringtie] Options -B, -b and -e can '
                                        'only be used if a reference is '
                                        'provided with -G.')
             stringtie.extend(option_list)

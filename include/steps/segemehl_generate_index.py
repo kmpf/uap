@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -74,7 +74,7 @@ class SegemehlGenerateIndex(AbstractStep):
                          ['in/reference_sequence']
 
                 if refseq == [None]:
-                    raise UAPError("No reference sequence received via "
+                    raise StepError(self, "No reference sequence received via "
                                  "connection in/reference_sequence.")
                 # Get names of FIFOs
                 refseq_fifos = list()

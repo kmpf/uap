@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from logging import getLogger
 import os
@@ -8,27 +8,27 @@ logger=getLogger('uap_logger')
 
 class MergeAssembly(AbstractStep):
     '''
-    This step merges a single gtf file that has been produced by a previous step 
+    This step merges a single gtf file that has been produced by a previous step
     (e.g. cuffmerge or cuffcompare) with a reference annotation. No lines
-    are discarded. The two files are simply concatenated and subsequently 
-    sorted by position. 
+    are discarded. The two files are simply concatenated and subsequently
+    sorted by position.
 
     '''
     # consider to include the following steps before concatenating
 #    - input: all XLOCs from merged assembly (cuffcompare results) - this contained exons only
 #    - gffread was applied to merge exons to transcripts
 #    - mergeBed was applied to the transcripts to combine them to genes
- 
-    
+
+
     def __init__(self, pipeline):
         super(MergeAssembly, self).__init__(pipeline)
-        
-        self.set_cores(1) 
-        
+
+        self.set_cores(1)
+
         self.add_connection('in/features')
         self.add_connection('out/features')
         self.add_connection('out/log_stderr')
-        
+
         self.require_tool('cat')
         self.require_tool('sort')
 
@@ -36,7 +36,7 @@ class MergeAssembly(AbstractStep):
         self.add_option('reference', str, optional = False,
                         description = "The reference annotation file that should be merged.")
         # [Options for 'sort':]
-        self.add_option('temp-sort-dir', str, optional = False, 
+        self.add_option('temp-sort-dir', str, optional = False,
                         description = 'Intermediate sort files are stored into this directory. '
                         'Note that this directory needs to be present before running this step.')
 
@@ -50,7 +50,7 @@ class MergeAssembly(AbstractStep):
 
                 if not input_paths:
                     raise StandardError("No input files for run %s" % (run_id))
-                    
+
                 # check whether there's exactly one feature file
                 if len(input_paths) != 1:
                     raise StandardError("Expected exactly one feature file.")
@@ -61,10 +61,10 @@ class MergeAssembly(AbstractStep):
                 # check for the existence of temporary sort directory
                 if not os.path.isdir(self.get_option('temp-sort-dir')):
                     #dir not present
-                    raise UAPError("Directory %s not found" % self.get_option('temp-sort-dir'))
+                    raise StepError(self, "Directory %s not found" % self.get_option('temp-sort-dir'))
                 if not os.access(self.get_option('temp-sort-dir'), os.W_OK):
                     #not accessible
-                    raise UAPError("Directory %s not accessible." % self.get_option('temp-sort-dir'))
+                    raise StepError(self, "Directory %s not accessible." % self.get_option('temp-sort-dir'))
 
                 # this is the prefix without directory for uap add output file
                 prefix = '%s_merge_assembly' %  run_id
@@ -84,7 +84,7 @@ class MergeAssembly(AbstractStep):
                         pipe.add_command(cat)
 
                         # 2. sort concatenated file by position
-                        sort = [self.get_tool('sort'), 
+                        sort = [self.get_tool('sort'),
                                 '-T', self.get_option('temp-sort-dir'),
                                 '-k', '1,1',
                                 '-k', '4g,4',

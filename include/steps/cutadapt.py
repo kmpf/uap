@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 import re
@@ -203,7 +203,7 @@ class Cutadapt(AbstractStep):
             run_ids = list(cc.get_runs_without_any('in/first_read'))
             if len(run_ids)>5:
                 run_ids = run_ids[0:5] + ['...']
-            raise UAPError('[cutadapt] No%s read passed by runs '
+            raise StepError(self, '[cutadapt] No%s read passed by runs '
                            '%s.' % (read_name, list(run_ids)))
         if paired_end:
             if not cc.all_runs_have_connection('in/second_read'):
@@ -211,7 +211,7 @@ class Cutadapt(AbstractStep):
                 run_ids = list(cc.get_runs_without_any('in/second_read'))
                 if len(run_ids)>5:
                     run_ids = run_ids[0:5] + ['...']
-                raise UAPError('[cutadapt] No%s read passed by runs '
+                raise StepError(self, '[cutadapt] No%s read passed by runs '
                                '%s.' % (read_name, list(run_ids)))
             read_types['second_read'] = 'R2'
 
@@ -249,19 +249,19 @@ class Cutadapt(AbstractStep):
                 if read == 'second_read':
                     if ( not self.is_option_set_in_config('adapter-R2') and
                          not self.is_option_set_in_config('adapter-file') ):
-                        raise UAPError(
+                        raise StepError(self,
                             "Option 'adapter-R2' or 'adapter-file' "
                             "required because sample %s is paired end!"
                             % run_id)
 
                 if ( self.is_option_set_in_config('adapter-file') and
                      self.is_option_set_in_config('adapter-R1') ):
-                    raise UAPError(
+                    raise StepError(self,
                         "Option 'adapter-R1' and 'adapter-file' "
                         "are both set but are mutually exclusive!")
                 if ( not self.is_option_set_in_config('adapter-file') and
                      not self.is_option_set_in_config('adapter-R1') ):
-                    raise UAPError(
+                    raise StepError(self,
                         "Option 'adapter-R1' or 'adapter-file' "
                         "required to call cutadapt for sample %s!"
                         % run_id)
@@ -314,7 +314,7 @@ class Cutadapt(AbstractStep):
                         ]
                         exec_group.add_command(dd_in)
                     else:
-                        raise UAPError("File %s does not end with any "
+                        raise StepError(self, "File %s does not end with any "
                                      "expected suffix (fastq.gz or "
                                      "fastq). Please fix that issue.")
                 # 3. Read data from fifos
@@ -354,7 +354,7 @@ class Cutadapt(AbstractStep):
 
                         # make sure the adapter is looking good
                         if re.search('^[ACGT]+$', adapter) == None:
-                            raise UAPError("Unable to come up with a "
+                            raise StepError(self, "Unable to come up with a "
                                          "legit-looking adapter: %s"
                                          % adapter)
                     # Or do we have a adapter sequence fasta file?
@@ -363,7 +363,7 @@ class Cutadapt(AbstractStep):
                             'adapter-file')
                         if not os.path.exists(
                                 self.get_option('adapter-file')):
-                            raise UAPError(
+                            raise StepError(self,
                                 "File %s containing adapter sequences "
                                 "does not exist."
                                 % self.get_option('adapter-file'))

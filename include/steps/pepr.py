@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -8,12 +8,12 @@ logger=getLogger('uap_logger')
 
 class PePr(AbstractStep):
     '''
-        
+
     '''
 
     def __init__(self, pipeline):
         super(PePr, self).__init__(pipeline)
-        
+
         self.set_cores(4)
 
         self.add_connection('in/alignments')
@@ -90,7 +90,7 @@ class PePr(AbstractStep):
 
     def runs(self, run_ids_connections_files):
         # Compile the list of options
-        options = ['file-format','normalization', 'peaktype', 
+        options = ['file-format','normalization', 'peaktype',
                    'shiftsize', 'threshold', 'windowsize']
 
         set_options = [option for option in options if \
@@ -134,11 +134,11 @@ class PePr(AbstractStep):
                             ['in/alignments'])
                         if run_ids_connections_files[in_run_id]\
                            ['in/alignments'] == [None]:
-                            raise UAPError("Upstream run %s provides no "
+                            raise StepError(self, "Upstream run %s provides no "
                                          "alignments for run %s"
                                          % (in_run_id, run_id))
                 except KeyError as e:
-                    raise UAPError("Required key %s missing in 'chip_vs_input' "
+                    raise StepError(self, "Required key %s missing in 'chip_vs_input' "
                                  "for run %s" % (key, run_id))
 
             # Create a new run named run_id
@@ -212,7 +212,7 @@ class PePr(AbstractStep):
                         mv_exec_group.add_command(mv)
 
                 with run.new_exec_group() as tar_exec_group:
-                    # 
+                    #
                     log_file = run.add_output_file(
                         'log', '%s__PePr_debug_log.tar.gz' % run_id, input_paths)
                     # We need to compress the temp directory (which should only

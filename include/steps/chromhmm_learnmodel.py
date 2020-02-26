@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import os
 from logging import getLogger
 import tarfile
@@ -24,18 +24,18 @@ class ChromHmmLearnModel(AbstractStep):
         super(ChromHmmLearnModel, self).__init__(pipeline)
 
         self.set_cores(8)
-        
+
         self.add_connection('in/cellmarkfiletable')
         self.add_connection('in/chromhmm_binarization')
         self.add_connection('out/chromhmm_model')
-        
+
         self.require_tool('ChromHMM')
         self.require_tool('ls')
         self.require_tool('mkdir')
         self.require_tool('rm')
         self.require_tool('tar')
         self.require_tool('xargs')
-        
+
         # ChromHMM LearnModel Required Parameters
         self.add_option('numstates', int, optional = False,
                         descritpion = "This parameter specifies the number of "
@@ -222,7 +222,7 @@ class ChromHmmLearnModel(AbstractStep):
                           ['in/chromhmm_binarization']
             # Test the input_paths (at least a bit)
             if len(input_paths) != 1 or not input_paths[0].endswith('.tar.gz'):
-                raise UAPError("Expected single tar.gz file via "
+                raise StepError(self, "Expected single tar.gz file via "
                              "'in/chromhmm_binarization' for run %s, but got "
                              "this %s" % (run_id, ", ".join(input_paths)))
 

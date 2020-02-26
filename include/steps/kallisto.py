@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 from logging import getLogger
 from abstract_step import AbstractStep
 import os
@@ -77,14 +77,14 @@ class Kallisto(AbstractStep):
         if self.is_option_set_in_config('index'):
             index_path = os.path.abspath(self.get_option('index'))
             if not os.path.isfile(index_path):
-                raise UAPError('[]: %s is no file.' %
+                raise StepError(self, '%s is no file.' %
                         self.get_option('index'))
         else:
             index_path = None
         connect_index_path = cc.look_for_unique('in/kallisto-index', index_path)
         index_per_run = cc.all_runs_have_connection('in/kallisto-index')
         if index_per_run is False and connect_index_path is None:
-            raise UAPError("No kallisto index give via config or connection.")
+            raise StepError(self, "No kallisto index give via config or connection.")
 
         read_runs = cc.get_runs_with_connections(['in/first_read', 'in/second_read'])
         for run_id in read_runs:
