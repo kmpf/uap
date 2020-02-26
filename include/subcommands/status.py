@@ -218,7 +218,7 @@ def main(args):
                 else:
                     failed = dict()
                     try:
-                        procs = anno_data['pipeline_log']['processes']
+                        procs = anno_data['pipeline_log'].get('processes', [])
                         for proc in procs:
                             if proc.get('exit_code', 0) == 0:
                                 continue
@@ -227,7 +227,6 @@ def main(args):
                                 'exit code':proc['exit_code'],
                                 'stderr':proc['stderr_copy']['tail']
                             }
-                        run_data = anno_data['run']
                     except KeyError as e:
                         print('The annotation file "%s" seems badly '
                                 'formated: %s\n' % (anno_file, e))
@@ -244,9 +243,10 @@ def main(args):
                                 default_flow_style = False))
                     else:
                         print('No failed commands found in the annotation file.\n')
+                    run_data = anno_data.get('run', [])
                     if 'error' in run_data:
                         found_error = True
-                        print('#### error\n%s\n' %  run_data['error'])
+                        print('# ERROR #\n%s\n' %  run_data['error'])
                     if not found_error:
                         print('No errors found.')
                         print("Run 'uap %s fix-problems --first-error' to investigate.'"
