@@ -63,7 +63,7 @@ def main(args):
     except OSError:
         raise UAPError("Couldn't open %s." % template_path)
 
-    steps_left = set()
+    steps_left = list()
     tasks_left = dict()
     for step_name in p.topological_step_order:
         tasks_left[step_name] = list()
@@ -87,7 +87,7 @@ def main(args):
                         "'uap %s submit-to-cluster --force' to force overwrite "
                         "of the results." %
                         (task, args.config.name, args.config.name))
-            steps_left.add(step_name)
+            steps_left.append(step_name)
             tasks_left[step_name].append(task)
 
     quotas = dict()
