@@ -759,7 +759,7 @@ class Pipeline(object):
                 else:
                     start_time = info['start_time']
                     last_activity = datetime.datetime.fromtimestamp(
-                        abstract_step.AbstractStep.fsc.getmtime(exec_ping_file))
+                        task.get_run().fsc.getmtime(exec_ping_file))
                     run_problems.append((task, exec_ping_file, stale,
                                          last_activity - start_time))
             if check_queue:
