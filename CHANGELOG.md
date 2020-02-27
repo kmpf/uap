@@ -1,4 +1,4 @@
-## 1.2 (24.01.2020)
+## 2.0 (27.02.2020)
 
 **Fixes**
  * completing slurm jobs are not considered running (#100)
