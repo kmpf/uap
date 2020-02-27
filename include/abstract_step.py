@@ -189,7 +189,7 @@ class AbstractStep(object):
                 if not key in self._defined_options:
                     message = "Unknown option in %s (%s): %s." % \
                             (self.get_step_name(), self.get_step_type(), key)
-                    logger.error(message + "Available options are:\n%s" %
+                    logger.error(message + "\nAvailable options are:\n%s" %
                                  yaml.dump(self._defined_options))
                     raise UAPError(message)
                 if value is not None and type(value) not in self._defined_options[key]['types']:
