@@ -87,8 +87,4 @@ class CommandInfo(object):
 
     @replace_output_dir_du_jour
     def get_command(self):
-        '''
-        Return command after replacing all file inside the destination
-        directory with relative paths.
-        '''
         return self._command
