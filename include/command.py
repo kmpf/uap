@@ -29,31 +29,30 @@ class CommandInfo(object):
 
     def replace_output_dir_du_jour(func):
         def inner(self, *args):
-            run_info = self.get_run()
-            # Collect info to replace du_jour placeholder with temp_out_dir
-            placeholder = run_info.get_output_directory_du_jour_placeholder()
-            temp_out_dir = run_info.get_output_directory_du_jour()
+            run = self.get_run()
+            # Collect info to remove derecated placeholders
+            # and replace absolute paths with relative paths
+            placeholder = run.get_output_directory_du_jour_placeholder()
+            placeholder += '' if placeholder.endswith('/') else '/'
+            pl_slashless = placeholder[:-1]
 
-            command = None
-            ret_value = func(self, *args)
-            if ret_value is None:
-                return(None)
-            if isinstance(ret_value, list) or isinstance(ret_value, set):
-                command = list()
-                for string in ret_value:
-                    if string != None and placeholder in string and\
-                       isinstance(temp_out_dir, str):
-                        command.append(
-                            string.replace(placeholder, temp_out_dir))
-                    else:
-                        command.append(string)
-            elif isinstance(ret_value, str):
-                if ret_value != None and isinstance(temp_out_dir, str):
-                        command = ret_value.replace(placeholder, temp_out_dir)
-            else:
-                raise UAPError("Function %s does not return list or string object"
-                             % func.__class__.__name__)
-            return(command)
+            working_dir = run.get_temp_output_directory()
+            abs_dest = run.get_step().get_pipeline().config['destination_path']
+            rel_path = os.path.relpath(abs_dest, working_dir)
+            def repl(text):
+                if isinstance(text, str):
+                    text = text.replace(abs_dest, rel_path)
+                    text = text.replace(placeholder, '')
+                    text = text.replace(pl_slashless, '.')
+                    return(text)
+                elif isinstance(text, list) or isinstance(text, set):
+                    return([repl(element) for element in text])
+                elif text is None:
+                    return(None)
+                else:
+                    raise UAPError("Function %s does not return string or "
+                                   "list of strings." % func.__name__)
+            return(repl(func(self, *args)))
         return(inner)
 
     def get_run(self):
@@ -92,16 +91,4 @@ class CommandInfo(object):
         Return command after replacing all file inside the destination
         directory with relative paths.
         '''
-        cmd = self._command
-        run = self.get_run()
-        working_dir = run.get_temp_output_directory()
-        destination = run.get_step().get_pipeline().config['destination_path']
-        diff = os.path.relpath(destination, working_dir)
-        def repl(text):
-            if isinstance(text, str):
-                return(text.replace(destination, diff))
-            elif isinstance(text, list) or isinstance(text, set):
-                return([repl(element) for element in text])
-            else:
-                return(text)
-        return(repl(cmd))
+        return(self._command)
