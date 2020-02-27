@@ -695,14 +695,23 @@ class Pipeline(object):
         for task in self.all_tasks_topologically_sorted:
             queued_ping_file = task.get_run().get_queued_ping_file()
             failed_qpf = queued_ping_file + '.bad' # alternative location
-            if os.path.exists(queued_ping_file):
+            try:
                 with open(queued_ping_file, 'r') as fl:
                     info = yaml.load(fl, Loader=yaml.FullLoader)
                 ids.add(info['job_id'])
-            elif os.path.exists(failed_qpf):
-                with open(failed_qpf, 'r') as fl:
-                    info = yaml.load(fl, Loader=yaml.FullLoader)
-                ids.add(info['job_id'])
+            except (IOError, TypeError) as e:
+                if os.path.exists(failed_qpf):
+                    raise UAPError('Could not read ping file %s: %s' %
+                            (queued_ping_file, e))
+                else:
+                    try:
+                        with open(failed_qpf, 'r') as fl:
+                            info = yaml.load(fl, Loader=yaml.FullLoader)
+                        ids.add(info['job_id'])
+                    except (IOError, TypeError) as e:
+                        if os.path.exists(failed_qpf):
+                            raise UAPError('Could not read ping file %s: %s' %
+                                    (failed_qpf, e))
         return ids
 
     def check_ping_files(self, print_more_warnings = False,
