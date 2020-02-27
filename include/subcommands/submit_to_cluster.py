@@ -67,7 +67,8 @@ def main(args):
     steps_left = list()
     tasks_left = dict()
     skip_message = list()
-    for step_name in tqdm(p.topological_step_order, desc='steps states'):
+    iter_steps = tqdm(p.topological_step_order, desc='steps states')
+    for step_name in iter_steps:
         tasks_left[step_name] = list()
         for task in p.tasks_in_step[step_name]:
             if task_wish_list is not None:
@@ -88,6 +89,7 @@ def main(args):
                     "ignored." % task)
                 continue
             if state == p.states.CHANGED and not args.force:
+                iter_steps.close()
                 raise UAPError("Task %s has changed. "
                         "Run 'uap %s status --details' to see what changed or "
                         "'uap %s submit-to-cluster --force' to force overwrite "

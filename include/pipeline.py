@@ -635,6 +635,7 @@ class Pipeline(object):
         pool = multiprocessing.Pool(4)
         def kill_pool(signum, frame):
             pool.terminate()
+            iter_tools.close()
             raise UAPError('Keybord interrupt during tool check.')
         show_status = True
         if hasattr(self.args, 'run') and self.args.run \
@@ -643,12 +644,12 @@ class Pipeline(object):
             sys.stderr.write('[uap] Running tool check...\n')
         elif logger.getEffectiveLevel() <= 20:
             show_status = False
-        original_int_handler = signal.signal(signal.SIGINT, kill_pool)
-        for tool_id, tool_check_info in \
-                tqdm(pool.imap_unordered(check_tool, self.config['tools'].items()),
+        iter_tools = tqdm(pool.imap_unordered(check_tool, self.config['tools'].items()),
                         total=len(self.config['tools']),
                         desc='tool check',
-                        disable=not show_status):
+                        disable=not show_status)
+        original_int_handler = signal.signal(signal.SIGINT, kill_pool)
+        for tool_id, tool_check_info in iter_tools:
             self.tool_versions[tool_id] = tool_check_info
         pool.close()
         pool.join()
