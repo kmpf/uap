@@ -22,7 +22,7 @@ class SourceController(AbstractStep):
                 description='Files to control.')
         self.add_connection('out/raw',
                 description='All controlled files combined in one run '
-                            'with the id ``links``. The ourput files are '
+                            '``links``. The output files are '
                             'named ``<previous run id>-<file name>``.')
 
         self.require_tool('ln')
