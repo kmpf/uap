@@ -14,11 +14,12 @@
  * make signal traps work on cluster
  * do not mix up lines in stderr tail of failed tasks
  * run-info uses list2cmdline for accurate command representation
- * run-locally checks parent task states befor running
  * include output file list to detect output changes
+ * steps now run within their temp directory (#29, #31)
+ * explicit and comlete lmod config in annotation files
+ * raise exeption if an unknown configuration key is used
 
 **Features**
- * steps now run within their temp directory (#29, #31)
  * use relative paths; uap output can now be moved (#115)
  * slurm jobs as array job per step (#105)
  * introduce --legacy option for submit-to-cluster to use none array jobs
@@ -28,20 +29,19 @@
  * output hash robust against tool location and order
  * tool versions can optionally be ignored with `ignore_version`
  * shorter lmod config (#104)
- * uap tools must not be referenced in config (#119)
+ * uap tools must not be referenced to in config (#119)
  * uap path in PATH environmental variable not required (#107)
  * default job quota is now 0, which is no quota (#105)
- * dependencies are now completed through selected connections (#127)
+ * dependencies are now completed implicitly through selected connections (#127)
  * reference assembly `-G` is optional for `stringtieMerge` and `stringtie` (#124)
  * input connection for reference assembly in `stringtieMerge` or `stringtie`
  * object `ConnectionsCollector` for handling input from multiple steps (#47)
  * introduce --profiling option to analyze uap runtime (#132)
  * introduce --path option to retrieve the UAP installation path
- * optional step connections (#35)
+ * optional connections with waring for not using required connections (#35)
  * new connection information in command line `steps` doc
  * improved single end support and sensitivity to respective connections (#38, #139)
  * forward None values for options to step declaration (#140)
- * raise exeption if an unknown configuration key is used
  * configure cluster default options (#76)
  * introduce --job-ids as option for status to report config specifc jobs (#58)
  * introduce --first-error option for fix-problems for faster debugging (#61)
@@ -56,7 +56,7 @@
  * new CHANGED state for tasks based on commands and tool versions
  * sha256 blockchain to determine CHANGED state
  * new BAD state for tasks when UAP caught an error
- * new VILATILIZED state if a step has been volatilized
+ * new VOILATILIZED state if a step has been volatilized
  * status --details to view changes of tasks and errors of bad tasks
  * --force to overwrite changed tasks
  * --ignore to ignore changes in tasks and consider them finished
@@ -64,7 +64,6 @@
  * config can be changed without effecting submitted tasks
  * task error logged in annotation and reported in status --details
  * `base_working_directory` can be configured and paths set relatively to it
- * status bar during tool check and task status
  * improved resource monitoring report in annotation file
  * introduce status --hash to validate sha256sum of output files
  * introduce fix-problems --file-modification-date to fix output after copy
@@ -80,15 +79,18 @@
  * complete merge with https://github.com/yigbt/uap
  * chronological naming for log files
  * move ping files on job error or interruption (#147)
- * no hash in output directories
+ * no hash in output directory names
  * nothing is written outside of `destination_path` (no `config.yaml-out` link)
  * only one annotation and no symlinks in output directory
  * multiple executions do not accumulate files in output directory
+ * previous ping files are only kept in debugging mode
  * log uap version in annotation
  * always use highest verbosity level on cluster jobs
- * run states overhaul
+ * run states refactored
  * caching is now run specific
- * use all cores to hash output files
+ * use all available cores to hash output files
+ * run-locally checks parent task states befor running
+ * using `output_directory_du_jour_placeholder` in steps is deprecated
 
 ## 1.1 (20.01.2020)
 
