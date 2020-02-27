@@ -27,7 +27,12 @@ class CommandInfo(object):
                 raise TypeError("Non-string element %s in command %s" % (_, command))
             self._command.append(_)
 
-    def replace_output_dir_du_jour(func):
+    def abs2rel_path(func):
+        '''
+        A decoraror function to replace absolute paths with relative paths.
+        It also removes the deprectaed output path placeholders for
+        backwards compatibility with old step implementation.
+        '''
         def inner(self, *args):
             run = self.get_run()
             # Collect info to remove derecated placeholders
@@ -73,7 +78,7 @@ class CommandInfo(object):
         if stdout_path != None:
             self._stdout_path = stdout_path
 
-    @replace_output_dir_du_jour
+    @abs2rel_path
     def get_stdout_path(self):
         return self._stdout_path
 
@@ -81,10 +86,10 @@ class CommandInfo(object):
         if stderr_path != None:
             self._stderr_path = stderr_path
 
-    @replace_output_dir_du_jour
+    @abs2rel_path
     def get_stderr_path(self):
         return self._stderr_path
 
-    @replace_output_dir_du_jour
+    @abs2rel_path
     def get_command(self):
         return self._command
