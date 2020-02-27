@@ -8,6 +8,7 @@ import os
 import re
 import subprocess
 import yaml
+from tqdm import tqdm
 
 import abstract_step
 import fscache
@@ -65,7 +66,8 @@ def main(args):
 
     steps_left = list()
     tasks_left = dict()
-    for step_name in p.topological_step_order:
+    skip_message = list()
+    for step_name in tqdm(p.topological_step_order, desc='steps states'):
         tasks_left[step_name] = list()
         for task in p.tasks_in_step[step_name]:
             if task_wish_list is not None:
@@ -73,14 +75,18 @@ def main(args):
                     continue
             state = task.get_task_state()
             if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
-                print("Skipping %s because it is already %s..." % (str(task), state.lower()))
+                skip_message.append("Skipping %s because it is already %s..." %
+                        (str(task), state.lower()))
                 continue
             if state == p.states.VOLATILIZED and not task_wish_list:
-                print("Skipping %s because it is already %s and not requested "
-                      "with -r %s..." % (str(task), state.lower(), step_name))
+                skip_message.append("Skipping %s because it is already %s and "
+                    "not requested with -r %s..." %
+                    (str(task), state.lower(), step_name))
                 continue
             if state == p.states.CHANGED and args.ignore:
-                print("Skipping %s because it's changes are ignored.\n" % task)
+                skip_message.append("Skipping %s because it's changes are "
+                    "ignored." % task)
+                continue
             if state == p.states.CHANGED and not args.force:
                 raise UAPError("Task %s has changed. "
                         "Run 'uap %s status --details' to see what changed or "
@@ -92,6 +98,8 @@ def main(args):
                 steps_left.append(step_name)
 
     quotas = dict()
+    for line in skip_message:
+        print(line)
 
     try:
         quotas['default'] = p.config['cluster']['default_job_quota']
@@ -209,11 +217,15 @@ def main(args):
         ##################
         # Submit the run #
         ##################
-        sys.stdout.write("[%d/%d %s] submitting with %s cores per job, quota %s"
-              % (step_num+1, len(steps_left), step_name, str(step._cores),
-                      quotas[step_name]))
+        sys.stdout.write(" with %s cores per job" % str(step._cores))
+        if quotas[step_name] != 0:
+            sys.stdout.write(", quota %s" % quotas[step_name])
+        else:
+            sys.stdout.write(", no quota")
         if dependent_steps:
             sys.stdout.write(", dependencies %s" % ', '.join(dependent_steps))
+        else:
+            sys.stdout.write(", no dependencies")
         # Store submit script in the run_output_dir
         submit_script_path = step.get_submit_script_file()
         with open(submit_script_path, 'w') as f:
@@ -239,7 +251,12 @@ def main(args):
         process.wait()
         response = process.stdout.read().strip()
         job_id = re.search(
-            p.get_cluster_command('parse_job_id'), response).group(1)
+            p.get_cluster_command('parse_job_id'), response)
+        if not job_id:
+            raise UAPError('Got unexpected from %s resposne: %s' %
+                    (p.get_cluster_type(), response))
+        else:
+            job_id = job_id.group(1)
         sys.stdout.write(" and job id %s.\n" % job_id)
 
         if job_id == None or len(job_id) == 0:
@@ -288,5 +305,7 @@ def main(args):
                         "parent %s is %s when it should be queued, running, "
                         "or finished." % (task, parent_task, parent_state.lower()))
                     continue
+        sys.stdout.write("[%d/%d][%s] %s job" %
+                (step_num+1, len(steps_left), step_name, p.get_cluster_type()))
         submit_step(step_name, parent_job_ids)
         step.reset_run_caches()
