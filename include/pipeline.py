@@ -545,7 +545,7 @@ class Pipeline(object):
                     if not dep_name in assigned_steps:
                         is_ready = False
                         break
-                if is_ready and step.get_step_type == 'source_controller':
+                if is_ready and step.get_step_type() == 'source_controller':
                     # make sure source_controller attempts to run first
                     next_steps = [step_name]
                     break
