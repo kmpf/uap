@@ -44,16 +44,16 @@ class CommandInfo(object):
                     text = text.replace(abs_dest, rel_path)
                     text = text.replace(placeholder, '')
                     text = text.replace(pl_slashless, '.')
-                    return(text)
+                    return text
                 elif isinstance(text, list) or isinstance(text, set):
-                    return([repl(element) for element in text])
+                    return [repl(element) for element in text]
                 elif text is None:
-                    return(None)
+                    return None
                 else:
                     raise UAPError("Function %s does not return string or "
                                    "list of strings." % func.__name__)
-            return(repl(func(self, *args)))
-        return(inner)
+            return repl(func(self, *args))
+        return inner
 
     def get_run(self):
         if isinstance(self._eop, pipeline_info.PipelineInfo):
@@ -62,7 +62,7 @@ class CommandInfo(object):
             run_info = self._eop.get_run()
         else:
             run_info = None
-        return(run_info)
+        return run_info
 
     def set_command(self, command):
         if not isinstance(command, list):
@@ -75,7 +75,7 @@ class CommandInfo(object):
 
     @replace_output_dir_du_jour
     def get_stdout_path(self):
-        return(self._stdout_path)
+        return self._stdout_path
 
     def set_stderr_path(self, stderr_path):
         if stderr_path != None:
@@ -83,7 +83,7 @@ class CommandInfo(object):
 
     @replace_output_dir_du_jour
     def get_stderr_path(self):
-        return(self._stderr_path)
+        return self._stderr_path
 
     @replace_output_dir_du_jour
     def get_command(self):
@@ -91,4 +91,4 @@ class CommandInfo(object):
         Return command after replacing all file inside the destination
         directory with relative paths.
         '''
-        return(self._command)
+        return self._command
