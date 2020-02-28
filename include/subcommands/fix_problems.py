@@ -54,17 +54,22 @@ def main(args):
         split_at = ' sha256sum is correct and modification date after '
         split_at_v = ' is volatilized and modification date after '
         changes = list()
-        for task in tqdm(tasks, desc='tasks'):
-            for bad_file in task.get_run().file_changes(do_hash=True):
-                bad_file = bad_file.split(split_at)
-                if len(bad_file) == 1:
-                    bad_file = bad_file[0].split(split_at_v)
-                if len(bad_file) == 1:
-                    continue
-                date = task.get_run().written_anno_data()['end_time']
-                changes.append('%s set for %s' % (date, bad_file[0]))
-                if args.srsly:
-                    os.utime(bad_file[0], (now(), timestamp(date)))
+        task_iter = tqdm(tasks, desc='tasks')
+        try:
+            for task in task_iter:
+                for bad_file in task.get_run().file_changes(do_hash=True):
+                    bad_file = bad_file.split(split_at)
+                    if len(bad_file) == 1:
+                        bad_file = bad_file[0].split(split_at_v)
+                    if len(bad_file) == 1:
+                        continue
+                    date = task.get_run().written_anno_data()['end_time']
+                    changes.append('%s set for %s' % (date, bad_file[0]))
+                    if args.srsly:
+                        os.utime(bad_file[0], (now(), timestamp(date)))
+        except:
+            task_iter.close()
+            raise
         if changes:
             print('#### Changes ####')
         else:

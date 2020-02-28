@@ -289,11 +289,16 @@ def main(args):
         tasks_for_status = {}
         tasks = p.all_tasks_topologically_sorted
 
-        for task in tqdm(tasks, desc='tasks'):
-            state = task.get_task_state(do_hash=args.hash)
-            if not state in tasks_for_status:
-                tasks_for_status[state] = list()
-            tasks_for_status[state].append(task)
+        task_iter = tqdm(tasks, desc='tasks')
+        try:
+            for task in task_iter:
+                state = task.get_task_state(do_hash=args.hash)
+                if not state in tasks_for_status:
+                    tasks_for_status[state] = list()
+                tasks_for_status[state].append(task)
+        except:
+            task_iter.close()
+            raise
 
         for status in p.states.order:
             if not status in tasks_for_status:

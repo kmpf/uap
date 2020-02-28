@@ -633,10 +633,6 @@ class Pipeline(object):
         if not 'tools' in self.config:
             return
         pool = multiprocessing.Pool(4)
-        def kill_pool(signum, frame):
-            pool.terminate()
-            iter_tools.close()
-            raise UAPError('Keybord interrupt during tool check.')
         show_status = True
         if hasattr(self.args, 'run') and self.args.run \
         and not hasattr(self.args, 'hash'):
@@ -648,12 +644,15 @@ class Pipeline(object):
                         total=len(self.config['tools']),
                         desc='tool check',
                         disable=not show_status)
-        original_int_handler = signal.signal(signal.SIGINT, kill_pool)
-        for tool_id, tool_check_info in iter_tools:
-            self.tool_versions[tool_id] = tool_check_info
+        try:
+            for tool_id, tool_check_info in iter_tools:
+                self.tool_versions[tool_id] = tool_check_info
+        except:
+            pool.terminate()
+            iter_tools.close()
+            raise
         pool.close()
         pool.join()
-        signal.signal(signal.SIGINT, original_int_handler)
 
     def notify(self, message, attachment = None):
         '''

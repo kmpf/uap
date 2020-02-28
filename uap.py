@@ -7,6 +7,7 @@ import logging
 import string
 import sys
 import yaml
+import traceback
 
 '''
 Adjust sys.path so everything we need can be found
@@ -563,7 +564,11 @@ def main():
                     filename='uap.cprof')
         else:
             args.func(args)
-    except (UAPError, StepError) as e:
+    except (Exception, KeyboardInterrupt) as e:
+        if hasattr(e, 'message') and e.message:
+            logger.error('%s: %s' % (type(e).__name__, e.message))
+        else:
+            logger.error(type(e).__name__)
         if args.debugging is True:
             raise
         else:

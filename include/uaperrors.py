@@ -9,7 +9,6 @@ class UAPError(StandardError):
     """
 
     def __init__(self, message):
-        logger.error(message)
         super(UAPError, self).__init__(message)
 
 class StepError(UAPError):

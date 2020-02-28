@@ -886,14 +886,19 @@ class AbstractStep(object):
     def get_run_info_str(self, progress=False, do_hash=False):
         count = {}
         runs = self.get_runs()
-        for run in tqdm(runs, total=len(runs), desc='runs',
-                        disable=not progress, leave=False):
-            if isinstance(run, str):
-                run = self.get_run(run)
-            state = run.get_state(do_hash=do_hash)
-            if not state in count:
-                count[state] = 0
-            count[state] += 1
+        run_iter = tqdm(runs, total=len(runs), desc='runs',
+                disable=not progress, leave=False)
+        try:
+            for run in run_iter:
+                if isinstance(run, str):
+                    run = self.get_run(run)
+                state = run.get_state(do_hash=do_hash)
+                if not state in count:
+                    count[state] = 0
+                count[state] += 1
+        except:
+            run_iter.close()
+            raise
         return ', '.join(["%d %s" % (count[_], _.lower()) \
                           for _ in self.get_pipeline().states.order if _ in count])
 
