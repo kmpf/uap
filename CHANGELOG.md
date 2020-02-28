@@ -91,6 +91,8 @@
  * use all available cores to hash output files
  * run-locally checks parent task states befor running
  * using `output_directory_du_jour_placeholder` in steps is deprecated
+ * all errors are logged with the `uap_logger`
+ * no traceback outside of debugging mode
 
 ## 1.1 (20.01.2020)
 
