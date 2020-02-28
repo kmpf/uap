@@ -5,6 +5,7 @@ import json
 import fscache
 from logging import getLogger
 import os
+import pwd
 import random
 import stat
 import string
@@ -983,7 +984,7 @@ class Run(object):
         log['run']['structure'] = self.get_run_structure()
         log['run']['hostname'] = platform.node()
         log['run']['platform'] = platform.platform()
-        log['run']['user'] = os.environ.get('USER')
+        log['run']['user'] = pwd.getpwuid(os.getuid())[0]
         if error is not None:
             log['run']['error'] = error
         try:
