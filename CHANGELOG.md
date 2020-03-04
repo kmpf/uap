@@ -18,7 +18,6 @@
  * steps now run within their temp directory (#29, #31)
  * explicit and comlete lmod config in annotation files
  * raise exeption if an unknown configuration key is used
- * make sure temporrary files are always written into the temp directory (#151)
 
 **Features**
  * use relative paths; uap output can now be moved (#115)
