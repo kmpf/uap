@@ -67,6 +67,7 @@ def main(args):
     steps_left = list()
     tasks_left = dict()
     skip_message = list()
+    skipped_tasks = dict()
     iter_steps = tqdm(p.topological_step_order, desc='step states')
     for step_name in iter_steps:
         tasks_left[step_name] = list()
@@ -76,8 +77,8 @@ def main(args):
                     continue
             state = task.get_task_state()
             if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
-                skip_message.append("Skipping %s because it is already %s..." %
-                        (str(task), state.lower()))
+                skipped_tasks.setdefault(state, set())
+                skipped_tasks[state].add(task)
                 continue
             if state == p.states.VOLATILIZED and not task_wish_list:
                 skip_message.append("Skipping %s because it is already %s and "
@@ -98,6 +99,10 @@ def main(args):
             tasks_left[step_name].append(task)
             if step_name not in steps_left:
                 steps_left.append(step_name)
+
+    for state, tasks in skipped_tasks.items():
+        skip_message.append("Skipping %d task(s) because they are already %s..." %
+                (len(tasks), state.lower()))
 
     quotas = dict()
     for line in skip_message:
