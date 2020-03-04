@@ -143,6 +143,8 @@ class FastqSample(AbstractStep):
 
                             pigz_compress_eg = run.new_exec_group()
                             pigz_compress = [self.get_tool('pigz'),
+                                             '--processes',
+                                             str(self.get_cores()),
                                              '--best', '--stdout',
                                              outfile + '.fastq']
                             pigz_compress_eg.add_command(
