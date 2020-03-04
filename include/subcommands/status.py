@@ -202,7 +202,7 @@ def main(args):
                 print('')
 
             elif state == p.states.BAD:
-                heading = 'errors of task %s' % task
+                heading = 'errors of bad task %s' % task
                 print(heading)
                 print('-'*len(heading)+'\n')
                 run = task.get_run()
