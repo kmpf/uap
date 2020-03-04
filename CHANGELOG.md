@@ -93,6 +93,7 @@
  * using `output_directory_du_jour_placeholder` in steps is deprecated
  * all errors are logged with the `uap_logger`
  * no traceback outside of debugging mode
+ * missing annotation file marks a task unfinished
 
 ## 1.1 (20.01.2020)
 
