@@ -700,7 +700,7 @@ class Pipeline(object):
                     info = yaml.load(fl, Loader=yaml.FullLoader)
                 ids.add(info['job_id'])
             except (IOError, TypeError) as e:
-                if os.path.exists(failed_qpf):
+                if os.path.exists(queued_ping_file):
                     raise UAPError('Could not read ping file %s: %s' %
                             (queued_ping_file, e))
                 else:

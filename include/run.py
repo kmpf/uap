@@ -671,43 +671,34 @@ class Run(object):
         self._output_files[out_connection][out_path] = in_paths
         return out_path
 
-    @replace_output_dir_du_jour
     def add_temporary_file(self, prefix = 'temp', suffix = '', designation = None):
         '''
-        Returns the name of a temporary file (created by tempfile library).
-        Name and output directory placeholder are concatenated. The concatenated
-        string is returned and stored in a list. The placeholder is immediately
-        properly adjusted by @replace_output_dir_du_jour.
+        Returns the name of a temporary file.
         '''
         count = len(self._temp_paths)
-        temp_placeholder = str()
-
         count = 0
         while True:
             temp_name = prefix + '-' + str(count) + suffix
-            temp_placeholder = os.path.join(
-                self.get_output_directory_du_jour_placeholder(), temp_name)
-            if not temp_placeholder in self._temp_paths:
+            if not temp_name in self._temp_paths:
                 break
             else:
                 count += 1
-
 
         logger.debug("Temporary file (#%s) in run %s: %s" %
               (len(self._temp_paths) + 1, self.get_run_id(), temp_name) )
 
         # _known_paths dict is logged
         known_paths = dict()
-        known_paths[temp_placeholder] = {
-            'label': os.path.basename(temp_placeholder),
+        known_paths[temp_name] = {
+            'label': os.path.basename(temp_name),
             'designation': designation,
             'type': ''
         }
         self.add_known_paths(known_paths)
         # _temp_paths set contains all temporary files which are going to be
         # deleted
-        self._temp_paths.add(temp_placeholder)
-        return temp_placeholder
+        self._temp_paths.add(temp_name)
+        return temp_name
 
     def add_temporary_directory(self, prefix = '', suffix = '',
                                 designation = None ):
