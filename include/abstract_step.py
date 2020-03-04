@@ -634,12 +634,6 @@ class AbstractStep(object):
             signal.signal(signal.SIGINT, original_int_handler)
             self._state = AbstractStep.states.DEFAULT # changes relative paths
             os.chdir(base_working_dir)
-            try:
-                os.kill(executing_ping_pid, signal.SIGTERM)
-                os.waitpid(executing_ping_pid, 0)
-            except OSError:
-                # if the ping process was already killed, it's gone anyway
-                pass
 
         self.end_time = datetime.now()
         # step has completed invalidate the FS cache because things have
@@ -753,7 +747,6 @@ class AbstractStep(object):
                 attachment['name'] = 'details.png'
                 attachment['data'] = open(annotation_path + '.png').read()
             self.get_pipeline().notify(message, attachment)
-            self.remove_ping_file(executing_ping_path)
             self.remove_ping_file(queued_ping_path, bad_copy=True)
             if caught_exception is not None:
                 raise caught_exception[1], None, caught_exception[2]
@@ -784,10 +777,17 @@ class AbstractStep(object):
                 attachment['name'] = 'details.png'
                 attachment['data'] = open(annotation_path + '.png').read()
             self.get_pipeline().notify(message, attachment)
-            self.remove_ping_file(executing_ping_path)
             self.remove_ping_file(queued_ping_path)
 
             self._reset()
+
+        try:
+            os.kill(executing_ping_pid, signal.SIGTERM)
+            os.waitpid(executing_ping_pid, 0)
+        except OSError:
+            # if the ping process was already killed, it's gone anyway
+            pass
+        self.remove_ping_file(executing_ping_path)
 
         if pool is not None:
             pool.join()
