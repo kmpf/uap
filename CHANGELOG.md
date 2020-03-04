@@ -18,6 +18,7 @@
  * steps now run within their temp directory (#29, #31)
  * explicit and comlete lmod config in annotation files
  * raise exeption if an unknown configuration key is used
+ * fix race condition in `samtools_index` step
 
 **Features**
  * use relative paths; uap output can now be moved (#115)
