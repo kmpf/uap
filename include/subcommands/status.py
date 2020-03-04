@@ -110,7 +110,7 @@ def main(args):
     elif args.details:
         p = pipeline.Pipeline(arguments=args)
         new_dest = p.config['destination_path']
-        observed_states = set()
+        n_per_state = dict()
         tasks = list()
         for task_id in args.run:
             if task_id not in p.task_for_task_id.keys():
@@ -119,9 +119,10 @@ def main(args):
         if not args.run:
             tasks = p.all_tasks_topologically_sorted
         for i, task in enumerate(tasks):
-            state = task.get_task_state(do_hash=args.hash)
             sys.stdout.write('[%d/%d] ' % (i+1, len(tasks)))
-            observed_states.add(state)
+            state = task.get_task_state(do_hash=args.hash)
+            n_per_state.setdefault(state, 0)
+            n_per_state[state] += 1
             if state == p.states.FINISHED:
                 message = '%s is finished' % task
                 if args.hash:
@@ -256,7 +257,12 @@ def main(args):
             else:
                 print('%s has unknown state "%s"' % (task, state.lower()))
 
-        if p.states.CHANGED in observed_states:
+        stat_counts = ["%d %s" % (n_per_state.get(state, 0), state.lower())
+                for state in p.states.order]
+        print("\nruns: %d total, %s" %
+              (sum(n_per_state.values()), ', '.join(stat_counts)))
+
+        if p.states.CHANGED in n_per_state.keys():
             print("If you want to force overwrite of the changed tasks, run\n"
                   "'uap %s run-locally --force' or 'uap %s submit-to-cluster --force'." %
                   (args.config.name, args.config.name))
@@ -293,8 +299,7 @@ def main(args):
         try:
             for task in task_iter:
                 state = task.get_task_state(do_hash=args.hash)
-                if not state in tasks_for_status:
-                    tasks_for_status[state] = list()
+                tasks_for_status.setdefault(state, list())
                 tasks_for_status[state].append(task)
         except:
             task_iter.close()
