@@ -578,21 +578,6 @@ class AbstractStep(object):
         executing_ping_info['cwd'] = os.getcwd()
         executing_ping_info['temp_directory'] = run.get_temp_output_directory()
 
-        def ping_on_term(signum, frame):
-            logger.warn('Recived SIGTERM and moving execution ping file...')
-            self.remove_ping_file(executing_ping_path)
-            self.remove_ping_file(queued_ping_path, bad_copy=True)
-            original_term_handler(signum, frame)
-            raise UAPError('Recived TERM signal (canceled job).')
-        def ping_on_int(signum, frame):
-            logger.warn('Recived SIGINT and moving execution ping file...')
-            self.remove_ping_file(executing_ping_path)
-            self.remove_ping_file(queued_ping_path, bad_copy=True)
-            original_int_handler(signum, frame)
-            raise UAPError('Recived INT signal (keybord interrupt).')
-        original_term_handler = signal.signal(signal.SIGTERM, ping_on_term)
-        original_int_handler = signal.signal(signal.SIGINT, ping_on_int)
-
         with open(executing_ping_path, 'w') as f:
             f.write(yaml.dump(executing_ping_info, default_flow_style = False))
 
@@ -609,6 +594,30 @@ class AbstractStep(object):
                     os.utime(executing_ping_path, None)
             finally:
                 os._exit(0)
+
+        def kill_exec_ping():
+            try:
+                os.kill(executing_ping_pid, signal.SIGTERM)
+                os.waitpid(executing_ping_pid, 0)
+            except OSError:
+                # if the ping process was already killed, it's gone anyway
+                pass
+            self.remove_ping_file(executing_ping_path)
+
+        def ping_on_term(signum, frame):
+            logger.warn('Recived SIGTERM and moving execution ping file...')
+            kill_exec_ping()
+            self.remove_ping_file(queued_ping_path, bad_copy=True)
+            original_term_handler(signum, frame)
+            raise UAPError('Recived TERM signal (canceled job).')
+        def ping_on_int(signum, frame):
+            logger.warn('Recived SIGINT and moving execution ping file...')
+            kill_exec_ping()
+            self.remove_ping_file(queued_ping_path, bad_copy=True)
+            original_int_handler(signum, frame)
+            raise UAPError('Recived INT signal (keybord interrupt).')
+        original_term_handler = signal.signal(signal.SIGTERM, ping_on_term)
+        original_int_handler = signal.signal(signal.SIGINT, ping_on_int)
 
         self.start_time = datetime.now()
         self.get_pipeline().notify(
@@ -640,7 +649,6 @@ class AbstractStep(object):
         # changed by now...
         run.reset_fsc()
 
-
         if (not self.get_pipeline().caught_signal) and (caught_exception is None):
             # if we're here, we can assume the step has finished successfully
             # now rename the output files (move from temp directory to
@@ -671,7 +679,7 @@ class AbstractStep(object):
                         if os.path.exists(path_volatile):
                             logger.info("Now deleting: %s" % path_volatile)
                             os.unlink(path_volatile)
-                        if run.fsc.exists(source_path):
+                        if os.path.exists(source_path):
 
                             os.rename(source_path, path)
                             known_paths.pop(source_path, None)
@@ -734,6 +742,7 @@ class AbstractStep(object):
         annotation_path = run.write_annotation_file(
             run.get_output_directory(), error=error)
 
+        kill_exec_ping()
         self._state = AbstractStep.states.DEFAULT
 
         if error:
@@ -780,14 +789,6 @@ class AbstractStep(object):
             self.remove_ping_file(queued_ping_path)
 
             self._reset()
-
-        try:
-            os.kill(executing_ping_pid, signal.SIGTERM)
-            os.waitpid(executing_ping_pid, 0)
-        except OSError:
-            # if the ping process was already killed, it's gone anyway
-            pass
-        self.remove_ping_file(executing_ping_path)
 
         if pool is not None:
             pool.join()
