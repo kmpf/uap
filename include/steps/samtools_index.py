@@ -56,7 +56,7 @@ class SamtoolsIndex(AbstractStep):
                     input_bam = input_paths[0]
                     base = os.path.basename(input_bam)
                     # At first create the index and a symlink to original BAM
-                    with run.new_exec_group() as index_exgr:
+                    with run.new_exec_group() as link_exgr:
                         # 1. command: Create symbolic link to original bam file
                         # (use absolute path)
                         ln = [self.get_tool('ln'), '-s', input_bam]
@@ -64,7 +64,8 @@ class SamtoolsIndex(AbstractStep):
                                                        input_paths)
                         ln.append(bam_link)
 
-                        index_exgr.add_command(ln)
+                        link_exgr.add_command(ln)
+                    with run.new_exec_group() as index_exgr:
                         # 2. command: Index bam file
                         samtools_index = [self.get_tool('samtools'), 'index']
                         if self.get_option('index_type') == 'bai':
