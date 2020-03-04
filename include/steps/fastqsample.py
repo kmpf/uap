@@ -105,6 +105,7 @@ class FastqSample(AbstractStep):
                                 temp_file = run.add_temporary_file()
                                 pigz_decompress_eg = run.new_exec_group()
                                 pigz = [self.get_tool('pigz'),
+                                        '--processes', str(self.get_cores()),
                                         '--decompress', '--keep',
                                         '--stdout', input_path]
 
