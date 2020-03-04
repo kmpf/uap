@@ -67,7 +67,7 @@ def main(args):
     steps_left = list()
     tasks_left = dict()
     skip_message = list()
-    iter_steps = tqdm(p.topological_step_order, desc='steps states')
+    iter_steps = tqdm(p.topological_step_order, desc='step states')
     for step_name in iter_steps:
         tasks_left[step_name] = list()
         for task in p.tasks_in_step[step_name]:
