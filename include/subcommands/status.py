@@ -214,8 +214,7 @@ def main(args):
                           'for %s.\n' % misc.duration_to_str(stale))
                 anno_data = run.written_anno_data()
                 if not anno_data:
-                    print('The annotation file could not be read: %s.\n' %
-                            anno_file)
+                    print('No annotation file.')
                 else:
                     failed = dict()
                     try:
