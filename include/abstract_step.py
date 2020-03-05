@@ -710,7 +710,7 @@ class AbstractStep(object):
                         process_pool.ProcessPool.SIGNAL_NAMES[signum]
                 super(SignalError, self).__init__(m)
         if caught_exception is None and to_be_moved:
-            p.notify("[INFO] %s/%s hashing %d output files." %
+            p.notify("[INFO] %s/%s hashing %d output file(s)." %
                     (str(self), run_id, len(to_be_moved)))
             if p.has_interactive_shell() \
             and logger.getEffectiveLevel() > 20:
