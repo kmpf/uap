@@ -984,26 +984,31 @@ class Run(object):
             log['run']['cluster job id'] = info['job_id']
         except (IOError, KeyError):
             pass
-        log['config'] = self.get_step().get_pipeline().config
 
-        log['tool_versions'] = {}
-        for tool in self.get_step()._tools.keys():
-            log['tool_versions'][tool] = self.get_step().get_pipeline()\
-                                                        .tool_versions[tool]
+        p = self.get_step().get_pipeline()
+        log['config'] = p.config
+        if p.args.no_tool_checks:
+            logger.warn('Writing annotation file without tool checks.')
+            log['tool_versions'] = 'deactivated with --no-tool-checks'
+        else:
+            log['tool_versions'] = {}
+            for tool in self.get_step()._tools.keys():
+                if not p.config['tools'][tool]['ignore_version']:
+                    log['tool_versions'][tool] = p.tool_versions[tool]
         log['pipeline_log'] = self.get_step()._pipeline_log
         log['start_time'] = self.get_step().start_time
         log['end_time'] = self.get_step().end_time
 
 
 
-        log['uap_version'] = self.get_step().get_pipeline().args.uap_version
-        log['git_tag'] = self.get_step().get_pipeline().git_tag
-        log['git_diff'] = self.get_step().get_pipeline().git_diff
-        log['git_version'] = self.get_step().get_pipeline().git_version
+        log['uap_version'] = p.args.uap_version
+        log['git_tag'] = p.git_tag
+        log['git_diff'] = p.git_diff
+        log['git_version'] = p.git_version
 
 
-        if self.get_step().get_pipeline().caught_signal is not None:
-            log['signal'] = self.get_step().get_pipeline().caught_signal
+        if p.caught_signal is not None:
+            log['signal'] = p.caught_signal
 
         annotation_yaml = yaml.dump(log, default_flow_style = False)
         annotation_path = self.get_annotation_path(path)
