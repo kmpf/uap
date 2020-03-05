@@ -81,11 +81,12 @@ def main(args):
                 skipped_tasks[state].add(task)
                 continue
             if state == p.states.VOLATILIZED and not task_wish_list:
-                skip_message.append("Skipping %s because it is already %s and "
-                    "not requested with -r %s..." %
-                    (str(task), state.lower(), step_name))
+                skipped_tasks.setdefault(state, set())
+                skipped_tasks[state].add(task)
                 continue
             if state == p.states.CHANGED and args.ignore:
+                skipped_tasks.setdefault(state, set())
+                skipped_tasks[state].add(task)
                 skip_message.append("Skipping %s because it's changes are "
                     "ignored." % task)
                 continue
@@ -101,8 +102,11 @@ def main(args):
                 steps_left.append(step_name)
 
     for state, tasks in skipped_tasks.items():
-        skip_message.append("Skipping %d task(s) because they are already %s..." %
+        skip_message.append("Skipping %d task(s) because they are %s..." %
                 (len(tasks), state.lower()))
+    if p.states.VOLATILIZED in skipped_tasks.keys():
+        skip_message.append("Request reproduction of volitilized tasks with "
+                            "'-r <task name>' or '-r <step name>'.")
 
     quotas = dict()
     for line in skip_message:
