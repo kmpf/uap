@@ -55,7 +55,7 @@ def main(args):
             task.move_ping_file()
             sys.stderr.write("Skipping %s because it's already %s.\n" %
                              (task, task_state))
-        if task_state == p.states.VOLATILIZED and not args.run:
+        elif task_state == p.states.VOLATILIZED and not args.run:
             task.move_ping_file()
             sys.stderr.write("Skipping %s because it's already %s and not "
                              "specified as argument.\n" %
