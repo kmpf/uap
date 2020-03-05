@@ -320,3 +320,4 @@ def main(args):
                 (step_num+1, len(steps_left), step_name, p.get_cluster_type()))
         submit_step(step_name, parent_job_ids)
         step.reset_run_caches()
+        sys.stdout.flush()
