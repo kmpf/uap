@@ -198,7 +198,7 @@ def sha_and_file(file):
     '''
     Designed to be run in multiprocessing.Pool().imap.
     '''
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGTERM, signal.SIG_DFL)
     return sha256sum_of(file), file
 
 class UAPDumper(yaml.Dumper):

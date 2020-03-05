@@ -620,24 +620,28 @@ class AbstractStep(object):
         original_int_handler = signal.signal(signal.SIGINT, ping_on_int)
 
         self.start_time = datetime.now()
-        self.get_pipeline().notify(
-            "[START] starting %s/%s on %s" %
-            (self, run_id, socket.gethostname()))
+        p = self.get_pipeline()
+        p.notify("[START] starting %s/%s on %s" %
+                 (self, run_id, socket.gethostname()))
         caught_exception = None
         self._state = AbstractStep.states.EXECUTING
         base_working_dir = os.getcwd()
         os.chdir(run.get_temp_output_directory())
         try:
             self.execute(run_id, run)
-        except Exception as e:
-            if type(e) != UAPError:
-                logger.error("%s: %s" % (type(e).__name__, e))
+        except UAPError:
+            process_pool.ProcessPool.kill()
+            caught_exception = sys.exc_info()
+        except:
             # Oh my. We have a situation. This is awkward. Tell the process
             # pool to wrap up. This way, we can try to get process stats before
             # shutting everything down.
             process_pool.ProcessPool.kill()
             # Store the exception, re-raise it later
             caught_exception = sys.exc_info()
+            error = ''.join(traceback.format_exception(
+                    *caught_exception)[-2:]).strip()
+            logger.error(error)
         finally:
             signal.signal(signal.SIGTERM, original_term_handler)
             signal.signal(signal.SIGINT, original_int_handler)
@@ -650,7 +654,7 @@ class AbstractStep(object):
         run.reset_fsc()
 
         to_be_moved = dict()
-        if (not self.get_pipeline().caught_signal) and (caught_exception is None):
+        if (not p.caught_signal) and (caught_exception is None):
             # if we're here, we can assume the step has finished successfully
             # now rename the output files (move from temp directory to
             # destination directory)
@@ -699,59 +703,65 @@ class AbstractStep(object):
                             caught_exception = (UAPError, caught_error, None)
 
         pool = None
+        class SignalError(StandardError):
+            def __init__(self, signum):
+                self.signum = signum
+                m = "Recived signal %s during hashing!" % \
+                        process_pool.ProcessPool.SIGNAL_NAMES[signum]
+                super(SignalError, self).__init__(m)
         if caught_exception is None and to_be_moved:
-            self.get_pipeline().notify("[INFO] %s/%s hashing %d output files." %
-                                       (str(self), run_id, len(to_be_moved)))
+            p.notify("[INFO] %s/%s hashing %d output files." %
+                    (str(self), run_id, len(to_be_moved)))
+            if p.has_interactive_shell() \
+            and logger.getEffectiveLevel() > 20:
+                show_progress = True
+            else:
+                show_progress = False
             try:
-                if self.get_pipeline().has_interactive_shell() \
-                and logger.getEffectiveLevel() > 20:
-                    show_progress = True
-                else:
-                    show_progress = False
-                pool = multiprocessing.Pool(self.get_cores())
-                file_iter = pool.imap(misc.sha_and_file, to_be_moved.keys())
-                total = len(to_be_moved)
-                file_iter = tqdm(file_iter, total=total, leave=False,
-                        disable=not show_progress, desc='files')
                 def stop(signum, frame):
-                    file_iter.close()
-                    logger.debug("Catching %s!" %
-                            process_pool.ProcessPool.SIGNAL_NAMES[signum])
-                    pool.terminate()
-                    raise UAPError('Interrupted during output hashing.')
+                    raise SignalError(signum)
                 original_term_handler = signal.signal(signal.SIGTERM, stop)
                 original_int_handler = signal.signal(signal.SIGINT, stop)
-
+                pool = multiprocessing.Pool(self.get_cores())
+                total = len(to_be_moved)
+                file_iter = pool.imap(misc.sha_and_file, to_be_moved.keys())
+                file_iter = tqdm(file_iter, total=total, leave=False,
+                        disable=not show_progress, desc='files')
                 for i, (hashsum, path) in enumerate(file_iter):
                     run.fsc.sha256sum_of(to_be_moved[path], value=hashsum)
                     known_paths[to_be_moved[path]]['sha256'] = hashsum
                     if not show_progress:
                         logger.info("sha256 [%d/%d] %s %s" %
                                 (i+1, total, hashsum, path))
-            except Exception as e:
+            except:
                 file_iter.close()
-                pool.terminate()
-                if type(e) != UAPError:
-                    logger.error("%s: %s" % (type(e).__name__, e))
                 caught_exception = sys.exc_info()
+                error = caught_exception[1]
+                if caught_exception[0] is SignalError:
+                    p.caught_signal = error.signum
+                if caught_exception[0] is not UAPError:
+                    logger.error(error)
+                if pool:
+                    pool.terminate()
             else:
                 pool.close()
-            finally:
-                signal.signal(signal.SIGTERM, original_term_handler)
-                signal.signal(signal.SIGINT, original_int_handler)
-
-            for source_path, new_path in to_be_moved.items():
-                logger.debug("Moving %s to %s." % (source_path, new_path))
-                os.rename(source_path, new_path)
+            signal.signal(signal.SIGTERM, original_term_handler)
+            signal.signal(signal.SIGINT, original_int_handler)
 
         run.add_known_paths(known_paths)
         error = None
-        if self.get_pipeline().caught_signal is not None:
-            error = 'Pipeline stopped because it caugh the signal %s' % \
-                    self.get_pipeline().caught_signal
+        if p.caught_signal is not None:
+            signum = p.caught_signal
+            signame = process_pool.ProcessPool.SIGNAL_NAMES[signum]
+            error = 'Pipeline stopped because it caugh signal %d - %s' % \
+                    (signum, signame)
         elif caught_exception is not None:
             error = ''.join(traceback.format_exception(
                     *caught_exception)[-2:]).strip()
+        if not error:
+            for source_path, new_path in to_be_moved.items():
+                logger.debug("Moving %s to %s." % (source_path, new_path))
+                os.rename(source_path, new_path)
         annotation_path = run.write_annotation_file(
             run.get_output_directory(), error=error)
 
@@ -768,7 +778,7 @@ class AbstractStep(object):
                 attachment = dict()
                 attachment['name'] = 'details.png'
                 attachment['data'] = open(annotation_path + '.png').read()
-            self.get_pipeline().notify(message, attachment)
+            p.notify(message, attachment)
             self.remove_ping_file(queued_ping_path, bad_copy=True)
             if caught_exception is not None:
                 raise caught_exception[1], None, caught_exception[2]
@@ -798,7 +808,7 @@ class AbstractStep(object):
                 attachment = dict()
                 attachment['name'] = 'details.png'
                 attachment['data'] = open(annotation_path + '.png').read()
-            self.get_pipeline().notify(message, attachment)
+            p.notify(message, attachment)
             self.remove_ping_file(queued_ping_path)
 
             self._reset()

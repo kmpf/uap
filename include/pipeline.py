@@ -156,7 +156,7 @@ def check_tool(args):
                          if x in info):
             tool_check_info = exec_pre_post_calls(
                 tool_id, info_key, info[info_key], tool_check_info)
-    except Exception as e:
+    except:
         logger.error(traceback.format_exc())
         raise
     return tool_id, tool_check_info

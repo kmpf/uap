@@ -887,6 +887,7 @@ class ProcessPool(object):
         if ProcessPool.current_instance is not None:
             self = ProcessPool.current_instance
             for pid in self.copy_processes_for_pid.keys():
+                logger.debug("Killing %s.")
                 try:
                     os.kill(pid, signal.SIGTERM)
                 except Exception as e:
