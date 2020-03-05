@@ -743,8 +743,7 @@ class AbstractStep(object):
                 error = caught_exception[1]
                 if caught_exception[0] is SignalError:
                     p.caught_signal = error.signum
-                if caught_exception[0] is not UAPError:
-                    logger.error(error)
+                logger.error(error)
                 if pool:
                     pool.terminate()
             else:
