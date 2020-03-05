@@ -19,6 +19,7 @@
  * explicit and comlete lmod config in annotation files
  * raise exeption if an unknown configuration key is used
  * fix race condition in `samtools_index` step
+ * a task is only finished when hashing and annotation file are done (#152)
 
 **Features**
  * use relative paths; uap output can now be moved (#115)
@@ -70,6 +71,7 @@
  * introduce fix-problems --file-modification-date to fix output after copy
  * configuration can be read from anny annotation file
  * implement `source_controller` step to detect changes in source inputs
+ * show output hashing progress
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
