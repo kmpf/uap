@@ -20,7 +20,7 @@ class SourceController(AbstractStep):
 
         self.add_connection('in/raw',
                 description='Files to control.')
-        self.add_connection('out/raw',
+        self.add_connection('out/merged',
                 description='All controlled files combined in one run '
                             '``links``. The output files are '
                             'named ``<previous run id>-<file name>``.')
@@ -37,7 +37,7 @@ class SourceController(AbstractStep):
         for run_id, files in cc.connection_items('in/raw'):
             for file in files:
                 link_name = run_id + '-' + os.path.basename(file)
-                link = group.add_output_file('raw', link_name, [file])
+                link = group.add_output_file('merged', link_name, [file])
                 ln = [self.get_tool('ln'), '-s', file, link_name]
                 execg.add_command(ln)
 
