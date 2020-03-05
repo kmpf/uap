@@ -416,7 +416,8 @@ class Pipeline(object):
             self.config['lmod'].setdefault('module_path', os.environ['MODULEPATH'])
         for key in ('path', 'module_path'):
             if key not in self.config['lmod']:
-                raise UAPError('lmod is not loaded or misses the key %s' % key)
+                raise UAPError('lmod is not loaded and misses the key '
+                               '"%s:" in %s.' % (key, self.args.config.name))
 
         if not 'tools' in self.config or not isinstance(self.config['tools'], dict):
             self.config['tools'] = dict()
