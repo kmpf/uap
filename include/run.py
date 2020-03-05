@@ -525,7 +525,7 @@ class Run(object):
             return states.READY
         else:
             if not anno_data:
-                return states.BAD
+                return states.CHANGED
             for bad_file in self.file_changes(do_hash=do_hash):
                 if bad_file:
                     return states.CHANGED

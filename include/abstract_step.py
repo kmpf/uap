@@ -649,6 +649,7 @@ class AbstractStep(object):
         # changed by now...
         run.reset_fsc()
 
+        to_be_moved = dict()
         if (not self.get_pipeline().caught_signal) and (caught_exception is None):
             # if we're here, we can assume the step has finished successfully
             # now rename the output files (move from temp directory to
@@ -657,7 +658,6 @@ class AbstractStep(object):
             # import pdb
             # pdb.set_trace()
 
-            to_be_hashed = set()
             for tag in run.get_output_files().keys():
                 for out_file in run.get_output_files()[tag].keys():
                     # don't try to rename files if they were not meant to exist
@@ -670,29 +670,27 @@ class AbstractStep(object):
                             run.get_temp_output_directory(),
                             os.path.basename(out_file)
                         )
-                        path = os.path.join(
+                        new_path = os.path.join(
                             run.get_output_directory(),
                             os.path.basename(out_file))
                         # first, delete a possibly existing volatile placeholder
                         # file
-                        path_volatile = path + AbstractStep.VOLATILE_SUFFIX
+                        path_volatile = new_path + AbstractStep.VOLATILE_SUFFIX
                         if os.path.exists(path_volatile):
                             logger.info("Now deleting: %s" % path_volatile)
                             os.unlink(path_volatile)
                         if os.path.exists(source_path):
-
-                            os.rename(source_path, path)
                             known_paths.pop(source_path, None)
-                            known_paths.setdefault(path, dict())
-                            if known_paths[path]['designation'] == 'output':
-                                to_be_hashed.add(path)
-                                size = run.fsc.getsize(path)
-                                mtime = datetime.fromtimestamp(run.fsc.getmtime(path))
-                                known_paths[path]['size'] = size
-                                known_paths[path]['modification time'] = mtime
-                            if known_paths[path]['type'] != 'step_file':
-                                logger.debug("Set %s 'type' info to 'step_file'" % path)
-                                known_paths[path]['type'] = 'step_file'
+                            known_paths.setdefault(new_path, dict())
+                            if known_paths[new_path]['designation'] == 'output':
+                                to_be_moved[source_path] = new_path
+                                size = run.fsc.getsize(source_path)
+                                mtime = datetime.fromtimestamp(run.fsc.getmtime(source_path))
+                                known_paths[new_path]['size'] = size
+                                known_paths[new_path]['modification time'] = mtime
+                            if known_paths[new_path]['type'] != 'step_file':
+                                logger.debug("Set %s 'type' info to 'step_file'" % new_path)
+                                known_paths[new_path]['type'] = 'step_file'
                         else:
                             caught_error = UAPError('The step failed to produce an '
                                                     'announced output file: "%s".\n'
@@ -701,21 +699,37 @@ class AbstractStep(object):
                             caught_exception = (UAPError, caught_error, None)
 
         pool = None
-        if caught_exception is None:
+        if caught_exception is None and to_be_moved:
+            self.get_pipeline().notify("[INFO] %s/%s hashing %d output files." %
+                                       (str(self), run_id, len(to_be_moved)))
             try:
+                if self.get_pipeline().has_interactive_shell() \
+                and logger.getEffectiveLevel() > 20:
+                    show_progress = True
+                else:
+                    show_progress = False
                 pool = multiprocessing.Pool(self.get_cores())
+                file_iter = pool.imap(misc.sha_and_file, to_be_moved.keys())
+                total = len(to_be_moved)
+                file_iter = tqdm(file_iter, total=total, leave=False,
+                        disable=not show_progress, desc='files')
                 def stop(signum, frame):
+                    file_iter.close()
                     logger.debug("Catching %s!" %
                             process_pool.ProcessPool.SIGNAL_NAMES[signum])
                     pool.terminate()
                     raise UAPError('Interrupted during output hashing.')
                 original_term_handler = signal.signal(signal.SIGTERM, stop)
                 original_int_handler = signal.signal(signal.SIGINT, stop)
-                for hashsum, path in pool.imap(misc.sha_and_file,
-                        to_be_hashed):
-                    run.fsc.sha256sum_of(path, value=hashsum)
-                    known_paths[path]['sha256'] = hashsum
+
+                for i, (hashsum, path) in enumerate(file_iter):
+                    run.fsc.sha256sum_of(to_be_moved[path], value=hashsum)
+                    known_paths[to_be_moved[path]]['sha256'] = hashsum
+                    if not show_progress:
+                        logger.info("sha256 [%d/%d] %s %s" %
+                                (i+1, total, hashsum, path))
             except Exception as e:
+                file_iter.close()
                 pool.terminate()
                 if type(e) != UAPError:
                     logger.error("%s: %s" % (type(e).__name__, e))
@@ -726,10 +740,9 @@ class AbstractStep(object):
                 signal.signal(signal.SIGTERM, original_term_handler)
                 signal.signal(signal.SIGINT, original_int_handler)
 
-        for path, path_info in known_paths.items():
-            # Get the file size
-            if os.path.exists(path):
-                known_paths[path]['size'] = run.fsc.getsize(path)
+            for source_path, new_path in to_be_moved.items():
+                logger.debug("Moving %s to %s." % (source_path, new_path))
+                os.rename(source_path, new_path)
 
         run.add_known_paths(known_paths)
         error = None

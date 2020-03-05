@@ -654,6 +654,9 @@ class Pipeline(object):
         pool.close()
         pool.join()
 
+    def has_interactive_shell(self):
+        return os.isatty(sys.stdout.fileno())
+
     def notify(self, message, attachment = None):
         '''
         prints a notification to the screen and optionally delivers the
