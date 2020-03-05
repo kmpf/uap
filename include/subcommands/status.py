@@ -255,6 +255,7 @@ def main(args):
 
             else:
                 print('%s has unknown state "%s"' % (task, state.lower()))
+            sys.stdout.flush()
 
         stat_counts = ["%d %s" % (n_per_state.get(state, 0), state.lower())
                 for state in p.states.order]
