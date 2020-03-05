@@ -753,7 +753,7 @@ class AbstractStep(object):
         if p.caught_signal is not None:
             signum = p.caught_signal
             signame = process_pool.ProcessPool.SIGNAL_NAMES[signum]
-            error = 'Pipeline stopped because it caugh signal %d - %s' % \
+            error = 'Pipeline stopped because it caught signal %d - %s' % \
                     (signum, signame)
         elif caught_exception is not None:
             error = ''.join(traceback.format_exception(
