@@ -408,17 +408,7 @@ class Pipeline(object):
         self.config.setdefault('base_working_directory', self._config_path)
         os.chdir(self.config['base_working_directory'])
 
-        if 'lmod' not in self.config or self.config['lmod'] is None:
-            self.config['lmod'] = dict()
-        if os.environ.has_key('LMOD_CMD'):
-            self.config['lmod'].setdefault('path', os.environ['LMOD_CMD'])
-        if os.environ.has_key('MODULEPATH'):
-            self.config['lmod'].setdefault('module_path', os.environ['MODULEPATH'])
-        for key in ('path', 'module_path'):
-            if key not in self.config['lmod']:
-                raise UAPError("lmod is not loaded and misses the key "
-                               "'%s:' in %s." % (key, self.args.config.name))
-
+        lmod_required = False
         if not 'tools' in self.config or not isinstance(self.config['tools'], dict):
             self.config['tools'] = dict()
         for tool, args in self.config['tools'].items():
@@ -434,6 +424,19 @@ class Pipeline(object):
                 self.config['tools'][tool].setdefault('module_load', cmd)
                 cmd = '%s python unload %s' % (self.config['lmod']['path'], mn)
                 self.config['tools'][tool].setdefault('module_unload', cmd)
+            if 'module_load' in self.config['tools'][tool]:
+                lmod_required = True
+
+        if 'lmod' not in self.config or self.config['lmod'] is None:
+            self.config['lmod'] = dict()
+        if os.environ.has_key('LMOD_CMD'):
+            self.config['lmod'].setdefault('path', os.environ['LMOD_CMD'])
+        if os.environ.has_key('MODULEPATH'):
+            self.config['lmod'].setdefault('module_path', os.environ['MODULEPATH'])
+        for key in ('path', 'module_path'):
+            if lmod_required and key not in self.config['lmod']:
+                raise UAPError("lmod is not loaded and misses the key "
+                               "'%s:' in %s." % (key, self.args.config.name))
 
         uap_tools_path = os.path.join(self._uap_path, 'tools')
         uap_python = os.path.join(self._uap_path, "python_env", "bin", "python")
