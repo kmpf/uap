@@ -993,8 +993,7 @@ class Run(object):
         else:
             log['tool_versions'] = {}
             for tool in self.get_step()._tools.keys():
-                if not p.config['tools'][tool]['ignore_version']:
-                    log['tool_versions'][tool] = p.tool_versions[tool]
+                log['tool_versions'][tool] = p.tool_versions[tool]
         log['pipeline_log'] = self.get_step()._pipeline_log
         log['start_time'] = self.get_step().start_time
         log['end_time'] = self.get_step().end_time
