@@ -238,8 +238,8 @@ def main(args):
                             sys.stdout.write(yaml.dump({tool:failings},
                                     Dumper=misc.UAPDumper,
                                     default_flow_style = False))
-                            err = ('\n'+stderr[tool]).replace('\n', '\n    ')
-                            print('  stderr:%s' % err)
+                            err = stderr[tool].replace('\n', '\n    ')
+                            print('  stderr: %s' % err)
                     else:
                         print('No failed commands found in the annotation file.\n')
                     run_data = anno_data.get('run', [])
