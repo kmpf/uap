@@ -748,13 +748,15 @@ class Pipeline(object):
         for arg in args:
             if arg in self.task_for_task_id:
                 task = self.task_for_task_id[arg]
+                if as_string:
+                    task = str(task)
+                task_wish_list.append(task)
             else:
                 for task in self.all_tasks_topologically_sorted:
                     if str(task)[0:len(arg)] == arg:
-                        break
-            if as_string:
-                task = str(task)
-            task_wish_list.append(task)
+                        if as_string:
+                            task = str(task)
+                        task_wish_list.append(task)
         if not task_wish_list and exclusive is False:
             return self.all_tasks_topologically_sorted
         return task_wish_list
