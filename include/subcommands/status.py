@@ -108,7 +108,8 @@ def main(args):
         n_per_state = dict()
         tasks = p.get_task_with_list()
         for i, task in enumerate(tasks):
-            sys.stdout.write('[%d/%d] ' % (i+1, len(tasks)))
+            len_tag = '[%d/%d] ' % (i+1, len(tasks))
+            sys.stdout.write(len_tag)
             state = task.get_task_state(do_hash=args.hash)
             n_per_state.setdefault(state, 0)
             n_per_state[state] += 1
@@ -162,7 +163,7 @@ def main(args):
             elif state == p.states.CHANGED:
                 heading = 'changes in task %s' % task
                 print(heading)
-                print('-'*len(heading))
+                print('-'*len(len_tag+heading))
                 run = task.get_run()
                 anno_data = run.written_anno_data()
                 has_date_change = False
