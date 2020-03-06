@@ -208,9 +208,6 @@ class Bowtie2(AbstractStep):
         self.add_option('al-conc', str, optional=True,
                         description="write pairs that aligned concordantly at least once to out/al-conc")
 
-        self.add_option('compress_add_output', bool, optional=True,
-                        description="Ads -gz to the 4 options above to produce "
-                        "compressed output.")
         self.add_option('quiet', bool, optional=True,
                         description="print nothing to stderr except serious errors")
         self.add_option('met-file', bool, optional=True, default=False,
@@ -262,6 +259,8 @@ class Bowtie2(AbstractStep):
                             'This does not work reliably with bowtie <= 2.3.4.2 '
                             'due to a race condition '
                             '(http://seqanswers.com/forums/showthread.php?t=16540).')
+        self.add_option('compress', bool, optional = True, default = True,
+                description='Use pigz and dd to pipe out and compress bowtie2 results.')
         self.add_option('dd-blocksize', str, optional = True, default = "2M")
         self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
@@ -444,15 +443,20 @@ class Bowtie2(AbstractStep):
                         else:
                             bowtie2.extend(['-U', ','.join(fr_temp_fifos)])
 
-                        out_file = run.add_output_file(
-                                'alignments',
-                                '%s-bowtie2-results.sam.gz' % run_id,
-                                input_paths
+                        if not self.get_option('compress'):
+                            out_file = run.add_output_file(
+                                    'alignments',
+                                    '%s-bowtie2-results.sam' % run_id,
+                                    input_paths
                             )
-                        if not self.get_option('fifo'):
                             bowtie2.extend(['-S', out_file])
                             bowtie2_pipe.add_command(bowtie2, stderr_path=log_stderr)
                         else:
+                            out_file = run.add_output_file(
+                                    'alignments',
+                                    '%s-bowtie2-results.sam.gz' % run_id,
+                                    input_paths
+                            )
                             bowtie2_pipe.add_command(bowtie2, stderr_path=log_stderr)
                             # Compress bowtie2 output
                             pigz = [self.get_tool('pigz'),
