@@ -393,7 +393,7 @@ class Pipeline(object):
             self.check_tools()
 
         # fill task_wish_list
-        if len(self.args.run) >= 1:
+        if hasattr(self.args, 'run') and self.args.run:
             for arg in self.args.run:
                 if arg in self.all_tasks_topologically_sorted:
                     self.task_wish_list.append(arg)
