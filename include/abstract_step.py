@@ -225,14 +225,16 @@ class AbstractStep(object):
         self._options.setdefault('_depends', list())
         if not isinstance(self._options['_depends'], list):
             self._options['_depends'] = [self._options['_depends']]
-        self._options['_depends'] = set(self._options['_depends'])
         # add implied dependencies
         for in_cons in self._options['_connect'].values():
             in_cons = in_cons if isinstance(in_cons, list) else [in_cons]
             for parent_cons in in_cons:
                 parent = parent_cons.split("/")[0]
-                if parent != 'empty':
-                    self._options['_depends'].add(parent)
+                if parent not in self._options['_depends'] \
+                and parent != 'empty':
+                    # We cannot use sets here since the order of
+                    # dependecies matters in rare cases, e.g., collect_scs.
+                    self._options['_depends'].append(parent)
 
     def get_options(self):
         '''
