@@ -42,15 +42,8 @@ def main(args):
     p = pipeline.Pipeline(arguments=args)
 
     task_wish_list = None
-    if len(args.run) >= 1:
-        task_wish_list = list()
-        for _ in args.run:
-            if '/' in _:
-                task_wish_list.append(_)
-            else:
-                for task in p.all_tasks_topologically_sorted:
-                    if str(task)[0:len(_)] == _:
-                        task_wish_list.append(str(task))
+    if p.task_wish_list:
+        task_wish_list = p.task_wish_list
 
     tasks_left = []
 

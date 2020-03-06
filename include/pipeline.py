@@ -342,6 +342,11 @@ class Pipeline(object):
         A set that stores all tools used by some step.
         '''
 
+        self.task_wish_list = list()
+        '''
+        A list of all tasks specified as arguemnts.
+        '''
+
 
         self.known_config_keys = set(['destination_path', 'constants', 'cluster',
                 'steps', 'lmod', 'tools', 'base_working_directory', 'id'])
@@ -386,6 +391,16 @@ class Pipeline(object):
         self.tool_versions = {}
         if not self.args.no_tool_checks:
             self.check_tools()
+
+        # fill task_wish_list
+        if len(args.run) >= 1:
+            for arg in args.run:
+                if arg in self.all_tasks_topologically_sorted:
+                    self.task_wish_list.append(arg)
+                else:
+                    for task in self.all_tasks_topologically_sorted:
+                        if str(task)[0:len(arg)] == arg:
+                            task_wish_list.append(str(task))
 
     def get_uap_path(self):
         return self._uap_path

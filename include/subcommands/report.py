@@ -24,19 +24,10 @@ def main(args):
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
 
-    task_list = p.all_tasks_topologically_sorted
-
-    if len(args.run) >= 1:
-        # execute the specified tasks
-        task_list = list()
-        for task_id in args.run:
-            if '/' in task_id:
-                task = p.task_for_task_id[task_id]
-                task_list.append(task)
-            else:
-                for task in p.all_tasks_topologically_sorted:
-                    if str(task)[0:len(task_id)] == task_id:
-                        task_list.append(task)
+    if p.task_wish_list:
+        task_list = p.task_wish_list
+    else:
+        task_list = p.all_tasks_topologically_sorted
 
     # try to generate reports for all tasks
     for task in task_list:

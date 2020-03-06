@@ -46,17 +46,6 @@ def main(args):
         return
     p = pipeline.Pipeline(arguments=args)
 
-    task_wish_list = None
-    if len(args.run) >= 1:
-        task_wish_list = list()
-        for _ in args.run:
-            if '/' in _:
-                task_wish_list.append(_)
-            else:
-                for task in p.all_tasks_topologically_sorted:
-                    if str(task)[0:len(_)] == _:
-                        task_wish_list.append(str(task))
-
     template_path = os.path.join(p.get_uap_path(),
                                  p.get_cluster_command('template'))
     try:
@@ -73,15 +62,15 @@ def main(args):
         for step_name in iter_steps:
             tasks_left[step_name] = list()
             for task in p.tasks_in_step[step_name]:
-                if task_wish_list is not None:
-                    if not str(task) in task_wish_list:
+                if p.task_wish_list:
+                    if not str(task) in p.task_wish_list:
                         continue
                 state = task.get_task_state()
                 if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
                     skipped_tasks.setdefault(state, set())
                     skipped_tasks[state].add(task)
                     continue
-                if state == p.states.VOLATILIZED and not task_wish_list:
+                if state == p.states.VOLATILIZED and not p.task_wish_list:
                     skipped_tasks.setdefault(state, set())
                     skipped_tasks[state].add(task)
                     continue

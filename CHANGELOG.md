@@ -100,6 +100,7 @@
  * no traceback outside of debugging mode
  * missing annotation file marks a task unfinished
  * same module for multiple tools is only loaded once during task
+ * use same parsing of argument tasks everywhere
 
 ## 1.1 (20.01.2020)
 

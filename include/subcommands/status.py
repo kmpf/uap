@@ -47,12 +47,8 @@ def main(args):
     elif args.run and not args.details:
         # print run infos of one or more specific tasks
         p = pipeline.Pipeline(arguments=args)
-        for task_id in args.run:
-            parts = task_id.split('/')
-            if len(parts) != 2:
-                raise StandardError("Invalid task ID %s." % task_id)
-            step_name = parts[0]
-            run_id = parts[1]
+        for task_id in p.task_wish_list:
+            step_name, run_id = task_id.split('/')
             report = p.steps[step_name].get_run(run_id).as_dict()
             print(yaml.dump(report, Dumper=misc.UAPDumper,
                     default_flow_style = False))
@@ -112,11 +108,9 @@ def main(args):
         new_dest = p.config['destination_path']
         n_per_state = dict()
         tasks = list()
-        for task_id in args.run:
-            if task_id not in p.task_for_task_id.keys():
-                raise UAPError('Task ID "%s" is not recognized.' % task_id)
-            tasks.append(p.task_for_task_id[task_id])
-        if not args.run:
+        if p.task_wish_list:
+            tasks = [p.task_for_task_id[t] for t in p.task_wish_list]
+        else:
             tasks = p.all_tasks_topologically_sorted
         for i, task in enumerate(tasks):
             sys.stdout.write('[%d/%d] ' % (i+1, len(tasks)))

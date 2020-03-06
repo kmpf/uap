@@ -103,18 +103,9 @@ def main(args):
         render_graph_for_all_steps(p, args)
 
     else:
-        # Compile a list of all tasks
-        task_list = list()
         # Only use tasks listed in args.run
-        if args.run and len(args.run) >= 1:
-            for task_id in args.run:
-                if '/' in task_id:
-                    task = p.task_for_task_id[task_id]
-                    task_list.append(task)
-                else:
-                    for task in p.all_tasks_topologically_sorted:
-                        if str(task)[0:len(task_id)] == task_id:
-                            task_list.append(task)
+        if p.task_wish_list:
+            task_list = p.task_wish_list
         # or take all available tasks
         else:
             task_list = p.all_tasks_topologically_sorted
