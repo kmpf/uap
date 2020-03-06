@@ -232,7 +232,7 @@ class ProcessPool(object):
             self.launch_pre_post_command(post_commands)
 
         # before everything is launched load the necessary modules
-        module_loads = self.get_run().get_step().get_module_loads().values()
+        module_loads = set(self.get_run().get_step().get_module_loads().values())
         if len(module_loads) > 0:
             for module_load in module_loads:
                 self.load_unload_module(module_load)
@@ -252,7 +252,7 @@ class ProcessPool(object):
         self.get_run().get_step().append_pipeline_log(self.get_log())
 
         # after finishing gracefully unload modules
-        module_unloads = self.get_run().get_step().get_module_unloads().values()
+        module_unloads = set(self.get_run().get_step().get_module_unloads().values())
         if len(module_unloads) > 0:
             for module_unload in module_unloads:
                 self.load_unload_module(module_unload)

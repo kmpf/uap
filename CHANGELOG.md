@@ -98,6 +98,7 @@
  * all errors are logged with the `uap_logger`
  * no traceback outside of debugging mode
  * missing annotation file marks a task unfinished
+ * same module for multiple tools is only loaded once during task
 
 ## 1.1 (20.01.2020)
 
