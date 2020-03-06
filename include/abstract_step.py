@@ -734,12 +734,12 @@ class AbstractStep(object):
                         logger.info("sha256 [%d/%d] %s %s" %
                                 (i+1, total, hashsum, path))
             except:
+                caught_exception = sys.exc_info()
                 try:
                     # removing the progress bar
                     file_iter.close()
                 except:
                     pass
-                caught_exception = sys.exc_info()
                 error = caught_exception[1]
                 if caught_exception[0] is SignalError:
                     p.caught_signal = error.signum

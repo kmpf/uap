@@ -565,10 +565,8 @@ def main():
         else:
             args.func(args)
     except (Exception, KeyboardInterrupt) as e:
-        if hasattr(e, 'message') and e.message:
-            logger.error('%s: %s' % (type(e).__name__, e.message))
-        else:
-            logger.error(type(e).__name__)
+        error = traceback.format_exception(*sys.exc_info())[-1]
+        logger.error(error)
         if args.debugging is True:
             raise
         else:
