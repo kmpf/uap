@@ -389,8 +389,15 @@ class Pipeline(object):
     # read configuration and make sure it's good
     def read_config(self, config_file):
         # yaml.load works fine, even for duplicate dictionary keys (WTF)
-        self.config = yaml.load(config_file, Loader=yaml.FullLoader)
-        config_file.close()
+        try:
+            self.config = yaml.load(config_file, Loader=yaml.FullLoader)
+        except yaml.scanner.ScannerError:
+            logger.error("The configuration file '%s' seems mal-formatted "
+                           "and could no be parsed as yaml." %
+                           self.args.config.name)
+            raise
+        finally:
+            config_file.close()
         if 'config' in self.config.keys():
             self.config = self.config['config']
             dest = os.path.join(self._config_path, '..', '..')
