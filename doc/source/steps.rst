@@ -351,7 +351,7 @@ raw_url_source
   - **url** (str, required) -- Download URL
 
 
-**Required tools:** compare_secure_hashes, cp, curl, dd, mkdir, pigz
+**Required tools:** cp, curl, dd, mkdir, pigz
 
 This step provides input files which already exists and therefore creates no tasks in the pipeline.
 
@@ -381,16 +381,10 @@ raw_url_sources
 **Options:**
   - **dd-blocksize** (str, optional)    - default value: 256k
 
-  - **run-download-info** (dict, required) -- Dictionary of dictionaries. The keys are the names of the runs. The values are dictionaries whose keys are identical with the options of an 'raw_url_source' source step. An example: <name>:
-    filename: <filename>
-    hashing-algorithm: <hashing-algorithm>
-    path: <path>
-    secure-hash: <secure-hash>
-    uncompress: <uncompress>
-    url: <url>
+  - **run-download-info** (dict, required) -- Dictionary of dictionaries. The keys are the names of the runs. The values are dictionaries whose keys are identical with the options of an 'raw_url_source' source step. An example: <name>: filename: <filename> hashing-algorithm: <hashing-algorithm> path: <path> secure-hash: <secure-hash> uncompress: <uncompress> url: <url>
 
 
-**Required tools:** compare_secure_hashes, cp, curl, dd, pigz
+**Required tools:** cp, curl, dd, pigz
 
 This step provides input files which already exists and therefore creates no tasks in the pipeline.
 
@@ -533,46 +527,44 @@ adapterremoval
    }
 
 **Options:**
-  - **adapter1** (str, required) -- Adapter sequence expected to be found in                         mate 1 reads [current:                         AGATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNATCTCGTATGCCGTCTTCTGCTTG]
+  - **adapter1** (str, required) -- Adapter sequence expected to be found in mate 1 reads [current: AGATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNATCTCGTATGCCGTCTTCTGCTTG]
 
-  - **adapter2** (str, optional) -- Adapter sequence expected to be found in                         mate 2 reads [current:                         AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT]
+  - **adapter2** (str, optional) -- Adapter sequence expected to be found in mate 2 reads [current: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT]
 
-  - **collapse** (bool, required) -- When set, paired ended read alignments                         of --minalignmentlength or more bases are combined                         into a single consensus sequence, representing the                         complete insert, and written to either                         basename.collapsed or basename.collapsed.truncated                         (if trimmed due to low-quality bases following                         collapse); for single-ended reads, putative complete                         inserts are identified as having at least                         --minalignmentlength bases overlap with the adapter                         sequence, and are written to the the same files                         [current:off]
+  - **collapse** (bool, required) -- When set, paired ended read alignments of --minalignmentlength or more bases are combined into a single consensus sequence, representing the complete insert, and written to either basename.collapsed or basename.collapsed.truncated (if trimmed due to low-quality bases following collapse); for single-ended reads, putative complete inserts are identified as having at least --minalignmentlength bases overlap with the adapter sequence, and are written to the the same files [current:off]
 
-  - **cores** (int, optional) -- workaround to specify cores for grid                                     engine and threads ie
+  - **cores** (int, optional) -- workaround to specify cores for grid engine and threads ie
     - default value: 1
 
   - **identify-adapters** (bool, optional)
-  - **maxlength** (int, optional) -- Reads longer than this length are                         discarded following trimming [current: 4294967295]
+  - **maxlength** (int, optional) -- Reads longer than this length are discarded following trimming [current: 4294967295]
 
-  - **maxns** (int, optional) -- Reads containing more ambiguous bases                         (N) than this number after trimming are discarded                         [current: 1000]
+  - **maxns** (int, optional) -- Reads containing more ambiguous bases (N) than this number after trimming are discarded [current: 1000]
 
-  - **minadapteroverlap** (bool, optional) -- In single-end mode, reads are only                         trimmed if the overlap between read and the adapter                         is at least X bases long, not counting ambiguous                         nucleotides (N); this is independant of the                         --minalignmentlength when using --collapse, allowing                         a conservative selection of putative complete inserts                         while ensuring that all possible adapter                         contamination is trimmed [current: 0].
+  - **minadapteroverlap** (bool, optional) -- In single-end mode, reads are only trimmed if the overlap between read and the adapter is at least X bases long, not counting ambiguous nucleotides (N); this is independant of the --minalignmentlength when using --collapse, allowing a conservative selection of putative complete inserts while ensuring that all possible adapter contamination is trimmed [current: 0].
 
-  - **minalignmentlength** (bool, optional) -- If --collapse is set,                         paired reads must overlap at least this number of                         bases to be collapsed, and single-ended reads must                         overlap at least this number of bases with the                         adapter to be considered complete template molecules                         [current: 11]
+  - **minalignmentlength** (bool, optional) -- If --collapse is set, paired reads must overlap at least this number of bases to be collapsed, and single-ended reads must overlap at least this number of bases with the adapter to be considered complete template molecules [current: 11]
 
-  - **minlength** (int, optional) -- Reads shorter than this length are                         discarded following trimming [current: 15]
+  - **minlength** (int, optional) -- Reads shorter than this length are discarded following trimming [current: 15]
 
-  - **minquality** (int, optional) -- Inclusive minimum; see --trimqualities                         for details [current: 2]
+  - **minquality** (int, optional) -- Inclusive minimum; see --trimqualities for details [current: 2]
 
-  - **mm** (int, optional) -- Max error-rate when aligning reads                         and/or adapters. If > 1, the max error-rate is set                         to 1 / MISMATCH_RATE; if < 0, the defaults are used,                         otherwise the user-supplied value is used directly.                         [defaults: 1/3 for trimming; 1/10 when identifing                         adapters]
+  - **mm** (int, optional) -- Max error-rate when aligning reads and/or adapters. If > 1, the max error-rate is set to 1 / MISMATCH_RATE; if < 0, the defaults are used, otherwise the user-supplied value is used directly. [defaults: 1/3 for trimming; 1/10 when identifing adapters]
 
-  - **qualitybase** (str, optional) -- Quality base used to encode Phred scores                         in input; either 33, 64, or solexa [current: 33]
+  - **qualitybase** (str, optional) -- Quality base used to encode Phred scores in input; either 33, 64, or solexa [current: 33]
     - possible values: '33', '64', 'solexa'
 
 
   - **seed** (int, optional)    - default value: 22595
 
-  - **shift** (int, optional) -- Consider alignments where up to N                         nucleotides are missing from the 5' termini                         [current: 2]
+  - **shift** (int, optional) -- Consider alignments where up to N nucleotides are missing from the 5' termini [current: 2]
 
-  - **threads** (int, optional)    - default value: 1
+  - **trimns** (bool, optional) -- If set, trim ambiguous bases (N) at 5'/3' termini [current: off]
 
-  - **trimns** (bool, optional) -- If set, trim ambiguous bases (N)                         at 5'/3' termini [current: off]
-
-  - **trimqualities** (bool, optional) -- If set, trim bases at 5'/3' termini                         with quality scores <= to --minquality value                         [current: off]
+  - **trimqualities** (bool, optional) -- If set, trim bases at 5'/3' termini with quality scores <= to --minquality value [current: off]
 
 
-**Required tools:** adapterremoval, mv, pwd
+**Required tools:** adapterremoval, mv
 
 **CPU Cores:** 1
 
@@ -753,7 +745,8 @@ bowtie2
 
   - **all** (bool, optional) -- report all alignments; very slow, MAPQ not meaningful
 
-  - **compress_add_output** (bool, optional) -- Ads -gz to the 4 options above to produce compressed output.
+  - **compress** (bool, optional) -- Use pigz to compress bowtie2 results.
+    - default value: True
 
   - **cores** (int, optional) -- number of alignment threads to launch (default=1)
 
@@ -769,7 +762,8 @@ bowtie2
 
   - **ff** (bool, optional) -- -1, -2 mates align fw/fw
 
-  - **fifo** (bool, optional)
+  - **fifo** (bool, optional) -- Use dd and pigz to pipe into bowtie2 with fifos. This does not work reliably with bowtie <= 2.3.4.2 due to a race condition (http://seqanswers.com/forums/showthread.php?t=16540).
+
   - **fr** (bool, optional) -- -1, -2 mates align fw/rev (default)
 
   - **gbar** (int, optional) -- disallow gaps within <int> nucs of read extremes (default=4)
@@ -1040,11 +1034,7 @@ bwa_backtrack
 
   - **aln-R** (int, optional) -- Proceed with suboptimal alignments if there are no more than INT equally best hits. This option only affects paired-end mapping. Increasing this threshold helps to improve the pairing accuracy at the cost of speed, especially for short reads (~32bp).
 
-  - **aln-b** (bool, optional) -- Specify the input read sequence file is the BAM format. For paired-end data, two ends in a pair must be grouped together and options aln-1 or aln-2 are usually applied to specify which end should be mapped. Typical command lines for mapping pair-end data in the BAM format are:
-     bwa aln ref.fa -b1 reads.bam > 1.sai
-     bwa aln ref.fa -b2 reads.bam > 2.sai 
-     bwa sampe ref.fa 1.sai 2.sai reads.bam reads.bam > aln.sam
-
+  - **aln-b** (bool, optional) -- Specify the input read sequence file is the BAM format. For paired-end data, two ends in a pair must be grouped together and options aln-1 or aln-2 are usually applied to specify which end should be mapped. Typical command lines for mapping pair-end data in the BAM format are: bwa aln ref.fa -b1 reads.bam > 1.sai bwa aln ref.fa -b2 reads.bam > 2.sai bwa sampe ref.fa 1.sai 2.sai reads.bam reads.bam > aln.sam 
 
   - **aln-c** (bool, optional) -- Reverse query but not complement it, which is required for alignment in the color space. (Disabled since 0.6.x)
 
@@ -1083,11 +1073,11 @@ bwa_backtrack
 
   - **sampe-o** (int, optional) -- Maximum occurrences of a read for pairing. A read with more occurrneces will be treated as a single-end read. Reducing this parameter helps faster pairing. [100000]
 
-  - **sampe-r** (str, optional) -- Specify the read group in a format like '@RG	ID:foo	SM:bar'. [null]
+  - **sampe-r** (str, optional) -- Specify the read group in a format like '@RG ID:foo SM:bar'. [null]
 
   - **samse-n** (int, optional) -- Maximum number of alignments to output in the XA tag for reads paired properly. If a read has more than INT hits, the XA tag will not be written. [3]
 
-  - **samse-r** (str, optional) -- Specify the read group in a format like '@RG	ID:foo	SM:bar'. [null]
+  - **samse-r** (str, optional) -- Specify the read group in a format like '@RG ID:foo SM:bar'. [null]
 
 
 **Required tools:** bwa, dd, mkfifo, pigz
@@ -1200,7 +1190,7 @@ bwa_mem
 
   - **P** (bool, optional) -- skip pairing; mate rescue performed unless -S also in use
 
-  - **R** (str, optional) -- read group header line such as '@RG	ID:foo	SM:bar' [null]
+  - **R** (str, optional) -- read group header line such as '@RG ID:foo SM:bar' [null]
 
   - **S** (bool, optional) -- skip mate rescue
 
@@ -1245,10 +1235,7 @@ bwa_mem
 
   - **w** (int, optional) -- band width for banded alignment [100]
 
-  - **x** (str, optional) -- read type. Setting -x changes multiple parameters unless overriden [null]::
-       pacbio: -k17 -W40 -r10 -A1 -B1 -O1 -E1 -L0  (PacBio reads to ref)
-       ont2d: -k14 -W20 -r10 -A1 -B1 -O1 -E1 -L0  (Oxford Nanopore 2D-reads to ref)
-       intractg: -B9 -O16 -L5  (intra-species contigs to ref)
+  - **x** (str, optional) -- read type. Setting -x changes multiple parameters unless overriden [null]:: pacbio: -k17 -W40 -r10 -A1 -B1 -O1 -E1 -L0 (PacBio reads to ref) ont2d: -k14 -W20 -r10 -A1 -B1 -O1 -E1 -L0 (Oxford Nanopore 2D-reads to ref) intractg: -B9 -O16 -L5 (intra-species contigs to ref)
 
   - **y** (int, optional) -- seed occurrence for the 3rd round seeding [20]
 
@@ -2000,7 +1987,7 @@ cutadapt
 
   - **adapter-file** (str, optional) -- File containing adapter sequences to be clipped off of the reads.
 
-  - **adapter-type** (str, optional) -- The type of the adapter that has been used for sequencing. a: adapter ligated to the 3' end; b: adapter ligated to the 3' or 5' end (If the adapter is found within the read or overlapping the 3' end of the read, the behavior is the same as for the -a value. If the adapter overlaps the 5' end (beginning of the read), the initial portion of the read matching the adapter is trimmed, but anything that follows is kept.); g: adapter ligated to the 5' end (If the adapter sequence starts with the character '^',  the adapter is 'anchored'. An anchored adapter must appear in its entirety at the 5' end of the read (it is a prefix of the read). A non-anchored adapter may appear partially at the 5' end, or it may occur within the read. If it is found within a read, the sequence preceding the adapter is also trimmed. In all cases, the adapter itself is trimmed).
+  - **adapter-type** (str, optional) -- The type of the adapter that has been used for sequencing. a: adapter ligated to the 3' end; b: adapter ligated to the 3' or 5' end (If the adapter is found within the read or overlapping the 3' end of the read, the behavior is the same as for the -a value. If the adapter overlaps the 5' end (beginning of the read), the initial portion of the read matching the adapter is trimmed, but anything that follows is kept.); g: adapter ligated to the 5' end (If the adapter sequence starts with the character '^', the adapter is 'anchored'. An anchored adapter must appear in its entirety at the 5' end of the read (it is a prefix of the read). A non-anchored adapter may appear partially at the 5' end, or it may occur within the read. If it is found within a read, the sequence preceding the adapter is also trimmed. In all cases, the adapter itself is trimmed).
     - default value: -a
     - possible values: '-a', '-g', '-b'
 
@@ -2051,7 +2038,7 @@ cutadapt
     - possible values: '33', '64'
 
 
-  - **quality-cutoff** (int, optional) -- Trim low-quality ends from reads before adapter removal. The algorithm is the same as the one used by  BWA (Subtract CUTOFF from all qualities; compute partial sums from all indices to the end of the sequence; cut sequence at the index at which the sum is minimal) (default: 0)
+  - **quality-cutoff** (int, optional) -- Trim low-quality ends from reads before adapter removal. The algorithm is the same as the one used by BWA (Subtract CUTOFF from all qualities; compute partial sums from all indices to the end of the sequence; cut sequence at the index at which the sum is minimal) (default: 0)
 
   - **strip-f3** (bool, optional) -- For color space: Strip the _F3 suffix of read names
 
@@ -2068,7 +2055,7 @@ cutadapt
   - **zero-cap** (bool, optional) -- Change negative quality values to zero. This is enabled by default when -c/--colorspace is also enabled. Use the above option to disable it.
 
 
-**Required tools:** cat, cutadapt, dd, fix_qnames, mkfifo, pigz
+**Required tools:** cat, cutadapt, dd, mkfifo, pigz
 
 **CPU Cores:** 4
 
@@ -2485,7 +2472,7 @@ discardLargeSplitsAndPairs
   - **N_splits** (str, required) -- Size of the skipped region within a split read (in nucleotides). Split Reads that skip more nt than this value are discarded.
 
 
-**Required tools:** dd, discardLargeSplitsAndPairs, pigz, samtools
+**Required tools:** dd, pigz, samtools
 
 **CPU Cores:** 4
 
@@ -2544,13 +2531,13 @@ fastq_screen
    }
 
 **Options:**
-  - **config** (str, required) -- Manually specify a location for the                         configuration.
+  - **config** (str, required) -- Manually specify a location for the configuration.
 
   - **cores** (int, required)    - default value: 10
 
-  - **nohits** (bool, optional) -- Writes to a file the sequences that did                         not map to any of the specified genomes. This option                         is equivalent to specifying --tag --filter 0000                         (number of zeros corresponds to the number of genomes                         screened).  By default the whole input file will be                         mapped, unless overridden by --subset.
+  - **nohits** (bool, optional) -- Writes to a file the sequences that did not map to any of the specified genomes. This option is equivalent to specifying --tag --filter 0000 (number of zeros corresponds to the number of genomes screened). By default the whole input file will be mapped, unless overridden by --subset.
 
-  - **subset** (int, optional) -- Don't use the whole sequence file, but                         create a temporary dataset of this specified number                         of reads. The dataset created will be of approximately                         (within a factor of 2) of this size. If the real                         dataset is smaller than twice the specified size                         then the whole dataset will be used. Subsets will                         be taken evenly from throughout the whole original                         dataset. By Default FastQ Screen runs with this                         parameter set to 100,000. To process an entire dataset                         however, adjust --subset to 0.
+  - **subset** (int, optional) -- Don't use the whole sequence file, but create a temporary dataset of this specified number of reads. The dataset created will be of approximately (within a factor of 2) of this size. If the real dataset is smaller than twice the specified size then the whole dataset will be used. Subsets will be taken evenly from throughout the whole original dataset. By Default FastQ Screen runs with this parameter set to 100,000. To process an entire dataset however, adjust --subset to 0.
 
 
 **Required tools:** bowtie2, fastq_screen, mv, rm
@@ -2574,15 +2561,15 @@ fastqc
 
 **Input Connection**
   - **in/first_read**
-  - **in/second_read**
+  - **in/second_read** (optional)
 
 **Output Connection**
   - **out/first_read_log_stderr**
   - **out/first_read_fastqc_report_webpage**
-  - **out/second_read_fastqc_report_webpage**
-  - **out/second_read_fastqc_report**
+  - **out/second_read_fastqc_report_webpage** (optional)
+  - **out/second_read_fastqc_report** (optional)
   - **out/first_read_fastqc_report**
-  - **out/second_read_log_stderr**
+  - **out/second_read_log_stderr** (optional)
 
 
 .. graphviz::
@@ -2596,7 +2583,7 @@ fastqc
       fastqc [style=filled, fillcolor="#fce94f"];
       in_0 [label="first_read"];
       in_0 -> fastqc;
-      in_1 [label="second_read"];
+      in_1 [label="second_read", style=filled, fillcolor="#a7a7a7"];
       in_1 -> fastqc;
       out_2 [label="first_read_fastqc_report"];
       fastqc -> out_2;
@@ -2604,11 +2591,11 @@ fastqc
       fastqc -> out_3;
       out_4 [label="first_read_log_stderr"];
       fastqc -> out_4;
-      out_5 [label="second_read_fastqc_report"];
+      out_5 [label="second_read_fastqc_report", style=filled, fillcolor="#a7a7a7"];
       fastqc -> out_5;
-      out_6 [label="second_read_fastqc_report_webpage"];
+      out_6 [label="second_read_fastqc_report_webpage", style=filled, fillcolor="#a7a7a7"];
       fastqc -> out_6;
-      out_7 [label="second_read_log_stderr"];
+      out_7 [label="second_read_log_stderr", style=filled, fillcolor="#a7a7a7"];
       fastqc -> out_7;
    }
 
@@ -2617,13 +2604,13 @@ fastqc
 
   - **casava** (bool, optional) -- Files come from raw casava output. Files in the same sample group (differing only by the group number) will be analysed as a set rather than individually. Sequences with the filter flag set in the header will be excluded from the analysis. Files must have the same names given to them by casava (including being gzipped and ending with .gz) otherwise they won't be grouped together correctly.
 
-  - **contaminants** (str, optional) -- Specifies a non-default file which contains the list of contaminants to screen overrepresented sequences against. The file must contain sets of named contaminants in the form name[tab]sequence.  Lines prefixed with a hash will be ignored.
+  - **contaminants** (str, optional) -- Specifies a non-default file which contains the list of contaminants to screen overrepresented sequences against. The file must contain sets of named contaminants in the form name[tab]sequence. Lines prefixed with a hash will be ignored.
 
   - **dd-blocksize** (str, optional)    - default value: 2M
 
   - **dir** (str, optional) -- Selects a directory to be used for temporary files written when generating report images. Defaults to system temp directory if not specified.
 
-  - **format** (str, optional) -- Bypasses the normal sequence file format detection and forces the program to use the specified format.  Valid formats are bam,sam, bam_mapped,sam_mapped and fastq
+  - **format** (str, optional) -- Bypasses the normal sequence file format detection and forces the program to use the specified format. Valid formats are bam,sam, bam_mapped,sam_mapped and fastq
     - possible values: 'bam', 'sam', 'bam_mapped', 'sam_mapped', 'fastq'
 
 
@@ -2631,11 +2618,11 @@ fastqc
 
   - **kmers** (int, optional) -- Specifies the length of Kmer to look for in the Kmer content module. Specified Kmer length must be between 2 and 10. Default length is 7 if not specified.
 
-  - **limits** (str, optional) -- Specifies a non-default file which contains a set of criteria which will be used to determine the warn/error limits for the various modules.  This file can also be used to selectively remove some modules from the output all together.  The format needs to mirror the default limits.txt file found in the Configuration folder.
+  - **limits** (str, optional) -- Specifies a non-default file which contains a set of criteria which will be used to determine the warn/error limits for the various modules. This file can also be used to selectively remove some modules from the output all together. The format needs to mirror the default limits.txt file found in the Configuration folder.
 
   - **nofilter** (bool, optional) -- If running with --casava then do not remove read flagged by casava as poor quality when performing the QC analysis.
 
-  - **nogroup** (bool, optional) -- Disable grouping of bases for reads >50bp. All reports will show data for every base in the read.  WARNING: Using this option will cause fastqc to crash and burn if you use it on really long reads, and your plots may end up a ridiculous size. You have been warned!
+  - **nogroup** (bool, optional) -- Disable grouping of bases for reads >50bp. All reports will show data for every base in the read. WARNING: Using this option will cause fastqc to crash and burn if you use it on really long reads, and your plots may end up a ridiculous size. You have been warned!
 
   - **pigz-blocksize** (str, optional)    - default value: 2048
 
@@ -2663,10 +2650,10 @@ fastqsample
 
 **Input Connection**
   - **in/first_read**
-  - **in/second_read**
+  - **in/second_read** (optional)
 
 **Output Connection**
-  - **out/second_read**
+  - **out/second_read** (optional)
   - **out/first_read**
 
 
@@ -2681,11 +2668,11 @@ fastqsample
       fastqsample [style=filled, fillcolor="#fce94f"];
       in_0 [label="first_read"];
       in_0 -> fastqsample;
-      in_1 [label="second_read"];
+      in_1 [label="second_read", style=filled, fillcolor="#a7a7a7"];
       in_1 -> fastqsample;
       out_2 [label="first_read"];
       fastqsample -> out_2;
-      out_3 [label="second_read"];
+      out_3 [label="second_read", style=filled, fillcolor="#a7a7a7"];
       fastqsample -> out_3;
    }
 
@@ -2852,60 +2839,60 @@ feature_counts
    }
 
 **Options:**
-  - **A** (str, optional) -- Specify the name of a file including                         aliases of chromosome names. The file should be a                         comma delimited text file that includes two columns.                         The first column gives the chromosome names used in                         the annotation and the second column gives the                         chromosome names used by reads. This file should not                         contain header lines. Names included in this file are                         case sensitive.
+  - **A** (str, optional) -- Specify the name of a file including aliases of chromosome names. The file should be a comma delimited text file that includes two columns. The first column gives the chromosome names used in the annotation and the second column gives the chromosome names used by reads. This file should not contain header lines. Names included in this file are case sensitive.
 
-  - **B** (bool, optional) -- If specified, only fragments that have                         both ends successfully aligned will be considered for                         summarization. This option is only applicable for                         paired-end reads.
+  - **B** (bool, optional) -- If specified, only fragments that have both ends successfully aligned will be considered for summarization. This option is only applicable for paired-end reads.
 
-  - **C** (bool, optional) -- If specified, the chimeric fragments                         (those fragments that have their two ends aligned to                         different chromosomes) will NOT be included for                         summarization. This option is only applicable for                         paired-end read data.
+  - **C** (bool, optional) -- If specified, the chimeric fragments (those fragments that have their two ends aligned to different chromosomes) will NOT be included for summarization. This option is only applicable for paired-end read data.
 
-  - **D** (int, optional) -- Maximum fragment/template length,                         600 by default.
+  - **D** (int, optional) -- Maximum fragment/template length, 600 by default.
 
-  - **F** (str, optional) -- Specify the format of the annotation                         file. Acceptable formats include 'GTF' and 'SAF'.                         'GTF' by default. Please refer to the users guide                         for SAF annotation format.
+  - **F** (str, optional) -- Specify the format of the annotation file. Acceptable formats include 'GTF' and 'SAF'. 'GTF' by default. Please refer to the users guide for SAF annotation format.
 
-  - **M** (bool, optional) -- If specified, multi-mapping                         reads/fragments will be counted (ie. a multi-mapping                         read will be counted up to N times if it has N                         reported mapping locations). The program uses the                         'NH' tag to find multi-mapping reads.
+  - **M** (bool, optional) -- If specified, multi-mapping reads/fragments will be counted (ie. a multi-mapping read will be counted up to N times if it has N reported mapping locations). The program uses the 'NH' tag to find multi-mapping reads.
 
-  - **O** (bool, optional) -- If specified, reads (or fragments if                         -p is specified) will be allowed to be assigned to                         more than one matched meta-feature (or feature if                         -f is specified).
+  - **O** (bool, optional) -- If specified, reads (or fragments if -p is specified) will be allowed to be assigned to more than one matched meta-feature (or feature if -f is specified).
 
-  - **P** (bool, optional) -- If specified, paired-end distance will                         be checked when assigning fragments to meta-features                         or features. This option is only applicable when -p                         is specified. The distance thresholds should be                         specified using -d and -D options.
+  - **P** (bool, optional) -- If specified, paired-end distance will be checked when assigning fragments to meta-features or features. This option is only applicable when -p is specified. The distance thresholds should be specified using -d and -D options.
 
-  - **Q** (int, optional) -- The minimum mapping quality score a read                         must satisfy in order to be counted. For paired-end                         reads, at least one end should satisfy this criteria.                         0 by default.
+  - **Q** (int, optional) -- The minimum mapping quality score a read must satisfy in order to be counted. For paired-end reads, at least one end should satisfy this criteria. 0 by default.
 
-  - **R** (bool, optional) -- Output read counting result for each                         read/fragment. For each input read file, read                         counting results for reads/fragments will be saved                         to a tab-delimited file that contains four columns                         including read name, status(assigned or the reason                         if not assigned), name of target feature/meta-feature                         and number of hits if the read/fragment is counted                         multiple times. Name of the file is the same as name                         of the input read file except a suffix                         '.featureCounts' is added.
+  - **R** (bool, optional) -- Output read counting result for each read/fragment. For each input read file, read counting results for reads/fragments will be saved to a tab-delimited file that contains four columns including read name, status(assigned or the reason if not assigned), name of target feature/meta-feature and number of hits if the read/fragment is counted multiple times. Name of the file is the same as name of the input read file except a suffix '.featureCounts' is added.
 
   - **T** (int, optional) -- Number of the threads. 1 by default.
 
-  - **a** (str, required) -- Give the name                         of the annotation file. The program assumes hat the                         provided annotation file is in GTF format. Use -F                         option to specify other annotation formats.
+  - **a** (str, required) -- Give the name of the annotation file. The program assumes hat the provided annotation file is in GTF format. Use -F option to specify other annotation formats.
 
   - **cores** (int, required)    - default value: 3
 
-  - **countSplitAlignmentsOnly** (bool, optional) -- If specified, only split                         alignments (CIGAR strings containing letter 'N') will                         be counted. All the other alignments will be ignored.                         An example of split alignments is the exon-spanning                         reads in RNA-seq data.
+  - **countSplitAlignmentsOnly** (bool, optional) -- If specified, only split alignments (CIGAR strings containing letter 'N') will be counted. All the other alignments will be ignored. An example of split alignments is the exon-spanning reads in RNA-seq data.
 
-  - **d** (int, optional) -- Minimum fragment/template length,                         50 by default.
+  - **d** (int, optional) -- Minimum fragment/template length, 50 by default.
 
-  - **f** (bool, optional) -- If specified, read summarization will be                         performed at the feature level (eg. exon level).                         Otherwise, it is performed at meta-feature level                         (eg. gene level).
+  - **f** (bool, optional) -- If specified, read summarization will be performed at the feature level (eg. exon level). Otherwise, it is performed at meta-feature level (eg. gene level).
 
-  - **g** (str, optional) -- Specify the attribute type used to group                         features (eg. exons) into meta-features (eg. genes),                         when GTF annotation is provided. 'gene_id' by                         default. This attribute type is usually the gene                         identifier. This argument is useful for the                         meta-feature level summarization.
+  - **g** (str, optional) -- Specify the attribute type used to group features (eg. exons) into meta-features (eg. genes), when GTF annotation is provided. 'gene_id' by default. This attribute type is usually the gene identifier. This argument is useful for the meta-feature level summarization.
 
-  - **ignoreDup** (bool, optional) -- If specified, reads that were marked as                         duplicates will be ignored. Bit Ox400 in FLAG field                         of SAM/BAM file is used for identifying duplicate                         reads. In paired end data, the entire read pair will                         be ignored if at least one end is found to be a                         duplicate read.
+  - **ignoreDup** (bool, optional) -- If specified, reads that were marked as duplicates will be ignored. Bit Ox400 in FLAG field of SAM/BAM file is used for identifying duplicate reads. In paired end data, the entire read pair will be ignored if at least one end is found to be a duplicate read.
 
-  - **minReadOverlap** (int, optional) -- Specify the minimum number of overlapped                         bases required to assign a read to a feature. 1 by                         default. Negative values are permitted, indicating a                         gap being allowed between a read and a feature.
+  - **minReadOverlap** (int, optional) -- Specify the minimum number of overlapped bases required to assign a read to a feature. 1 by default. Negative values are permitted, indicating a gap being allowed between a read and a feature.
 
-  - **o** (str, optional) -- Give the name                         of the output file. The output file contains the                         number of reads assigned to each meta-feature                         (or each feature if -f is specified). A meta-feature                         is the aggregation of features, grouped by using gene                         identifiers. Please refer to the users guide for more                         details.
+  - **o** (str, optional) -- Give the name of the output file. The output file contains the number of reads assigned to each meta-feature (or each feature if -f is specified). A meta-feature is the aggregation of features, grouped by using gene identifiers. Please refer to the users guide for more details.
     - default value: counts.txt
 
-  - **p** (bool, optional) -- If specified, fragments (or templates)                         will be counted instead of reads. This option is                         only applicable for paired-end reads. The two reads                         from the same fragment must be adjacent to each other                         in the provided SAM/BAM file.
+  - **p** (bool, optional) -- If specified, fragments (or templates) will be counted instead of reads. This option is only applicable for paired-end reads. The two reads from the same fragment must be adjacent to each other in the provided SAM/BAM file.
 
-  - **primary** (bool, optional) -- If specified, only primary alignments                         will be counted. Primary and secondary alignments                         are identified using bit 0x100 in the Flag field of                         SAM/BAM files. All primary alignments in a dataset                         will be counted no matter they are from multi-mapping                         reads or not ('-M' is ignored).
+  - **primary** (bool, optional) -- If specified, only primary alignments will be counted. Primary and secondary alignments are identified using bit 0x100 in the Flag field of SAM/BAM files. All primary alignments in a dataset will be counted no matter they are from multi-mapping reads or not ('-M' is ignored).
 
-  - **read2pos** (int, optional) -- The read is reduced to its 5' most base                         or 3' most base. Read summarization is then performed                         based on the single base which the read is reduced to.                        By default, no read reduction will be performed.
+  - **read2pos** (int, optional) -- The read is reduced to its 5' most base or 3' most base. Read summarization is then performed based on the single base which the read is reduced to. By default, no read reduction will be performed.
 
-  - **readExtension3** (int, optional) -- Reads are extended upstream by <int>                         bases from their 3' end. 0 by default.
+  - **readExtension3** (int, optional) -- Reads are extended upstream by <int> bases from their 3' end. 0 by default.
 
-  - **readExtension5** (int, optional) -- Reads are extended upstream by <int>                         bases from their 5' end. 0 by default.
+  - **readExtension5** (int, optional) -- Reads are extended upstream by <int> bases from their 5' end. 0 by default.
 
-  - **s** (int, required) -- Indicate if strand-specific read                         counting should be performed. It has three possible                         values:  0 (unstranded), 1 (stranded) and 2                         (reversely stranded). 0 by default.
+  - **s** (int, required) -- Indicate if strand-specific read counting should be performed. It has three possible values: 0 (unstranded), 1 (stranded) and 2 (reversely stranded). 0 by default.
 
-  - **t** (str, required) -- Specify the feature type. Only rows                         which have the matched feature type in the provided                         GTF annotation file will be included for read                         counting. 'exon' by default.
+  - **t** (str, required) -- Specify the feature type. Only rows which have the matched feature type in the provided GTF annotation file will be included for read counting. 'exon' by default.
 
 
 **Required tools:** feature_counts
@@ -2951,7 +2938,7 @@ filter_gtf
 
   - **class-list-keep** (str, optional) -- class codes to be kept possible '=,c,j,e,i,o,p,r,u,x,s,.'
 
-  - **keep-by-class** (bool, required) -- "keep  gtf if any class is found in class_code field, requieres class-list-keep
+  - **keep-by-class** (bool, required) -- "keep gtf if any class is found in class_code field, requieres class-list-keep
 
   - **remove-by-field-match** (str, optional) -- select gft field like gene_id, gene_name which will match against --string
 
@@ -3010,7 +2997,7 @@ fix_cutadapt
   - **pigz-blocksize** (str, optional)    - default value: 2048
 
 
-**Required tools:** cat, dd, fix_cutadapt, mkfifo, pigz
+**Required tools:** cat, dd, mkfifo, pigz
 
 **CPU Cores:** 4
 
@@ -3259,7 +3246,7 @@ gsnap
 **Options:**
   - **D** (str, required) -- Genome directory
 
-  - **cores** (int, optional) -- workaround to specify cores for grid                                                     engine and threads ie
+  - **cores** (int, optional) -- workaround to specify cores for grid engine and threads ie
     - default value: 1
 
   - **d** (str, required) -- Genome database
@@ -3328,34 +3315,37 @@ hisat2
    }
 
 **Options:**
-  - **add-chrname** (bool, optional) -- Add 'chr' to reference names in                         alignment (e.g., 18 to chr18)
+  - **add-chrname** (bool, optional) -- Add 'chr' to reference names in alignment (e.g., 18 to chr18)
 
-  - **al-gz** (bool, optional) -- write unpaired reads that aligned                         to gzip compress output connection "out/aligned"
+  - **al-gz** (bool, optional) -- write unpaired reads that aligned to gzip compress output connection "out/aligned"
 
-  - **c** (bool, optional) -- <m1>, <m2>, <r> are sequences                         themselves, not files
+  - **c** (bool, optional) -- <m1>, <m2>, <r> are sequences themselves, not files
 
   - **cores** (int, required)    - default value: 12
 
-  - **dta** (bool, optional) -- Reports alignments tailored for                         transcript assemblers
+  - **dta** (bool, optional) -- Reports alignments tailored for transcript assemblers
 
-  - **f** (bool, optional) -- query input files are (multi-)FASTA                         .fa/.mfa
+  - **f** (bool, optional) -- query input files are (multi-)FASTA .fa/.mfa
 
-  - **ignore-quals** (bool, optional) -- treat all quality values as 30 on Phred                         scale (off)
+  - **ff** (bool, optional) -- -1, -2 mates align fw/rev, rev/fw, fw/fw (--fr)
 
-  - **index** (str, required) -- Path to hisat2 index (not containing                         file suffixes).
+  - **fr** (bool, optional) -- -1, -2 mates align fw/rev, rev/fw, fw/fw (--fr)
 
-  - **int-quals** (bool, optional) -- qualities encoded as space-delimited                         integers
+  - **ignore-quals** (bool, optional) -- treat all quality values as 30 on Phred scale (off)
 
-  - **k** (int, optional) -- report up to <int> alns per read;                         MAPQ not meaningful
+  - **index** (str, required) -- Path to hisat2 index (not containing file suffixes).
 
-  - **known-splicesite-infile** (str, optional) -- provide a list of known                         splice sites
+  - **int-quals** (bool, optional) -- qualities encoded as space-delimited integers
 
-  - **library_type** (str, required) -- -1, -2 mates align fw/rev, rev/fw, fw/fw (--fr)
-    - default value: fr
+  - **k** (int, optional) -- report up to <int> alns per read; MAPQ not meaningful
+
+  - **known-splicesite-infile** (str, optional) -- provide a list of known splice sites
+
+  - **library_type** (str, optional) -- -1, -2 mates align fr (fw/rev), rf (rev/fw), ff (fw/fw) (default fr).
     - possible values: 'fr', 'rf', 'ff'
 
 
-  - **ma** (str, optional) -- match bonus (0 for --end-to-end, 2 for                         --local)
+  - **ma** (str, optional) -- match bonus (0 for --end-to-end, 2 for --local)
 
   - **max-intronlen** (str, optional) -- maximum intron length (500000)
 
@@ -3367,17 +3357,17 @@ hisat2
 
   - **mm** (bool, optional) -- use memory-mapped I/O for index; many 'hisat2's can share
 
-  - **mp** (str, optional) -- max and min penalties for mismatch;                         lower qual = lower penalty <2,6>
+  - **mp** (str, optional) -- max and min penalties for mismatch; lower qual = lower penalty <2,6>
 
-  - **n-ceil** (str, optional) -- func for max # non-A/C/G/Ts permitted in                         aln (L,0,0.15)
+  - **n-ceil** (str, optional) -- func for max # non-A/C/G/Ts permitted in aln (L,0,0.15)
 
-  - **new-summary** (bool, optional) -- print alignment summary in a new style,                         which is more machine-friendly
+  - **new-summary** (bool, optional) -- print alignment summary in a new style, which is more machine-friendly
 
-  - **no-discordant** (bool, optional) -- suppress discordant alignments for                         paired reads
+  - **no-discordant** (bool, optional) -- suppress discordant alignments for paired reads
 
-  - **no-head** (bool, optional) -- supppress header lines, i.e. lines                         starting with @
+  - **no-head** (bool, optional) -- supppress header lines, i.e. lines starting with @
 
-  - **no-mixed** (bool, optional) -- suppress unpaired alignments for paired                         reads
+  - **no-mixed** (bool, optional) -- suppress unpaired alignments for paired reads
 
   - **no-softclip** (bool, optional) -- no soft-clipping
 
@@ -3385,79 +3375,81 @@ hisat2
 
   - **no-sq** (bool, optional) -- supppress @SQ header lines
 
-  - **no-temp-splicesite** (bool, optional) -- disable the use of splice                         sites found
+  - **no-temp-splicesite** (bool, optional) -- disable the use of splice sites found
 
-  - **nofw** (bool, optional) -- do not align forward (original) version                         of read (off)
+  - **nofw** (bool, optional) -- do not align forward (original) version of read (off)
 
-  - **non-deterministic** (bool, optional) -- seed rand. gen. arbitrarily instead of                         using read attributes
+  - **non-deterministic** (bool, optional) -- seed rand. gen. arbitrarily instead of using read attributes
 
-  - **norc** (bool, optional) -- do not align reverse-complement version                         of read (off)
+  - **norc** (bool, optional) -- do not align reverse-complement version of read (off)
 
-  - **novel-splicesite-infile** (str, optional) -- provide a list of novel                         splice sites
+  - **novel-splicesite-infile** (str, optional) -- provide a list of novel splice sites
 
-  - **novel-splicesite-outfile** (str, optional) -- report a list of splice                         sites
+  - **novel-splicesite-outfile** (str, optional) -- report a list of splice sites
 
   - **np** (str, optional) -- penalty for non-A/C/G/Ts in read/ref (1)
 
   - **offrate** (int, optional) -- override offrate of index; must be >= index's offrate
 
-  - **omit-sec-seq** (bool, optional) -- put '*' in SEQ and QUAL fields for                         secondary alignments
+  - **omit-sec-seq** (bool, optional) -- put '*' in SEQ and QUAL fields for secondary alignments
 
-  - **pen-canintronlen** (str, optional) -- penalty for long introns (G,-8,1) with                         canonical splice sites
+  - **pen-canintronlen** (str, optional) -- penalty for long introns (G,-8,1) with canonical splice sites
 
   - **pen-cansplice** (str, optional) -- penalty for a canonical splice site (0)
 
-  - **pen-noncanintronlen** (str, optional) -- penalty for long introns                         (G,-8,1) with noncanonical splice sites
+  - **pen-noncanintronlen** (str, optional) -- penalty for long introns (G,-8,1) with noncanonical splice sites
 
-  - **pen-noncansplice** (str, optional) -- penalty for a non-canonical splice site                         (12)
+  - **pen-noncansplice** (str, optional) -- penalty for a non-canonical splice site (12)
 
   - **phred33** (bool, optional) -- qualities are Phred+33 (default)
 
   - **phred64** (bool, optional) -- qualities are Phred+64
 
-  - **q** (bool, optional) -- query input files are FASTQ .fq/.fastq                         (default)
+  - **q** (bool, optional) -- query input files are FASTQ .fq/.fastq (default)
 
-  - **qc-filter** (bool, optional) -- filter out reads that are bad according                         to QSEQ filter
+  - **qc-filter** (bool, optional) -- filter out reads that are bad according to QSEQ filter
 
-  - **qseq** (bool, optional) -- query input files are in Illumina's                         qseq format
+  - **qseq** (bool, optional) -- query input files are in Illumina's qseq format
 
-  - **quiet** (bool, optional) -- print nothing to stderr except serious                         errors
+  - **quiet** (bool, optional) -- print nothing to stderr except serious errors
 
-  - **r** (bool, optional) -- query input files are                         raw one-sequence-per-line
+  - **r** (bool, optional) -- query input files are raw one-sequence-per-line
 
   - **rdg** (str, optional) -- read gap open, extend penalties (5,3)
 
-  - **remove-chrname** (bool, optional) -- Remove 'chr' from reference names in                         alignment (e.g., chr18 to 18)
+  - **remove-chrname** (bool, optional) -- Remove 'chr' from reference names in alignment (e.g., chr18 to 18)
 
   - **reorder** (bool, optional) -- force SAM output order to match order of input reads
 
-  - **rfg** (str, optional) -- reference gap open, extend penalties                         (5,3)
+  - **rf** (bool, optional) -- -1, -2 mates align fw/rev, rev/fw, fw/fw (--fr)
 
-  - **rg** (str, optional) -- add <text> ('lab:value') to @RG line of                         SAM header. (Note: @RG line only printed when --rg-id                         is set.)
+  - **rfg** (str, optional) -- reference gap open, extend penalties (5,3)
+
+  - **rg** (str, optional) -- add <text> ('lab:value') to @RG line of SAM header. (Note: @RG line only printed when --rg-id is set.)
 
   - **rg-id** (str, optional) -- puts sample name in rg
 
-  - **rna-strandness** (str, required) -- Specify strand-specific information                         (unstranded); paired and are extended F->FR, R->RF
+  - **rna-strandness** (str, required) -- Specify strand-specific information (unstranded); paired and are extended F->FR, R->RF
     - possible values: 'R', 'F', 'U'
 
 
-  - **score-min** (str, optional) -- min acceptable alignment score w/r/t                         read length (G,20,8 for local, L,-0.6,-0.6 for                         end-to-end)
+  - **score-min** (str, optional) -- min acceptable alignment score w/r/t read length (G,20,8 for local, L,-0.6,-0.6 for end-to-end)
 
   - **seed** (int, optional) -- seed for random number generator (0)
 
-  - **skip** (int, optional) -- skip the first <int> reads/pairs                         in the input (none)
+  - **skip** (int, optional) -- skip the first <int> reads/pairs in the input (none)
 
-  - **sp** (str, optional) -- max and min penalties for soft-clipping;                         lower qual = lower penalty <1,2>
+  - **sp** (str, optional) -- max and min penalties for soft-clipping; lower qual = lower penalty <1,2>
 
-  - **tmo** (bool, optional) -- Reports only those alignments within                         known transcriptome
+  - **tmo** (bool, optional) -- Reports only those alignments within known transcriptome
 
-  - **trim3** (int, optional) -- trim <int> bases from 3'/right end                         of reads (0)
+  - **trim3** (int, optional) -- trim <int> bases from 3'/right end of reads (0)
 
-  - **trim5** (int, optional) -- trim <int> bases from 5'/left end                         of reads (0)
+  - **trim5** (int, optional) -- trim <int> bases from 5'/left end of reads (0)
 
-  - **un-gz** (bool, optional) -- write unpaired reads that didn't align                         to gzip compress output connection "out/unaligned"
+  - **un-gz** (bool, optional) -- write unpaired reads that didn't align to gzip compress output connection "out/unaligned"
 
-  - **upto** (int, optional) -- stop after first <int> reads/pairs                         (no limit)
+  - **upto** (int, optional) -- stop after first <int> reads/pairs (no limit)
 
 
 **Required tools:** hisat2, pigz
@@ -3598,7 +3590,7 @@ kallisto
 
 **Input Connection**
   - **in/first_read**
-  - **in/kallisto-index**
+  - **in/kallisto-index** (optional)
   - **in/second_read** (optional)
 
 **Output Connection**
@@ -3620,7 +3612,7 @@ kallisto
       kallisto [style=filled, fillcolor="#fce94f"];
       in_0 [label="first_read"];
       in_0 -> kallisto;
-      in_1 [label="kallisto-index"];
+      in_1 [label="kallisto-index", style=filled, fillcolor="#a7a7a7"];
       in_1 -> kallisto;
       in_2 [label="second_read", style=filled, fillcolor="#a7a7a7"];
       in_2 -> kallisto;
@@ -3641,14 +3633,14 @@ kallisto
 
   - **bootstrap-samples** (int, optional) -- Number of bootstrap samples (default: 0)
 
-  - **cores** (int, optional) -- workaround to specify cores for grid                         engine and threads ie
+  - **cores** (int, optional) -- workaround to specify cores for grid engine and threads ie
     - default value: 1
 
   - **fr-stranded** (bool, optional) -- Strand specific reads, first read forward
 
   - **fragment-length** (int, optional) -- Estimated average fragment length
 
-  - **index** (str, optional) -- Filename for the kallisto index to be                         used for quantification
+  - **index** (str, optional) -- Filename for the kallisto index to be used for quantification
 
   - **rf-stranded** (bool, optional) -- Strand specific reads, first read reverse
 
@@ -3658,9 +3650,7 @@ kallisto
 
   - **single** (bool, optional) -- Quantify single-end reads
 
-  - **single-overhang** (bool, optional) -- Include reads where unobserved
-                        rest of fragment is predicted to lie
-                        outside a transcript
+  - **single-overhang** (bool, optional) -- Include reads where unobserved rest of fragment is predicted to lie outside a transcript
 
 
 **Required tools:** kallisto
@@ -3726,14 +3716,14 @@ kallisto_fusion
 
   - **bootstrap-samples** (int, optional) -- Number of bootstrap samples (default: 0)
 
-  - **cores** (int, optional) -- workaround to specify cores for grid                         engine and threads ie
+  - **cores** (int, optional) -- workaround to specify cores for grid engine and threads ie
     - default value: 1
 
   - **fr-stranded** (bool, optional) -- Strand specific reads, first read forward
 
   - **fragment-length** (int, optional) -- Estimated average fragment length
 
-  - **index** (str, required) -- Filename for the kallisto index to be                         used for quantification
+  - **index** (str, required) -- Filename for the kallisto index to be used for quantification
 
   - **rf-stranded** (bool, optional) -- Strand specific reads, first read reverse
 
@@ -3743,9 +3733,7 @@ kallisto_fusion
 
   - **single** (int, optional) -- Quantify single-end reads
 
-  - **single-overhang** (int, optional) -- Include reads where unobserved
-                        rest of fragment is predicted to lie
-                        outside a transcript
+  - **single-overhang** (int, optional) -- Include reads where unobserved rest of fragment is predicted to lie outside a transcript
 
 
 **Required tools:** kallisto
@@ -4157,13 +4145,11 @@ merge_genecounts
    }
 
 **Options:**
-  - **cores** (int, optional) -- workaround to specify cores for grid                                            engine and threads ie
+  - **cores** (int, optional) -- workaround to specify cores for grid engine and threads ie
     - default value: 1
 
   - **t** (str, required) -- tool name (htseq_count: htc, featureCounts: fc)
 
-
-**Required tools:** merge_genecounts
 
 **CPU Cores:** 1
 
@@ -4352,11 +4338,7 @@ pepr
    }
 
 **Options:**
-  - **chip_vs_input** (dict, required) -- A YAML dictionary that contains: runID:                        
-    rep1: [<List of runIDs>]  
-    input1: [<List of runIDs>]
-[   rep2: [<List of runIDs>]  
-    input2: [<List of runIDs>] ]rep2 and input2 are optional and will only be used for differential peak calling
+  - **chip_vs_input** (dict, required) -- A YAML dictionary that contains: runID: rep1: [<List of runIDs>] input1: [<List of runIDs>] [ rep2: [<List of runIDs>] input2: [<List of runIDs>] ]rep2 and input2 are optional and will only be used for differential peak calling
 
   - **diff** (bool, required) -- Tell PePr to perform differential binding analysis or not.
 
@@ -4429,9 +4411,7 @@ pepr_postprocess
    }
 
 **Options:**
-  - **chip_vs_input** (dict, required) -- A YAML dictionary that contains: runID:                        
-    rep1: [<List of runIDs>]  
-    input1: [<List of runIDs>]
+  - **chip_vs_input** (dict, required) -- A YAML dictionary that contains: runID: rep1: [<List of runIDs>] input1: [<List of runIDs>]
 
   - **file-type** (str, required) -- Read file format. Currently support bed, sam, bam
     - possible values: 'bed', 'sam', 'bam'
@@ -5073,7 +5053,7 @@ The cufflinks suite can be used to assembly new transcripts and
   - **string** (str, optional) -- String to match in gtf field gene_name for discarding
 
 
-**Required tools:** cat, post_cufflinks_merge
+**Required tools:** cat
 
 **CPU Cores:** 6
 
@@ -5125,7 +5105,7 @@ post_sawdust
   - **split_ident** (str, required)    - default value:  
 
 
-**Required tools:** cat, pigz, post_sawdust, samtools
+**Required tools:** cat, pigz, samtools
 
 **CPU Cores:** 2
 
@@ -5371,7 +5351,7 @@ reformatCigar
   - **threads** (int, optional) -- Number of threads 2B started. (Default: 1). Beware that this is only for (un-)compressing, the reformating is using a single CPU only.
 
 
-**Required tools:** cat, pigz, segemehl_2017_reformatCigar
+**Required tools:** cat, pigz
 
 **CPU Cores:** 1
 
@@ -5527,7 +5507,7 @@ rseqc
 
 **Output Connection**
   - **out/junction_saturation_stdout**
-  - **out/inner_distance_freq**
+  - **out/inner_distance_freq** (optional)
   - **out/junction_annotation_stderr**
   - **out/geneBody_coverage_stderr**
   - **out/bam_stat**
@@ -5536,7 +5516,7 @@ rseqc
   - **out/junction_bed**
   - **out/DupRate_plot_r**
   - **out/gc_stdout**
-  - **out/inner_distance_stderr**
+  - **out/inner_distance_stderr** (optional)
   - **out/DupRate_stdout**
   - **out/geneBody_coverage_stdout**
   - **out/DupRate_stderr**
@@ -5544,15 +5524,15 @@ rseqc
   - **out/junction_xls**
   - **out/gc_r**
   - **out/read_distribution**
-  - **out/inner_distance_stdout**
+  - **out/inner_distance_stdout** (optional)
   - **out/gc_stderr**
   - **out/DupRate_seq**
   - **out/gc_xls**
-  - **out/inner_distance**
+  - **out/inner_distance** (optional)
   - **out/geneBody_coverage.r**
   - **out/junctionSaturation_r**
   - **out/junction_saturation_stderr**
-  - **out/inner_distance_plot**
+  - **out/inner_distance_plot** (optional)
   - **out/geneBody_coverage.txt**
   - **out/junction_annotation_stdout**
 
@@ -5598,15 +5578,15 @@ rseqc
       rseqc -> out_14;
       out_15 [label="infer_experiment"];
       rseqc -> out_15;
-      out_16 [label="inner_distance"];
+      out_16 [label="inner_distance", style=filled, fillcolor="#a7a7a7"];
       rseqc -> out_16;
-      out_17 [label="inner_distance_freq"];
+      out_17 [label="inner_distance_freq", style=filled, fillcolor="#a7a7a7"];
       rseqc -> out_17;
-      out_18 [label="inner_distance_plot"];
+      out_18 [label="inner_distance_plot", style=filled, fillcolor="#a7a7a7"];
       rseqc -> out_18;
-      out_19 [label="inner_distance_stderr"];
+      out_19 [label="inner_distance_stderr", style=filled, fillcolor="#a7a7a7"];
       rseqc -> out_19;
-      out_20 [label="inner_distance_stdout"];
+      out_20 [label="inner_distance_stdout", style=filled, fillcolor="#a7a7a7"];
       rseqc -> out_20;
       out_21 [label="junctionSaturation_r"];
       rseqc -> out_21;
@@ -5631,7 +5611,7 @@ rseqc
 **Options:**
   - **reference** (str, required) -- Reference gene model in bed fomat. [required]
 
-  - **treatAs** (str, required) -- Some modules in rseqc  need paired end dataan fail otherwise on single end [required]
+  - **treatAs** (str, required) -- Some modules in rseqc need paired end dataan fail otherwise on single end [required]
     - possible values: 'single', 'paired'
 
 
@@ -5686,7 +5666,7 @@ s2c
   - **tmp_dir** (str, required) -- Temp directory for 's2c.py'. This can be in the /work/username/ path, since it is only temporary.
 
 
-**Required tools:** cat, dd, fix_s2c, pigz, s2c, samtools
+**Required tools:** cat, dd, pigz, samtools
 
 **CPU Cores:** 6
 
@@ -5766,10 +5746,10 @@ salmon
    }
 
 **Options:**
-  - **cores** (int, optional) -- workaround to specify cores for grid                         engine and threads ie
+  - **cores** (int, optional) -- workaround to specify cores for grid engine and threads ie
     - default value: 1
 
-  - **g** (str, optional) -- File containing a mapping of transcripts to genes.  If this file is provided Salmon will output both quant.sf and quant.genes.sf files, where the latter contains aggregated gene-level abundance estimates. The transcript to gene mapping should be provided as either a GTF file, or a in a simple tab-delimited format where each line contains the name of a transcript and the gene to which it belongs separated by a tab. The extension of the file is used to determine how the file should be parsed. Files ending in '.gtf', '.gff' or '.gff3'are assumed to be in GTF format; files with any other extension are assumed to be in the simple format. In GTF / GFF format, the 'transcript_id' is assumed to contain the transcript identifier and the 'gene_id' is assumed to contain the corresponding gene identifier.
+  - **g** (str, optional) -- File containing a mapping of transcripts to genes. If this file is provided Salmon will output both quant.sf and quant.genes.sf files, where the latter contains aggregated gene-level abundance estimates. The transcript to gene mapping should be provided as either a GTF file, or a in a simple tab-delimited format where each line contains the name of a transcript and the gene to which it belongs separated by a tab. The extension of the file is used to determine how the file should be parsed. Files ending in '.gtf', '.gff' or '.gff3'are assumed to be in GTF format; files with any other extension are assumed to be in the simple format. In GTF / GFF format, the 'transcript_id' is assumed to contain the transcript identifier and the 'gene_id' is assumed to contain the corresponding gene identifier.
 
   - **i** (str, required) -- Salmon index
 
@@ -6160,7 +6140,7 @@ samtools_sort
     - possible values: 'BAM', 'SAM', 'CRAM'
 
 
-  - **cores** (int, optional) -- workaround to specify cores for grid                                     engine and threads ie
+  - **cores** (int, optional) -- workaround to specify cores for grid engine and threads ie
     - default value: 1
 
   - **dd-blocksize** (str, optional) -- Read data with ``dd`` and set the blocksize.
@@ -6381,7 +6361,7 @@ segemehl
     - default value: 10
 
 
-**Required tools:** cat, dd, fix_qnames, mkfifo, pigz, segemehl
+**Required tools:** cat, dd, mkfifo, pigz, segemehl
 
 **CPU Cores:** 10
 
@@ -6544,7 +6524,7 @@ segemehl_2017
     - default value: 1
 
 
-**Required tools:** cat, dd, fix_qnames, mkfifo, pigz, segemehl
+**Required tools:** cat, dd, mkfifo, pigz, segemehl
 
 **CPU Cores:** 10
 
@@ -6721,14 +6701,7 @@ soapfuse
    }
 
 **Options:**
-  - **c** (str, required) -- SOAPfuse config;
-                        In the config file following variables are overwritten:
-                        path to index: DB_db_dir
-                        path to soapfuse bin: PG_pg_dir
-                        path to soapfuse source: PS_ps_dir
-                        suffix for fastq: PA_all_fq_postfix (i.e.: \*fastq.gz)
-                        cores: PA_all_process_of_align_software
-                        
+  - **c** (str, required) -- SOAPfuse config; In the config file following variables are overwritten: path to index: DB_db_dir path to soapfuse bin: PG_pg_dir path to soapfuse source: PS_ps_dir suffix for fastq: PA_all_fq_postfix (i.e.: \*fastq.gz) cores: PA_all_process_of_align_software 
 
   - **cores** (int, required)    - default value: 6
 
@@ -6749,6 +6722,48 @@ soapfuse
 **Required tools:** cp, echo, ln, mkdir, rm, soapfuse, tar
 
 **CPU Cores:** 6
+
+.. index:: source_controller
+
+source_controller
+=================
+
+
+
+    This step combines all inputs, produces a symlink to each file
+    and hashes them. It may be use to inherit from source steps
+    so changes in the source files can be detected later on.
+
+**Input Connection**
+  - **in/raw** - Files to control.
+
+**Output Connection**
+  - **out/merged** - All controlled files combined in one run ``links``. The output files are named ``<previous run id>-<file name>``.
+
+
+.. graphviz::
+
+   digraph foo {
+      rankdir = LR;
+      splines = true;
+      graph [fontname = Helvetica, fontsize = 12, size = "14, 11", nodesep = 0.2, ranksep = 0.3];
+      node [fontname = Helvetica, fontsize = 12, shape = rect];
+      edge [fontname = Helvetica, fontsize = 12];
+      source_controller [style=filled, fillcolor="#fce94f"];
+      in_0 [label="raw"];
+      in_0 -> source_controller;
+      out_1 [label="merged"];
+      source_controller -> out_1;
+   }
+
+**Options:**
+  - **cores** (int, optional) -- Number of threads used to calculate the hash sums.
+    - default value: 4
+
+
+**Required tools:** ln
+
+**CPU Cores:** 4
 
 .. index:: split_fastq
 
@@ -6794,7 +6809,7 @@ split_fastq
    }
 
 **Options:**
-  - **cores** (int, optional) -- workaround to specify cores for grid                                     engine and threads ie
+  - **cores** (int, optional) -- workaround to specify cores for grid engine and threads ie
     - default value: 1
 
   - **outfile_count** (int, required) -- Number of outfiles
@@ -7023,12 +7038,12 @@ star
    }
 
 **Options:**
-  - **cores** (int, optional) -- workaround to specify cores for grid                                                     engine and threads ie
+  - **cores** (int, optional) -- workaround to specify cores for grid engine and threads ie
     - default value: 1
 
-  - **genomeDir** (str, optional) -- path to the directory where genome files                                 are stored (if runMode!=generateGenome) or will be                                 generated (if runMode==generateGenome)
+  - **genomeDir** (str, optional) -- path to the directory where genome files are stored (if runMode!=generateGenome) or will be generated (if runMode==generateGenome)
 
-  - **readFilesCommand** (str, optional) -- command line to execute for each of the                         input file. This command should generate FASTA or                         FASTQ text and send it to stdout.                         For example: zcat - to uncompress .gz files,                         bzcat - to uncompress .bz2 files, etc.
+  - **readFilesCommand** (str, optional) -- command line to execute for each of the input file. This command should generate FASTA or FASTQ text and send it to stdout. For example: zcat - to uncompress .gz files, bzcat - to uncompress .bz2 files, etc.
 
   - **runThreadN** (int, optional) -- number of threads to run STAR
     - default value: 1
@@ -7044,7 +7059,8 @@ stringtie
 =========
 
 
-StringTie is a fast and highly efficient assembler of RNA-Seq alignments into potential
+
+    StringTie is a fast and highly efficient assembler of RNA-Seq alignments into potential
     transcripts. It uses a novel network flow algorithm as well as an optional de novo assembly step
     to assemble and quantitate full-length transcripts representing multiple splice variants for
     each gene locus. Its input can include not only the alignments of raw reads used by other
@@ -7119,6 +7135,8 @@ StringTie is a fast and highly efficient assembler of RNA-Seq alignments into po
   - **M** (float, optional) -- Sets the maximum fraction of muliple-location-mapped reads that are allowed to be present at a given locus. Default: 0.95.
 
   - **a** (int, optional) -- minimum anchor length for junctions (default: 10)
+
+  - **b** (bool, optional) -- enable output of Ballgown table files but these files will be created under the directory path given as <dir_path>
 
   - **c** (float, optional) -- minimum reads per bp coverage to consider for transcript assembly (default: 2.5)
 
@@ -7395,17 +7413,15 @@ tcount2gcount
    }
 
 **Options:**
-  - **cores** (int, optional) -- workaround to specify cores for grid                                            engine and threads ie
+  - **cores** (int, optional) -- workaround to specify cores for grid engine and threads ie
     - default value: 1
 
   - **kallisto-extended** (bool, optional) -- writes extended format includign tpm. 
 
-  - **m** (str, optional) -- transcript to gene mapping file. Required Format example (per row): ENST00000527779.1	ENSG00000137692.11 or gtf
+  - **m** (str, optional) -- transcript to gene mapping file. Required Format example (per row): ENST00000527779.1 ENSG00000137692.11 or gtf
 
   - **t** (str, optional) -- source tool of input file. Possible values: kallisto, salmon
 
-
-**Required tools:** tcount2gcount
 
 **CPU Cores:** 1
 

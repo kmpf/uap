@@ -60,7 +60,7 @@ to store the created files.
 
 
 ``base_working_directory`` Section
-----------------------------
+----------------------------------
 
 The value of ``base_working_directory`` is the directory where **uap**
 changes to before declaring all steps and it defaults to the location
