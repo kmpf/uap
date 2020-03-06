@@ -649,13 +649,17 @@ class Pipeline(object):
         if not 'tools' in self.config:
             return
         pool = multiprocessing.Pool(4)
-        show_status = True
-        if hasattr(self.args, 'run') and self.args.run \
-        and not hasattr(self.args, 'hash'):
+        if logger.getEffectiveLevel() <= 20:
             show_status = False
+        elif self.has_interactive_shell():
+            show_status = True
+        elif not (hasattr(self.args, 'run') and self.args.run):
+            show_status = True
+        else:
+            show_status = False
+        if not show_status:
             sys.stderr.write('[uap] Running tool check...\n')
-        elif logger.getEffectiveLevel() <= 20:
-            show_status = False
+            sys.stderr.flush()
         iter_tools = tqdm(pool.imap_unordered(check_tool, self.config['tools'].items()),
                         total=len(self.config['tools']),
                         desc='tool check',
