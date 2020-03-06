@@ -33,6 +33,7 @@
  * tool versions can optionally be ignored with `ignore_version`
  * shorter lmod config (#104)
  * uap tools must not be referenced to in config (#119)
+ * uap tools are not listed as requirement in step documentation
  * uap path in PATH environmental variable not required (#107)
  * default job quota is now 0, which is no quota (#105)
  * dependencies are now completed implicitly through selected connections (#127)
