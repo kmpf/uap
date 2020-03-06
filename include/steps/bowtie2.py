@@ -260,7 +260,7 @@ class Bowtie2(AbstractStep):
                             'due to a race condition '
                             '(http://seqanswers.com/forums/showthread.php?t=16540).')
         self.add_option('compress', bool, optional = True, default = True,
-                description='Use pigz and dd to pipe out and compress bowtie2 results.')
+                description='Use pigz to compress bowtie2 results.')
         self.add_option('dd-blocksize', str, optional = True, default = "2M")
         self.add_option('pigz-blocksize', str, optional = True, default = "2048")
 
@@ -449,7 +449,8 @@ class Bowtie2(AbstractStep):
                                     '%s-bowtie2-results.sam' % run_id,
                                     input_paths
                             )
-                            bowtie2.extend(['-S', out_file])
+                            if not self.get_option('fifo'):
+                                bowtie2.extend(['-S', out_file])
                             bowtie2_pipe.add_command(bowtie2, stderr_path=log_stderr)
                         else:
                             out_file = run.add_output_file(
@@ -463,11 +464,14 @@ class Bowtie2(AbstractStep):
                                     '--processes', str(self.get_cores()),
                                     '--blocksize', self.get_option('pigz-blocksize'),
                                     '--stdout']
-                            bowtie2_pipe.add_command(pigz)
-                            # Write bowtie2 output to file
-                            dd = [
-                                self.get_tool('dd'),
-                                'obs=%s' % self.get_option('dd-blocksize'),
-                                'of=%s' % out_file
-                            ]
-                            bowtie2_pipe.add_command(dd)
+                            if not self.get_option('fifo'):
+                                bowtie2_pipe.add_command(pigz, stdout_path=out_file)
+                            else:
+                                bowtie2_pipe.add_command(pigz)
+                                # Write bowtie2 output to file
+                                dd = [
+                                    self.get_tool('dd'),
+                                    'obs=%s' % self.get_option('dd-blocksize'),
+                                    'of=%s' % out_file
+                                ]
+                                bowtie2_pipe.add_command(dd)
