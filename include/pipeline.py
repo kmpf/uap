@@ -337,6 +337,11 @@ class Pipeline(object):
         This dict stores tasks per step name.
         '''
 
+        self.used_tools = set()
+        '''
+        A set that stores all tools used by some step.
+        '''
+
 
         self.known_config_keys = set(['destination_path', 'constants', 'cluster',
                 'steps', 'lmod', 'tools', 'base_working_directory', 'id'])
@@ -346,6 +351,14 @@ class Pipeline(object):
 
         self.read_config(self.args.config)
         self.setup_lmod()
+        self.build_steps()
+
+        configured_tools = set(tool for tool, conf in
+                self.config['tools'].items() if not
+                conf.get('atomatically_configured'))
+        unused_tools = configured_tools - self.used_tools
+        if unused_tools:
+            logger.warn('Unused tool(s): %s' % list(unused_tools))
 
         # collect all tasks
         for step_name in self.topological_step_order:
@@ -481,8 +494,6 @@ class Pipeline(object):
             self.config['cluster'].setdefault(i, '')
         self.config['cluster'].setdefault('default_job_quota', 0) # no quota
 
-        self.build_steps()
-
     def get_config(self):
         return self.config
 
@@ -521,6 +532,7 @@ class Pipeline(object):
             step.set_options(step_description)
 
             self.steps[step_name] = step
+            self.used_tools.update(step.used_tools)
 
         # step two: set dependencies
         for step_name, step in self.steps.items():

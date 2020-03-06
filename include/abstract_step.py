@@ -898,6 +898,10 @@ class AbstractStep(object):
                          "self.require_tool('%s')" % (key, key))
         return self._tools[key]
 
+    @property
+    def used_tools(self):
+        return set(self._tools.keys())
+
     def get_module_unloads(self):
         """
         Return dictionary with module unload commands to execute before

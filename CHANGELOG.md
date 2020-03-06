@@ -73,6 +73,7 @@
  * configuration can be read from anny annotation file
  * implement `source_controller` step to detect changes in source inputs
  * show output hashing progress
+ * warn if unused tools are configured
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
