@@ -211,6 +211,7 @@ def main(args):
                     print('No annotation file.')
                 else:
                     failed = dict()
+                    stderr = dict()
                     try:
                         procs = anno_data['pipeline_log'].get('processes', [])
                         for proc in procs:
@@ -218,9 +219,9 @@ def main(args):
                                 continue
                             failed[proc['name']] = {
                                 'command':list2cmdline(proc['args']),
-                                'exit code':proc['exit_code'],
-                                'stderr':proc['stderr_copy']['tail']
+                                'exit code':proc['exit_code']
                             }
+                            stderr[proc['name']] = proc['stderr_copy']['tail']
                     except KeyError as e:
                         print('The annotation file "%s" seems badly '
                                 'formated: %s\n' % (anno_file, e))
@@ -233,8 +234,12 @@ def main(args):
                     if failed:
                         found_error = True
                         print('## FAILED COMMANDS ##')
-                        print(yaml.dump(failed, Dumper=misc.UAPDumper,
-                                default_flow_style = False))
+                        for tool, failings in failed.items():
+                            sys.stdout.write(yaml.dump({tool:failings},
+                                    Dumper=misc.UAPDumper,
+                                    default_flow_style = False))
+                            err = ('\n'+stderr[tool]).replace('\n', '\n    ')
+                            print('  stderr:%s' % err)
                     else:
                         print('No failed commands found in the annotation file.\n')
                     run_data = anno_data.get('run', [])
