@@ -20,6 +20,7 @@
  * raise exeption if an unknown configuration key is used
  * fix race condition in `samtools_index` step
  * a task is only finished when hashing and annotation file are done (#152)
+ * exceptions during hashing or renaming are now caught and logged
 
 **Features**
  * use relative paths; uap output can now be moved (#115)
