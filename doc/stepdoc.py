@@ -13,7 +13,7 @@ import string
 import yaml
 
 
-def doc_module(module_name, fout):
+def doc_module(module_name, fout, uap_tools):
     step_class = abstract_step.AbstractStep.get_step_class_for_key(module_name)
     step = step_class(None)
     fout.write(".. index:: %s\n" % module_name)
@@ -103,8 +103,9 @@ def doc_module(module_name, fout):
         fout.write("\n")
 
     # print tools
-    if len(step._tools) > 0:
-        fout.write("**Required tools:** %s\n" % ', '.join(sorted(step._tools.keys())))
+    tools = [t for t in step._tools.keys() if t not in uap_tools]
+    if tools:
+        fout.write("**Required tools:** %s\n" % ', '.join(sorted(tools)))
         fout.write("\n")
 
     if abstract_step.AbstractSourceStep in step.__class__.__bases__:
@@ -128,6 +129,8 @@ def doc_module(module_name, fout):
 
 def main():
     abs_path = os.path.dirname(os.path.realpath(__file__))
+    uap_tools = glob.glob(os.path.join(abs_path, '../tools/*.py'))
+    uap_tools = [os.path.basename(t).replace('.py', '') for t in uap_tools]
     with open(os.path.join(abs_path, 'source/steps.rst'), 'w') as fout:
         fout.write("###############\n")
         fout.write("Available steps\n")
@@ -140,7 +143,7 @@ def main():
         for m in sorted(modules):
             module_name = os.path.basename(m).replace('.py', '')
             if not '__' in module_name:
-                doc_module(module_name, fout)
+                doc_module(module_name, fout, uap_tools)
         fout.write("****************\n")
         fout.write("Processing steps\n")
         fout.write("****************\n\n")
@@ -150,7 +153,7 @@ def main():
             if module_name == 'io_step':
                 continue
             if not '__' in module_name:
-                doc_module(module_name, fout)
+                doc_module(module_name, fout, uap_tools)
 
 if __name__ == '__main__':
     logging.basicConfig()
