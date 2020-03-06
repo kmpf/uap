@@ -747,7 +747,7 @@ class Pipeline(object):
             args = self.args.run
         for arg in args:
             if arg in self.task_for_task_id:
-                task = task_for_task_id[arg]
+                task = self.task_for_task_id[arg]
             else:
                 for task in self.all_tasks_topologically_sorted:
                     if str(task)[0:len(arg)] == arg:
