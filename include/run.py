@@ -318,7 +318,7 @@ class Run(object):
 
         # get output files
         cmd_by_eg['output'] = dict()
-        for connection, files in self.get_output_files().items():
+        for connection, files in sorted(self.get_output_files().items()):
             if files:
                 cmd_by_eg['output'][connection] = files.keys()
 
