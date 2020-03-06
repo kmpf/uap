@@ -57,7 +57,7 @@ class ConnectionsCollector(object):
         Saves the names in ``files`` for a new ``connection``.
         '''
         if not isinstance(files, list):
-            raise UAPError('files must to be a list but is a %s' %
+            raise UAPError('"files" must be a list but is a %s' %
                     file.__class__.__name__)
         run_id = self._init_run_id(run_id)
         if not isinstance(connection, str):
