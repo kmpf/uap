@@ -342,11 +342,6 @@ class Pipeline(object):
         A set that stores all tools used by some step.
         '''
 
-        self.task_wish_list = list()
-        '''
-        A list of all tasks specified as arguemnts.
-        '''
-
 
         self.known_config_keys = set(['destination_path', 'constants', 'cluster',
                 'steps', 'lmod', 'tools', 'base_working_directory', 'id'])
@@ -391,16 +386,6 @@ class Pipeline(object):
         self.tool_versions = {}
         if not self.args.no_tool_checks:
             self.check_tools()
-
-        # fill task_wish_list
-        if hasattr(self.args, 'run') and self.args.run:
-            for arg in self.args.run:
-                if arg in self.all_tasks_topologically_sorted:
-                    self.task_wish_list.append(arg)
-                else:
-                    for task in self.all_tasks_topologically_sorted:
-                        if str(task)[0:len(arg)] == arg:
-                            self.task_wish_list.append(str(task))
 
     def get_uap_path(self):
         return self._uap_path
@@ -747,6 +732,29 @@ class Pipeline(object):
                             raise UAPError('Could not read ping file %s: %s' %
                                     (failed_qpf, e))
         return ids
+
+    def get_task_with_list(self, as_string=False, exclusive=False):
+        '''
+        Reruns a list of tasks, specified with the run argument.
+        '''
+        task_wish_list = list()
+        args = list()
+        if hasattr(self.args, 'run'):
+            args = self.args.run
+        for arg in args:
+            if arg in self.task_for_task_id:
+                task = task_for_task_id[arg]
+            else:
+                for task in self.all_tasks_topologically_sorted:
+                    if str(task)[0:len(arg)] == arg:
+                        break
+            if as_string:
+                task = str(task)
+            task_wish_list.append(task)
+        if not task_wish_list and exclusive is False:
+            return self.all_tasks_topologically_sorted
+        return task_wish_list
+
 
     def check_ping_files(self, print_more_warnings = False,
                          print_details = False, fix_problems = False):

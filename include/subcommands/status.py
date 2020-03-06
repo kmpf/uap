@@ -47,9 +47,8 @@ def main(args):
     elif args.run and not args.details:
         # print run infos of one or more specific tasks
         p = pipeline.Pipeline(arguments=args)
-        for task_id in p.task_wish_list:
-            step_name, run_id = task_id.split('/')
-            report = p.steps[step_name].get_run(run_id).as_dict()
+        for task in p.get_task_with_list():
+            report = task.get_run().as_dict()
             print(yaml.dump(report, Dumper=misc.UAPDumper,
                     default_flow_style = False))
 
@@ -107,11 +106,7 @@ def main(args):
         p = pipeline.Pipeline(arguments=args)
         new_dest = p.config['destination_path']
         n_per_state = dict()
-        tasks = list()
-        if p.task_wish_list:
-            tasks = [p.task_for_task_id[t] for t in p.task_wish_list]
-        else:
-            tasks = p.all_tasks_topologically_sorted
+        tasks = p.get_task_with_list()
         for i, task in enumerate(tasks):
             sys.stdout.write('[%d/%d] ' % (i+1, len(tasks)))
             state = task.get_task_state(do_hash=args.hash)

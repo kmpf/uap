@@ -24,13 +24,8 @@ def main(args):
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
 
-    if p.task_wish_list:
-        task_list = p.task_wish_list
-    else:
-        task_list = p.all_tasks_topologically_sorted
-
     # try to generate reports for all tasks
-    for task in task_list:
+    for task in p.get_task_with_list():
         basic_task_state = task.get_task_state()
         if basic_task_state == p.states.FINISHED:
             try:

@@ -57,20 +57,20 @@ def main(args):
     tasks_left = dict()
     skip_message = list()
     skipped_tasks = dict()
+    wish_list = p.get_task_with_list()
     iter_steps = tqdm(p.topological_step_order, desc='step states')
     try:
         for step_name in iter_steps:
             tasks_left[step_name] = list()
             for task in p.tasks_in_step[step_name]:
-                if p.task_wish_list:
-                    if not str(task) in p.task_wish_list:
-                        continue
+                if wish_list and task not in wish_list:
+                    continue
                 state = task.get_task_state()
                 if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
                     skipped_tasks.setdefault(state, set())
                     skipped_tasks[state].add(task)
                     continue
-                if state == p.states.VOLATILIZED and not p.task_wish_list:
+                if state == p.states.VOLATILIZED and not wish_list:
                     skipped_tasks.setdefault(state, set())
                     skipped_tasks[state].add(task)
                     continue

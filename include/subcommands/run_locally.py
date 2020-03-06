@@ -27,11 +27,6 @@ def main(args):
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
 
-    if p.task_wish_list:
-        task_list = p.task_wish_list
-    else:
-        task_list = p.all_tasks_topologically_sorted
-
     # execute all tasks
     finished_states = [p.states.FINISHED]
     if args.ignore:
@@ -39,7 +34,7 @@ def main(args):
 
     accepted_states = [p.states.BAD, p.states.READY, p.states.QUEUED,
             p.states.VOLATILIZED]
-    for task in task_list:
+    for task in p.get_task_with_list():
         task_state = task.get_task_state()
         if task_state in finished_states:
             task.move_ping_file()

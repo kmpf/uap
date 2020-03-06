@@ -103,14 +103,7 @@ def main(args):
         render_graph_for_all_steps(p, args)
 
     else:
-        # Only use tasks listed in args.run
-        if p.task_wish_list:
-            task_list = p.task_wish_list
-        # or take all available tasks
-        else:
-            task_list = p.all_tasks_topologically_sorted
-
-        for task in task_list:
+        for task in p.get_task_with_list():
             outdir = task.get_run().get_output_directory()
             anno_files = glob.glob(os.path.join(
                 outdir, ".%s*.annotation.yaml" % task.get_run().get_run_id()

@@ -41,9 +41,7 @@ logger = logging.getLogger("uap_logger")
 def main(args):
     p = pipeline.Pipeline(arguments=args)
 
-    task_wish_list = None
-    if p.task_wish_list:
-        task_wish_list = p.task_wish_list
+    wish_list = p.get_task_with_list()
 
     tasks_left = []
 
@@ -55,9 +53,8 @@ def main(args):
         raise UAPError("Couldn't open %s." % template_path)
 
     for task in p.all_tasks_topologically_sorted:
-        if task_wish_list is not None:
-            if not str(task) in task_wish_list:
-                continue
+        if wish_list and task not in task_wish_list:
+            continue
         tasks_left.append(task)
 
     print("Now attempting to submit %d jobs..." % len(tasks_left))

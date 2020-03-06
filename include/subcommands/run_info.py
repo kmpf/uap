@@ -30,7 +30,7 @@ def main(args):
 
     else:
         # print run infos of one or more specific tasks
-        for task_id in p.task_wish_list:
+        for task_id in p.get_task_with_list(as_string=True, exclusive=True):
             parts = task_id.split('/')
             if len(parts) != 2:
                 raise StandardError("Invalid run ID %s." % task_id)
