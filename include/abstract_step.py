@@ -654,22 +654,20 @@ class AbstractStep(object):
         run.reset_fsc()
 
         to_be_moved = dict()
-        if (not p.caught_signal) and (caught_exception is None):
+        if not p.caught_signal and not caught_exception:
             # if we're here, we can assume the step has finished successfully
-            # now rename the output files (move from temp directory to
-            # destination directory)
+            # now log file stats
 
-            # import pdb
-            # pdb.set_trace()
-
-            for tag in run.get_output_files().keys():
-                for out_file in run.get_output_files()[tag].keys():
-                    # don't try to rename files if they were not meant to exist
-                    # in our temporary directory
-                    # 1. out_file should not be None (empty output connection)
-                    # 2. out_file should not contain a '/' (file belongs to a
-                    #    source step)
-                    if out_file != None and not '/' in out_file:
+            try:
+                for tag in run.get_output_files().keys():
+                    for out_file in run.get_output_files()[tag].keys():
+                        # don't try to rename files if they were not meant to exist
+                        # in our temporary directory
+                        # 1. out_file should not be None (empty output connection)
+                        # 2. out_file should not contain a '/' (file belongs to a
+                        #    source step)
+                        if out_file is None or '/' in out_file:
+                            continue
                         source_path = os.path.join(
                             run.get_temp_output_directory(),
                             os.path.basename(out_file)
@@ -696,11 +694,12 @@ class AbstractStep(object):
                                 logger.debug("Set %s 'type' info to 'step_file'" % new_path)
                                 known_paths[new_path]['type'] = 'step_file'
                         else:
-                            caught_error = UAPError('The step failed to produce an '
+                            raise UAPError('The step failed to produce an '
                                                     'announced output file: "%s".\n'
                                                     'Source file doesn\'t exists: "%s"'
                                                     % (out_file, source_path))
-                            caught_exception = (UAPError, caught_error, None)
+            except:
+                caught_exception = sys.exc_info()
 
         pool = None
         class SignalError(StandardError):
@@ -752,6 +751,14 @@ class AbstractStep(object):
             signal.signal(signal.SIGINT, original_int_handler)
 
         run.add_known_paths(known_paths)
+        if not p.caught_signal and not caught_exception:
+            try:
+                for source_path, new_path in to_be_moved.items():
+                    logger.debug("Moving %s to %s." % (source_path, new_path))
+                    os.rename(source_path, new_path)
+            except:
+                caught_exception = sys.exc_info()
+
         error = None
         if p.caught_signal is not None:
             signum = p.caught_signal
@@ -761,10 +768,6 @@ class AbstractStep(object):
         elif caught_exception is not None:
             error = ''.join(traceback.format_exception(
                     *caught_exception)[-2:]).strip()
-        if not error:
-            for source_path, new_path in to_be_moved.items():
-                logger.debug("Moving %s to %s." % (source_path, new_path))
-                os.rename(source_path, new_path)
         annotation_path = run.write_annotation_file(
             run.get_output_directory(), error=error)
 
