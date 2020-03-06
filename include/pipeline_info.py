@@ -25,5 +25,9 @@ class PipelineInfo(object):
     def get_commands(self):
         return self._commands
 
+    def get_command_string(self, replace_path=False):
+        return ' | '.join(c.get_command_string(replace_path=replace_path)
+                for c in self.get_commands())
+
     def get_exec_group(self):
         return self._exec_group

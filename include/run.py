@@ -11,7 +11,6 @@ import stat
 import string
 import tempfile
 import platform
-import subprocess
 from deepdiff import DeepHash, DeepDiff
 import inspect
 from functools import wraps
@@ -292,11 +291,8 @@ class Run(object):
         # get tool version texts and paths
         tools = sorted(self.get_step()._tools.keys())
         cmd_by_eg['tool_versions'] = dict()
-        tool_paths = dict()
         tool_conf = p.config['tools']
         for tool in tools:
-            if tool != tool_conf[tool]['path']:
-                tool_paths[tool] = tool_conf[tool]['path']
             if not tool_conf[tool]['ignore_version'] \
             and not p.args.no_tool_checks:
                 tool_info = p.tool_versions[tool]
@@ -308,24 +304,17 @@ class Run(object):
         for eg_count, exec_group in enumerate(self.get_exec_groups()):
             eg_name = 'execution group %d' % eg_count
             cmd_by_eg[eg_name] = dict()
-            for pipe_count, poc in enumerate(exec_group.get_pipes_and_commands()):
+            procs = exec_group.get_pipes_and_commands(sort=True)
+            for pipe_count, poc in enumerate(procs):
                 # for each pipe or command (poc)
                 # check if it is a pipeline ...
                 if isinstance(poc, pipeline_info.PipelineInfo):
-                    pipe_count += 1
-                    cmd_by_eg[eg_name]['pipe %s' % pipe_count] = list()
-                    for command in poc.get_commands():
-                        cmd_list = command.get_command()
-                        # replace tool paths by tool names
-                        for tool, path in tool_paths.items():
-                            cmd_list = [element.replace(path, tool)
-                                    for element in cmd_list]
-                        cmd_by_eg[eg_name]['pipe %s' % pipe_count].append(
-                                subprocess.list2cmdline(cmd_list))
+                    cmd_by_eg[eg_name]['pipe %s' % pipe_count] = \
+                            poc.get_command_string(replace_path=True)
                 # ... or a command
                 elif isinstance(poc, command_info.CommandInfo):
                     cmd_by_eg[eg_name]['command %s' % pipe_count] = \
-                            subprocess.list2cmdline(poc.get_command())
+                            poc.get_command_string(replace_path=True)
 
         # get output files
         cmd_by_eg['output'] = dict()

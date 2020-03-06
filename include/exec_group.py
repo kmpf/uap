@@ -38,8 +38,11 @@ class ExecGroup(object):
         self._pipes_and_commands.append(command)
         return command
 
-    def get_pipes_and_commands(self):
-        return self._pipes_and_commands
+    def get_pipes_and_commands(self, sort=False):
+        if sort is not True:
+            return self._pipes_and_commands
+        return sorted(self._pipes_and_commands,
+                key=lambda proc: proc.get_command_string(replace_path=True))
 
     def get_run(self):
         return self._run

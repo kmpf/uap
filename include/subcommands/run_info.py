@@ -60,18 +60,11 @@ def main(args):
                     # check if it is a pipeline ...
                     
                     if isinstance(poc, pipeline_info.PipelineInfo):
-                        pipe_header = goc_header + " -- %d. Pipeline" % pipe_count
-                        print("# " + pipe_header)
-                        print("# " + "-" * len(pipe_header) + "\n")
-                        # ... create a pipeline ...
-                        pipe = list()
-                        for command in poc.get_commands():
-                            pipe.append(list2cmdline(command.get_command()))
-                        print( " | ".join(pipe) + "\n" )
+                        cmd_header = goc_header + " -- %d. Pipeline" % pipe_count
                         pipe_count += 1
                     elif isinstance(poc, command_info.CommandInfo):
                         cmd_header = goc_header + " -- %d. Command" % cmd_count
-                        print("# " + cmd_header)
-                        print("# " + "-" * len(cmd_header) + "\n")
-                        print(list2cmdline(poc.get_command()) + "\n")
-                        cmd_count
+                        cmd_count += 1
+                    print("# " + cmd_header)
+                    print("# " + "-" * len(cmd_header) + "\n")
+                    print(poc.get_command_string() + "\n")

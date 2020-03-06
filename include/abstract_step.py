@@ -900,6 +900,13 @@ class AbstractStep(object):
                          "self.require_tool('%s')" % (key, key))
         return self._tools[key]
 
+    def get_path_tool(self):
+        '''
+        Returns a dict with a tool name for each tool paths.
+        '''
+        return {path:tool for tool, path in self._tools.items()}
+
+
     @property
     def used_tools(self):
         return set(self._tools.keys())

@@ -1,6 +1,7 @@
 from uaperrors import UAPError
 import sys
 import os
+from subprocess import list2cmdline
 from logging import getLogger
 import pipeline_info
 import exec_group
@@ -93,3 +94,18 @@ class CommandInfo(object):
     @abs2rel_path
     def get_command(self):
         return self._command
+
+    def get_command_string(self, replace_path=False):
+        '''
+        Returns a string to represent the command.
+        '''
+        if replace_path is not True:
+            return list2cmdline(self.get_command())
+        cmd = self.get_command()
+        map = self.get_run().get_step().get_path_tool()
+        tool = map.get(cmd[0])
+        if tool is None:
+            tool = cmd[0]
+            for path, tool in map.items():
+                tool = tool.replace(path, tool)
+        return list2cmdline([tool] + cmd[1:])
