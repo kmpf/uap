@@ -400,7 +400,7 @@ class Pipeline(object):
                 else:
                     for task in self.all_tasks_topologically_sorted:
                         if str(task)[0:len(arg)] == arg:
-                            task_wish_list.append(str(task))
+                            self.task_wish_list.append(str(task))
 
     def get_uap_path(self):
         return self._uap_path
