@@ -151,25 +151,26 @@ Here is the help message::
                                             [--cluster CLUSTER] [--details]
                                             [--job-ids] [--summarize] [--graph]
                                             [--hash] [--sources]
-                                            [-r [RUN [RUN ...]]]
+                                            [run [run ...]]
 
   This script displays by default information about all runs of the pipeline as configured in '<project-config>.yaml'. But the displayed information can be narrowed down via command line options.
   IMPORTANT: Hints given by this script are just valid if the jobs were submitted to the cluster.
 
+  positional arguments:
+    run                The status of these runs are displayed.
+
   optional arguments:
-    -h, --help            show this help message and exit
-    --even-if-dirty       This option must be set if the local git repository contains uncommited changes.
-                          Otherwise uap will not run.
-    --no-tool-checks      This option disables the otherwise mandatory checks for tool availability and version
-    --cluster CLUSTER     Specify the cluster type. Default: [auto].
-    --details             Displays more information about task states.
-    --job-ids             Prints space seperated cluster job ids of all submitted jobs.
-    --summarize           Displays summarized information of the analysis.
-    --graph               Displays the dependency graph of the analysis.
-    --hash                Validate sha256sums to detect file changes.
-    --sources             Displays only information about the source runs.
-    -r [RUN [RUN ...]], --run [RUN [RUN ...]]
-                          The status of these runs are displayed.
+    -h, --help         show this help message and exit
+    --even-if-dirty    This option must be set if the local git repository contains uncommited changes.
+                       Otherwise uap will not run.
+    --no-tool-checks   This option disables the otherwise mandatory checks for tool availability and version
+    --cluster CLUSTER  Specify the cluster type. Default: [auto].
+    --details          Displays more information about task states.
+    --job-ids          Prints space seperated cluster job ids of all submitted jobs.
+    --summarize        Displays summarized information of the analysis.
+    --graph            Displays the dependency graph of the analysis.
+    --hash             Validate sha256sums to detect file changes.
+    --sources          Displays only information about the source runs.
 
 At any time, each run is in one of the following states:
 

@@ -108,8 +108,10 @@ def main(args):
         skip_message.append("Skipping %d task(s) because they are %s..." %
                 (len(tasks), state.lower()))
     if p.states.VOLATILIZED in skipped_tasks.keys():
-        skip_message.append("Request reproduction of volitilized tasks with "
-                            "'-r <task name>' or '-r <step name>'.")
+        skip_message.append("Request reproduction of volitilized tasks by "
+                            "requesting it explicitly, e.g., with 'uap %s "
+                            "submit-to-cluster <step name>'." %
+                            p.args.config.name)
 
     quotas = dict()
     for line in skip_message:

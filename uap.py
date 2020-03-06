@@ -367,8 +367,7 @@ def main():
         help="Displays only information about the source runs.")
 
     status_parser.add_argument(
-        "-r","--run",
-        dest="run",
+        "run",
         nargs='*',
         default=list(),
         type=str,
