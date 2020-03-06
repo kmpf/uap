@@ -69,37 +69,40 @@ def main(args):
     skip_message = list()
     skipped_tasks = dict()
     iter_steps = tqdm(p.topological_step_order, desc='step states')
-    for step_name in iter_steps:
-        tasks_left[step_name] = list()
-        for task in p.tasks_in_step[step_name]:
-            if task_wish_list is not None:
-                if not str(task) in task_wish_list:
+    try:
+        for step_name in iter_steps:
+            tasks_left[step_name] = list()
+            for task in p.tasks_in_step[step_name]:
+                if task_wish_list is not None:
+                    if not str(task) in task_wish_list:
+                        continue
+                state = task.get_task_state()
+                if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
+                    skipped_tasks.setdefault(state, set())
+                    skipped_tasks[state].add(task)
                     continue
-            state = task.get_task_state()
-            if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
-                skipped_tasks.setdefault(state, set())
-                skipped_tasks[state].add(task)
-                continue
-            if state == p.states.VOLATILIZED and not task_wish_list:
-                skipped_tasks.setdefault(state, set())
-                skipped_tasks[state].add(task)
-                continue
-            if state == p.states.CHANGED and args.ignore:
-                skipped_tasks.setdefault(state, set())
-                skipped_tasks[state].add(task)
-                skip_message.append("Skipping %s because it's changes are "
-                    "ignored." % task)
-                continue
-            if state == p.states.CHANGED and not args.force:
-                iter_steps.close()
-                raise UAPError("Task %s has changed. "
-                        "Run 'uap %s status --details' to see what changed or "
-                        "'uap %s submit-to-cluster --force' to force overwrite "
-                        "of the results." %
-                        (task, args.config.name, args.config.name))
-            tasks_left[step_name].append(task)
-            if step_name not in steps_left:
-                steps_left.append(step_name)
+                if state == p.states.VOLATILIZED and not task_wish_list:
+                    skipped_tasks.setdefault(state, set())
+                    skipped_tasks[state].add(task)
+                    continue
+                if state == p.states.CHANGED and args.ignore:
+                    skipped_tasks.setdefault(state, set())
+                    skipped_tasks[state].add(task)
+                    skip_message.append("Skipping %s because it's changes are "
+                        "ignored." % task)
+                    continue
+                if state == p.states.CHANGED and not args.force:
+                    raise UAPError("Task %s has changed. "
+                            "Run 'uap %s status --details' to see what changed or "
+                            "'uap %s submit-to-cluster --force' to force overwrite "
+                            "of the results." %
+                            (task, args.config.name, args.config.name))
+                tasks_left[step_name].append(task)
+                if step_name not in steps_left:
+                    steps_left.append(step_name)
+    except:
+        iter_steps.close()
+        raise
 
     for state, tasks in skipped_tasks.items():
         skip_message.append("Skipping %d task(s) because they are %s..." %
