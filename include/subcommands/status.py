@@ -222,10 +222,13 @@ def main(args):
                         print('The annotation file "%s" seems badly '
                                 'formated: %s\n' % (anno_file, e))
                     else:
-                        host = anno_data.get('run', dict()).get('hostname', 'unknown')
-                        time = anno_data.get('end_time', 'unknown')
+                        time = anno_data.get('end_time', 'not available')
+                        rd = anno_data.get('run', dict())
+                        host = rd.get('hostname', 'not available')
+                        job_id = rd.get('cluster job id', 'not available')
                         print('host: %s' % host)
                         print('time: %s' % time)
+                        print('cluster job id: %s' % job_id)
                         print('')
                     if failed:
                         found_error = True

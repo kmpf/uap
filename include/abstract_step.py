@@ -538,6 +538,12 @@ class AbstractStep(object):
             raise UAPError("%s/%s seems to be already running, exiting..."
                          % (self, run_id))
         queued_ping_path = run.get_queued_ping_file()
+        try:
+            with open(queued_ping_path, 'r') as buff:
+                info = yaml.load(buff, Loader=yaml.FullLoader)
+            job_id = info['job_id']
+        except (IOError, KeyError):
+            job_id = None
 
         # create a temporary directory for the output files
         temp_directory = run.get_temp_output_directory()
@@ -579,6 +585,8 @@ class AbstractStep(object):
         executing_ping_info['pid'] = os.getpid()
         executing_ping_info['cwd'] = os.getcwd()
         executing_ping_info['temp_directory'] = run.get_temp_output_directory()
+        if job_id:
+            executing_ping_info['cluster_job_id'] = job_id
 
         with open(executing_ping_path, 'w') as f:
             f.write(yaml.dump(executing_ping_info, default_flow_style = False))
@@ -622,9 +630,12 @@ class AbstractStep(object):
         original_int_handler = signal.signal(signal.SIGINT, ping_on_int)
 
         self.start_time = datetime.now()
+        message = "[START] starting %s/%s on %s" % \
+                (self, run_id, socket.gethostname())
+        if job_id:
+            message += " with job id %s" % job_id
         p = self.get_pipeline()
-        p.notify("[START] starting %s/%s on %s" %
-                 (self, run_id, socket.gethostname()))
+        p.notify(message)
         caught_exception = None
         self._state = AbstractStep.states.EXECUTING
         base_working_dir = os.getcwd()
@@ -771,7 +782,7 @@ class AbstractStep(object):
             error = ''.join(traceback.format_exception(
                     *caught_exception)[-2:]).strip()
         annotation_path = run.write_annotation_file(
-            run.get_output_directory(), error=error)
+            run.get_output_directory(), error=error, job_id=job_id)
 
         kill_exec_ping()
         self._state = AbstractStep.states.DEFAULT

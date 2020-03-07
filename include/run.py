@@ -944,7 +944,7 @@ class Run(object):
                             % anno_file)
         return None
 
-    def write_annotation_file(self, path=None, error=None):
+    def write_annotation_file(self, path=None, error=None, job_id=None):
         '''
         Write the YAML annotation after a successful or failed run. The
         annotation can later be used to render the process graph.
@@ -984,12 +984,15 @@ class Run(object):
         log['run']['user'] = pwd.getpwuid(os.getuid())[0]
         if error is not None:
             log['run']['error'] = error
-        try:
-            with open(self.get_queued_ping_file(), 'r') as buff:
-                info = yaml.load(buff, Loader=yaml.FullLoader)
-            log['run']['cluster job id'] = info['job_id']
-        except (IOError, KeyError):
-            pass
+        if job_id:
+            log['run']['cluster job id'] = job_id
+        else:
+            try:
+                with open(self.get_queued_ping_file(), 'r') as buff:
+                    info = yaml.load(buff, Loader=yaml.FullLoader)
+                log['run']['cluster job id'] = info['job_id']
+            except (IOError, KeyError):
+                pass
 
         p = self.get_step().get_pipeline()
         log['config'] = p.config
