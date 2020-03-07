@@ -9,6 +9,7 @@ from subprocess import list2cmdline
 import pipeline
 import pipeline_info
 import command as command_info
+from misc import UAPDumper
 
 '''
 By default, this script displays information about all runs of the pipeline
@@ -43,7 +44,7 @@ def main(args):
             report_header = "%s/%s -- Report" % (step_name, run_id)
             print("# " + report_header)
             print("# " + "=" * len(report_header) + "\n#")
-            dump = yaml.dump(report, default_flow_style = False)
+            dump = yaml.dump(report, Dumper=UAPDumper, default_flow_style = False)
             for line in dump.split('\n'):
                 print("# " + line)
             exec_header = "%s/%s -- Commands" % (step_name, run_id)

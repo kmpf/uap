@@ -12,6 +12,7 @@ import string
 import tempfile
 import platform
 from deepdiff import DeepHash, DeepDiff
+from collections import OrderedDict
 import inspect
 from functools import wraps
 
@@ -902,15 +903,31 @@ class Run(object):
         return (key in self._private_info)
 
     def as_dict(self):
-        result = dict()
-        result['run_id'] = self._run_id
-        result['output_directory'] = self.get_output_directory()
-        result['annotation_file'] = self.get_annotation_path()
-        result['output_files'] = self._output_files
-        result['private_info'] = self._private_info
-        result['public_info'] = self._public_info
+        result = OrderedDict([
+            ('step_type', self.get_step().get_step_type()),
+            ('step_name', self.get_step().get_step_name()),
+            ('run_id', self._run_id),
+            ('output_directory', self.get_output_directory()),
+            ('annotation_file', self.get_annotation_path()),
+            ('output_files', self._output_files),
+            ('private_info', self._private_info),
+            ('public_info', self._public_info)
+        ])
         result.update(self.get_run_structure())
+        del result['tool_versions']
         del result['output']
+        anno = self.written_anno_data()
+        if anno and anno.get('run'):
+            result['run'] = OrderedDict([
+                ('start_time', anno['start_time']),
+                ('end_time', anno['end_time'])
+            ])
+            for key, value in anno['run'].items():
+                if key in result.keys() + ['known_paths', 'structure']:
+                    continue
+                result['run'][key] = value
+        else:
+            result['run'] = 'not run yet'
         return result
 
     @cache
@@ -925,7 +942,7 @@ class Run(object):
             else:
                 logger.warn('The annotation file "%s" could not be read.'
                             % anno_file)
-                return None
+        return None
 
     def write_annotation_file(self, path=None, error=None):
         '''
