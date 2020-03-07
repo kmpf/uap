@@ -22,7 +22,6 @@
  * a task is only finished when hashing and annotation file are done (#152)
  * exceptions during hashing or renaming are now caught and logged
  * output hash not sensitive to order of commands within an execution group
- * remove explicit `|` in `count_rRNA` (#154)
 
 **Features**
  * use relative paths; uap output can now be moved (#115)

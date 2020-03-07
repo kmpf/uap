@@ -70,7 +70,7 @@ class SamToFastq(AbstractStep):
                             #3 save fastq file
                             cuta  = [self.get_tool('cut'), '-f', '2,3,4']
                             pipe.add_command(cuta)
-                            cutb  = [self.get_tool('cut'), '-f', '1', '-d']
+                            cutb  = [self.get_tool('cut'), '-f', '1', '-d' , '|']
                             pipe.add_command(cutb)
                             grep = [self.get_tool('grep'), '-v', '*']
                             pipe.add_command(grep)
