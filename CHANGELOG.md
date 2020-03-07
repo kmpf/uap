@@ -13,7 +13,7 @@
  * more stable `status` while jobs are running
  * make signal traps work on cluster
  * do not mix up lines in stderr tail of failed tasks
- * run-info uses list2cmdline for accurate command representation
+ * quote commands in run-info to produce working bash commands (#155)
  * include output file list to detect output changes
  * steps now run within their temp directory (#29, #31)
  * explicit and comlete lmod config in annotation files

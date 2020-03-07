@@ -1,7 +1,6 @@
 from uaperrors import UAPError
 import sys
 import os
-from subprocess import list2cmdline
 from logging import getLogger
 import pipeline_info
 import exec_group
@@ -97,10 +96,13 @@ class CommandInfo(object):
 
     def get_command_string(self, replace_path=False):
         '''
-        Returns a string to represent the command.
+        Returns a string representation of the command that is runable in bash.
         '''
+        # We cannot use subprocess.list2cmdline here since it does not
+        # quote for bash and leaves special characters such as | as is.
         if replace_path is not True:
-            return list2cmdline(self.get_command())
+            return self.quote(self.get_command())
+        # replace tool call with its name
         cmd = self.get_command()
         map = self.get_run().get_step().get_path_tool()
         tool = map.get(' '.join(cmd[0]))
@@ -108,4 +110,13 @@ class CommandInfo(object):
             tool = cmd[0]
             for path, tool in map.items():
                 tool = tool.replace(path, tool)
-        return list2cmdline([tool] + cmd[1:])
+        return self.quote([tool] + cmd[1:])
+
+    def quote(self, c):
+        if not isinstance(c, str):
+            return ' '.join(self.quote(b) for b in c)
+        if "'" in c:
+            c = "'%s'" % c.replace("'", "\\'")
+        elif any(s in c for s in ' |*+";?&()[]<>$#`\t\n'):
+            c = "'%s'" % c
+        return c
