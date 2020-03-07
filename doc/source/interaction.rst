@@ -239,7 +239,7 @@ To get a more concise summary, specify ``--summarize``::
 Detailed information about a specific task can be obtained by specifying the
 run ID on the command line::
 
-  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status -r \
+  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status \
     bowtie2_index/Mycoplasma_genitalium_index-download
   output_directory: genomes/bacteria/Mycoplasma_genitalium/bowtie2_index/Mycoplasma_genitalium_index-download-ZsvbSjtK
   output_files:
@@ -274,12 +274,10 @@ The ``run-info`` subcommand displays the commands issued for a given run.
 The output looks like a BASH script, but might not be functional.
 This is due to the fact that output redirections for some commands
 are missing in the BASH script.
-The output includes also the information as shown by the ``status -r <run-ID>``
-subcommand.
 
 An example output showing the download of the *Mycoplasma genitalium* genome::
 
-  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml run-info --even -r M_genitalium_genome/download
+  $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml run-info --even M_genitalium_genome/download
   #!/usr/bin/env bash
 
   # M_genitalium_genome/download -- Report
