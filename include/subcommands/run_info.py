@@ -4,7 +4,6 @@
 import sys
 import logging
 import yaml
-from subprocess import list2cmdline
 
 import pipeline
 import pipeline_info

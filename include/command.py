@@ -101,7 +101,7 @@ class CommandInfo(object):
         # We cannot use subprocess.list2cmdline here since it does not
         # quote for bash and leaves special characters such as | as is.
         if replace_path is not True:
-            return self.quote(self.get_command())
+            return quote(self.get_command())
         # replace tool call with its name
         cmd = self.get_command()
         map = self.get_run().get_step().get_path_tool()
@@ -110,13 +110,13 @@ class CommandInfo(object):
             tool = cmd[0]
             for path, tool in map.items():
                 tool = tool.replace(path, tool)
-        return self.quote([tool] + cmd[1:])
+        return quote([tool] + cmd[1:])
 
-    def quote(self, c):
-        if not isinstance(c, str):
-            return ' '.join(self.quote(b) for b in c)
-        if "'" in c:
-            c = "'%s'" % c.replace("'", "\\'")
-        elif any(s in c for s in ' |*+";?&()[]<>$#`\t\n'):
-            c = "'%s'" % c
-        return c
+def quote(c):
+    if not isinstance(c, str):
+        return ' '.join(quote(b) for b in c)
+    if "'" in c:
+        c = "'%s'" % c.replace("'", "\\'")
+    elif any(s in c for s in ' |*+";?&()[]<>$#`\t\n'):
+        c = "'%s'" % c
+    return c

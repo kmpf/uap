@@ -10,11 +10,11 @@ import string
 from cStringIO  import StringIO
 import yaml
 from tqdm import tqdm
-from subprocess import list2cmdline
 import signal
 
 import pipeline
 from uaperrors import UAPError
+import command
 import misc
 
 '''
@@ -214,7 +214,7 @@ def main(args):
                             if proc.get('exit_code', 0) == 0:
                                 continue
                             failed[proc['name']] = {
-                                'command':list2cmdline(proc['args']),
+                                'command':command.quote(proc['args']),
                                 'exit code':proc['exit_code']
                             }
                             stderr[proc['name']] = proc['stderr_copy']['tail']
