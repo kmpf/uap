@@ -958,6 +958,7 @@ class Run(object):
         log['step'] = {}
         log['step']['options'] = self.get_step().get_options()
         log['step']['name'] = self.get_step().get_step_name()
+        log['step']['type'] = self.get_step().get_step_type()
         # if a submit script was used ...
         script = self.get_step().get_submit_script_file()
         script_path = os.path.relpath(script, path)
