@@ -21,6 +21,7 @@
  * fix race condition in `samtools_index` step
  * a task is only finished when hashing and annotation file are done (#152)
  * exceptions during hashing or renaming are now caught and logged
+ * output hash not sensitive to order of commands within an execution group
 
 **Features**
  * use relative paths; uap output can now be moved (#115)
