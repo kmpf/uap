@@ -8,7 +8,9 @@ logger = getLogger('uap_logger')
 
 class Tcount2gcount(AbstractStep):
     '''
-
+    This step converts transcript based count files, e.g., from kallosto or
+    salmon, into a gene base count files of the same format by summing
+    counts of transcripts of the same gene.
     '''
 
     def __init__(self, pipeline):
