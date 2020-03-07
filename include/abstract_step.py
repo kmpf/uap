@@ -904,7 +904,7 @@ class AbstractStep(object):
         '''
         Returns a dict with a tool name for each tool paths.
         '''
-        return {path:tool for tool, path in self._tools.items()}
+        return {' '.join(path):tool for tool, path in self._tools.items()}
 
 
     @property

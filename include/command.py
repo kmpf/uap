@@ -103,7 +103,7 @@ class CommandInfo(object):
             return list2cmdline(self.get_command())
         cmd = self.get_command()
         map = self.get_run().get_step().get_path_tool()
-        tool = map.get(cmd[0])
+        tool = map.get(' '.join(cmd[0]))
         if tool is None:
             tool = cmd[0]
             for path, tool in map.items():
