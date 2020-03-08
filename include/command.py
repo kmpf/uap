@@ -100,10 +100,11 @@ class CommandInfo(object):
         '''
         # We cannot use subprocess.list2cmdline here since it does not
         # quote for bash and leaves special characters such as | as is.
+        out = ''
         if self._stdout_path:
-            out = ' > %s' % self._stdout_path
-        else:
-            out = ''
+            out += ' > %s' % self._stdout_path
+        if self._stderr_path:
+            out += ' 2> %s' % self._stderr_path
         if replace_path is not True:
             return quote(self.get_command()) + out
         # replace tool call with its name
