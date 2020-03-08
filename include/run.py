@@ -268,7 +268,7 @@ class Run(object):
         return self._temp_directory
 
     @cache
-    def get_run_structure(self):
+    def get_run_structure(self, commands=True):
         '''
         Returns a dictionary with all information known at
         run declaratuon time, relevant for its result
@@ -301,22 +301,6 @@ class Run(object):
                 response = tool_info['response'].replace(real_tool_path, tool)
                 cmd_by_eg['tool_versions'][tool] = response
 
-        # get commands
-        for eg_count, exec_group in enumerate(self.get_exec_groups()):
-            eg_name = 'execution group %d' % eg_count
-            cmd_by_eg[eg_name] = dict()
-            procs = exec_group.get_pipes_and_commands(sort=True)
-            for pipe_count, poc in enumerate(procs):
-                # for each pipe or command (poc)
-                # check if it is a pipeline ...
-                if isinstance(poc, pipeline_info.PipelineInfo):
-                    cmd_by_eg[eg_name]['pipe %s' % pipe_count] = \
-                            poc.get_command_string(replace_path=True)
-                # ... or a command
-                elif isinstance(poc, command_info.CommandInfo):
-                    cmd_by_eg[eg_name]['command %s' % pipe_count] = \
-                            poc.get_command_string(replace_path=True)
-
         # get output files
         cmd_by_eg['output'] = dict()
         for connection, files in sorted(self.get_output_files().items()):
@@ -333,6 +317,25 @@ class Run(object):
             hashsum = misc.str_to_sha256(json.dumps(prun.get_run_structure(),
                     sort_keys=True))
             cmd_by_eg['parent hashes'][task_id] = hashsum
+
+        if not commands:
+            return cmd_by_eg
+
+        # get commands
+        for eg_count, exec_group in enumerate(self.get_exec_groups()):
+            eg_name = 'execution group %d' % eg_count
+            cmd_by_eg[eg_name] = dict()
+            procs = exec_group.get_pipes_and_commands(sort=True)
+            for pipe_count, poc in enumerate(procs):
+                # for each pipe or command (poc)
+                # check if it is a pipeline ...
+                if isinstance(poc, pipeline_info.PipelineInfo):
+                    cmd_by_eg[eg_name]['pipe %s' % pipe_count] = \
+                            poc.get_command_string(replace_path=True)
+                # ... or a command
+                elif isinstance(poc, command_info.CommandInfo):
+                    cmd_by_eg[eg_name]['command %s' % pipe_count] = \
+                            poc.get_command_string(replace_path=True)
 
         return cmd_by_eg
 
@@ -913,7 +916,7 @@ class Run(object):
             ('private_info', self._private_info),
             ('public_info', self._public_info)
         ])
-        result.update(self.get_run_structure())
+        result.update(self.get_run_structure(commands=False))
         del result['tool_versions']
         del result['output']
         anno = self.written_anno_data()
