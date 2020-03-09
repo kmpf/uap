@@ -489,40 +489,6 @@ def main():
 
     volatilize_parser.set_defaults(func=volatilize.main)
 
-    '''
-    The argument parser for 'runtime_info.py' is created here."
-    '''
-
-    runtime_info_parser = subparsers.add_parser(
-        "runtime-info",
-        help="Provides Information about the runtime",
-        description="Provides Information about the runtime.",
-        formatter_class=argparse.RawTextHelpFormatter,
-        parents=[common_parser])
-
-    runtime_info_parser.add_argument(
-        "--to-screen",
-        dest="to_screen",
-        action="store_true",
-        default=False,
-        help="Displays information to the screen instead of writing to file.")
-
-    runtime_info_parser.add_argument(
-        "--run_id",
-        dest="run_id",
-        action="store_true",
-        default=False,
-        help="Get information for a specific run-id.")
-
-    runtime_info_parser.add_argument(
-        "--file-path",
-        dest="file_path",
-        type=str,
-        default='runtime_info.csv',
-        help="Path of the output file. [runtime_info.csv]")
-
-    runtime_info_parser.set_defaults(func=runtime_info.main)
-
     # get arguments and call the appropriate function
     args = parser.parse_args()
     # Add the path to this very file

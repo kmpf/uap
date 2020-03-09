@@ -7,4 +7,4 @@ from . import submit_to_cluster
 from . import run_info
 from . import volatilize
 __all__ = ['fix_problems', 'render', 'run_locally', 'status', 'steps',
-           'submit_to_cluster', 'run_info', 'volatilize', 'runtime_info']
+           'submit_to_cluster', 'run_info', 'volatilize']
