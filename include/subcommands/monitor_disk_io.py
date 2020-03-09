@@ -61,7 +61,7 @@ def handle_line(pid, line):
         if not pid in proc_files:
             proc_files[pid] = open("_monitor_disk_io/%s.proc.txt" % pid, 'w')
         proc_files[pid].write(line + "\n")
-    m = re.search('^(\w+)\((.*)\)\s+=\s+(.+)$', line)
+    m = re.search(r'^(\w+)\((.*)\)\s+=\s+(.+)$', line)
     if m:
         command = str(m.group(1))
         args = str(m.group(2)).strip()
@@ -159,7 +159,7 @@ def size_to_cat(s):
 line_buffer = {}
 for line in strace_out:
     line = line.strip()
-    pid = str(re.search('^(\d+)\s', line).group(1))
+    pid = str(re.search(r'^(\d+)\s', line).group(1))
     line = line[line.index(' ') + 1:]
     if 'resumed>' in line:
         line = re.sub(r'\<.+\>', '', line)

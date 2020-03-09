@@ -66,7 +66,7 @@ def main(args):
             singleN += 1
             if 'N' in x[5]: # this is a single read that is a split read
                 splitsSingleN += 1
-                y = re.search('(\d+)N', x[5])
+                y = re.search(r'(\d+)N', x[5])
                 # if skipped region in range
                 if int(y.group(1)) <= args.N_splits:
                     args.outfile.write(lineBR) # write R it to outfile
@@ -110,7 +110,7 @@ def main(args):
                 pass
             else: # no
                 splitsN += 1
-                y = re.search('(\d+)N', x[5])
+                y = re.search(r'(\d+)N', x[5])
                 # if skipped region in range
                 if int(y.group(1)) <= args.N_splits:
                     args.outfile.write(lineBR) # write it to outfile

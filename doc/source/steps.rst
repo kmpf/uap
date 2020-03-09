@@ -168,8 +168,8 @@ fastq_source
     dictionary which maps indices to sample names.
 
 **Output Connection**
-  - **out/second_read** (optional)
   - **out/first_read**
+  - **out/second_read** (optional)
 
 
 .. graphviz::
@@ -401,8 +401,8 @@ run_folder_source
     for all samples is coherent and unambiguous.
 
 **Output Connection**
-  - **out/second_read** (optional)
   - **out/first_read**
+  - **out/second_read** (optional)
 
 
 .. graphviz::
@@ -479,15 +479,15 @@ adapterremoval
   - **in/second_read** (optional)
 
 **Output Connection**
-  - **out/log_stdout**
-  - **out/singleton.truncated** (optional)
-  - **out/pair2.truncated** (optional) Format: **fastq** - Truncated first secind of paired end reads.
-  - **out/discarded**
-  - **out/collapsed.truncated** (optional)
+  - **out/pair1.truncated** (optional) Format: **fastq** - Truncated first read of paired end reads.
   - **out/collapsed** (optional)
   - **out/settings**
-  - **out/pair1.truncated** (optional) Format: **fastq** - Truncated first read of paired end reads.
+  - **out/log_stdout**
+  - **out/discarded**
   - **out/log_stderr**
+  - **out/singleton.truncated** (optional)
+  - **out/collapsed.truncated** (optional)
+  - **out/pair2.truncated** (optional) Format: **fastq** - Truncated first secind of paired end reads.
   - **out/truncated** (optional) Format: **fastq** - Truncated single end reads.
 
 
@@ -578,8 +578,8 @@ bam_to_bedgraph_and_bigwig
   - **in/alignments**
 
 **Output Connection**
-  - **out/bigwig**
   - **out/bedgraph**
+  - **out/bigwig**
 
 
 .. graphviz::
@@ -692,13 +692,13 @@ bowtie2
   - **in/second_read** (optional)
 
 **Output Connection**
-  - **out/un-conc** (optional) - pairs that didn't align concordantly
-  - **out/al** (optional) - unpaired reads that aligned at least once
-  - **out/al-conc** (optional) - pairs that aligned concordantly at least once
   - **out/met-file** (optional) - metrics file
+  - **out/un-conc** (optional) - pairs that didn't align concordantly
   - **out/alignments**
+  - **out/al** (optional) - unpaired reads that aligned at least once
   - **out/log_stderr**
   - **out/unaligned** (optional) -  unpaired reads that didn't align
+  - **out/al-conc** (optional) - pairs that aligned concordantly at least once
 
 
 .. graphviz::
@@ -1309,8 +1309,8 @@ chimpipe
 
 **Output Connection**
   - **out/tar_archive**
-  - **out/log_stdout**
   - **out/log_stderr**
+  - **out/log_stdout**
 
 
 .. graphviz::
@@ -1379,8 +1379,8 @@ chromhmm_binarizebam
   - **in/alignments**
 
 **Output Connection**
-  - **out/metrics**
   - **out/alignments**
+  - **out/metrics**
 
 
 .. graphviz::
@@ -1456,8 +1456,8 @@ chromhmm_learnmodel
     considered missing at that interval for the mark.
 
 **Input Connection**
-  - **in/cellmarkfiletable**
   - **in/chromhmm_binarization**
+  - **in/cellmarkfiletable**
 
 **Output Connection**
   - **out/chromhmm_model**
@@ -1665,8 +1665,8 @@ cuffcompare
 
 **Output Connection**
   - **out/stats**
-  - **out/loci**
   - **out/tracking**
+  - **out/loci**
   - **out/log_stderr**
   - **out/features**
 
@@ -1748,11 +1748,11 @@ cufflinks
   - **in/alignments**
 
 **Output Connection**
-  - **out/isoforms_fpkm**
-  - **out/genes-fpkm**
   - **out/skipped**
+  - **out/genes-fpkm**
   - **out/log_stderr**
   - **out/features**
+  - **out/isoforms_fpkm**
 
 
 .. graphviz::
@@ -1888,10 +1888,10 @@ cuffmerge
   - **in/features**
 
 **Output Connection**
+  - **out/assemblies**
   - **out/log_stderr**
   - **out/features**
   - **out/run_log**
-  - **out/assemblies**
 
 
 .. graphviz::
@@ -1951,10 +1951,10 @@ cutadapt
   - **in/second_read** (optional)
 
 **Output Connection**
-  - **out/second_read** (optional)
-  - **out/log_second_read** (optional)
-  - **out/first_read**
   - **out/log_first_read**
+  - **out/first_read**
+  - **out/log_second_read** (optional)
+  - **out/second_read** (optional)
 
 
 .. graphviz::
@@ -2203,8 +2203,8 @@ deepTools_bamPEFragmentSize
   - **in/alignments**
 
 **Output Connection**
-  - **out/fragment_size_stats**
   - **out/fragment_size_plots**
+  - **out/fragment_size_stats**
 
 
 .. graphviz::
@@ -2359,8 +2359,8 @@ deepTools_plotFingerprint
   - **in/alignments**
 
 **Output Connection**
-  - **out/plots**
   - **out/counts**
+  - **out/plots**
 
 
 .. graphviz::
@@ -2442,9 +2442,9 @@ discardLargeSplitsAndPairs
   - **in/alignments**
 
 **Output Connection**
-  - **out/log**
   - **out/stats**
   - **out/alignments**
+  - **out/log**
 
 
 .. graphviz::
@@ -2494,11 +2494,11 @@ fastq_screen
   - **in/first_read**
 
 **Output Connection**
-  - **out/log_stdout**
-  - **out/fqc_image**
-  - **out/tagged_filter** (optional)
   - **out/fqc_report**
+  - **out/fqc_image**
   - **out/fqc_html**
+  - **out/log_stdout**
+  - **out/tagged_filter** (optional)
   - **out/log_stderr**
   - **out/tagged** (optional)
 
@@ -2564,12 +2564,12 @@ fastqc
   - **in/second_read** (optional)
 
 **Output Connection**
-  - **out/second_read_fastqc_report** (optional)
-  - **out/first_read_fastqc_report**
-  - **out/first_read_log_stderr**
-  - **out/first_read_fastqc_report_webpage**
-  - **out/second_read_log_stderr** (optional)
   - **out/second_read_fastqc_report_webpage** (optional)
+  - **out/first_read_fastqc_report_webpage**
+  - **out/first_read_log_stderr**
+  - **out/first_read_fastqc_report**
+  - **out/second_read_log_stderr** (optional)
+  - **out/second_read_fastqc_report** (optional)
 
 
 .. graphviz::
@@ -2653,8 +2653,8 @@ fastqsample
   - **in/second_read** (optional)
 
 **Output Connection**
-  - **out/second_read** (optional)
   - **out/first_read**
+  - **out/second_read** (optional)
 
 
 .. graphviz::
@@ -2805,13 +2805,13 @@ feature_counts
     comment here
 
 **Input Connection**
-  - **in/alignments**
   - **in/feature-file**
+  - **in/alignments**
 
 **Output Connection**
-  - **out/log_stderr**
   - **out/log_stdout**
   - **out/counts**
+  - **out/log_stderr**
   - **out/summary**
 
 
@@ -2912,8 +2912,8 @@ filter_gtf
   - **in/assembling**
 
 **Output Connection**
-  - **out/log_stderr**
   - **out/assembling**
+  - **out/log_stderr**
 
 
 .. graphviz::
@@ -2968,8 +2968,8 @@ fix_cutadapt
   - **in/second_read**
 
 **Output Connection**
-  - **out/second_read**
   - **out/first_read**
+  - **out/second_read**
 
 
 .. graphviz::
@@ -3024,8 +3024,8 @@ fusioncatcher
 
 **Output Connection**
   - **out/tar_archive**
-  - **out/log_stdout**
   - **out/log_stderr**
+  - **out/log_stdout**
 
 
 .. graphviz::
@@ -3087,10 +3087,10 @@ gffcompare_single
   - **in/assembling**
 
 **Output Connection**
-  - **out/combined**
   - **out/stats**
-  - **out/loci**
   - **out/tracking**
+  - **out/loci**
+  - **out/combined**
   - **out/log_stderr**
 
 
@@ -3164,13 +3164,13 @@ gffread_extract_transcripts
     gffread -w transcripts.fa -g /path/to/genome.fa transcripts.gtf
 
 **Input Connection**
-  - **in/fasta**
   - **in/anno**
+  - **in/fasta**
 
 **Output Connection**
+  - **out/fasta**
   - **out/log_stderr**
   - **out/log_stdout**
-  - **out/fasta**
 
 
 .. graphviz::
@@ -3217,9 +3217,9 @@ gsnap
   - **in/second_read**
 
 **Output Connection**
+  - **out/alignments**
   - **out/log_stderr**
   - **out/log_stdout**
-  - **out/alignments**
 
 
 .. graphviz::
@@ -3279,12 +3279,12 @@ hisat2
   - **in/second_read** (optional)
 
 **Output Connection**
-  - **out/aligned** (optional) Format: **fastq.gz** - Unpaired reads that aligned.
-  - **out/summary**
-  - **out/alignments**
   - **out/metrics**
-  - **out/log_stderr**
+  - **out/summary**
+  - **out/aligned** (optional) Format: **fastq.gz** - Unpaired reads that aligned.
+  - **out/alignments**
   - **out/unaligned** (optional) Format: **fastq.gz** - Unpaired reads that didn't align.
+  - **out/log_stderr**
 
 
 .. graphviz::
@@ -3589,16 +3589,16 @@ kallisto
 
 
 **Input Connection**
-  - **in/kallisto-index** (optional)
   - **in/first_read**
+  - **in/kallisto-index** (optional)
   - **in/second_read** (optional)
 
 **Output Connection**
   - **out/log_stdout**
   - **out/run_info.json**
   - **out/log_stderr**
-  - **out/abundance.tsv**
   - **out/abundance.h5**
+  - **out/abundance.tsv**
 
 
 .. graphviz::
@@ -3669,17 +3669,17 @@ kallisto_fusion
 
 
 **Input Connection**
-  - **in/kallisto-index**
   - **in/first_read**
+  - **in/kallisto-index**
   - **in/second_read**
 
 **Output Connection**
   - **out/log_stdout**
-  - **out/fusion.txt**
   - **out/run_info.json**
   - **out/log_stderr**
-  - **out/abundance.tsv**
   - **out/abundance.h5**
+  - **out/abundance.tsv**
+  - **out/fusion.txt**
 
 
 .. graphviz::
@@ -3755,9 +3755,9 @@ kallisto_index
   - **in/fasta**
 
 **Output Connection**
-  - **out/log_stdout**
   - **out/kallisto-index**
   - **out/log_stderr**
+  - **out/log_stdout**
 
 
 .. graphviz::
@@ -3818,15 +3818,15 @@ macs2
   - **in/alignments**
 
 **Output Connection**
+  - **out/diagnosis**
   - **out/narrowpeaks**
+  - **out/narrowpeaks-xls**
+  - **out/broadpeaks-xls**
   - **out/model**
   - **out/gappedpeaks**
-  - **out/broadpeaks**
-  - **out/log**
-  - **out/diagnosis**
-  - **out/broadpeaks-xls**
-  - **out/narrowpeaks-xls**
   - **out/summits**
+  - **out/log**
+  - **out/broadpeaks**
 
 
 .. graphviz::
@@ -4034,8 +4034,8 @@ merge_fastq_files
   - **in/second_read**
 
 **Output Connection**
-  - **out/second_read**
   - **out/first_read**
+  - **out/second_read**
 
 
 .. graphviz::
@@ -4084,8 +4084,8 @@ merge_fastx_files
 
 **Output Connection**
   - **out/report**
-  - **out/second_read**
   - **out/first_read**
+  - **out/second_read**
 
 
 .. graphviz::
@@ -4205,11 +4205,11 @@ pear
   - **in/second_read**
 
 **Output Connection**
+  - **out/assembled**
   - **out/unassembled.forward**
   - **out/discarded**
-  - **out/log**
   - **out/unassembled.reverse**
-  - **out/assembled**
+  - **out/log**
 
 
 .. graphviz::
@@ -4310,9 +4310,9 @@ pepr
   - **in/alignments**
 
 **Output Connection**
-  - **out/log**
-  - **out/differential_peaks**
   - **out/parameter**
+  - **out/differential_peaks**
+  - **out/log**
   - **out/peaks**
 
 
@@ -4378,11 +4378,11 @@ pepr_postprocess
   - **in/peaks**
 
 **Output Connection**
-  - **out/chip**
-  - **out/failed_peaks**
-  - **out/peaks**
-  - **out/input**
   - **out/passed_peaks**
+  - **out/input**
+  - **out/chip**
+  - **out/peaks**
+  - **out/failed_peaks**
 
 
 .. graphviz::
@@ -4540,8 +4540,8 @@ picard_collectrnaseqmetrics
 
 
 **Input Connection**
-  - **in/alignments**
   - **in/refFlat** (optional)
+  - **in/alignments**
 
 **Output Connection**
   - **out/metrics**
@@ -4682,8 +4682,8 @@ picard_markduplicates
   - **in/alignments**
 
 **Output Connection**
-  - **out/metrics**
   - **out/alignments**
+  - **out/metrics**
 
 
 .. graphviz::
@@ -4936,17 +4936,17 @@ pizzly
     https://github.com/pmelsted/pizzly
 
 **Input Connection**
-  - **in/fusion.txt**
   - **in/first_read**
   - **in/second_read**
+  - **in/fusion.txt**
 
 **Output Connection**
-  - **out/fusion_fasta**
   - **out/log_stdout**
+  - **out/unfiltered_json**
+  - **out/fusion_fasta**
+  - **out/log_stderr**
   - **out/fusion_json**
   - **out/unfiltered_fasta**
-  - **out/log_stderr**
-  - **out/unfiltered_json**
 
 
 .. graphviz::
@@ -5070,8 +5070,8 @@ post_sawdust
   - **in/alignments**
 
 **Output Connection**
-  - **out/log_stderr**
   - **out/alignments**
+  - **out/log_stderr**
 
 
 .. graphviz::
@@ -5324,8 +5324,8 @@ reformatCigar
   - **in/alignments**
 
 **Output Connection**
-  - **out/log**
   - **out/alignments**
+  - **out/log**
 
 
 .. graphviz::
@@ -5373,8 +5373,8 @@ remove_duplicate_reads_runs
   - **in/alignments**
 
 **Output Connection**
-  - **out/metrics**
   - **out/alignments**
+  - **out/metrics**
 
 
 .. graphviz::
@@ -5424,10 +5424,10 @@ rgt_thor
   - **in/alignments**
 
 **Output Connection**
-  - **out/diff_peaks_bed**
   - **out/diff_narrow_peaks**
-  - **out/chip_seq_bigwig**
   - **out/thor_config**
+  - **out/chip_seq_bigwig**
+  - **out/diff_peaks_bed**
   - **out/thor_setup_info**
 
 
@@ -5506,35 +5506,35 @@ rseqc
   - **in/alignments**
 
 **Output Connection**
-  - **out/gc_stderr**
-  - **out/gc_xls**
-  - **out/inner_distance** (optional)
-  - **out/junction_annotation_stderr**
-  - **out/geneBody_coverage.r**
   - **out/geneBody_coverage_stdout**
-  - **out/junction_bed**
-  - **out/junction_saturation_stdout**
-  - **out/junctionSaturation_r**
   - **out/inner_distance_freq** (optional)
-  - **out/DupRate_stdout**
-  - **out/geneBody_coverage_stderr**
-  - **out/DupRate_pos**
-  - **out/DupRate_plot_r**
-  - **out/junction_plot**
-  - **out/junction_annotation_stdout**
-  - **out/DupRate_stderr**
   - **out/read_distribution**
-  - **out/infer_experiment**
-  - **out/inner_distance_stdout** (optional)
-  - **out/inner_distance_plot** (optional)
-  - **out/junction_saturation_stderr**
-  - **out/bam_stat**
-  - **out/DupRate_seq**
-  - **out/junction_xls**
-  - **out/inner_distance_stderr** (optional)
-  - **out/gc_stdout**
-  - **out/geneBody_coverage.txt**
+  - **out/junction_plot**
   - **out/gc_r**
+  - **out/junction_xls**
+  - **out/geneBody_coverage.r**
+  - **out/DupRate_pos**
+  - **out/junction_bed**
+  - **out/DupRate_plot_r**
+  - **out/gc_xls**
+  - **out/geneBody_coverage_stderr**
+  - **out/junction_annotation_stderr**
+  - **out/DupRate_seq**
+  - **out/DupRate_stdout**
+  - **out/junctionSaturation_r**
+  - **out/junction_annotation_stdout**
+  - **out/gc_stdout**
+  - **out/inner_distance** (optional)
+  - **out/bam_stat**
+  - **out/inner_distance_stdout** (optional)
+  - **out/infer_experiment**
+  - **out/junction_saturation_stdout**
+  - **out/geneBody_coverage.txt**
+  - **out/inner_distance_plot** (optional)
+  - **out/DupRate_stderr**
+  - **out/inner_distance_stderr** (optional)
+  - **out/gc_stderr**
+  - **out/junction_saturation_stderr**
 
 
 .. graphviz::
@@ -5639,8 +5639,8 @@ s2c
   - **in/alignments**
 
 **Output Connection**
-  - **out/log**
   - **out/alignments**
+  - **out/log**
 
 
 .. graphviz::
@@ -5686,20 +5686,20 @@ salmon
   - **in/second_read** (optional)
 
 **Output Connection**
-  - **out/log_stdout**
-  - **out/observed_bias.gz**
-  - **out/fld.gz**
   - **out/observed_bias_3p.gz**
-  - **out/flenDist.txt**
-  - **out/quant.sf**
-  - **out/salmon_quant.log**
-  - **out/cmd_info.json**
+  - **out/log_stdout**
   - **out/lib_format_counts.json**
   - **out/expected_bias.gz**
-  - **out/quant.genes.sf**
+  - **out/fld.gz**
+  - **out/flenDist.txt**
   - **out/meta_info.json**
+  - **out/quant.genes.sf**
   - **out/log_stderr**
+  - **out/observed_bias.gz**
+  - **out/salmon_quant.log**
+  - **out/quant.sf**
   - **out/ambig_info.tsv**
+  - **out/cmd_info.json**
 
 
 .. graphviz::
@@ -5979,8 +5979,8 @@ samtools_index
 
 **Output Connection**
   - **out/alignments**
-  - **out/indices**
   - **out/index_stats**
+  - **out/indices**
 
 
 .. graphviz::
@@ -6033,9 +6033,9 @@ The step samtools_merge builds on 'samtools merge' to merge sorted SAM/BAM files
   - **in/alignments**
 
 **Output Connection**
-  - **out/log**
   - **out/alignments**
   - **out/err**
+  - **out/log**
 
 
 .. graphviz::
@@ -6246,9 +6246,9 @@ segemehl
   - **in/second_read**
 
 **Output Connection**
+  - **out/alignments**
   - **out/unmapped**
   - **out/log**
-  - **out/alignments**
 
 
 .. graphviz::
@@ -6408,12 +6408,12 @@ segemehl_2017
   - **in/second_read**
 
 **Output Connection**
+  - **out/splits_sngl**
+  - **out/splits_trns**
   - **out/unmapped**
-  - **out/log**
   - **out/splits_mult**
   - **out/alignments**
-  - **out/splits_trns**
-  - **out/splits_sngl**
+  - **out/log**
 
 
 .. graphviz::
@@ -6600,8 +6600,8 @@ segemehl_generate_index_bisulfite
   - **in/reference_sequence**
 
 **Output Connection**
-  - **out/log**
   - **out/indexCT**
+  - **out/log**
   - **out/indexGA**
 
 
@@ -6668,11 +6668,11 @@ soapfuse
   - **in/second_read**
 
 **Output Connection**
-  - **out/log_stdout**
   - **out/sf_config**
+  - **out/log_stdout**
+  - **out/log_stderr**
   - **out/tar_archive**
   - **out/sf_sample_list**
-  - **out/log_stderr**
 
 
 .. graphviz::
@@ -6779,10 +6779,10 @@ split_fastq
   - **in/second_read**
 
 **Output Connection**
+  - **out/first_read**
   - **out/log_stderr**
   - **out/log_stdout**
   - **out/second_read**
-  - **out/first_read**
 
 
 .. graphviz::
@@ -6888,9 +6888,9 @@ sra_fastq_dump
   - **in/sequence**
 
 **Output Connection**
+  - **out/first_read**
   - **out/log**
   - **out/second_read**
-  - **out/first_read**
 
 
 .. graphviz::
@@ -7000,11 +7000,11 @@ star
 
 **Output Connection**
   - **out/log_stdout**
-  - **out/log.final**
-  - **out/aligned**
   - **out/log.out**
   - **out/sj.out**
+  - **out/aligned**
   - **out/log.progess**
+  - **out/log.final**
   - **out/log_stderr**
 
 
@@ -7080,16 +7080,16 @@ stringtie
   - **in/features** (optional) Format: **['gtf', 'gff3']** - Reference assembly. Can also be passed with option G or left out for denovo assembling.
 
 **Output Connection**
+  - **out/e2t** (optional) Format: **ctab** - Ballgown output (requires -G and -B).
+  - **out/e_data** (optional) Format: **ctab** - Ballgown output (requires -G and -B).
   - **out/log_stdout**
   - **out/i_data** (optional) Format: **ctab** - Ballgown output (requires -G and -B).
-  - **out/e_data** (optional) Format: **ctab** - Ballgown output (requires -G and -B).
   - **out/coverage** (optional) Format: **gtf** - Coverage of the reference assmbly (-B, requires -G)
-  - **out/t_data** (optional) Format: **ctab** - Ballgown output (requires -G and -B).
-  - **out/abundances** Format: **tab** - Feature abundancies (-A).
-  - **out/i2t** (optional) Format: **ctab** - Ballgown output (requires -G and -B).
-  - **out/e2t** (optional) Format: **ctab** - Ballgown output (requires -G and -B).
   - **out/log_stderr**
   - **out/features** Format: **gtf** - Contains the assempled transcripts (-o).
+  - **out/abundances** Format: **tab** - Feature abundancies (-A).
+  - **out/i2t** (optional) Format: **ctab** - Ballgown output (requires -G and -B).
+  - **out/t_data** (optional) Format: **ctab** - Ballgown output (requires -G and -B).
 
 
 .. graphviz::
@@ -7197,9 +7197,9 @@ stringtieMerge
   - **in/features** Format: **['gtf', 'gff3']** - Feature annotations to be merged.
 
 **Output Connection**
+  - **out/assemblies**
   - **out/log_stderr**
   - **out/features** Format: **gtf**
-  - **out/assemblies**
 
 
 .. graphviz::
@@ -7280,8 +7280,8 @@ StringTie is a fast and highly efficient assembler of RNA-Seq alignments into po
 
 **Output Connection**
   - **out/log_stdout**
-  - **out/transcript_matrix**
   - **out/gene_matrix**
+  - **out/transcript_matrix**
   - **out/legend**
   - **out/log_stderr**
 
@@ -7346,8 +7346,8 @@ subsetMappedReads
   - **in/alignments**
 
 **Output Connection**
-  - **out/log**
   - **out/alignments**
+  - **out/log**
 
 
 .. graphviz::
@@ -7452,14 +7452,14 @@ tophat2
   - **in/second_read**
 
 **Output Connection**
-  - **out/unmapped**
-  - **out/deletions**
-  - **out/prep_reads**
   - **out/junctions**
+  - **out/unmapped**
   - **out/alignments**
-  - **out/align_summary**
   - **out/misc_logs**
   - **out/log_stderr**
+  - **out/prep_reads**
+  - **out/align_summary**
+  - **out/deletions**
   - **out/insertions**
 
 
@@ -7586,16 +7586,16 @@ trim_galore
   - **in/second_read**
 
 **Output Connection**
-  - **out/first_read_report**
-  - **out/first_read_fastqc_zip**
-  - **out/second_read**
-  - **out/first_read**
-  - **out/second_read_fastqc_zip**
-  - **out/second_read_report**
-  - **out/stdout**
   - **out/first_read_fastqc_html**
-  - **out/stderr**
   - **out/second_read_fastqc_html**
+  - **out/stderr**
+  - **out/second_read**
+  - **out/second_read_report**
+  - **out/first_read_fastqc_zip**
+  - **out/second_read_fastqc_zip**
+  - **out/first_read**
+  - **out/stdout**
+  - **out/first_read_report**
 
 
 .. graphviz::
@@ -7720,12 +7720,12 @@ trimmomatic
   - **in/second_read**
 
 **Output Connection**
-  - **out/reverse.unpaired**
-  - **out/log**
   - **out/forward.unpaired**
   - **out/reverse**
-  - **out/log_stderr**
   - **out/forward**
+  - **out/reverse.unpaired**
+  - **out/log_stderr**
+  - **out/log**
 
 
 .. graphviz::

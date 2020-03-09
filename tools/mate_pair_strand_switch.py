@@ -38,7 +38,7 @@ def main():
     for bed_line in args.infile:
         bed_line = bed_line.rstrip()
         columns = bed_line.split('\t')
-        if re.search('2$', columns[3]):
+        if re.search(r'2$', columns[3]):
             columns[5] = '-' if columns[5] == '+' else '+'
         sys.stdout.write('\t'.join(columns) + '\n')    
 

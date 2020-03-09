@@ -992,7 +992,7 @@ class AbstractStep(object):
             self._connection_formats[connection] = format
         if description is not None:
             self._connection_descriptions[connection] = \
-                    re.sub('\s+', ' ', description)
+                    re.sub(r'\s+', ' ', description)
 
     def get_connections(self, with_optional=True):
         """
@@ -1104,7 +1104,7 @@ class AbstractStep(object):
                 raise UAPError('The description of option %s in step %s is not a string.' %
                         (key, self))
             # collapse whites spaces
-            info['description'] = re.sub('\s+', ' ', info['description'])
+            info['description'] = re.sub(r'\s+', ' ', info['description'])
 
         self._defined_options[key] = info
 

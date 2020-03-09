@@ -353,7 +353,7 @@ class Cutadapt(AbstractStep):
                             adapter = adapter.translate(complements)[::-1]
 
                         # make sure the adapter is looking good
-                        if re.search('^[ACGT]+$', adapter) == None:
+                        if re.search(r'^[ACGT]+$', adapter) == None:
                             raise StepError(self, "Unable to come up with a "
                                          "legit-looking adapter: %s"
                                          % adapter)

@@ -278,10 +278,10 @@ class TrimGalore(AbstractStep):
 
 
                 # remove file endings if they are given and leading underscores
-                read_types['first_read'] = re.sub( "^_(.*)\.?.*$", "\g<1>", read_types['first_read'])
+                read_types['first_read'] = re.sub(r"^_(.*)\.?.*$", r"\g<1>", read_types['first_read'])
 
                 if not input_paths['in/second_read'][0] is None:
-                    read_types['second_read'] = re.sub( "^_(.*)\.?.*$", "\g<1>", read_types['second_read'])
+                    read_types['second_read'] = re.sub(r"^_(.*)\.?.*$", r"\g<1>", read_types['second_read'])
 
                 if input_paths['in/first_read'][0].endswith('.gz'):
                     if not input_paths['in/second_read'][0] is None:
