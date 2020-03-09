@@ -108,11 +108,15 @@ class CommandInfo(object):
                 tool = tool.replace(path, tool)
         return quote([tool] + cmd[1:]) + out
 
-def quote(c):
-    if not isinstance(c, str):
-        return ' '.join(quote(b) for b in c)
-    if "'" in c:
-        c = "'%s'" % c.replace("'", "\\'")
-    elif any(s in c for s in ' |*+";?&()[]<>$#`\t\n'):
-        c = "'%s'" % c
-    return c
+def quote(cmd_args):
+    """
+    An arument list is combined into a string and arguments
+    containing bash special characters are single quoted.
+    """
+    if not isinstance(cmd_args, str):
+        return ' '.join(quote(c) for c in cmd_args)
+    if "'" in cmd_args:
+        cmd_args = "'%s'" % cmd_args.replace("'", "\\'")
+    elif any(s in cmd_args for s in ' |*+";?&()[]<>$#`\t\n'):
+        cmd_args = "'%s'" % cmd_args
+    return cmd_args
