@@ -735,6 +735,8 @@ class Run(object):
             if output_file in \
                 self.get_output_files_for_out_connection(connection):
                     return self._output_files[connection][output_file]
+        raise UAPError("Sorry, your output '%s' file couldn't be found in"
+                     "the dictionary: %s." % (out_path, temp))
 
     def get_input_files_for_output_file_abspath(self, output_file):
         for connection in self.get_out_connections():
@@ -805,17 +807,6 @@ class Run(object):
         '''
         temp = self.get_output_files_abspath()
         return misc.assign_strings(temp[annotation].keys(), tags)
-
-    def get_input_files_for_output_file(self, out_path):
-        '''
-        Return all input files a given output file depends on.
-        '''
-        temp = self.get_output_files()
-        for tag in temp.keys():
-            if out_path in temp[tag].keys():
-                return sorted(temp[tag][out_path])
-        raise UAPError("Sorry, your output '%s' file couldn't be found in"
-                     "the dictionary: %s." % (out_path, temp))
 
     def get_public_info(self, key):
         '''
