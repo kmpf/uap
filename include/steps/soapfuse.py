@@ -46,7 +46,7 @@ class SOAPfuse(AbstractStep):
                         description="The step you want to end at 1-9")
 
         self.add_option('c', str, optional=False,
-                        description="""SOAPfuse config;
+                        description=r"""SOAPfuse config;
                         In the config file following variables are overwritten:
                         path to index: DB_db_dir
                         path to soapfuse bin: PG_pg_dir

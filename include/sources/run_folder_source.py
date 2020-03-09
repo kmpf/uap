@@ -60,7 +60,7 @@ class RunFolderSource(AbstractSourceStep):
             str,
             default='Sample_*',
             optional=True,
-            description='Pattern for the sample directory names inside '
+            description=r'Pattern for the sample directory names inside '
             'path/[Project\_]project[_name]')
         self.add_option('first_read', str, default='_R1',
                         description="Part of the file name that marks all "
