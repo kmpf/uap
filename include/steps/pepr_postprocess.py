@@ -136,7 +136,7 @@ class PePrPostprocess(AbstractStep):
                 with run.new_exec_group() as pepr_post_exec_group:
                     # 1. Compile the PePr-postprocess command
                     peaks = ",".join(os.path.basename(f) for f in in_files['peak'])
-                    chip = ",".join(os.path.basename(f)) for f in in_files['chip'])
+                    chip = ",".join(os.path.basename(f) for f in in_files['chip'])
                     inpu = ",".join(os.path.basename(f) for f in in_files['input'])
                     pepr_post = [
                         self.get_tool('pepr-postprocess'),
