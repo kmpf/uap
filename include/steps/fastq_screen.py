@@ -91,7 +91,7 @@ class FastqScreen(AbstractStep):
                 'BOWTIE2 %s' % self.get_tool('bowtie2'),
                 'THREADS %d' % self.get_cores()
             ]
-            for db in self.get_option('databases').items():
+            for db in sorted(self.get_option('databases').items()):
                 conf_data.append('DATABASE %s %s BOWTIE2' % db)
 
         for run_id in cc.keys():
