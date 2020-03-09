@@ -57,11 +57,11 @@ def read_args():
 
 def read_mapping_file(mapping_file):
     mapping_data = dict()
-    
+
     with open(mapping_file, 'r') as f:
         for line in f:
             if line.startswith('#'):
-                continue 
+                continue
 
             line_data = line.rstrip('\n').split('\t')
             if mapping_file.endswith('gtf'):
@@ -72,8 +72,8 @@ def read_mapping_file(mapping_file):
                     g_id = d['gene_id'].rstrip(';').replace('"', '')
                 else:
                     continue
-            
-                    
+
+
             else:
                 t_id = line_data[0]
                 g_id = line_data[1]
@@ -105,11 +105,11 @@ def read_input_file(input_file, mapping_data, tool_name):
 def read_input_file_k(input_file, mapping_data):
     res =  defaultdict(dict)
 
-    info = ['t_target_id', 't_length', 't_eff_length', 't_est_count', 't_tpm'] 
+    info = ['t_target_id', 't_length', 't_eff_length', 't_est_count', 't_tpm']
 
     with open(input_file, 'r') as f:
         for lnum, line in enumerate(f):
-            
+
             if lnum != 0:
                 data  = line.strip('"').rstrip('\n').split('\t')
 
@@ -123,7 +123,7 @@ def read_input_file_k(input_file, mapping_data):
                     res[mapping_data[transcript]]['eff_length'] = 'NA'
                     res[mapping_data[transcript]]['est_count'] = float(data[3])
                     res[mapping_data[transcript]]['tpm'] = float(data[4])
-                        
+
                 else:
                     for i in range(5):
                         res[mapping_data[transcript]][info[i]] += ',' + str(data[i])
@@ -142,8 +142,8 @@ def write_output_file(output_file, result_data):
 def write_output_file_k(output_file, result_data):
 
     header = ['target_id', 'length', 'eff_length', 'est_count', 'tpm',
-              't_target_id', 't_length', 't_eff_length', 't_est_count', 't_tpm'] 
-    
+              't_target_id', 't_length', 't_eff_length', 't_est_count', 't_tpm']
+
     output_file.write("\t".join(header) + '\n')
     for g_id, entry in result_data.items():
         out = [str(entry[x]) for x in header]
