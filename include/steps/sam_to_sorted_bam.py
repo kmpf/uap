@@ -62,10 +62,12 @@ class SamToSortedBam(AbstractStep):
                     sortpath = os.path.abspath(self.get_option('temp-sort-dir'))
                     if not os.path.isdir(sortpath):
                         #dir not present
-                        raise StepError(self, "Directory %s not found" % self.get_option('temp-sort-dir'))
+                        raise StepError(self, "Directory %s not found" %
+                                self.get_option('temp-sort-dir'))
                     if not os.access(sortpath, os.W_OK):
                         #not accessible
-                        raise StepError(self, "Directory %s not accessible." % self.get_option('temp-sort-dir'))
+                        raise StepError(self, "Directory %s not accessible." %
+                                self.get_option('temp-sort-dir'))
                 else:
                     sortpath = './'
 
