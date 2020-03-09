@@ -38,7 +38,7 @@ class Pear(AbstractStep):
                         'after trimming the low quality part.')
 
         self.add_option('q', int, optional=True, default=0,
-                        choices=[0] + range(33, 158),
+                        choices=[0] + list(range(33, 158)),
                         description='Specify the quality score threshold '
                         'for trimming the low quality part of a read.')
 
@@ -67,7 +67,7 @@ class Pear(AbstractStep):
                         description='Specify the amount of memory to be used.')
 
         self.add_option('cap', int, optional=True, default=40,
-                        choices=[0] + range(33, 158),
+                        choices=[0] + list(range(33, 158)),
                         description='Specify the upper bound for the '
                         'resulting quality score.')
 
@@ -88,7 +88,7 @@ class Pear(AbstractStep):
             with self.declare_run(run_id) as run:
                 if len(run_ids_connections_files[run_id]['in/first_read']) !=\
                    len(run_ids_connections_files[run_id]['in/second_read']):
-                    raise StandardError("Incorrect pairing of paired-end-files "
+                    raise Exception("Incorrect pairing of paired-end-files "
                                         "in run %s" % run_id)
                 for file_no in range(len(run_ids_connections_files[run_id]
                                          ['in/first_read'])):

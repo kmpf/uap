@@ -45,7 +45,7 @@ class SegemehlGenerateIndexBisulfite(AbstractStep):
         self.add_option('generate2', str, optional = True,
                         description="Filename of 2nd (GA) db index that is generated "
                         "and store to disk (efault: index-basename.ctidx).")
-        self.add_option('bisulfite', int, optional = True, choices = [1,2],
+        self.add_option('bisulfite', int, optional = True, choices = [1, 2],
                         default=1,
                         description="bisulfite mapping with methylC-seq/Lister "
                         "et al. (=1) or bs-seq/Cokus et al. protocol (=2) (default:0)")

@@ -1,7 +1,7 @@
 import os
 uap_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/python_env/bin/activate_this.py' % uap_path
-execfile(activate_this_file, dict(__file__=activate_this_file))
+exec(compile(open(activate_this_file).read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
 import argparse
 import logging
 import string
@@ -227,29 +227,6 @@ def main():
         help="Render only graphs for these runs.")
 
     render_parser.set_defaults(func=render.main)
-
-#    '''
-#    The argument parser for 'report.py' is created here."
-#    '''
-#
-#    report_parser = subparsers.add_parser(
-#        "report",
-#        help="Generates reports of steps which can do so.",
-#        description="",
-#        formatter_class=argparse.RawTextHelpFormatter,
-#        parents=[common_parser])
-#
-#    report_parser.add_argument(
-#        "run",
-#        nargs='*',
-#        default=list(),
-#        type=str,
-#        help="Can take multiple step names as input. A step name is the name "
-#        "of any entry in the 'steps:' section as defined in "
-#        "'<project-config>.yaml'. To get a list of all run IDs please "
-#        "run 'uap <project-config>.yaml status'.")
-#
-#    report_parser.set_defaults(func=report.main)
 
     '''
     The argument parser for 'run_locally.py' is created here."

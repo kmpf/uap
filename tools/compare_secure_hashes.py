@@ -12,7 +12,7 @@
 import os
 seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
-execfile(activate_this_file, dict(__file__=activate_this_file))
+exec(compile(open(activate_this_file).read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
 import argparse
 import sys
 import hashlib
@@ -70,7 +70,7 @@ def main():
         sys.exit()
     else:
         if os.path.exists(file_to_hash_new_path):
-            raise StandardError("File %s already exists. Couldn't rename %s "
+            raise Exception("File %s already exists. Couldn't rename %s "
                                 "to %s." % (file_to_hash_new_path,
                                             file_to_hash_abspath,
                                             file_to_hash_new_path)

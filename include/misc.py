@@ -128,7 +128,7 @@ def bytes_to_str(num):
     '''
     Convert a number representing a number of bytes into a human-readable string such as "4.7 GB"
     '''
-    for _, x in enumerate(['bytes','k','M','G']):
+    for _, x in enumerate(['bytes', 'k', 'M', 'G']):
         if num < 1024.0:
             if _ == 0:
                 return "%d %s" % (num, x)
@@ -216,6 +216,10 @@ UAPDumper.add_representer(literal, literal_presenter)
 def ordered_dict_presenter(dumper, data):
     return dumper.represent_dict(data.items())
 UAPDumper.add_representer(OrderedDict, ordered_dict_presenter)
+
+def dict_keys_presenter(dumper, data):
+    return dumper.represent_list(data)
+UAPDumper.add_representer(type(dict().keys()), dict_keys_presenter)
 
 class type_tuple(tuple):
     pass

@@ -51,7 +51,7 @@ class S2C(AbstractStep):
                 input_paths = run_ids_connections_files[run_id]['in/alignments']
                 # check, if only a single input file is provided
                 if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file., but got this %s" % input_paths)
+                    raise Exception("Expected exactly one alignments file., but got this %s" % input_paths)
 
                 if self.is_option_set_in_config('tmp_dir'):
                     if not os.path.isdir(self.get_option('tmp_dir')):

@@ -138,7 +138,7 @@ class Cutadapt(AbstractStep):
                         "(Subtract CUTOFF from all qualities; compute partial sums from "
                         "all indices to the end of the sequence; cut sequence at the index "
                         "at which the sum is minimal) (default: 0)")
-        self.add_option("quality-base", int, optional=True, choices = [33,64],
+        self.add_option("quality-base", int, optional=True, choices = [33, 64],
                         description="Assume that quality values are encoded as ascii "
                         "(quality + QUALITY_BASE). The default (33) is usually correct, "
                         "except for reads produced by some versions of the Illumina "

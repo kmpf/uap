@@ -57,7 +57,7 @@ class Fastqc(AbstractStep):
                         "cause fastqc to crash and burn if you use it on really long reads, and "
                         "your plots may end up a ridiculous size. You have been warned!")
         self.add_option('format', str, optional=True,
-                        choices=['bam','sam','bam_mapped','sam_mapped','fastq'],
+                        choices=['bam', 'sam', 'bam_mapped', 'sam_mapped', 'fastq'],
                         description="Bypasses the normal sequence file format detection and forces "
                         "the program to use the specified format.  Valid formats are bam,sam, "
                         "bam_mapped,sam_mapped and fastq")

@@ -139,7 +139,7 @@ class deepToolsBamPEFragmentSize(AbstractStep):
         if self.is_option_set_in_config('samples'):
             runIds_samples = self.get_option('samples')
 
-            for run_id, samples in runIds_samples.iteritems():
+            for run_id, samples in runIds_samples.items():
                 if not isinstance(run_id, str):
                     raise StepError(self, "Not a string run ID (%s) for samples (%s)"
                                  % (run_id, ", ".join(samples)))

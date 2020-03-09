@@ -85,12 +85,12 @@ def main(args):
             while not write_file:
                 message = "The given file_path '%s' already exists! " \
                           "Do you want to overwrite this file? [N/y]" % file_path
-                response = raw_input(message)
+                response = eval(input(message))
 
                 if response == "N" or response == "":
-                    file_path = raw_input("Please give a new file_path:")
+                    file_path = eval(input("Please give a new file_path:"))
                     while file_path == '':
-                        file_path = raw_input('Please give a valid file_path:')
+                        file_path = eval(input('Please give a valid file_path:'))
 
                     if os.path.exists(file_path):
                         continue

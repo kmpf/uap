@@ -12,7 +12,7 @@
 import os
 seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
-execfile(activate_this_file, dict(__file__=activate_this_file))
+exec(compile(open(activate_this_file).read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
 import sys
 import argparse
 import pprint
@@ -38,7 +38,7 @@ def read_samline(line):
     keylist = 'qname, flag, rname, pos, mapq, cigar, mrnm, mpos, isize, seq, qual'.split(', ')
 
     optional_fields = fields[ 11: ]
-    samdict = dict(zip(keylist,fields[0:11]))
+    samdict = dict(zip(keylist, fields[0:11]))
     samdict['flag'] = int(samdict['flag'])
 
 
@@ -66,7 +66,7 @@ def make_samline(samdict):
         pre_line.append(samdict[i])
         
     for i in opt_keys:
-        opt = ':'.join([i,samdict[i][1],samdict[i][0]])
+        opt = ':'.join([i, samdict[i][1], samdict[i][0]])
         pre_line.append(opt)
 
     
@@ -77,7 +77,7 @@ def make_samline(samdict):
     
 
 
-def collect(sam_hits, samdict,ID):
+def collect(sam_hits, samdict, ID):
     if ID == None:
         ID = samdict['qname']
         
@@ -154,7 +154,7 @@ def process_sam_hits(info, sam_hits):
                "temp"
                # samdict['flag'] = setBit(samdict['flag'],8)
             else: 
-                samdict['flag'] = clearBit(samdict['flag'],8)
+                samdict['flag'] = clearBit(samdict['flag'], 8)
             #if  paired set mate unmapped 
             samdict['flag'] = test_set_flag(samdict['flag'], 0, 0, 3)
             return_list.append(samdict)
@@ -177,8 +177,8 @@ def process_sam_hits(info, sam_hits):
                # samdict_A['flag'] = setBit(samdict_A['flag'],8)
                # samdict_B['flag'] = setBit(samdict_B['flag'],8)
             else: 
-                samdict_A['flag'] = clearBit(samdict_A['flag'],8)
-                samdict_B['flag'] = clearBit(samdict_B['flag'],8)
+                samdict_A['flag'] = clearBit(samdict_A['flag'], 8)
+                samdict_B['flag'] = clearBit(samdict_B['flag'], 8)
 
             #set mate info    
 
@@ -196,11 +196,11 @@ def process_sam_hits(info, sam_hits):
             
 
             #if mate reverse set mat reverse flag in my info 
-            if  testBit(samdict_B['flag'],4) > 0:
-                samdict_A['flag'] = setBit(samdict_A['flag'],5)
+            if  testBit(samdict_B['flag'], 4) > 0:
+                samdict_A['flag'] = setBit(samdict_A['flag'], 5)
 
-            if  testBit(samdict_A['flag'],4) > 0:
-                samdict_B['flag'] = setBit(samdict_B['flag'],5)
+            if  testBit(samdict_A['flag'], 4) > 0:
+                samdict_B['flag'] = setBit(samdict_B['flag'], 5)
 
 
             return_list.append(samdict_A)
@@ -218,7 +218,7 @@ def process_sam_hits(info, sam_hits):
 
 def test_set_flag(flag, bit_to_check, response, bit_to_set):
     if testBit(flag, bit_to_check) > response:
-        flag = setBit(flag,bit_to_set) 
+        flag = setBit(flag, bit_to_set) 
     return flag
                         
   

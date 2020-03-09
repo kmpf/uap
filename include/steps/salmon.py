@@ -155,7 +155,7 @@ class Salmon(AbstractStep):
 
                 # move file from temp directory to expected position
                 with run.new_exec_group() as mv_exec_group:
-                    for orig, dest_path in result_files.iteritems():
+                    for orig, dest_path in result_files.items():
                         orig_path = os.path.join(temp_dir, orig)
                         if orig in self.dir_files:
                             orig_path = os.path.join(temp_dir, self.dir_files[orig], orig)

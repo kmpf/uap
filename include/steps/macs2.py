@@ -287,7 +287,7 @@ class Macs2(AbstractStep):
                 option_list.append( str(self.get_option(option)) )
 
         control_samples = self.get_option('control')
-        for control_id, treatment_list in control_samples.iteritems():
+        for control_id, treatment_list in control_samples.items():
             # Check for existence of control files
             control_files = list()
             if control_id != 'None':
@@ -398,7 +398,7 @@ class Macs2(AbstractStep):
                         macs2_exec_group.add_command(macs2)
 
                     with run.new_exec_group() as mv_exec_group:
-                        for orig, dest_path in result_files.iteritems():
+                        for orig, dest_path in result_files.items():
                             # 3. Move file from temp directory to expected
                             #    position
                             orig_path = os.path.join(temp_dir, orig)

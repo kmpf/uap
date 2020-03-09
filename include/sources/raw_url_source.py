@@ -2,7 +2,7 @@ from uaperrors import UAPError
 import sys
 from logging import getLogger
 import os
-import urlparse
+import urllib.parse
 from abstract_step import AbstractSourceStep
 
 logger=getLogger("uap_logger")
@@ -47,7 +47,7 @@ class RawUrlSource(AbstractSourceStep):
     def runs(self, run_ids_connections_files):
         # Get file name of downloaded file
         url_filename = os.path.basename(
-            urlparse.urlparse(self.get_option('url')).path)
+            urllib.parse.urlparse(self.get_option('url')).path)
 
         # Is downloaded file gzipped?
         root, ext = os.path.splitext(url_filename)

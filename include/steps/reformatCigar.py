@@ -61,7 +61,7 @@ class Reformatcigar(AbstractStep):
                 input_paths = run_ids_connections_files[run_id]['in/alignments']
 
                 if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file."
+                    raise Exception("Expected exactly one alignments file."
                                         ", but got this %s" % input_paths)
 
                 alignments_path = input_paths[0]

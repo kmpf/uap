@@ -73,7 +73,7 @@ def exec_pre_post_calls(tool_id, info_key, info_command,
                 info_key, tool_id, " ".join(command))
             )
             try:
-                exec output
+                exec(output)
             except NameError as e:
                 msg = "Error while loading module '%s': \n%s"
                 raise UAPError(msg % (tool_id, error))
@@ -137,10 +137,11 @@ def check_tool(args):
         proc.wait()
         exit_code = None
         exit_code = proc.returncode
+        out = (proc.stdout.read() + proc.stderr.read()).strip().decode('utf-8')
         tool_check_info.update({
             'command': (' '.join(command)).strip(),
             'exit_code': exit_code,
-            'response': (proc.stdout.read() + proc.stderr.read()).strip(),
+            'response': out,
             'used_path': used_path
         })
         expected_exit_code = info['exit_code']
@@ -192,7 +193,7 @@ class Pipeline(object):
             self.git_version = subprocess.check_output(command).strip()
 
         except subprocess.CalledProcessError:
-            logger.warn("""Execution of %s failed. Git seems to be
+            logger.warning("""Execution of %s failed. Git seems to be
                          unavailable. Continue anyways""" % " ".join(command))
 
         if self.git_version:
@@ -209,7 +210,7 @@ class Pipeline(object):
                 logger.error("Execution of %s failed." % " ".join(command))
 
             if self.git_diff != '':
-                logger.warn('THE GIT REPOSITORY HAS UNCOMMITED CHANGES!')
+                logger.warning('THE GIT REPOSITORY HAS UNCOMMITED CHANGES!')
 
 
         """
@@ -343,8 +344,8 @@ class Pipeline(object):
         '''
 
 
-        self.known_config_keys = set(['destination_path', 'constants', 'cluster',
-                'steps', 'lmod', 'tools', 'base_working_directory', 'id'])
+        self.known_config_keys = {'destination_path', 'constants', 'cluster',
+                'steps', 'lmod', 'tools', 'base_working_directory', 'id'}
         '''
         A set of accepted keys in the config.
         '''
@@ -358,7 +359,7 @@ class Pipeline(object):
                 conf.get('atomatically_configured'))
         unused_tools = configured_tools - self.used_tools
         if unused_tools:
-            logger.warn('Unused tool(s): %s' % list(unused_tools))
+            logger.warning('Unused tool(s): %s' % list(unused_tools))
 
         # collect all tasks
         for step_name in self.topological_step_order:
@@ -422,9 +423,9 @@ class Pipeline(object):
 
         if 'lmod' not in self.config or self.config['lmod'] is None:
             self.config['lmod'] = dict()
-        if os.environ.has_key('LMOD_CMD'):
+        if 'LMOD_CMD' in os.environ:
             self.config['lmod'].setdefault('path', os.environ['LMOD_CMD'])
-        if os.environ.has_key('MODULEPATH'):
+        if 'MODULEPATH' in os.environ:
             self.config['lmod'].setdefault('module_path', os.environ['MODULEPATH'])
         lmod_configured = all(key in self.config['lmod']
                 for key in ['path', 'module_path'])
@@ -700,12 +701,12 @@ class Pipeline(object):
                     proc.stdin.close()
                     proc.wait()
                 else:
-                    logger.warn('Cloud not split patter into http(s)://host/token to notify: %s' %
+                    logger.warning('Cloud not split patter into http(s)://host/token to notify: %s' %
                             self.config['notify'])
             except:
                 # swallow all exception that happen here, failing notifications
                 # are no reason to crash the entire thing
-                logger.warn('Notification of "%s" failed with:' %
+                logger.warning('Notification of "%s" failed with:' %
                         (self.config['notify'], sys.exc_info()[0]))
                 pass
 
@@ -772,7 +773,7 @@ class Pipeline(object):
         try:
             stat_output = subprocess.check_output(
                 [self.get_cluster_command('stat')],
-                stderr = subprocess.STDOUT)
+                stderr = subprocess.STDOUT).decode('utf-8')
         except (KeyError, OSError, subprocess.CalledProcessError):
             # we don't have a stat tool here, if subprocess.CalledProcessError
             # is raised
@@ -951,12 +952,12 @@ class Pipeline(object):
                 identity['answer'] = [identity['answer']]
             for answer in identity['answer']:
                 try:
-                    if (subprocess.check_output( identity['test'] )
-                        .startswith(answer) ):
+                    if (subprocess.check_output(identity['test'])
+                        .decode('utf-8').startswith(answer)):
                         return cluster_type
                 except OSError:
                     pass
-        logger.warn('Cluster type could not be detected.')
+        logger.warning('Cluster type could not be detected.')
         return None
 
     def get_cluster_type(self):

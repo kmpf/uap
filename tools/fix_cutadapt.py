@@ -13,7 +13,7 @@
 import os
 seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
-execfile(activate_this_file, dict(__file__=activate_this_file))
+exec(compile(open(activate_this_file).read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
 import sys
 import argparse
 

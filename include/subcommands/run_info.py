@@ -33,7 +33,7 @@ def main(args):
         for task_id in p.get_task_with_list(as_string=True, exclusive=True):
             parts = task_id.split('/')
             if len(parts) != 2:
-                raise StandardError("Invalid run ID %s." % task_id)
+                raise Exception("Invalid run ID %s." % task_id)
             step_name = parts[0]
             run_id = parts[1]
             run = p.steps[step_name].get_run(run_id)

@@ -73,7 +73,7 @@ class SamtoolsMerge(AbstractStep):
 
     def runs(self, run_ids_connections_files):
 
-        options = ['n','r','u','f','1','l','R','c','p','s']
+        options = ['n', 'r', 'u', 'f', '1', 'l', 'R', 'c', 'p', 's']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]

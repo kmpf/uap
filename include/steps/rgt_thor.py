@@ -172,7 +172,7 @@ class RgtThor(AbstractStep):
                 # Add chrom_sizes
                 ## control chrom_sizes file to be a file
                 if not os.path.isfile(self.get_option('chrom_sizes_file')):
-                    raise StandardError("Chromsizes file %s is not a file"
+                    raise Exception("Chromsizes file %s is not a file"
                                         % self.get_option('chrom_sizes_file'))
                 file = os.path.abspath(self.get_option('chrom_sizes_file'))
                 config_content['chrom_sizes'] = [file]
@@ -219,7 +219,7 @@ class RgtThor(AbstractStep):
                         input_files
                     )
                     ## - THOR created BigWig files
-                    for (rep, suf) in {'rep1': 's1', 'rep2': 's2'}.iteritems():
+                    for (rep, suf) in {'rep1': 's1', 'rep2': 's2'}.items():
                         for i in range(len(config_content[rep])):
                             run.add_output_file(
                                 'chip_seq_bigwig',

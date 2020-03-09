@@ -2,7 +2,7 @@ from uaperrors import UAPError
 import sys
 from logging import getLogger
 import os
-import urlparse
+import urllib.parse
 from abstract_step import AbstractSourceStep
 
 logger=getLogger("uap_logger")
@@ -42,9 +42,9 @@ class RawUrlSource(AbstractSourceStep):
         file_download = self.get_option('run-download-info')
 
         # List with valid download options
-        download_opts = set(['filename', 'hashing-algorithm', 'path',
-                            'secure-hash', 'uncompress', 'url'])
-        mandatory_opts = set(['filename', 'path', 'url'])
+        download_opts = {'filename', 'hashing-algorithm', 'path',
+                            'secure-hash', 'uncompress', 'url'}
+        mandatory_opts = {'filename', 'path', 'url'}
 
         for files, downloads in file_download.items():
             # Control input for unknown options
@@ -81,7 +81,7 @@ class RawUrlSource(AbstractSourceStep):
 
             # Get file name of downloaded file
             url_filename = os.path.basename(
-                urlparse.urlparse(downloads['url']).path)
+                urllib.parse.urlparse(downloads['url']).path)
 
             # Is downloaded file gzipped?
             root, ext = os.path.splitext(url_filename)

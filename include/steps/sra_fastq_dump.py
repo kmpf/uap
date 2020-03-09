@@ -227,11 +227,11 @@ class SraFastqDump (AbstractStep):
     def runs (self, run_ids_connections_files):
         # Assemble fastq-dump options
         sra_options = [
-            'accession','table','split-spot','minSpotId','maxSpotId',
-            'spot-groups', 'clip','minReadLen', 'read-filter',
-            'qual-filter','aligned','unaligned', 'aligned-region',
+            'accession', 'table', 'split-spot', 'minSpotId', 'maxSpotId',
+            'spot-groups', 'clip', 'minReadLen', 'read-filter',
+            'qual-filter', 'aligned', 'unaligned', 'aligned-region',
             'matepair-distance', 'skip-technical', 'dumpcs',
-            'dumpbase','offset','fasta','suppress-qual-for-cskey',
+            'dumpbase', 'offset', 'fasta', 'suppress-qual-for-cskey',
             'origfmt', 'readids', 'helicos', 'defline-seq',
             'defline-qual', 'disable-multithreading', 'log-level',
             'verbose', 'ncbi_error_report', 'legacy-report']
@@ -266,7 +266,7 @@ class SraFastqDump (AbstractStep):
                 input_paths = run_ids_connections_files[run_id]['in/sequence']
                 # check, if only a single input file is provided
                 if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one sra file, but "
+                    raise Exception("Expected exactly one sra file, but "
                                         "got this %s" % input_paths)
 
                 with run.new_exec_group() as exec_group:

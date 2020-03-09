@@ -57,7 +57,7 @@ class TopHat2(AbstractStep):
         self.add_option('min-anchor', int, optional=True, #default=8,
                         description="Size of minimal anchor.")
         self.add_option('splice-mismatches', int, optional=True, #default=0,
-                        choices=[0,1,2],
+                        choices=[0, 1, 2],
                         description="Number of splice mismatches")
         self.add_option('min-intron-length', int, optional=True, #default=50,
                         description="Minimal intron length")

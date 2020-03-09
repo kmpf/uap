@@ -4,7 +4,7 @@ import os
 import argparse
 seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
-execfile(activate_this_file, dict(__file__=activate_this_file))
+exec(compile(open(activate_this_file).read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
 CHECK_QNAMES = False
 
 class Filter:
@@ -24,7 +24,7 @@ class Filter:
     def handle(self):
         if len(self.lines) > 0:
             if CHECK_QNAMES and self.current_qname in self.seen_qnames:
-                raise StandardError("Input is not sorted by qname. KA-BLAM.")
+                raise Exception("Input is not sorted by qname. KA-BLAM.")
 
             if len(self.lines) <= 2:
                 skip = False

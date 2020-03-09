@@ -107,7 +107,7 @@ class TrimGalore(AbstractStep):
         self.add_option('nextera', bool, optional=True,
                         description='Adapter sequence to be trimmed is the first 12bp of the Nextera adapter \'CTGTCTCTTATA\' instead of'
                         'the default auto-detection of adapter sequence.')
-        self.add_option('small_rna',bool, optional=True,
+        self.add_option('small_rna', bool, optional=True,
                         description='Adapter sequence to be trimmed is the first 12bp of the Illumina Small RNA 3\' Adapter'
                         '\'TGGAATTCTCGG\' instead of the default auto-detection of adapter sequence. Selectingto trim'
                         'smallRNA adapters will also lower the --length value to 18bp. If the smallRNAlibraries are'
@@ -230,11 +230,11 @@ class TrimGalore(AbstractStep):
 
     def runs(self, run_ids_connections_files):
 
-        options = ['quality','phred33','phred64','fastqc','adapter','adapter2',
-                   'illumina','nextera','small_rna','max_length','stringency', 'gzip','dont_gzip',
-                   'length','max_n','trim-n', 'paired', 'clip_R1','clip_R2','three_prime_clip_R1',
-                   'three_prime_clip_R2', 'rrbs','non_directional','keep',
-                   'trim1','retain_unpaired','length_1','length_2']
+        options = ['quality', 'phred33', 'phred64', 'fastqc', 'adapter', 'adapter2',
+                   'illumina', 'nextera', 'small_rna', 'max_length', 'stringency', 'gzip', 'dont_gzip',
+                   'length', 'max_n', 'trim-n', 'paired', 'clip_R1', 'clip_R2', 'three_prime_clip_R1',
+                   'three_prime_clip_R2', 'rrbs', 'non_directional', 'keep',
+                   'trim1', 'retain_unpaired', 'length_1', 'length_2']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]

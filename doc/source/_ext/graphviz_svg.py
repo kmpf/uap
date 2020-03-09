@@ -110,7 +110,7 @@ def render_dot(self, code, options, format, prefix='graphviz'):
         dot_args.extend(['-Tcmapx', '-o%s.map' % outfn])
     try:
         p = Popen(dot_args, stdout=PIPE, stdin=PIPE, stderr=PIPE)
-    except OSError, err:
+    except OSError as err:
         if err.errno != 2:   # No such file or directory
             raise
         self.builder.warn('dot command %r cannot be run (needed for graphviz '
@@ -119,7 +119,7 @@ def render_dot(self, code, options, format, prefix='graphviz'):
         self.builder._graphviz_warned_dot = True
         return None, None
     # graphviz expects UTF-8 by default
-    if isinstance(code, unicode):
+    if isinstance(code, str):
         code = code.encode('utf-8')
     stdout, stderr = p.communicate(code)
     if p.returncode != 0:
@@ -155,7 +155,7 @@ def render_dot_html(self, node, code, options, prefix='graphviz', imgcls=None):
     format = self.builder.config.graphviz_output_format
     try:
         fname, outfn = render_dot(self, code, options, format, prefix)
-    except GraphvizError, exc:
+    except GraphvizError as exc:
         self.builder.warn('dot code %r: ' % code + str(exc))
         raise nodes.SkipNode
 
@@ -196,7 +196,7 @@ def html_visit_graphviz(self, node):
 def render_dot_latex(self, node, code, options, prefix='graphviz'):
     try:
         fname, outfn = render_dot(self, code, options, 'pdf', prefix)
-    except GraphvizError, exc:
+    except GraphvizError as exc:
         self.builder.warn('dot code %r: ' % code + str(exc))
         raise nodes.SkipNode
 

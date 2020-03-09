@@ -187,14 +187,14 @@ class Segemehl2017(AbstractStep):
     # run_ids_connections_files - hash : run id -> n connections -> m files
     def runs(self, run_ids_connections_files):
         # Compile the list of options
-        options = ['index', 'index2', 'filebins','bisulfite',
-                   'minsize','brief','checkidx','briefcigar','threads',
-                   'readgroupfile','readgroupid','differences','jump',
-                   'nosuflinks','evalue','maxsplitevalue','maxinterval',
-                   'maxout', 'MEOP','nohead','extensionpenalty',
-                   'dropoff','accuracy','minsplicecover','minfragscore','minfraglen',
-                   'splicescorescale','hitstrategy','showalign',
-                   'prime5','prime3','clipacc','maxinsertsize']#, 'order']
+        options = ['index', 'index2', 'filebins', 'bisulfite',
+                   'minsize', 'brief', 'checkidx', 'briefcigar', 'threads',
+                   'readgroupfile', 'readgroupid', 'differences', 'jump',
+                   'nosuflinks', 'evalue', 'maxsplitevalue', 'maxinterval',
+                   'maxout', 'MEOP', 'nohead', 'extensionpenalty',
+                   'dropoff', 'accuracy', 'minsplicecover', 'minfragscore', 'minfraglen',
+                   'splicescorescale', 'hitstrategy', 'showalign',
+                   'prime5', 'prime3', 'clipacc', 'maxinsertsize']#, 'order']
 #        options = ['bisulfite', 'minsize', 'brief', 'differences',
 #                   'jump', 'evalue', 'maxsplitevalue', 'maxinterval', 'splits',
 #                   'SEGEMEHL', 'MEOP', 'nohead', 'extensionscore',

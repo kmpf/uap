@@ -94,7 +94,7 @@ class ChromHmmLearnModel(AbstractStep):
         # [-i outfileID]: If set is set programmatically
         # [-init information|random|load]
         self.add_option('init', str, optional = True,
-                        choices = ["information","random","load"],
+                        choices = ["information", "random", "load"],
                         description = "This specifies the method for parameter "
                         "initialization method. 'information' is the default "
                         "method described in (Ernst and Kellis, Nature Methods "

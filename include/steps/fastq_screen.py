@@ -29,7 +29,7 @@ class FastqScreen(AbstractStep):
         self.add_connection('out/log_stdout')
         self.add_connection('out/log_stderr')
 
-        self.add_option('config', str , optional=False,
+        self.add_option('config', str, optional=False,
                         description="Manually specify a location for the \
                         configuration.")
 

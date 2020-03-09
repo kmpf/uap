@@ -139,11 +139,11 @@ class CuffCompare(AbstractStep):
 
                 input_paths = run_ids_connections_files[run_id]['in/features']
                 if not input_paths:
-                    raise StandardError("No input files for run %s" % (run_id))
+                    raise Exception("No input files for run %s" % (run_id))
 
                 # check whether there's exactly one feature file
                 if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one feature file.")
+                    raise Exception("Expected exactly one feature file.")
 
                 in_file = input_paths#[0]
 

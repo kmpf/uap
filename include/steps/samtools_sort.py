@@ -59,7 +59,7 @@ class SamtoolsSort(AbstractStep):
                                     engine and threads ie")
 
         # [Options for 'dd':]
-	self.add_option('fifo', bool, optional=True, default=False,
+        self.add_option('fifo', bool, optional=True, default=False,
                 description='Enable the FIFO functionality for splitting large input files.')
         self.add_option('dd-blocksize', str, optional=True, default='4096k',
                 description='Read data with ``dd`` and set the blocksize.')

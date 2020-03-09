@@ -70,7 +70,7 @@ def read_arguments():
 def eval_arguments(args):
     if args.class_list:
         t = args.class_list
-        t = t.replace("'",'')
+        t = t.replace("'", '')
         args.class_list = t.split(',')
     return(args)
 
@@ -139,7 +139,7 @@ def read_gtf_line(line):
     keylist = 'seqname, source, feature, start, end, score, strand, frame'.split(', ')
 
     optional_field = fields[8]
-    gtf_dict = OrderedDict(zip(keylist,fields[0:8]))
+    gtf_dict = OrderedDict(zip(keylist, fields[0:8]))
 
 
         
@@ -151,12 +151,12 @@ def read_gtf_line(line):
             continue
         else:
             opt_id, opt_val = str.split(opt_entry)[0:2]
-            gtf_dict[opt_id] = opt_val.replace('"','')
+            gtf_dict[opt_id] = opt_val.replace('"', '')
 
     
     for key in ['gene_id', 'transcript_id']:
         if not key in gtf_dict:
-            raise StandardError('key:{0} not in gtf_line\n {1}'.format(key, line))
+            raise Exception('key:{0} not in gtf_line\n {1}'.format(key, line))
             
     for numbers in ['start', 'end', 'exon_number']:
         gtf_dict[numbers] = int(gtf_dict[numbers])
@@ -217,7 +217,7 @@ def make_transcript_object(gtf_dicts):
     
     return t_obj
 
-def collect(gtf_dicts, gtf_dict,ID):
+def collect(gtf_dicts, gtf_dict, ID):
     if ID == None:
         ID = gtf_dict['transcript_id']
         
@@ -431,7 +431,7 @@ def main(args):
 
     #last block after while iteration        
     if not gtf_dicts:
-        raise StandardError("You discarded everthing") 
+        raise Exception("You discarded everthing") 
     t_obj = make_transcript_object(gtf_dicts                                   )
     metrics = add_metrics(metrics, t_obj)
     write_t_obj(t_obj)

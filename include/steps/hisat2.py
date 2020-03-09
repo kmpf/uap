@@ -377,7 +377,7 @@ class Hisat2(AbstractStep):
         library_types = [flag for is_set, flag in res if is_set]
         if len(library_types) > 1:
             message = "too many stranded flags fr, rf, ff: %s"
-            raise StandardError(message % (res))
+            raise Exception(message % (res))
 
         library_type = self.get_option('library_type')
 

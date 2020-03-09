@@ -158,16 +158,16 @@ class Stringtie(AbstractStep):
                         'the first place.')
 
         # [Options for 'dd':]
-	self.add_option('fifo', bool, optional = True, default = False,
-			description='Enable the FIFO functionality for splitting large input files.')
+        self.add_option('fifo', bool, optional = True, default = False,
+            description='Enable the FIFO functionality for splitting large input files.')
         self.add_option('dd-blocksize', str, optional = True, default = "2M",
-			description='Provide the blocksize for dd tool.')
+            description='Provide the blocksize for dd tool.')
 
     def runs(self, cc):
         self.set_cores(self.get_option('p'))
 
         options = ['v', 'p', 'm', 'l', 'f', 'M', 'e', 'B']
-        options=['l','f','m','a','j','t','c','v','g','M','p', 'B','e','x']
+        options=['l', 'f', 'm', 'a', 'j', 't', 'c', 'v', 'g', 'M', 'p', 'B', 'e', 'x']
 
         set_options = [option for option in options if
                        self.is_option_set_in_config(option)]

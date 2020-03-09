@@ -98,7 +98,7 @@ class PePrPostprocess(AbstractStep):
                 file_failed_peaks += '.boundary_refined'
 
             # Get the chip/input files of runs mentioned in chip_vs_input dict
-            for key, opt in config_to_option.iteritems():
+            for key, opt in config_to_option.items():
                 experiment = chip_vs_input[run_id]
                 in_files[opt] = list()
                 try:
@@ -122,7 +122,7 @@ class PePrPostprocess(AbstractStep):
                 with run.new_exec_group() as ln_exec_group:
                     for in_con, out_con in  {'peak': 'peaks',
                                   'chip': 'chip',
-                                  'input': 'input'}.iteritems():
+                                  'input': 'input'}.items():
                         for f in in_files[in_con]:
                             ln = [self.get_tool('ln'), '-s',
                                   f,

@@ -119,7 +119,7 @@ class Bcl2Fastq2Source(AbstractSourceStep):
                 option_list.append('--%s' % option)
                 option_list.append(path)
             else:
-                raise StandardError("No such directory for option '%s': %s" %
+                raise Exception("No such directory for option '%s': %s" %
                                     (option, path))
         ## check if provided sample sheet exists
         file_option = 'sample-sheet'
@@ -129,7 +129,7 @@ class Bcl2Fastq2Source(AbstractSourceStep):
                 option_list.append('--%s' % file_option)
                 option_list.append(file)
             else:
-                raise StandardError("No such file for option '%s': %s" %
+                raise Exception("No such file for option '%s': %s" %
                                     (file_option, file))
         ### if the sample sheet is not provided in config, bcl2fastq automatically searches for
         ### it in the runfolder-dir, we need this file to split the process into runs per lane,

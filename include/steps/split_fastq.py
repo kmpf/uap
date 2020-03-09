@@ -1,4 +1,4 @@
-from itertools import (takewhile,repeat)
+from itertools import (takewhile, repeat)
 import math
 
 from logging import getLogger
@@ -53,7 +53,7 @@ class SplitFastq(AbstractStep):
 
         for run_id in run_ids_connections_files.keys():
 
-            index_list = range(1, outfile_count+1)
+            index_list = list(range(1, outfile_count+1))
 
             for index in index_list:
                 new_run_id = '%s_%s' % (run_id, str(index))

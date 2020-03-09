@@ -59,7 +59,7 @@ class Bcl2FastqSource(AbstractSourceStep):
         '''
         input_dir = self.get_option('input-dir')
         if not os.path.isdir(input_dir):
-            raise StandardError("The given input directory '%s' is not an "
+            raise Exception("The given input directory '%s' is not an "
                                 "existing directory." % input_dir)
         # Get path to output folder ...
         output_dir = os.path.abspath(input_dir)
@@ -73,7 +73,7 @@ class Bcl2FastqSource(AbstractSourceStep):
         # Check existence of Sample Sheet
         sample_sheet = os.path.abspath(self.get_option('sample-sheet'))
         if not os.path.isfile(sample_sheet):
-            raise StandardError("The given Sample Sheet '%s' is not an "
+            raise Exception("The given Sample Sheet '%s' is not an "
                                 "existing file." % sample_sheet)
 
         # Compile the list of options

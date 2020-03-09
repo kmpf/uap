@@ -90,7 +90,7 @@ class PePr(AbstractStep):
 
     def runs(self, run_ids_connections_files):
         # Compile the list of options
-        options = ['file-format','normalization', 'peaktype',
+        options = ['file-format', 'normalization', 'peaktype',
                    'shiftsize', 'threshold', 'windowsize']
 
         set_options = [option for option in options if \
@@ -122,7 +122,7 @@ class PePr(AbstractStep):
                 config_to_option = {'rep1': 'chip1', 'inputs1': 'input1',
                                     'rep2': 'chip2', 'inputs2': 'input2'}
             # Check the input from the chip_vs_input dict
-            for key, opt in config_to_option.iteritems():
+            for key, opt in config_to_option.items():
                 experiment = chip_vs_input[run_id]
                 in_files[opt] = list()
                 try:
@@ -202,7 +202,7 @@ class PePr(AbstractStep):
                     pepr_exec_group.add_command(pepr)
 
                 with run.new_exec_group() as mv_exec_group:
-                    for orig, dest_path in result_files.iteritems():
+                    for orig, dest_path in result_files.items():
                         # 3. Move file from temp directory to expected
                         #    position
                         orig_path = os.path.join(temp_dir, orig)

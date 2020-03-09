@@ -32,7 +32,7 @@ class ExecGroup(object):
                                                stdout_path = stdout_path,
                                                stderr_path = stderr_path
                                            )
-        except TypeError, err:
+        except TypeError as err:
             raise UAPError('During declaration of step "%s": %s' %
                     (str(self._run.get_step()), str(err)))
         self._pipes_and_commands.append(command)

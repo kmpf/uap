@@ -73,7 +73,7 @@ class StringTiePrepDE(AbstractStep):
     def runs(self, run_ids_connections_files):
 
         # Compile the list of options
-        options=['length','pattern','cluster','string','key']
+        options=['length', 'pattern', 'cluster', 'string', 'key']
 
         set_options = [option for option in options if \
                        self.is_option_set_in_config(option)]

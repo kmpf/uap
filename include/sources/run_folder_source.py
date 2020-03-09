@@ -73,7 +73,7 @@ class RunFolderSource(AbstractSourceStep):
             os.path.join(path, 'Unaligned')
         path = os.path.abspath(path)
         if not os.path.exists(path):
-            raise StandardError("Source path does not exist: " + path)
+            raise Exception("Source path does not exist: " + path)
 
         # find all samples
         project = 'Project_' + self.get_option('project')
@@ -86,7 +86,7 @@ class RunFolderSource(AbstractSourceStep):
 
             sample_name = os.path.basename(sample_path).replace('Sample_', '')
             if sample_name in found_samples:
-                raise StandardError("Duplicate sample: " + sample_name)
+                raise Exception("Duplicate sample: " + sample_name)
 
             if not sample_name in found_samples:
                 found_samples[sample_name] = dict()
@@ -121,7 +121,7 @@ class RunFolderSource(AbstractSourceStep):
                 for row in reader:
                     sample_id = row['SampleID']
                     if not sample_id in found_samples.keys():
-                        raise StandardError("Found sample %s in %s, but it "
+                        raise Exception("Found sample %s in %s, but it "
                                             "shouldn't be here."
                                             % sample_id, sample_sheet_path)
 
@@ -136,7 +136,7 @@ class RunFolderSource(AbstractSourceStep):
                                             + run.get_public_info('index-R2'))
 
                             if ('-').join(index)                            != stored_index:
-                                raise StandardError("Inconsistent index defined "
+                                raise Exception("Inconsistent index defined "
                                     "in %s for sample %s" % (sample_sheet_path,
                                                              sample_id))
 
@@ -144,12 +144,12 @@ class RunFolderSource(AbstractSourceStep):
                         if not run.has_public_info('index-R1'):
                             run.add_public_info('index-R1', index[0])
                         elif index[0] != run.get_public_info('index-R1'):
-                            raise StandardError("Inconsistent index defined in "
+                            raise Exception("Inconsistent index defined in "
                                 "%s for sample %s" % (sample_sheet_path,
                                                       sample_id))
 
                     else:
-                        raise StandardError("Unknown index definition %s found "
+                        raise Exception("Unknown index definition %s found "
                             "in %s" % (('-').join(index), sample_sheet_path))
 
                 csv_file.close()

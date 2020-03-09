@@ -119,7 +119,7 @@ class CuffMerge(AbstractStep):
 
             # 4. mv output files from temp dir to final location
             with run.new_exec_group() as mv_exec_group:
-                for orig, dest_path in result_files.iteritems():
+                for orig, dest_path in result_files.items():
                      orig_path = os.path.join(cuffmerge_out_path, orig)
                      mv = [self.get_tool('mv'), orig_path, dest_path]
                      mv_exec_group.add_command(mv)
@@ -178,7 +178,7 @@ class CuffMerge(AbstractStep):
 #
 #                # 4. move files from temp-dir to usual uap-temp-dir, rename
 #                with run.new_exec_group() as mv_exec_group:
-#                    for orig, dest_path in result_files.iteritems():
+#                    for orig, dest_path in result_files.items():
 #                     # 3. Rename files
 #                     orig_path = os.path.join(temp_dir, orig)
 #                     mv = [self.get_tool('mv'), orig_path, dest_path]

@@ -121,7 +121,7 @@ class FastqSample(AbstractStep):
 
                             fastqsample = [self.get_tool('fastq-sample')]
 
-                            for option, value in config_options.iteritems():
+                            for option, value in config_options.items():
                                 if option in self.possible_options:
                                     if option == 'o' or value is None:
                                         continue

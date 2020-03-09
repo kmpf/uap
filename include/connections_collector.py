@@ -90,7 +90,7 @@ class ConnectionsCollector(object):
             ins = child.get_in_connections(strip_prefix=True)
             conns = parent_out_conns.intersection(ins)
             if len(conns) == 0:
-                logger.warn('There are no default connections between '
+                logger.warning('There are no default connections between '
                         '%s and its dependency %s. The parent out connections '
                         'are %s and the child in connections are %s.'%
                         (parent_name, child_name, list(parent_out_conns),
@@ -248,12 +248,7 @@ class ConnectionsCollector(object):
         if self._con_of_all_runs is None:
             # calculate and cache connections of all runs
             con_list = self.connections.values()
-            if len(con_list) > 1:
-                self._con_of_all_runs = set(con_list[0]).intersection(*con_list)
-            elif len(con_list) == 1:
-                self._con_of_all_runs = set(con_list[0])
-            else:
-                self._con_of_all_runs = set()
+            self._con_of_all_runs = set.intersection(*(set(val) for val in con_list))
         if isinstance(connection, list):
             return all(con in self._con_of_all_runs for con in connection)
         return connection in self._con_of_all_runs
@@ -279,8 +274,8 @@ class ConnectionsCollector(object):
         '''
         return sorted(self.connections.items())
 
-    def iteritems(self):
+    def items(self):
         '''
-        Emulates dict.iteritems().
+        Emulates dict.items().
         '''
         return iter(sorted(self.connections.items()))

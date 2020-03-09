@@ -88,7 +88,7 @@ class filterGTF(AbstractStep):
                 # check, if only a single input file is provided
                 len_input = run_ids_connections_files[run_id]['in/assembling']
                 if len(len_input) != 1:
-                    raise StandardError("Expected exactly one assembling file, but got this: %s" % len_input)
+                    raise Exception("Expected exactly one assembling file, but got this: %s" % len_input)
 
                 with run.new_exec_group() as exec_group:
 

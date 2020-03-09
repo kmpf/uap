@@ -355,10 +355,10 @@ class CuffLinks(AbstractStep):
 
                 # check, if only a single input file is provided
                 if len(input_paths) != 1:
-                    raise StandardError("Expected exactly one alignments file, "
+                    raise Exception("Expected exactly one alignments file, "
                                         "but got this %s" % input_paths)
 
-                cufflinks = [self.get_tool('cufflinks'),'-o', temp_dir, '-q']
+                cufflinks = [self.get_tool('cufflinks'), '-o', temp_dir, '-q']
                 cufflinks.extend(option_list)
                 cufflinks.append(input_paths[0])
 
@@ -405,7 +405,7 @@ class CuffLinks(AbstractStep):
 
              # Files get moved to expected position after cufflinks finished
              with run.new_exec_group() as mv_exec_group:
-                 for orig, dest_path in result_files.iteritems():
+                 for orig, dest_path in result_files.items():
                      # 3. Rename files
                      orig_path = os.path.join(temp_dir, orig)
                      mv = [self.get_tool('mv'), orig_path, dest_path]

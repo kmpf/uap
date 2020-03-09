@@ -196,32 +196,30 @@ def main(args):
             submit_script_path = task.get_run().get_submit_script_file()
             with open(submit_script_path, 'w') as f:
                 f.write(submit_script)
+            submit_script_args.append(submit_script_path)
 
             process = None
             try:
                 process = subprocess.Popen(
                     submit_script_args,
                     bufsize = -1,
-                    stdin = subprocess.PIPE,
                     stdout = subprocess.PIPE)
             except OSError as e:
                 if e.errno == os.errno.ENOENT:
-                    raise StandardError("Unable to launch %s. Maybe " %
+                    raise Exception("Unable to launch %s. Maybe " %
                                         p.get_cluster_command('submit') +
                                         "you are not executing this script on " +
                                         "the cluster")
                 else:
                     raise e
-            process.stdin.write(submit_script)
-            process.stdin.close()
             process.wait()
-            response = process.stdout.read()
+            response = process.stdout.read().strip().decode('utf-8')
             print("GOT A RESPONSE: %s" % response)
             job_id = re.search(
                 p.get_cluster_command('parse_job_id'), response).group(1)
 
             if job_id == None or len(job_id) == 0:
-                raise StandardError("Error: We couldn't parse a job_id from this:\n" + response)
+                raise Exception("Error: We couldn't parse a job_id from this:\n" + response)
 
             queued_ping_info = dict()
             queued_ping_info['step'] = str(task.step)

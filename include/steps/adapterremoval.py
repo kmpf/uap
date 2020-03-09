@@ -147,7 +147,7 @@ class AdapterRemoval(AbstractStep):
         self.__treat_as_paired = cc.connection_exists('in/second_read')
 
         if self.get_option('seed') is not None and self.get_option('cores')>1:
-            logger.warn('AdapterRemoval can not work deterministically on '
+            logger.warning('AdapterRemoval can not work deterministically on '
                         'multiple threads. Please pass a blank `seed:` option '
                         'to deactivate the seed or set `cores:` to 1.')
 

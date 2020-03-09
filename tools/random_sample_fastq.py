@@ -3,7 +3,7 @@ import sys
 import os
 seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
-execfile(activate_this_file, dict(__file__=activate_this_file))
+exec(compile(open(activate_this_file).read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
 import random
 import argparse
 import gzip
@@ -12,12 +12,12 @@ def read_args():
     parser = argparse.ArgumentParser(description='randomly sample from [s]ingle or [p]aired end fastq file')
     parser.add_argument('readtype', type=str, metavar='type', nargs=1, choices=['single', 'paired']
                         , help='single or paired, default = None')
-    parser.add_argument('--sample_size' , '-n', type=int, nargs=1  ,              help='Number of reads to sample')
-    parser.add_argument('--infiles' , '-i', nargs='+'  ,             help='Fastq input')
-    parser.add_argument('--outfiles', '-o', nargs='+'  ,             help='Fastq output')
-    parser.add_argument('--read-gz' ,       nargs = '?', const=True, help='input is gzipped: infile.fastq.gz')
-    parser.add_argument('--write-gz',       nargs='?'  , const=True, help='write gzipped output: outfile.fastq.gz')
-    parser.add_argument('--fasta',          nargs='?'  , default='fastq', const='fasta', help='fasta or fastq file default is set to fastq')
+    parser.add_argument('--sample_size', '-n', type=int, nargs=1,              help='Number of reads to sample')
+    parser.add_argument('--infiles', '-i', nargs='+',             help='Fastq input')
+    parser.add_argument('--outfiles', '-o', nargs='+',             help='Fastq output')
+    parser.add_argument('--read-gz',       nargs = '?', const=True, help='input is gzipped: infile.fastq.gz')
+    parser.add_argument('--write-gz',       nargs='?', const=True, help='write gzipped output: outfile.fastq.gz')
+    parser.add_argument('--fasta',          nargs='?', default='fastq', const='fasta', help='fasta or fastq file default is set to fastq')
 
 
 
@@ -98,7 +98,7 @@ def main(args):
         sys.stderr.write( "sample bigger than records aboarting\n")
         exit(1)
 
-    rand_records = sorted(random.sample(xrange(records), args.sample_size[0]))
+    rand_records = sorted(random.sample(range(records), args.sample_size[0]))
 
 
 

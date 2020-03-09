@@ -92,7 +92,7 @@ class Run(object):
         '''
         A decorator to cache a functions return value with self.fsc.
         '''
-        function_name = [func.func_name, inspect.getargspec(func)]
+        function_name = [func.__name__, inspect.signature(func)]
         @wraps(func)
         def inner(self, *args, **kwargs):
             key = str(function_name + [args, kwargs])
@@ -247,7 +247,7 @@ class Run(object):
         cmd_by_eg['output'] = dict()
         for connection, files in sorted(self.get_output_files().items()):
             if files:
-                cmd_by_eg['output'][connection] = files.keys()
+                cmd_by_eg['output'][connection] = list(files.keys())
 
         # get parent hash
         cmd_by_eg['parent hashes'] = dict()
@@ -257,7 +257,7 @@ class Run(object):
                 continue
             task_id = '%s/%s' % (prun.get_step().get_step_name(), prun.get_run_id())
             hashsum = misc.str_to_sha256(json.dumps(prun.get_run_structure(),
-                    sort_keys=True))
+                    sort_keys=True, ensure_ascii=False).encode('utf8'))
             cmd_by_eg['parent hashes'][task_id] = hashsum
 
         if not commands:
@@ -695,7 +695,7 @@ class Run(object):
         An empty output connection has 'None' as output file and 'None' as input
         file.
         '''
-        logger.warn('[Deprecation] %s: add_empty_output_connection is depricated. '
+        logger.warning('[Deprecation] %s: add_empty_output_connection is depricated. '
                 'Please make the connection "out/%s" optional and do not add '
                 'anything instead.' % (self.get_step().get_step_type(), tag))
         # make sure tag was declared with an outgoing connection
@@ -861,7 +861,7 @@ class Run(object):
             if not os.path.exists(anno_file):
                 return False
             else:
-                logger.warn('The annotation file "%s" could not be read.'
+                logger.warning('The annotation file "%s" could not be read.'
                             % anno_file)
         return None
 
@@ -919,7 +919,7 @@ class Run(object):
         p = self.get_step().get_pipeline()
         log['config'] = p.config
         if p.args.no_tool_checks:
-            logger.warn('Writing annotation file without tool checks.')
+            logger.warning('Writing annotation file without tool checks.')
             log['tool_versions'] = 'deactivated with --no-tool-checks'
         else:
             log['tool_versions'] = {}
@@ -940,7 +940,8 @@ class Run(object):
         if p.caught_signal is not None:
             log['signal'] = p.caught_signal
 
-        annotation_yaml = yaml.dump(log, default_flow_style = False)
+        annotation_yaml = yaml.dump(log, default_flow_style = False,
+                Dumper=misc.UAPDumper)
         annotation_path = self.get_annotation_path(path)
 
         # overwrite the annotation if it already exists

@@ -88,7 +88,7 @@ class FastqSource(AbstractSourceStep):
             for path in glob.glob(os.path.abspath(self.get_option('pattern'))):
                 match = regex.match(os.path.basename(path))
                 if match == None:
-                    raise StandardError("Couldn't match regex /%s/ to file %s."
+                    raise Exception("Couldn't match regex /%s/ to file %s."
                         % (self.get_option('group'), os.path.basename(path)))
 
                 # Construct sample_id
@@ -114,7 +114,7 @@ class FastqSource(AbstractSourceStep):
             for sample_id, paths in self.get_option('sample_to_files_map').items():
                 for path in paths:
                     if not os.path.isfile(path):
-                        raise StandardError("[fastq_source]: %s is no file. "
+                        raise Exception("[fastq_source]: %s is no file. "
                                             "Please provide correct path."
                                             % path)
 
@@ -130,7 +130,7 @@ class FastqSource(AbstractSourceStep):
                     found_files[sample_id][which_read].append(path)
 
         else:
-            raise StandardError("[raw_file_source]: Either 'group' AND 'pattern'"
+            raise Exception("[raw_file_source]: Either 'group' AND 'pattern'"
                                 " OR 'sample_to_files_map' options have to be "
                                 "set. ")
 
@@ -151,7 +151,7 @@ class FastqSource(AbstractSourceStep):
         # determine index information...
         # retrieve each run and punch in the information
         if self.is_option_set_in_config('indices'):
-            if type(self.get_option('indices')) == str:
+            if isinstance(self.get_option('indices'), str):
                 # read indices from CSV file
                 indices_path = self.get_option('indices')
                 reader = csv.DictReader(open(indices_path))
@@ -167,7 +167,7 @@ class FastqSource(AbstractSourceStep):
                             elif len(index) == 1:
                                 run.add_public_info('index-R1', index[0])
                             else:
-                                raise StandardError("Index %s is not a valid index in %s"
+                                raise Exception("Index %s is not a valid index in %s"
                                                     % index.join('-'), indices_path)
             else:
                 # indices are defined in the configuration
@@ -182,6 +182,6 @@ class FastqSource(AbstractSourceStep):
                             elif len(idx) == 1:
                                 run.add_public_info('index-R1', idx[0])
                             else:
-                                raise StandardError("Index %s is not a valid index in %s"
+                                raise Exception("Index %s is not a valid index in %s"
                                                     % idx.join('-'), index)
 

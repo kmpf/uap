@@ -77,7 +77,7 @@ class gffCompare(AbstractStep):
 
     def runs(self, run_ids_connections_files):
 
-        options=['i', 'r','R','Q','M','N','s','e','d','p','C','F','G','T']
+        options=['i', 'r', 'R', 'Q', 'M', 'N', 's', 'e', 'd', 'p', 'C', 'F', 'G', 'T']
         file_options=['i', 'r', 's']
 
         set_options = [option for option in options if \
@@ -131,13 +131,13 @@ class gffCompare(AbstractStep):
                 # check, if only a single input file is provided
                 len_input = run_ids_connections_files[run_id]['in/assembling']
                 if len(len_input) != 1:
-                    raise StandardError("Expected exactly one assembling file., but got this %s" % input_paths)
+                    raise Exception("Expected exactly one assembling file., but got this %s" % input_paths)
 
                 with run.new_exec_group() as exec_group:
 
                    # exec_group.add_command(loci, stdout_path = loci_file)
                     with exec_group.add_pipeline() as pipe:
-                        gffCompare = [self.get_tool('gffcompare'), '-o' , run_id]
+                        gffCompare = [self.get_tool('gffcompare'), '-o', run_id]
 
                         gffCompare.extend(option_list)
                         gffCompare.append(assembling)

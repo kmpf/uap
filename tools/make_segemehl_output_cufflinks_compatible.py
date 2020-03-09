@@ -7,11 +7,11 @@
 # Example: python s2c.py -s mymap.sam -g hg19.fa > mymap_cufflinks_compatible.sam
 # Example:  samtools view -h mymap.bam | python s2c.py -s - -g hg19.fa | samtools view -Sb - | samtools sort - mymap_cufflinks_compatible_sorted.bam
 
-from __future__ import division
+
 import os
 seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
-execfile(activate_this_file, dict(__file__=activate_this_file))
+exec(compile(open(activate_this_file).read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
 import pdb
 import sys
 import subprocess
@@ -23,7 +23,7 @@ from Bio import SeqIO
 
 
 parser = argparse.ArgumentParser(description='python script for parsing the output of segemehl (remapper/realigner) into a cufflinks-compatible output')
-parser.add_argument("-s", "--sam", dest='my_sam', required=True,type=argparse.FileType('r'), help="specifies the path to directory where the segemehl.sam input file is located (when piping in with samtools than just use - as argument )")
+parser.add_argument("-s", "--sam", dest='my_sam', required=True, type=argparse.FileType('r'), help="specifies the path to directory where the segemehl.sam input file is located (when piping in with samtools than just use - as argument )")
 parser.add_argument("-g", "--genome", dest='my_genome', help="in case the protocol is not strand specific: specifies the path to the genome")
 parser.add_argument("-d", "--maxDist", dest='my_maxDist', help="specifies the maximal distance of a splice junction. junctions with disctance higher than this value are classified as fusions (default is 200.000nt)")
 parser.add_argument("-o", "--outdir", dest='my_outdir', help="specifies the path to ouput directory (temp files are also created in this directory) (default is '.')")
@@ -64,7 +64,7 @@ def getGenomicLength(cigar):
     myD=0
     myX=0
     myEqual=0
-    myReg = re.compile(r'\D+',re.I)
+    myReg = re.compile(r'\D+', re.I)
     endPosAnzahl=-1
     myIter= re.finditer(myReg, cigar)
     item2= None
@@ -89,33 +89,33 @@ def getGenomicLength(cigar):
 def updateXQs(mapping):
     XX_index=-1
     XQ_index=-1
-    for i in range(11,(len(mapping[0]))):
+    for i in range(11, (len(mapping[0]))):
         if "XX:i" in mapping[0][i]:
             XX_index=i
         if "XQ:i" in mapping[0][i]:
             XQ_index=i
-    xq_sorted_mapping = sorted(mapping,key=lambda x: int(x[XX_index][5:]))
+    xq_sorted_mapping = sorted(mapping, key=lambda x: int(x[XX_index][5:]))
 
-    for i in range(0,(len(xq_sorted_mapping))):
+    for i in range(0, (len(xq_sorted_mapping))):
         newXQ='XQ:i:'+str(i)
         xq_sorted_mapping[i][XQ_index]=newXQ
 
-    pos_sorted_mapping = sorted(xq_sorted_mapping,key=lambda x: int(x[3]))
+    pos_sorted_mapping = sorted(xq_sorted_mapping, key=lambda x: int(x[3]))
     return pos_sorted_mapping
 
 def bestOnly(mappingList):
     global bestOnlyCounter
     NM_index=-1
     NH_index=-1
-    for i in range(11,(len(mappingList[0]))):
+    for i in range(11, (len(mappingList[0]))):
         if "NM:i" in mappingList[0][i]:
             NM_index=i
         if "NH:i" in mappingList[0][i]:
             NH_index=i
     mymappingDist=[]
-    for i in range(0,len(mappingList)):
+    for i in range(0, len(mappingList)):
         mymappingDist.append(0)
-        for j in range(0,len(mappingList[i])):
+        for j in range(0, len(mappingList[i])):
             mymappingDist[i]+=int(mappingList[i][j][NM_index][5:])
     minDist=min(mymappingDist)
     new_mappingList=[]
@@ -133,9 +133,9 @@ def bestOnly(mappingList):
 
 def getmapping(fragmentList):
     maxXI=0
-    for i in range(0,len(fragmentList)):
+    for i in range(0, len(fragmentList)):
         XI_index=-1
-        for k in range(11,(len(fragmentList[i]))):
+        for k in range(11, (len(fragmentList[i]))):
             if "XI:i" in fragmentList[i][k]:
                 XI_index=k
         if(XI_index==-1):
@@ -145,11 +145,11 @@ def getmapping(fragmentList):
             maxXI=int(fragmentList[i][XI_index][5:])
 
     mappingList=[]
-    for j in range(0,(maxXI+1)):
+    for j in range(0, (maxXI+1)):
         mapping=[]
-        for i in range(0,len(fragmentList)):
+        for i in range(0, len(fragmentList)):
             XI_index=-1
-            for k in range(11,(len(fragmentList[i]))):
+            for k in range(11, (len(fragmentList[i]))):
                 if "XI:i" in fragmentList[i][k]:
                     XI_index=k
             if(int(fragmentList[i][XI_index][5:])==j):
@@ -181,7 +181,7 @@ def isFusion(eingabe):
     XQ_index_last=-1
     for myline in eingabe:
         XQ_index=-1
-        for i in range(11,(len(myline))):
+        for i in range(11, (len(myline))):
             if "XQ:i" in myline[i]:
                 XQ_index=i
         if(abgehts):
@@ -256,7 +256,7 @@ def processLines(eingabe):
     XI= None
     XI_seen = None
 #    pdb.set_trace()
-    for i in range(11,(len(eingabe[0]))):
+    for i in range(11, (len(eingabe[0]))):
         if "NH:i" in eingabe[0][i]:
             NH=str(eingabe[0][i])
 
@@ -283,7 +283,7 @@ def processLines(eingabe):
     for i in range (0, len(eingabe)):
         NM_index=-1
         MD_index=-1
-        for j in range(11,(len(eingabe[i]))):
+        for j in range(11, (len(eingabe[i]))):
             if "NM:i:" in eingabe[i][j]:
                 NM_index= j
             else:
@@ -317,7 +317,7 @@ def processLines(eingabe):
         else:
             NMi+=int(eingabe[i][NM_index][5:])
             md2=eingabe[i][MD_index][5:]
-            myReg = re.compile(r'\D+',re.I)
+            myReg = re.compile(r'\D+', re.I)
             myIter= re.finditer(myReg, md1)
             item= None
             for item in myIter:
@@ -339,7 +339,7 @@ def processLines(eingabe):
             md1=newMD
     NMi='NM:i:'+str(NMi)
     newMD='MD:Z:'+newMD
-    for j in range (0,11):
+    for j in range (0, 11):
         if(j==5):
             newLine.append(newCigar)
         else:
@@ -393,7 +393,7 @@ for line in args.my_sam:
                 sys.stdout.write("\t")
         sys.stdout.write("\n")
     else:
-        for i in range(11,(len(columns))):
+        for i in range(11, (len(columns))):
             if "XQ:i" in columns[i]:
                 splitRead=True
         if(splitRead):
@@ -420,7 +420,7 @@ for line in args.my_sam:
 temp.flush()
 temp.seek(0)
 temp2 = tempfile.TemporaryFile(dir=outPath)
-p=subprocess.Popen(['sort', '-t','\t','-k', '1,1', '-k', '4,4n',mytempName],stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+p=subprocess.Popen(['sort', '-t', '\t', '-k', '1,1', '-k', '4,4n', mytempName], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 temp2.write(p.communicate()[0])
 temp.close()
 temp2.flush()
@@ -447,7 +447,7 @@ for line in temp2.readlines():
         else:
             listofmappings = []
             listofmappings=getmapping(listToMerge)
-            for i in range(0,len(listofmappings)):
+            for i in range(0, len(listofmappings)):
                 transcripts+=1
                 if(len(listofmappings[i])>2):
                     transcriptsMore+=1
@@ -478,7 +478,7 @@ for line in temp2.readlines():
 if(len(listToMerge)>0):
     listofmappings = []
     listofmappings=getmapping(listToMerge)
-    for i in range(0,len(listofmappings)):
+    for i in range(0, len(listofmappings)):
         transcripts+=1
         if(len(listofmappings[i])>2):
             transcriptsMore+=1
@@ -499,7 +499,7 @@ temp2.close()
 temp_mate.flush()
 temp_mate.seek(0)
 temp2_mate = tempfile.TemporaryFile(dir=outPath)
-p_mate=subprocess.Popen(['sort', '-t','\t','-k', '1,1', '-k', '4,4n',mytemp_mateName],stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+p_mate=subprocess.Popen(['sort', '-t', '\t', '-k', '1,1', '-k', '4,4n', mytemp_mateName], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 temp2_mate.write(p_mate.communicate()[0])
 temp_mate.close()
 temp2_mate.flush()
@@ -516,7 +516,7 @@ for line in temp2_mate.readlines():
         else:
             listofmappings = []
             listofmappings=getmapping(listToMerge)
-            for i in range(0,len(listofmappings)):
+            for i in range(0, len(listofmappings)):
                 transcripts+=1
                 if(len(listofmappings[i])>2):
                     transcriptsMore+=1
@@ -544,7 +544,7 @@ for line in temp2_mate.readlines():
 if(len(listToMerge)>0):
     listofmappings = []
     listofmappings=getmapping(listToMerge)
-    for i in range(0,len(listofmappings)):
+    for i in range(0, len(listofmappings)):
         transcripts+=1
         if(len(listofmappings[i])>2):
             transcriptsMore+=1

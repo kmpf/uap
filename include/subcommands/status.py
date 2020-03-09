@@ -7,7 +7,7 @@ from contextlib import closing
 import logging
 import pydoc
 import string
-from cStringIO  import StringIO
+from io  import StringIO
 import yaml
 from tqdm import tqdm
 from subprocess import list2cmdline

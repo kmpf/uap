@@ -178,7 +178,7 @@ class ProcessPool(object):
             module_cmd = [module_cmd]
 
         for command in module_cmd:
-            if type(command) is str:
+            if isinstance(command, str):
                 command = command.split()
             self.check_subprocess_command(command)
 
@@ -196,8 +196,8 @@ class ProcessPool(object):
                              (" ".join(command), e.errno, e.strerror))
 
             (output, error) = proc.communicate()
-            exec output
-            sys.stderr.write(error)
+            exec(output)
+            sys.stderr.write(error.decode('utf-8'))
             sys.stderr.flush()
 
         return
@@ -207,7 +207,7 @@ class ProcessPool(object):
             commands = [commands]
 
         for command in commands:
-            if type(command) is str:
+            if isinstance(command, str):
                 command = command.split()
 
             self.launch(command)
@@ -447,7 +447,7 @@ class ProcessPool(object):
                 fdout = os.open(fout_path, os.O_WRONLY|os.O_CREAT|os.O_TRUNC)
 
             checksum = hashlib.sha256()
-            tail = ''
+            tail = b''
             length = 0
             newline_count = 0
 
@@ -471,7 +471,7 @@ class ProcessPool(object):
                 length += len(block)
 
                 # update newline_count
-                newline_count += block.count('\n')
+                newline_count += block.count(b'\n')
 
                 # write block to output file
                 if fdout is not None:
@@ -541,7 +541,7 @@ class ProcessPool(object):
                         with open(watcher_report_path, 'r') as f:
                             self.process_watcher_report = yaml.load(f, Loader=yaml.FullLoader)
                     except IOError as e:
-                        logger.warn("Couldn't load watcher report from %s." %
+                        logger.warning("Couldn't load watcher report from %s." %
                               watcher_report_path)
                         logger.debug("Reading the watcher failed with: %s" % e)
                         raise
@@ -660,7 +660,7 @@ class ProcessPool(object):
                 with open(watcher_report_path, 'r') as f:
                     self.process_watcher_report = yaml.load(f, Loader=yaml.FullLoader)
             except IOError as e:
-                logger.warn("Couldn't load watcher report from %s." %
+                logger.warning("Couldn't load watcher report from %s." %
                       watcher_report_path)
                 logger.debug("Reading the watcher failed with: %s" % e)
         except OSError as e:
@@ -708,7 +708,7 @@ class ProcessPool(object):
         super_pid = os.getpid()
 
         def human_readable_size(size, decimal_places=1):
-            for unit in ['B','KB','MB','GB','TB']:
+            for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
                 if size < 1024.0:
                     break
                 size /= 1024.0
@@ -737,7 +737,7 @@ class ProcessPool(object):
                     except psutil.NoSuchProcess:
                         pass
 
-                pid_list = copy.deepcopy(procs.keys())
+                pid_list = copy.deepcopy(list(procs.keys()))
                 for pid in pid_list:
                     proc = procs[pid]
                     try:
@@ -760,7 +760,7 @@ class ProcessPool(object):
                 max_data = dict()
                 first_call = None
                 while True:
-                    pid_list = copy.deepcopy(procs.keys())
+                    pid_list = copy.deepcopy(list(procs.keys()))
                     sum_data = dict()
                     if first_call is None:
                         first_call = True
@@ -841,15 +841,17 @@ class ProcessPool(object):
                         net_data = psutil.net_io_counters()._asdict()
                         report['host net stats'] = \
                             {k:net_data[k]-first_net[k] for k in net_data.keys()}
+                        new_field = dict()
                         for field in report.values():
                             for key in field.keys():
                                 if 'bytes' in key:
-                                    field[key.replace('bytes', 'data')] = \
+                                    new_field[key.replace('bytes', 'data')] = \
                                         human_readable_size(field[key])
                         for field in max_data.values():
                             for key in field.keys():
                                 if key in ['rss', 'vms']:
-                                    field[key + ' unit'] = human_readable_size(field[key])
+                                    new_field[key + ' unit'] = human_readable_size(field[key])
+                        field.update(new_field)
                         report['max'] = max_data
                         with open(watcher_report_path, 'w') as f:
                             f.write(yaml.dump(report, default_flow_style = False))
@@ -891,7 +893,7 @@ class ProcessPool(object):
                 try:
                     os.kill(pid, signal.SIGTERM)
                 except Exception as e:
-                    if type(e) == OSError and e.errno == errno.ESRCH:
+                    if isinstance(e, OSError) and e.errno == errno.ESRCH:
                         logger.debug('Trying to kill already dead process %s.'
                                 % pid)
                         return

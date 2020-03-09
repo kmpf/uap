@@ -20,7 +20,7 @@ def main(args):
     p = pipeline.Pipeline(arguments=args)
 
     def handle_signal(signum, frame):
-        logger.warn("Catching %s!" %
+        logger.warning("Catching %s!" %
                 process_pool.ProcessPool.SIGNAL_NAMES[signum])
         p.caught_signal = signum
         process_pool.ProcessPool.kill()

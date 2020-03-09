@@ -64,18 +64,18 @@ class SamToFastq(AbstractStep):
                             pipe.add_command(pigz)
 
                             # 2. command: Convert to fastq
-                            samtools = [self.get_tool('samtools'), 'view', '-S' ,'-']
+                            samtools = [self.get_tool('samtools'), 'view', '-S', '-']
                             pipe.add_command(samtools)
 
                             #3 save fastq file
                             cuta  = [self.get_tool('cut'), '-f', '2,3,4']
                             pipe.add_command(cuta)
-                            cutb  = [self.get_tool('cut'), '-f', '1', '-d' , '|']
+                            cutb  = [self.get_tool('cut'), '-f', '1', '-d', '|']
                             pipe.add_command(cutb)
                             grep = [self.get_tool('grep'), '-v', '*']
                             pipe.add_command(grep)
 
-                            cutc  = [self.get_tool('cut'), '-f', '1', '-d' , '_']
+                            cutc  = [self.get_tool('cut'), '-f', '1', '-d', '_']
                             pipe.add_command(cutc)
 
                             sorta = [self.get_tool('sort')]

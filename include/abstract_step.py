@@ -22,7 +22,7 @@ import random
 import signal
 import socket
 import string
-import StringIO
+import io
 import subprocess
 import tempfile
 import textwrap
@@ -318,18 +318,18 @@ class AbstractStep(object):
             missings = required_out - used_conns
             if missings:
                 bad_runs += 1
-                logger.warn('Run "%s" of step "%s" misses the required '
+                logger.warning('Run "%s" of step "%s" misses the required '
                         'connections %s. To remove this warning pass '
                         'optional=True to the add_connection method in the '
                         'step constructor __init__ of "%s".' %
                         (run_id, self.get_step_name(), list(missings),
                                 self.get_step_type()))
             if bad_runs == 5:
-                logger.warn('... Emitting connection test for further '
+                logger.warning('... Emitting connection test for further '
                     'runs of "%s".' % self.get_step_name())
                 break
         if bad_runs:
-            logger.warn('[Deprecation] Unmet required connections '
+            logger.warning('[Deprecation] Unmet required connections '
                     'may trigger an error in future version of the UAP.')
 
     def get_output_directory(self):
@@ -595,13 +595,13 @@ class AbstractStep(object):
             self.remove_ping_file(executing_ping_path)
 
         def ping_on_term(signum, frame):
-            logger.warn('Recived SIGTERM and moving execution ping file...')
+            logger.warning('Recived SIGTERM and moving execution ping file...')
             kill_exec_ping()
             self.remove_ping_file(queued_ping_path, bad_copy=True)
             original_term_handler(signum, frame)
             raise UAPError('Recived TERM signal (canceled job).')
         def ping_on_int(signum, frame):
-            logger.warn('Recived SIGINT and moving execution ping file...')
+            logger.warning('Recived SIGINT and moving execution ping file...')
             kill_exec_ping()
             self.remove_ping_file(queued_ping_path, bad_copy=True)
             original_int_handler(signum, frame)
@@ -695,7 +695,7 @@ class AbstractStep(object):
                 caught_exception = sys.exc_info()
 
         pool = None
-        class SignalError(StandardError):
+        class SignalError(Exception):
             def __init__(self, signum):
                 self.signum = signum
                 m = "Recived signal %s during hashing!" % \
@@ -780,7 +780,7 @@ class AbstractStep(object):
             p.notify(message, attachment)
             self.remove_ping_file(queued_ping_path, bad_copy=True)
             if caught_exception is not None:
-                raise caught_exception[1], None, caught_exception[2]
+                raise caught_exception[1].with_traceback(caught_exception[2])
 
         else:
             # finally, remove the temporary directory if it's empty
@@ -1120,7 +1120,7 @@ class AbstractStep(object):
             run_id = task.run_id
             run = step._runs[run_id]
             if run.has_public_info(key):
-            	results.add(run.get_public_info(key))
+                results.add(run.get_public_info(key))
             results |= self.find_upstream_info_for_input_paths_as_set(
                 task.input_files(), key, None)
 
@@ -1173,7 +1173,7 @@ class AbstractStep(object):
             set_out_connections = set_out_connections.union(set(out_conn))
 
         if 'empty' in set_out_connections:
-            logger.warn('[%s] "empty" in _connect is deprecated and will be '
+            logger.warning('[%s] "empty" in _connect is deprecated and will be '
                         'ignored.' % self.get_step_name())
             set_out_connections.discard('empty')
 
@@ -1202,12 +1202,12 @@ class AbstractStep(object):
         required_connections = self.get_in_connections(with_optional=False)
         missing = required_connections - cc.existing_connections
         if missing:
-            logger.warn('_connect: The required connection %s of step '
+            logger.warning('_connect: The required connection %s of step '
                 '"%s" is not satisfied. To remove this warning pass '
                 'optional=True to the add_connection method in the step '
                 'constructor __init__ of "%s".' %
                 (missing, self.get_step_type(), self.get_step_type()))
-            logger.warn('[Deprecation] Unmet required connections may trigger '
+            logger.warning('[Deprecation] Unmet required connections may trigger '
                 'an error in future version of the UAP.')
 
         # Check if all set out connections were recognized.

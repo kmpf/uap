@@ -8,7 +8,7 @@ import logging
 import os
 import re
 import socket
-import StringIO
+import io
 import subprocess
 import textwrap
 import yaml
@@ -90,13 +90,13 @@ def main(args):
         with open(os.devnull, 'w') as devnull:
             subprocess.check_call(dot_version, stdout=devnull)
     except subprocess.CalledProcessError as e:
-        raise StandardError("Execution of %s failed. GraphViz seems to be "
+        raise Exception("Execution of %s failed. GraphViz seems to be "
                             "unavailable." % " ".join(dot_version))
 
     if args.files:
         msg = "Going to plot the graph containing all files of the analysis"
         logger.info(msg)
-        raise StandardError("Sorry, feature not implemented yet!")
+        raise Exception("Sorry, feature not implemented yet!")
     elif args.steps:
         logger.info("Create a graph showing the DAG of the analysis")
 
@@ -308,7 +308,7 @@ def create_dot_file_from_annotations(logs, args):
         for _ in ['nodes', 'edges', 'clusters', 'graph_labels']:
             hash[_].update(temp[_])
 
-    f = StringIO.StringIO()
+    f = io.StringIO()
     f.write("digraph {\n")
     if args.orientation == "top-to-bottom":
         f.write("    rankdir = TB;\n")

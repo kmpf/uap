@@ -61,7 +61,7 @@ logger object.
 Essential imports are the ``from logging import getLogger``,
 ``from abstract_step import ...`` and ``from uaperrors import UAPError``.
 The ``logger`` can be used to log messages on different verbosity levels
-(e.g. ``logger.debug``, ``logger.info``, ``logger.warn``). The ``UAPError``
+(e.g. ``logger.debug``, ``logger.info``, ``logger.warning``). The ``UAPError``
 can be used to raise UAÜ specific errors with ``raise UAPError(<message>)``.
 ``AbstractStep`` and ``AbstractSourceStep`` are available parent classes
 from which the new implementation musst inherit its methods.

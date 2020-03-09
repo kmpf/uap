@@ -71,30 +71,30 @@ class Trimmomatic(AbstractStep):
                 if option[0] == 'ILLUMINACLIP':
                     assert(len(option) in range(4, 7))
                     if option[1][-6:] != '.fasta':
-                        raise StandardError("Adapters should be provided as "
+                        raise Exception("Adapters should be provided as "
                                             "FASTA-file.")
-                    if int(option[2]) not in range(17):
-                        raise StandardError("The alignment-seed can contain up "
+                    if int(option[2]) not in list(range(17)):
+                        raise Exception("The alignment-seed can contain up "
                                             "to 17 mismatches.")
                 elif option[0] == 'SLIDINGWINDOW':
                     assert(len(option[1:]) == 2)
-                    if int(option[2]) not in range(33, 158):
-                        raise StandardError("SLIDINGWINDOW: Specify a valid "
+                    if int(option[2]) not in list(range(33, 158)):
+                        raise Exception("SLIDINGWINDOW: Specify a valid "
                                             "PHRED-score.")
                 elif option[0] == 'MAXINFO':
                     assert(len(option[1:]) == 2)
                     if not 0 <= float(option[2]) <= 1:
-                        raise StandardError("Strictness should be set between "
+                        raise Exception("Strictness should be set between "
                                             " 0.0 and 1.0")
                 elif option[0] == 'LEADING':
                     assert(len(option[1:]) == 1)
-                    if int(option[1]) not in range(33, 158):
-                        raise StandardError("LEADING: Specify a valid "
+                    if int(option[1]) not in list(range(33, 158)):
+                        raise Exception("LEADING: Specify a valid "
                                             "PHRED-score.")
                 elif option[0] == 'TRAILING':
                     assert(len(option[1:]) == 1)
-                    if int(option[1]) not in range(33, 158):
-                        raise StandardError("TRAILING: Specify a valid "
+                    if int(option[1]) not in list(range(33, 158)):
+                        raise Exception("TRAILING: Specify a valid "
                                             "PHRED-score.")
                 elif option[0] == 'CROP':
                     assert(len(option[1:]) == 1)
@@ -107,14 +107,14 @@ class Trimmomatic(AbstractStep):
                     assert(str(option[1]).isdigit())
                 elif option[0] == 'AVGQUAL':
                     assert(len(option[1:]) == 1)
-                    if int(option[1]) not in range(33, 158):
-                        raise StandardError("Specify a valid PHRED-score.")
+                    if int(option[1]) not in list(range(33, 158)):
+                        raise Exception("Specify a valid PHRED-score.")
                 elif option[0] == 'TOPHRED33':
                     assert(len(option) == 1)
                 elif option[0] == 'TOPHRED64':
                     assert(len(option) == 1)
                 else:
-                    raise StandardError("TRIMMOMATIC: Invalid step declared")
+                    raise Exception("TRIMMOMATIC: Invalid step declared")
                 for i in range(len(option)):
                     option[i] = str(option[i])
                 step_list.append(':'.join(option))
@@ -125,7 +125,7 @@ class Trimmomatic(AbstractStep):
                            ['in/first_read']) !=\
                         len(run_ids_connections_files[run_id]
                             ['in/second_read']):
-                        raise StandardError("Incorrect pairing of paired-end-"
+                        raise Exception("Incorrect pairing of paired-end-"
                                             "files in run %s" % run_id)
                 for file_no in range(len(run_ids_connections_files[run_id]
                                          ['in/first_read'])):

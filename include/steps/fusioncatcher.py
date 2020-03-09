@@ -46,11 +46,11 @@ class FusionCatcher(AbstractStep):
         self.add_option('cores', str, default='6')
 
 
-        self.add_option('keep-unmapped-read' , bool, optional=True)
+        self.add_option('keep-unmapped-read', bool, optional=True)
 
-        self.add_option('skip-filter-adapter' , bool, optional=True)
+        self.add_option('skip-filter-adapter', bool, optional=True)
 
-        self.add_option('extract-buffer-size' , str, optional=True)
+        self.add_option('extract-buffer-size', str, optional=True)
 
 
     def runs(self, run_ids_connections_files):

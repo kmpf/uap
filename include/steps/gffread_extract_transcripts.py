@@ -42,7 +42,7 @@ class GffreadExtractTranscripts(AbstractStep):
 
             cmd.append(self.get_option('output-fasta-name'))
 
-            for __ , connection  in run_ids_connections_files.items():
+            for __, connection  in run_ids_connections_files.items():
                 if 'in/fasta' in connection:
                     cmd.append('-g')
                     cmd.append(connection['in/fasta'][0])
@@ -53,7 +53,7 @@ class GffreadExtractTranscripts(AbstractStep):
             if self.is_option_set_in_config('gtf'):
                 cmd.append(os.path.abspath(self.get_option('gtf')))
             else:
-                for __ , connection  in run_ids_connections_files.items():
+                for __, connection  in run_ids_connections_files.items():
                     if 'in/anno' in connection:
                         cmd.append(connection['in/anno'][0])
                         rfiles.append(connection['in/anno'][0])
