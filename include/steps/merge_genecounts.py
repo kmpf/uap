@@ -46,11 +46,10 @@ class MergeGenecounts(AbstractStep):
         with self.declare_run(new_run_id) as run:
             file_name = '%s_%s.txt' % (new_run_id, tool_name)
             run.add_output_file('merged_counts', file_name, gc_files)
-            basename = run.get_output_directory_du_jour_placeholder()
             merge_command = [
                 self.get_tool('merge_genecounts'),
                 '-t', tool_name,
-                '-o', basename,
+                '-o', '.',
                 '-p', file_name,
                 ' '.join(gc_files)
             ]

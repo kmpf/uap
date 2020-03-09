@@ -179,9 +179,7 @@ class PePr(AbstractStep):
                 temp_dir = str()
                 with run.new_exec_group() as pepr_exec_group:
                     # 1. Create temporary directory for PePr output
-                    temp_dir = os.path.join(
-                        run.get_output_directory_du_jour_placeholder(),
-                        'pepr-out')
+                    temp_dir = 'pepr-out'
                     mkdir = [self.get_tool('mkdir'), temp_dir]
                     pepr_exec_group.add_command(mkdir)
 

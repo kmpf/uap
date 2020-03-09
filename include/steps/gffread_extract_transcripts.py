@@ -40,8 +40,7 @@ class GffreadExtractTranscripts(AbstractStep):
         with self.declare_run(run_id) as run:
             cmd = [self.get_tool('gffread'), '-w']
 
-            path = run.get_output_directory_du_jour_placeholder()
-            cmd.append(path + '/' + self.get_option('output-fasta-name'))
+            cmd.append(self.get_option('output-fasta-name'))
 
             for __ , connection  in run_ids_connections_files.items():
                 if 'in/fasta' in connection:

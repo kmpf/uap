@@ -140,11 +140,7 @@ class Trimmomatic(AbstractStep):
 
                     with run.new_exec_group() as trimmomatic_exec_group:
                         option_list = list()
-                        option_list.extend(
-                            ('-trimlog',
-                             os.path.join(
-                                 run.get_output_directory_du_jour_placeholder(),
-                                 '%s.log' % file_id)))
+                        option_list.extend(['-trimlog', '%s.log' % file_id])
 
                         option_list.append(
                             run_ids_connections_files[run_id]
@@ -154,22 +150,15 @@ class Trimmomatic(AbstractStep):
                                 run_ids_connections_files[run_id]
                                 ['in/second_read'][file_no])
 
-                        option_list.append(
-                            os.path.join(
-                                run.
-                                get_output_directory_du_jour_placeholder(),
-                                '%s.forward.fastq' % file_id))
+                        option_list.append('%s.forward.fastq' % file_id)
 
                         if paired_end:
                             pe_out_files = ('forward.unpaired',
                                             'reverse',
                                             'reverse.unpaired')
                             for output_file in pe_out_files:
-                                option_list.append(
-                                    os.path.join(
-                                     run.
-                                     get_output_directory_du_jour_placeholder(),
-                                     '%s.%s.fastq' % (file_id, output_file)))
+                                option_list.append('%s.%s.fastq' % \
+                                        (file_id, output_file))
 
                         trimmomatic = trimmomatic_base[:]
                         trimmomatic.extend(option_list)

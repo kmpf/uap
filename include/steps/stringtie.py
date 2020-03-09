@@ -286,8 +286,7 @@ class Stringtie(AbstractStep):
                                't_data']
 
                 for connection in connections:
-                    is_produced = ''.join([run.get_output_directory_du_jour_placeholder(),
-                                           '/', connection, '.ctab'])
+                    is_produced = connection + '.ctab'
 
                     out_file = run_id + '-' + connection + '.ctab'
                     is_wanted = run.add_output_file(connection,

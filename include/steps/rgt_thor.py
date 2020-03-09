@@ -205,7 +205,7 @@ class RgtThor(AbstractStep):
                 with run.new_exec_group() as rgt_thor_eg:
                     rgt_thor = [ self.get_tool('rgt-THOR'),
                                  '--output-dir',
-                                 run.get_output_directory_du_jour_placeholder(),
+                                 '.'
                                  '--name', run_id ]
                     rgt_thor.extend(option_list)
                     rgt_thor.append(config_path)

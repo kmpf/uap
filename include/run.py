@@ -170,53 +170,12 @@ class Run(object):
     def is_source(self):
         return True if isinstance(self._step, abst.AbstractSourceStep) else False
 
-    def replace_output_dir_du_jour(func):
-        def inner(self, *args, **kwargs):
-            # Collect info to replace du_jour placeholder with temp_out_dir
-            step = self.get_step()
-            placeholder = self.get_output_directory_du_jour_placeholder()
-            temp_out_dir = self.get_output_directory_du_jour()
-
-            value = None
-            ret_value = func(self, *args, **kwargs)
-            # If currently calling AbstractStep.runs() do nothing
-            if ret_value is None:
-                return(None)
-            elif temp_out_dir is None:
-                return(ret_value)
-            elif isinstance(ret_value, list) or isinstance(ret_value, set):
-                value = list()
-                for string in ret_value:
-                    if string != None and placeholder in string:
-                        value.append(
-                            string.replace(placeholder, temp_out_dir))
-                    else:
-                        value.append(string)
-            elif isinstance(ret_value, str):
-                if ret_value != None and placeholder in ret_value:
-                    value = ret_value.replace(placeholder, temp_out_dir)
-            elif isinstance(ret_value, dict):
-                for key in ret_value.keys():
-                    if key != None and placeholder in key:
-                        new_key = key.replace(placeholder, temp_out_dir)
-                        ret_value[new_key] = ret_value.pop(key)
-                value = ret_value
-            elif ret_value == None:
-                value = None
-            else:
-                raise UAPError("Function %s does not return list or string object"
-                             % func.__class__.__name__)
-            return(value)
-        return(inner)
-
-    @replace_output_dir_du_jour
     def get_known_paths(self):
         return self._known_paths
 
     def add_known_paths(self, known_paths_dict):
         self._known_paths.update(known_paths_dict)
 
-    @replace_output_dir_du_jour
     def get_temp_paths(self):
         '''
         Returns a set of all temporary paths which belong to this run.
@@ -225,29 +184,12 @@ class Run(object):
 
     def get_output_directory_du_jour_placeholder(self):
         '''
-        Returns a placeholder for the temporary output directory, which
-        needs to be replaced by the actual temp directory inside the
-        abstract_step.execute() method
+        Used to return a placeholder for the temporary output directory, which
+        needed to be replaced by the actual temp directory inside the
+        abstract_step.execute() method.
         '''
-        return("<%s-output-directory-du-jour>" %
-               str(self.get_step().__class__.__name__))
-
-    def get_output_directory_du_jour(self):
-        '''
-        Returns the state-dependent output directory of the step.
-
-
-        Returns this steps output directory according to its current
-        state:
-
-         - if we are currently calling a step's execute() method,
-           this will return the current directory
-         - otherwise, it will return the real output directory
-        '''
-        if self.get_step()._state == abst.AbstractStep.states.EXECUTING:
-            return '.'
-        else:
-            return self.get_output_directory()
+        raise UAPError("Using run.get_output_directory_du_jour_placeholder() "
+                       "is deprecated. Just use the string '.' instead.")
 
     def get_temp_output_directory(self):
         '''

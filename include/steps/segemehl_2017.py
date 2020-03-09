@@ -299,9 +299,8 @@ class Segemehl2017(AbstractStep):
                             segemehl.extend(['--mate', sr_input[0]])
 
                         if self.is_option_set_in_config('splits'):
-                            outdir = run.get_output_directory_du_jour_placeholder()
                             # this is the prefix for the segemehl cmd -S (splits files)
-                            prefixSM = '%s/%s_splits' % (outdir, run_id)
+                            prefixSM = '%s_splits' % run_id
                             # this is the prefix without directory for uap add output file
                             prefix = '%s_splits' %  run_id
                             segemehl.extend(['-S', prefixSM])

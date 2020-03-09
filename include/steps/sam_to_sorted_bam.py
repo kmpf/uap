@@ -67,7 +67,7 @@ class SamToSortedBam(AbstractStep):
                         #not accessible
                         raise StepError(self, "Directory %s not accessible." % self.get_option('temp-sort-dir'))
                 else:
-                    sortpath =  (run.get_output_directory_du_jour_placeholder()  + '/')
+                    sortpath = './'
 
 
                 with run.new_exec_group() as exec_group:

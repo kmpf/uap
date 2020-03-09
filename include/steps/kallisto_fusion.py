@@ -123,7 +123,6 @@ class Kallisto(AbstractStep):
                     'run_info.json', 'run_info.json', input_paths)
 
                 # Assemble kallisto command
-                my_output = run.get_output_directory_du_jour_placeholder()
                 with run.new_exec_group() as exec_group:
 
                     kallisto = [self.get_tool('kallisto'),
@@ -154,7 +153,7 @@ class Kallisto(AbstractStep):
                             kallisto.extend(['--' + param_optn,
                                 str(self.get_option(param_optn))])
 
-                    kallisto.extend(['-o', my_output,
+                    kallisto.extend(['-o', '.',
                                     fr_input,
                                     sr_input])
 

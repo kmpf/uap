@@ -98,9 +98,7 @@ class Bcl2FastqSource(AbstractSourceStep):
                 # Create new execution group for configureBclToFastq.pl
                 with run.new_exec_group() as bcl2Fastq_exec_group:
                     # Create placeholder for Unaligned folder
-                    temp_output_dir = os.path.join(
-                        run.get_output_directory_du_jour_placeholder(),
-                        'Unaligned')
+                    temp_output_dir = 'Unaligned'
 
                     # Assemble configureBclToFastq.pl command
                     configureBcl2Fastq = [

@@ -100,8 +100,6 @@ class gffCompare(AbstractStep):
 
              with self.declare_run(run_id) as run:
 
-                base = run.get_output_directory_du_jour_placeholder() + '/' + run_id
-
                 assembling  = run_ids_connections_files[run_id]['in/assembling'][0]
                 input_paths = assembling
 
@@ -139,7 +137,7 @@ class gffCompare(AbstractStep):
 
                    # exec_group.add_command(loci, stdout_path = loci_file)
                     with exec_group.add_pipeline() as pipe:
-                        gffCompare = [self.get_tool('gffcompare'), '-o' , base]
+                        gffCompare = [self.get_tool('gffcompare'), '-o' , run_id]
 
                         gffCompare.extend(option_list)
                         gffCompare.append(assembling)

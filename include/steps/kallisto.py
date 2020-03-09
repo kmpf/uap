@@ -126,8 +126,7 @@ class Kallisto(AbstractStep):
                         kallisto.extend(['--' + param_flag,
                                          str(self.get_option(param_flag))])
 
-                out_path = run.get_output_directory_du_jour_placeholder()
-                kallisto.extend(['-o', out_path])
+                kallisto.extend(['-o', '.'])
 
                 kallisto.extend(input_fileset)
 

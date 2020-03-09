@@ -135,13 +135,9 @@ class PePrPostprocess(AbstractStep):
 
                 with run.new_exec_group() as pepr_post_exec_group:
                     # 1. Compile the PePr-postprocess command
-                    djp = run.get_output_directory_du_jour_placeholder()
-                    peaks = ",".join([os.path.join(djp, os.path.basename(f)) \
-                                      for f in in_files['peak']])
-                    chip = ",".join([os.path.join(djp, os.path.basename(f)) \
-                                     for f in in_files['chip']])
-                    inpu = ",".join([os.path.join(djp, os.path.basename(f)) \
-                                     for f in in_files['input']])
+                    peaks = ",".join(os.path.basename(f) for f in in_files['peak'])
+                    chip = ",".join(os.path.basename(f)) for f in in_files['chip'])
+                    inpu = ",".join(os.path.basename(f) for f in in_files['input'])
                     pepr_post = [
                         self.get_tool('pepr-postprocess'),
                         '--peak', peaks,

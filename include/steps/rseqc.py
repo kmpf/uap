@@ -87,9 +87,6 @@ class RSeQC(AbstractStep):
             alignments = run_ids_connections_files[run_id]['in/alignments']
 
             with self.declare_run(run_id) as run:
-                out = run.get_output_directory_du_jour_placeholder() \
-                    + '/' + run_id
-
                 with run.new_exec_group() as exec_group:
                     bam_stat = [
                         self.get_tool('bam_stat.py'),
@@ -137,7 +134,7 @@ class RSeQC(AbstractStep):
                         self.get_tool('geneBody_coverage.py'),
                         '-i', alignments[0],
                         '-r', os.path.abspath(self.get_option('reference')),
-                        '-o', out
+                        '-o', run_id
                     ]
                     gbc_txt = run_id + '.geneBodyCoverage.txt'
                     run.add_output_file('geneBody_coverage.txt',
@@ -163,7 +160,7 @@ class RSeQC(AbstractStep):
                             self.get_tool('inner_distance.py'),
                             '-i', alignments[0],
                             '-r', os.path.abspath(self.get_option('reference')),
-                            '-o', out
+                            '-o', run_id
                         ]
                         id_txt = run_id + '.inner_distance.txt'
                         run.add_output_file('inner_distance', id_txt, alignments)
@@ -191,7 +188,7 @@ class RSeQC(AbstractStep):
                         self.get_tool('junction_annotation.py'),
                         '-i', alignments[0],
                         '-r', os.path.abspath(self.get_option('reference')),
-                        '-o', out
+                        '-o', run_id
                     ]
                     ja_bed = run_id + '.junction.bed'
                     run.add_output_file('junction_bed', ja_bed, alignments)
@@ -218,7 +215,7 @@ class RSeQC(AbstractStep):
                         self.get_tool('junction_saturation.py'),
                         '-i', alignments[0],
                         '-r', os.path.abspath(self.get_option('reference')),
-                        '-o', out
+                        '-o', run_id
                     ]
                     js_r = run_id + '.junctionSaturation_plot.r'
                     run.add_output_file('junctionSaturation_r',
@@ -241,7 +238,7 @@ class RSeQC(AbstractStep):
                     read_duplication = [
                         self.get_tool('read_duplication.py'),
                         '-i', alignments[0],
-                        '-o', out
+                        '-o', run_id
                     ]
                     rd_r = run_id + '.DupRate_plot.r'
                     run.add_output_file('DupRate_plot_r', rd_r, alignments)
@@ -265,7 +262,7 @@ class RSeQC(AbstractStep):
                     read_gc = [
                         self.get_tool('read_GC.py'),
                         '-i', alignments[0],
-                        '-o', out
+                        '-o', run_id
                     ]
                     gc_r = run_id + '.GC_plot.r'
                     run.add_output_file('gc_r', gc_r, alignments)

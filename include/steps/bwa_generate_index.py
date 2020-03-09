@@ -46,11 +46,7 @@ class BwaGenerateIndex(AbstractStep):
                             "Reference sequence is not a single file.")
                     bwa_index = [self.get_tool('bwa'), 'index']
                     # Add index_basename
-                    bwa_index.extend(
-                        ['-p', os.path.join(
-                            run.get_output_directory_du_jour_placeholder(),
-                            index_basename)]
-                    )
+                    bwa_index.extend(['-p', index_basename])
                     # Add reference sequence (a single file)
                     bwa_index.append(refseq[0])
                     exec_group.add_command(bwa_index)

@@ -219,9 +219,7 @@ class Bowtie2GenerateIndex(AbstractStep):
                     # Add list of reference sequences
                     bowtie_build.append(','.join(temp_files))
                     # Add basename
-                    bowtie_build.append(os.path.join(
-                        run.get_output_directory_du_jour_placeholder(),
-                        index_basename) )
+                    bowtie_build.append(index_basename)
 
                     exec_group.add_command(bowtie_build)
 

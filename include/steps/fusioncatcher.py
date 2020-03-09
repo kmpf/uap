@@ -73,10 +73,8 @@ class FusionCatcher(AbstractStep):
 
                 # create folder structure
 
-                my_temp_dir = run.get_output_directory_du_jour_placeholder()
-
-                my_input = os.path.join(my_temp_dir, 'input')
-                my_output = os.path.join(my_temp_dir, 'output')
+                my_input = 'input'
+                my_output = 'output'
 
                 # create logfiles
                 log_stderr = run.add_output_file(

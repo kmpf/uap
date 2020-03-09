@@ -114,6 +114,6 @@ class FastqScreen(AbstractStep):
 
                                 fastq_screen.extend(['--nohits'])
 
-                            fastq_screen.extend(['--outdir', run.get_output_directory_du_jour_placeholder(), input_path])
+                            fastq_screen.extend(['--outdir', '.', input_path])
                             fastq_screen_exec_group.add_command(fastq_screen, stdout_path=log_stdout, stderr_path=log_stderr)
 

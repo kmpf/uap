@@ -147,12 +147,9 @@ class CuffCompare(AbstractStep):
 
                 in_file = input_paths#[0]
 
-                # the temporary output directory
-                outdir = run.get_output_directory_du_jour_placeholder()
-
                 # this is the prefix for the cufflinks cmd options:
                 # -o and -c (out- and consensus prefix):
-                prefixCC = '%s/%s_cuffcompare' % (outdir, run_id)
+                prefixCC = '%s_cuffcompare' % run_id
 
                 # this is the prefix without directory for uap add output file
                 prefix = '%s_cuffcompare' %  run_id

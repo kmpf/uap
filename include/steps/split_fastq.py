@@ -93,12 +93,11 @@ class SplitFastq(AbstractStep):
                                                      stdout_file,
                                                      input_fileset)
 
-                    basename = run.get_output_directory_du_jour_placeholder()
                     split_fastq_r1 = [
                         self.get_tool('split_fastqn'),
                         '-i', r1,
                         '-n', str(readcount),
-                        '-o', basename,
+                        '-o', '.',
                         '-p', new_run_id,
                         '-s', str(index),
                         '-m', 'r1'

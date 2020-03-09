@@ -78,8 +78,7 @@ class Star(AbstractStep):
 
                 star.extend(['--genomeDir', genome_dir])
 
-                out_path = run.get_output_directory_du_jour_placeholder()
-                star.extend(['--outFileNamePrefix', out_path + '/'])
+                star.extend(['--outFileNamePrefix', './'])
 
                 if self.is_option_set_in_config('readFilesCommand'):
                     star.extend(['--readFilesCommand', self.get_option('readFilesCommand')])

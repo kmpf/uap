@@ -202,9 +202,6 @@ class ChromHmmBinarizeBam(AbstractStep):
 
                 with self.declare_run(run_id) as run:
 
-                    # temp directory = inputbamdir
-                    temp_dir = run.get_output_directory_du_jour_placeholder()
-
                     # necessary for cell-mark-file table
                     linked_controls = list()
                     linked_treatments = list()
@@ -246,9 +243,7 @@ class ChromHmmBinarizeBam(AbstractStep):
                     with run.new_exec_group() as exec_group:
                         chromhmm = [ self.get_tool('ChromHMM'),
                                      'BinarizeBam',
-                                     self.get_option('chrom_sizes_file'),
-                                     temp_dir,
-                                     cell_mark_file,
-                                     temp_dir
+                                     self.get_option('chrom_sizes_file'), '.',
+                                     cell_mark_file, '.'
                                  ]
 

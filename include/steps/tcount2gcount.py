@@ -65,7 +65,6 @@ class Tcount2gcount(AbstractStep):
                 tool_name = self.get_option('t')
                 file_name = '%s-gene-abundance.tsv' % (run_id)
                 run.add_output_file('counts', file_name, [counts])
-                basename = run.get_output_directory_du_jour_placeholder()
 
                 cmd = [self.get_tool('tcount2gcount')]
 
@@ -82,7 +81,7 @@ class Tcount2gcount(AbstractStep):
 
                 cmd.extend(['-i', counts,
                             '-t', tool_name,
-                            '-o', basename + '/' + file_name])
+                            '-o', file_name])
 
                 convert_exec_group = run.new_exec_group()
                 convert_exec_group.add_command(cmd)

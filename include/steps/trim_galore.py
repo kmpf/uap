@@ -271,11 +271,9 @@ class TrimGalore(AbstractStep):
 
 
 
-                # the temporary output directory
-                outdir = run.get_output_directory_du_jour_placeholder()
                 # this is the prefix for the trim_galore cmd option:
                 # -o
-                prefixTG = '%s' % outdir
+                prefixTG = '.'
                 input_paths = run_ids_connections_files[run_id]
 
 
@@ -367,7 +365,7 @@ class TrimGalore(AbstractStep):
 
 
                 tg = [self.get_tool('trim_galore'),
-                              '--output_dir', outdir]
+                              '--output_dir', '.']
                 tg.extend(option_list)
                 tg.append(input_paths['in/first_read'][0])
                 if not input_paths['in/second_read'][0] is None:

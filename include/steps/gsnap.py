@@ -78,8 +78,7 @@ class Gsnap(AbstractStep):
                 gsnap.extend(['-A', 'sam'])
 
                 # output
-                out_path = run.get_output_directory_du_jour_placeholder()
-                gsnap.extend(['-o', out_path + '/gsnap_out.sam'])
+                gsnap.extend(['-o', 'gsnap_out.sam'])
                 gsnap.extend(input_fileset)
 
                 run.add_output_file("alignments", "gsnap_out.sam", input_fileset)

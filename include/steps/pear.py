@@ -108,10 +108,7 @@ class Pear(AbstractStep):
 
                     with run.new_exec_group() as pear_exec_group:
                         option_list.append('--output')
-                        option_list.append(
-                            os.path.join(
-                                run.get_output_directory_du_jour_placeholder(),
-                                file_id))
+                        option_list.append(file_id)
 
                         pear = [self.get_tool('pear')]
                         pear.extend(option_list)

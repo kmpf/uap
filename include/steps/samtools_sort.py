@@ -129,7 +129,7 @@ class SamtoolsSort(AbstractStep):
                         if self.get_option('sort-by-name'):
                             samtools_sort.append('-n')
 
-                        sortpath =  (run.get_output_directory_du_jour_placeholder()  + '/')
+                        sortpath =  './'
 
                         if self.is_option_set_in_config('temp-sort-dir'):
                             sortpath = os.path.join(os.path.abspath(self.get_option('temp-sort-dir')),

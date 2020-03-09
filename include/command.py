@@ -35,21 +35,12 @@ class CommandInfo(object):
         '''
         def inner(self, *args):
             run = self.get_run()
-            # Collect info to remove derecated placeholders
-            # and replace absolute paths with relative paths
-            placeholder = run.get_output_directory_du_jour_placeholder()
-            placeholder += '' if placeholder.endswith('/') else '/'
-            pl_slashless = placeholder[:-1]
-
             working_dir = run.get_temp_output_directory()
             abs_dest = run.get_step().get_pipeline().config['destination_path']
             rel_path = os.path.relpath(abs_dest, working_dir)
             def repl(text):
                 if isinstance(text, str):
-                    text = text.replace(abs_dest, rel_path)
-                    text = text.replace(placeholder, '')
-                    text = text.replace(pl_slashless, '.')
-                    return text
+                    return text.replace(abs_dest, rel_path)
                 elif isinstance(text, list) or isinstance(text, set):
                     return [repl(element) for element in text]
                 elif text is None:
