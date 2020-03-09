@@ -294,7 +294,7 @@ def main(args):
         tasks = p.all_tasks_topologically_sorted
 
         task_iter = tqdm(tasks, desc='tasks',
-                bar_format='{desc}{percentage:3.0f}%|{bar:10}{r_bar}')
+                bar_format='{desc}:{percentage:3.0f}%|{bar:10}{r_bar}')
         try:
             for task in task_iter:
                 state = task.get_task_state(do_hash=args.hash)

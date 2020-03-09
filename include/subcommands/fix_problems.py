@@ -55,7 +55,7 @@ def main(args):
         split_at_v = ' is volatilized and modification date after '
         changes = list()
         task_iter = tqdm(tasks, desc='tasks',
-                bar_format='{desc}{percentage:3.0f}%|{bar:10}{r_bar}')
+                bar_format='{desc}:{percentage:3.0f}%|{bar:10}{r_bar}')
         try:
             for task in task_iter:
                 for bad_file in task.get_run().file_changes(do_hash=True):

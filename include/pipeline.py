@@ -664,7 +664,7 @@ class Pipeline(object):
         iter_tools = tqdm(pool.imap_unordered(check_tool, self.config['tools'].items()),
                         total=len(self.config['tools']),
                         desc='tool check',
-                        bar_format='{desc}{percentage:3.0f}%|{bar:10}{r_bar}',
+                        bar_format='{desc}:{percentage:3.0f}%|{bar:10}{r_bar}',
                         disable=not show_status)
         try:
             for tool_id, tool_check_info in iter_tools:

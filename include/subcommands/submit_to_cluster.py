@@ -59,7 +59,7 @@ def main(args):
     skipped_tasks = dict()
     wish_list = p.get_task_with_list()
     iter_steps = tqdm(p.topological_step_order, desc='step states',
-            bar_format='{desc}{percentage:3.0f}%|{bar:10}{r_bar}')
+            bar_format='{desc}:{percentage:3.0f}%|{bar:10}{r_bar}')
     try:
         for step_name in iter_steps:
             tasks_left[step_name] = list()

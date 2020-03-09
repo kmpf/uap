@@ -718,7 +718,7 @@ class AbstractStep(object):
                 total = len(to_be_moved)
                 file_iter = pool.imap(misc.sha_and_file, to_be_moved.keys())
                 file_iter = tqdm(file_iter, total=total, leave=False,
-                        bar_format='{desc}{percentage:3.0f}%|{bar:10}{r_bar}',
+                        bar_format='{desc}:{percentage:3.0f}%|{bar:10}{r_bar}',
                         disable=not show_progress, desc='files')
                 for i, (hashsum, path) in enumerate(file_iter):
                     run.fsc.sha256sum_of(to_be_moved[path], value=hashsum)
