@@ -759,7 +759,9 @@ class Pipeline(object):
                             task = str(task)
                         task_wish_list.append(task)
         if not task_wish_list and exclusive is False:
-            return self.all_tasks_topologically_sorted
+            if not as_string:
+                return self.all_tasks_topologically_sorted
+            return [str(t) for t in self.all_tasks_topologically_sorted]
         return task_wish_list
 
 

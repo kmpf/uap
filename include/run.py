@@ -844,7 +844,7 @@ class Run(object):
                 ('end_time', anno['end_time'])
             ])
             for key, value in anno['run'].items():
-                if key in result.keys() + ['known_paths', 'structure']:
+                if key in list(result.keys()) + ['known_paths', 'structure']:
                     continue
                 result['run'][key] = value
         else:
