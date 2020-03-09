@@ -289,25 +289,6 @@ class AbstractStep(object):
     def get_dependencies(self):
         return self.dependencies
 
-    def which_extensions_match_file_path(self, filepath, extensions):
-        # Kann evtl. auch weg!
-        extension_list = list()
-        if type(filepath) is not str:
-            raise UAPError("Filename must be string. Got %s of type %s"
-                         % (filepath, type(filepath)))
-        for ext in extensions:
-            if type(ext) is not str:
-                raise UAPError("Found non-string file extension: %s " % ext)
-            else:
-                extension_list.append(ext)
-
-        ext_in_filename = list()
-        file_parts = os.path.basename(filepath).split(".")
-        for ext in extension_list:
-            if ext in file_parts:
-                ext_in_filename.append(ext)
-        return ext_in_filename
-
     def get_input_runs(self):
         '''
         Return a dict which contains all runs per parent steps.
@@ -835,59 +816,6 @@ class AbstractStep(object):
         if pool is not None:
             pool.join()
 
-    def reports(self, run_id, out_connection_output_files):
-        '''
-        Abstract method this must be implemented by actual step.
-
-        Raise NotImplementedError if subclass does not override this
-        method.
-        '''
-        raise NotImplementedError()
-
-
-    def generate_report(self, run_id):
-        '''
-        Gathers the output files for each outgoing connection and calls
-        self.reports() to do the job of creating a report.
-        '''
-
-        run = self.get_run(run_id)
-        out_connection_output_files = dict()
-        for out_connection in run.get_out_connections():
-            out_connection_output_files[out_connection] = run.\
-                get_output_files_abspath_for_out_connection(out_connection)
-
-        try:
-            self.reports(run_id, out_connection_output_files)
-        except NotImplementedError as e:
-            logger.info('Step %s is not capable to generate reports' %
-                        (self._step_name))
-        except Exception as e:
-            logger.error('Unexpected error while trying to generate report for '
-                         'task %s/%s: %s' % (self._step_name, run_id,
-                                             e))
-
-    def generate_one_report(self):
-        '''
-        Gathers the output files for each outgoing connection and calls
-        self.reports() to do the job of creating a report.
-        '''
-
-        run_ids_connections_output_files = self\
-            .get_run_ids_out_connections_output_files()
-        for run_id in run_ids_connections_output_files:
-            for con, files in run_ids_connections_output_files[run_id].items():
-                files = [f for f in files if os.path.isfile(f)]
-                run_ids_connections_output_files[run_id][con] = files
-        try:
-            self.reports( run_ids_connections_output_files )
-        except NotImplementedError as e:
-            logger.info('Step %s is not capable to generate reports' %
-                        (self._step_name))
-        except Exception as e:
-            raise UAPError('Unexpected error while trying to generate report for '
-                         'step %s: %s' % (self.get_step_name(), e))
-
     def get_pre_commands(self):
         """
         Return dictionary with commands to execute before starting any other
@@ -1218,31 +1146,6 @@ class AbstractStep(object):
             input_paths, key, expected = 1)
         return list(result)[0]
 
-    def get_run_ids_out_connections_output_files(self):
-        '''
-        Return a dictionary with all run IDs of the current step, their
-        out connections, and the files that belong to them::
-
-           run_id_1:
-               in_connection_1: [input_path_1, input_path_2, ...]
-               in_connection_2: ...
-           run_id_2: ...
-
-        Format of ``in_connection``: ``in/<connection>``. Input paths are
-        absolute.
-        '''
-        run_ids_connections_files = dict()
-
-        for run in self.get_runs():
-            run_id = run.get_run_id()
-            run_ids_connections_files[run_id] = dict()
-            for out_connection in run.get_out_connections():
-                run_ids_connections_files[run_id][out_connection] = run\
-                    .get_output_files_for_out_connection(out_connection)
-
-        return run_ids_connections_files
-
-
     def get_run_ids_in_connections_input_files(self):
         '''
         Return a dictionary with all run IDs from parent steps, the
@@ -1318,58 +1221,6 @@ class AbstractStep(object):
                     (self.get_step_name(), list(unrecognized)))
 
         return cc
-
-
-    def get_input_run_info_for_connection(self, in_key):
-        if in_key[0:3] != 'in/':
-            raise UAPError("in_key does not start with 'in/': %s" % in_key)
-        if in_key not in self._connections:
-            raise UAPError("Undeclared connection %s." % in_key)
-        out_key = in_key.replace('in/', 'out/')
-        out_keys = None
-        allowed_steps = None
-        if '_connect' in self._options:
-            if in_key in self._options['_connect']:
-                declaration = self._options['_connect'][in_key]
-                if isinstance(declaration, str):
-                    if '/' in declaration:
-                        parts = declaration.split('/')
-                        allowed_steps = set()
-                        allowed_steps.add(parts[0])
-                        out_key = 'out/' + parts[1]
-                    else:
-                        out_key = 'out/' + declaration
-                elif isinstance(declaration, list):
-                    for dec in declaration:
-                        if isinstance(declaration, str):
-                            if '/' in declaration:
-                                parts = declaration.split('/')
-                                if allowed_steps == None:
-                                    allowed_steps = set()
-                                allowed_steps.add(parts[0])
-                                if out_keys == None:
-                                    out_keys = list()
-                                out_keys.append('out/' + parts[1])
-                            else:
-                                if out_keys == None:
-                                    out_keys = list()
-                                out_keys.append('out/' + declaration)
-                else:
-                    raise UAPError(
-                        "Invalid _connect value: %s" % yaml.dump(declaration))
-
-        result = dict()
-        result['counts'] = {
-            'total_steps': 0,
-            'total_runs': 0,
-            'total_files': 0,
-            'min_steps_per_run': None,
-            'max_steps_per_run': None,
-            'min_files_per_step_and_run': None,
-            'max_files_per_step_and_run': None,
-            'min_files_per_run': None,
-            'max_files_per_run': None,
-        }
 
         def update_min_max(key, value):
             for mkey in ['min', 'max']:

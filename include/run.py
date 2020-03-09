@@ -784,17 +784,6 @@ class Run(object):
 
         return result
 
-    def get_single_output_file_for_annotation(self, annotation):
-        '''
-        Retrieve exactly one output file of the given annotation, and crash
-        if there isn't exactly one.
-        '''
-        temp = self.get_output_files_abspath()
-        if len(temp[annotation]) != 1:
-            raise UAPError("More than one output file declared for out/%s."
-                         % annotation)
-        return temp[annotation].keys()[0]
-
     def get_output_files_for_annotation_and_tags(self, annotation, tags):
         '''
         Retrieve a set of output files of the given annotation, assigned to
