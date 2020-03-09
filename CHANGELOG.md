@@ -106,6 +106,7 @@
  * use same parsing of argument tasks everywhere
  * remove some deprecated code (#133)
  * deprecate connection constraints (#158)
+ * moved to Python 3 (#92)
 
 ## 1.1 (20.01.2020)
 
