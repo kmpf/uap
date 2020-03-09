@@ -146,7 +146,7 @@ if __name__ == '__main__':
         l = p.map(process_line, a)
 
         for j in l:
-            print '\n'.join(j)
+            print('\n'.join(j))
 
         a[:] = [] # delete processed lines from the list
 

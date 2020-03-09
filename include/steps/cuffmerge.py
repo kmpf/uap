@@ -80,19 +80,15 @@ class CuffMerge(AbstractStep):
         for run_id in run_ids_connections_files.keys():
             cufflinks_sample_gtf.append(run_ids_connections_files[run_id]['in/features'][0])
 
-#        print '\n'.join(cufflinks_sample_gtf)
 
         run_id = self.get_option('run_id')
-#        run_id = 'magic'
         with self.declare_run(run_id) as run:
 
             # create the filename of the assemblies.txt file
             assemblies = [self.get_tool('printf'), '\n'.join(cufflinks_sample_gtf)]
-#            print assemblies
 
             assemblies_file = run.add_output_file('assemblies', '%s-cuffmerge-assemblies.txt' % run_id, cufflinks_sample_gtf)
 
-#            print assemblies_file
 
             # 1. create assemblies file
             with run.new_exec_group() as as_exec_group:
@@ -114,7 +110,6 @@ class CuffMerge(AbstractStep):
             # 3. run cuffmerge
             with run.new_exec_group() as cm_exec_group:
                 cuffmerge.append(assemblies_file)
-#                print(cuffmerge)
                 cm_exec_group.add_command(cuffmerge, stderr_path = log_err_file)
 
             result_files = {
