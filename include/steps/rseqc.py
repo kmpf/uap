@@ -17,10 +17,7 @@ class RSeQC(AbstractStep):
 
         self.set_cores(4)
 
-        self.add_connection(
-            'in/alignments',
-            constraints={'min_files_per_run': 1, 'max_files_per_run': 1}
-        )
+        self.add_connection('in/alignments')
 
         self.add_connection('out/bam_stat')
         self.add_connection('out/infer_experiment')

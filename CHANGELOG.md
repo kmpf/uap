@@ -104,6 +104,8 @@
  * missing annotation file marks a task unfinished
  * same module for multiple tools is only loaded once during task
  * use same parsing of argument tasks everywhere
+ * remove some deprecated code (#133)
+ * deprecate connection constraints (#158)
 
 ## 1.1 (20.01.2020)
 

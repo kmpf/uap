@@ -93,7 +93,6 @@ class AbstractStep(object):
         self._optional_connections = set()
         self._connection_formats = dict()
         self._connection_descriptions = dict()
-        self._connection_restrictions = dict()
         self._pre_command = dict()
         self._post_command = dict()
         self._module_load = dict()
@@ -962,19 +961,19 @@ class AbstractStep(object):
         """
         return self._cores
 
-    def add_input_connection(self, connection, constraints = None):
+    def add_input_connection(self, connection):
         '''
         Add an input connection to this step
         '''
-        self.add_connection('in/%s' % connection, constraints)
+        self.add_connection('in/%s' % connection)
 
-    def add_output_connection(self, connection, constraints = None):
+    def add_output_connection(self, connection):
         '''
         Add an output connection to this step
         '''
-        self.add_connection('out/%s' % connection, constraints)
+        self.add_connection('out/%s' % connection)
 
-    def add_connection(self, connection, constraints = None,
+    def add_connection(self, connection,
             optional = False, format = None, description = None):
         """
         Add a connection, which must start with 'in/' or 'out/'.
@@ -994,8 +993,6 @@ class AbstractStep(object):
         if description is not None:
             self._connection_descriptions[connection] = \
                     re.sub('\s+', ' ', description)
-        if constraints is not None:
-            self._connection_restrictions[connection] = constraints
 
     def get_connections(self, with_optional=True):
         """
@@ -1221,56 +1218,6 @@ class AbstractStep(object):
                     (self.get_step_name(), list(unrecognized)))
 
         return cc
-
-        def update_min_max(key, value):
-            for mkey in ['min', 'max']:
-                key2 = '%s_%s' % (mkey, key)
-                if result['counts'][key2] is None:
-                    result['counts'][key2] = value
-                result['counts'][key2] = (min if mkey == 'min' else max)\
-                                         (result['counts'][key2], value)
-
-        result['runs'] = dict()
-        for step_name, step_info in self.get_input_runs().items():
-            if allowed_steps is not None:
-                if not step_name in allowed_steps:
-                    continue
-            for key in self.get_pipeline().get_step(step_name)._connections:
-                if out_key == 'out/*' or out_key == key:
-                    result['counts']['total_steps'] += 1
-                    for run_id, run_info in step_info.items():
-                        result['counts']['total_runs'] += 1
-                        paths = run_info.get_output_files_abspath()[key.replace(
-                            'out/', '')].keys()
-                        result['counts']['total_files'] += len(paths)
-                        if not run_id in result['runs']:
-                            result['runs'][run_id] = dict()
-                        result['runs'][run_id][step_name] = paths
-
-                        steps_per_run = len(result['runs'][run_id])
-                        update_min_max('steps_per_run', steps_per_run)
-
-                        files_per_step_and_run = len(result['runs'][run_id]\
-                                                     [step_name])
-                        update_min_max('files_per_step_and_run',
-                                       files_per_step_and_run)
-
-                        files_per_run = 0
-                        for _ in result['runs'][run_id].values():
-                            files_per_run += len(_)
-                        update_min_max('files_per_run', files_per_run)
-
-        # check constraints, if any
-        if in_key in self._connection_restrictions:
-            for k, v in self._connection_restrictions[in_key].items():
-                if result['counts'][k] != v:
-                    raise UAPError("Connection constraint failed: %s/%s"
-                                 "/%s should be %d but is %s."
-                                 % (self, in_key, k, v,
-                                    str(result['counts'][k])))
-
-        return result
-
 
 class AbstractSourceStep(AbstractStep):
     """

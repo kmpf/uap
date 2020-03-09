@@ -15,14 +15,8 @@ class FeatureCounts(AbstractStep):
         super(FeatureCounts, self).__init__(pipeline)
 
         # in-connections
-        self.add_connection(
-            'in/alignments',
-            #constraints={'min_files_per_run': 1, 'max_files_per_run': 1}
-        )
-        self.add_connection(
-            'in/feature-file',
-            #constraints={'total_files': 1}
-        )
+        self.add_connection('in/alignments')
+        self.add_connection('in/feature-file')
 
         # out-connections
         self.add_connection('out/counts')

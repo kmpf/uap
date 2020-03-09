@@ -34,8 +34,7 @@ class StringTiePrepDE(AbstractStep):
         self.set_cores(6)
 
         # The transcripts that should be merged
-        self.add_connection('in/features',
-                            constraints ={'min_files_per_run': 1, 'max_files_per_run': 1})
+        self.add_connection('in/features')
 
         self.add_connection('out/gene_matrix')
         self.add_connection('out/transcript_matrix')

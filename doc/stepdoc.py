@@ -121,7 +121,6 @@ def doc_module(module_name, fout, uap_tools):
     '''
     print("Cores: %d" % step._cores)
     print("Connections: %s" % step._connections)
-    print("Connection restrictions: %s" % step._connection_restrictions)
     print("Tools: %s" % step._tools)
     print("Options: %s" % sorted(step._defined_options.keys()))
     print(step.__doc__)

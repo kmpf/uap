@@ -16,10 +16,7 @@ class Post_Sawdust(AbstractStep):
 
         self.set_cores(2)
 
-        self.add_connection(
-            'in/alignments',
-            constraints = {'min_files_per_run': 1, 'max_files_per_run': 1}
-        )
+        self.add_connection('in/alignments')
 
         self.add_connection('out/log_stderr')
         self.add_connection('out/alignments')

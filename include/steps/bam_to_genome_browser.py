@@ -13,9 +13,7 @@ class BamToBedgraph(AbstractStep):
 
         self.set_cores(8)
 
-        self.add_connection('in/alignments',
-                            constraints = {'min_files_per_run': 1,
-                                           'max_files_per_run': 1})
+        self.add_connection('in/alignments')
         self.add_connection('out/alignments')
 
         self.require_tool('dd')
