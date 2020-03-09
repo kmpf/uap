@@ -5,7 +5,8 @@ import yaml
 import os
 from logging import getLogger
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class SraFastqDump (AbstractStep):
     '''
@@ -67,7 +68,7 @@ class SraFastqDump (AbstractStep):
     '''
 
     def __init__(self, pipeline):
-        super (SraFastqDump, self).__init__(pipeline)
+        super(SraFastqDump, self).__init__(pipeline)
         # set # of cores for cluster, it is ignored if run locally
         self.set_cores(10)
 
@@ -82,24 +83,30 @@ class SraFastqDump (AbstractStep):
         self.require_tool('pigz')
         self.require_tool('mkfifo')
 
-        ## Complete set of options (excluding those mentioned above) for version
-        ## 2.7.0
+        # Complete set of options (excluding those mentioned above) for version
+        # 2.7.0
 
-        ## INPUT
-        self.add_option('accession', str, optional=True,
-                        description="Replaces accession derived from <path> in "
-                        "filename(s) and deflines (only for single table dump)")
+        # INPUT
+        self.add_option(
+            'accession',
+            str,
+            optional=True,
+            description="Replaces accession derived from <path> in "
+            "filename(s) and deflines (only for single table dump)")
 
-        self.add_option('table', str, optional=True,
-                        description='Table name within cSRA object, default is '
-                        '"SEQUENCE"')
+        self.add_option(
+            'table',
+            str,
+            optional=True,
+            description='Table name within cSRA object, default is '
+            '"SEQUENCE"')
 
-        ## Processing
-        ### Read Splitting
+        # Processing
+        # Read Splitting
         self.add_option('split-spot', str, optional=True,
                         description="Split spots into individual reads")
 
-        ### Full Spot Filters
+        # Full Spot Filters
         self.add_option('minSpotId', int, optional=True,
                         description='Minimum spot id to be dumped. Use with '
                         '"maxSpotId" to dump a range.')
@@ -108,13 +115,16 @@ class SraFastqDump (AbstractStep):
                         description='Maximum spot id to be dumped. Use with '
                         '"minSpotId" to dump a range.')
 
-        self.add_option('spot-groups', str, optional=True,
-                    description="Filter by SPOT_GROUP (member): name[,...]")
+        self.add_option(
+            'spot-groups',
+            str,
+            optional=True,
+            description="Filter by SPOT_GROUP (member): name[,...]")
 
         self.add_option('clip', bool, optional=True,
                         description='Apply left and right clips')
 
-        ### Common Filters
+        # Common Filters
         self.add_option('minReadLen', int, optional=True,
                         description='Filter by sequence length >= <len>')
 
@@ -130,7 +140,7 @@ class SraFastqDump (AbstractStep):
         self.add_option('qual-filter-1', bool, optional=True,
                         description='Filter used in current 1000 Genomes data')
 
-        ### Filters based on alignments
+        # Filters based on alignments
         self.add_option('aligned', bool, optional=True,
                         description='Dump only aligned sequences')
 
@@ -149,12 +159,12 @@ class SraFastqDump (AbstractStep):
                         'references. Use from-to to limit matepair distance '
                         'on the same reference. <from-to|unknown>')
 
-        ### Filters for individual reads
+        # Filters for individual reads
         self.add_option('skip-technical', bool, optional=True,
                         description='Dump only biological reads')
 
-        ## FORMATTING
-        ### Sequence
+        # FORMATTING
+        # Sequence
         self.add_option('dumpcs', bool, optional=True,
                         description='Formats sequence using color space '
                         '(default for SOLiD),"cskey" may be specified for '
@@ -164,7 +174,7 @@ class SraFastqDump (AbstractStep):
                         description='Formats sequence using base space '
                         '(default for other than SOLiD).')
 
-        ### Quality
+        # Quality
         self.add_option('offset', int, optional=True,
                         description='Offset to use for quality conversion, '
                         'default is 33')
@@ -177,7 +187,7 @@ class SraFastqDump (AbstractStep):
         self.add_option('suppress-qual-for-cskey', bool, optional=True,
                         description='supress quality-value for cskey ')
 
-        ### Defline
+        # Defline
         self.add_option('origfmt', bool, optional=True,
                         description='Defline contains only original sequence '
                         'name')
@@ -189,19 +199,23 @@ class SraFastqDump (AbstractStep):
         self.add_option('helicos', bool, optional=True,
                         description='Helicos style defline')
 
-        self.add_option('defline-seq', str, optional=True,
-                        description='Defline format specification for sequence.'
-        )
+        self.add_option(
+            'defline-seq',
+            str,
+            optional=True,
+            description='Defline format specification for sequence.')
 
-        self.add_option('defline-qual', str, optional=True,
-                        description='Defline format specification for quality.')
+        self.add_option(
+            'defline-qual',
+            str,
+            optional=True,
+            description='Defline format specification for quality.')
 
-
-        ## OTHER
+        # OTHER
         self.add_option('disable-multithreading', bool, optional=True,
                         description='disable multithreading')
 
-        self.add_option('log-level', str,  optional=True,
+        self.add_option('log-level', str, optional=True,
                         description='Logging level as number or enum string '
                         'One of (fatal|sys|int|err|warn|info) or (0-5). '
                         'Current/default is warn. <level>')
@@ -215,16 +229,19 @@ class SraFastqDump (AbstractStep):
                         'report generation (if implemented). One of '
                         '(never|error|always). Default is error. <error>')
 
-        self.add_option('legacy-report', bool, optional=True,
-                        description='use legacy style "Written spots" for tool')
+        self.add_option(
+            'legacy-report',
+            bool,
+            optional=True,
+            description='use legacy style "Written spots" for tool')
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
-        self.add_option('max_cores', int, optional = True, default= 10,
+        self.add_option('dd-blocksize', str, optional=True, default="256k")
+        self.add_option('max_cores', int, optional=True, default=10,
                         description='Maximum number of cores available on the '
                         'cluster')
 
-    def runs (self, run_ids_connections_files):
+    def runs(self, run_ids_connections_files):
         # Assemble fastq-dump options
         sra_options = [
             'accession', 'table', 'split-spot', 'minSpotId', 'maxSpotId',
@@ -235,7 +252,7 @@ class SraFastqDump (AbstractStep):
             'origfmt', 'readids', 'helicos', 'defline-seq',
             'defline-qual', 'disable-multithreading', 'log-level',
             'verbose', 'ncbi_error_report', 'legacy-report']
-        sra_set_options = [option for option in sra_options if \
+        sra_set_options = [option for option in sra_options if
                            self.is_option_set_in_config(option)]
         sra_option_list = list()
         for option in sra_set_options:
@@ -248,8 +265,8 @@ class SraFastqDump (AbstractStep):
 
         # Assemble dd options
         dd_options = ['dd-blocksize', 'max_cores']
-        dd_set_options = [option for option in dd_options if \
-                           self.is_option_set_in_config(option)]
+        dd_set_options = [option for option in dd_options if
+                          self.is_option_set_in_config(option)]
         dd_option_list = list()
         for option in dd_set_options:
             if isinstance(self.get_option(option), bool):
@@ -267,32 +284,32 @@ class SraFastqDump (AbstractStep):
                 # check, if only a single input file is provided
                 if len(input_paths) != 1:
                     raise Exception("Expected exactly one sra file, but "
-                                        "got this %s" % input_paths)
+                                    "got this %s" % input_paths)
 
                 with run.new_exec_group() as exec_group:
                     # 1. Create FIFO for reading sra file
-                    fifo_path_sra=run.add_temporary_file (
+                    fifo_path_sra = run.add_temporary_file(
                         'sra-fifo', designation='input')
-                    mkfifo_sra= [self.get_tool('mkfifo'), fifo_path_sra]
+                    mkfifo_sra = [self.get_tool('mkfifo'), fifo_path_sra]
                     exec_group.add_command(mkfifo_sra)
 
                     # 2. Read sra file and output to FIFO
-                    dd_sra=[self.get_tool('dd'),
-                            'bs=%s' % self.get_option('dd-blocksize'),
-                            'if=%s' % input_paths[0],
-                            'of=%s' % fifo_path_sra]
+                    dd_sra = [self.get_tool('dd'),
+                              'bs=%s' % self.get_option('dd-blocksize'),
+                              'if=%s' % input_paths[0],
+                              'of=%s' % fifo_path_sra]
                     exec_group.add_command(dd_sra)
 
                     # 3. Run fastq-dump
 
                     # with exec_group.add_pipeline() as fastq_dump_pipe:
-                    fastq_dump=[self.get_tool('fastq-dump'), '--stdout']
+                    fastq_dump = [self.get_tool('fastq-dump'), '--stdout']
                     exec_group.extend(option_list)
                     exec_group.extend(fifo_path_sra)
 
-                    exec_group.add_command (
+                    exec_group.add_command(
                         fastq_dump,
-                        stderr_path = run.add_output_file(
+                        stderr_path=run.add_output_file(
                             'log',
                             '%s-fastq-dump-log.txt' % run_id,
                             input_paths)
@@ -314,7 +331,3 @@ class SraFastqDump (AbstractStep):
 #                                 input_paths)
 #                         )
 #
-
-
-
-

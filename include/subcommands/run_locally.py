@@ -16,12 +16,13 @@ from uaperrors import UAPError
 
 logger = logging.getLogger("uap_logger")
 
+
 def main(args):
     p = pipeline.Pipeline(arguments=args)
 
     def handle_signal(signum, frame):
         logger.warning("Catching %s!" %
-                process_pool.ProcessPool.SIGNAL_NAMES[signum])
+                       process_pool.ProcessPool.SIGNAL_NAMES[signum])
         p.caught_signal = signum
         process_pool.ProcessPool.kill()
     signal.signal(signal.SIGTERM, handle_signal)
@@ -33,7 +34,7 @@ def main(args):
         finished_states += [p.states.CHANGED]
 
     accepted_states = [p.states.BAD, p.states.READY, p.states.QUEUED,
-            p.states.VOLATILIZED]
+                       p.states.VOLATILIZED]
     for task in p.get_task_with_list():
         task_state = task.get_task_state()
         if task_state in finished_states:
@@ -48,21 +49,24 @@ def main(args):
         elif task_state == p.states.CHANGED:
             if not args.force:
                 task.move_ping_file()
-                raise UAPError("Task %s has changed. "
-                        "Run 'uap %s status --details' to see what changed or "
-                        "'uap %s run-locally --force' to force overwrite "
-                        "of the results." %
-                        (task, args.config.name, args.config.name))
+                raise UAPError(
+                    "Task %s has changed. "
+                    "Run 'uap %s status --details' to see what changed or "
+                    "'uap %s run-locally --force' to force overwrite "
+                    "of the results." %
+                    (task, args.config.name, args.config.name))
             else:
                 check_parents_and_run(task, finished_states, args.debugging)
         elif task_state in accepted_states:
             check_parents_and_run(task, finished_states, args.debugging)
         else:
             task.move_ping_file()
-            raise UAPError("Unexpected task state for %s: %s\n"
-                         "Expected state to be 'READY'. Probably an upstream "
-                         "run crashed." %
-                         (task, task_state))
+            raise UAPError(
+                "Unexpected task state for %s: %s\n"
+                "Expected state to be 'READY'. Probably an upstream "
+                "run crashed." %
+                (task, task_state))
+
 
 def check_parents_and_run(task, states, turn_bad):
     parents = task.get_parent_tasks()
@@ -70,11 +74,12 @@ def check_parents_and_run(task, states, turn_bad):
         parent_state = parent_task.get_task_state()
         if parent_state not in states:
             should = ' or '.join(states)
-            error =  "Cannot run %s because a parent job " \
-                     "%s is %s when it should be %s." % \
-                     (task, parent_task, parent_state, should)
+            error = "Cannot run %s because a parent job " \
+                "%s is %s when it should be %s." % \
+                (task, parent_task, parent_state, should)
             log_task_error(task, error)
     task.run()
+
 
 def log_task_error(task, error, turn_bad):
     if turn_bad:
@@ -86,6 +91,7 @@ def log_task_error(task, error, turn_bad):
     else:
         task.move_ping_file(bad_copy=False)
     raise UAPError(error)
+
 
 if __name__ == '__main__':
     try:

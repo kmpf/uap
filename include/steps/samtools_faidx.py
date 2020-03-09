@@ -4,7 +4,8 @@ import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class SamtoolsFaidx(AbstractStep):
     '''
@@ -42,11 +43,14 @@ class SamtoolsFaidx(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("sequence")
                 elif len(input_paths) != 1:
-                    raise StepError(self, "Expected exactly one sequence file.")
+                    raise StepError(
+                        self, "Expected exactly one sequence file.")
                 elif os.path.splitext(os.path.basename(input_paths[0]))[1] \
-                not in ['.fa', '.fna', '.fasta']:
-                    raise StepError(self, "The input file %s does not seem to be "
-                                 "a FASTA file." % input_paths[0])
+                        not in ['.fa', '.fna', '.fasta']:
+                    raise StepError(
+                        self, "The input file %s does not seem to be "
+                        "a FASTA file." %
+                        input_paths[0])
                 else:
                     with run.new_exec_group() as faidx_group:
                         samtools_faidx = [
@@ -61,6 +65,6 @@ class SamtoolsFaidx(AbstractStep):
                                   "indices",
                                   "%s.fai" % os.path.basename(input_paths[0]),
                                   input_paths
-                              )
+                        )
                         ]
                         mv_group.add_command(mv)

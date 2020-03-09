@@ -5,7 +5,8 @@ from logging import getLogger
 import pipeline_info
 import exec_group
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class CommandInfo(object):
     def __init__(self, eop, command, stdout_path=None, stderr_path=None):
@@ -24,7 +25,9 @@ class CommandInfo(object):
                     self._tool = _[-1]
                 pass
             elif not isinstance(_, str):
-                raise TypeError("Non-string element %s in command %s" % (_, command))
+                raise TypeError(
+                    "Non-string element %s in command %s" %
+                    (_, command))
             self._command.append(_)
 
     def abs2rel_path(func):
@@ -33,11 +36,13 @@ class CommandInfo(object):
         It also removes the deprectaed output path placeholders for
         backwards compatibility with old step implementation.
         '''
+
         def inner(self, *args):
             run = self.get_run()
             working_dir = run.get_temp_output_directory()
             abs_dest = run.get_step().get_pipeline().config['destination_path']
             rel_path = os.path.relpath(abs_dest, working_dir)
+
             def repl(text):
                 if isinstance(text, str):
                     return text.replace(abs_dest, rel_path)
@@ -66,7 +71,7 @@ class CommandInfo(object):
         self._command = command
 
     def set_stdout_path(self, stdout_path):
-        if stdout_path != None:
+        if stdout_path is not None:
             self._stdout_path = stdout_path
 
     @abs2rel_path
@@ -74,7 +79,7 @@ class CommandInfo(object):
         return self._stdout_path
 
     def set_stderr_path(self, stderr_path):
-        if stderr_path != None:
+        if stderr_path is not None:
             self._stderr_path = stderr_path
 
     @abs2rel_path
@@ -107,6 +112,7 @@ class CommandInfo(object):
             for path, tool in map.items():
                 tool = tool.replace(path, tool)
         return quote([tool] + cmd[1:]) + out
+
 
 def quote(cmd_args):
     """

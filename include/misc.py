@@ -9,9 +9,12 @@ import signal
 import yaml
 from collections import OrderedDict
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
 
-# an enum class, yanked from http://stackoverflow.com/questions/36932/whats-the-best-way-to-implement-an-enum-in-python
+# an enum class, yanked from
+# http://stackoverflow.com/questions/36932/whats-the-best-way-to-implement-an-enum-in-python
+
+
 class Enum(set):
     def __init__(self, _list):
         self.order = _list
@@ -21,6 +24,7 @@ class Enum(set):
         if name in self:
             return name
         raise AttributeError
+
 
 def assign_strings(paths, tags):
     '''
@@ -55,7 +59,6 @@ def assign_strings(paths, tags):
 
         return None
 
-
     results = {}
     if len(paths) != len(tags):
         raise UAPError("Number of tags must be equal to number of paths")
@@ -68,14 +71,15 @@ def assign_strings(paths, tags):
                 while path.find(tag, offset) >= 0:
                     index = path.find(tag, offset)
                     head = path[:index]
-                    tail = path[(index+len(tag)):]
+                    tail = path[(index + len(tag)):]
                     # now try chopping off head and tail from every path
                     # and see whether we can unambiguously assign a path
                     # to every tag, if yes, we have a result candidate
 
                     result_candidate = check_candidate(paths, tags, head, tail)
                     if result_candidate:
-                        results[json.dumps(result_candidate, sort_keys = True)] = result_candidate
+                        results[json.dumps(
+                            result_candidate, sort_keys=True)] = result_candidate
                     offset = index + 1
 
     if len(results) != 1:
@@ -83,17 +87,19 @@ def assign_strings(paths, tags):
 
     return results[results.keys()[0]]
 
+
 def assign_string(s, tags):
     match = None
     for tag in tags:
         if tag in s:
-            if match != None:
+            if match is not None:
                 raise UAPError("Could not unambiguously match %s to %s."
-                             % (s, tags))
+                               % (s, tags))
             match = tag
-    if match == None:
+    if match is None:
         raise UAPError("Could not match %s to %s." % (s, tags))
     return match
+
 
 def natsorted(l):
     '''
@@ -101,12 +107,15 @@ def natsorted(l):
 
     Credits: http://www.codinghorror.com/blog/2007/12/sorting-for-humans-natural-sort-order.html
     '''
-    convert = lambda text: int(text) if text.isdigit() else text
-    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
+    def convert(text): return int(text) if text.isdigit() else text
+    def alphanum_key(key): return [convert(c)
+                                   for c in re.split('([0-9]+)', key)]
     return sorted(l, key=alphanum_key)
+
 
 def str_to_sha256(s):
     return hashlib.sha256(s).hexdigest()
+
 
 def str_to_sha256_b62(s):
     digest = hashlib.sha256(s).digest()
@@ -137,7 +146,8 @@ def bytes_to_str(num):
         num /= 1024.0
     return "%1.1f %sB" % (num, 'T')
 
-def duration_to_str(duration, long = False):
+
+def duration_to_str(duration, long=False):
     '''
     Minor adjustment for Python's duration to string conversion, removed
     microsecond accuracy and replaces 'days' with 'd'
@@ -148,11 +158,14 @@ def duration_to_str(duration, long = False):
             value = value.replace(' days,', 'd')
         if 'day' in value:
             value = value.replace(' day,', 'd')
-        if 'd' in value and ':' in value and (value.index(':') - value.index('d')) != 4:
-            value = value[:value.index('d') + 1] + ' ' + value[value.index('d') + 1:]
+        if 'd' in value and ':' in value and (
+                value.index(':') - value.index('d')) != 4:
+            value = value[:value.index('d') + 1] + \
+                ' ' + value[value.index('d') + 1:]
     if '.' in value:
         value = value[0:value.index('.') + 2]
     return value
+
 
 def append_suffix_to_path(path, suffix):
     '''
@@ -172,6 +185,7 @@ def append_suffix_to_path(path, suffix):
     filename = basename + '-' + suffix + extension
     return os.path.join(dirname, filename)
 
+
 def sha256sum_of(file):
     """
     Returns hexdigits of the sha256sum of the passed file.
@@ -184,15 +198,16 @@ def sha256sum_of(file):
             # updates the sha256sum
             while True:
                 # read file in 2MB chunks
-                buf = f.read(2*1024*1024)
+                buf = f.read(2 * 1024 * 1024)
                 if not buf:
                     break
                 sha256sum.update(buf)
-    except:
+    except BaseException:
         raise UAPError("Error while calculating SHA256sum "
-                     "of %s" % file)
+                       "of %s" % file)
 
     return sha256sum.hexdigest()
+
 
 def sha_and_file(file):
     '''
@@ -201,30 +216,45 @@ def sha_and_file(file):
     signal.signal(signal.SIGTERM, signal.SIG_DFL)
     return sha256sum_of(file), file
 
+
 class UAPDumper(yaml.Dumper):
     # ensures indentation of lists
     def increase_indent(self, flow=False, indentless=False):
         return super(UAPDumper, self).increase_indent(flow, False)
 
+
 class literal(str):
     pass
 
+
 def literal_presenter(dumper, data):
     return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+
+
 UAPDumper.add_representer(literal, literal_presenter)
+
 
 def ordered_dict_presenter(dumper, data):
     return dumper.represent_dict(data.items())
+
+
 UAPDumper.add_representer(OrderedDict, ordered_dict_presenter)
+
 
 def dict_keys_presenter(dumper, data):
     return dumper.represent_list(data)
+
+
 UAPDumper.add_representer(type(dict().keys()), dict_keys_presenter)
+
 
 class type_tuple(tuple):
     pass
 
+
 def type_tuple_presenter(dumper, data):
     strings = [ty.__name__ for ty in data]
     return dumper.represent_scalar('tag:yaml.org,2002:str', ', '.join(strings))
+
+
 UAPDumper.add_representer(type_tuple, type_tuple_presenter)

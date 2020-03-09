@@ -4,7 +4,8 @@ import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class Samtools(AbstractStep):
     '''
@@ -33,48 +34,57 @@ class Samtools(AbstractStep):
         self.require_tool('samtools')
         self.require_tool('pigz')
 
-
-
         # general samtools options
         # -h
-        self.add_option('keep_header', bool, optional = True, default = True,
-                        description = 'Include the header in the output.')
+        self.add_option('keep_header', bool, optional=True, default=True,
+                        description='Include the header in the output.')
         # -b
-        self.add_option('output_bam', bool, optional = True, default = False,
-                        description = 'Output in the BAM format.')
+        self.add_option('output_bam', bool, optional=True, default=False,
+                        description='Output in the BAM format.')
         # -t <FILE>
-        self.add_option('genome-faidx', str, optional = False)
+        self.add_option('genome-faidx', str, optional=False)
 
         # Quality
         # -q <INT>
-        self.add_option('q_mapq', int, optional = True, default = 0,
-                        description = 'Skip alignments with MAPQ smaller than '
+        self.add_option('q_mapq', int, optional=True, default=0,
+                        description='Skip alignments with MAPQ smaller than '
                         'this value.')
 
-        ### samtools view
+        # samtools view
         # Filter
         # -f <INT>
-        self.add_option('f_keep', int, optional = True, default = 0,
-                        description = 'Only output alignments with all bits set in '
-                        'INT present in the FLAG field.')
+        self.add_option(
+            'f_keep',
+            int,
+            optional=True,
+            default=0,
+            description='Only output alignments with all bits set in '
+            'INT present in the FLAG field.')
         # -F <INT>
-        self.add_option('F_skip', int, optional = True, default = 0,
-                        description = 'Do not output alignments with any bits set '
-                        'in INT present in the FLAG field.')
+        self.add_option(
+            'F_skip',
+            int,
+            optional=True,
+            default=0,
+            description='Do not output alignments with any bits set '
+            'in INT present in the FLAG field.')
 
-        ### samtools sort
+        # samtools sort
         # Sorting
         # -n
-        self.add_option('sort-by-name', bool, default = False,
-                        description = 'Sort by read names (i.e., the QNAME field) '
-                        'rather than by chromosomal coordinates.')
-        self.add_option('temp-sort-dir', str, optional = False,
-                        description = 'Intermediate sort files are stored into'
+        self.add_option(
+            'sort-by-name',
+            bool,
+            default=False,
+            description='Sort by read names (i.e., the QNAME field) '
+            'rather than by chromosomal coordinates.')
+        self.add_option('temp-sort-dir', str, optional=False,
+                        description='Intermediate sort files are stored into'
                         'this directory.')
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "2048",
-                        description = 'Blocksize for dd tool.')
+        self.add_option('dd-blocksize', str, optional=True, default="2048",
+                        description='Blocksize for dd tool.')
 
     def runs(self, run_ids_connections_files):
 
@@ -85,19 +95,24 @@ class Samtools(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    raise StepError(self, "Expected exactly one alignments file.")
+                    raise StepError(
+                        self, "Expected exactly one alignments file.")
                 else:
                     is_gzipped = True if os.path.splitext(input_paths[0])[1]\
-                                 in ['.gz', '.gzip'] else False
+                        in ['.gz', '.gzip'] else False
 
                 if self.is_option_set_in_config('temp-sort-dir'):
                     if not os.path.isdir(self.get_option('temp-sort-dir')):
-                        #dir not present
-                        raise StepError(self, "Directory %s not found" % self.get_option('temp-sort-dir'))
-                    if not os.access(self.get_option('temp-sort-dir'), os.W_OK):
+                        # dir not present
+                        raise StepError(
+                            self, "Directory %s not found" %
+                            self.get_option('temp-sort-dir'))
+                    if not os.access(
+                            self.get_option('temp-sort-dir'), os.W_OK):
                         #not accessible
-                        raise StepError(self, "Directory %s not accessible." % self.get_option('temp-sort-dir'))
-
+                        raise StepError(
+                            self, "Directory %s not accessible." %
+                            self.get_option('temp-sort-dir'))
 
                     with run.new_exec_group() as exec_group:
 
@@ -114,8 +129,10 @@ class Samtools(AbstractStep):
                             if is_gzipped:
                                 pigz = [self.get_tool('pigz'),
                                         '--decompress',
-                                        '--processes', str(self.get_cores()),
-                                        '--blocksize', self.get_option('dd-blocksize'),
+                                        '--processes',
+                                        str(self.get_cores()),
+                                        '--blocksize',
+                                        self.get_option('dd-blocksize'),
                                         '--stdout']
                                 pipe.add_command(pigz)
 
@@ -141,26 +158,26 @@ class Samtools(AbstractStep):
                                 samtools_sort.extend(['-O', 'bam'])
                             # quality
                             if self.get_option('q_mapq') > 0:
-                                samtools_view.extend(['-q',
-                                                     str(self.get_option('q_mapq'))])
+                                samtools_view.extend(
+                                    ['-q', str(self.get_option('q_mapq'))])
                                 # no need to do this for samtools_sort
 
                             # filter options
                             # keep
                             if self.get_option('f_keep') > 0:
-                                samtools_view.extend(['-f',
-                                                      str(self.get_option('f_keep'))])
+                                samtools_view.extend(
+                                    ['-f', str(self.get_option('f_keep'))])
                             # skip
                             if self.get_option('F_skip') > 0:
-                                samtools_view.extend(['-F',
-                                                      str(self.get_option('F_skip'))])
+                                samtools_view.extend(
+                                    ['-F', str(self.get_option('F_skip'))])
 
                             samtools_view.extend(['-t', self.get_option('genome-faidx'),
                                                   '-', '-@', str(self.get_cores())])
                             samtools_sort.extend(['-T',
                                                   os.path.join(self.get_option('temp-sort-dir'), run_id),
                                                   '-', '-@', str(self.get_cores())]
-                            )
+                                                 )
 
                             # add to pipe
                             pipe.add_command(samtools_view)
@@ -174,7 +191,7 @@ class Samtools(AbstractStep):
                             ]
                             pipe.add_command(
                                 dd_out,
-                                stdout_path = run.add_output_file(
+                                stdout_path=run.add_output_file(
                                     'alignments',
                                     '%s.samtools.bam' % run_id,
                                     input_paths)

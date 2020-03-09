@@ -59,17 +59,29 @@ class Kallisto(AbstractStep):
                         rest of fragment is predicted to lie
                         outside a transcript""")
 
-        self.add_option('fr-stranded', bool, optional=True, default=None,
-                        description="Strand specific reads, first read forward")
+        self.add_option(
+            'fr-stranded',
+            bool,
+            optional=True,
+            default=None,
+            description="Strand specific reads, first read forward")
 
-        self.add_option('rf-stranded', bool, optional=True, default=None,
-                        description="Strand specific reads, first read reverse")
+        self.add_option(
+            'rf-stranded',
+            bool,
+            optional=True,
+            default=None,
+            description="Strand specific reads, first read reverse")
 
         self.add_option('fragment-length', int, optional=True, default=None,
                         description="Estimated average fragment length")
 
-        self.add_option('sd', int, optional=True, default=None,
-                        description="Estimated standard deviation of fragment length")
+        self.add_option(
+            'sd',
+            int,
+            optional=True,
+            default=None,
+            description="Estimated standard deviation of fragment length")
 
     def runs(self, run_ids_connections_files):
         self.set_cores(self.get_option('cores'))
@@ -130,32 +142,36 @@ class Kallisto(AbstractStep):
                                 '-t', str(self.get_option('cores')),
                                 '--fusion']
                     if self.is_option_set_in_config('index'):
-                            kallisto.extend(['-i', os.path.abspath(self.get_option('index'))])
+                        kallisto.extend(
+                            ['-i', os.path.abspath(self.get_option('index'))])
                     else:
                         if connect_index_path:
                             kallisto.extend(['-i', connect_index_path])
                         else:
-                            raise StepError(self,
-                            "%s no kallisto index give via config or connection" % run_id)
+                            raise StepError(
+                                self,
+                                "%s no kallisto index give via config or connection" %
+                                run_id)
 
                     optns = ['fr-stranded', 'rf-stranded',
-                            'bias', 'single-overhang', 'single']
+                             'bias', 'single-overhang', 'single']
 
                     for optn in optns:
-                        if self.is_option_set_in_config(optn) and self.get_option(optn):
+                        if self.is_option_set_in_config(
+                                optn) and self.get_option(optn):
                             kallisto.append('--' + optn)
 
                     param_optns = ['bootstrap-samples', 'seed',
-                                'fragment-length', 'sd']
+                                   'fragment-length', 'sd']
 
                     for param_optn in param_optns:
                         if self.is_option_set_in_config(param_optn):
                             kallisto.extend(['--' + param_optn,
-                                str(self.get_option(param_optn))])
+                                             str(self.get_option(param_optn))])
 
                     kallisto.extend(['-o', '.',
-                                    fr_input,
-                                    sr_input])
+                                     fr_input,
+                                     sr_input])
 
                     exec_group.add_command(kallisto,
                                            stdout_path=log_stdout,

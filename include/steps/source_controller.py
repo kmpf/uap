@@ -4,7 +4,8 @@ import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class SourceController(AbstractStep):
     '''
@@ -19,16 +20,21 @@ class SourceController(AbstractStep):
         self.set_cores(4)
 
         self.add_connection('in/raw',
-                description='Files to control.')
-        self.add_connection('out/merged',
-                description='All controlled files combined in one run '
-                            '``links``. The output files are '
-                            'named ``<previous run id>-<file name>``.')
+                            description='Files to control.')
+        self.add_connection(
+            'out/merged',
+            description='All controlled files combined in one run '
+            '``links``. The output files are '
+            'named ``<previous run id>-<file name>``.')
 
         self.require_tool('ln')
 
-        self.add_option('cores', int, optional=True, default=4,
-                description='Number of threads used to calculate the hash sums.')
+        self.add_option(
+            'cores',
+            int,
+            optional=True,
+            default=4,
+            description='Number of threads used to calculate the hash sums.')
 
     def runs(self, cc):
         self.set_cores(self.get_option('cores'))
@@ -40,4 +46,3 @@ class SourceController(AbstractStep):
                 link = group.add_output_file('merged', link_name, [file])
                 ln = [self.get_tool('ln'), '-s', file, link_name]
                 execg.add_command(ln)
-

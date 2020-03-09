@@ -57,8 +57,11 @@ class ChimPipe(AbstractStep):
 
         self.add_option('cores', str, default='6')
 
-        self.add_option('consensus_seq', str, optional=True,
-                        description="Sequence pair of consensus splice site bases")
+        self.add_option(
+            'consensus_seq',
+            str,
+            optional=True,
+            description="Sequence pair of consensus splice site bases")
 
         self.add_option('library_type', str, optional=True,
                         description="Type of sequence library")

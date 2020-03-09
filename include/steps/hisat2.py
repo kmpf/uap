@@ -29,9 +29,9 @@ class Hisat2(AbstractStep):
         self.add_connection('out/metrics')
         self.add_connection('out/summary')
         self.add_connection('out/unaligned', optional=True, format='fastq.gz',
-                description='Unpaired reads that didn\'t align.')
+                            description='Unpaired reads that didn\'t align.')
         self.add_connection('out/aligned', optional=True, format='fastq.gz',
-                description='Unpaired reads that aligned.')
+                            description='Unpaired reads that aligned.')
 
         self.require_tool('pigz')
         self.require_tool('hisat2')
@@ -216,13 +216,19 @@ class Hisat2(AbstractStep):
 
         # I, X?
 
-        self.add_option('minins', int, optional=True,
-                        description='minimum fragment length (0), only valid with '
-                        '--no-spliced-alignment')
+        self.add_option(
+            'minins',
+            int,
+            optional=True,
+            description='minimum fragment length (0), only valid with '
+            '--no-spliced-alignment')
 
-        self.add_option('maxins', int, optional=True,
-                        description='maximum fragment length (500), only valid with '
-                        '--no-spliced-alignment')
+        self.add_option(
+            'maxins',
+            int,
+            optional=True,
+            description='maximum fragment length (500), only valid with '
+            '--no-spliced-alignment')
 
         self.add_option('library_type', str, optional=True,
                         choices=['fr', 'rf', 'ff'], default=None,
@@ -239,7 +245,6 @@ class Hisat2(AbstractStep):
                         description="-1, -2 mates align fw/rev, rev/fw, \
                         fw/fw (--fr)")
 
-
         self.add_option('no-mixed', bool, default=None, optional=True,
                         description="suppress unpaired alignments for paired \
                         reads")
@@ -254,12 +259,21 @@ class Hisat2(AbstractStep):
         # Performance: #
         ################
 
-        self.add_option('offrate', int, optional=True,
-                        description='override offrate of index; must be >= index\'s offrate')
-        self.add_option('reorder', bool, optional=True,
-                        description='force SAM output order to match order of input reads')
-        self.add_option('mm', bool, optional=True,
-                        description='use memory-mapped I/O for index; many \'hisat2\'s can share')
+        self.add_option(
+            'offrate',
+            int,
+            optional=True,
+            description='override offrate of index; must be >= index\'s offrate')
+        self.add_option(
+            'reorder',
+            bool,
+            optional=True,
+            description='force SAM output order to match order of input reads')
+        self.add_option(
+            'mm',
+            bool,
+            optional=True,
+            description='use memory-mapped I/O for index; many \'hisat2\'s can share')
 
         ###########
         # Output: #
@@ -329,16 +343,40 @@ class Hisat2(AbstractStep):
         self.add_option('seed', int, optional=True,
                         description='seed for random number generator (0)')
 
-        self.add_option('non-deterministic', bool, default=False, optional=True,
-                        description="seed rand. gen. arbitrarily instead of \
+        self.add_option(
+            'non-deterministic',
+            bool,
+            default=False,
+            optional=True,
+            description="seed rand. gen. arbitrarily instead of \
                         using read attributes")
 
     def runs(self, cc):
-        flags = ['q', 'qseq', 'skip', 'f', 'c', 'ignore-quals', 'nofw', 'dta',
-                 'norc', 'no-mixed',  'no-discordant', 'quiet', 'qc-filter',
-                 'non-deterministic', 'no-temp-splicesite', 'no-softclip',
-                 'no-spliced-alignment', 'tmo', 'no-head', 'no-sq',
-                 'omit-sec-seq', 'remove-chrname', 'add-chrname', 'new-summary']
+        flags = [
+            'q',
+            'qseq',
+            'skip',
+            'f',
+            'c',
+            'ignore-quals',
+            'nofw',
+            'dta',
+            'norc',
+            'no-mixed',
+            'no-discordant',
+            'quiet',
+            'qc-filter',
+            'non-deterministic',
+            'no-temp-splicesite',
+            'no-softclip',
+            'no-spliced-alignment',
+            'tmo',
+            'no-head',
+            'no-sq',
+            'omit-sec-seq',
+            'remove-chrname',
+            'add-chrname',
+            'new-summary']
 
         strflags = ['n-ceil', 'ma', 'mp', 'sp', 'np', 'rdg', 'score-min', 'k',
                     'skip', 'rfg', 'rg', 'pen-cansplice', 'pen-noncansplice',
@@ -352,24 +390,24 @@ class Hisat2(AbstractStep):
         # Check if option values are valid
         if not os.path.exists(self.get_option('index') + '.1.ht2'):
             raise StepError(self, "Could not find index file: %s.*" %
-                         self.get_option('index'))
+                            self.get_option('index'))
 
         paired_end = cc.connection_exists('in/second_read')
 
         if not cc.all_runs_have_connection('in/first_read'):
             read_name = '' if paired_end else ' first'
             run_ids = list(cc.get_runs_without_any('in/first_read'))
-            if len(run_ids)>5:
+            if len(run_ids) > 5:
                 run_ids = run_ids[0:5] + ['...']
             raise StepError(self, 'No%s read passed by runs '
-                           '%s.' % (read_name, list(run_ids)))
+                            '%s.' % (read_name, list(run_ids)))
 
         if paired_end and not cc.all_runs_have_connection('in/second_read'):
             run_ids = list(cc.get_runs_without_any('in/second_read'))
-            if len(run_ids)>5:
+            if len(run_ids) > 5:
                 run_ids = run_ids[0:5] + ['...']
             raise StepError(self, 'No second read passed by runs '
-                           '%s.' % run_ids)
+                            '%s.' % run_ids)
 
         res = [(self.get_option('fr'), 'fr'),
                (self.get_option('rf'), 'rf'),
@@ -383,16 +421,16 @@ class Hisat2(AbstractStep):
 
         if paired_end and library_types and library_type:
             raise StepError(self, 'Option "library_type: %s" and the flag %s '
-                    'are set. Please specify only one.' %
-                    (library_type, library_types[0]))
+                            'are set. Please specify only one.' %
+                            (library_type, library_types[0]))
         elif paired_end and library_types:
             library_type = library_types[0]
         elif not paired_end and library_types:
             raise StepError(self, 'Library type %s is specified for single '
-                           'end reads.' % library_types[0])
+                            'end reads.' % library_types[0])
         elif not paired_end and library_type:
             raise StepError(self, 'Library type %s is specified for single '
-                           'end reads.' % library_type)
+                            'end reads.' % library_type)
 
         for run_id in cc.keys():
             with self.declare_run(run_id) as run:
@@ -422,11 +460,14 @@ class Hisat2(AbstractStep):
                         for flag in strflags:
                             if self.is_option_set_in_config(flag):
                                 hisat2.extend(['--' + flag,
-                                              str(self.get_option(flag))])
+                                               str(self.get_option(flag))])
 
-                        # Leave 2 cores available for pigz compressing the output.
-                        hisat2.extend(['-p', str(self.get_option('cores') - 2),
-                                       '-x', os.path.abspath(self.get_option('index'))])
+                        # Leave 2 cores available for pigz compressing the
+                        # output.
+                        hisat2.extend(['-p',
+                                       str(self.get_option('cores') - 2),
+                                       '-x',
+                                       os.path.abspath(self.get_option('index'))])
 
                         if paired_end:
                             if self.get_option('rna-strandness') == 'F':

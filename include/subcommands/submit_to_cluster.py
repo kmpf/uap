@@ -40,6 +40,7 @@ This task wish list is now processed one by one (in topological order):
 
 logger = logging.getLogger("uap_logger")
 
+
 def main(args):
     if args.legacy is True:
         submit_to_cluster_legacy.main(args)
@@ -59,7 +60,7 @@ def main(args):
     skipped_tasks = dict()
     wish_list = p.get_task_with_list()
     iter_steps = tqdm(p.topological_step_order, desc='step states',
-            bar_format='{desc}:{percentage:3.0f}%|{bar:10}{r_bar}')
+                      bar_format='{desc}:{percentage:3.0f}%|{bar:10}{r_bar}')
     try:
         for step_name in iter_steps:
             tasks_left[step_name] = list()
@@ -67,7 +68,10 @@ def main(args):
                 if wish_list and task not in wish_list:
                     continue
                 state = task.get_task_state()
-                if state in [p.states.QUEUED, p.states.EXECUTING, p.states.FINISHED]:
+                if state in [
+                        p.states.QUEUED,
+                        p.states.EXECUTING,
+                        p.states.FINISHED]:
                     skipped_tasks.setdefault(state, set())
                     skipped_tasks[state].add(task)
                     continue
@@ -79,24 +83,25 @@ def main(args):
                     skipped_tasks.setdefault(state, set())
                     skipped_tasks[state].add(task)
                     skip_message.append("Skipping %s because it's changes are "
-                        "ignored." % task)
+                                        "ignored." % task)
                     continue
                 if state == p.states.CHANGED and not args.force:
-                    raise UAPError("Task %s has changed. "
-                            "Run 'uap %s status --details' to see what changed or "
-                            "'uap %s submit-to-cluster --force' to force overwrite "
-                            "of the results." %
-                            (task, args.config.name, args.config.name))
+                    raise UAPError(
+                        "Task %s has changed. "
+                        "Run 'uap %s status --details' to see what changed or "
+                        "'uap %s submit-to-cluster --force' to force overwrite "
+                        "of the results." %
+                        (task, args.config.name, args.config.name))
                 tasks_left[step_name].append(task)
                 if step_name not in steps_left:
                     steps_left.append(step_name)
-    except:
+    except BaseException:
         iter_steps.close()
         raise
 
     for state, tasks in skipped_tasks.items():
         skip_message.append("Skipping %d task(s) because they are %s..." %
-                (len(tasks), state.lower()))
+                            (len(tasks), state.lower()))
     if p.states.VOLATILIZED in skipped_tasks.keys():
         skip_message.append("Request reproduction of volitilized tasks by "
                             "requesting it explicitly, e.g., with 'uap %s "
@@ -109,7 +114,7 @@ def main(args):
 
     try:
         quotas['default'] = p.config['cluster']['default_job_quota']
-    except:
+    except BaseException:
         quotas['default'] = 0
     # read quotas
     # -> for every step, a quota can be defined (with a default quota
@@ -117,7 +122,7 @@ def main(args):
     # -> during submission, there is a list of N previous job ids in
     #    which every item holds one of the previously submitted tasks
 
-    def submit_step(step_name, dependent_steps = []):
+    def submit_step(step_name, dependent_steps=[]):
         '''
         This method reads and modifies the necessary submit script for a given
         step. It applies job quotas. Finally, it starts the submit command.
@@ -140,32 +145,31 @@ def main(args):
             placeholder_values['#{SUBMIT_OPTIONS}'] = step._options[
                 '_cluster_submit_options']
         else:
-            placeholder_values['#{SUBMIT_OPTIONS}'] = p.config['cluster']\
-                                                      ['default_submit_options']
+            placeholder_values['#{SUBMIT_OPTIONS}'] = p.config['cluster']['default_submit_options']
         # PRE_JOB_COMMAND
         if step._options['_cluster_pre_job_command']:
             placeholder_values['#{PRE_JOB_COMMAND}'] = step._options[
-            '_cluster_pre_job_command']
+                '_cluster_pre_job_command']
         else:
-            placeholder_values['#{PRE_JOB_COMMAND}'] = p.config['cluster']\
-                                                       ['default_pre_job_command']
+            placeholder_values['#{PRE_JOB_COMMAND}'] = p.config['cluster']['default_pre_job_command']
         # POST_JOB_COMMAND
         if step._options['_cluster_post_job_command']:
             placeholder_values['#{POST_JOB_COMMAND}'] = step._options[
                 '_cluster_post_job_command']
         else:
-            placeholder_values['#{POST_JOB_COMMAND}'] = p.config['cluster']\
-                                                        ['default_post_job_command']
+            placeholder_values['#{POST_JOB_COMMAND}'] = p.config['cluster']['default_post_job_command']
 
         # Replace placeholders with their values
         for placeholder, value in placeholder_values.items():
             submit_script = submit_script.replace(placeholder, value)
 
         task_names = [str(task) for task in tasks_left[step_name]]
-        submit_script = submit_script.replace("#{ARRAY_JOBS}",
-                " ".join("'" + task + "'" for task in task_names))
+        submit_script = submit_script.replace(
+            "#{ARRAY_JOBS}", " ".join(
+                "'" + task + "'" for task in task_names))
         submit_script = submit_script.replace("#{CORES}", str(step._cores))
-        submit_script = submit_script.replace("#{UAP_CONFIG}", yaml.dump(p.config))
+        submit_script = submit_script.replace(
+            "#{UAP_CONFIG}", yaml.dump(p.config))
 
         command = ['exec', os.path.join(p.get_uap_path(), 'uap'), '-vv']
         if p.args.debugging:
@@ -199,17 +203,17 @@ def main(args):
         submit_script_args = [p.get_cluster_command('submit')]
         size = len(tasks)
         if quotas[step_name] == 0:
-            submit_script_args += p.get_cluster_command_cli_option('array_job',
-                    str(size-1))
+            submit_script_args += p.get_cluster_command_cli_option(
+                'array_job', str(size - 1))
         else:
             submit_script_args += p.get_cluster_command_cli_option(
-                    'array_job_wquota',
-                    (str(size-1), str(quotas[step_name])))
+                'array_job_wquota',
+                (str(size - 1), str(quotas[step_name])))
         submit_script_args += p.get_cluster_command_cli_option(
             'set_job_name', step_name)
 
         out_file = os.path.join(step.get_output_directory(),
-                '.' + long_task_id_with_date + '.uapout')
+                                '.' + long_task_id_with_date + '.uapout')
         submit_script_args.append(p.get_cluster_command('set_stderr'))
         submit_script_args.append(out_file)
         submit_script_args.append(p.get_cluster_command('set_stdout'))
@@ -242,14 +246,14 @@ def main(args):
         try:
             process = subprocess.Popen(
                 submit_script_args,
-                bufsize = -1,
-                stdout = subprocess.PIPE)
+                bufsize=-1,
+                stdout=subprocess.PIPE)
         except OSError as e:
             if e.errno == os.errno.ENOENT:
                 raise Exception("Unable to launch %s. Maybe " %
-                                    p.get_cluster_command('submit') +
-                                    "you are not executing this script on " +
-                                    "the cluster")
+                                p.get_cluster_command('submit') +
+                                "you are not executing this script on " +
+                                "the cluster")
             else:
                 raise e
         process.wait()
@@ -258,13 +262,15 @@ def main(args):
             p.get_cluster_command('parse_job_id'), response)
         if not job_id:
             raise UAPError('Got unexpected from %s resposne: %s' %
-                    (p.get_cluster_type(), response))
+                           (p.get_cluster_type(), response))
         else:
             job_id = job_id.group(1)
         sys.stdout.write(" and job id %s.\n" % job_id)
 
-        if job_id == None or len(job_id) == 0:
-            raise Exception("Error: We couldn't parse a job_id from this:\n" + response)
+        if job_id is None or len(job_id) == 0:
+            raise Exception(
+                "Error: We couldn't parse a job_id from this:\n" +
+                response)
 
         queued_ping_info = dict()
         queued_ping_info['step'] = step_name
@@ -273,10 +279,10 @@ def main(args):
         for task in tasks:
             queued_ping_info['run_id'] = task.run_id
             ping_file = step.get_run(task.run_id).get_queued_ping_file()
-            if os.path.exists(ping_file+'.bad'):
-                os.unlink(ping_file+'.bad')
+            if os.path.exists(ping_file + '.bad'):
+                os.unlink(ping_file + '.bad')
             with open(ping_file, 'w') as f:
-                f.write(yaml.dump(queued_ping_info, default_flow_style = False))
+                f.write(yaml.dump(queued_ping_info, default_flow_style=False))
 
         task.get_run().reset_fsc()
 
@@ -284,7 +290,7 @@ def main(args):
 
     for step_num, step_name in enumerate(steps_left):
         step = p.get_step(step_name)
-        if not step_name in quotas.keys():
+        if step_name not in quotas.keys():
             quotas[step_name] = quotas['default']
             if step._options['_cluster_job_quota']:
                 quotas[step_name] = step._options['_cluster_job_quota']
@@ -296,21 +302,31 @@ def main(args):
                 if parent_state in [p.states.EXECUTING, p.states.QUEUED]:
                     # determine job_id from YAML queued ping file
                     parent_job_id = None
-                    parent_queued_ping_path = parent.get_run(parent_task.run_id).get_queued_ping_file()
+                    parent_queued_ping_path = parent.get_run(
+                        parent_task.run_id).get_queued_ping_file()
                     try:
-                        parent_info = yaml.load(open(parent_queued_ping_path), Loader=yaml.FullLoader)
+                        parent_info = yaml.load(
+                            open(parent_queued_ping_path), Loader=yaml.FullLoader)
                         parent_job_ids.add(parent_info['job_id'])
-                    except:
-                        print("Couldn't determine job_id of %s while trying to load %s." %
+                    except BaseException:
+                        print(
+                            "Couldn't determine job_id of %s while trying to load %s." %
                             (parent_task, parent_queued_ping_path))
                         raise
                 elif parent_state in [p.states.READY, p.states.WAITING, p.states.BAD, p.states.CHANGED]:
-                    print("Cannot submit %s because its "
+                    print(
+                        "Cannot submit %s because its "
                         "parent %s is %s when it should be queued, running, "
-                        "or finished." % (task, parent_task, parent_state.lower()))
+                        "or finished." %
+                        (task, parent_task, parent_state.lower()))
                     continue
-        sys.stdout.write("[%d/%d][%s] %s job" %
-                (step_num+1, len(steps_left), step_name, p.get_cluster_type()))
+        sys.stdout.write(
+            "[%d/%d][%s] %s job" %
+            (step_num +
+             1,
+             len(steps_left),
+                step_name,
+                p.get_cluster_type()))
         submit_step(step_name, parent_job_ids)
         step.reset_run_caches()
         sys.stdout.flush()

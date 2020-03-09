@@ -82,7 +82,7 @@ def render_dot(self, code, options, format, prefix='graphviz'):
     Render graphviz code into a PNG or PDF output file.
     """
     hashkey = code.encode('utf-8') + str(options) + \
-              str(self.builder.config.graphviz_dot_args)
+        str(self.builder.config.graphviz_dot_args)
     fname = '%s-%s.%s' % (prefix, sha(hashkey).hexdigest(), format)
     if hasattr(self.builder, 'imgpath'):
         # HTML
@@ -130,17 +130,17 @@ def render_dot(self, code, options, format, prefix='graphviz'):
 
 def render_svg_tag(svgref, svgfile, imgcls=None):
     # Webkit can't figure out svg dimensions when using object tag
-    # so we need to get it from the svg file 
-    regex = r'<svg\swidth="(\d+)pt"\sheight="(\d+)pt"'   
+    # so we need to get it from the svg file
+    regex = r'<svg\swidth="(\d+)pt"\sheight="(\d+)pt"'
     with open(svgfile, 'r') as f:
         svg = f.read()
     dimensions = re.search(regex, svg, re.M).groups()
-    
+
     # We need this hack to make WebKit show our object tag properly
     def convert_pt2px(x):
         from math import ceil
-        return int(ceil((96.0/72.0) * float(x)))
-    
+        return int(ceil((96.0 / 72.0) * float(x)))
+
     style = 'width="%s" height="%s"' % tuple(map(convert_pt2px, dimensions))
 
     # The object tag works fine on Firefox and WebKit
@@ -150,7 +150,7 @@ def render_svg_tag(svgref, svgfile, imgcls=None):
            (svgref, imgcss, style)
     return html
 
-    
+
 def render_dot_html(self, node, code, options, prefix='graphviz', imgcls=None):
     format = self.builder.config.graphviz_output_format
     try:
@@ -207,6 +207,7 @@ def render_dot_latex(self, node, code, options, prefix='graphviz'):
 
 def latex_visit_graphviz(self, node):
     render_dot_latex(self, node, node['code'], node['options'])
+
 
 def setup(app):
     app.add_node(graphviz,

@@ -89,7 +89,7 @@ class Pear(AbstractStep):
                 if len(run_ids_connections_files[run_id]['in/first_read']) !=\
                    len(run_ids_connections_files[run_id]['in/second_read']):
                     raise Exception("Incorrect pairing of paired-end-files "
-                                        "in run %s" % run_id)
+                                    "in run %s" % run_id)
                 for file_no in range(len(run_ids_connections_files[run_id]
                                          ['in/first_read'])):
                     option_list = list()
@@ -125,9 +125,9 @@ class Pear(AbstractStep):
 
                         for output_file in out_files:
                             run.add_output_file(
-                                    output_file,
-                                    '%s.%s.fastq' % (file_id, output_file),
-                                    [run_ids_connections_files[run_id]
-                                    ['in/first_read'][file_no],
-                                    run_ids_connections_files[run_id]
-                                    ['in/second_read'][file_no]])
+                                output_file,
+                                '%s.%s.fastq' % (file_id, output_file),
+                                [run_ids_connections_files[run_id]
+                                 ['in/first_read'][file_no],
+                                 run_ids_connections_files[run_id]
+                                 ['in/second_read'][file_no]])

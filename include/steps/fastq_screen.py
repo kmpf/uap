@@ -5,6 +5,7 @@ import os
 
 logger = logging.getLogger('uap_logger')
 
+
 class FastqScreen(AbstractStep):
     '''
     Fastq Screen (ver. 0.11.*)
@@ -80,8 +81,10 @@ class FastqScreen(AbstractStep):
             raise StepError(self, "No config file or databases are specified.")
 
         if self.get_option('config'):
-            logger.warning('[%s] Using a config file is deprecated. '
-                    'Please specify databases instead.' % self.get_step_name())
+            logger.warning(
+                '[%s] Using a config file is deprecated. '
+                'Please specify databases instead.' %
+                self.get_step_name())
             config_file = os.path.abspath(self.get_option('config'))
         else:
             conf_data = [
@@ -96,7 +99,7 @@ class FastqScreen(AbstractStep):
             if not self.get_option('config'):
                 if self.get_option('keep config'):
                     config_file = run.add_output_file('fastq_screen.conf',
-                            'fastq_screen.conf', [])
+                                                      'fastq_screen.conf', [])
                 else:
                     config_file = run.add_temporary_file('fastq_screen.conf')
                 write_conf = [self.get_tool('printf'), '\n'.join(conf_data)]
@@ -110,7 +113,6 @@ class FastqScreen(AbstractStep):
 
                 file_pattern = "%s_screen.png" % (file_name)
                 run.add_output_file("fqc_image", file_pattern, [input_path])
-
 
                 file_pattern = "%s_screen.html" % (file_name)
                 run.add_output_file("fqc_html", file_pattern, [input_path])
@@ -126,13 +128,13 @@ class FastqScreen(AbstractStep):
                                                  [input_path])
 
                 # build fastq_screen command
-                fastq_screen_exec_group  = run.new_exec_group()
+                fastq_screen_exec_group = run.new_exec_group()
                 fastq_screen = [self.get_tool('fastq_screen'),
                                 '-conf', config_file]
 
                 if self.get_option('subset'):
                     fastq_screen.extend(['--subset',
-                            str(self.get_option('subset'))])
+                                         str(self.get_option('subset'))])
 
                 if self.get_option('nohits'):
                     file_pattern = "%s.tagged.fastq.gz" % (file_name)
@@ -140,11 +142,10 @@ class FastqScreen(AbstractStep):
 
                     file_pattern = "%s.tagged_filter.fastq.gz" % (file_name)
                     run.add_output_file("tagged_filter", file_pattern,
-                            [input_path])
+                                        [input_path])
 
                     fastq_screen.extend(['--nohits'])
 
                 fastq_screen.extend(['--outdir', '.', input_path])
-                fastq_screen_exec_group.add_command(fastq_screen,
-                        stdout_path=log_stdout, stderr_path=log_stderr)
-
+                fastq_screen_exec_group.add_command(
+                    fastq_screen, stdout_path=log_stdout, stderr_path=log_stderr)

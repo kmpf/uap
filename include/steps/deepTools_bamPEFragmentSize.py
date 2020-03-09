@@ -4,7 +4,8 @@ import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class deepToolsBamPEFragmentSize(AbstractStep):
     '''
@@ -47,9 +48,12 @@ class deepToolsBamPEFragmentSize(AbstractStep):
                         'name a BAM file is expected to be the input from '
                         'upstream steps. If not provided this step '
                         'calculates summary statistics for each input file.')
-        self.add_option('histogram', bool, optional=True,
-                        description='If set saves a .png file with a histogram '
-                        'of fragment length distribution for each run.')
+        self.add_option(
+            'histogram',
+            bool,
+            optional=True,
+            description='If set saves a .png file with a histogram '
+            'of fragment length distribution for each run.')
         self.add_option('maxFragmentLength', int, optional=True,
                         description='The maximum fragment length in the '
                         'histogram. A value of 0 (the default) indicates to '
@@ -60,15 +64,18 @@ class deepToolsBamPEFragmentSize(AbstractStep):
         self.add_option('binSize', int, optional=True,
                         description='Length in bases of the window used to '
                         'sample the genome. (default 1000)')
-        self.add_option('distanceBetweenBins', int, optional=True,
-                        description='To reduce the computation time, not every '
-                        'possible genomic bin is sampled. This option allows '
-                        'you to set the distance between bins actually sampled '
-                        'from. Larger numbers are sufficient for high coverage '
-                        'samples, while smaller values are useful for lower '
-                        'coverage samples. Note that if you specify a value '
-                        'that results in too few (<1000) reads sampled, the '
-                        'value will be decreased. (default 1000000)')
+        self.add_option(
+            'distanceBetweenBins',
+            int,
+            optional=True,
+            description='To reduce the computation time, not every '
+            'possible genomic bin is sampled. This option allows '
+            'you to set the distance between bins actually sampled '
+            'from. Larger numbers are sufficient for high coverage '
+            'samples, while smaller values are useful for lower '
+            'coverage samples. Note that if you specify a value '
+            'that results in too few (<1000) reads sampled, the '
+            'value will be decreased. (default 1000000)')
         self.add_option('blackListFileName', str, optional=True,
                         description="A BED file containing regions that "
                         "should be excluded from all analyses. Currently this "
@@ -84,7 +91,7 @@ class deepToolsBamPEFragmentSize(AbstractStep):
         # Compile the list of options
         options = ['histogram', 'maxFragmentLength', 'logScale', 'binSize',
                    'distanceBetweenBins', 'blackListFileName']
-        set_options = [option for option in options if \
+        set_options = [option for option in options if
                        self.is_option_set_in_config(option)]
         option_list = list()
         for option in set_options:
@@ -92,8 +99,8 @@ class deepToolsBamPEFragmentSize(AbstractStep):
                 if self.get_option(option):
                     option_list.append('--%s' % option)
             else:
-                option_list.append( '--%s' % option )
-                option_list.append( str(self.get_option(option)) )
+                option_list.append('--%s' % option)
+                option_list.append(str(self.get_option(option)))
 
         def declare_bamPEFragmentSize(run_id, input_paths, labels):
             with self.declare_run(run_id) as run:
@@ -121,17 +128,15 @@ class deepToolsBamPEFragmentSize(AbstractStep):
                         if self.is_option_set_in_config('logScale'):
                             bamPEFragmentSize.append('--logScale')
 
-                    ## Append list of options
+                    # Append list of options
                     bamPEFragmentSize.extend(option_list)
 
                     bamPEFragmentSize_eg.add_command(
                         bamPEFragmentSize,
-                        stdout_path = run.add_output_file(
+                        stdout_path=run.add_output_file(
                             'fragment_size_stats',
                             '%s-PEFragmentSize.stats' % run_id,
                             input_paths))
-
-
 
         run_id = str()
         input_paths = list()
@@ -141,21 +146,27 @@ class deepToolsBamPEFragmentSize(AbstractStep):
 
             for run_id, samples in runIds_samples.items():
                 if not isinstance(run_id, str):
-                    raise StepError(self, "Not a string run ID (%s) for samples (%s)"
-                                 % (run_id, ", ".join(samples)))
+                    raise StepError(
+                        self, "Not a string run ID (%s) for samples (%s)" %
+                        (run_id, ", ".join(samples)))
                 if not isinstance(samples, list):
-                    raise StepError(self, "Not a list of samples. Type: %s, Value: %s"
-                                 % (type(samples), samples))
+                    raise StepError(
+                        self, "Not a list of samples. Type: %s, Value: %s" %
+                        (type(samples), samples))
 
                 for sample in samples:
                     try:
                         bam_files = run_ids_connections_files[sample]['in/alignments']
                     except KeyError:
-                        raise StepError(self, "No input sample named %s" % sample)
+                        raise StepError(
+                            self, "No input sample named %s" %
+                            sample)
 
                     for i in range(len(bam_files)):
                         if not bam_files[i].endswith(".bam"):
-                            raise StepError(self, "Not a BAM file: %s" % bam_files[i])
+                            raise StepError(
+                                self, "Not a BAM file: %s" %
+                                bam_files[i])
                         input_paths.append(bam_files[i])
                         if i > 0:
                             labels.append("%s-%s" % (sample, i))
@@ -169,8 +180,10 @@ class deepToolsBamPEFragmentSize(AbstractStep):
                 try:
                     input_paths = run_ids_connections_files[run_id]['in/alignments']
                 except KeyError:
-                    raise StepError(self, 'No files found for run-id %s and connection '
-                    '"in/alignments". Please check your configuration.' % run_id)
+                    raise StepError(
+                        self, 'No files found for run-id %s and connection '
+                        '"in/alignments". Please check your configuration.' %
+                        run_id)
                 for f in input_paths:
                     label = run_id
                     if len(input_paths) > 1:

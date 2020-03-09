@@ -29,26 +29,23 @@ class Tcount2gcount(AbstractStep):
                                            engine and threads ie")
 
         self.add_option('t', str, optional=True,
-                        description='source tool of input file. ' \
+                        description='source tool of input file. '
                                     'Possible values: kallisto, salmon')
 
         self.add_option('m', str, optional=True,
-                        description='transcript to gene mapping file. ' \
-                        'Required Format example (per row): ' \
-                        'ENST00000527779.1\tENSG00000137692.11' \
+                        description='transcript to gene mapping file. '
+                        'Required Format example (per row): '
+                        'ENST00000527779.1\tENSG00000137692.11'
                         ' or gtf')
 
-
         self.add_option('kallisto-extended', bool, optional=True,
-                        description='writes extended format includign tpm. ' )
-
+                        description='writes extended format includign tpm. ')
 
         # required tools
         self.require_tool('tcount2gcount')
 
     def runs(self, run_ids_connections_files):
         self.set_cores(self.get_option('cores'))
-
 
         annotation = None
         for run_id in run_ids_connections_files.keys():
@@ -69,12 +66,15 @@ class Tcount2gcount(AbstractStep):
                 cmd = [self.get_tool('tcount2gcount')]
 
                 if self.is_option_set_in_config('m'):
-                     cmd.extend(['-m', os.path.abspath(self.get_option('m'))])
+                    cmd.extend(['-m', os.path.abspath(self.get_option('m'))])
                 else:
                     if annotation:
                         cmd.extend(['-m', os.path.abspath(annotation)])
                     else:
-                        raise StepError(self, "%s no annotation give via config or connection" % run_id)
+                        raise StepError(
+                            self,
+                            "%s no annotation give via config or connection" %
+                            run_id)
 
                 if self.is_option_set_in_config('kallisto-extended'):
                     cmd.append('--kallisto-extended')

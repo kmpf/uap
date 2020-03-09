@@ -26,18 +26,16 @@ class RemoveDuplicates(AbstractStep):
 
         self.require_tool('MarkDuplicates')
 
-
     def runs(self, run_ids_connections_files):
         # Compile list of options
         options = []
         # Compile list of set options
-        set_options = [option for option in options if \
+        set_options = [option for option in options if
                        self.is_option_set_in_config(option)]
 
         for run_id in run_ids_connections_files.keys():
             # Get input alignments
-            input_paths = run_ids_connections_files[run_id]\
-                          ['in/alignments']
+            input_paths = run_ids_connections_files[run_id]['in/alignments']
             with self.declare_run(run_id) as run:
                 for input_path in input_paths:
                     with run.new_exec_group() as exec_group:
@@ -58,4 +56,3 @@ class RemoveDuplicates(AbstractStep):
                         exec_group.add_command(
                             mark_duplicates,
                         )
-

@@ -4,7 +4,8 @@ import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class HtSeqCount(AbstractStep):
     '''
@@ -26,8 +27,8 @@ class HtSeqCount(AbstractStep):
 
         # the feature file provided by another step (e.g. cuffmerge)
         self.add_connection('in/features', optional=True, format='gtf',
-            description='reference assembly'
-        )
+                            description='reference assembly'
+                            )
 
         # the counts per alignment
         self.add_connection('out/counts')
@@ -38,23 +39,23 @@ class HtSeqCount(AbstractStep):
         self.require_tool('samtools')
 
         # Path to external feature file if necessary
-        self.add_option('feature-file', str, optional = True)
+        self.add_option('feature-file', str, optional=True)
 
         # [Options for 'htseq-count':]
-        self.add_option('order', str, choices = ['name', 'pos'],
-                        optional = False)
-        self.add_option('stranded', str, choices = ['yes', 'no', 'reverse'],
+        self.add_option('order', str, choices=['name', 'pos'],
                         optional=False)
-        self.add_option('a', int, optional = True)
-        self.add_option('type', str, default = 'exon', optional = True)
-        self.add_option('idattr', str, default='gene_id', optional = True)
-        self.add_option('mode', str, choices = ['union', 'intersection-strict',\
-                                                'intersection-nonempty'],
-                        default = 'union', optional = True)
+        self.add_option('stranded', str, choices=['yes', 'no', 'reverse'],
+                        optional=False)
+        self.add_option('a', int, optional=True)
+        self.add_option('type', str, default='exon', optional=True)
+        self.add_option('idattr', str, default='gene_id', optional=True)
+        self.add_option('mode', str, choices=['union', 'intersection-strict',
+                                              'intersection-nonempty'],
+                        default='union', optional=True)
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "2M")
-        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
+        self.add_option('dd-blocksize', str, optional=True, default="2M")
+        self.add_option('pigz-blocksize', str, optional=True, default="2048")
         self.add_option('threads', int, default=2, optional=True,
                         description="start <n> threads (default:2)")
 
@@ -62,7 +63,7 @@ class HtSeqCount(AbstractStep):
         # Compile the list of options
         options = ['order', 'stranded', 'a', 'type', 'idattr', 'mode']
 
-        set_options = [option for option in options if \
+        set_options = [option for option in options if
                        self.is_option_set_in_config(option)]
 
         option_list = list()
@@ -82,7 +83,7 @@ class HtSeqCount(AbstractStep):
             features_path = os.path.abspath(self.get_option('feature-file'))
             if not os.path.isfile(features_path):
                 raise StepError(self, '[HTSeq-Count]: %s is no file.' %
-                        self.get_option('feature-file'))
+                                self.get_option('feature-file'))
         else:
             features_path = None
         features_path = cc.look_for_unique('in/features', features_path)
@@ -112,12 +113,16 @@ class HtSeqCount(AbstractStep):
             elif ext in ['.sam']:
                 is_sam = True
             else:
-                raise StepError(self, "Input file not in [SB]am format: %s" % input_paths[0])
-
+                raise StepError(
+                    self, "Input file not in [SB]am format: %s" %
+                    input_paths[0])
 
             if not (bool(is_bam) ^ bool(is_sam)):
-                raise StepError(self, "Alignment file '%s' is neither SAM nor BAM "
-                             "format" % input_paths[0])
+                raise StepError(
+                    self,
+                    "Alignment file '%s' is neither SAM nor BAM "
+                    "format" %
+                    input_paths[0])
 
             alignments_path = input_paths[0]
 
@@ -134,8 +139,10 @@ class HtSeqCount(AbstractStep):
                             # 2. Uncompress file to STDOUT
                             pigz = [self.get_tool('pigz'),
                                     '--decompress',
-                                    '--blocksize', self.get_option('pigz-blocksize'),
-                                    '--processes', str(self.get_cores()),
+                                    '--blocksize',
+                                    self.get_option('pigz-blocksize'),
+                                    '--processes',
+                                    str(self.get_cores()),
                                     '--stdout']
                             pipe.add_command(pigz)
 
@@ -158,7 +165,7 @@ class HtSeqCount(AbstractStep):
 
                         pipe.add_command(
                             htseq_count,
-                            stdout_path = run.add_output_file(
+                            stdout_path=run.add_output_file(
                                 'counts',
                                 '%s-htseq_counts.txt' % run_id,
                                 input_paths

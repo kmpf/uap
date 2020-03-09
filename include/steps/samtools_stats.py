@@ -4,7 +4,8 @@ import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class SamtoolsStats(AbstractStep):
     '''
@@ -29,14 +30,13 @@ class SamtoolsStats(AbstractStep):
         self.require_tool('pigz')
 
         # Options for dd
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        self.add_option('dd-blocksize', str, optional=True, default="256k")
 
     def runs(self, run_ids_connections_files):
 
         for run_id in run_ids_connections_files.keys():
             # Get input alignments
-            input_paths = run_ids_connections_files[run_id]\
-                          ['in/alignments']
+            input_paths = run_ids_connections_files[run_id]['in/alignments']
 
             if input_paths == [None]:
                 run.add_empty_output_connection("alignments")
@@ -57,8 +57,8 @@ class SamtoolsStats(AbstractStep):
                         # Assemble samtools stats command
                         samtools = [self.get_tool('samtools'), 'stats']
                         pipe.add_command(samtools,
-                                         stdout_path = run.add_output_file(
+                                         stdout_path=run.add_output_file(
                                              'stats',
                                              basename + '.bam.stats',
                                              input_path)
-                                     )
+                                         )

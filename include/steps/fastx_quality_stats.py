@@ -4,7 +4,8 @@ from logging import getLogger
 import os
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class FastxQualityStats(AbstractStep):
     '''
@@ -41,14 +42,14 @@ class FastxQualityStats(AbstractStep):
 
         # [Options for 'fastx_quality_stats':]
         self.add_option('new_output_format', bool, optional=True,
-                        description = "New output format (with more information "
+                        description="New output format (with more information "
                         "per nucleotide/cycle).")
         # no info in help for this option ?! -> excluded
         self.add_option('quality', int, default=33, optional=True)
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "2M")
-        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
+        self.add_option('dd-blocksize', str, optional=True, default="2M")
+        self.add_option('pigz-blocksize', str, optional=True, default="2048")
 
     def runs(self, run_ids_connections_files):
         # get a list of all read files we have to count
@@ -58,7 +59,7 @@ class FastxQualityStats(AbstractStep):
 
         options = {'new_output_format': '-N', 'quality': '-Q'}
         option_list = list()
-        for option in [o for o in options.keys() \
+        for option in [o for o in options.keys()
                        if self.is_option_set_in_config(o)]:
             if isinstance(self.get_option(option), bool) and \
                self.get_option(option):
@@ -84,7 +85,7 @@ class FastxQualityStats(AbstractStep):
                         for input_path in input_paths:
                             temp_fifo = run.add_temporary_file(
                                 "fifo-%s" %
-                                os.path.basename(input_path) )
+                                os.path.basename(input_path))
                             temp_fifos.append(temp_fifo)
                             mkfifo = [self.get_tool('mkfifo'), temp_fifo]
                             exec_group.add_command(mkfifo)
@@ -92,7 +93,8 @@ class FastxQualityStats(AbstractStep):
                             # 2. Output files to fifo
                             if input_path.endswith('fastq.gz'):
                                 with exec_group.add_pipeline() as unzip_pipe:
-                                    # 2.1 command: Read file in 'dd-blocksize' chunks
+                                    # 2.1 command: Read file in 'dd-blocksize'
+                                    # chunks
                                     dd_in = [
                                         self.get_tool('dd'),
                                         'ibs=%s' %
@@ -102,10 +104,13 @@ class FastxQualityStats(AbstractStep):
                                     # 2.2 command: Uncompress file to fifo
                                     pigz = [self.get_tool('pigz'),
                                             '--decompress',
-                                            '--processes', str(self.get_cores()),
-                                            '--blocksize', self.get_option('pigz-blocksize'),
+                                            '--processes',
+                                            str(self.get_cores()),
+                                            '--blocksize',
+                                            self.get_option('pigz-blocksize'),
                                             '--stdout']
-                                    # 2.3 Write file in 'dd-blocksize' chunks to fifo
+                                    # 2.3 Write file in 'dd-blocksize' chunks
+                                    # to fifo
                                     dd_out = [
                                         self.get_tool('dd'),
                                         'obs=%s' %
@@ -118,7 +123,7 @@ class FastxQualityStats(AbstractStep):
                                     unzip_pipe.add_command(dd_out)
                             elif input_path.endswith('fastq'):
                                 # 2.1 command: Read file in 'dd-blocksize' chunks and
-                                #              write to fifo in 'dd-blocksize' chunks
+                                # write to fifo in 'dd-blocksize' chunks
                                 dd_in = [
                                     self.get_tool('dd'),
                                     'bs=%s' % self.get_option('dd-blocksize'),
@@ -127,9 +132,10 @@ class FastxQualityStats(AbstractStep):
                                 ]
                                 exec_group.add_command(dd_in)
                             else:
-                                raise StepError(self, "File %s does not end with any "
-                                             "expected suffix (fastq.gz or "
-                                             "fastq). Please fix that issue.")
+                                raise StepError(
+                                    self, "File %s does not end with any "
+                                    "expected suffix (fastq.gz or "
+                                    "fastq). Please fix that issue.")
                         # 3. Read data from fifos and check quality stats
                         with exec_group.add_pipeline() as fastx_pipe:
                             # 3.1 command: Read from ALL fifos
@@ -145,4 +151,4 @@ class FastxQualityStats(AbstractStep):
                             fastx_qs.extend(option_list)
                             fastx_pipe.add_command(cat)
                             fastx_pipe.add_command(fastx_qs,
-                                                   stdout_path = fastx_qs_file)
+                                                   stdout_path=fastx_qs_file)

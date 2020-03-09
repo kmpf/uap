@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from abstract_step import AbstractSourceStep, AbstractStep
 import inspect
 import glob
 import os
@@ -14,14 +15,14 @@ from logging import getLogger
 from misc import UAPDumper
 logger = getLogger('uap_logger')
 
-from abstract_step import AbstractSourceStep, AbstractStep
 
 def main(args):
 
     steps_path = os.path.dirname(os.path.realpath(__file__))
 
     # Assemble list of all files in ../sources and ../steps which end on .py
-    # Check if they are loadable objects of type AbstractStep or AbstractSourceStep
+    # Check if they are loadable objects of type AbstractStep or
+    # AbstractSourceStep
 
     if args.step:
         is_step = False
@@ -40,20 +41,24 @@ def main(args):
                     ('Available Options', step._defined_options),
                     ('CPU Cores', step.get_cores())
                 ])
-                print(yaml.dump(report, Dumper=UAPDumper, default_flow_style=False))
+                print(
+                    yaml.dump(
+                        report,
+                        Dumper=UAPDumper,
+                        default_flow_style=False))
 
         if not is_step:
             raise UAPError("'%s' is neither a source nor a processing step"
-                         % args.step)
+                           % args.step)
 
     else:
         source_steps = sorted([
-            os.path.splitext( os.path.basename(f) )[0] \
+            os.path.splitext(os.path.basename(f))[0]
             for f in glob.glob(os.path.join(steps_path, '../sources/*.py'))
         ])
 
         proc_steps = sorted([
-            os.path.splitext( os.path.basename(f) )[0] \
+            os.path.splitext(os.path.basename(f))[0]
             for f in glob.glob(os.path.join(steps_path, '../steps/*.py'))
         ])
 
@@ -65,7 +70,7 @@ def main(args):
             if is_key_a_step(s, AbstractSourceStep):
                 if args.details:
                     print(s)
-                    print('_'*len(s))
+                    print('_' * len(s))
                     step_class = AbstractStep.get_step_class_for_key(s)
                     print(step_class.__doc__)
                 else:
@@ -77,7 +82,7 @@ def main(args):
             if is_key_a_step(s, AbstractStep):
                 if args.details:
                     print(s)
-                    print('-'*len(s))
+                    print('-' * len(s))
                     step_class = AbstractStep.get_step_class_for_key(s)
                     print(step_class.__doc__)
                 else:
@@ -88,15 +93,15 @@ def is_key_a_step(key, step_type, state=False):
     '''
     Check if given key belongs to a loadable class
     '''
-    #been there
-    if state == True:
+    # been there
+    if state:
         return False
 
     res = False
     for name, cl in inspect.getmembers(__import__(key), inspect.isclass):
-            if  cl.__module__ == key:
-                if issubclass(cl, step_type):
-                    res = True
+        if cl.__module__ == key:
+            if issubclass(cl, step_type):
+                res = True
     return res
 
 

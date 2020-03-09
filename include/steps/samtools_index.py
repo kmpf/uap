@@ -4,7 +4,8 @@ import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class SamtoolsIndex(AbstractStep):
     '''
@@ -30,8 +31,8 @@ class SamtoolsIndex(AbstractStep):
         self.require_tool('ln')
         self.require_tool('samtools')
 
-        self.add_option('index_type', str, choices = ['bai', 'csi'],
-                        optional = False)
+        self.add_option('index_type', str, choices=['bai', 'csi'],
+                        optional=False)
 
     def runs(self, run_ids_connections_files):
 
@@ -44,13 +45,14 @@ class SamtoolsIndex(AbstractStep):
                     run.add_empty_output_connection("indices")
                 # Fail if we haven't exactly one input file
                 elif len(input_paths) != 1:
-                    raise StepError(self, "Expected exactly one alignments file.")
+                    raise StepError(
+                        self, "Expected exactly one alignments file.")
                 # Fail if the input is not a bam file
                 elif os.path.splitext(input_paths[0])[1] not in ['.bam']:
-                    raise StepError(self,
-                        "The file %s seems not to be a BAM file. At "
-                        "least the suffix is wrong." % input_paths[0]
-                    )
+                    raise StepError(
+                        self, "The file %s seems not to be a BAM file. At "
+                        "least the suffix is wrong." %
+                        input_paths[0])
                 # Everything seems fine, lets start
                 else:
                     input_bam = input_paths[0]
@@ -91,7 +93,7 @@ class SamtoolsIndex(AbstractStep):
                         samtools_idxstats.append(bam_link)
                         idxstats_exgr.add_command(
                             samtools_idxstats,
-                            stdout_path = run.add_output_file(
+                            stdout_path=run.add_output_file(
                                 'index_stats',
                                 '%s_idxstats.txt' % base,
                                 input_paths

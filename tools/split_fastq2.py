@@ -1,13 +1,20 @@
+from Bio import SeqIO
+import argparse
 import os
 seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
-exec(compile(open(activate_this_file).read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
-import argparse
-from Bio import SeqIO
+exec(
+    compile(
+        open(activate_this_file).read(),
+        activate_this_file,
+        'exec'),
+    dict(
+        __file__=activate_this_file))
 
 '''
 
 '''
+
 
 def read_args():
     parser = argparse.ArgumentParser(
@@ -56,6 +63,7 @@ def read_args():
 
     return args
 
+
 def main(args):
     # TODO: Exception if its not a fastq
     infile = args.infile[0]
@@ -73,7 +81,8 @@ def main(args):
 
     start = (int(sample_index) - 1) * int(chunksize)
     with open(infile, 'r') as fin:
-        tmp_filename = outpath + "%s_%i_%s.fastq" % (out_file_pattern, int(sample_index), mate)
+        tmp_filename = outpath + \
+            "%s_%i_%s.fastq" % (out_file_pattern, int(sample_index), mate)
         fout = open(tmp_filename, "wb")
         for i, line in enumerate(fin):
             if i >= start:
@@ -87,6 +96,7 @@ def main(args):
     filesize = os.path.getsize(tmp_filename)
     if filesize == 0:
         os.remove(tmp_filename)
+
 
 if __name__ == '__main__':
     args = read_args()

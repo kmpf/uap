@@ -35,10 +35,16 @@ class AdapterRemoval(AbstractStep):
         self.add_connection('out/collapsed.truncated', optional=True)
         self.add_connection('out/discarded')
         self.add_connection('out/truncated', optional=True, format='fastq',
-            description='Truncated single end reads.')
-        self.add_connection('out/pair1.truncated', optional=True, format='fastq',
+                            description='Truncated single end reads.')
+        self.add_connection(
+            'out/pair1.truncated',
+            optional=True,
+            format='fastq',
             description='Truncated first read of paired end reads.')
-        self.add_connection('out/pair2.truncated', optional=True, format='fastq',
+        self.add_connection(
+            'out/pair2.truncated',
+            optional=True,
+            format='fastq',
             description='Truncated first secind of paired end reads.')
         self.add_connection('out/singleton.truncated', optional=True)
         self.add_connection('out/settings')
@@ -146,30 +152,36 @@ class AdapterRemoval(AbstractStep):
 
         self.__treat_as_paired = cc.connection_exists('in/second_read')
 
-        if self.get_option('seed') is not None and self.get_option('cores')>1:
-            logger.warning('AdapterRemoval can not work deterministically on '
-                        'multiple threads. Please pass a blank `seed:` option '
-                        'to deactivate the seed or set `cores:` to 1.')
+        if self.get_option(
+                'seed') is not None and self.get_option('cores') > 1:
+            logger.warning(
+                'AdapterRemoval can not work deterministically on '
+                'multiple threads. Please pass a blank `seed:` option '
+                'to deactivate the seed or set `cores:` to 1.')
 
         if not cc.all_runs_have_connection('in/first_read'):
             read_name = '' if self.__treat_as_paired else ' first'
             run_ids = list(cc.get_runs_without_any('in/first_read'))
-            if len(run_ids)>5:
+            if len(run_ids) > 5:
                 run_ids = run_ids[0:5] + ['...']
             raise StepError(self, '[adapterremoval] No%s read passed by runs '
-                           '%s.' % (read_name, list(run_ids)))
+                            '%s.' % (read_name, list(run_ids)))
 
-        if self.__treat_as_paired and not cc.all_runs_have_connection('in/second_read'):
+        if self.__treat_as_paired and not cc.all_runs_have_connection(
+                'in/second_read'):
             run_ids = list(cc.get_runs_without_any('in/second_read'))
-            if len(run_ids)>5:
+            if len(run_ids) > 5:
                 run_ids = run_ids[0:5] + ['...']
-            raise StepError(self, '[adapterremoval] No second read passed by runs '
-                           '%s.' % run_ids)
+            raise StepError(
+                self,
+                '[adapterremoval] No second read passed by runs '
+                '%s.' %
+                run_ids)
 
         if self.__treat_as_paired \
-            and not self.is_option_set_in_config('adapter2'):
-                raise StepError(self, '[adapterremoval] Paired end mode requires '
-                               'option `adapter2`.')
+                and not self.is_option_set_in_config('adapter2'):
+            raise StepError(self, '[adapterremoval] Paired end mode requires '
+                            'option `adapter2`.')
 
         for run_id in cc.keys():
             with self.declare_run(run_id) as run:
@@ -206,7 +218,7 @@ class AdapterRemoval(AbstractStep):
                 ar.extend(['--gzip'])
 
                 if self.is_option_set_in_config('cores') \
-                and self.get_option('cores')>1:
+                        and self.get_option('cores') > 1:
                     ar.extend(['--threads', str(self.get_option('cores'))])
 
                 if self.is_option_set_in_config('qualitybase'):
@@ -217,13 +229,13 @@ class AdapterRemoval(AbstractStep):
                     ar.extend(['--collapse'])
 
                 if self.is_option_set_in_config('mm'):
-                    ar.extend(['--mm',  str(self.get_option('mm'))])
+                    ar.extend(['--mm', str(self.get_option('mm'))])
 
                 if self.is_option_set_in_config('maxns'):
-                    ar.extend(['--maxns',  str(self.get_option('maxns'))])
+                    ar.extend(['--maxns', str(self.get_option('maxns'))])
 
                 if self.is_option_set_in_config('shift'):
-                    ar.extend(['--shift',  str(self.get_option('shift'))])
+                    ar.extend(['--shift', str(self.get_option('shift'))])
 
                 if self.is_option_set_in_config('trimns'):
                     ar.extend(['--trimns'])

@@ -67,7 +67,7 @@ class FastqSample(AbstractStep):
 
         if isset_n and isset_p:
             raise StepError(self, "Option n AND p are set in config.yaml. "
-                         "Only one is allowed.")
+                            "Only one is allowed.")
 
         config_options = self.get_options()
 
@@ -76,13 +76,14 @@ class FastqSample(AbstractStep):
             new_run_id = run_id
             # create new run id if option o isset
             if self.is_option_set_in_config('o'):
-               new_run_id = config_options['o'] + '_' + run_id
+                new_run_id = config_options['o'] + '_' + run_id
 
             with self.declare_run(new_run_id) as run:
 
                 for read in read_types:
                     connection = 'in/%s' % read
-                    input_paths = run_ids_connections_files[run_id].get(connection)
+                    input_paths = run_ids_connections_files[run_id].get(
+                        connection)
 
                     if input_paths:
                         for input_path in input_paths:
@@ -126,13 +127,13 @@ class FastqSample(AbstractStep):
                                     if option == 'o' or value is None:
                                         continue
                                     fastqsample.extend(['-%s' % (option),
-                                                       str(value)])
+                                                        str(value)])
 
                             fastqsample.extend(['-o', outfile])
                             fastqsample.append(temp_file)
                             fastqsample_eg.add_command(fastqsample)
 
-                            #output compress subsample
+                            # output compress subsample
                             filename_params = (new_run_id,
                                                read_types[read])
 

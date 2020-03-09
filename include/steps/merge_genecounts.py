@@ -23,8 +23,11 @@ class MergeGenecounts(AbstractStep):
                         description="workaround to specify cores for grid \
                                            engine and threads ie")
 
-        self.add_option('t', str, optional=False,
-                        description="tool name (htseq_count: htc, featureCounts: fc)")
+        self.add_option(
+            't',
+            str,
+            optional=False,
+            description="tool name (htseq_count: htc, featureCounts: fc)")
 
         # required tools
         self.require_tool('merge_genecounts')

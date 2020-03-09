@@ -1,16 +1,16 @@
 #!../python_env/bin/python
 
+import yaml
+import string
+import os
+import logging
+import glob
 import sys
 sys.path.append('../include')
 sys.path.append('../include/steps')
 sys.path.append('../include/sources')
-import abstract_step
-import glob
-import logging
-import os
 import pipeline
-import string
-import yaml
+import abstract_step
 
 
 def doc_module(module_name, fout, uap_tools):
@@ -61,10 +61,14 @@ def doc_module(module_name, fout, uap_tools):
     fout.write("   digraph foo {\n")
     fout.write("      rankdir = LR;\n")
     fout.write("      splines = true;\n")
-    fout.write("      graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", nodesep = 0.2, ranksep = 0.3];\n")
-    fout.write("      node [fontname = Helvetica, fontsize = 12, shape = rect];\n")
+    fout.write(
+        "      graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", nodesep = 0.2, ranksep = 0.3];\n")
+    fout.write(
+        "      node [fontname = Helvetica, fontsize = 12, shape = rect];\n")
     fout.write("      edge [fontname = Helvetica, fontsize = 12];\n")
-    fout.write("      %s [style=filled, fillcolor=\"#fce94f\"];\n" % module_name)
+    fout.write(
+        "      %s [style=filled, fillcolor=\"#fce94f\"];\n" %
+        module_name)
     for index, c in enumerate(sorted(step.get_connections())):
         if c in step._optional_connections:
             fill = ', style=filled, fillcolor="#a7a7a7"'
@@ -72,7 +76,9 @@ def doc_module(module_name, fout, uap_tools):
             fill = ''
         c = c.split('/')
         if c[0] == 'out':
-            fout.write("      out_%d [label=\"%s\"%s];\n" % (index, c[1], fill))
+            fout.write(
+                "      out_%d [label=\"%s\"%s];\n" %
+                (index, c[1], fill))
             fout.write("      %s -> out_%d;\n" % (module_name, index))
         else:
             fout.write("      in_%d [label=\"%s\"%s];\n" % (index, c[1], fill))
@@ -97,7 +103,7 @@ def doc_module(module_name, fout, uap_tools):
                 fout.write("    - default value: %s\n" % option['default'])
             if option['choices']:
                 fout.write("    - possible values: %s\n" %
-                           ", ".join(["'%s'" % x for x in option['choices']]) )
+                           ", ".join(["'%s'" % x for x in option['choices']]))
                 fout.write("\n")
             fout.write("\n")
         fout.write("\n")
@@ -110,13 +116,13 @@ def doc_module(module_name, fout, uap_tools):
 
     if abstract_step.AbstractSourceStep in step.__class__.__bases__:
         # this is a source step which does not create any tasks
-        fout.write("This step provides input files which already exists and therefore creates no tasks in the pipeline.\n")
+        fout.write(
+            "This step provides input files which already exists and therefore creates no tasks in the pipeline.\n")
         fout.write("\n")
     else:
         # this is a step which creates tasks
         fout.write("**CPU Cores:** %s\n" % step._cores)
         fout.write("\n")
-
 
     '''
     print("Cores: %d" % step._cores)
@@ -125,6 +131,7 @@ def doc_module(module_name, fout, uap_tools):
     print("Options: %s" % sorted(step._defined_options.keys()))
     print(step.__doc__)
     '''
+
 
 def main():
     abs_path = os.path.dirname(os.path.realpath(__file__))
@@ -141,7 +148,7 @@ def main():
         modules = glob.glob(os.path.join(abs_path, '../include/sources/*.py'))
         for m in sorted(modules):
             module_name = os.path.basename(m).replace('.py', '')
-            if not '__' in module_name:
+            if '__' not in module_name:
                 doc_module(module_name, fout, uap_tools)
         fout.write("****************\n")
         fout.write("Processing steps\n")
@@ -151,14 +158,15 @@ def main():
             module_name = os.path.basename(m).replace('.py', '')
             if module_name == 'io_step':
                 continue
-            if not '__' in module_name:
+            if '__' not in module_name:
                 doc_module(module_name, fout, uap_tools)
+
 
 if __name__ == '__main__':
     logging.basicConfig()
     logger = logging.getLogger("uap_logger")
     info_formatter = logging.Formatter(
-        fmt = '[uap][%(levelname)s]: %(message)s '
+        fmt='[uap][%(levelname)s]: %(message)s '
     )
     # create console handler
     ch = logging.StreamHandler()

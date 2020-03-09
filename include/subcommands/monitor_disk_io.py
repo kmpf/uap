@@ -14,16 +14,16 @@
 # path of that script (i. e. BASH voodoo is not allowed here but can be
 # accomplished if a BASH script is used).
 
+import yaml
+import re
+import os
+import subprocess
+import logging
+import glob
+import copy
+import sys
 WRITE_PROC_FILES = False
 
-import sys
-import copy
-import glob
-import logging
-import subprocess
-import os
-import re
-import yaml
 
 logger = logging.getLogger("uap_logger")
 
@@ -33,11 +33,13 @@ if not os.path.exists('_monitor_disk_io'):
     os.mkdir('_monitor_disk_io')
 
 if len(sys.argv) > 1:
-    pigz = subprocess.Popen("pigz -p 2 -b 4096 -c > _monitor_disk_io/strace-out.txt.gz",
-                            stdin = subprocess.PIPE, shell = True)
+    pigz = subprocess.Popen(
+        "pigz -p 2 -b 4096 -c > _monitor_disk_io/strace-out.txt.gz",
+        stdin=subprocess.PIPE,
+        shell=True)
     args = ["strace", "-f", "-o", '/dev/stderr']
     args.extend(sys.argv[1:])
-    p = subprocess.Popen(args, stderr = subprocess.PIPE)
+    p = subprocess.Popen(args, stderr=subprocess.PIPE)
     strace_out = p.stderr
     for line in strace_out:
         pigz.stdin.write(line)
@@ -46,7 +48,7 @@ if len(sys.argv) > 1:
     exit(0)
 
 pigz = subprocess.Popen("pigz -p 1 -d -c _monitor_disk_io/strace-out.txt.gz",
-                        stdout = subprocess.PIPE, shell = True)
+                        stdout=subprocess.PIPE, shell=True)
 strace_out = pigz.stdout
 
 if len(glob.glob('_monitor_disk_io/*.proc.txt')) > 0:
@@ -55,10 +57,11 @@ if len(glob.glob('_monitor_disk_io/*.proc.txt')) > 0:
 path_for_pid_and_fd = {}
 stats = {}
 
+
 def handle_line(pid, line):
     line = line.strip()
     if WRITE_PROC_FILES:
-        if not pid in proc_files:
+        if pid not in proc_files:
             proc_files[pid] = open("_monitor_disk_io/%s.proc.txt" % pid, 'w')
         proc_files[pid].write(line + "\n")
     m = re.search(r'^(\w+)\((.*)\)\s+=\s+(.+)$', line)
@@ -68,35 +71,38 @@ def handle_line(pid, line):
         retval = str(m.group(3))
         if command == 'clone':
             for _ in path_for_pid_and_fd[pid].keys():
-                if not retval in path_for_pid_and_fd:
+                if retval not in path_for_pid_and_fd:
                     path_for_pid_and_fd[retval] = {}
-                path_for_pid_and_fd[retval][_] = copy.copy(path_for_pid_and_fd[pid][_])
+                path_for_pid_and_fd[retval][_] = copy.copy(
+                    path_for_pid_and_fd[pid][_])
 
         if command == 'dup2':
             fds = [_.strip() for _ in args.split(',')]
             try:
-                path_for_pid_and_fd[pid][fds[1]] = copy.copy(path_for_pid_and_fd[pid][fds[0]])
-            except:
+                path_for_pid_and_fd[pid][fds[1]] = copy.copy(
+                    path_for_pid_and_fd[pid][fds[0]])
+            except BaseException:
                 path_for_pid_and_fd[pid][fds[1]] = '[unknown]'
 
         if command == 'open':
-            if not pid in path_for_pid_and_fd:
+            if pid not in path_for_pid_and_fd:
                 path_for_pid_and_fd[pid] = {}
-            path_for_pid_and_fd[pid][retval] = re.search("^\\\"([^\\\"]+)\\\"", args).group(1)
+            path_for_pid_and_fd[pid][retval] = re.search(
+                "^\\\"([^\\\"]+)\\\"", args).group(1)
         if command == 'close':
-            if not pid in path_for_pid_and_fd:
+            if pid not in path_for_pid_and_fd:
                 path_for_pid_and_fd[pid] = {}
             fd = args.strip()
         if command == 'lseek':
             fd = None
-            m = re.search("^(\d+),", args)
+            m = re.search(r"^(\d+),", args)
             if m:
                 fd = m.group(1)
             if fd:
                 path = '[unknown]'
                 try:
                     path = path_for_pid_and_fd[pid][fd]
-                except:
+                except BaseException:
                     if fd == '0':
                         path = 'stdin'
                     elif fd == '1':
@@ -105,13 +111,13 @@ def handle_line(pid, line):
                         path = 'stderr'
                     else:
                         pass
-                if not path in stats:
+                if path not in stats:
                     stats[path] = {'read': {}, 'write': {}, 'lseek': 0}
                 stats[path]['lseek'] += 1
         if command == 'read' or command == 'write':
             fd = None
             size = None
-            m = re.search("^(\d+),", args)
+            m = re.search(r"^(\d+),", args)
             if m:
                 fd = m.group(1)
             size = retval
@@ -123,7 +129,7 @@ def handle_line(pid, line):
                 path = '[unknown]'
                 try:
                     path = path_for_pid_and_fd[pid][fd]
-                except:
+                except BaseException:
                     if fd == '0':
                         path = 'stdin'
                     elif fd == '1':
@@ -132,11 +138,12 @@ def handle_line(pid, line):
                         path = 'stderr'
                     else:
                         pass
-                if not path in stats:
+                if path not in stats:
                     stats[path] = {'read': {}, 'write': {}, 'lseek': 0}
-                if not sizek in stats[path][command]:
+                if sizek not in stats[path][command]:
                     stats[path][command][sizek] = 0
                 stats[path][command][sizek] += 1
+
 
 def size_to_cat(s):
     if s < 32:
@@ -155,6 +162,7 @@ def size_to_cat(s):
         return (6, '4096k+ ')
     else:
         return (7, '8192k+')
+
 
 line_buffer = {}
 for line in strace_out:
@@ -175,7 +183,19 @@ for line in strace_out:
 
 for path in stats.keys():
     cancel = False
-    for _ in ['python_env', '/proc', '/etc', '/usr', '.git', '.so', '.py', '.pyc', 'stdin', 'stdout', 'stderr', '/dev']:
+    for _ in [
+        'python_env',
+        '/proc',
+        '/etc',
+        '/usr',
+        '.git',
+        '.so',
+        '.py',
+        '.pyc',
+        'stdin',
+        'stdout',
+        'stderr',
+            '/dev']:
         if _ in path:
             cancel = True
             continue
@@ -188,13 +208,13 @@ for path in stats.keys():
         mod_size = {}
         for _, count in stats[path][mode].items():
             cat = size_to_cat(_)
-            if not cat in mod_size:
+            if cat not in mod_size:
                 mod_size[cat] = 0
             mod_size[cat] += count
         for key in sorted(mod_size.keys(), reverse=True):
             size = key[1]
-            #if key[0] == 0:
-                #continue
+            # if key[0] == 0:
+            # continue
             if not printed_path:
                 print('-' * len(path))
                 print(path)

@@ -3,6 +3,7 @@ from uaperrors import UAPError
 
 logger = getLogger("uap_logger")
 
+
 class ConnectionsCollector(object):
     '''
     A ConnectionsCollector helps to collect and query file connections.
@@ -12,6 +13,7 @@ class ConnectionsCollector(object):
     can be used in the course of a step to dicide how to use the
     input runs and connections.
     '''
+
     def __init__(self, step_name=None):
         self.step_name = step_name
         self.connections = dict()
@@ -48,7 +50,7 @@ class ConnectionsCollector(object):
         self._by_cons_empty.setdefault(connection, set())
         self._by_cons_empty[connection].add(run_id)
         self.existing_connections.add(connection)
-        self._con_of_all_runs = None # reset cache
+        self._con_of_all_runs = None  # reset cache
         logger.debug("Found connection %s which is declared empty" %
                      (connection))
 
@@ -58,7 +60,7 @@ class ConnectionsCollector(object):
         '''
         if not isinstance(files, list):
             raise UAPError('"files" must be a list but is a %s' %
-                    file.__class__.__name__)
+                           file.__class__.__name__)
         run_id = self._init_run_id(run_id)
         if not isinstance(connection, str):
             raise UAPError('The passed connection must be a string.')
@@ -69,9 +71,9 @@ class ConnectionsCollector(object):
         self._by_cons_none_empty.setdefault(connection, set())
         self._by_cons_none_empty[connection].add(run_id)
         self.existing_connections.add(connection)
-        self._con_of_all_runs = None # reset cache
+        self._con_of_all_runs = None  # reset cache
         logger.debug("Found %s to connect %s with run %s." %
-                (self.step_name, connection, run_id))
+                     (self.step_name, connection, run_id))
 
     def connect(self, parent, child, connections=None):
         '''
@@ -90,33 +92,34 @@ class ConnectionsCollector(object):
             ins = child.get_in_connections(strip_prefix=True)
             conns = parent_out_conns.intersection(ins)
             if len(conns) == 0:
-                logger.warning('There are no default connections between '
-                        '%s and its dependency %s. The parent out connections '
-                        'are %s and the child in connections are %s.'%
-                        (parent_name, child_name, list(parent_out_conns),
-                                list(ins)))
+                logger.warning(
+                    'There are no default connections between '
+                    '%s and its dependency %s. The parent out connections '
+                    'are %s and the child in connections are %s.' %
+                    (parent_name, child_name, list(parent_out_conns), list(ins)))
                 return 0
             make_connections = [
-                ('in/%s'%conn, 'out/%s'%conn, '%s/%s'%(parent_name, conn))
-                for conn in conns
-            ]
+                ('in/%s' % conn,
+                 'out/%s' % conn,
+                 '%s/%s' % (parent_name, conn)) for conn in conns]
         elif isinstance(connections, dict):
             # extract connections from config
             make_connections = list()
-            pre_len = len(parent_name)+1
+            pre_len = len(parent_name) + 1
             for in_conn, out_conns in connections.items():
                 if not isinstance(out_conns, list):
                     out_conns = [out_conns]
                 for out_conn in out_conns:
                     if out_conn.startswith(parent_name + '/'):
                         stripped_out_conn = out_conn[pre_len:]
-                        p_out = 'out/%s'%stripped_out_conn
+                        p_out = 'out/%s' % stripped_out_conn
                         if stripped_out_conn not in parent_out_conns:
                             avail = list(parent_out_conns)
-                            raise UAPError('The connection "%s" set in "%s" '
-                                    'is not an out connection of "%s". ' 
-                                    'Available out connections are: %s' %
-                                    (out_conn, child_name, parent_name, avail))
+                            raise UAPError(
+                                'The connection "%s" set in "%s" '
+                                'is not an out connection of "%s". '
+                                'Available out connections are: %s' %
+                                (out_conn, child_name, parent_name, avail))
                         make_connections.append((in_conn, p_out, out_conn))
                         must_connect.add(out_conn)
         else:
@@ -131,15 +134,16 @@ class ConnectionsCollector(object):
                 if out_conn not in parent_run.get_out_connections():
                     continue
                 output_files = parent_run\
-                        .get_output_files_abspath_for_out_connection(out_conn)
+                    .get_output_files_abspath_for_out_connection(out_conn)
                 self.add_connection(in_conn, output_files)
                 used_conns.add(parent_con)
 
         missing = must_connect - used_conns
         if missing:
-            raise UAPError('The connection(s) %s required by the step "%s" are '
-                           'optional output of step "%s" and not produced.' %
-                           (list(missing), child_name, parent_name))
+            raise UAPError(
+                'The connection(s) %s required by the step "%s" are '
+                'optional output of step "%s" and not produced.' %
+                (list(missing), child_name, parent_name))
 
         return used_conns
 
@@ -151,7 +155,7 @@ class ConnectionsCollector(object):
         cons = self.connections[run_id]
         if connection not in cons.keys():
             raise UAPError('The input run %s of %s has no connection %s.' %
-                    (run_id, self.step_name, connection))
+                           (run_id, self.step_name, connection))
         return cons[run_id]
 
     def connection_items(self, connection):
@@ -213,24 +217,31 @@ class ConnectionsCollector(object):
         If more then one but not all runs come with the connection an UAPError is raised.
         '''
         if self.connection_exists(connection) and default is not None:
-            raise UAPError('In step %s runs come with %s but it is set '
-                'to %s in the config.' % (self.step_name, connection, default))
+            raise UAPError(
+                'In step %s runs come with %s but it is set '
+                'to %s in the config.' %
+                (self.step_name, connection, default))
 
         if self.all_runs_have_connection(connection):
             return default
 
         ref_run = self.get_runs_with_connections(connection, with_empty=False)
         if len(ref_run) > 1:
-            UAPError('More then one but not all runs come with %s.' % connection)
+            UAPError(
+                'More then one but not all runs come with %s.' %
+                connection)
         elif len(ref_run) == 1:
             if default is not None:
-                raise UAPError('In step %s, value supplied by connection %s but'
-                        'option is set to %s.' % (self.step_name, connection, default))
+                raise UAPError(
+                    'In step %s, value supplied by connection %s but'
+                    'option is set to %s.' %
+                    (self.step_name, connection, default))
             ref_run = ref_run.pop()
             con_value = self.connections[ref_run][connection]
             if len(con_value) > 1:
-                raise UAPError('In step %s more than one file is passed with %s.' %
-                        (self.step_name, connection))
+                raise UAPError(
+                    'In step %s more than one file is passed with %s.' %
+                    (self.step_name, connection))
             return con_value[0]
         return default
 
@@ -248,7 +259,8 @@ class ConnectionsCollector(object):
         if self._con_of_all_runs is None:
             # calculate and cache connections of all runs
             con_list = self.connections.values()
-            self._con_of_all_runs = set.intersection(*(set(val) for val in con_list))
+            self._con_of_all_runs = set.intersection(
+                *(set(val) for val in con_list))
         if isinstance(connection, list):
             return all(con in self._con_of_all_runs for con in connection)
         return connection in self._con_of_all_runs
@@ -256,7 +268,7 @@ class ConnectionsCollector(object):
     def __getitem__(self, run_id):
         if run_id not in self.connections.keys():
             raise KeyError('In step %s there is no connection for run %s.' %
-                    (self.step_name, run_id))
+                           (self.step_name, run_id))
         return self.connections[run_id]
 
     def keys(self):
@@ -267,12 +279,6 @@ class ConnectionsCollector(object):
         Emulates dict.values().
         '''
         return self.connections.values()
-
-    def items(self):
-        '''
-        Emulates dict.items().
-        '''
-        return sorted(self.connections.items())
 
     def items(self):
         '''

@@ -11,13 +11,14 @@ class Star(AbstractStep):
     '''
 
     '''
+
     def __init__(self, pipeline):
         super(Star, self).__init__(pipeline)
 
         # input connections
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
-        #self.add_connection('in/index')
+        # self.add_connection('in/index')
 
         # output connections
         self.add_connection('out/aligned')
@@ -70,10 +71,12 @@ class Star(AbstractStep):
 
                 # get genomeDir from config or from input files
                 if self.is_option_set_in_config('genomeDir'):
-                    genome_dir = os.path.abspath(str(self.get_option('genomeDir')))
+                    genome_dir = os.path.abspath(
+                        str(self.get_option('genomeDir')))
                 else:
                     if 'in/genome_dir' not in run_ids_connections_files[run_id]:
-                        raise StepError(self, 'Required parameter "GenomDir" wasnt found!')
+                        raise StepError(
+                            self, 'Required parameter "GenomDir" wasnt found!')
                     genome_dir = run_ids_connections_files[run_id]['in/genome_dir'][0]
 
                 star.extend(['--genomeDir', genome_dir])
@@ -81,10 +84,12 @@ class Star(AbstractStep):
                 star.extend(['--outFileNamePrefix', './'])
 
                 if self.is_option_set_in_config('readFilesCommand'):
-                    star.extend(['--readFilesCommand', self.get_option('readFilesCommand')])
+                    star.extend(
+                        ['--readFilesCommand', self.get_option('readFilesCommand')])
 
                 if self.is_option_set_in_config('cores'):
-                    star.extend(['--runThreadN', str(self.get_option('runThreadN'))])
+                    star.extend(
+                        ['--runThreadN', str(self.get_option('runThreadN'))])
 
                 star.append('--readFilesIn')
                 star.extend(input_fileset)
@@ -96,10 +101,15 @@ class Star(AbstractStep):
                 log_stdout = run.add_output_file("log_stdout",
                                                  stdout_file, input_fileset)
 
-                run.add_output_file("aligned", "Aligned.out.sam", input_fileset)
-                run.add_output_file("log.final", "Log.final.out", input_fileset)
+                run.add_output_file(
+                    "aligned", "Aligned.out.sam", input_fileset)
+                run.add_output_file(
+                    "log.final", "Log.final.out", input_fileset)
                 run.add_output_file("log.out", "Log.out", input_fileset)
-                run.add_output_file("log.progess", "Log.progress.out", input_fileset)
+                run.add_output_file(
+                    "log.progess",
+                    "Log.progress.out",
+                    input_fileset)
                 run.add_output_file("sj.out", "SJ.out.tab", input_fileset)
 
                 star_eg = run.new_exec_group()

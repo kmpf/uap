@@ -2,6 +2,7 @@ import os
 import yaml
 import misc
 
+
 class FSCache:
     '''
     Use this class if you expect to make the same os.path.* calls many
@@ -27,7 +28,7 @@ class FSCache:
         self.cache = dict()
 
     def load_yaml_from_file(self, path):
-        if not 'load_yaml_from_file' in self.cache:
+        if 'load_yaml_from_file' not in self.cache:
             self.cache['load_yaml_from_file'] = dict()
 
         if path in self.cache['load_yaml_from_file']:
@@ -40,7 +41,7 @@ class FSCache:
         return data
 
     def sha256sum_of(self, path, value=None):
-        if not 'sha256sums' in self.cache:
+        if 'sha256sums' not in self.cache:
             self.cache['sha256sums'] = dict()
 
         if value is not None:
@@ -70,11 +71,13 @@ class FSCache:
             # otherwise, make the call and store the result in the cache
             try:
                 result = getattr(os.path, name)(*args)
-                if not name in self.cache:
+                if name not in self.cache:
                     self.cache[name] = dict()
                 self.cache[name][args] = result
                 return result
             except AttributeError:
-                raise AttributeError("Module os.path has no method '%s'" % name)
+                raise AttributeError(
+                    "Module os.path has no method '%s'" %
+                    name)
 
         return method

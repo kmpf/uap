@@ -1,17 +1,12 @@
-import sys
 from datetime import datetime, timedelta
-import glob
 import json
 import fscache
 from logging import getLogger
 import os
 import pwd
-import random
 import stat
-import string
-import tempfile
 import platform
-from deepdiff import DeepHash, DeepDiff
+from deepdiff import DeepDiff
 from collections import OrderedDict
 import inspect
 from functools import wraps
@@ -26,6 +21,7 @@ import misc
 from uaperrors import UAPError
 
 logger = getLogger("uap_logger")
+
 
 class Run(object):
     '''
@@ -42,7 +38,8 @@ class Run(object):
 
     def __init__(self, step, run_id):
         if '/' in run_id:
-            raise UAPError("Error: A run ID must not contain a slash: %s." % run_id)
+            raise UAPError("Error: A run ID must not contain a slash: %s." %
+                           run_id)
         self.fsc = fscache.FSCache()
         '''
         A cache.
@@ -59,7 +56,8 @@ class Run(object):
         self._public_info = dict()
         self._input_files = set()
         self._output_files = dict()
-        for out_connection in self._step.get_out_connections(with_optional=False):
+        out_conns = self._step.get_out_connections(with_optional=False)
+        for out_connection in out_conns:
             self.add_out_connection(out_connection)
         '''
         Dictionary containing the output files for each outgoing connection and
@@ -105,7 +103,6 @@ class Run(object):
             return result
         return inner
 
-
     def __enter__(self):
         return self
 
@@ -142,10 +139,10 @@ class Run(object):
             return connection
         else:
             raise KeyError("Connection %s not declared for step %s" %
-                         (connection, self.get_step()))
+                           (connection, self.get_step()))
 
     def _get_ping_file(self, key):
-        if self._ping_files[key] == None:
+        if self._ping_files[key] is None:
             self._ping_files[key] = os.path.join(
                 self.get_output_directory(),
                 '.%s-%s-ping.yaml' % (self.get_run_id(), key)
@@ -159,7 +156,7 @@ class Run(object):
         return self._get_ping_file('queued')
 
     def get_submit_script_file(self):
-        if self._submit_script == None:
+        if self._submit_script is None:
             self._submit_script = os.path.join(
                 self.get_output_directory(),
                 ".submit-%s-%s.sh" % (self.get_step().get_step_name(),
@@ -168,7 +165,8 @@ class Run(object):
         return self._submit_script
 
     def is_source(self):
-        return True if isinstance(self._step, abst.AbstractSourceStep) else False
+        return True if isinstance(
+            self._step, abst.AbstractSourceStep) else False
 
     def get_known_paths(self):
         return self._known_paths
@@ -195,7 +193,7 @@ class Run(object):
         '''
         Returns the temporary output directory of a run.
         '''
-        if self._temp_directory == None:
+        if self._temp_directory is None:
             while True:
                 current_time = datetime.now().strftime('%y%m%d-%H%M%S-%f')
                 path = os.path.join(
@@ -237,7 +235,7 @@ class Run(object):
         tool_conf = p.config['tools']
         for tool in tools:
             if not tool_conf[tool]['ignore_version'] \
-            and not p.args.no_tool_checks:
+                    and not p.args.no_tool_checks:
                 tool_info = p.tool_versions[tool]
                 real_tool_path = tool_info['used_path']
                 response = tool_info['response'].replace(real_tool_path, tool)
@@ -255,9 +253,13 @@ class Run(object):
         for prun in parents:
             if isinstance(prun.get_step(), abst.AbstractSourceStep):
                 continue
-            task_id = '%s/%s' % (prun.get_step().get_step_name(), prun.get_run_id())
-            hashsum = misc.str_to_sha256(json.dumps(prun.get_run_structure(),
-                    sort_keys=True, ensure_ascii=False).encode('utf8'))
+            task_id = '%s/%s' % (prun.get_step().get_step_name(),
+                                 prun.get_run_id())
+            hashsum = misc.str_to_sha256(
+                json.dumps(
+                    prun.get_run_structure(),
+                    sort_keys=True,
+                    ensure_ascii=False).encode('utf8'))
             cmd_by_eg['parent hashes'][task_id] = hashsum
 
         if not commands:
@@ -273,18 +275,18 @@ class Run(object):
                 # check if it is a pipeline ...
                 if isinstance(poc, pipeline_info.PipelineInfo):
                     cmd_by_eg[eg_name]['pipe %s' % pipe_count] = \
-                            poc.get_command_string(replace_path=True)
+                        poc.get_command_string(replace_path=True)
                 # ... or a command
                 elif isinstance(poc, command_info.CommandInfo):
                     cmd_by_eg[eg_name]['command %s' % pipe_count] = \
-                            poc.get_command_string(replace_path=True)
+                        poc.get_command_string(replace_path=True)
 
         return cmd_by_eg
 
     def get_changes(self):
         anno_data = self.written_anno_data()
         if not anno_data:
-            return {'Error':'Missing annotation file %s' %
+            return {'Error': 'Missing annotation file %s' %
                     self.get_annotation_path()}
         old_struct = anno_data['run']['structure']
         new_struct = self.get_run_structure()
@@ -363,7 +365,7 @@ class Run(object):
                     else:
                         in_file = v_in
                 if parent_fsc.getmtime(in_file) > \
-                self.fsc.getmtime(path):
+                        self.fsc.getmtime(path):
                     has_changed_deps = True
                     yield 'input file %s was modified' % in_file
             if has_changed_deps:
@@ -443,15 +445,17 @@ class Run(object):
                 has_volitile_parent = True
 
         output_files = [(out_file, input_files)
-                for files in self.get_output_files_abspath().values()
-                for out_file, input_files in files.items()]
+                        for files in self.get_output_files_abspath().values()
+                        for out_file, input_files in files.items()]
         all_exist = all(self.fsc.exists(out_file)
                         for out_file, _ in output_files)
         is_volatilized = False
         if not all_exist and self.get_step().is_volatile():
-            all_exist = all(self.fsc.exists(out_file
-                            + abst.AbstractStep.VOLATILE_SUFFIX)
-                            for out_file, _ in output_files)
+            all_exist = all(
+                self.fsc.exists(
+                    out_file +
+                    abst.AbstractStep.VOLATILE_SUFFIX) for out_file,
+                _ in output_files)
             is_volatilized = True
 
         if not all_exist:
@@ -535,10 +539,10 @@ class Run(object):
         The stored information can be acquired via:
         ``AbstractStep.find_upstream_info()``.
         '''
-        if not key in self._public_info:
+        if key not in self._public_info:
             raise UAPError("The key %s doesn't exist yet as public info."
-                         "Please use add_public_info(%s, %s)"
-                         % (key, key, value))
+                           "Please use add_public_info(%s, %s)"
+                           % (key, key, value))
         else:
             self._public_info[key] = value
 
@@ -571,7 +575,7 @@ class Run(object):
         if head != "" and not \
            isinstance(self._step, abst.AbstractSourceStep):
             raise UAPError("The declared output file path contains "
-                         "directory separator: %s." % out_path)
+                           "directory separator: %s." % out_path)
         elif isinstance(self._step, abst.AbstractSourceStep):
             out_path = os.path.abspath(out_path)
         else:
@@ -582,7 +586,8 @@ class Run(object):
 
         out_connection = self.get_out_connection(tag)
 
-        if out_path in self.get_output_files_for_out_connection(out_connection):
+        if out_path in self.get_output_files_for_out_connection(
+                out_connection):
             raise UAPError(
                 "You're trying to re-add an output file which has already "
                 "been declared: %s." % out_path)
@@ -595,18 +600,19 @@ class Run(object):
                 "There is a NoneType element in input paths (%s) for output "
                 "file (%s)" % (in_paths, out_path))
 
-        if out_path == None:
+        if out_path is None:
             raise UAPError(
                 "Trying to add NoneType element as output file for input paths "
-                ": %s" % in_paths)
+                ": %s" %
+                in_paths)
 
         self._input_files.union(set(in_paths))
-        logger.debug('Adding files %s as for connection %s in %s for run %s.' %
-                (out_path, out_connection, str(self.get_step()), self.get_run_id()))
+        logger.debug('Adding files %s as for connection %s in %s for run %s.' % (
+            out_path, out_connection, str(self.get_step()), self.get_run_id()))
         self._output_files[out_connection][out_path] = in_paths
         return out_path
 
-    def add_temporary_file(self, prefix = 'temp', suffix = '', designation = None):
+    def add_temporary_file(self, prefix='temp', suffix='', designation=None):
         '''
         Returns the name of a temporary file.
         '''
@@ -614,13 +620,13 @@ class Run(object):
         count = 0
         while True:
             temp_name = prefix + '-' + str(count) + suffix
-            if not temp_name in self._temp_paths:
+            if temp_name not in self._temp_paths:
                 break
             else:
                 count += 1
 
         logger.debug("Temporary file (#%s) in run %s: %s" %
-              (len(self._temp_paths) + 1, self.get_run_id(), temp_name) )
+                     (len(self._temp_paths) + 1, self.get_run_id(), temp_name))
 
         # _known_paths dict is logged
         known_paths = dict()
@@ -635,15 +641,15 @@ class Run(object):
         self._temp_paths.add(temp_name)
         return temp_name
 
-    def add_temporary_directory(self, prefix = '', suffix = '',
-                                designation = None ):
+    def add_temporary_directory(self, prefix='', suffix='',
+                                designation=None):
         '''
         Convenience method for creation of temporary directories.
         Basically, just calls self.add_temporary_file().
         The magic happens in ProcessPool.__exit__()
         '''
-        return self.add_temporary_file(prefix = prefix, suffix = suffix,
-                                       designation = designation)
+        return self.add_temporary_file(prefix=prefix, suffix=suffix,
+                                       designation=designation)
 
     def remove_temporary_paths(self):
         '''
@@ -669,7 +675,9 @@ class Run(object):
                     logger.debug("Set %s 'type' info to 'file'" % tmp_file)
                     self._known_paths[tmp_file]['type'] = 'file'
                 elif isdir:
-                    logger.debug("Set %s 'type' info to 'directory'" % tmp_file)
+                    logger.debug(
+                        "Set %s 'type' info to 'directory'" %
+                        tmp_file)
                     self._known_paths[tmp_file]['type'] = 'directory'
                 elif isfifo:
                     logger.debug("Set %s 'type' info to 'fifo'" % tmp_file)
@@ -695,15 +703,19 @@ class Run(object):
         An empty output connection has 'None' as output file and 'None' as input
         file.
         '''
-        logger.warning('[Deprecation] %s: add_empty_output_connection is depricated. '
-                'Please make the connection "out/%s" optional and do not add '
-                'anything instead.' % (self.get_step().get_step_type(), tag))
+        logger.warning(
+            '[Deprecation] %s: add_empty_output_connection is depricated. '
+            'Please make the connection "out/%s" optional and do not add '
+            'anything instead.' %
+            (self.get_step().get_step_type(), tag))
         # make sure tag was declared with an outgoing connection
         if 'out/' + tag not in self._step.get_out_connections():
-            raise UAPError("Invalid output_file tag '%s' in %s. "
-                         "You might want to add self.add_connection('out/%s') "
-                         "to the constructor of %s."
-                         % (tag, str(self._step), tag, self._step.__module__))
+            raise UAPError(
+                "Invalid output_file tag '%s' in %s. "
+                "You might want to add self.add_connection('out/%s') "
+                "to the constructor of %s." %
+                (tag, str(
+                    self._step), tag, self._step.__module__))
         try:
             out_connection = self.get_out_connection(tag)
         except KeyError:
@@ -721,36 +733,35 @@ class Run(object):
             out_connection = 'out/' + out_connection
         if out_connection not in self._step.get_out_connections():
             raise UAPError("Invalid output connection '%s' in %s. "
-                         "You might want to add self.add_connection('%s') "
-                         "to the constructor of %s."
-                         % (out_connection, str(self._step), out_connection,
-                                 self._step.__module__))
+                           "You might want to add self.add_connection('%s') "
+                           "to the constructor of %s."
+                           % (out_connection, str(self._step), out_connection,
+                              self._step.__module__))
         logger.debug('Adding %s to %s in run %s.' %
-                (out_connection, str(self.get_step()), self.get_run_id()))
+                     (out_connection, str(self.get_step()), self.get_run_id()))
         self._output_files[out_connection] = dict()
         return out_connection
 
     def get_input_files_for_output_file(self, output_file):
         for connection in self.get_out_connections():
             if output_file in \
-                self.get_output_files_for_out_connection(connection):
-                    return self._output_files[connection][output_file]
+                    self.get_output_files_for_out_connection(connection):
+                return self._output_files[connection][output_file]
         raise UAPError("Sorry, your output '%s' file couldn't be found in"
-                     "the dictionary: %s." % (out_path, temp))
+                       "the dictionary: %s." % (output_file, temp))
 
     def get_input_files_for_output_file_abspath(self, output_file):
         for connection in self.get_out_connections():
             if output_file in \
                self.get_output_files_abspath_for_out_connection(connection):
-                return self.get_output_files_abspath()[connection]\
-                    [output_file]
+                return self.get_output_files_abspath()[connection][output_file]
 
     def get_output_files_for_out_connection(self, out_connection):
-        return list( self._output_files[out_connection].keys() )
+        return list(self._output_files[out_connection].keys())
 
     def get_output_files_abspath_for_out_connection(self, out_connection):
         return sorted(
-            list( self.get_output_files_abspath()[out_connection].keys() )
+            list(self.get_output_files_abspath()[out_connection].keys())
         )
 
     def get_output_files(self):
@@ -862,7 +873,7 @@ class Run(object):
                 return False
             else:
                 logger.warning('The annotation file "%s" could not be read.'
-                            % anno_file)
+                               % anno_file)
         return None
 
     def write_annotation_file(self, path=None, error=None, job_id=None):
@@ -929,19 +940,16 @@ class Run(object):
         log['start_time'] = self.get_step().start_time
         log['end_time'] = self.get_step().end_time
 
-
-
         log['uap_version'] = p.args.uap_version
         log['git_tag'] = p.git_tag
         log['git_diff'] = p.git_diff
         log['git_version'] = p.git_version
 
-
         if p.caught_signal is not None:
             log['signal'] = p.caught_signal
 
-        annotation_yaml = yaml.dump(log, default_flow_style = False,
-                Dumper=misc.UAPDumper)
+        annotation_yaml = yaml.dump(log, default_flow_style=False,
+                                    Dumper=misc.UAPDumper)
         annotation_path = self.get_annotation_path(path)
 
         # overwrite the annotation if it already exists
@@ -966,10 +974,10 @@ class Run(object):
             exec_ping_file = self.get_executing_ping_file()
         if self.fsc.exists(exec_ping_file):
             last_activity = datetime.fromtimestamp(
-                    self.fsc.getmtime(exec_ping_file))
+                self.fsc.getmtime(exec_ping_file))
             now = datetime.now()
             inactivity = now - last_activity
             if inactivity.total_seconds() > \
                     abst.AbstractStep.PING_TIMEOUT:
-                        return inactivity
+                return inactivity
         return False

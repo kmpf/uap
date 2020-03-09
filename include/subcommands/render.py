@@ -91,7 +91,7 @@ def main(args):
             subprocess.check_call(dot_version, stdout=devnull)
     except subprocess.CalledProcessError as e:
         raise Exception("Execution of %s failed. GraphViz seems to be "
-                            "unavailable." % " ".join(dot_version))
+                        "unavailable." % " ".join(dot_version))
 
     if args.files:
         msg = "Going to plot the graph containing all files of the analysis"
@@ -109,7 +109,7 @@ def main(args):
                 outdir, ".%s*.annotation.yaml" % task.get_run().get_run_id()
             ))
 
-            yaml_files = {os.path.realpath(f) for f in anno_files \
+            yaml_files = {os.path.realpath(f) for f in anno_files
                           if os.path.islink(f)}
             for y in yaml_files:
                 log_level = logger.getEffectiveLevel()
@@ -131,8 +131,8 @@ def render_graph_for_all_steps(p, args):
 
 #    if args.format == "svg":
     dot = subprocess.Popen(['dot', '-Tsvg'],
-                           stdin = subprocess.PIPE,
-                           stdout = subprocess.PIPE)
+                           stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE)
 #    elif args.format == "png":
 #    dot = subprocess.Popen(['dot', '-Tpng'],
 #                           stdin = subprocess.PIPE,
@@ -147,8 +147,9 @@ def render_graph_for_all_steps(p, args):
     elif args.orientation == "right-to-left":
         f.write("  rankdir = RL;\n")
     f.write("  splines = true;\n")
-    f.write("    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", "
-            "nodesep = 0.2, ranksep = 0.3];\n")
+    f.write(
+        "    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", "
+        "nodesep = 0.2, ranksep = 0.3];\n")
     f.write("    node [fontname = Helvetica, fontsize = 12, shape = rect];\n")
     f.write("    edge [fontname = Helvetica, fontsize = 12];\n")
     for step_name, step in p.get_steps().items():
@@ -163,8 +164,9 @@ def render_graph_for_all_steps(p, args):
         label = step_name
         if step_name != step.__module__:
             label = "%s\\n(%s)" % (step_name, step.__module__)
-        f.write("    %s [label=\"%s\", style = filled, fillcolor = \"#fce94f\"];\n"
-                % (step_name, label))
+        f.write(
+            "    %s [label=\"%s\", style = filled, fillcolor = \"#fce94f\"];\n" %
+            (step_name, label))
         color = gradient(float(finished_runs) / total_runs
                          if total_runs > 0
                          else 0.0, GRADIENTS['traffic_lights'])
@@ -180,8 +182,9 @@ def render_graph_for_all_steps(p, args):
             for c in step._connections:
                 connection_key = escape(('%s/%s'
                                          % (step_name, c)).replace('/', '__'))
-                f.write("    %s [label=\"%s\", shape = ellipse, fontsize = 10];\n"
-                        % (connection_key, c))
+                f.write(
+                    "    %s [label=\"%s\", shape = ellipse, fontsize = 10];\n" %
+                    (connection_key, c))
                 if c[0:3] == 'in/':
                     f.write("    %s -> %s;\n" % (connection_key, step_name))
                 else:
@@ -204,7 +207,8 @@ def render_graph_for_all_steps(p, args):
                     allowed_steps = None
                     if '_connect' in step.get_options():
                         if in_key in step.get_options()['_connect']:
-                            declaration = step.get_options()['_connect'][in_key]
+                            declaration = step.get_options()[
+                                '_connect'][in_key]
                             if isinstance(declaration, str):
                                 if '/' in declaration:
                                     parts = declaration.split('/')
@@ -232,8 +236,9 @@ def render_graph_for_all_steps(p, args):
                             continue
                         if out_key == real_outkey:
                             connection_key = escape(
-                                ('%s/%s' % (step_name, in_key)).replace('/', '__')
-                            )
+                                ('%s/%s' %
+                                 (step_name, in_key)).replace(
+                                    '/', '__'))
                             other_connection_key = escape(
                                 ('%s/%s' % (other_step.get_step_name(),
                                             out_key)).replace('/', '__')
@@ -252,7 +257,8 @@ def render_graph_for_all_steps(p, args):
     gv = f.getvalue()
     f.close()
     return gv
-        
+
+
 def render_single_annotation(annotation_path, args):
     logger.info("Start rendering %s" % annotation_path)
     dot_file = annotation_path.replace('.yaml', '.dot')
@@ -282,6 +288,7 @@ def render_single_annotation(annotation_path, args):
 
     run_dot(gv, dot_file, png_file, svg_file)
 
+
 def run_dot(gv, dot_file, png_file, svg_file):
     try:
         with open(dot_file, 'w') as f:
@@ -289,17 +296,18 @@ def run_dot(gv, dot_file, png_file, svg_file):
 
 #        if args.format == "svg":
         dot = subprocess.Popen(['dot', '-Tsvg', '-o%s' % svg_file, dot_file],
-                               stdin = subprocess.PIPE,
-                               stdout = subprocess.PIPE)
+                               stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE)
 #        elif args.format == "png":
 #        dot = subprocess.Popen(['dot', '-Tpng', '-o%s' % png_file, dot_file],
 #                               stdin = subprocess.PIPE,
 #                               stdout = subprocess.PIPE)
-    except:
+    except BaseException:
         print(sys.exc_info())
         import traceback
         traceback.print_tb(sys.exc_info()[2])
         pass
+
 
 def create_dot_file_from_annotations(logs, args):
     hash = {'nodes': {}, 'edges': {}, 'clusters': {}, 'graph_labels': {}}
@@ -335,7 +343,7 @@ def create_dot_file_from_annotations(logs, args):
         key=lambda node: hash['nodes'][node]['start_time'], reverse=True
     )
     node_keys_ordered.extend([node for node in hash['nodes'].keys()
-                             if node not in node_keys_ordered])
+                              if node not in node_keys_ordered])
     for node_key in node_keys_ordered:
         node_info = hash['nodes'][node_key]
         f.write("    _%s" % node_key)
@@ -477,8 +485,7 @@ def create_hash_from_annotation(log):
                                arg in proc_info['hints']['writes']:
                                 io_type = 'output'
                             if io_type is None:
-                                io_type = log['step']['known_paths']\
-                                    [known_path]['designation']
+                                io_type = log['step']['known_paths'][known_path]['designation']
                                 if io_type is None:
                                     io_type = 'input'
 

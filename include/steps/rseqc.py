@@ -72,10 +72,15 @@ class RSeQC(AbstractStep):
                         description="Reference gene model in bed fomat. "
                         "[required]")
 
-        self.add_option('treatAs', str, optional=False,
-                        choices = ["single", "paired"],
-                        description="Some modules in rseqc  need paired end data"
-                        "an fail otherwise on single end [required]")
+        self.add_option(
+            'treatAs',
+            str,
+            optional=False,
+            choices=[
+                "single",
+                "paired"],
+            description="Some modules in rseqc  need paired end data"
+            "an fail otherwise on single end [required]")
 
     def runs(self, run_ids_connections_files):
 
@@ -151,16 +156,19 @@ class RSeQC(AbstractStep):
                                            stdout_path=log_stdout,
                                            stderr_path=log_stderr)
 
-
                     if self.get_option('treatAs') == 'paired':
                         inner_distance = [
                             self.get_tool('inner_distance.py'),
-                            '-i', alignments[0],
-                            '-r', os.path.abspath(self.get_option('reference')),
-                            '-o', run_id
-                        ]
+                            '-i',
+                            alignments[0],
+                            '-r',
+                            os.path.abspath(
+                                self.get_option('reference')),
+                            '-o',
+                            run_id]
                         id_txt = run_id + '.inner_distance.txt'
-                        run.add_output_file('inner_distance', id_txt, alignments)
+                        run.add_output_file(
+                            'inner_distance', id_txt, alignments)
                         id_freq = run_id + '.inner_distance_freq.txt'
                         run.add_output_file('inner_distance_freq',
                                             id_freq, alignments)
@@ -169,12 +177,12 @@ class RSeQC(AbstractStep):
                                             id_plot, alignments)
 
                         stdout_file = "%s-inner_distance_stdout.txt" % (run_id)
-                        log_stdout = run.add_output_file("inner_distance_stdout",
-                                                     stdout_file, alignments)
+                        log_stdout = run.add_output_file(
+                            "inner_distance_stdout", stdout_file, alignments)
 
                         stderr_file = "%s-inner_distance_stderr.txt" % (run_id)
-                        log_stderr = run.add_output_file("inner_distance_stderr",
-                                                     stderr_file, alignments)
+                        log_stderr = run.add_output_file(
+                            "inner_distance_stderr", stderr_file, alignments)
 
                         exec_group.add_command(inner_distance,
                                                stdout_path=log_stdout,
@@ -276,4 +284,3 @@ class RSeQC(AbstractStep):
                     exec_group.add_command(read_gc,
                                            stdout_path=log_stdout,
                                            stderr_path=log_stderr)
-

@@ -46,7 +46,7 @@ from run import Run
 abs_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(abs_path, 'steps'))
 sys.path.insert(0, os.path.join(abs_path, 'sources'))
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
 
 
 class AbstractStep(object):
@@ -54,9 +54,15 @@ class AbstractStep(object):
     PING_TIMEOUT = 300
     PING_RENEW = 30
     VOLATILE_SUFFIX = '.volatile.placeholder.yaml'
-    UNDERSCORE_OPTIONS = ['_depends', '_volatile', '_BREAK', '_connect',
-                          '_cluster_submit_options', '_cluster_pre_job_command',
-                          '_cluster_post_job_command', '_cluster_job_quota']
+    UNDERSCORE_OPTIONS = [
+        '_depends',
+        '_volatile',
+        '_BREAK',
+        '_connect',
+        '_cluster_submit_options',
+        '_cluster_pre_job_command',
+        '_cluster_post_job_command',
+        '_cluster_job_quota']
 
     states = misc.Enum(['DEFAULT', 'EXECUTING'])
 
@@ -180,23 +186,24 @@ class AbstractStep(object):
         # set options
         for key, value in options.items():
             if key[0] == '_':
-                if not key in AbstractStep.UNDERSCORE_OPTIONS:
+                if key not in AbstractStep.UNDERSCORE_OPTIONS:
                     raise UAPError(
                         "Invalid option in %s: %s" % (key, self))
                 self._options[key] = value
             else:
-                if not key in self._defined_options:
+                if key not in self._defined_options:
                     message = "Unknown option in %s (%s): %s." % \
-                            (self.get_step_name(), self.get_step_type(), key)
+                        (self.get_step_name(), self.get_step_type(), key)
                     logger.error(message + "\nAvailable options are:\n%s" %
                                  yaml.dump(self._defined_options))
                     raise UAPError(message)
-                if value is not None and type(value) not in self._defined_options[key]['types']:
+                if value is not None and type(
+                        value) not in self._defined_options[key]['types']:
                     raise UAPError(
                         "Invalid type for option %s - it's %s and should be "
                         "one of %s." % (key, type(value),
                                         self._defined_options[key]['types']))
-                if self._defined_options[key]['choices'] != None and \
+                if self._defined_options[key]['choices'] is not None and \
                    value not in self._defined_options[key]['choices']:
                     raise UAPError(
                         "Invalid value '%s' specified for option %s - "
@@ -230,7 +237,7 @@ class AbstractStep(object):
             for parent_cons in in_cons:
                 parent = parent_cons.split("/")[0]
                 if parent not in self._options['_depends'] \
-                and parent != 'empty':
+                        and parent != 'empty':
                     # We cannot use sets here since the order of
                     # dependecies matters in rare cases, e.g., collect_scs.
                     self._options['_depends'].append(parent)
@@ -299,7 +306,7 @@ class AbstractStep(object):
 
     def declare_runs(self):
         # fetch all incoming run IDs which produce reads...
-        self.runs( self.get_run_ids_in_connections_input_files() )
+        self.runs(self.get_run_ids_in_connections_input_files())
         self.check_required_out_connections()
 
     def check_required_out_connections(self):
@@ -318,19 +325,20 @@ class AbstractStep(object):
             missings = required_out - used_conns
             if missings:
                 bad_runs += 1
-                logger.warning('Run "%s" of step "%s" misses the required '
-                        'connections %s. To remove this warning pass '
-                        'optional=True to the add_connection method in the '
-                        'step constructor __init__ of "%s".' %
-                        (run_id, self.get_step_name(), list(missings),
-                                self.get_step_type()))
+                logger.warning(
+                    'Run "%s" of step "%s" misses the required '
+                    'connections %s. To remove this warning pass '
+                    'optional=True to the add_connection method in the '
+                    'step constructor __init__ of "%s".' %
+                    (run_id, self.get_step_name(), list(missings), self.get_step_type()))
             if bad_runs == 5:
                 logger.warning('... Emitting connection test for further '
-                    'runs of "%s".' % self.get_step_name())
+                               'runs of "%s".' % self.get_step_name())
                 break
         if bad_runs:
-            logger.warning('[Deprecation] Unmet required connections '
-                    'may trigger an error in future version of the UAP.')
+            logger.warning(
+                '[Deprecation] Unmet required connections '
+                'may trigger an error in future version of the UAP.')
 
     def get_output_directory(self):
         '''
@@ -342,7 +350,7 @@ class AbstractStep(object):
         )
 
     def get_submit_script_file(self):
-        if self._submit_script == None:
+        if self._submit_script is None:
             self._submit_script = os.path.join(
                 self.get_output_directory(),
                 ".submit-%s.sh" % self.get_step_name()
@@ -380,13 +388,13 @@ class AbstractStep(object):
                                 for command in poc.get_commands():
                                     pipeline.append(
                                         command.get_command(),
-                                        stdout_path = command.get_stdout_path(),
-                                        stderr_path = command.get_stderr_path())
+                                        stdout_path=command.get_stdout_path(),
+                                        stderr_path=command.get_stderr_path())
                         elif isinstance(poc, command_info.CommandInfo):
                             pool.launch(
                                 poc.get_command(),
-                                stdout_path = poc.get_stdout_path(),
-                                stderr_path = poc.get_stderr_path())
+                                stdout_path=poc.get_stdout_path(),
+                                stderr_path=poc.get_stderr_path())
 
     def get_runs(self):
         '''
@@ -410,9 +418,9 @@ class AbstractStep(object):
                 run = self.get_run(run_id)
                 for connection in run.get_output_files_abspath().keys():
                     for output_path, input_paths in \
-                        run.get_output_files_abspath()[connection].items():
+                            run.get_output_files_abspath()[connection].items():
                         # proceed if we have normal output_path/input_paths
-                        if output_path != None and input_paths != None:
+                        if output_path is not None and input_paths is not None:
                             # store file dependencies
                             pipeline.add_file_dependencies(
                                 output_path, input_paths)
@@ -476,13 +484,13 @@ class AbstractStep(object):
                     logger.debug('The run ping file "%s" was moved to "%s" '
                                  'and copied to "%s" by host %s.' %
                                  (ping_path, out_w_bad, out_w_suffix,
-                                         socket.gethostname()))
+                                  socket.gethostname()))
                 elif backup:
                     os.rename(ping_path, out_w_suffix)
                     logger.debug('The run ping file "%s" was moved to "%s" '
                                  'by host %s.' %
                                  (ping_path, out_w_suffix,
-                                         socket.gethostname()))
+                                  socket.gethostname()))
                 else:
                     os.unlink(ping_path)
                     logger.debug('The run ping file "%s" was removed by %s.' %
@@ -494,7 +502,6 @@ class AbstractStep(object):
         else:
             logger.debug('This run ping file was not found: %s' %
                          ping_path)
-
 
     def run(self, run_id):
         '''
@@ -516,7 +523,7 @@ class AbstractStep(object):
 
         if os.path.exists(executing_ping_path):
             raise UAPError("%s/%s seems to be already running, exiting..."
-                         % (self, run_id))
+                           % (self, run_id))
         queued_ping_path = run.get_queued_ping_file()
         try:
             with open(queued_ping_path, 'r') as buff:
@@ -534,7 +541,7 @@ class AbstractStep(object):
         for tag, tag_info in run.get_output_files_abspath().items():
             for output_path, input_paths in tag_info.items():
                 # add the real output path
-                if output_path != None and input_paths != None:
+                if output_path is not None and input_paths is not None:
                     known_paths[output_path] = {
                         'type': 'output',
                         'designation': 'output',
@@ -551,7 +558,7 @@ class AbstractStep(object):
                         'type': 'step_file',
                         'real_path': output_path}
                     for input_path in input_paths:
-                        if input_path != None:
+                        if input_path is not None:
                             known_paths[input_path] = {
                                 'type': 'input',
                                 'designation': 'input',
@@ -569,7 +576,7 @@ class AbstractStep(object):
             executing_ping_info['cluster_job_id'] = job_id
 
         with open(executing_ping_path, 'w') as f:
-            f.write(yaml.dump(executing_ping_info, default_flow_style = False))
+            f.write(yaml.dump(executing_ping_info, default_flow_style=False))
 
         executing_ping_pid = os.fork()
         if executing_ping_pid == 0:
@@ -600,6 +607,7 @@ class AbstractStep(object):
             self.remove_ping_file(queued_ping_path, bad_copy=True)
             original_term_handler(signum, frame)
             raise UAPError('Recived TERM signal (canceled job).')
+
         def ping_on_int(signum, frame):
             logger.warning('Recived SIGINT and moving execution ping file...')
             kill_exec_ping()
@@ -611,7 +619,7 @@ class AbstractStep(object):
 
         self.start_time = datetime.now()
         message = "[START] starting %s/%s on %s" % \
-                (self, run_id, socket.gethostname())
+            (self, run_id, socket.gethostname())
         if job_id:
             message += " with job id %s" % job_id
         p = self.get_pipeline()
@@ -625,7 +633,7 @@ class AbstractStep(object):
         except UAPError:
             process_pool.ProcessPool.kill()
             caught_exception = sys.exc_info()
-        except:
+        except BaseException:
             # Oh my. We have a situation. This is awkward. Tell the process
             # pool to wrap up. This way, we can try to get process stats before
             # shutting everything down.
@@ -638,7 +646,7 @@ class AbstractStep(object):
         finally:
             signal.signal(signal.SIGTERM, original_term_handler)
             signal.signal(signal.SIGINT, original_int_handler)
-            self._state = AbstractStep.states.DEFAULT # changes relative paths
+            self._state = AbstractStep.states.DEFAULT  # changes relative paths
             os.chdir(base_working_dir)
 
         self.end_time = datetime.now()
@@ -680,32 +688,35 @@ class AbstractStep(object):
                             if known_paths[new_path]['designation'] == 'output':
                                 to_be_moved[source_path] = new_path
                                 size = run.fsc.getsize(source_path)
-                                mtime = datetime.fromtimestamp(run.fsc.getmtime(source_path))
+                                mtime = datetime.fromtimestamp(
+                                    run.fsc.getmtime(source_path))
                                 known_paths[new_path]['size'] = size
                                 known_paths[new_path]['modification time'] = mtime
                             if known_paths[new_path]['type'] != 'step_file':
-                                logger.debug("Set %s 'type' info to 'step_file'" % new_path)
+                                logger.debug(
+                                    "Set %s 'type' info to 'step_file'" % new_path)
                                 known_paths[new_path]['type'] = 'step_file'
                         else:
                             raise UAPError('The step failed to produce an '
-                                                    'announced output file: "%s".\n'
-                                                    'Source file doesn\'t exists: "%s"'
-                                                    % (out_file, source_path))
-            except:
+                                           'announced output file: "%s".\n'
+                                           'Source file doesn\'t exists: "%s"'
+                                           % (out_file, source_path))
+            except BaseException:
                 caught_exception = sys.exc_info()
 
         pool = None
+
         class SignalError(Exception):
             def __init__(self, signum):
                 self.signum = signum
                 m = "Recived signal %s during hashing!" % \
-                        process_pool.ProcessPool.SIGNAL_NAMES[signum]
+                    process_pool.ProcessPool.SIGNAL_NAMES[signum]
                 super(SignalError, self).__init__(m)
         if caught_exception is None and to_be_moved:
             p.notify("[INFO] %s/%s hashing %d output file(s)." %
-                    (str(self), run_id, len(to_be_moved)))
+                     (str(self), run_id, len(to_be_moved)))
             if p.has_interactive_shell() \
-            and logger.getEffectiveLevel() > 20:
+                    and logger.getEffectiveLevel() > 20:
                 show_progress = True
             else:
                 show_progress = False
@@ -717,21 +728,25 @@ class AbstractStep(object):
                 pool = multiprocessing.Pool(self.get_cores())
                 total = len(to_be_moved)
                 file_iter = pool.imap(misc.sha_and_file, to_be_moved.keys())
-                file_iter = tqdm(file_iter, total=total, leave=False,
-                        bar_format='{desc}:{percentage:3.0f}%|{bar:10}{r_bar}',
-                        disable=not show_progress, desc='files')
+                file_iter = tqdm(
+                    file_iter,
+                    total=total,
+                    leave=False,
+                    bar_format='{desc}:{percentage:3.0f}%|{bar:10}{r_bar}',
+                    disable=not show_progress,
+                    desc='files')
                 for i, (hashsum, path) in enumerate(file_iter):
                     run.fsc.sha256sum_of(to_be_moved[path], value=hashsum)
                     known_paths[to_be_moved[path]]['sha256'] = hashsum
                     if not show_progress:
                         logger.info("sha256 [%d/%d] %s %s" %
-                                (i+1, total, hashsum, path))
-            except:
+                                    (i + 1, total, hashsum, path))
+            except BaseException:
                 caught_exception = sys.exc_info()
                 try:
                     # removing the progress bar
                     file_iter.close()
-                except:
+                except BaseException:
                     pass
                 error = caught_exception[1]
                 if caught_exception[0] is SignalError:
@@ -750,7 +765,7 @@ class AbstractStep(object):
                 for source_path, new_path in to_be_moved.items():
                     logger.debug("Moving %s to %s." % (source_path, new_path))
                     os.rename(source_path, new_path)
-            except:
+            except BaseException:
                 caught_exception = sys.exc_info()
 
         error = None
@@ -789,7 +804,7 @@ class AbstractStep(object):
                 os.rmdir(temp_directory)
             except OSError as e:
                 logger.info('Coult not remove temp dir "%s": %s' %
-                        (temp_directory, e))
+                            (temp_directory, e))
             temp = os.path.normpath(os.path.join(temp_directory, '..'))
             try:
                 os.rmdir(temp)
@@ -836,15 +851,14 @@ class AbstractStep(object):
         """
         if key not in self._tools:
             raise UAPError("Tool %s unknown. Maybe you forgot to use "
-                         "self.require_tool('%s')" % (key, key))
+                           "self.require_tool('%s')" % (key, key))
         return self._tools[key]
 
     def get_path_tool(self):
         '''
         Returns a dict with a tool name for each tool paths.
         '''
-        return {' '.join(path):tool for tool, path in self._tools.items()}
-
+        return {' '.join(path): tool for tool, path in self._tools.items()}
 
     @property
     def used_tools(self):
@@ -857,7 +871,6 @@ class AbstractStep(object):
         """
         return self._module_unload
 
-
     def get_post_commands(self):
         """
         Return dictionary with commands to execute after finishing any other
@@ -865,24 +878,23 @@ class AbstractStep(object):
         """
         return self._post_command
 
-
     def get_run_info_str(self, progress=False, do_hash=False):
         count = {}
         runs = self.get_runs()
         run_iter = tqdm(runs, total=len(runs), desc='runs',
-                disable=not progress, leave=False)
+                        disable=not progress, leave=False)
         try:
             for run in run_iter:
                 if isinstance(run, str):
                     run = self.get_run(run)
                 state = run.get_state(do_hash=do_hash)
-                if not state in count:
+                if state not in count:
                     count[state] = 0
                 count[state] += 1
-        except:
+        except BaseException:
             run_iter.close()
             raise
-        return ', '.join(["%d %s" % (count[_], _.lower()) \
+        return ', '.join(["%d %s" % (count[_], _.lower())
                           for _ in self.get_pipeline().states.order if _ in count])
 
     def append_pipeline_log(self, log):
@@ -910,7 +922,6 @@ class AbstractStep(object):
                     else:
                         self._pipeline_log[k].update(log[k])
 
-
     def __str__(self):
         return self._step_name
 
@@ -930,12 +941,11 @@ class AbstractStep(object):
         # of io_step. There's probably a better solution, but I think it doesn't
         # hurt, either. Here goes the awkward line:
 
-
         check_classes = [AbstractSourceStep, AbstractStep]
         for index, c in enumerate(check_classes):
 
             classes = [_ for _ in inspect.getmembers(__import__(key),
-                                                     inspect.isclass) \
+                                                     inspect.isclass)
                        if c in _[1].__bases__]
 
             for k in range(index):
@@ -943,17 +953,18 @@ class AbstractStep(object):
             if len(classes) > 0:
                 if len(classes) != 1:
                     raise UAPError("need exactly one subclass of %s in %s"
-                                 % (c, key))
+                                   % (c, key))
                 return classes[0][1]
 
         raise UAPError("No suitable class found for module %s." % key)
+
     def set_cores(self, cores):
         """
         Specify the number of CPU cores this step will use.
         """
         if not isinstance(cores, int) or cores < 1:
             raise UAPError('[%s] Cores need to be a positive integer, not %s.'
-                    % (self.get_step_name(), cores))
+                           % (self.get_step_name(), cores))
         self._cores = cores
 
     def get_cores(self):
@@ -975,7 +986,7 @@ class AbstractStep(object):
         self.add_connection('out/%s' % connection)
 
     def add_connection(self, connection,
-            optional = False, format = None, description = None):
+                       optional=False, format=None, description=None):
         """
         Add a connection, which must start with 'in/' or 'out/'.
         :type format: (str) Data format passed in the connection.
@@ -993,7 +1004,7 @@ class AbstractStep(object):
             self._connection_formats[connection] = format
         if description is not None:
             self._connection_descriptions[connection] = \
-                    re.sub(r'\s+', ' ', description)
+                re.sub(r'\s+', ' ', description)
 
     def get_connections(self, with_optional=True):
         """
@@ -1044,23 +1055,25 @@ class AbstractStep(object):
         *get_tool()*.
         """
         if self.get_pipeline() is not None:
-            if not tool in self.get_pipeline().config['tools']:
-                raise UAPError("%s requires the tool %s but it's not declared in "
-                             "the configuration."
-                             % (self, tool))
-            self._tools[tool] = self.get_pipeline().config['tools'][tool]['path']
+            if tool not in self.get_pipeline().config['tools']:
+                raise UAPError(
+                    "%s requires the tool %s but it's not declared in "
+                    "the configuration." %
+                    (self, tool))
+            self._tools[tool] = self.get_pipeline(
+            ).config['tools'][tool]['path']
             if 'pre_command' in self.get_pipeline().config['tools'][tool]:
-                self._pre_command[tool] = self.get_pipeline().config['tools'][tool]\
-                                          ['pre_command']
+                self._pre_command[tool] = self.get_pipeline(
+                ).config['tools'][tool]['pre_command']
             if 'module_load' in self.get_pipeline().config['tools'][tool]:
-                self._module_load[tool] = self.get_pipeline().config['tools'][tool]\
-                                          ['module_load']
+                self._module_load[tool] = self.get_pipeline(
+                ).config['tools'][tool]['module_load']
             if 'module_unload' in self.get_pipeline().config['tools'][tool]:
-                self._module_unload[tool] = self.get_pipeline().config['tools'][tool]\
-                                            ['module_unload']
+                self._module_unload[tool] = self.get_pipeline(
+                ).config['tools'][tool]['module_unload']
             if 'post_command' in self.get_pipeline().config['tools'][tool]:
-                self._post_command[tool] = self.get_pipeline().config['tools'][tool]\
-                                           ['post_command']
+                self._post_command[tool] = self.get_pipeline(
+                ).config['tools'][tool]['post_command']
         else:
             self._tools[tool] = True
 
@@ -1068,10 +1081,10 @@ class AbstractStep(object):
         """
         Add an option. Multiple types may be specified.
         """
-        if not 'optional' in kwargs:
+        if 'optional' not in kwargs:
             kwargs['optional'] = False
         for _ in ['default', 'description', 'choices']:
-            if not _ in kwargs:
+            if _ not in kwargs:
                 kwargs[_] = None
 
         if key[0] == '_':
@@ -1081,19 +1094,22 @@ class AbstractStep(object):
             raise UAPError("Option %s is already defined." % key)
         if len(option_types) == 0:
             raise UAPError("No option type specified for option %s." % key)
-        if len(option_types) > 1 and kwargs['choices'] != None:
-            raise UAPError("You cannot define choices if multiple options types "
-                         "are defined (%s)." % key)
+        if len(option_types) > 1 and kwargs['choices'] is not None:
+            raise UAPError(
+                "You cannot define choices if multiple options types "
+                "are defined (%s)." %
+                key)
         for option_type in option_types:
-            if not  option_type in [int, float, str, bool, list, dict]:
+            if option_type not in [int, float, str, bool, list, dict]:
                 raise UAPError("Invalid type for option %s: %s."
-                             % (key, option_type))
-        if kwargs['optional'] and (kwargs['default'] != None):
+                               % (key, option_type))
+        if kwargs['optional'] and (kwargs['default'] is not None):
             if type(kwargs['default']) not in option_types:
                 raise UAPError(
                     "In step: (%s) option: (%s) Type of default value (%s) does not match any of the "
-                    "declared possible types (%s)."
-                    % (self, key, type(kwargs['default']), option_types))
+                    "declared possible types (%s)." %
+                    (self, key, type(
+                        kwargs['default']), option_types))
 
         info = dict()
         info['types'] = type_tuple(option_types)
@@ -1102,15 +1118,16 @@ class AbstractStep(object):
 
         if info['description'] is not None:
             if not isinstance(info['description'], str):
-                raise UAPError('The description of option %s in step %s is not a string.' %
-                        (key, self))
+                raise UAPError(
+                    'The description of option %s in step %s is not a string.' %
+                    (key, self))
             # collapse whites spaces
             info['description'] = re.sub(r'\s+', ' ', info['description'])
 
         self._defined_options[key] = info
 
     def find_upstream_info_for_input_paths_as_set(self, input_paths,
-                                                  key, expected = 1):
+                                                  key, expected=1):
         task_ids = set()
         for path in input_paths:
             task_ids.add(self.get_pipeline().task_id_for_output_file[path])
@@ -1138,10 +1155,9 @@ class AbstractStep(object):
         information is not found or defined in more than one upstream step,
         this will crash.
         """
-        # And boy, will it crash. SUH-MAAAASH! http://youtu.be/PbYD7sj6vxc?t=1m38s
 
         result = self.find_upstream_info_for_input_paths_as_set(
-            input_paths, key, expected = 1)
+            input_paths, key, expected=1)
         return list(result)[0]
 
     def get_run_ids_in_connections_input_files(self):
@@ -1168,57 +1184,62 @@ class AbstractStep(object):
         for in_conn, out_conn in self._options['_connect'].items():
             if in_conn not in self.get_in_connections():
                 raise UAPError('_connect: unknown input connection "%s" '
-                             'found. Available connections are %s' %
-                             (in_conn, list(self.get_in_connections())))
+                               'found. Available connections are %s' %
+                               (in_conn, list(self.get_in_connections())))
             out_conn = out_conn if isinstance(out_conn, list) else [out_conn]
             set_out_connections = set_out_connections.union(set(out_conn))
 
         if 'empty' in set_out_connections:
-            logger.warning('[%s] "empty" in _connect is deprecated and will be '
-                        'ignored.' % self.get_step_name())
+            logger.warning(
+                '[%s] "empty" in _connect is deprecated and will be '
+                'ignored.' %
+                self.get_step_name())
             set_out_connections.discard('empty')
 
         # For each parent step ...
         for parent in self.get_dependencies():
             if not parent.get_runs():
                 raise UAPError('The step "%s" produces no output.' %
-                        parent.get_step_name())
+                               parent.get_step_name())
             logger.debug('Connecting "%s" to "%s".' %
-                    (parent.get_step_name(), self.get_step_name()))
+                         (parent.get_step_name(), self.get_step_name()))
             # ... look for connection to add
             used_conns = cc.connect(parent, self, self._options['_connect'])
             if not used_conns:
                 # ... or add connections with the same name.
                 logger.debug('Parent "%s" not connected to child "%s". '
-                        'Hence connecting equally named connections.'%
-                         (parent.get_step_name(), self.get_step_name()))
+                             'Hence connecting equally named connections.' %
+                             (parent.get_step_name(), self.get_step_name()))
                 used_conns = cc.connect(parent, self)
             if not used_conns:
                 raise UAPError('No connections could be made between '
-                        '"%s" and its dependency "%s".' %
-                        (self.get_step_name(), parent.get_step_name()))
+                               '"%s" and its dependency "%s".' %
+                               (self.get_step_name(), parent.get_step_name()))
             used_out_connections = used_out_connections.union(used_conns)
 
         # Check if all required connections are sattisfied.
         required_connections = self.get_in_connections(with_optional=False)
         missing = required_connections - cc.existing_connections
         if missing:
-            logger.warning('_connect: The required connection %s of step '
+            logger.warning(
+                '_connect: The required connection %s of step '
                 '"%s" is not satisfied. To remove this warning pass '
                 'optional=True to the add_connection method in the step '
                 'constructor __init__ of "%s".' %
                 (missing, self.get_step_type(), self.get_step_type()))
-            logger.warning('[Deprecation] Unmet required connections may trigger '
+            logger.warning(
+                '[Deprecation] Unmet required connections may trigger '
                 'an error in future version of the UAP.')
 
         # Check if all set out connections were recognized.
         unrecognized = set_out_connections - used_out_connections
         if len(unrecognized) > 0:
             raise UAPError('For the following connections into step "%s" '
-                    'no parent run could be found: %s.' %
-                    (self.get_step_name(), list(unrecognized)))
+                           'no parent run could be found: %s.' %
+                           (self.get_step_name(), list(unrecognized)))
 
         return cc
+
 
 class AbstractSourceStep(AbstractStep):
     """
@@ -1236,14 +1257,21 @@ class AbstractSourceStep(AbstractStep):
     def __init__(self, pipeline):
         super(AbstractSourceStep, self).__init__(pipeline)
 
+
 def type_presenter(dumper, data):
     return dumper.represent_scalar('tag:yaml.org,2002:str', data.__name__)
+
+
 yaml.add_representer(type, type_presenter)
+
 
 class type_tuple(tuple):
     pass
 
+
 def type_tuple_presenter(dumper, data):
     strings = [ty.__name__ for ty in data]
     return dumper.represent_scalar('tag:yaml.org,2002:str', ', '.join(strings))
+
+
 yaml.add_representer(type_tuple, type_tuple_presenter)

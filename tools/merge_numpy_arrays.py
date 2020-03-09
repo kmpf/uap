@@ -63,8 +63,8 @@ while os.path.exists(outFile):
 print("Output file: %s" % outFile)
 np.savez_compressed(outFile, matrix=ma, labels=labels)
 
-    #print(arr)
-    
-    # check array dimensions if they are equal merge them by column    
+# print(arr)
 
-    # np.load()
+# check array dimensions if they are equal merge them by column
+
+# np.load()

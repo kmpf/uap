@@ -4,8 +4,15 @@ import os
 import argparse
 seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
-exec(compile(open(activate_this_file).read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
+exec(
+    compile(
+        open(activate_this_file).read(),
+        activate_this_file,
+        'exec'),
+    dict(
+        __file__=activate_this_file))
 CHECK_QNAMES = False
+
 
 class Filter:
     def __init__(self, source, destination):
@@ -80,15 +87,23 @@ class Filter:
 
         self.handle()
         self.wpercent = self.wcount * 100.0 / self.rcount
-        keys = ['rcount', 'wcount', 'wpercent', 'discard_gt_2', 'discard_40_80']
+        keys = [
+            'rcount',
+            'wcount',
+            'wpercent',
+            'discard_gt_2',
+            'discard_40_80']
         sys.stderr.write("#%s\n" % "\t".join(keys))
-        sys.stderr.write("%s\n" % "\t".join([str(getattr(self, k)) for k in keys]))
+        sys.stderr.write("%s\n" %
+                         "\t".join([str(getattr(self, k)) for k in keys]))
+
 
 def main():
     parser = argparse.ArgumentParser(description='No documentation available.')
     args = parser.parse_args()
     filter = Filter(sys.stdin, sys.stdout)
     filter.run()
+
 
 if __name__ == '__main__':
     main()

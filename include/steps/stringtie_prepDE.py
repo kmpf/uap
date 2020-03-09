@@ -8,7 +8,8 @@ import os
 
 from logging import getLogger
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class StringTiePrepDE(AbstractStep):
 
@@ -28,6 +29,7 @@ class StringTiePrepDE(AbstractStep):
     https://ccb.jhu.edu/software/stringtie/
 
     '''
+
     def __init__(self, pipeline):
         super(StringTiePrepDE, self).__init__(pipeline)
 
@@ -45,37 +47,53 @@ class StringTiePrepDE(AbstractStep):
         self.require_tool('prepDE')
         self.require_tool('printf')
 
-        ## options for stringtie program
+        # options for stringtie program
         # -l LENGTH, --length=LENGTH
-        self.add_option('length', int, optional = True,
-                        description = 'the average read length [default: 75]')
+        self.add_option('length', int, optional=True,
+                        description='the average read length [default: 75]')
         # -p PATTERN, --pattern=PATTERN
-        self.add_option('pattern', str, optional = True,
-                        description = 'a regular expression that selects the sample subdirectories')
+        self.add_option(
+            'pattern',
+            str,
+            optional=True,
+            description='a regular expression that selects the sample subdirectories')
         # -c, --cluster
-        self.add_option('cluster', bool, optional = True,
-                        description = 'whether to cluster genes that overlap with different '
-                        'gene IDs, ignoring ones with geneID pattern (see below)')
+        self.add_option(
+            'cluster',
+            bool,
+            optional=True,
+            description='whether to cluster genes that overlap with different '
+            'gene IDs, ignoring ones with geneID pattern (see below)')
         # -s STRING, --string=STRING
-        self.add_option('string', str, optional = True,
-                        description = 'if a different prefix is used for geneIDs assigned by '
-                        'StringTie [default: MSTRG')
+        self.add_option(
+            'string',
+            str,
+            optional=True,
+            description='if a different prefix is used for geneIDs assigned by '
+            'StringTie [default: MSTRG')
         # -k KEY, --key=KEY
-        self.add_option('key', str, optional = True,
-                        description = 'if clustering, what prefix to use for geneIDs assigned '
-                        'by this script [default: prepG]')
+        self.add_option(
+            'key',
+            str,
+            optional=True,
+            description='if clustering, what prefix to use for geneIDs assigned '
+            'by this script [default: prepG]')
         # --legend=LEGEND writes a file if clustering is enabled, assessed via uap
 
-        self.add_option('run_id', str, optional=True, default="prepDEall",
-                        description="A name for the run. Since this step merges multiple samples "
-                        "into a single one, the run_id cannot be the sample name anymore.")
+        self.add_option(
+            'run_id',
+            str,
+            optional=True,
+            default="prepDEall",
+            description="A name for the run. Since this step merges multiple samples "
+            "into a single one, the run_id cannot be the sample name anymore.")
 
     def runs(self, run_ids_connections_files):
 
         # Compile the list of options
-        options=['length', 'pattern', 'cluster', 'string', 'key']
+        options = ['length', 'pattern', 'cluster', 'string', 'key']
 
-        set_options = [option for option in options if \
+        set_options = [option for option in options if
                        self.is_option_set_in_config(option)]
 
         option_list = list()
@@ -84,8 +102,8 @@ class StringTiePrepDE(AbstractStep):
                 if self.get_option(option):
                     option_list.append('--%s' % option)
             else:
-                option_list.append( '--%s' % option )
-                option_list.append( str(self.get_option(option)) )
+                option_list.append('--%s' % option)
+                option_list.append(str(self.get_option(option)))
 
         run_id = self.get_option('run_id')
 
@@ -100,17 +118,19 @@ class StringTiePrepDE(AbstractStep):
         with self.declare_run(run_id) as run:
 
             lstfile = run.add_temporary_file('input_list',
-                                             designation = 'input')
+                                             designation='input')
 
-            genematfile = run.add_output_file('gene_matrix',
-                                              '%s-prepDE_gene_count_matrix.csv' % run_id,
-                                              input_paths)
-            transmatfile = run.add_output_file('transcript_matrix',
-                                               '%s-prepDE_transcript_count_matrix.csv' % run_id,
-                                               input_paths)
+            genematfile = run.add_output_file(
+                'gene_matrix', '%s-prepDE_gene_count_matrix.csv' %
+                run_id, input_paths)
+            transmatfile = run.add_output_file(
+                'transcript_matrix',
+                '%s-prepDE_transcript_count_matrix.csv' %
+                run_id,
+                input_paths)
             legendfile = run.add_output_file('legend',
-                                               '%s-prepDE_legend.csv' % run_id,
-                                               input_paths)
+                                             '%s-prepDE_legend.csv' % run_id,
+                                             input_paths)
             stdout = run.add_output_file('log_stdout',
                                          '%s-prepDE_counts.stdout' % run_id,
                                          input_paths)
@@ -124,12 +144,12 @@ class StringTiePrepDE(AbstractStep):
                               '\n'.join(input_list)]
 
                 create_list_group.add_command(print_list,
-                                              stdout_path = lstfile)
+                                              stdout_path=lstfile)
 
             with run.new_exec_group() as prepDE_group:
 
                 stringtie_prep = [self.get_tool('prepDE'),
-                                   '-i', lstfile]
+                                  '-i', lstfile]
 
                 stringtie_prep.extend(option_list)
 
@@ -137,7 +157,6 @@ class StringTiePrepDE(AbstractStep):
                 stringtie_prep.extend(['-t', transmatfile])
                 stringtie_prep.extend(['--legend=%s' % legendfile])
 
-
                 prepDE_group.add_command(stringtie_prep,
-                                         stdout_path = stdout,
-                                         stderr_path = stderr)
+                                         stdout_path=stdout,
+                                         stderr_path=stderr)

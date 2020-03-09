@@ -4,7 +4,8 @@ import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class BwaGenerateIndex(AbstractStep):
     '''
@@ -24,26 +25,26 @@ class BwaGenerateIndex(AbstractStep):
 
         self.require_tool('bwa')
 
-        self.add_option('index-basename', str, optional = False,
+        self.add_option('index-basename', str, optional=False,
                         description="Prefix of the created index database")
 
     def runs(self, run_ids_connections_files):
 
         for run_id in run_ids_connections_files.keys():
             # Get the basename
-            index_basename =  "%s-%s" % (
+            index_basename = "%s-%s" % (
                 self.get_option('index-basename'), run_id)
 
             with self.declare_run(index_basename) as run:
                 with run.new_exec_group() as exec_group:
-                    refseq = run_ids_connections_files[run_id]\
-                             ['in/reference_sequence']
+                    refseq = run_ids_connections_files[run_id]['in/reference_sequence']
 
                     if refseq == [None]:
-                        raise StepError(self, "No reference sequence received.")
+                        raise StepError(
+                            self, "No reference sequence received.")
                     if len(refseq) != 1:
-                        raise StepError(self,
-                            "Reference sequence is not a single file.")
+                        raise StepError(
+                            self, "Reference sequence is not a single file.")
                     bwa_index = [self.get_tool('bwa'), 'index']
                     # Add index_basename
                     bwa_index.extend(['-p', index_basename])

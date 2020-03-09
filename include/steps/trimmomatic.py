@@ -44,7 +44,7 @@ class Trimmomatic(AbstractStep):
                         description="Path to trimmomatic.jar")
 
     def runs(self, run_ids_connections_files):
-         for run_id in run_ids_connections_files.keys():
+        for run_id in run_ids_connections_files.keys():
             trimmomatic_base = [self.get_tool('java')]
             trimmomatic_base.extend(('-jar', self.get_option('jar_path')))
 
@@ -57,7 +57,7 @@ class Trimmomatic(AbstractStep):
 
             if self.is_option_set_in_config('threads'):
                 trimmomatic_base.extend(('-threads',
-                                        str(self.get_option('threads'))))
+                                         str(self.get_option('threads'))))
 
             if self.is_option_set_in_config('phred-base'):
                 if self.get_option('phred-base') == 64:
@@ -72,30 +72,30 @@ class Trimmomatic(AbstractStep):
                     assert(len(option) in range(4, 7))
                     if option[1][-6:] != '.fasta':
                         raise Exception("Adapters should be provided as "
-                                            "FASTA-file.")
+                                        "FASTA-file.")
                     if int(option[2]) not in list(range(17)):
                         raise Exception("The alignment-seed can contain up "
-                                            "to 17 mismatches.")
+                                        "to 17 mismatches.")
                 elif option[0] == 'SLIDINGWINDOW':
                     assert(len(option[1:]) == 2)
                     if int(option[2]) not in list(range(33, 158)):
                         raise Exception("SLIDINGWINDOW: Specify a valid "
-                                            "PHRED-score.")
+                                        "PHRED-score.")
                 elif option[0] == 'MAXINFO':
                     assert(len(option[1:]) == 2)
                     if not 0 <= float(option[2]) <= 1:
                         raise Exception("Strictness should be set between "
-                                            " 0.0 and 1.0")
+                                        " 0.0 and 1.0")
                 elif option[0] == 'LEADING':
                     assert(len(option[1:]) == 1)
                     if int(option[1]) not in list(range(33, 158)):
                         raise Exception("LEADING: Specify a valid "
-                                            "PHRED-score.")
+                                        "PHRED-score.")
                 elif option[0] == 'TRAILING':
                     assert(len(option[1:]) == 1)
                     if int(option[1]) not in list(range(33, 158)):
                         raise Exception("TRAILING: Specify a valid "
-                                            "PHRED-score.")
+                                        "PHRED-score.")
                 elif option[0] == 'CROP':
                     assert(len(option[1:]) == 1)
                     assert(str(option[1]).isdigit())
@@ -126,7 +126,7 @@ class Trimmomatic(AbstractStep):
                         len(run_ids_connections_files[run_id]
                             ['in/second_read']):
                         raise Exception("Incorrect pairing of paired-end-"
-                                            "files in run %s" % run_id)
+                                        "files in run %s" % run_id)
                 for file_no in range(len(run_ids_connections_files[run_id]
                                          ['in/first_read'])):
 
@@ -157,8 +157,8 @@ class Trimmomatic(AbstractStep):
                                             'reverse',
                                             'reverse.unpaired')
                             for output_file in pe_out_files:
-                                option_list.append('%s.%s.fastq' % \
-                                        (file_id, output_file))
+                                option_list.append('%s.%s.fastq' %
+                                                   (file_id, output_file))
 
                         trimmomatic = trimmomatic_base[:]
                         trimmomatic.extend(option_list)

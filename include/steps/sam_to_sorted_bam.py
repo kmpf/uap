@@ -4,7 +4,8 @@ import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class SamToSortedBam(AbstractStep):
     '''
@@ -35,14 +36,14 @@ class SamToSortedBam(AbstractStep):
         # Step was tested for pigz release 2.3.1
         self.require_tool('pigz')
 
-        self.add_option('sort-by-name', bool, default = False)
-        self.add_option('genome-faidx', str, optional = False)
-        self.add_option('temp-sort-dir', str, optional = True,
-                        description = 'Intermediate sort files are stored into'
+        self.add_option('sort-by-name', bool, default=False)
+        self.add_option('genome-faidx', str, optional=False)
+        self.add_option('temp-sort-dir', str, optional=True,
+                        description='Intermediate sort files are stored into'
                         'this directory.')
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        self.add_option('dd-blocksize', str, optional=True, default="256k")
 
     def runs(self, run_ids_connections_files):
 
@@ -53,24 +54,25 @@ class SamToSortedBam(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    raise StepError(self, "Expected exactly one alignments file.")
+                    raise StepError(
+                        self, "Expected exactly one alignments file.")
                 else:
                     is_gzipped = True if os.path.splitext(input_paths[0])[1]\
-                                 in ['.gz', '.gzip'] else False
+                        in ['.gz', '.gzip'] else False
 
                 if self.is_option_set_in_config('temp-sort-dir'):
-                    sortpath = os.path.abspath(self.get_option('temp-sort-dir'))
+                    sortpath = os.path.abspath(
+                        self.get_option('temp-sort-dir'))
                     if not os.path.isdir(sortpath):
-                        #dir not present
+                        # dir not present
                         raise StepError(self, "Directory %s not found" %
-                                self.get_option('temp-sort-dir'))
+                                        self.get_option('temp-sort-dir'))
                     if not os.access(sortpath, os.W_OK):
                         #not accessible
                         raise StepError(self, "Directory %s not accessible." %
-                                self.get_option('temp-sort-dir'))
+                                        self.get_option('temp-sort-dir'))
                 else:
                     sortpath = './'
-
 
                 with run.new_exec_group() as exec_group:
 
@@ -122,7 +124,7 @@ class SamToSortedBam(AbstractStep):
                         ]
                         pipe.add_command(
                             dd_out,
-                            stdout_path = run.add_output_file(
+                            stdout_path=run.add_output_file(
                                 'alignments',
                                 '%s.sorted.bam' % run_id,
                                 input_paths)

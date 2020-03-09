@@ -12,12 +12,13 @@ from misc import UAPDumper
 
 '''
 By default, this script displays information about all runs of the pipeline
-configured in 'config.yaml'. But the displayed information can be narrowed 
+configured in 'config.yaml'. But the displayed information can be narrowed
 down via command line options.
 
 '''
 
 logger = logging.getLogger("uap_logger")
+
 
 def main(args):
     args.no_tool_checks = True
@@ -43,7 +44,10 @@ def main(args):
             report_header = "%s/%s -- Report" % (step_name, run_id)
             print("# " + report_header)
             print("# " + "=" * len(report_header) + "\n#")
-            dump = yaml.dump(report, Dumper=UAPDumper, default_flow_style = False)
+            dump = yaml.dump(
+                report,
+                Dumper=UAPDumper,
+                default_flow_style=False)
             for line in dump.split('\n'):
                 print("# " + line)
             exec_header = "%s/%s -- Commands" % (step_name, run_id)
@@ -55,10 +59,11 @@ def main(args):
                 line_end = ""
                 if len(pocs) > 1:
                     line_end = " &"
-                for count, poc in enumerate(exec_group.get_pipes_and_commands()):
+                for count, poc in enumerate(
+                        exec_group.get_pipes_and_commands()):
                     # for each pipe or command (poc)
                     # check if it is a pipeline ...
-                    
+
                     if isinstance(poc, pipeline_info.PipelineInfo):
                         cmd_header = goc_header + " -- %d. Pipeline" % count
                     elif isinstance(poc, command_info.CommandInfo):

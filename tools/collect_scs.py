@@ -171,7 +171,7 @@ def main(args):
 
         if str(n + 1) == args.rrna_aln_pos:
             (outd[n]['values'], outd['rnacomposition']) = \
-                    process_count_rRNA(args, f)
+                process_count_rRNA(args, f)
         else:
             outd[n]['values'] = process_bowtie2(f)
             # remove unaligned for all except last entry
@@ -179,7 +179,7 @@ def main(args):
                 del outd[n]['values']['unaligned']
 
     args.outfile.write(yaml.dump(outd, default_flow_style=False,
-                       default_style=''))
+                                 default_style=''))
 
 
 __version__ = '0.001'

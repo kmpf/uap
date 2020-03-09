@@ -30,8 +30,12 @@ class GffreadExtractTranscripts(AbstractStep):
         self.add_option('gtf', str, optional=True, default=None,
                         description="path to gtf file")
 
-        self.add_option('output-fasta-name', str, optional=False, default=None,
-                        description="name of the outputfile trancriptom myfasta.fa")
+        self.add_option(
+            'output-fasta-name',
+            str,
+            optional=False,
+            default=None,
+            description="name of the outputfile trancriptom myfasta.fa")
 
     def runs(self, run_ids_connections_files):
         run_id = self.get_option('output-fasta-name')
@@ -42,29 +46,28 @@ class GffreadExtractTranscripts(AbstractStep):
 
             cmd.append(self.get_option('output-fasta-name'))
 
-            for __, connection  in run_ids_connections_files.items():
+            for __, connection in run_ids_connections_files.items():
                 if 'in/fasta' in connection:
                     cmd.append('-g')
                     cmd.append(connection['in/fasta'][0])
                     rfiles.append(connection['in/fasta'][0])
                     continue
 
-
             if self.is_option_set_in_config('gtf'):
                 cmd.append(os.path.abspath(self.get_option('gtf')))
             else:
-                for __, connection  in run_ids_connections_files.items():
+                for __, connection in run_ids_connections_files.items():
                     if 'in/anno' in connection:
                         cmd.append(connection['in/anno'][0])
                         rfiles.append(connection['in/anno'][0])
                         continue
 
-
-
-            stderr_file = "%s-gffread_extract_transcripts-log_stderr.txt" % (run_id)
+            stderr_file = "%s-gffread_extract_transcripts-log_stderr.txt" % (
+                run_id)
             log_stderr = run.add_output_file("log_stderr",
                                              stderr_file, rfiles)
-            stdout_file = "%s-gffread_extract_transcripts-log_stdout.txt" % (run_id)
+            stdout_file = "%s-gffread_extract_transcripts-log_stdout.txt" % (
+                run_id)
             log_stdout = run.add_output_file("log_stdout",
                                              stdout_file, rfiles)
 

@@ -51,10 +51,10 @@ def exec_pre_post_calls(tool_id, info_key, info_command,
         try:
             proc = subprocess.Popen(
                 command,
-                stdin = None,
-                stdout = subprocess.PIPE,
-                stderr = subprocess.PIPE,
-                close_fds = True)
+                stdin=None,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                close_fds=True)
 
         except OSError as e:
             raise UAPError(
@@ -79,18 +79,19 @@ def exec_pre_post_calls(tool_id, info_key, info_command,
                 raise UAPError(msg % (tool_id, error))
 
             tool_check_info.update({
-                command_call : (' '.join(command)).strip(),
-                command_exit_code : proc.returncode
+                command_call: (' '.join(command)).strip(),
+                command_exit_code: proc.returncode
             })
             logger.info('Loading tool %s: %s' % (tool_id, error))
         else:
             tool_check_info.update({
-                command_call : (' '.join(command)).strip(),
-                command_exit_code : proc.returncode,
-                command_response : (output + error)
+                command_call: (' '.join(command)).strip(),
+                command_exit_code: proc.returncode,
+                command_response: (output + error)
             })
 
     return tool_check_info
+
 
 def check_tool(args):
     '''
@@ -104,7 +105,7 @@ def check_tool(args):
 
         # Load module(s) and execute command if configured
         for pre_cmd in (x for x in ('module_load', 'pre_command')
-                         if x in info):
+                        if x in info):
             tool_check_info = exec_pre_post_calls(
                 tool_id, pre_cmd, info[pre_cmd], tool_check_info)
 
@@ -117,23 +118,23 @@ def check_tool(args):
             used_path = find_executable(info['path'][0])
         else:
             raise TypeError('Unsupported format for path of tool "%s": %s' %
-                    (tool_id, info['path']))
+                            (tool_id, info['path']))
         command.append(info['get_version'])
         logger.info("Executing command: %s" % " ".join(command))
         try:
             proc = subprocess.Popen(
                 command,
-                stdin = subprocess.PIPE,
-                stdout = subprocess.PIPE,
-                stderr = subprocess.PIPE,
-                close_fds = True)
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                close_fds=True)
             proc.stdin.close()
         except OSError as e:
             raise UAPError("Error while checking Tool %s "
-                         "Error no.: %s Error message: %s\ncommand: %s "
-                         "\nSTDOUT-ERR: %s\n" %
-                         (info['path'], e.errno, e.strerror, command,
-                                 subprocess.PIPE))
+                           "Error no.: %s Error message: %s\ncommand: %s "
+                           "\nSTDOUT-ERR: %s\n" %
+                           (info['path'], e.errno, e.strerror, command,
+                            subprocess.PIPE))
         proc.wait()
         exit_code = None
         exit_code = proc.returncode
@@ -157,10 +158,11 @@ def check_tool(args):
                          if x in info):
             tool_check_info = exec_pre_post_calls(
                 tool_id, info_key, info[info_key], tool_check_info)
-    except:
+    except BaseException:
         logger.error(traceback.format_exc())
         raise
     return tool_id, tool_check_info
+
 
 class Pipeline(object):
     '''
@@ -212,7 +214,6 @@ class Pipeline(object):
             if self.git_diff != '':
                 logger.warning('THE GIT REPOSITORY HAS UNCOMMITED CHANGES!')
 
-
         """
         check if we got passed an 'arguments' parameter
         this parameter should contain a argparse.Namespace object
@@ -221,13 +222,11 @@ class Pipeline(object):
         if 'arguments' in kwargs:
             self.args = kwargs['arguments']
 
-
         '''
         Absolute path to the directory of the uap executable.
         It is used to circumvent path issues.
         '''
         self._uap_path = self.args.uap_path
-
 
         '''
         The cluster type to be used (must be one of the keys specified in
@@ -236,7 +235,8 @@ class Pipeline(object):
         self._cluster_config_path = os.path.join(
             self._uap_path, 'cluster/cluster-specific-commands.yaml')
         with open(self._cluster_config_path, 'r') as cluster_config_file:
-            self._cluster_config = yaml.load(cluster_config_file, Loader=yaml.FullLoader)
+            self._cluster_config = yaml.load(
+                cluster_config_file, Loader=yaml.FullLoader)
 
         try:
             # set cluster type
@@ -254,7 +254,8 @@ class Pipeline(object):
         User working directory.
         '''
 
-        self._config_path, self.config_name = os.path.split(self.args.config.name)
+        self._config_path, self.config_name = os.path.split(
+            self.args.config.name)
         '''
         Name of the YAML configuration file
         '''
@@ -343,9 +344,15 @@ class Pipeline(object):
         A set that stores all tools used by some step.
         '''
 
-
-        self.known_config_keys = {'destination_path', 'constants', 'cluster',
-                'steps', 'lmod', 'tools', 'base_working_directory', 'id'}
+        self.known_config_keys = {
+            'destination_path',
+            'constants',
+            'cluster',
+            'steps',
+            'lmod',
+            'tools',
+            'base_working_directory',
+            'id'}
         '''
         A set of accepted keys in the config.
         '''
@@ -355,8 +362,8 @@ class Pipeline(object):
         self.build_steps()
 
         configured_tools = set(tool for tool, conf in
-                self.config['tools'].items() if not
-                conf.get('atomatically_configured'))
+                               self.config['tools'].items() if not
+                               conf.get('atomatically_configured'))
         unused_tools = configured_tools - self.used_tools
         if unused_tools:
             logger.warning('Unused tool(s): %s' % list(unused_tools))
@@ -366,7 +373,8 @@ class Pipeline(object):
             step = self.get_step(step_name)
             self.tasks_in_step[step_name] = list()
             logger.debug("Collect now all tasks for step: %s" % step)
-            for run_index, run_id in enumerate(misc.natsorted(step.get_run_ids())):
+            for run_index, run_id in enumerate(
+                    misc.natsorted(step.get_run_ids())):
                 task = task_module.Task(self, step, run_id, run_index)
                 # if any run of a step contains an exec_groups,
                 # the task (step/run) is added to the task list
@@ -415,7 +423,7 @@ class Pipeline(object):
             if key not in self.known_config_keys:
                 raise UAPError('The key "%s" set in config is unknown.' % key)
 
-        if not 'id' in self.config:
+        if 'id' not in self.config:
             self.config['id'] = self.config_name
 
         self.config.setdefault('base_working_directory', self._config_path)
@@ -426,22 +434,26 @@ class Pipeline(object):
         if 'LMOD_CMD' in os.environ:
             self.config['lmod'].setdefault('path', os.environ['LMOD_CMD'])
         if 'MODULEPATH' in os.environ:
-            self.config['lmod'].setdefault('module_path', os.environ['MODULEPATH'])
+            self.config['lmod'].setdefault(
+                'module_path', os.environ['MODULEPATH'])
         lmod_configured = all(key in self.config['lmod']
-                for key in ['path', 'module_path'])
+                              for key in ['path', 'module_path'])
 
-        if not 'tools' in self.config or not isinstance(self.config['tools'], dict):
+        if 'tools' not in self.config or not isinstance(
+                self.config['tools'], dict):
             self.config['tools'] = dict()
         for tool, args in self.config['tools'].items():
-            if args is None or len(args)==0:
+            if args is None or len(args) == 0:
                 self.config['tools'][tool] = dict()
             self.config['tools'][tool].setdefault('path', tool)
             self.config['tools'][tool].setdefault('get_version', '--version')
             self.config['tools'][tool].setdefault('exit_code', 0)
             self.config['tools'][tool].setdefault('ignore_version', False)
-            if any(key in self.config['tools'][tool]
-                    for key in ['module_name', 'module_load', 'module_unload']) \
-            and not lmod_configured:
+            if any(
+                key in self.config['tools'][tool] for key in [
+                    'module_name',
+                    'module_load',
+                    'module_unload']) and not lmod_configured:
                 raise UAPError("The tool %s requires lmod, but lmod is not "
                                "loaded nor configured in %s." %
                                (tool, self.args.config.name))
@@ -453,57 +465,61 @@ class Pipeline(object):
                 self.config['tools'][tool].setdefault('module_unload', cmd)
 
         uap_tools_path = os.path.join(self._uap_path, 'tools')
-        uap_python = os.path.join(self._uap_path, "python_env", "bin", "python")
+        uap_python = os.path.join(
+            self._uap_path, "python_env", "bin", "python")
         for tool_file in os.listdir(uap_tools_path):
             tool_path = os.path.join(uap_tools_path, tool_file)
             if not tool_file.endswith('.py') or not os.path.isfile(tool_path):
                 continue
             tool = tool_file[:-3]
             auto_add = False
-            if not tool in self.config['tools'] or \
+            if tool not in self.config['tools'] or \
                     not isinstance(self.config['tools'][tool], dict):
-                        auto_add = True
-                        self.config['tools'][tool] = dict()
+                auto_add = True
+                self.config['tools'][tool] = dict()
             elif self.config['tools'][tool].get('atomatically_configured'):
                 auto_add = True
             if auto_add:
                 self.config['tools'][tool]['path'] = [uap_python, tool_path]
             else:
-                self.config['tools'][tool].setdefault('path', [uap_python, tool_path])
+                self.config['tools'][tool].setdefault(
+                    'path', [uap_python, tool_path])
             self.config['tools'][tool].setdefault('get_version', '--help')
             self.config['tools'][tool].setdefault('exit_code', 0)
             self.config['tools'][tool].setdefault('ignore_version', False)
-            self.config['tools'][tool].setdefault('atomatically_configured', auto_add)
+            self.config['tools'][tool].setdefault(
+                'atomatically_configured', auto_add)
 
-        if not 'destination_path' in self.config:
+        if 'destination_path' not in self.config:
             raise UAPError("Missing key: destination_path")
         if not os.path.exists(self.config['destination_path']):
             raise UAPError("Destination path does not exist: %s" %
-                            self.config['destination_path'])
+                           self.config['destination_path'])
 
         self.config['destination_path'] = \
-                os.path.abspath(self.config['destination_path'])
+            os.path.abspath(self.config['destination_path'])
 
-        if not 'cluster' in self.config or self.config['cluster'] is None:
+        if 'cluster' not in self.config or self.config['cluster'] is None:
             self.config['cluster'] = dict()
 
         if self.get_cluster_type() is not None:
-            self.config['cluster'].setdefault('default_submit_options',
-                    self.get_cluster_command('default_options'))
+            self.config['cluster'].setdefault(
+                'default_submit_options',
+                self.get_cluster_command('default_options'))
         for i in ['default_submit_options', 'default_pre_job_command',
-                'default_post_job_command']:
+                  'default_post_job_command']:
             self.config['cluster'].setdefault(i, '')
-        self.config['cluster'].setdefault('default_job_quota', 0) # no quota
+        self.config['cluster'].setdefault('default_job_quota', 0)  # no quota
 
     def get_config(self):
         return self.config
 
     def build_steps(self):
         self.steps = {}
-        if not 'steps' in self.config:
+        if 'steps' not in self.config:
             raise UAPError("Missing key: steps")
         re_simple_key = re.compile('^[a-zA-Z0-9_]+$')
-        re_complex_key = re.compile('^([a-zA-Z0-9_]+)\s+\(([a-zA-Z0-9_]+)\)$')
+        re_complex_key = re.compile(r'^([a-zA-Z0-9_]+)\s+\(([a-zA-Z0-9_]+)\)$')
 
         # step one: instantiate all steps
         for step_key, step_description in self.config['steps'].items():
@@ -526,7 +542,8 @@ class Pipeline(object):
                 # A step cannot be named 'temp' because we need the out/temp
                 # directory to store temporary files.
                 raise UAPError("A step name cannot be 'temp'.")
-            step_class = abstract_step.AbstractStep.get_step_class_for_key(module_name)
+            step_class = abstract_step.AbstractStep.get_step_class_for_key(
+                module_name)
             step = step_class(self)
 
             step.set_step_name(step_name)
@@ -538,10 +555,10 @@ class Pipeline(object):
         # step two: set dependencies
         for step_name, step in self.steps.items():
             for parent_step in step._options['_depends']:
-                if not parent_step in self.steps.keys():
+                if parent_step not in self.steps.keys():
                     raise UAPError("Step %s specifies an undefined "
-                                 "dependency: %s."
-                                 % (step_name, parent_step))
+                                   "dependency: %s."
+                                   % (step_name, parent_step))
                 step.add_dependency(self.steps[parent_step])
 
         # step three: perform topological sort
@@ -559,7 +576,7 @@ class Pipeline(object):
                 step = self.steps[step_name]
                 for dep in step.dependencies:
                     dep_name = dep.get_step_name()
-                    if not dep_name in assigned_steps:
+                    if dep_name not in assigned_steps:
                         is_ready = False
                         break
                 if is_ready and step.get_step_type() == 'source_controller':
@@ -589,30 +606,30 @@ class Pipeline(object):
     def add_file_dependencies(self, output_path, input_paths):
         if output_path in self.file_dependencies:
             raise UAPError("Different steps/runs/tags want to create "
-                         "the same output file: %s." % output_path)
+                           "the same output file: %s." % output_path)
         self.file_dependencies[output_path] = set(input_paths)
 
         for inpath in input_paths:
-            if not inpath in self.file_dependencies_reverse:
+            if inpath not in self.file_dependencies_reverse:
                 self.file_dependencies_reverse[inpath] = set()
             self.file_dependencies_reverse[inpath].add(output_path)
 
     def add_task_for_output_file(self, output_path, task_id):
         if output_path in self.task_id_for_output_file:
             raise UAPError("More than one step is trying to create the "
-                         "same output file: %s." % output_path)
+                           "same output file: %s." % output_path)
         self.task_id_for_output_file[output_path] = task_id
 
-        if not task_id in self.output_files_for_task_id:
+        if task_id not in self.output_files_for_task_id:
             self.output_files_for_task_id[task_id] = set()
         self.output_files_for_task_id[task_id].add(output_path)
 
     def add_task_for_input_file(self, input_path, task_id):
-        if not input_path in self.task_ids_for_input_file:
+        if input_path not in self.task_ids_for_input_file:
             self.task_ids_for_input_file[input_path] = set()
         self.task_ids_for_input_file[input_path].add(task_id)
 
-        if not task_id in self.input_files_for_task_id:
+        if task_id not in self.input_files_for_task_id:
             self.input_files_for_task_id[task_id] = set()
         self.input_files_for_task_id[task_id].add(input_path)
 
@@ -647,7 +664,7 @@ class Pipeline(object):
         checks whether all tools references by the configuration are available
         and records their versions as determined by ``[tool] --version`` etc.
         '''
-        if not 'tools' in self.config:
+        if 'tools' not in self.config:
             return
         pool = multiprocessing.Pool(4)
         if logger.getEffectiveLevel() <= 20:
@@ -661,15 +678,19 @@ class Pipeline(object):
         if not show_status:
             sys.stderr.write('[uap] Running tool check...\n')
             sys.stderr.flush()
-        iter_tools = tqdm(pool.imap_unordered(check_tool, self.config['tools'].items()),
-                        total=len(self.config['tools']),
-                        desc='tool check',
-                        bar_format='{desc}:{percentage:3.0f}%|{bar:10}{r_bar}',
-                        disable=not show_status)
+        iter_tools = tqdm(
+            pool.imap_unordered(
+                check_tool,
+                self.config['tools'].items()),
+            total=len(
+                self.config['tools']),
+            desc='tool check',
+            bar_format='{desc}:{percentage:3.0f}%|{bar:10}{r_bar}',
+            disable=not show_status)
         try:
             for tool_id, tool_check_info in iter_tools:
                 self.tool_versions[tool_id] = tool_check_info
-        except:
+        except BaseException:
             pool.terminate()
             iter_tools.close()
             raise
@@ -679,7 +700,7 @@ class Pipeline(object):
     def has_interactive_shell(self):
         return os.isatty(sys.stdout.fileno())
 
-    def notify(self, message, attachment = None):
+    def notify(self, message, attachment=None):
         '''
         prints a notification to the screen and optionally delivers the
         message on additional channels (as defined by the configuration)
@@ -693,22 +714,24 @@ class Pipeline(object):
                     host = match.group(1)
                     token = match.group(2)
                     args = ['curl', host, '-X', 'POST', '-d', '@-']
-                    proc = subprocess.Popen(args, stdin = subprocess.PIPE)
+                    proc = subprocess.Popen(args, stdin=subprocess.PIPE)
                     data = {'token': token, 'message': message}
                     if attachment:
                         data['attachment_name'] = attachment['name']
-                        data['attachment_data'] = base64.b64encode(attachment['data'])
+                        data['attachment_data'] = base64.b64encode(
+                            attachment['data'])
                     proc.stdin.write(json.dumps(data))
                     proc.stdin.close()
                     proc.wait()
                 else:
-                    logger.warning('Cloud not split patter into http(s)://host/token to notify: %s' %
-                            self.config['notify'])
-            except:
+                    logger.warning(
+                        'Cloud not split patter into http(s)://host/token to notify: %s' %
+                        self.config['notify'])
+            except BaseException:
                 # swallow all exception that happen here, failing notifications
                 # are no reason to crash the entire thing
                 logger.warning('Notification of "%s" failed with:' %
-                        (self.config['notify'], sys.exc_info()[0]))
+                               (self.config['notify'], sys.exc_info()[0]))
                 pass
 
     def get_cluster_job_ids(self):
@@ -719,7 +742,7 @@ class Pipeline(object):
         ids = set()
         for task in self.all_tasks_topologically_sorted:
             queued_ping_file = task.get_run().get_queued_ping_file()
-            failed_qpf = queued_ping_file + '.bad' # alternative location
+            failed_qpf = queued_ping_file + '.bad'  # alternative location
             try:
                 with open(queued_ping_file, 'r') as fl:
                     info = yaml.load(fl, Loader=yaml.FullLoader)
@@ -727,7 +750,7 @@ class Pipeline(object):
             except (IOError, TypeError) as e:
                 if os.path.exists(queued_ping_file):
                     raise UAPError('Could not read ping file %s: %s' %
-                            (queued_ping_file, e))
+                                   (queued_ping_file, e))
                 else:
                     try:
                         with open(failed_qpf, 'r') as fl:
@@ -736,7 +759,7 @@ class Pipeline(object):
                     except (IOError, TypeError) as e:
                         if os.path.exists(failed_qpf):
                             raise UAPError('Could not read ping file %s: %s' %
-                                    (failed_qpf, e))
+                                           (failed_qpf, e))
         return ids
 
     def get_task_with_list(self, as_string=False, exclusive=False):
@@ -765,9 +788,8 @@ class Pipeline(object):
             return [str(t) for t in self.all_tasks_topologically_sorted]
         return task_wish_list
 
-
-    def check_ping_files(self, print_more_warnings = False,
-                         print_details = False, fix_problems = False):
+    def check_ping_files(self, print_more_warnings=False,
+                         print_details=False, fix_problems=False):
         run_problems = list()
         queue_problems = list()
         bad_problems = list()
@@ -776,7 +798,7 @@ class Pipeline(object):
         try:
             stat_output = subprocess.check_output(
                 [self.get_cluster_command('stat')],
-                stderr = subprocess.STDOUT).decode('utf-8')
+                stderr=subprocess.STDOUT).decode('utf-8')
         except (KeyError, OSError, subprocess.CalledProcessError):
             # we don't have a stat tool here, if subprocess.CalledProcessError
             # is raised
@@ -813,7 +835,7 @@ class Pipeline(object):
             if stale:
                 try:
                     info = yaml.load(open(exec_ping_file, 'r'),
-                            Loader=yaml.FullLoader)
+                                     Loader=yaml.FullLoader)
                 except IOError as e:
                     if os.path.exists(exec_ping_file):
                         raise e
@@ -826,7 +848,7 @@ class Pipeline(object):
             if check_queue:
                 try:
                     info = yaml.load(open(queued_ping_file, 'r'),
-                            Loader=yaml.FullLoader)
+                                     Loader=yaml.FullLoader)
                 except IOError as e:
                     if os.path.exists(queued_ping_file):
                         raise e
@@ -837,23 +859,26 @@ class Pipeline(object):
                                                info['job_id']))
             try:
                 info = yaml.load(open(bad_queued_ping_file, 'r'),
-                        Loader=yaml.FullLoader)
+                                 Loader=yaml.FullLoader)
             except IOError as e:
                 if os.path.exists(bad_queued_ping_file):
                     raise e
             else:
                 bad_problems.append((task, bad_queued_ping_file,
-                                       info['submit_time'], info['job_id']))
+                                     info['submit_time'], info['job_id']))
 
         show_hint = False
 
         if len(run_problems) > 0:
             show_hint = True
-            label = "Warning: There are %d stale run ping files." % len(run_problems)
+            label = "Warning: There are %d stale run ping files." % len(
+                run_problems)
             print(label)
             if print_details:
                 print('-' * len(label))
-                run_problems = sorted(run_problems, key=itemgetter(2, 3), reverse=True)
+                run_problems = sorted(
+                    run_problems, key=itemgetter(
+                        2, 3), reverse=True)
                 for problem in run_problems:
                     task = problem[0]
                     path = problem[1]
@@ -866,31 +891,39 @@ class Pipeline(object):
 
         if len(queue_problems) > 0:
             show_hint = True
-            label = "Warning: There are %d tasks marked as queued, but they do not seem to be queued." % len(queue_problems)
+            label = "Warning: There are %d tasks marked as queued, but they do not seem to be queued." % len(
+                queue_problems)
             print(label)
             if print_details:
                 print('-' * len(label))
-                queue_problems = sorted(queue_problems, key=itemgetter(2), reverse=True)
+                queue_problems = sorted(
+                    queue_problems, key=itemgetter(2), reverse=True)
                 for problem in queue_problems:
                     task = problem[0]
                     path = problem[1]
                     start_time = problem[2]
                     job_id = problem[3]
-                    print("submitted job %s at %13s: %s" % (job_id, start_time, task))
+                    print(
+                        "submitted job %s at %13s: %s" %
+                        (job_id, start_time, task))
                 print("")
 
         if len(bad_problems) > 0:
-            label = "Info: Found %d queue files of failed tasks." % len(bad_problems)
+            label = "Info: Found %d queue files of failed tasks." % len(
+                bad_problems)
             print(label)
             if print_details:
                 print('-' * len(label))
-                bad_problems = sorted(bad_problems, key=itemgetter(2), reverse=True)
+                bad_problems = sorted(
+                    bad_problems, key=itemgetter(2), reverse=True)
                 for problem in bad_problems:
                     task = problem[0]
                     path = problem[1]
                     start_time = problem[2]
                     job_id = problem[3]
-                    print("submitted job %s at %13s: %s" % (job_id, start_time, task))
+                    print(
+                        "submitted job %s at %13s: %s" %
+                        (job_id, start_time, task))
                 print("")
 
         if fix_problems:
@@ -905,7 +938,7 @@ class Pipeline(object):
         if show_hint:
             if print_more_warnings and not print_details or not fix_problems:
                 print("Hint: Run 'uap %s fix-problems --details' to see the "
-                      "details."  % self.args.config.name)
+                      "details." % self.args.config.name)
             if print_more_warnings and not fix_problems:
                 print("Hint: Run 'uap %s fix-problems --first-error' to "
                       "investigate what happended." % self.args.config.name)
@@ -916,7 +949,7 @@ class Pipeline(object):
         else:
             print('No problematic ping files were found.')
 
-    def check_volatile_files(self, details = False, srsly = False):
+    def check_volatile_files(self, details=False, srsly=False):
         collected_files = set()
         for task in self.all_tasks_topologically_sorted:
             collected_files |= task.volatilize_if_possible(srsly)
@@ -942,21 +975,20 @@ class Pipeline(object):
             identity = dict()
             for key in ['test', 'answer']:
                 try:
-                    identity[key] = cluster_config[cluster_type]\
-                                        ['identity_%s' % key]
+                    identity[key] = cluster_config[cluster_type]['identity_%s' % key]
                 except KeyError:
                     raise UAPError("%s: Missing 'identity_%s' for %s"
-                                 "cluster type."
-                                 % (self._cluster_config_path,
-                                    key, cluster_type)
-                             )
+                                   "cluster type."
+                                   % (self._cluster_config_path,
+                                      key, cluster_type)
+                                   )
             # Now that we know let's test for that cluster
             if not isinstance(identity['answer'], list):
                 identity['answer'] = [identity['answer']]
             for answer in identity['answer']:
                 try:
                     if (subprocess.check_output(identity['test'])
-                        .decode('utf-8').startswith(answer)):
+                            .decode('utf-8').startswith(answer)):
                         return cluster_type
                 except OSError:
                     pass
@@ -967,25 +999,28 @@ class Pipeline(object):
         return self._cluster_type
 
     def set_cluster_type(self, cluster_type):
-        if cluster_type is not None and not cluster_type in self.get_cluster_config():
-            raise UAPError ('Cluster type "%s" not configured.' % cluster_type)
+        if cluster_type is not None and cluster_type not in self.get_cluster_config():
+            raise UAPError('Cluster type "%s" not configured.' % cluster_type)
         self._cluster_type = cluster_type
 
     '''
     Shorthand to retrieve a cluster-type-dependent command or filename
     (cc == cluster command).
     '''
+
     def get_cluster_command(self, key):
         ct = self.get_cluster_type()
         if key not in self.get_cluster_config()[ct].keys():
-            raise UAPError('The option "%s" is not available for the cluster "%s".' %
-                    (key, ct))
+            raise UAPError(
+                'The option "%s" is not available for the cluster "%s".' %
+                (key, ct))
         return self.get_cluster_config()[ct][key]
 
     '''
     Shorthand to retrieve a cluster-type-dependent command line part (this is a
     list)
     '''
+
     def get_cluster_command_cli_option(self, key, value):
         result = self.get_cluster_config()[self.get_cluster_type()][key]
         if isinstance(result, list):
@@ -999,7 +1034,7 @@ class Pipeline(object):
             i = 0
             for part in result:
                 if '%s' in part:
-                    options.append(part % value[i:i+part.count('%s')])
+                    options.append(part % value[i:i + part.count('%s')])
                     i += part.count('%s')
                 else:
                     options.append(part)

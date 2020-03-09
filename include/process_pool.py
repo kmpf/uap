@@ -1,3 +1,18 @@
+import yaml
+import traceback
+import time
+import tempfile
+import subprocess
+import signal
+import psutil
+import os
+import misc
+from logging import getLogger
+import hashlib
+import fcntl
+import errno
+import datetime
+import copy
 from uaperrors import UAPError
 '''
 This module can be used to launch child processes and wait for them.
@@ -6,35 +21,24 @@ Processes may either run on their own or pipelines can be built with them.
 
 import sys
 sys.path.append('./include/steps')
-import copy
-import datetime
-import errno
-import fcntl
-import hashlib
-from logging import getLogger
-import misc
-import os
-import psutil
-import signal
-import subprocess
-import tempfile
-import time
-import traceback
-import yaml
 
-logger=getLogger("uap_logger")
+logger = getLogger("uap_logger")
+
 
 class TimeoutException(Exception):
     pass
+
 
 def timeout_handler(signum, frame):
     time.sleep(3600)
     raise TimeoutException()
 
+
 def restore_sigpipe_handler():
     # http://www.chiark.greenend.org.uk/ucgi/~cjwatson/blosxom/2009-07-02-python-sigpipe.html
     signal.signal(signal.SIGPIPE, signal.SIG_DFL)
     os.setsid()
+
 
 class ProcessPool(object):
     '''
@@ -78,7 +82,8 @@ class ProcessPool(object):
 
     # signal names for numbers... kudos to
     # http://stackoverflow.com/questions/2549939/get-signal-names-from-numbers-in-python
-    SIGNAL_NAMES = dict((getattr(signal, n), n) for n in dir(signal) if n.startswith('SIG') and '_' not in n )
+    SIGNAL_NAMES = dict((getattr(signal, n), n) for n in dir(
+        signal) if n.startswith('SIG') and '_' not in n)
 
     class Pipeline(object):
         '''
@@ -89,6 +94,7 @@ class ProcessPool(object):
             with pool.Pipeline(pool) as pipeline:
                 # append processes to the pipeline here
         '''
+
         def __init__(self, pool):
             pool.launch_calls.append(self)
             self.append_calls = []
@@ -99,7 +105,7 @@ class ProcessPool(object):
         def __exit__(self, type, value, traceback):
             pass
 
-        def append(self, args, stdout_path = None, stderr_path = None, hints = {}):
+        def append(self, args, stdout_path=None, stderr_path=None, hints={}):
             '''
             Append a process to the pipeline. Parameters get stored and are passed
             to *ProcessPool.launch()* later, so the same behaviour applies.
@@ -185,15 +191,15 @@ class ProcessPool(object):
             try:
                 proc = subprocess.Popen(
                     command,
-                    stdin = None,
-                    stdout = subprocess.PIPE,
-                    stderr = subprocess.PIPE,
-                    close_fds = True)
+                    stdin=None,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    close_fds=True)
 
             except OSError as e:
                 raise UAPError("Error while executing '%s' "
-                             "Error no.: %s Error message: %s" %
-                             (" ".join(command), e.errno, e.strerror))
+                               "Error no.: %s Error message: %s" %
+                               (" ".join(command), e.errno, e.strerror))
 
             (output, error) = proc.communicate()
             exec(output)
@@ -214,8 +220,9 @@ class ProcessPool(object):
 
     def __enter__(self):
         if ProcessPool.current_instance is not None:
-            raise UAPError("Sorry, only one instance of ProcessPool allowed at "
-                         "a time.")
+            raise UAPError(
+                "Sorry, only one instance of ProcessPool allowed at "
+                "a time.")
         ProcessPool.current_instance = self
 
         # First we have to add the pre_command commands for execution
@@ -232,7 +239,8 @@ class ProcessPool(object):
             self.launch_pre_post_command(post_commands)
 
         # before everything is launched load the necessary modules
-        module_loads = set(self.get_run().get_step().get_module_loads().values())
+        module_loads = set(
+            self.get_run().get_step().get_module_loads().values())
         if len(module_loads) > 0:
             for module_load in module_loads:
                 self.load_unload_module(module_load)
@@ -243,7 +251,7 @@ class ProcessPool(object):
         # ...and wait until all child processes have exited
         try:
             self._wait()
-        except:
+        except BaseException:
             # pass log to step even if there was a problem
             self.get_run().get_step().append_pipeline_log(self.get_log())
             raise
@@ -252,7 +260,8 @@ class ProcessPool(object):
         self.get_run().get_step().append_pipeline_log(self.get_log())
 
         # after finishing gracefully unload modules
-        module_unloads = set(self.get_run().get_step().get_module_unloads().values())
+        module_unloads = set(
+            self.get_run().get_step().get_module_unloads().values())
         if len(module_unloads) > 0:
             for module_unload in module_unloads:
                 self.load_unload_module(module_unload)
@@ -263,7 +272,7 @@ class ProcessPool(object):
 
         ProcessPool.current_instance = None
 
-    def launch(self, args, stdout_path = None, stderr_path = None, hints = {}):
+    def launch(self, args, stdout_path=None, stderr_path=None, hints={}):
         '''
         Launch a process. Arguments, including the program itself, are passed in
         *args*. If the program is not a binary but a script which cannot be
@@ -295,7 +304,8 @@ class ProcessPool(object):
         '''
         Append a message to the pipeline log.
         '''
-        formatted_message = "[%s] %s" % (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), message)
+        formatted_message = "[%s] %s" % (
+            datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), message)
         logger.info(formatted_message)
         self.log_entries.append(formatted_message)
 
@@ -309,8 +319,10 @@ class ProcessPool(object):
         for pid in self.proc_order:
             if 'listener_for' in self.proc_details[pid]:
                 attach_info = self.proc_details[pid]['listener_for']
-                proc_details_copy[attach_info[0]][attach_info[1] + '_copy'] = copy.deepcopy(self.proc_details[pid])
-                del proc_details_copy[attach_info[0]][attach_info[1] + '_copy']['listener_for']
+                proc_details_copy[attach_info[0]][attach_info[1] + \
+                    '_copy'] = copy.deepcopy(self.proc_details[pid])
+                del proc_details_copy[attach_info[0]
+                                      ][attach_info[1] + '_copy']['listener_for']
             else:
                 proc_details_copy[pid] = copy.deepcopy(self.proc_details[pid])
 
@@ -331,15 +343,15 @@ class ProcessPool(object):
                 use_stdin = None
                 last_pid = None
                 for index, info in enumerate(pipeline.append_calls):
-                    use_stdin, pid = self._do_launch(info,
-                        index < len(pipeline.append_calls) - 1, use_stdin)
+                    use_stdin, pid = self._do_launch(
+                        info, index < len(pipeline.append_calls) - 1, use_stdin)
                     if last_pid is not None:
                         self.proc_details[pid]['use_stdin_of'] = last_pid
                     last_pid = pid
             else:
                 self._do_launch(info)
 
-    def _do_launch(self, info, keep_stdout_open = False, use_stdin = None):
+    def _do_launch(self, info, keep_stdout_open=False, use_stdin=None):
         '''
         Launch a process and after that, launch a copy process for *stdout* and
         *stderr* each.
@@ -362,11 +374,11 @@ class ProcessPool(object):
         # be passed on to another process
         proc = subprocess.Popen(
             args,
-            stdin = use_stdin,
-            stdout = subprocess.PIPE,
-            stderr = subprocess.PIPE,
-            preexec_fn = restore_sigpipe_handler,
-            close_fds = True
+            stdin=use_stdin,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            preexec_fn=restore_sigpipe_handler,
+            close_fds=True
         )
         pid = proc.pid
         self.popen_procs[pid] = proc
@@ -384,7 +396,7 @@ class ProcessPool(object):
             'stderr_path': stderr_path
         }
         message = "Launched %s in %s as PID %d (%s)." % \
-                (' '.join(args), os.getcwd(), pid, name)
+            (' '.join(args), os.getcwd(), pid, name)
         self.log(message)
 
         pipe = None
@@ -406,8 +418,10 @@ class ProcessPool(object):
             self.copy_process_reports[listener_pid] = report_path
 
             if sink_path is not None:
-                self.proc_details[listener_pid]['sink'] = os.path.basename(sink_path)
-                self.proc_details[listener_pid]['sink_full_path'] = os.path.abspath(sink_path)
+                self.proc_details[listener_pid]['sink'] = os.path.basename(
+                    sink_path)
+                self.proc_details[listener_pid]['sink_full_path'] = os.path.abspath(
+                    sink_path)
 
         if keep_stdout_open:
             os.close(pipe[1])
@@ -415,7 +429,14 @@ class ProcessPool(object):
         else:
             return None, pid
 
-    def _do_launch_copy_process(self, fin, fout_path, report_path, parent_pid, which, pipe):
+    def _do_launch_copy_process(
+            self,
+            fin,
+            fout_path,
+            report_path,
+            parent_pid,
+            which,
+            pipe):
         pid = os.fork()
         if pid == 0:
 
@@ -431,7 +452,7 @@ class ProcessPool(object):
                         freport.write(yaml.dump(report))
                 except (IOError, LookupError) as e:
                     logger.error("Eror while writing %s (%s): %s" %
-                            (report_path, type(e).__name__, e))
+                                 (report_path, type(e).__name__, e))
                     logger.debug(traceback.format_exc())
                 finally:
                     os._exit(0)
@@ -444,7 +465,8 @@ class ProcessPool(object):
                 os.close(pipe[0])
             fdout = None
             if fout_path is not None:
-                fdout = os.open(fout_path, os.O_WRONLY|os.O_CREAT|os.O_TRUNC)
+                fdout = os.open(fout_path, os.O_WRONLY |
+                                os.O_CREAT | os.O_TRUNC)
 
             checksum = hashlib.sha256()
             tail = b''
@@ -503,7 +525,9 @@ class ProcessPool(object):
                 'listener_for': [parent_pid, which],
                 'report_path': report_path
             }
-            self.log("Launched a copy process with PID %d to capture %s of PID %d." % (pid, which, parent_pid))
+            self.log(
+                "Launched a copy process with PID %d to capture %s of PID %d." %
+                (pid, which, parent_pid))
             if fout_path is not None:
                 self.log("...which gets also redirected to %s" % fout_path)
             return pid
@@ -534,15 +558,17 @@ class ProcessPool(object):
                 if pid in self.proc_details.keys():
                     name = self.proc_details[pid]['name']
                 logger.info("PID %s (%s), Signal: %s, Exit code: %s" %
-                                 (pid, name, signal_number, exit_code))
+                            (pid, name, signal_number, exit_code))
                 if pid == watcher_pid:
                     ProcessPool.process_watcher_pid = None
                     try:
                         with open(watcher_report_path, 'r') as f:
-                            self.process_watcher_report = yaml.load(f, Loader=yaml.FullLoader)
+                            self.process_watcher_report = yaml.load(
+                                f, Loader=yaml.FullLoader)
                     except IOError as e:
-                        logger.warning("Couldn't load watcher report from %s." %
-                              watcher_report_path)
+                        logger.warning(
+                            "Couldn't load watcher report from %s." %
+                            watcher_report_path)
                         logger.debug("Reading the watcher failed with: %s" % e)
                         raise
                     # the process watcher has terminated, which is cool, I guess
@@ -563,12 +589,14 @@ class ProcessPool(object):
                 if signal_number > 0:
                     what_happened = "has received signal %d" % signal_number
                     if signal_number in ProcessPool.SIGNAL_NAMES:
-                        what_happened = ("has received %s (signal number %d)" %
-                        (ProcessPool.SIGNAL_NAMES[signal_number], signal_number))
+                        what_happened = (
+                            "has received %s (signal number %d)" %
+                            (ProcessPool.SIGNAL_NAMES[signal_number], signal_number))
 
                 if pid in self.proc_details:
-                    self.log("%s (PID %d) %s." % (self.proc_details[pid]['name'],
-                                                  pid, what_happened))
+                    self.log(
+                        "%s (PID %d) %s." %
+                        (self.proc_details[pid]['name'], pid, what_happened))
                 else:
                     self.log("PID %d %s." % (pid, what_happened))
 
@@ -583,10 +611,13 @@ class ProcessPool(object):
                     # now kill it's predecessor
                     if 'use_stdin_of' in self.proc_details[pid]:
                         kpid = self.proc_details[pid]['use_stdin_of']
-                        self.log("Now killing %d, the predecessor of %d (%s)." %
-                                 (kpid, pid, self.proc_details[pid]['name']))
+                        self.log(
+                            "Now killing %d, the predecessor of %d (%s)." %
+                            (kpid, pid, self.proc_details[pid]['name']))
                         if kpid in self.proc_details.keys():
-                            logger.debug('PID %s is "%s".' % (kpid, self.proc_details[kpid]['name']))
+                            logger.debug(
+                                'PID %s is "%s".' %
+                                (kpid, self.proc_details[kpid]['name']))
                         self.ok_to_fail.add(kpid)
                         try:
                             os.kill(kpid, signal.SIGPIPE)
@@ -620,7 +651,7 @@ class ProcessPool(object):
                 if e.errno == errno.ECHILD:
                     # no more children running, we are done
                     logger.debug("ProcessPool: There are no child "
-                                     "processes left, exiting.\n")
+                                 "processes left, exiting.\n")
                     signal.alarm(0)
                     self.log("Cancelling timeout (if there was one), all "
                              "child processes have exited.")
@@ -632,7 +663,7 @@ class ProcessPool(object):
                     raise
             else:
                 if exit_code_with_signal != 0:
-                    if not pid in self.ok_to_fail:
+                    if pid not in self.ok_to_fail:
                         # Oops, something went wrong. See what happens and
                         # terminate all child processes in a few seconds.
                         if first_failed_pid is None:
@@ -642,8 +673,9 @@ class ProcessPool(object):
                         name = 'unkown'
                         if pid in self.proc_details.keys():
                             name = self.proc_details[pid]['name']
-                        self.log('Terminating all children of "%s" in %d seconds...' %
-                                 (name, ProcessPool.SIGTERM_TIMEOUT))
+                        self.log(
+                            'Terminating all children of "%s" in %d seconds...' %
+                            (name, ProcessPool.SIGTERM_TIMEOUT))
                         signal.alarm(ProcessPool.SIGTERM_TIMEOUT)
                     else:
                         name = 'unkown name'
@@ -658,10 +690,11 @@ class ProcessPool(object):
             os.waitpid(watcher_pid, 0)
             try:
                 with open(watcher_report_path, 'r') as f:
-                    self.process_watcher_report = yaml.load(f, Loader=yaml.FullLoader)
+                    self.process_watcher_report = yaml.load(
+                        f, Loader=yaml.FullLoader)
             except IOError as e:
                 logger.warning("Couldn't load watcher report from %s." %
-                      watcher_report_path)
+                               watcher_report_path)
                 logger.debug("Reading the watcher failed with: %s" % e)
         except OSError as e:
             if e.errno == errno.ESRCH:
@@ -677,10 +710,10 @@ class ProcessPool(object):
         if first_failed_pid:
             if was_reporter:
                 log = 'Reporter crashed %s exit with code %s' % \
-                        (first_failed_pid, exit_code_with_signal)
+                    (first_failed_pid, exit_code_with_signal)
                 if report is not None:
                     log += ' while writing into "%s".' % \
-                            self.proc_details[first_failed_pid]['report_path']
+                        self.proc_details[first_failed_pid]['report_path']
             else:
                 for pid in failed_pids:
                     name = 'unkown name'
@@ -690,9 +723,9 @@ class ProcessPool(object):
                     report = self.proc_details[stderr_listener]['tail']
                     if report and report != '':
                         logger.error('stderr tail of %s (%s):\n%s' %
-                                (pid, name, report))
+                                     (pid, name, report))
                 log = "Pipeline crashed while working in %s" % \
-                       self.get_run().get_temp_output_directory()
+                    self.get_run().get_temp_output_directory()
             self.log(log)
             raise UAPError(log)
 
@@ -741,12 +774,12 @@ class ProcessPool(object):
                 for pid in pid_list:
                     proc = procs[pid]
                     try:
-                        cpu_percent = proc.cpu_percent(interval = None)
+                        cpu_percent = proc.cpu_percent(interval=None)
                         # add values for all children
                         if pid != super_pid:
-                            for p in proc.children(recursive = True):
+                            for p in proc.children(recursive=True):
                                 try:
-                                    cpu_percent = p.cpu_percent(interval = None)
+                                    cpu_percent = p.cpu_percent(interval=None)
                                     called_cpu_stat_for_childpid.add(p.pid)
                                 except psutil.NoSuchProcess:
                                     pass
@@ -777,7 +810,8 @@ class ProcessPool(object):
                         try:
                             data = dict()
                             with proc.oneshot():
-                                data['cpu_percent'] = proc.cpu_percent(interval = None)
+                                data['cpu_percent'] = proc.cpu_percent(
+                                    interval=None)
                                 data['threads'] = len(proc.threads())
                                 data['memory_percent'] = proc.memory_percent()
                                 memory_info = proc.memory_info()
@@ -786,13 +820,14 @@ class ProcessPool(object):
 
                             # add values for all children
                             if pid != super_pid:
-                                for p in proc.children(recursive = True):
+                                for p in proc.children(recursive=True):
                                     try:
                                         with p.oneshot():
-                                            v = p.cpu_percent(interval = None)
+                                            v = p.cpu_percent(interval=None)
                                             if p.pid in called_cpu_stat_for_childpid:
                                                 data['cpu_percent'] += v
-                                            called_cpu_stat_for_childpid.add(p.pid)
+                                            called_cpu_stat_for_childpid.add(
+                                                p.pid)
                                             data['memory_percent'] += p.memory_percent()
                                             memory_info = p.memory_info()
                                             data['rss'] += memory_info.rss
@@ -815,20 +850,20 @@ class ProcessPool(object):
                         except psutil.NoSuchProcess:
                             del procs[pid]
 
-                    if not 'sum' in max_data:
+                    if 'sum' not in max_data:
                         max_data['sum'] = copy.deepcopy(sum_data)
                     for k, v in sum_data.items():
                         max_data['sum'][k] = max(max_data['sum'][k], v)
 
                     cpu_data = psutil.cpu_times()._asdict()
-                    total = sum(cpu_data.values())/100
-                    if not 'host cpu percentages' in max_data:
+                    total = sum(cpu_data.values()) / 100
+                    if 'host cpu percentages' not in max_data:
                         max_data['host cpu percentages'] = \
-                            {k:v/total for k, v in cpu_data.items()}
+                            {k: v / total for k, v in cpu_data.items()}
                     else:
                         for k, v in cpu_data.items():
-                            max_data['host cpu percentages'][k] = \
-                                max(max_data['host cpu percentages'][k], v/total)
+                            max_data['host cpu percentages'][k] = max(
+                                max_data['host cpu percentages'][k], v / total)
 
                     if len(procs) <= 2 and not first_call:
                         # there's nothing more to watch, write report and exit
@@ -836,11 +871,11 @@ class ProcessPool(object):
                         # the process watcher itself
                         report = dict()
                         io_data = psutil.disk_io_counters()._asdict()
-                        report['host io stats'] = \
-                            {k:io_data[k]-first_io[k] for k in io_data.keys()}
+                        report['host io stats'] = {
+                            k: io_data[k] - first_io[k] for k in io_data.keys()}
                         net_data = psutil.net_io_counters()._asdict()
-                        report['host net stats'] = \
-                            {k:net_data[k]-first_net[k] for k in net_data.keys()}
+                        report['host net stats'] = {
+                            k: net_data[k] - first_net[k] for k in net_data.keys()}
                         new_field = dict()
                         for field in report.values():
                             for key in field.keys():
@@ -850,11 +885,15 @@ class ProcessPool(object):
                         for field in max_data.values():
                             for key in field.keys():
                                 if key in ['rss', 'vms']:
-                                    new_field[key + ' unit'] = human_readable_size(field[key])
+                                    new_field[key +
+                                              ' unit'] = human_readable_size(field[key])
                         field.update(new_field)
                         report['max'] = max_data
                         with open(watcher_report_path, 'w') as f:
-                            f.write(yaml.dump(report, default_flow_style = False))
+                            f.write(
+                                yaml.dump(
+                                    report,
+                                    default_flow_style=False))
                         os._exit(0)
 
                     iterations += 1
@@ -870,7 +909,7 @@ class ProcessPool(object):
                 if pid in self.proc_details.keys():
                     name = self.proc_details[pid]['name']
                 logger.error("PID %s (%s) Process Watcher Exception: %s" %
-                      (pid, name, type(e).__name__, e))
+                             (pid, name, type(e).__name__, e))
             finally:
                 os._exit(0)
         else:
@@ -895,13 +934,14 @@ class ProcessPool(object):
                 except Exception as e:
                     if isinstance(e, OSError) and e.errno == errno.ESRCH:
                         logger.debug('Trying to kill already dead process %s.'
-                                % pid)
+                                     % pid)
                         return
                     name = 'unkown name'
                     if pid in self.proc_details.keys():
                         name = self.proc_details[pid]['name']
-                    logger.error("While trying to kill PID %s (%s) there was %s: %s" %
-                            (pid, name, type(e).__name__, e))
+                    logger.error(
+                        "While trying to kill PID %s (%s) there was %s: %s" %
+                        (pid, name, type(e).__name__, e))
                     logger.debug(traceback.format_exc())
 
     @classmethod
@@ -912,9 +952,8 @@ class ProcessPool(object):
         their children etc.
         '''
         proc = psutil.Process(os.getpid())
-        for p in proc.children(recursive = True):
+        for p in proc.children(recursive=True):
             try:
                 p.terminate()
             except psutil.NoSuchProcess:
                 pass
-

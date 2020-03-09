@@ -217,12 +217,14 @@ class FeatureCounts(AbstractStep):
                     if self.is_option_set_in_config('a'):
                         feature_path = self.get_option('a')
                     else:
-                        raise StepError(self,
-                            "No feature file could be found for '%s'" % run_id)
+                        raise StepError(
+                            self, "No feature file could be found for '%s'" %
+                            run_id)
                         exit(1)
                     if not os.path.isfile(feature_path):
-                        raise StepError(self, "Feature file '%s' is not a file."
-                                     % feature_path)
+                        raise StepError(
+                            self, "Feature file '%s' is not a file." %
+                            feature_path)
                         exit(1)
 
                 fc_exec_group = run.new_exec_group()
@@ -306,7 +308,7 @@ class FeatureCounts(AbstractStep):
 
                 fc.extend(['-a', os.path.abspath(feature_path)])
 
-                basename = run_id + '.' +  self.get_option('o')
+                basename = run_id + '.' + self.get_option('o')
                 fc.extend(['-o', basename])
 
                 fc.extend(input_paths)
@@ -319,11 +321,15 @@ class FeatureCounts(AbstractStep):
                                                  stdout_file, input_paths)
 
                 run.add_output_file('counts',
-                                    run_id + '.' +  self.get_option('o'),
+                                    run_id + '.' + self.get_option('o'),
                                     input_paths)
-                run.add_output_file('summary',
-                                    run_id + '.' + self.get_option('o') + '.summary',
-                                    input_paths)
+                run.add_output_file(
+                    'summary',
+                    run_id +
+                    '.' +
+                    self.get_option('o') +
+                    '.summary',
+                    input_paths)
                 fc_exec_group = run.new_exec_group()
                 fc_exec_group.add_command(fc, stdout_path=log_stdout,
                                           stderr_path=log_stderr)

@@ -1,13 +1,19 @@
+import traceback
+import yaml
+import sys
+import string
+import logging
+import argparse
 import os
 uap_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/python_env/bin/activate_this.py' % uap_path
-exec(compile(open(activate_this_file).read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
-import argparse
-import logging
-import string
-import sys
-import yaml
-import traceback
+exec(
+    compile(
+        open(activate_this_file).read(),
+        activate_this_file,
+        'exec'),
+    dict(
+        __file__=activate_this_file))
 
 '''
 Adjust sys.path so everything we need can be found
@@ -28,9 +34,9 @@ if steps_path not in sys.path:
 subcommand_path = '%s/include/subcommands' % uap_path
 if subcommand_path not in sys.path:
     sys.path.append(subcommand_path)
-
-from include.subcommands import *
 from uaperrors import *
+from include.subcommands import *
+
 
 def main():
     '''
@@ -66,7 +72,7 @@ def main():
         action="store_true",
         default=False,
         help="This option disables the otherwise mandatory checks for "
-	"tool availability and version")
+        "tool availability and version")
 
     # Definition of the final parser
 
@@ -78,7 +84,7 @@ def main():
         "For source code see: https://github.com/yigbt/uap",
         formatter_class=argparse.RawTextHelpFormatter,
         prog='uap'
-        )
+    )
 
     parser.add_argument(
         "config",
@@ -120,7 +126,7 @@ def main():
         dest="version",
         action="version",
         version="%%(prog)s %s" % uap_version,
-        help = "Display version information.")
+        help="Display version information.")
 
     subparsers = parser.add_subparsers(
         title="subcommands",
@@ -307,7 +313,6 @@ def main():
         default=False,
         help="Displays more information about task states.")
 
-
     status_parser.add_argument(
         "--job-ids",
         dest="job_ids",
@@ -446,7 +451,7 @@ def main():
         parents=[common_parser])
 
     run_info_parser.add_argument(
-         "--sources",
+        "--sources",
         dest="sources",
         action="store_true",
         default=False,
@@ -502,7 +507,7 @@ def main():
         if args.profiling is True:
             import cProfile
             cProfile.runctx('args.func(args)', {'args': args}, {},
-                    filename='uap.cprof')
+                            filename='uap.cprof')
         else:
             args.func(args)
     except (Exception, KeyboardInterrupt) as e:
@@ -513,15 +518,16 @@ def main():
         else:
             sys.exit(1)
 
+
 def _configure_logger(verbosity):
     logger = logging.getLogger("uap_logger")
 
     # create formatter for different log level
     debug_formatter = logging.Formatter(
-        fmt = '[uap][%(levelname)s] %(funcName)s in %(filename)s: %(message)s '
+        fmt='[uap][%(levelname)s] %(funcName)s in %(filename)s: %(message)s '
     )
     info_formatter = logging.Formatter(
-        fmt = '[uap][%(levelname)s]: %(message)s '
+        fmt='[uap][%(levelname)s]: %(message)s '
     )
     # create console handler
     ch = logging.StreamHandler()
@@ -559,7 +565,6 @@ def _configure_logger(verbosity):
     logger.info("Set log level to %s" % lvl)
 
     return logger
-
 
 
 if __name__ == '__main__':

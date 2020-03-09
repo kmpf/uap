@@ -6,6 +6,7 @@ from abstract_step import AbstractStep
 
 logger = getLogger('uap_logger')
 
+
 class SegemehlGenerateIndex(AbstractStep):
     '''
     The step segemehl_generate_index generates a index for given reference
@@ -30,23 +31,23 @@ class SegemehlGenerateIndex(AbstractStep):
         self.require_tool('pigz')
         self.require_tool('segemehl')
 
-        self.add_option('index-basename', str, optional = False,
-                        description= "Basename for created segemehl index.")
+        self.add_option('index-basename', str, optional=False,
+                        description="Basename for created segemehl index.")
 
         # Segemehl options
-        self.add_option('threads', int, optional = True,
-                        description = "start <n> threads (default:4)")
+        self.add_option('threads', int, optional=True,
+                        description="start <n> threads (default:4)")
 
         # Options for dd
-        self.add_option('dd-blocksize', str, optional = True, default = "2M")
+        self.add_option('dd-blocksize', str, optional=True, default="2M")
         # Options for pigz
-        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
+        self.add_option('pigz-blocksize', str, optional=True, default="2048")
 
     def runs(self, run_ids_connections_files):
 
         options = ['threads']
 
-        set_options = [option for option in options if \
+        set_options = [option for option in options if
                        self.is_option_set_in_config(option)]
 
         option_list = list()
@@ -70,31 +71,31 @@ class SegemehlGenerateIndex(AbstractStep):
 
             with self.declare_run(index_basename) as run:
                 # Get list of files for first/second read
-                refseq = run_ids_connections_files[run_id]\
-                         ['in/reference_sequence']
+                refseq = run_ids_connections_files[run_id]['in/reference_sequence']
 
                 if refseq == [None]:
                     raise StepError(self, "No reference sequence received via "
-                                 "connection in/reference_sequence.")
+                                    "connection in/reference_sequence.")
                 # Get names of FIFOs
                 refseq_fifos = list()
                 index_fifo = run.add_temporary_file(
-                    'segemehl-index-fifo', designation = 'output')
+                    'segemehl-index-fifo', designation='output')
 
                 with run.new_exec_group() as exec_group:
                     # 1. Create FIFOs ...
                     # 1.1 ... for the input sequence
                     for seq_file in refseq:
                         # Is the reference gzipped?
-                        root, ext = os.path.splitext(os.path.basename(seq_file))
+                        root, ext = os.path.splitext(
+                            os.path.basename(seq_file))
                         is_gzipped = True if ext in ['.gz', '.gzip'] else False
 
                         # Create FIFO for input file
                         seq_fifo = run.add_temporary_file(
                             '%s-fifo' %
                             os.path.basename(seq_file),
-                            suffix = '.fa',
-                            designation = 'input')
+                            suffix='.fa',
+                            designation='input')
                         refseq_fifos.append(seq_fifo)
 
                         mkfifo_seq = [
@@ -118,9 +119,12 @@ class SegemehlGenerateIndex(AbstractStep):
                                     '--decompress',
                                     '--stdout']
 
-                                dd_out = [self.get_tool('dd'),
-                                          'bs=%s' % self.get_option('dd-blocksize'),
-                                          'of=%s' % seq_fifo]
+                                dd_out = [
+                                    self.get_tool('dd'),
+                                    'bs=%s' %
+                                    self.get_option('dd-blocksize'),
+                                    'of=%s' %
+                                    seq_fifo]
                                 pipe.add_command(dd_refseq)
                                 pipe.add_command(pigz)
                                 pipe.add_command(dd_out)
@@ -147,7 +151,7 @@ class SegemehlGenerateIndex(AbstractStep):
 
                     exec_group.add_command(
                         segemehl,
-                        stderr_path = run.add_output_file(
+                        stderr_path=run.add_output_file(
                             'log',
                             '%s-segemehl-generate-index-log.txt' % run_id,
                             refseq
@@ -160,7 +164,7 @@ class SegemehlGenerateIndex(AbstractStep):
                                 'if=%s' % index_fifo]
                     exec_group.add_command(
                         dd_index,
-                        stdout_path = run.add_output_file(
+                        stdout_path=run.add_output_file(
                             'segemehl_index',
                             '%s.idx' % index_basename,
                             refseq)

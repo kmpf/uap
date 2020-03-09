@@ -4,7 +4,8 @@ import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class mergeNumpyZipArrays(AbstractStep):
     '''
@@ -27,7 +28,6 @@ class mergeNumpyZipArrays(AbstractStep):
 
         self.require_tool('merge_numpy_arrays.py')
 
-
     def runs(self, run_ids_connections_files):
         for run_id in run_ids_connections_files.keys():
             # Collect input_paths and labels for multiBamSummary
@@ -48,10 +48,10 @@ class mergeNumpyZipArrays(AbstractStep):
                     # TODO: where is subcommand coming from???
                     multi_bam_summary = [
                         self.get_tool('multiBamSummary'), subcommand]
-                    ## Append list of input BAM files
+                    # Append list of input BAM files
                     multi_bam_summary.append('--bamfiles')
                     multi_bam_summary.extend(input_paths)
-                    ## Append name of the output file
+                    # Append name of the output file
                     multi_bam_summary.append('--outFileName')
                     multi_bam_summary.append(
                         run.add_output_file(
@@ -60,17 +60,17 @@ class mergeNumpyZipArrays(AbstractStep):
                             input_paths
                         )
                     )
-                    ## Append list of BED files for BED-file subcommand
+                    # Append list of BED files for BED-file subcommand
                     if subcommand == "BED-file":
                         multi_bam_summary.append('--BED')
                         multi_bam_summary.extend(self.get_option('bed-file'))
-                    ## Append list of labels
+                    # Append list of labels
                     multi_bam_summary.append('--labels')
                     multi_bam_summary.extend(labels)
-                    ## Append number of processors
+                    # Append number of processors
                     multi_bam_summary.extend(['--numberOfProcessors',
                                               str(self.get_cores())])
-                    ## Append list of options
+                    # Append list of options
                     # TODO: optionlist dont exists!!!
                     multi_bam_summary.extend(option_list)
 
