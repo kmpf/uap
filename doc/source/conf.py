@@ -12,7 +12,6 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import stepdoc
 import sys
 import os
 import shlex
@@ -25,6 +24,7 @@ sys.path.insert(0, os.path.abspath('../../include'))
 sys.path.insert(0, os.path.abspath('../'))
 
 # stepdoc creates steps.rst file automatically
+import stepdoc
 
 stepdoc.main()
 
