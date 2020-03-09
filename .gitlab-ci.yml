@@ -30,7 +30,7 @@ steptests:
     - module load Python/3.6.6-foss-2018b
     - source python_env/bin/activate
     - cd uap_test
-    - python3 scripts/uap_test.py run-tests --uap-test-dir . --uap-path ../uap
+    - python scripts/uap_test.py run-tests --uap-test-dir . --uap-path ../uap
   dependencies:
     - prepare
   artifacts:
