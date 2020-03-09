@@ -1,5 +1,4 @@
 import base64
-import copy
 import datetime
 import json
 import signal
@@ -74,7 +73,7 @@ def exec_pre_post_calls(tool_id, info_key, info_command,
             )
             try:
                 exec(output)
-            except NameError as e:
+            except NameError:
                 msg = "Error while loading module '%s': \n%s"
                 raise UAPError(msg % (tool_id, error))
 
@@ -864,7 +863,6 @@ class Pipeline(object):
                     # this is not a JID
                     pass
 
-        now = datetime.datetime.now()
         for task in self.all_tasks_topologically_sorted:
             queued_ping_file = task.get_run().get_queued_ping_file()
             bad_queued_ping_file = queued_ping_file + '.bad'
@@ -929,8 +927,8 @@ class Pipeline(object):
 
         if len(queue_problems) > 0:
             show_hint = True
-            label = "Warning: There are %d tasks marked as queued, but they do not seem to be queued." % len(
-                queue_problems)
+            label = "Warning: There are %d tasks marked as queued, but they "\
+                    "do not seem to be queued." % len(queue_problems)
             print(label)
             if print_details:
                 print('-' * len(label))

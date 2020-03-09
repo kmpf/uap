@@ -1,7 +1,5 @@
 import traceback
-import yaml
 import sys
-import string
 import logging
 import argparse
 import os

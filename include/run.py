@@ -266,10 +266,10 @@ class Run(object):
             return cmd_by_eg
 
         # get commands
-        for eg_count, exec_group in enumerate(self.get_exec_groups()):
+        for eg_count, exec_g in enumerate(self.get_exec_groups()):
             eg_name = 'execution group %d' % eg_count
             cmd_by_eg[eg_name] = dict()
-            procs = exec_group.get_pipes_and_commands(sort=True)
+            procs = exec_g.get_pipes_and_commands(sort=True)
             for pipe_count, poc in enumerate(procs):
                 # for each pipe or command (poc)
                 # check if it is a pipeline ...
@@ -312,7 +312,6 @@ class Run(object):
             raise StopIteration
         new_dest = self.get_step().get_pipeline().config['destination_path']
         old_dest = anno_data['config']['destination_path']
-        end_time = anno_data['end_time']
         p = self.get_step().get_pipeline()
         is_volatile = self.get_step().is_volatile()
         for path, input_files in self.dependencies().items():
@@ -695,7 +694,7 @@ class Run(object):
                 try:
                     logger.info("Now deleting: %s" % tmp_file)
                     os.unlink(tmp_file)
-                except OSError as e:
+                except OSError:
                     pass
 
     def add_empty_output_connection(self, tag):
@@ -747,8 +746,8 @@ class Run(object):
             if output_file in \
                     self.get_output_files_for_out_connection(connection):
                 return self._output_files[connection][output_file]
-        raise UAPError("Sorry, your output '%s' file couldn't be found in"
-                       "the dictionary: %s." % (output_file, temp))
+        raise UAPError("Sorry, your output '%s' file couldn't be found" %
+                       output_file)
 
     def get_input_files_for_output_file_abspath(self, output_file):
         for connection in self.get_out_connections():
@@ -868,7 +867,7 @@ class Run(object):
         try:
             with open(anno_file, 'r') as fl:
                 return yaml.load(fl, Loader=yaml.FullLoader)
-        except IOError as e:
+        except IOError:
             if not os.path.exists(anno_file):
                 return False
             else:

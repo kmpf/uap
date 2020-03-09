@@ -11,28 +11,19 @@ steps can introduce files from outside the destination path into the pipeline.
 
 # 1. standard library imports
 import sys
-import copy
 from datetime import datetime
-import hashlib
 import inspect
 from logging import getLogger
 import os
 import re
-import random
 import signal
 import socket
-import string
-import io
-import subprocess
-import tempfile
-import textwrap
 import time
 import traceback
 from shutil import copyfile
 from tqdm import tqdm
 import multiprocessing
 # 2. related third party imports
-import psutil
 import yaml
 # 3. local application/library specific imports
 from uaperrors import UAPError
@@ -543,7 +534,6 @@ class AbstractStep(object):
                 # add the real output path
                 if output_path is not None and input_paths is not None:
                     known_paths[output_path] = {
-                        'type': 'output',
                         'designation': 'output',
                         'label': os.path.basename(output_path),
                         'type': 'step_file'}
@@ -551,7 +541,6 @@ class AbstractStep(object):
                     known_paths[
                         os.path.join(temp_directory, os.path.basename(
                             output_path))] = {
-                        'type': 'output',
                         'designation': 'output',
                         'label': "%s\\n(%s)" %
                                 (os.path.basename(output_path), tag),
@@ -560,7 +549,6 @@ class AbstractStep(object):
                     for input_path in input_paths:
                         if input_path is not None:
                             known_paths[input_path] = {
-                                'type': 'input',
                                 'designation': 'input',
                                 'label': os.path.basename(input_path),
                                 'type': 'step_file'}
@@ -1106,10 +1094,9 @@ class AbstractStep(object):
         if kwargs['optional'] and (kwargs['default'] is not None):
             if type(kwargs['default']) not in option_types:
                 raise UAPError(
-                    "In step: (%s) option: (%s) Type of default value (%s) does not match any of the "
-                    "declared possible types (%s)." %
-                    (self, key, type(
-                        kwargs['default']), option_types))
+                    "In step: (%s) option: (%s) Type of default value (%s) "
+                    "does not match any of the declared possible types (%s)." %
+                    (self, key, type(kwargs['default']), option_types))
 
         info = dict()
         info['types'] = type_tuple(option_types)
