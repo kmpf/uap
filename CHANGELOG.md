@@ -109,6 +109,8 @@
  * remove some deprecated code (#133)
  * deprecate connection constraints (#158)
  * moved to Python 3 (#92)
+ * PEP8 adjustments
+ * configure some GNU Core Utilities by default and ignore theire version (#161)
 
 ## 1.1 (20.01.2020)
 

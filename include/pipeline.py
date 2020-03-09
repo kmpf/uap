@@ -357,6 +357,38 @@ class Pipeline(object):
         A set of accepted keys in the config.
         '''
 
+        self.coreutils = {
+            'basename',
+            'cat',
+            'cp',
+            'cut',
+            'date',
+            'dd',
+            'dirname',
+            'du',
+            'head',
+            'ln',
+            'ls',
+            'mkdir',
+            'mkfifo',
+            'mv',
+            'paste',
+            'printf',
+            'pwd',
+            'seq',
+            'sleep',
+            'sort',
+            'rm',
+            'tail',
+            'tee',
+            'tr',
+            'uniq',
+            'wc'}
+        '''
+        Some GNU Core Utilities that are configured by default to be callable
+        by name and to ignore theire version in the output hash.
+        '''
+
         self.read_config(self.args.config)
         self.setup_lmod()
         self.build_steps()
@@ -442,6 +474,9 @@ class Pipeline(object):
         if 'tools' not in self.config or not isinstance(
                 self.config['tools'], dict):
             self.config['tools'] = dict()
+        for tool in self.coreutils:
+            self.config['tools'].setdefault(tool, dict())
+            self.config['tools'][tool].setdefault('ignore_version', True)
         for tool, args in self.config['tools'].items():
             if args is None or len(args) == 0:
                 self.config['tools'][tool] = dict()
