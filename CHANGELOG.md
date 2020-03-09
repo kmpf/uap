@@ -24,6 +24,7 @@
  * output hash not sensitive to order of commands within an execution group
  * set type of temporary files in annotation (#157)
  * use raw strings in regexes
+ * configure `fastq_sceen` in the uap config (#160)
 
 **Features**
  * use relative paths; uap output can now be moved (#115)
