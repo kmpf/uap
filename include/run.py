@@ -833,7 +833,7 @@ class Run(object):
         '''
         return (key in self._private_info)
 
-    def as_dict(self):
+    def as_dict(self, commands=False):
         result = OrderedDict([
             ('step_type', self.get_step().get_step_type()),
             ('step_name', self.get_step().get_step_name()),
@@ -844,7 +844,7 @@ class Run(object):
             ('private_info', self._private_info),
             ('public_info', self._public_info)
         ])
-        result.update(self.get_run_structure(commands=False))
+        result.update(self.get_run_structure(commands=commands))
         del result['tool_versions']
         del result['output']
         anno = self.written_anno_data()

@@ -49,7 +49,7 @@ def main(args):
         # print run infos of one or more specific tasks
         p = pipeline.Pipeline(arguments=args)
         for task in p.get_task_with_list():
-            report = task.get_run().as_dict()
+            report = task.get_run().as_dict(commands=True)
             print(yaml.dump(report, Dumper=misc.UAPDumper,
                             default_flow_style=False))
 
