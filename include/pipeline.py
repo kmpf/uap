@@ -441,8 +441,12 @@ class Pipeline(object):
 
     # read configuration and make sure it's good
     def read_config(self, config_file):
+
+        # read yaml
         self.config = yaml.load(config_file, Loader=yaml.FullLoader)
         config_file.close()
+
+        # was yaml an annotation file?
         if 'config' in self.config.keys():
             self.config = self.config['config']
             dest = os.path.join(self._config_path, '..', '..')
@@ -450,16 +454,20 @@ class Pipeline(object):
             print('[uap] Reading config from annotation file with destination '
                   '%s' % self.config['destination_path'])
 
+        # is the config valid
         for key in self.config.keys():
             if key not in self.known_config_keys:
                 raise UAPError('The key "%s" set in config is unknown.' % key)
 
+        # default id
         if 'id' not in self.config:
             self.config['id'] = self.config_name
 
+        # sew workin directory to work with relative paths
         self.config.setdefault('base_working_directory', self._config_path)
         os.chdir(self.config['base_working_directory'])
 
+        # configure lmod
         if 'lmod' not in self.config or self.config['lmod'] is None:
             self.config['lmod'] = dict()
         if 'LMOD_CMD' in os.environ:
@@ -470,6 +478,7 @@ class Pipeline(object):
         lmod_configured = all(key in self.config['lmod']
                               for key in ['path', 'module_path'])
 
+        # configure GNU Core Utilities
         if 'tools' not in self.config or not isinstance(
                 self.config['tools'], dict):
             self.config['tools'] = dict()
@@ -482,6 +491,8 @@ class Pipeline(object):
             self.config['tools'][tool].setdefault('ignore_version', True)
             self.config['tools'][tool].setdefault(
                 'atomatically_configured', auto_add)
+
+        # configure regular tools
         for tool, args in self.config['tools'].items():
             if not args:
                 self.config['tools'][tool] = dict()
@@ -504,6 +515,7 @@ class Pipeline(object):
                 cmd = '%s python unload %s' % (self.config['lmod']['path'], mn)
                 self.config['tools'][tool].setdefault('module_unload', cmd)
 
+        # configure tools that come with the uap
         uap_tools_path = os.path.join(self._uap_path, 'tools')
         uap_python = os.path.join(
             self._uap_path, "python_env", "bin", "python")
@@ -530,18 +542,18 @@ class Pipeline(object):
             self.config['tools'][tool].setdefault(
                 'atomatically_configured', auto_add)
 
+        # destination path
         if 'destination_path' not in self.config:
             raise UAPError("Missing key: destination_path")
         if not os.path.exists(self.config['destination_path']):
             raise UAPError("Destination path does not exist: %s" %
                            self.config['destination_path'])
-
         self.config['destination_path'] = \
             os.path.abspath(self.config['destination_path'])
 
+        # cluster
         if 'cluster' not in self.config or self.config['cluster'] is None:
             self.config['cluster'] = dict()
-
         if self.get_cluster_type() is not None:
             self.config['cluster'].setdefault(
                 'default_submit_options',
