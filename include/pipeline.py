@@ -111,13 +111,14 @@ def exec_pre_post_calls(tool_id, info_key, info_command,
                 exec(output)
             except NameError:
                 msg = "Error while loading module '%s': \n%s"
-                raise UAPError(msg % (tool_id, error))
+                raise UAPError(msg % (tool_id, error.decode('utf-8')))
 
             tool_check_info.update({
                 command_call: (' '.join(command)).strip(),
                 command_exit_code: proc.returncode
             })
-            logger.info('Loading tool %s: %s' % (tool_id, error))
+            logger.info('Loading tool %s: %s' %
+                        (tool_id, error.decode('utf-8')))
         else:
             tool_check_info.update({
                 command_call: (' '.join(command)).strip(),
