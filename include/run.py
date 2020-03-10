@@ -941,6 +941,7 @@ class Run(object):
 
         log['uap_version'] = p.args.uap_version
         log['git_tag'] = p.git_tag
+        log['git_status'] = p.git_status
         log['git_diff'] = p.git_diff
         log['git_version'] = p.git_version
 

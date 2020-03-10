@@ -218,7 +218,9 @@ class Pipeline(object):
         self.caught_signal = None
         self._cluster_type = None
         self.git_version = None
+        self.git_status = None
         self.git_diff = None
+        self.git_untracked = None
         self.git_tag = None
 
         '''use git diff to determine any changes in git
@@ -234,9 +236,21 @@ class Pipeline(object):
                          unavailable. Continue anyways""" % " ".join(command))
 
         if self.git_version:
-            command = ['git', 'diff']
+            command = ['git', 'status', '--porcelain']
+            try:
+                self.git_status = subprocess.check_output(command)
+            except subprocess.CalledProcessError:
+                logger.error("Execution of %s failed." % " ".join(command))
+
+            command = ['git', 'diff', 'HEAD']
             try:
                 self.git_diff = subprocess.check_output(command)
+            except subprocess.CalledProcessError:
+                logger.error("Execution of %s failed." % " ".join(command))
+
+            command = ['git', 'ls-files', '--others', '--exclude-standard']
+            try:
+                self.git_untracked = subprocess.check_output(command)
             except subprocess.CalledProcessError:
                 logger.error("Execution of %s failed." % " ".join(command))
 
@@ -249,6 +263,9 @@ class Pipeline(object):
             if self.git_diff:
                 logger.warning('THE GIT REPOSITORY HAS UNCOMMITED CHANGES:\n'
                                '%s' % self.git_diff.decode('utf-8'))
+            if self.git_untracked:
+                logger.warning('THE GIT REPOSITORY HAS UNTRACKED FILES:\n'
+                               '%s' % self.git_untracked.decode('utf-8'))
 
         """
         check if we got passed an 'arguments' parameter

@@ -25,7 +25,8 @@
  * set type of temporary files in annotation (#157)
  * use raw strings in regexes
  * configure `fastq_sceen` in the uap config (#160)
- * count_rRNA doese not fail silently for uncomressed input (#156)
+ * `count_rRNA` doese not fail silently for uncomressed input (#156)
+ * detect uncommitded changes even if they are staged
 
 **Features**
  * use relative paths; uap output can now be moved (#115)
@@ -80,6 +81,7 @@
  * implement `source_controller` step to detect changes in source inputs
  * show output hashing progress
  * warn if unused tools are configured
+ * git status --porcelain output with changes and untracked files in annotation files
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
