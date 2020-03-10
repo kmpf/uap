@@ -115,6 +115,7 @@
  * moved to Python 3 (#92)
  * PEP8 adjustments
  * configure some GNU Core Utilities by default and ignore theire version (#161)
+ * removed the already deprecated `io_step`
 
 ## 1.1 (20.01.2020)
 

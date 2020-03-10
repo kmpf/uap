@@ -922,14 +922,6 @@ class AbstractStep(object):
         you will get the cutadapt.Cutadapt class which you may then instantiate.
         """
 
-        # Attention, import statement in class method coming right up!
-        # Ok, this is strange, I know. But we need the io_step.IOStep class now
-        # because we want to test whether module members are a subclass of this
-        # and if we import it right at the beginning of this file, we would create
-        # a circular reference, because AbstractStep is imported at the beginning
-        # of io_step. There's probably a better solution, but I think it doesn't
-        # hurt, either. Here goes the awkward line:
-
         check_classes = [AbstractSourceStep, AbstractStep]
         for index, c in enumerate(check_classes):
 
