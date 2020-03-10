@@ -90,7 +90,7 @@ bcl2fastq2_source
   - **writing-threads** (int, optional) -- number of threads used for writing FASTQ data (=4)
 
 
-**Required tools:** bcl2fastq, mkdir
+**Required tools:** bcl2fastq, mkdir (coreutils)
 
 This step provides input files which already exists and therefore creates no tasks in the pipeline.
 
@@ -146,7 +146,7 @@ bcl2fastq_source
 
   - **with-failed-reads** (str, optional)
 
-**Required tools:** configureBclToFastq.pl, make, mkdir, mv
+**Required tools:** configureBclToFastq.pl, make, mkdir (coreutils), mv (coreutils)
 
 This step provides input files which already exists and therefore creates no tasks in the pipeline.
 
@@ -168,8 +168,8 @@ fastq_source
     dictionary which maps indices to sample names.
 
 **Output Connection**
-  - **out/first_read**
   - **out/second_read** (optional)
+  - **out/first_read**
 
 
 .. graphviz::
@@ -236,7 +236,7 @@ fetch_chrom_sizes_source
   - **ucsc-database** (str, required) -- Name of UCSC database e.g. hg38, mm9
 
 
-**Required tools:** cp, fetchChromSizes
+**Required tools:** cp (coreutils), fetchChromSizes
 
 This step provides input files which already exists and therefore creates no tasks in the pipeline.
 
@@ -351,7 +351,7 @@ raw_url_source
   - **url** (str, required) -- Download URL
 
 
-**Required tools:** cp, curl, dd, mkdir, pigz
+**Required tools:** cp (coreutils), curl, dd (coreutils), mkdir (coreutils), pigz
 
 This step provides input files which already exists and therefore creates no tasks in the pipeline.
 
@@ -384,7 +384,7 @@ raw_url_sources
   - **run-download-info** (dict, required) -- Dictionary of dictionaries. The keys are the names of the runs. The values are dictionaries whose keys are identical with the options of an 'raw_url_source' source step. An example: <name>: filename: <filename> hashing-algorithm: <hashing-algorithm> path: <path> secure-hash: <secure-hash> uncompress: <uncompress> url: <url>
 
 
-**Required tools:** cp, curl, dd, pigz
+**Required tools:** cp (coreutils), curl, dd (coreutils), pigz
 
 This step provides input files which already exists and therefore creates no tasks in the pipeline.
 
@@ -401,8 +401,8 @@ run_folder_source
     for all samples is coherent and unambiguous.
 
 **Output Connection**
-  - **out/first_read**
   - **out/second_read** (optional)
+  - **out/first_read**
 
 
 .. graphviz::
@@ -475,20 +475,20 @@ adapterremoval
     "Pipeline specific "input and output expected to be gzipped"
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read** (optional)
+  - **in/first_read**
 
 **Output Connection**
-  - **out/pair1.truncated** (optional) Format: **fastq** - Truncated first read of paired end reads.
-  - **out/collapsed** (optional)
   - **out/settings**
-  - **out/log_stdout**
+  - **out/collapsed** (optional)
   - **out/discarded**
+  - **out/log_stdout**
   - **out/log_stderr**
-  - **out/singleton.truncated** (optional)
-  - **out/collapsed.truncated** (optional)
-  - **out/pair2.truncated** (optional) Format: **fastq** - Truncated first secind of paired end reads.
   - **out/truncated** (optional) Format: **fastq** - Truncated single end reads.
+  - **out/pair1.truncated** (optional) Format: **fastq** - Truncated first read of paired end reads.
+  - **out/singleton.truncated** (optional)
+  - **out/pair2.truncated** (optional) Format: **fastq** - Truncated first secind of paired end reads.
+  - **out/collapsed.truncated** (optional)
 
 
 .. graphviz::
@@ -564,7 +564,7 @@ adapterremoval
   - **trimqualities** (bool, optional) -- If set, trim bases at 5'/3' termini with quality scores <= to --minquality value [current: off]
 
 
-**Required tools:** adapterremoval, mv
+**Required tools:** adapterremoval, mv (coreutils)
 
 **CPU Cores:** 1
 
@@ -578,8 +578,8 @@ bam_to_bedgraph_and_bigwig
   - **in/alignments**
 
 **Output Connection**
-  - **out/bedgraph**
   - **out/bigwig**
+  - **out/bedgraph**
 
 
 .. graphviz::
@@ -603,7 +603,7 @@ bam_to_bedgraph_and_bigwig
   - **chromosome-sizes** (str, required)
   - **temp-sort-dir** (str, optional)
 
-**Required tools:** bedGraphToBigWig, bedtools, sort
+**Required tools:** bedGraphToBigWig, bedtools, sort (coreutils)
 
 **CPU Cores:** 8
 
@@ -658,7 +658,7 @@ bam_to_genome_browser
   - **trackline** (dict, optional)
   - **trackopts** (dict, optional)
 
-**Required tools:** bedGraphToBigWig, bedToBigBed, bedtools, dd, mkfifo, pigz
+**Required tools:** bedGraphToBigWig, bedToBigBed, bedtools, dd (coreutils), mkfifo (coreutils), pigz
 
 **CPU Cores:** 8
 
@@ -688,17 +688,17 @@ bowtie2
     This step wraps release: bowtie2
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read** (optional)
+  - **in/first_read**
 
 **Output Connection**
-  - **out/met-file** (optional) - metrics file
-  - **out/un-conc** (optional) - pairs that didn't align concordantly
-  - **out/alignments**
-  - **out/al** (optional) - unpaired reads that aligned at least once
-  - **out/log_stderr**
   - **out/unaligned** (optional) -  unpaired reads that didn't align
+  - **out/un-conc** (optional) - pairs that didn't align concordantly
   - **out/al-conc** (optional) - pairs that aligned concordantly at least once
+  - **out/met-file** (optional) - metrics file
+  - **out/alignments**
+  - **out/log_stderr**
+  - **out/al** (optional) - unpaired reads that aligned at least once
 
 
 .. graphviz::
@@ -879,7 +879,7 @@ bowtie2
   - **very-sensitive-local** (bool, optional) -- Preset, same as: -D 20 -R 3 -N 0 -L 20 -i S,1,0.50
 
 
-**Required tools:** bowtie2, dd, mkfifo, pigz
+**Required tools:** bowtie2, dd (coreutils), mkfifo (coreutils), pigz
 
 **CPU Cores:** 6
 
@@ -958,7 +958,7 @@ bowtie2_generate_index
   - **threads** (int, optional) -- By default bowtie2-build is using only one thread. Increasing the number of threads will speed up the index building considerably in most cases.
 
 
-**Required tools:** bowtie2-build, dd, pigz
+**Required tools:** bowtie2-build, dd (coreutils), pigz
 
 **CPU Cores:** 6
 
@@ -989,8 +989,8 @@ bwa_backtrack
 
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
   - **out/alignments**
@@ -1080,7 +1080,7 @@ bwa_backtrack
   - **samse-r** (str, optional) -- Specify the read group in a format like '@RG ID:foo SM:bar'. [null]
 
 
-**Required tools:** bwa, dd, mkfifo, pigz
+**Required tools:** bwa, dd (coreutils), mkfifo (coreutils), pigz
 
 **CPU Cores:** 8
 
@@ -1145,8 +1145,8 @@ bwa_mem
         bwa mem [options] <bwa-index> <first-read.fastq> [<second-read.fastq>]         > <sam-output>
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
   - **out/alignments**
@@ -1240,7 +1240,7 @@ bwa_mem
   - **y** (int, optional) -- seed occurrence for the 3rd round seeding [20]
 
 
-**Required tools:** bwa, dd, mkfifo, pigz
+**Required tools:** bwa, dd (coreutils), mkfifo (coreutils), pigz
 
 **CPU Cores:** 6
 
@@ -1281,7 +1281,7 @@ cat_text
   - **run_id** (str, optional)    - default value: merged
 
 
-**Required tools:** cat
+**Required tools:** cat (coreutils)
 
 **CPU Cores:** 8
 
@@ -1304,13 +1304,13 @@ chimpipe
     http://chimpipe.readthedocs.io/en/latest/index.html
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
   - **out/tar_archive**
-  - **out/log_stderr**
   - **out/log_stdout**
+  - **out/log_stderr**
 
 
 .. graphviz::
@@ -1354,7 +1354,7 @@ chimpipe
   - **transcriptome_keys** (str, required) -- Transcriptome to genome conversion keys
 
 
-**Required tools:** chimpipe, mkdir, rm, tar
+**Required tools:** chimpipe, mkdir (coreutils), rm (coreutils), tar
 
 **CPU Cores:** 6
 
@@ -1379,8 +1379,8 @@ chromhmm_binarizebam
   - **in/alignments**
 
 **Output Connection**
-  - **out/alignments**
   - **out/metrics**
+  - **out/alignments**
 
 
 .. graphviz::
@@ -1434,7 +1434,7 @@ chromhmm_binarizebam
   - **w** (int, optional) -- This determines the extent of the spatial smoothing in computing the local enrichment for control reads. The local enrichment for control signal in the x-th bin on the chromosome after adding pseudocountcontrol is computed based on the average control counts for all bins within x-w and x+w. If no controldir is specified, then this option is ignored. The default value is 5.
 
 
-**Required tools:** ChromHMM, echo, ln
+**Required tools:** ChromHMM, echo, ln (coreutils)
 
 **CPU Cores:** 8
 
@@ -1525,7 +1525,7 @@ chromhmm_learnmodel
   - **z** (int, optional) -- This parameter determines the threshold at which to set extremely low transition probabilities to 0 durining training. Setting extremely low transition probabilities makes model learning more efficient with essentially no impact on the final results. If a transition probability falls below 10^-zerotransitionpower during training it is set to 0. Making this parameter to low and thus the cutoff too high can potentially cause some numerical instability. By default this parameter is set to 8.
 
 
-**Required tools:** ChromHMM, ls, mkdir, rm, tar, xargs
+**Required tools:** ChromHMM, ls (coreutils), mkdir (coreutils), rm (coreutils), tar, xargs
 
 **CPU Cores:** 8
 
@@ -1567,8 +1567,6 @@ collect_scs
   - **rrna-aln-pos** (str, required)
   - **types** (list, required)
 
-**Required tools:** collect_scs
-
 **CPU Cores:** 1
 
 .. index:: copy_file
@@ -1603,7 +1601,7 @@ copy_file
       copy_file -> out_1;
    }
 
-**Required tools:** cp
+**Required tools:** cp (coreutils)
 
 **CPU Cores:** 1
 
@@ -1638,7 +1636,7 @@ count_rRNA
       count_rRNA -> out_1;
    }
 
-**Required tools:** cut, grep, pigz, samtools, sort, uniq
+**Required tools:** cut (coreutils), grep, pigz, samtools, sort (coreutils), uniq (coreutils)
 
 **CPU Cores:** 8
 
@@ -1664,11 +1662,11 @@ cuffcompare
   - **in/features**
 
 **Output Connection**
-  - **out/stats**
-  - **out/tracking**
   - **out/loci**
-  - **out/log_stderr**
   - **out/features**
+  - **out/stats**
+  - **out/log_stderr**
+  - **out/tracking**
 
 
 .. graphviz::
@@ -1749,10 +1747,10 @@ cufflinks
 
 **Output Connection**
   - **out/skipped**
-  - **out/genes-fpkm**
-  - **out/log_stderr**
   - **out/features**
   - **out/isoforms_fpkm**
+  - **out/genes-fpkm**
+  - **out/log_stderr**
 
 
 .. graphviz::
@@ -1864,7 +1862,7 @@ cufflinks
   - **verbose** (bool, optional) -- Print lots of status updates and other diagnostic information. Default: FALSE
 
 
-**Required tools:** cufflinks, mkdir, mv
+**Required tools:** cufflinks, mkdir (coreutils), mv (coreutils)
 
 **CPU Cores:** 6
 
@@ -1889,9 +1887,9 @@ cuffmerge
 
 **Output Connection**
   - **out/assemblies**
-  - **out/log_stderr**
   - **out/features**
   - **out/run_log**
+  - **out/log_stderr**
 
 
 .. graphviz::
@@ -1927,7 +1925,7 @@ cuffmerge
     - default value: magic
 
 
-**Required tools:** cuffmerge, mkdir, mv, printf
+**Required tools:** cuffmerge, mkdir (coreutils), mv (coreutils), printf (coreutils)
 
 **CPU Cores:** 6
 
@@ -1947,14 +1945,14 @@ cutadapt
 
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read** (optional)
+  - **in/first_read**
 
 **Output Connection**
-  - **out/log_first_read**
-  - **out/first_read**
   - **out/log_second_read** (optional)
   - **out/second_read** (optional)
+  - **out/log_first_read**
+  - **out/first_read**
 
 
 .. graphviz::
@@ -2055,7 +2053,7 @@ cutadapt
   - **zero-cap** (bool, optional) -- Change negative quality values to zero. This is enabled by default when -c/--colorspace is also enabled. Use the above option to disable it.
 
 
-**Required tools:** cat, cutadapt, dd, mkfifo, pigz
+**Required tools:** cat (coreutils), cutadapt, dd (coreutils), mkfifo (coreutils), pigz
 
 **CPU Cores:** 4
 
@@ -2203,8 +2201,8 @@ deepTools_bamPEFragmentSize
   - **in/alignments**
 
 **Output Connection**
-  - **out/fragment_size_plots**
   - **out/fragment_size_stats**
+  - **out/fragment_size_plots**
 
 
 .. graphviz::
@@ -2442,9 +2440,9 @@ discardLargeSplitsAndPairs
   - **in/alignments**
 
 **Output Connection**
-  - **out/stats**
-  - **out/alignments**
   - **out/log**
+  - **out/alignments**
+  - **out/stats**
 
 
 .. graphviz::
@@ -2472,7 +2470,7 @@ discardLargeSplitsAndPairs
   - **N_splits** (str, required) -- Size of the skipped region within a split read (in nucleotides). Split Reads that skip more nt than this value are discarded.
 
 
-**Required tools:** dd, pigz, samtools
+**Required tools:** dd (coreutils), pigz, samtools
 
 **CPU Cores:** 4
 
@@ -2494,11 +2492,12 @@ fastq_screen
   - **in/first_read**
 
 **Output Connection**
-  - **out/fqc_report**
   - **out/fqc_image**
+  - **out/tagged_filter** (optional)
+  - **out/fastq_screen.conf** (optional)
+  - **out/fqc_report**
   - **out/fqc_html**
   - **out/log_stdout**
-  - **out/tagged_filter** (optional)
   - **out/log_stderr**
   - **out/tagged** (optional)
 
@@ -2514,33 +2513,39 @@ fastq_screen
       fastq_screen [style=filled, fillcolor="#fce94f"];
       in_0 [label="first_read"];
       in_0 -> fastq_screen;
-      out_1 [label="fqc_html"];
+      out_1 [label="fastq_screen.conf", style=filled, fillcolor="#a7a7a7"];
       fastq_screen -> out_1;
-      out_2 [label="fqc_image"];
+      out_2 [label="fqc_html"];
       fastq_screen -> out_2;
-      out_3 [label="fqc_report"];
+      out_3 [label="fqc_image"];
       fastq_screen -> out_3;
-      out_4 [label="log_stderr"];
+      out_4 [label="fqc_report"];
       fastq_screen -> out_4;
-      out_5 [label="log_stdout"];
+      out_5 [label="log_stderr"];
       fastq_screen -> out_5;
-      out_6 [label="tagged", style=filled, fillcolor="#a7a7a7"];
+      out_6 [label="log_stdout"];
       fastq_screen -> out_6;
-      out_7 [label="tagged_filter", style=filled, fillcolor="#a7a7a7"];
+      out_7 [label="tagged", style=filled, fillcolor="#a7a7a7"];
       fastq_screen -> out_7;
+      out_8 [label="tagged_filter", style=filled, fillcolor="#a7a7a7"];
+      fastq_screen -> out_8;
    }
 
 **Options:**
-  - **config** (str, required) -- Manually specify a location for the configuration.
+  - **config** (str, optional) -- Manually specify a location for the configuration.
 
   - **cores** (int, required)    - default value: 10
+
+  - **databases** (dict, optional) -- Manually specify a location for the configuration. E.g.: fastq_screen: databases: Human: /path/to/human/bowtie2/index
+
+  - **keep config** (bool, optional) -- Keep the generated fastq_screen.conf for each run (only if databases are specified).
 
   - **nohits** (bool, optional) -- Writes to a file the sequences that did not map to any of the specified genomes. This option is equivalent to specifying --tag --filter 0000 (number of zeros corresponds to the number of genomes screened). By default the whole input file will be mapped, unless overridden by --subset.
 
   - **subset** (int, optional) -- Don't use the whole sequence file, but create a temporary dataset of this specified number of reads. The dataset created will be of approximately (within a factor of 2) of this size. If the real dataset is smaller than twice the specified size then the whole dataset will be used. Subsets will be taken evenly from throughout the whole original dataset. By Default FastQ Screen runs with this parameter set to 100,000. To process an entire dataset however, adjust --subset to 0.
 
 
-**Required tools:** bowtie2, fastq_screen, mv, rm
+**Required tools:** bowtie2, fastq_screen, mv (coreutils), printf (coreutils), rm (coreutils)
 
 **CPU Cores:** 10
 
@@ -2560,16 +2565,16 @@ fastqc
     Tested fastqc release: 0.11.2
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read** (optional)
+  - **in/first_read**
 
 **Output Connection**
+  - **out/first_read_fastqc_report**
+  - **out/second_read_fastqc_report** (optional)
+  - **out/second_read_log_stderr** (optional)
+  - **out/first_read_log_stderr**
   - **out/second_read_fastqc_report_webpage** (optional)
   - **out/first_read_fastqc_report_webpage**
-  - **out/first_read_log_stderr**
-  - **out/first_read_fastqc_report**
-  - **out/second_read_log_stderr** (optional)
-  - **out/second_read_fastqc_report** (optional)
 
 
 .. graphviz::
@@ -2629,7 +2634,7 @@ fastqc
   - **threads** (int, optional) -- Specifies the number of files which can be processed simultaneously. Each thread will be allocated 250MB of memory so you should not run more threads than your available memory will cope with, and not more than 6 threads on a 32 bit machine
 
 
-**Required tools:** fastqc, mkdir, mv
+**Required tools:** fastqc, mkdir (coreutils), mv (coreutils)
 
 **CPU Cores:** 4
 
@@ -2649,12 +2654,12 @@ fastqsample
     (paired end)
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read** (optional)
+  - **in/first_read**
 
 **Output Connection**
-  - **out/first_read**
   - **out/second_read** (optional)
+  - **out/first_read**
 
 
 .. graphviz::
@@ -2692,7 +2697,7 @@ fastqsample
     - default value: 1234
 
 
-**Required tools:** fastq-sample, mv, pigz, rm
+**Required tools:** fastq-sample, mv (coreutils), pigz, rm (coreutils)
 
 **CPU Cores:** 1
 
@@ -2713,12 +2718,12 @@ fastx_quality_stats
     Tested fastqc release: 0.0.13
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
-  - **out/first_read_quality_stats**
   - **out/second_read_quality_stats**
+  - **out/first_read_quality_stats**
 
 
 .. graphviz::
@@ -2750,7 +2755,7 @@ fastx_quality_stats
   - **quality** (int, optional)    - default value: 33
 
 
-**Required tools:** cat, dd, fastx_quality_stats, mkfifo, pigz
+**Required tools:** cat (coreutils), dd (coreutils), fastx_quality_stats, mkfifo (coreutils), pigz
 
 **CPU Cores:** 4
 
@@ -2791,7 +2796,7 @@ fastx_reverse_complement
   - **prefix** (str, optional) -- Add Prefix to sample name
 
 
-**Required tools:** cat, fastx_reverse_complement, pigz
+**Required tools:** cat (coreutils), fastx_reverse_complement, pigz
 
 **CPU Cores:** 1
 
@@ -2809,10 +2814,10 @@ feature_counts
   - **in/alignments**
 
 **Output Connection**
-  - **out/log_stdout**
   - **out/counts**
-  - **out/log_stderr**
   - **out/summary**
+  - **out/log_stdout**
+  - **out/log_stderr**
 
 
 .. graphviz::
@@ -2964,12 +2969,12 @@ fix_cutadapt
     one of them has been completely removed by cutadapt (or any other software).
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
-  - **out/first_read**
   - **out/second_read**
+  - **out/first_read**
 
 
 .. graphviz::
@@ -2997,7 +3002,7 @@ fix_cutadapt
   - **pigz-blocksize** (str, optional)    - default value: 2048
 
 
-**Required tools:** cat, dd, mkfifo, pigz
+**Required tools:** cat (coreutils), dd (coreutils), mkfifo (coreutils), pigz
 
 **CPU Cores:** 4
 
@@ -3019,13 +3024,13 @@ fusioncatcher
 
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
   - **out/tar_archive**
-  - **out/log_stderr**
   - **out/log_stdout**
+  - **out/log_stderr**
 
 
 .. graphviz::
@@ -3058,7 +3063,7 @@ fusioncatcher
   - **keep-unmapped-read** (bool, optional)
   - **skip-filter-adapter** (bool, optional)
 
-**Required tools:** fusioncatcher, mkdir, rm, tar
+**Required tools:** fusioncatcher, mkdir (coreutils), rm (coreutils), tar
 
 **CPU Cores:** 6
 
@@ -3087,11 +3092,11 @@ gffcompare_single
   - **in/assembling**
 
 **Output Connection**
-  - **out/stats**
-  - **out/tracking**
   - **out/loci**
   - **out/combined**
+  - **out/stats**
   - **out/log_stderr**
+  - **out/tracking**
 
 
 .. graphviz::
@@ -3147,7 +3152,7 @@ gffcompare_single
   - **s** (str, optional) -- path to genome sequences (optional); this can be either a multi-FASTA file or a directory containing single-fasta files (one for each contig); repeats must be soft-masked (lower case) in order to be able to classify transfrags as repeats
 
 
-**Required tools:** gffcompare, mkdir, mv
+**Required tools:** gffcompare, mkdir (coreutils), mv (coreutils)
 
 **CPU Cores:** 2
 
@@ -3164,13 +3169,13 @@ gffread_extract_transcripts
     gffread -w transcripts.fa -g /path/to/genome.fa transcripts.gtf
 
 **Input Connection**
-  - **in/anno**
   - **in/fasta**
+  - **in/anno**
 
 **Output Connection**
   - **out/fasta**
-  - **out/log_stderr**
   - **out/log_stdout**
+  - **out/log_stderr**
 
 
 .. graphviz::
@@ -3213,13 +3218,13 @@ gsnap
 
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
   - **out/alignments**
-  - **out/log_stderr**
   - **out/log_stdout**
+  - **out/log_stderr**
 
 
 .. graphviz::
@@ -3275,15 +3280,15 @@ hisat2
     metrics and summary file are automatically produced
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read** (optional)
+  - **in/first_read**
 
 **Output Connection**
   - **out/metrics**
-  - **out/summary**
-  - **out/aligned** (optional) Format: **fastq.gz** - Unpaired reads that aligned.
-  - **out/alignments**
   - **out/unaligned** (optional) Format: **fastq.gz** - Unpaired reads that didn't align.
+  - **out/summary**
+  - **out/alignments**
+  - **out/aligned** (optional) Format: **fastq.gz** - Unpaired reads that aligned.
   - **out/log_stderr**
 
 
@@ -3470,8 +3475,8 @@ htseq_count
     http://www-huber.embl.de/users/anders/HTSeq/doc/count.html
 
 **Input Connection**
-  - **in/alignments**
   - **in/features** (optional) Format: **gtf** - reference assembly
+  - **in/alignments**
 
 **Output Connection**
   - **out/counts**
@@ -3519,7 +3524,7 @@ htseq_count
   - **type** (str, optional)    - default value: exon
 
 
-**Required tools:** dd, htseq-count, pigz, samtools
+**Required tools:** dd (coreutils), htseq-count, pigz, samtools
 
 **CPU Cores:** 2
 
@@ -3546,12 +3551,12 @@ identify_adapters
     "Pipeline specific "input and output expected to be gzipped"
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
-  - **out/log_stderr**
   - **out/log_stdout**
+  - **out/log_stderr**
 
 
 .. graphviz::
@@ -3589,15 +3594,15 @@ kallisto
 
 
 **Input Connection**
-  - **in/first_read**
-  - **in/kallisto-index** (optional)
   - **in/second_read** (optional)
+  - **in/kallisto-index** (optional)
+  - **in/first_read**
 
 **Output Connection**
-  - **out/log_stdout**
   - **out/run_info.json**
-  - **out/log_stderr**
   - **out/abundance.h5**
+  - **out/log_stdout**
+  - **out/log_stderr**
   - **out/abundance.tsv**
 
 
@@ -3669,17 +3674,17 @@ kallisto_fusion
 
 
 **Input Connection**
-  - **in/first_read**
-  - **in/kallisto-index**
   - **in/second_read**
+  - **in/kallisto-index**
+  - **in/first_read**
 
 **Output Connection**
-  - **out/log_stdout**
   - **out/run_info.json**
-  - **out/log_stderr**
   - **out/abundance.h5**
-  - **out/abundance.tsv**
   - **out/fusion.txt**
+  - **out/log_stdout**
+  - **out/log_stderr**
+  - **out/abundance.tsv**
 
 
 .. graphviz::
@@ -3755,9 +3760,9 @@ kallisto_index
   - **in/fasta**
 
 **Output Connection**
-  - **out/kallisto-index**
-  - **out/log_stderr**
   - **out/log_stdout**
+  - **out/log_stderr**
+  - **out/kallisto-index**
 
 
 .. graphviz::
@@ -3818,13 +3823,13 @@ macs2
   - **in/alignments**
 
 **Output Connection**
-  - **out/diagnosis**
-  - **out/narrowpeaks**
-  - **out/narrowpeaks-xls**
-  - **out/broadpeaks-xls**
   - **out/model**
+  - **out/broadpeaks-xls**
   - **out/gappedpeaks**
   - **out/summits**
+  - **out/narrowpeaks-xls**
+  - **out/narrowpeaks**
+  - **out/diagnosis**
   - **out/log**
   - **out/broadpeaks**
 
@@ -3917,7 +3922,7 @@ macs2
 
 
 
-**Required tools:** macs2, mkdir, mv
+**Required tools:** macs2, mkdir (coreutils), mv (coreutils)
 
 **CPU Cores:** 4
 
@@ -3938,8 +3943,8 @@ merge_assembly
   - **in/features**
 
 **Output Connection**
-  - **out/log_stderr**
   - **out/features**
+  - **out/log_stderr**
 
 
 .. graphviz::
@@ -3965,7 +3970,7 @@ merge_assembly
   - **temp-sort-dir** (str, required) -- Intermediate sort files are stored into this directory. Note that this directory needs to be present before running this step.
 
 
-**Required tools:** cat, sort
+**Required tools:** cat (coreutils), sort (coreutils)
 
 **CPU Cores:** 1
 
@@ -4014,7 +4019,7 @@ merge_fasta_files
   - **pigz-blocksize** (str, optional)    - default value: 2048
 
 
-**Required tools:** cat, dd, mkfifo, pigz
+**Required tools:** cat (coreutils), dd (coreutils), mkfifo (coreutils), pigz
 
 **CPU Cores:** 4
 
@@ -4030,12 +4035,12 @@ merge_fastq_files
     gzipped.
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
-  - **out/first_read**
   - **out/second_read**
+  - **out/first_read**
 
 
 .. graphviz::
@@ -4063,7 +4068,7 @@ merge_fastq_files
   - **pigz-blocksize** (str, optional)    - default value: 2048
 
 
-**Required tools:** cat, dd, mkfifo, pigz
+**Required tools:** cat (coreutils), dd (coreutils), mkfifo (coreutils), pigz
 
 **CPU Cores:** 4
 
@@ -4079,13 +4084,13 @@ merge_fastx_files
     gzipped.
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
-  - **out/report**
   - **out/first_read**
   - **out/second_read**
+  - **out/report**
 
 
 .. graphviz::
@@ -4201,14 +4206,14 @@ pear
 
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
-  - **out/assembled**
   - **out/unassembled.forward**
-  - **out/discarded**
   - **out/unassembled.reverse**
+  - **out/discarded**
+  - **out/assembled**
   - **out/log**
 
 
@@ -4310,10 +4315,10 @@ pepr
   - **in/alignments**
 
 **Output Connection**
+  - **out/peaks**
   - **out/parameter**
   - **out/differential_peaks**
   - **out/log**
-  - **out/peaks**
 
 
 .. graphviz::
@@ -4359,7 +4364,7 @@ pepr
   - **windowsize** (int, optional) -- Sliding window size. If not specified by user, PePr will estimate this by calculating the average width of potential peaks. The lower and upper bound for PePr estimate is 100bp and 1000bp. User provided window size is not constrained, but we recommend to stay in this range (100-1000bp).
 
 
-**Required tools:** mkdir, mv, pepr, tar
+**Required tools:** mkdir (coreutils), mv (coreutils), pepr, tar
 
 **CPU Cores:** 4
 
@@ -4374,14 +4379,14 @@ pepr_postprocess
     Attention: Filter criteria are hard coded!
 
 **Input Connection**
-  - **in/alignments**
   - **in/peaks**
+  - **in/alignments**
 
 **Output Connection**
   - **out/passed_peaks**
-  - **out/input**
-  - **out/chip**
   - **out/peaks**
+  - **out/chip**
+  - **out/input**
   - **out/failed_peaks**
 
 
@@ -4421,7 +4426,7 @@ pepr_postprocess
   - **remove-artefacts** (bool, optional)    - default value: True
 
 
-**Required tools:** ln, pepr-postprocess
+**Required tools:** ln (coreutils), pepr-postprocess
 
 **CPU Cores:** 4
 
@@ -4682,8 +4687,8 @@ picard_markduplicates
   - **in/alignments**
 
 **Output Connection**
-  - **out/alignments**
   - **out/metrics**
+  - **out/alignments**
 
 
 .. graphviz::
@@ -4862,7 +4867,7 @@ picard_merge_sam_bam_files
 
 
 
-**Required tools:** ln, picard-tools
+**Required tools:** ln (coreutils), picard-tools
 
 **CPU Cores:** 12
 
@@ -4936,17 +4941,17 @@ pizzly
     https://github.com/pmelsted/pizzly
 
 **Input Connection**
-  - **in/first_read**
-  - **in/second_read**
   - **in/fusion.txt**
+  - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
-  - **out/log_stdout**
-  - **out/unfiltered_json**
+  - **out/unfiltered_fasta**
   - **out/fusion_fasta**
+  - **out/unfiltered_json**
+  - **out/log_stdout**
   - **out/log_stderr**
   - **out/fusion_json**
-  - **out/unfiltered_fasta**
 
 
 .. graphviz::
@@ -5013,8 +5018,8 @@ The cufflinks suite can be used to assembly new transcripts and
   - **in/features**
 
 **Output Connection**
-  - **out/log_stderr**
   - **out/features**
+  - **out/log_stderr**
 
 
 .. graphviz::
@@ -5053,7 +5058,7 @@ The cufflinks suite can be used to assembly new transcripts and
   - **string** (str, optional) -- String to match in gtf field gene_name for discarding
 
 
-**Required tools:** cat
+**Required tools:** cat (coreutils)
 
 **CPU Cores:** 6
 
@@ -5105,7 +5110,7 @@ post_sawdust
   - **split_ident** (str, required)    - default value:  
 
 
-**Required tools:** cat, pigz, samtools
+**Required tools:** cat (coreutils), pigz, samtools
 
 **CPU Cores:** 2
 
@@ -5351,7 +5356,7 @@ reformatCigar
   - **threads** (int, optional) -- Number of threads 2B started. (Default: 1). Beware that this is only for (un-)compressing, the reformating is using a single CPU only.
 
 
-**Required tools:** cat, pigz
+**Required tools:** cat (coreutils), pigz
 
 **CPU Cores:** 1
 
@@ -5373,8 +5378,8 @@ remove_duplicate_reads_runs
   - **in/alignments**
 
 **Output Connection**
-  - **out/alignments**
   - **out/metrics**
+  - **out/alignments**
 
 
 .. graphviz::
@@ -5424,11 +5429,11 @@ rgt_thor
   - **in/alignments**
 
 **Output Connection**
-  - **out/diff_narrow_peaks**
-  - **out/thor_config**
-  - **out/chip_seq_bigwig**
   - **out/diff_peaks_bed**
+  - **out/thor_config**
   - **out/thor_setup_info**
+  - **out/diff_narrow_peaks**
+  - **out/chip_seq_bigwig**
 
 
 .. graphviz::
@@ -5487,7 +5492,7 @@ rgt_thor
   - **step** (int, optional) -- Stepsize with which the window consecutively slides across the genome to create the signal.
 
 
-**Required tools:** printf, rgt-THOR
+**Required tools:** printf (coreutils), rgt-THOR
 
 **CPU Cores:** 4
 
@@ -5506,35 +5511,35 @@ rseqc
   - **in/alignments**
 
 **Output Connection**
+  - **out/DupRate_stdout**
   - **out/geneBody_coverage_stdout**
-  - **out/inner_distance_freq** (optional)
+  - **out/bam_stat**
+  - **out/junctionSaturation_r**
+  - **out/DupRate_seq**
+  - **out/inner_distance** (optional)
+  - **out/junction_saturation_stderr**
+  - **out/gc_r**
+  - **out/gc_stderr**
+  - **out/geneBody_coverage.r**
   - **out/read_distribution**
   - **out/junction_plot**
-  - **out/gc_r**
-  - **out/junction_xls**
-  - **out/geneBody_coverage.r**
-  - **out/DupRate_pos**
-  - **out/junction_bed**
-  - **out/DupRate_plot_r**
+  - **out/inner_distance_stderr** (optional)
   - **out/gc_xls**
+  - **out/inner_distance_stdout** (optional)
+  - **out/inner_distance_freq** (optional)
+  - **out/geneBody_coverage.txt**
   - **out/geneBody_coverage_stderr**
-  - **out/junction_annotation_stderr**
-  - **out/DupRate_seq**
-  - **out/DupRate_stdout**
-  - **out/junctionSaturation_r**
+  - **out/junction_bed**
   - **out/junction_annotation_stdout**
   - **out/gc_stdout**
-  - **out/inner_distance** (optional)
-  - **out/bam_stat**
-  - **out/inner_distance_stdout** (optional)
   - **out/infer_experiment**
-  - **out/junction_saturation_stdout**
-  - **out/geneBody_coverage.txt**
   - **out/inner_distance_plot** (optional)
+  - **out/DupRate_plot_r**
+  - **out/DupRate_pos**
   - **out/DupRate_stderr**
-  - **out/inner_distance_stderr** (optional)
-  - **out/gc_stderr**
-  - **out/junction_saturation_stderr**
+  - **out/junction_xls**
+  - **out/junction_saturation_stdout**
+  - **out/junction_annotation_stderr**
 
 
 .. graphviz::
@@ -5616,7 +5621,7 @@ rseqc
 
 
 
-**Required tools:** bam_stat.py, cat, geneBody_coverage.py, infer_experiment.py, inner_distance.py, junction_annotation.py, junction_saturation.py, read_GC.py, read_distribution.py, read_duplication.py, rm
+**Required tools:** bam_stat.py, cat (coreutils), geneBody_coverage.py, infer_experiment.py, inner_distance.py, junction_annotation.py, junction_saturation.py, read_GC.py, read_distribution.py, read_duplication.py, rm (coreutils)
 
 **CPU Cores:** 4
 
@@ -5666,7 +5671,7 @@ s2c
   - **tmp_dir** (str, required) -- Temp directory for 's2c.py'. This can be in the /work/username/ path, since it is only temporary.
 
 
-**Required tools:** cat, dd, pigz, samtools
+**Required tools:** cat (coreutils), dd (coreutils), pigz, samtools
 
 **CPU Cores:** 6
 
@@ -5682,24 +5687,24 @@ salmon
 
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read** (optional)
+  - **in/first_read**
 
 **Output Connection**
-  - **out/observed_bias_3p.gz**
-  - **out/log_stdout**
   - **out/lib_format_counts.json**
-  - **out/expected_bias.gz**
-  - **out/fld.gz**
-  - **out/flenDist.txt**
-  - **out/meta_info.json**
   - **out/quant.genes.sf**
-  - **out/log_stderr**
-  - **out/observed_bias.gz**
-  - **out/salmon_quant.log**
-  - **out/quant.sf**
+  - **out/flenDist.txt**
   - **out/ambig_info.tsv**
+  - **out/observed_bias_3p.gz**
+  - **out/meta_info.json**
+  - **out/observed_bias.gz**
+  - **out/fld.gz**
+  - **out/log_stdout**
+  - **out/log_stderr**
+  - **out/quant.sf**
+  - **out/expected_bias.gz**
   - **out/cmd_info.json**
+  - **out/salmon_quant.log**
 
 
 .. graphviz::
@@ -5754,7 +5759,7 @@ salmon
   - **i** (str, required) -- Salmon index
 
 
-**Required tools:** mkdir, mv, rm, salmon
+**Required tools:** mkdir (coreutils), mv (coreutils), rm (coreutils), salmon
 
 **CPU Cores:** 1
 
@@ -5846,7 +5851,7 @@ sam_to_sorted_bam
   - **temp-sort-dir** (str, optional) -- Intermediate sort files are stored intothis directory.
 
 
-**Required tools:** dd, pigz, samtools
+**Required tools:** dd (coreutils), pigz, samtools
 
 **CPU Cores:** 8
 
@@ -5912,7 +5917,7 @@ samtools
   - **temp-sort-dir** (str, required) -- Intermediate sort files are stored intothis directory.
 
 
-**Required tools:** dd, pigz, samtools
+**Required tools:** dd (coreutils), pigz, samtools
 
 **CPU Cores:** 8
 
@@ -5955,7 +5960,7 @@ samtools_faidx
       samtools_faidx -> out_1;
    }
 
-**Required tools:** mv, samtools
+**Required tools:** mv (coreutils), samtools
 
 **CPU Cores:** 4
 
@@ -5979,8 +5984,8 @@ samtools_index
 
 **Output Connection**
   - **out/alignments**
-  - **out/index_stats**
   - **out/indices**
+  - **out/index_stats**
 
 
 .. graphviz::
@@ -6007,7 +6012,7 @@ samtools_index
 
 
 
-**Required tools:** ln, samtools
+**Required tools:** ln (coreutils), samtools
 
 **CPU Cores:** 4
 
@@ -6034,8 +6039,8 @@ The step samtools_merge builds on 'samtools merge' to merge sorted SAM/BAM files
 
 **Output Connection**
   - **out/alignments**
-  - **out/err**
   - **out/log**
+  - **out/err**
 
 
 .. graphviz::
@@ -6090,7 +6095,7 @@ The step samtools_merge builds on 'samtools merge' to merge sorted SAM/BAM files
   - **u** (bool, optional) -- uncompressed BAM output
 
 
-**Required tools:** dd, pigz, samtools
+**Required tools:** dd (coreutils), pigz, samtools
 
 **CPU Cores:** 6
 
@@ -6161,7 +6166,7 @@ samtools_sort
   - **temp-sort-dir** (str, optional) -- Intermediate sort files are stored intothis directory. original option -T
 
 
-**Required tools:** dd, pigz, samtools
+**Required tools:** dd (coreutils), pigz, samtools
 
 **CPU Cores:** 1
 
@@ -6205,7 +6210,7 @@ samtools_stats
   - **dd-blocksize** (str, optional)    - default value: 256k
 
 
-**Required tools:** dd, pigz, samtools
+**Required tools:** dd (coreutils), pigz, samtools
 
 **CPU Cores:** 1
 
@@ -6242,13 +6247,13 @@ segemehl
 
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
   - **out/alignments**
-  - **out/unmapped**
   - **out/log**
+  - **out/unmapped**
 
 
 .. graphviz::
@@ -6361,7 +6366,7 @@ segemehl
     - default value: 10
 
 
-**Required tools:** cat, dd, mkfifo, pigz, segemehl
+**Required tools:** cat (coreutils), dd (coreutils), mkfifo (coreutils), pigz, segemehl
 
 **CPU Cores:** 10
 
@@ -6404,16 +6409,16 @@ segemehl_2017
 
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
   - **out/splits_sngl**
-  - **out/splits_trns**
   - **out/unmapped**
-  - **out/splits_mult**
   - **out/alignments**
+  - **out/splits_trns**
   - **out/log**
+  - **out/splits_mult**
 
 
 .. graphviz::
@@ -6524,7 +6529,7 @@ segemehl_2017
     - default value: 1
 
 
-**Required tools:** cat, dd, mkfifo, pigz, segemehl
+**Required tools:** cat (coreutils), dd (coreutils), mkfifo (coreutils), pigz, segemehl
 
 **CPU Cores:** 10
 
@@ -6577,7 +6582,7 @@ segemehl_generate_index
   - **threads** (int, optional) -- start <n> threads (default:4)
 
 
-**Required tools:** dd, mkfifo, pigz, segemehl
+**Required tools:** dd (coreutils), mkfifo (coreutils), pigz, segemehl
 
 **CPU Cores:** 4
 
@@ -6643,7 +6648,7 @@ segemehl_generate_index_bisulfite
   - **threads** (int, optional) -- start <n> threads (default:4)
 
 
-**Required tools:** dd, mkfifo, pigz, segemehl
+**Required tools:** dd (coreutils), mkfifo (coreutils), pigz, segemehl
 
 **CPU Cores:** 4
 
@@ -6664,15 +6669,15 @@ soapfuse
     https://sourceforge.net/p/soapfuse/wiki/Home/
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
-  - **out/sf_config**
-  - **out/log_stdout**
-  - **out/log_stderr**
   - **out/tar_archive**
+  - **out/log_stdout**
   - **out/sf_sample_list**
+  - **out/log_stderr**
+  - **out/sf_config**
 
 
 .. graphviz::
@@ -6719,7 +6724,7 @@ soapfuse
   - **suffix_for_fq_file** (str, required) -- Sets 'PA_all_fq_postfix' in SOAPfuse config
 
 
-**Required tools:** cp, echo, ln, mkdir, rm, soapfuse, tar
+**Required tools:** cp (coreutils), echo, ln (coreutils), mkdir (coreutils), rm (coreutils), soapfuse, tar
 
 **CPU Cores:** 6
 
@@ -6761,7 +6766,7 @@ source_controller
     - default value: 4
 
 
-**Required tools:** ln
+**Required tools:** ln (coreutils)
 
 **CPU Cores:** 4
 
@@ -6775,14 +6780,14 @@ split_fastq
 
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
   - **out/first_read**
-  - **out/log_stderr**
-  - **out/log_stdout**
   - **out/second_read**
+  - **out/log_stdout**
+  - **out/log_stderr**
 
 
 .. graphviz::
@@ -6888,9 +6893,9 @@ sra_fastq_dump
   - **in/sequence**
 
 **Output Connection**
-  - **out/first_read**
-  - **out/log**
   - **out/second_read**
+  - **out/log**
+  - **out/first_read**
 
 
 .. graphviz::
@@ -6981,7 +6986,7 @@ sra_fastq_dump
   - **verbose** (bool, optional) -- Increase the verbosity level of the program. Use multiple times for more verbosity.
 
 
-**Required tools:** dd, fastq-dump, mkfifo, pigz
+**Required tools:** dd (coreutils), fastq-dump, mkfifo (coreutils), pigz
 
 **CPU Cores:** 10
 
@@ -6995,17 +7000,17 @@ star
 
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
-  - **out/log_stdout**
-  - **out/log.out**
   - **out/sj.out**
-  - **out/aligned**
   - **out/log.progess**
+  - **out/aligned**
+  - **out/log_stdout**
   - **out/log.final**
   - **out/log_stderr**
+  - **out/log.out**
 
 
 .. graphviz::
@@ -7049,7 +7054,7 @@ star
     - default value: 1
 
 
-**Required tools:** rm, star
+**Required tools:** rm (coreutils), star
 
 **CPU Cores:** 1
 
@@ -7076,18 +7081,18 @@ stringtie
 
 
 **Input Connection**
-  - **in/alignments** Format: **bam**
   - **in/features** (optional) Format: **['gtf', 'gff3']** - Reference assembly. Can also be passed with option G or left out for denovo assembling.
+  - **in/alignments** Format: **bam**
 
 **Output Connection**
   - **out/e2t** (optional) Format: **ctab** - Ballgown output (requires -G and -B).
+  - **out/abundances** Format: **tab** - Feature abundancies (-A).
+  - **out/coverage** (optional) Format: **gtf** - Coverage of the reference assmbly (-B, requires -G)
+  - **out/i_data** (optional) Format: **ctab** - Ballgown output (requires -G and -B).
+  - **out/features** Format: **gtf** - Contains the assempled transcripts (-o).
   - **out/e_data** (optional) Format: **ctab** - Ballgown output (requires -G and -B).
   - **out/log_stdout**
-  - **out/i_data** (optional) Format: **ctab** - Ballgown output (requires -G and -B).
-  - **out/coverage** (optional) Format: **gtf** - Coverage of the reference assmbly (-B, requires -G)
   - **out/log_stderr**
-  - **out/features** Format: **gtf** - Contains the assempled transcripts (-o).
-  - **out/abundances** Format: **tab** - Feature abundancies (-A).
   - **out/i2t** (optional) Format: **ctab** - Ballgown output (requires -G and -B).
   - **out/t_data** (optional) Format: **ctab** - Ballgown output (requires -G and -B).
 
@@ -7171,7 +7176,7 @@ stringtie
   - **x** (str, optional) -- Ignore all read alignments (and thus do not attempt to perform transcript assembly) on the specified reference sequences. Parameter <seqid_list> can be a single reference sequence name (e.g. -x chrM) or a comma-delimited list of sequence names (e.g. -x "chrM,chrX,chrY"). This can speed up StringTie especially in the case of excluding the mitochondrial genome, whose genes may have very high coverage in some cases, even though they may be of no interest for a particular RNA-Seq analysis. The reference sequence names are case sensitive, they must match identically the names of chromosomes/contigs of the target genome against which the RNA-Seq reads were aligned in the first place.
 
 
-**Required tools:** dd, mkdir, mkfifo, mv, stringtie
+**Required tools:** dd (coreutils), mkdir (coreutils), mkfifo (coreutils), mv (coreutils), stringtie
 
 **CPU Cores:** 6
 
@@ -7198,8 +7203,8 @@ stringtieMerge
 
 **Output Connection**
   - **out/assemblies**
-  - **out/log_stderr**
   - **out/features** Format: **gtf**
+  - **out/log_stderr**
 
 
 .. graphviz::
@@ -7249,7 +7254,7 @@ stringtieMerge
     - default value: 2
 
 
-**Required tools:** mkdir, mv, printf, stringtie
+**Required tools:** mkdir (coreutils), mv (coreutils), printf (coreutils), stringtie
 
 **CPU Cores:** 2
 
@@ -7279,11 +7284,11 @@ StringTie is a fast and highly efficient assembler of RNA-Seq alignments into po
   - **in/features**
 
 **Output Connection**
-  - **out/log_stdout**
-  - **out/gene_matrix**
-  - **out/transcript_matrix**
   - **out/legend**
+  - **out/log_stdout**
   - **out/log_stderr**
+  - **out/transcript_matrix**
+  - **out/gene_matrix**
 
 
 .. graphviz::
@@ -7324,7 +7329,7 @@ StringTie is a fast and highly efficient assembler of RNA-Seq alignments into po
   - **string** (str, optional) -- if a different prefix is used for geneIDs assigned by StringTie [default: MSTRG
 
 
-**Required tools:** prepDE, printf
+**Required tools:** prepDE, printf (coreutils)
 
 **CPU Cores:** 6
 
@@ -7374,7 +7379,7 @@ subsetMappedReads
   - **paired_end** (bool, required) -- The reads are expected to have a mate, due to paired end sequencing.
 
 
-**Required tools:** cat, dd, head, pigz, samtools
+**Required tools:** cat (coreutils), dd (coreutils), head (coreutils), pigz, samtools
 
 **CPU Cores:** 1
 
@@ -7448,19 +7453,19 @@ tophat2
     Tested on release: TopHat v2.0.13
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
-  - **out/junctions**
-  - **out/unmapped**
-  - **out/alignments**
-  - **out/misc_logs**
-  - **out/log_stderr**
   - **out/prep_reads**
-  - **out/align_summary**
   - **out/deletions**
+  - **out/unmapped**
+  - **out/misc_logs**
+  - **out/alignments**
+  - **out/log_stderr**
+  - **out/align_summary**
   - **out/insertions**
+  - **out/junctions**
 
 
 .. graphviz::
@@ -7549,7 +7554,7 @@ tophat2
   - **transcriptome-max-hits** (int, optional) -- Max hits in transcriptome
 
 
-**Required tools:** mkdir, mv, tar, tophat2
+**Required tools:** mkdir (coreutils), mv (coreutils), tar, tophat2
 
 **CPU Cores:** 6
 
@@ -7582,20 +7587,20 @@ trim_galore
 
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
-  - **out/first_read_fastqc_html**
-  - **out/second_read_fastqc_html**
-  - **out/stderr**
   - **out/second_read**
-  - **out/second_read_report**
-  - **out/first_read_fastqc_zip**
+  - **out/first_read_report**
+  - **out/stderr**
   - **out/second_read_fastqc_zip**
   - **out/first_read**
   - **out/stdout**
-  - **out/first_read_report**
+  - **out/second_read_fastqc_html**
+  - **out/first_read_fastqc_html**
+  - **out/first_read_fastqc_zip**
+  - **out/second_read_report**
 
 
 .. graphviz::
@@ -7716,15 +7721,15 @@ trimmomatic
 
 
 **Input Connection**
-  - **in/first_read**
   - **in/second_read**
+  - **in/first_read**
 
 **Output Connection**
-  - **out/forward.unpaired**
-  - **out/reverse**
   - **out/forward**
+  - **out/reverse**
   - **out/reverse.unpaired**
   - **out/log_stderr**
+  - **out/forward.unpaired**
   - **out/log**
 
 
