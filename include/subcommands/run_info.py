@@ -22,6 +22,9 @@ down via command line options.
 logger = logging.getLogger("uap_logger")
 
 def ordinal(n):
+    """
+    Returns an ordinal for a number, e.g., '1st' for 1 and '2nd' for 2.
+    """
     return "%d%s" % (n,"tsnrhtdd"[(math.floor(n/10)%10!=1)*(n%10<4)*n%10::4])
 
 def main(args):
