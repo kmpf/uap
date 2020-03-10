@@ -38,6 +38,8 @@ def main(args):
 
     else:
         # print run infos of one or more specific tasks
+        shebang = "#!/usr/bin/env bash"
+        print(shebang + "\n")
         for task_id in p.get_task_with_list(as_string=True, exclusive=False):
             parts = task_id.split('/')
             if len(parts) != 2:
@@ -46,8 +48,6 @@ def main(args):
             run_id = parts[1]
             run = p.steps[step_name].get_run(run_id)
             report = run.as_dict()
-            shebang = "#!/usr/bin/env bash"
-            print(shebang + "\n")
             report_header = "%s/%s -- Report" % (step_name, run_id)
             print("# " + report_header)
             print("# " + "=" * len(report_header) + "\n#")
