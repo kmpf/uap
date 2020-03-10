@@ -117,8 +117,9 @@ def exec_pre_post_calls(tool_id, info_key, info_command,
                 command_call: (' '.join(command)).strip(),
                 command_exit_code: proc.returncode
             })
-            logger.info('Loading tool %s: %s' %
-                        (tool_id, error.decode('utf-8')))
+            if error:
+                logger.info('Loading tool %s: %s' %
+                            (tool_id, error.decode('utf-8')))
         else:
             tool_check_info.update({
                 command_call: (' '.join(command)).strip(),

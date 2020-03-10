@@ -89,6 +89,8 @@ class RSeQC(AbstractStep):
             alignments = run_ids_connections_files[run_id]['in/alignments']
 
             with self.declare_run(run_id) as run:
+                # redundant log.txt should be deleted after run
+                run.add_temporary_file('log.txt')
                 with run.new_exec_group() as exec_group:
                     bam_stat = [
                         self.get_tool('bam_stat.py'),
