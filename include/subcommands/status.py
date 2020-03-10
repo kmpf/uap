@@ -44,6 +44,7 @@ def main(args):
 
     elif args.run and not args.details:
         # print run infos of one or more specific tasks
+        args.no_tool_checks = True
         p = pipeline.Pipeline(arguments=args)
         for task in p.get_task_with_list():
             report = task.get_run().as_dict(commands=True)
