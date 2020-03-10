@@ -567,9 +567,6 @@ class Pipeline(object):
             self.config['cluster'].setdefault(i, '')
         self.config['cluster'].setdefault('default_job_quota', 0)  # no quota
 
-    def get_config(self):
-        return self.config
-
     def build_steps(self):
         self.steps = {}
         if 'steps' not in self.config:
@@ -698,15 +695,6 @@ class Pipeline(object):
             return self.task_for_task_id[task_id]
         else:
             return None
-
-    def check_command(self, command):
-        for argument in command:
-            if not isinstance(argument, str):
-                raise UAPError(
-                    "The command to be launched '%s' contains non-string "
-                    "argument '%s'. Therefore the command will fail. Please "
-                    "fix this type issue." % (command, argument))
-        return
 
     def setup_lmod(self):
         '''
