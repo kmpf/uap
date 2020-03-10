@@ -47,6 +47,7 @@ def main(args):
         args.no_tool_checks = True
         p = pipeline.Pipeline(arguments=args)
         for task in p.get_task_with_list():
+            print('## %s\n' % task)
             report = task.get_run().as_dict(commands=True)
             print(yaml.dump(report, Dumper=misc.UAPDumper,
                             default_flow_style=False))
