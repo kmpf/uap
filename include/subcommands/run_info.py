@@ -53,14 +53,14 @@ def main(args):
             exec_header = "%s/%s -- Commands" % (step_name, run_id)
             print("# " + exec_header)
             print("# " + "=" * len(exec_header) + "\n")
-            for eg_count, exec_group in enumerate(run.get_exec_groups()):
+            for eg_count, exec_group in enumerate(run.get_exec_groups(), 1):
                 goc_header = "%d. Group of Commands" % eg_count
                 pocs = exec_group.get_pipes_and_commands()
                 line_end = ""
                 if len(pocs) > 1:
                     line_end = " &"
                 for count, poc in enumerate(
-                        exec_group.get_pipes_and_commands()):
+                        exec_group.get_pipes_and_commands(), 1):
                     # for each pipe or command (poc)
                     # check if it is a pipeline ...
 
@@ -72,6 +72,7 @@ def main(args):
                     print("# " + "-" * len(cmd_header) + "\n")
                     print(poc.get_command_string() + line_end + "\n")
                 if len(pocs) > 1:
-                    print("# Waiting for Group to Finish")
-                    print("# ---------------------------\n")
+                    print("# Waiting for %d. Group to Finish" % eg_count)
+                    print("# ------------%s-----------------\n" %
+                          "-"*len(str(eg_count)))
                     print("wait" + "\n")
