@@ -396,7 +396,6 @@ class Pipeline(object):
                                self.config['tools'].items() if not
                                conf.get('atomatically_configured'))
         unused_tools = configured_tools - self.used_tools
-        unused_tools -= self.coreutils
         if unused_tools:
             logger.warning('Unused tool(s): %s' % list(unused_tools))
 
@@ -475,10 +474,14 @@ class Pipeline(object):
                 self.config['tools'], dict):
             self.config['tools'] = dict()
         for tool in self.coreutils:
+            auto_add = False
             if tool not in self.config['tools'] or \
                     not self.config['tools'][tool]:
                 self.config['tools'][tool] = dict()
+                auto_add = True
             self.config['tools'][tool].setdefault('ignore_version', True)
+            self.config['tools'][tool].setdefault(
+                'atomatically_configured', auto_add)
         for tool, args in self.config['tools'].items():
             if not args:
                 self.config['tools'][tool] = dict()
