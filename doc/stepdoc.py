@@ -9,7 +9,7 @@ import sys
 sys.path.append('../include')
 sys.path.append('../include/steps')
 sys.path.append('../include/sources')
-import pipeline
+from pipeline import coreutils
 import abstract_step
 
 
@@ -109,7 +109,9 @@ def doc_module(module_name, fout, uap_tools):
         fout.write("\n")
 
     # print tools
-    tools = [t for t in step._tools.keys() if t not in uap_tools]
+    def tooltag(tool):
+        return ' (coreutils)' if tool in coreutils else ''
+    tools = [t+tooltag(t) for t in step._tools.keys() if t not in uap_tools]
     if tools:
         fout.write("**Required tools:** %s\n" % ', '.join(sorted(tools)))
         fout.write("\n")

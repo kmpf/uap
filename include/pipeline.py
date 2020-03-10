@@ -25,6 +25,39 @@ from uaperrors import UAPError
 
 logger = getLogger("uap_logger")
 
+coreutils = {
+    'basename',
+    'cat',
+    'cp',
+    'cut',
+    'date',
+    'dd',
+    'dirname',
+    'du',
+    'head',
+    'ln',
+    'ls',
+    'mkdir',
+    'mkfifo',
+    'mv',
+    'paste',
+    'printf',
+    'pwd',
+    'seq',
+    'sleep',
+    'sort',
+    'rm',
+    'tail',
+    'tee',
+    'tr',
+    'uniq',
+    'wc'}
+'''
+Some GNU Core Utilities that are configured by default to be callable
+by name and to ignore theire version in the output hash.
+'''
+
+
 
 class ConfigurationException(Exception):
     """an exception class for reporting configuration errors"""
@@ -359,38 +392,6 @@ class Pipeline(object):
         A set of accepted keys in the config.
         '''
 
-        self.coreutils = {
-            'basename',
-            'cat',
-            'cp',
-            'cut',
-            'date',
-            'dd',
-            'dirname',
-            'du',
-            'head',
-            'ln',
-            'ls',
-            'mkdir',
-            'mkfifo',
-            'mv',
-            'paste',
-            'printf',
-            'pwd',
-            'seq',
-            'sleep',
-            'sort',
-            'rm',
-            'tail',
-            'tee',
-            'tr',
-            'uniq',
-            'wc'}
-        '''
-        Some GNU Core Utilities that are configured by default to be callable
-        by name and to ignore theire version in the output hash.
-        '''
-
         self.read_config(self.args.config)
         self.setup_lmod()
         self.build_steps()
@@ -485,7 +486,7 @@ class Pipeline(object):
         if 'tools' not in self.config or not isinstance(
                 self.config['tools'], dict):
             self.config['tools'] = dict()
-        for tool in self.coreutils:
+        for tool in coreutils:
             auto_add = False
             if tool not in self.config['tools'] or \
                     not self.config['tools'][tool]:

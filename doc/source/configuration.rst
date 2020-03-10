@@ -382,6 +382,14 @@ the version e.g. by running ``pigz --version``.
 If not set ``exit_code`` defaults to 0, ``get_version`` to ``--version``,
 ``ignore_version`` to ``False`` and ``path`` to the tool name.
 
+Some tools are configured by default. Theire configuration will be logged
+in the result annotation but they do not have to be made explicitly in the
+configuration yaml. These are tools that come with the UAP installation
+in ``<UAP path>/tools`` and these |coreutils|: basename, cat, cp, cut, date,
+dd, dirname, du, head, ln, ls, mkdir, mkfifo, mv, paste, printf, pwd, seq,
+sleep, sort, rm, tail, tee, tr, uniq, wc. The ``ignore_version`` of these
+|coreutils| defaults to ``True``.
+
 To use |lmod_link| to load an unload a tool you can specify the
 ``module_name`` option:
 
@@ -692,3 +700,7 @@ cluster.
 .. |lmod_link| raw:: html
 
    <a href="https://lmod.readthedocs.io/en/latest/" target="_blank">lmod</a>
+
+.. |coreutils| raw:: html
+
+    <a href="https://www.gnu.org/software/coreutils/manual/coreutils.html" target="_blank">GNU Core Utilities</a>
