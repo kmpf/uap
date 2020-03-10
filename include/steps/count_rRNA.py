@@ -1,5 +1,4 @@
 from uaperrors import StepError
-import sys
 import os
 from logging import getLogger
 from abstract_step import AbstractStep
@@ -47,6 +46,8 @@ class SamToFastq(AbstractStep):
                     "%s_%s-rRNA_count.txt" % (run_id, 'R1'),
                     input_paths)
 
+                 samtools = [self.get_tool('samtools'), 'view', '-S']
+
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as pipe:
                         # 1.1 command: Uncompress file to no fucking fifo
@@ -59,26 +60,27 @@ class SamToFastq(AbstractStep):
                             pipe.add_command(pigz)
 
                             # 2. command: Convert to fastq
-                            samtools = [
-                                self.get_tool('samtools'), 'view', '-S', '-']
-                            pipe.add_command(samtools)
+                            samtools.append('-')
+                        else:
+                            samtools.extend(input_paths)
+                        pipe.add_command(samtools)
 
-                            # 3 save fastq file
-                            cuta = [self.get_tool('cut'), '-f', '2,3,4']
-                            pipe.add_command(cuta)
-                            cutb = [self.get_tool('cut'), '-f', '1', '-d', '|']
-                            pipe.add_command(cutb)
-                            grep = [self.get_tool('grep'), '-v', '*']
-                            pipe.add_command(grep)
+                        # 3 save fastq file
+                        cuta = [self.get_tool('cut'), '-f', '2,3,4']
+                        pipe.add_command(cuta)
+                        cutb = [self.get_tool('cut'), '-f', '1', '-d', '|']
+                        pipe.add_command(cutb)
+                        grep = [self.get_tool('grep'), '-v', '*']
+                        pipe.add_command(grep)
 
-                            cutc = [self.get_tool('cut'), '-f', '1', '-d', '_']
-                            pipe.add_command(cutc)
+                        cutc = [self.get_tool('cut'), '-f', '1', '-d', '_']
+                        pipe.add_command(cutc)
 
-                            sorta = [self.get_tool('sort')]
+                        sorta = [self.get_tool('sort')]
 
-                            pipe.add_command(sorta)
+                        pipe.add_command(sorta)
 
-                            uniq = [self.get_tool('uniq'), '-c']
-                            pipe.add_command(uniq)
-                            sortb = [self.get_tool('sort')]
-                            pipe.add_command(sortb, stdout_path=out)
+                        uniq = [self.get_tool('uniq'), '-c']
+                        pipe.add_command(uniq)
+                        sortb = [self.get_tool('sort')]
+                        pipe.add_command(sortb, stdout_path=out)
