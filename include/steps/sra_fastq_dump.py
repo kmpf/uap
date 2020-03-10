@@ -9,7 +9,7 @@ logger = getLogger('uap_logger')
 
 
 class SraFastqDump (AbstractStep):
-    '''
+    r'''
     sra tools is a suite from NCBI to handle sra (short read archive) files.
     fastq-dump is an sra tool that dumps the content of an sra file in fastq
     format

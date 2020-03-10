@@ -61,7 +61,7 @@ class RunFolderSource(AbstractSourceStep):
             default='Sample_*',
             optional=True,
             description=r'Pattern for the sample directory names inside '
-            'path/[Project\_]project[_name]')
+            r'path/[Project\_]project[_name]')
         self.add_option('first_read', str, default='_R1',
                         description="Part of the file name that marks all "
                         "files containing sequencing data of the first read. "
