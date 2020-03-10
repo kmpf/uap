@@ -3,18 +3,15 @@
 
 import sys
 import os
-from contextlib import closing
 import logging
 import pydoc
 import string
-from io import StringIO
 import yaml
 from tqdm import tqdm
 from subprocess import list2cmdline
 import signal
 
 import pipeline
-from uaperrors import UAPError
 import misc
 
 '''
@@ -108,7 +105,6 @@ def main(args):
 
     elif args.details:
         p = pipeline.Pipeline(arguments=args)
-        new_dest = p.config['destination_path']
         n_per_state = dict()
         tasks = p.get_task_with_list()
         for i, task in enumerate(tasks):
