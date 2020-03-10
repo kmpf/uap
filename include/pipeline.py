@@ -11,7 +11,10 @@ import sys
 import yaml
 import multiprocessing
 import traceback
-from distutils.spawn import find_executable
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings('ignore', category=DeprecationWarning)
+    from distutils.spawn import find_executable
 from tqdm import tqdm
 
 import abstract_step
