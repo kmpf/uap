@@ -5,6 +5,7 @@ import sys
 import logging
 import yaml
 from textwrap import wrap
+import math
 
 import pipeline
 import pipeline_info
@@ -20,6 +21,8 @@ down via command line options.
 
 logger = logging.getLogger("uap_logger")
 
+def ordinal(n):
+    return "%d%s" % (n,"tsnrhtdd"[(math.floor(n/10)%10!=1)*(n%10<4)*n%10::4])
 
 def main(args):
     args.no_tool_checks = True
@@ -55,7 +58,8 @@ def main(args):
             print("# " + exec_header)
             print("# " + "=" * len(exec_header) + "\n")
             for eg_count, exec_group in enumerate(run.get_exec_groups(), 1):
-                goc_header = "%d. Group of Commands" % eg_count
+                ord = ordinal(eg_count)
+                goc_header = "%s Group of Commands" % ord
                 pocs = exec_group.get_pipes_and_commands()
                 line_end = ""
                 if len(pocs) > 1:
@@ -65,10 +69,11 @@ def main(args):
                     # for each pipe or command (poc)
                     # check if it is a pipeline ...
 
+                    cord = ordinal(count)
                     if isinstance(poc, pipeline_info.PipelineInfo):
-                        cmd_header = goc_header + " -- %d. Pipeline" % count
+                        cmd_header = goc_header + " -- %s Pipeline" % cord
                     elif isinstance(poc, command_info.CommandInfo):
-                        cmd_header = goc_header + " -- %d. Command" % count
+                        cmd_header = goc_header + " -- %s Command" % cord
                     print("# " + cmd_header)
                     print("# " + "-" * len(cmd_header) + "\n")
                     cmd = poc.get_command_string() + line_end
@@ -77,7 +82,7 @@ def main(args):
                                subsequent_indent='  ')
                     print(" \\\n".join(cmd) + '\n')
                 if len(pocs) > 1:
-                    print("# Waiting for %d. Group to Finish" % eg_count)
+                    print("# Waiting for %s Group to Finish" % ord)
                     print("# ------------%s-----------------\n" %
-                          "-"*len(str(eg_count)))
+                          ("-" * len(ord)))
                     print("wait" + "\n")
