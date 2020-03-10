@@ -558,7 +558,6 @@ class AbstractStep(object):
         executing_ping_info['start_time'] = datetime.now()
         executing_ping_info['host'] = socket.gethostname()
         executing_ping_info['pid'] = os.getpid()
-        executing_ping_info['cwd'] = os.getcwd()
         executing_ping_info['temp_directory'] = run.get_temp_output_directory()
         if job_id:
             executing_ping_info['cluster job id'] = job_id
