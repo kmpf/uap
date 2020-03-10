@@ -37,11 +37,16 @@ class FastqScreen(AbstractStep):
 
         self.add_option('databases', dict, optional=True,
                         description="Manually specify a location for the \
-                        configuration.")
+                        configuration. E.g.::
+
+                            fastq_screen:
+                                databases:
+                                    Human: /path/to/human/bowtie2/index
+                                    Mouse: /path/to/mouse/bowtie2/index")
 
         self.add_option('keep config', bool, optional=True, default=False,
                         description="Keep the generated fastq_screen.conf \
-                        if databases are specified.")
+                        for each run (only if databases are specified).")
 
         self.add_option('cores', int, default=cores)
 
