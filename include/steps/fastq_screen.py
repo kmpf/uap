@@ -1,6 +1,7 @@
 import sys
 import logging
 from abstract_step import AbstractStep
+from uaperrors import StepError
 import os
 
 logger = logging.getLogger('uap_logger')
