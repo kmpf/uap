@@ -4,6 +4,7 @@
 import sys
 import logging
 import yaml
+from textwrap import wrap
 
 import pipeline
 import pipeline_info
@@ -70,7 +71,11 @@ def main(args):
                         cmd_header = goc_header + " -- %d. Command" % count
                     print("# " + cmd_header)
                     print("# " + "-" * len(cmd_header) + "\n")
-                    print(poc.get_command_string() + line_end + "\n")
+                    cmd = poc.get_command_string() + line_end
+                    cmd = wrap(cmd, break_long_words=False,
+                               break_on_hyphens=False,
+                               subsequent_indent='  ')
+                    print(" \\\n".join(cmd) + '\n')
                 if len(pocs) > 1:
                     print("# Waiting for %d. Group to Finish" % eg_count)
                     print("# ------------%s-----------------\n" %
