@@ -36,13 +36,13 @@ class FastqScreen(AbstractStep):
                         configuration.")
 
         self.add_option('databases', dict, optional=True,
-                        description="Manually specify a location for the \
+                        description="""Manually specify a location for the
                         configuration. E.g.::
 
                             fastq_screen:
                                 databases:
                                     Human: /path/to/human/bowtie2/index
-                                    Mouse: /path/to/mouse/bowtie2/index")
+                                    Mouse: /path/to/mouse/bowtie2/index""")
 
         self.add_option('keep config', bool, optional=True, default=False,
                         description="Keep the generated fastq_screen.conf \
