@@ -80,7 +80,7 @@ def main(args):
                     print("# " + cmd_header)
                     print("# " + "-" * len(cmd_header) + "\n")
                     cmd = poc.get_command_string() + line_end
-                    cmd = wrap(cmd, break_long_words=False,
+                    cmd = wrap(cmd, width=78, break_long_words=False,
                                break_on_hyphens=False,
                                subsequent_indent='  ')
                     print(" \\\n".join(cmd) + '\n')
