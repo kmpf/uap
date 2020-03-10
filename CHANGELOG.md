@@ -25,6 +25,7 @@
  * set type of temporary files in annotation (#157)
  * use raw strings in regexes
  * configure `fastq_sceen` in the uap config (#160)
+ * count_rRNA doese not fail silently for uncomressed input (#156)
 
 **Features**
  * use relative paths; uap output can now be moved (#115)
