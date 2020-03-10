@@ -15,6 +15,7 @@ from datetime import datetime
 import inspect
 from logging import getLogger
 import os
+import pwd
 import re
 import signal
 import socket
@@ -558,6 +559,7 @@ class AbstractStep(object):
         executing_ping_info['start_time'] = datetime.now()
         executing_ping_info['host'] = socket.gethostname()
         executing_ping_info['pid'] = os.getpid()
+        executing_ping_info['user'] = pwd.getpwuid(os.getuid())[0]
         executing_ping_info['temp_directory'] = run.get_temp_output_directory()
         if job_id:
             executing_ping_info['cluster job id'] = job_id
