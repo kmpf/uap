@@ -1,11 +1,51 @@
 from uaperrors import UAPError
-import sys
 import os
 from logging import getLogger
 import pipeline_info
 import exec_group
 
 logger = getLogger('uap_logger')
+
+
+def abs2rel_path(func):
+    '''
+    A decoraror function to replace absolute paths with relative paths.
+    It also removes the deprectaed output path placeholders for
+    backwards compatibility with old step implementation.
+    '''
+
+    def inner(self, *args):
+        run = self.get_run()
+        working_dir = run.get_temp_output_directory()
+        abs_dest = run.get_step().get_pipeline().config['destination_path']
+        rel_path = os.path.relpath(abs_dest, working_dir)
+
+        def repl(text):
+            if isinstance(text, str):
+                return text.replace(abs_dest, rel_path)
+            elif isinstance(text, list) or isinstance(text, set):
+                return [repl(element) for element in text]
+            elif text is None:
+                return None
+            else:
+                raise UAPError("Function %s does not return string or "
+                               "list of strings." % func.__name__)
+        return repl(func(self, *args))
+    return inner
+
+
+def quote(cmd_args):
+    """
+    An arument list is combined into a string and arguments
+    containing bash special characters are single quoted.
+    """
+    if not isinstance(cmd_args, str):
+        return ' '.join(quote(c) for c in cmd_args)
+    if "'" in cmd_args:
+        cmd_args = "'%s'" % cmd_args.replace("'", "\\'")
+    elif any(s in cmd_args for s in ' |*+";?&()[]<>$#`\t\n'):
+        cmd_args = "'%s'" % cmd_args
+    return cmd_args
 
 
 class CommandInfo(object):
@@ -86,43 +126,3 @@ class CommandInfo(object):
             for path, tool in map.items():
                 tool = tool.replace(path, tool)
         return quote([tool] + cmd[1:]) + out
-
-
-def abs2rel_path(func):
-    '''
-    A decoraror function to replace absolute paths with relative paths.
-    It also removes the deprectaed output path placeholders for
-    backwards compatibility with old step implementation.
-    '''
-
-    def inner(self, *args):
-        run = self.get_run()
-        working_dir = run.get_temp_output_directory()
-        abs_dest = run.get_step().get_pipeline().config['destination_path']
-        rel_path = os.path.relpath(abs_dest, working_dir)
-
-        def repl(text):
-            if isinstance(text, str):
-                return text.replace(abs_dest, rel_path)
-            elif isinstance(text, list) or isinstance(text, set):
-                return [repl(element) for element in text]
-            elif text is None:
-                return None
-            else:
-                raise UAPError("Function %s does not return string or "
-                               "list of strings." % func.__name__)
-        return repl(func(self, *args))
-    return inner
-
-def quote(cmd_args):
-    """
-    An arument list is combined into a string and arguments
-    containing bash special characters are single quoted.
-    """
-    if not isinstance(cmd_args, str):
-        return ' '.join(quote(c) for c in cmd_args)
-    if "'" in cmd_args:
-        cmd_args = "'%s'" % cmd_args.replace("'", "\\'")
-    elif any(s in cmd_args for s in ' |*+";?&()[]<>$#`\t\n'):
-        cmd_args = "'%s'" % cmd_args
-    return cmd_args
