@@ -246,9 +246,9 @@ class Pipeline(object):
             except subprocess.CalledProcessError:
                 logger.error("Execution of %s failed." % " ".join(command))
 
-            if self.git_diff != '':
+            if self.git_diff:
                 logger.warning('THE GIT REPOSITORY HAS UNCOMMITED CHANGES:\n'
-                               '%s' % self.git_diff)
+                               '%s' % self.git_diff.decode('utf-8'))
 
         """
         check if we got passed an 'arguments' parameter
