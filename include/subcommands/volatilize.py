@@ -18,6 +18,3 @@ def main(args):
     p = pipeline.Pipeline(arguments=args)
     p.check_volatile_files(details=args.details, srsly=args.srsly)
 
-
-if __name__ == '__main__':
-    main(args)

@@ -115,7 +115,7 @@ class SplitFastq(AbstractStep):
                             self.get_tool('split_fastqn'),
                             '-i', r2,
                             '-n', str(readcount),
-                            '-o', basename,
+                            '-o', '.',
                             '-p', new_run_id,
                             '-s', str(index),
                             '-m', 'r2'

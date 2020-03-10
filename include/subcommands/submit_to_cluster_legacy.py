@@ -6,6 +6,7 @@ import datetime
 import copy
 import logging
 import os
+import errno
 import re
 import subprocess
 import yaml
@@ -42,7 +43,7 @@ logger = logging.getLogger("uap_logger")
 def main(args):
     p = pipeline.Pipeline(arguments=args)
 
-    wish_list = p.get_task_with_list()
+    task_wish_list = p.get_task_with_list()
 
     tasks_left = []
 
@@ -54,7 +55,7 @@ def main(args):
         raise UAPError("Couldn't open %s." % template_path)
 
     for task in p.all_tasks_topologically_sorted:
-        if wish_list and task not in task_wish_list:
+        if task_wish_list and task not in task_wish_list:
             continue
         tasks_left.append(task)
 
@@ -66,8 +67,7 @@ def main(args):
         quotas['default'] = p.config['cluster']['default_job_quota']
         print("Set default quota to %s" % quotas['default'])
     except BaseException:
-        print("No default quota defined in %s. Set default quota to '5'." %
-              p.get_config_filepath())
+        print("No default quota defined in config. Set default quota to '5'.")
         quotas['default'] = 5
     # read quotas
     # -> for every step, a quota can be defined (with a default quota
@@ -204,7 +204,7 @@ def main(args):
                     bufsize=-1,
                     stdout=subprocess.PIPE)
             except OSError as e:
-                if e.errno == os.errno.ENOENT:
+                if e.errno == errno.ENOENT:
                     raise Exception("Unable to launch %s. Maybe " %
                                     p.get_cluster_command('submit') +
                                     "you are not executing this script on " +

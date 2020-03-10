@@ -644,7 +644,8 @@ class ProcessPool(object):
                         was_reporter = False
 
             except TimeoutException as e:
-                logger.error("TimeoutException (%s): %s" % (e.args, e.message))
+                error = traceback.format_exception(*sys.exc_info())[-1]
+                logger.error(error)
                 self.log("Timeout, killing all child processes now.")
                 ProcessPool.kill_all_child_processes()
             except OSError as e:
@@ -904,12 +905,13 @@ class ProcessPool(object):
                     if iterations == 30:
                         delay = 10
                     time.sleep(delay)
-            except Exception as e:
+            except BaseException:
+                error = traceback.format_exception(*sys.exc_info())[-1]
                 name = 'unkown name'
                 if pid in self.proc_details.keys():
                     name = self.proc_details[pid]['name']
                 logger.error("PID %s (%s) Process Watcher Exception: %s" %
-                             (pid, name, type(e).__name__, e))
+                             (pid, name, error))
             finally:
                 os._exit(0)
         else:

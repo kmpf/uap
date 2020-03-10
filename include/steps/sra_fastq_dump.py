@@ -304,8 +304,8 @@ class SraFastqDump (AbstractStep):
 
                     # with exec_group.add_pipeline() as fastq_dump_pipe:
                     fastq_dump = [self.get_tool('fastq-dump'), '--stdout']
-                    exec_group.extend(option_list)
-                    exec_group.extend(fifo_path_sra)
+                    fastq_dump.extend(sra_option_list)
+                    fastq_dump.extend(fifo_path_sra)
 
                     exec_group.add_command(
                         fastq_dump,

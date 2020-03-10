@@ -60,7 +60,7 @@ class ConnectionsCollector(object):
         '''
         if not isinstance(files, list):
             raise UAPError('"files" must be a list but is a %s' %
-                           file.__class__.__name__)
+                           files.__class__.__name__)
         run_id = self._init_run_id(run_id)
         if not isinstance(connection, str):
             raise UAPError('The passed connection must be a string.')

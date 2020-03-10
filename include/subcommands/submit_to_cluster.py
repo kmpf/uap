@@ -5,6 +5,7 @@ import datetime
 import copy
 import logging
 import os
+import errno
 import re
 import subprocess
 import yaml
@@ -249,7 +250,7 @@ def main(args):
                 bufsize=-1,
                 stdout=subprocess.PIPE)
         except OSError as e:
-            if e.errno == os.errno.ENOENT:
+            if e.errno == errno.ENOENT:
                 raise Exception("Unable to launch %s. Maybe " %
                                 p.get_cluster_command('submit') +
                                 "you are not executing this script on " +

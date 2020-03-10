@@ -30,32 +30,6 @@ class CommandInfo(object):
                     (_, command))
             self._command.append(_)
 
-    def abs2rel_path(func):
-        '''
-        A decoraror function to replace absolute paths with relative paths.
-        It also removes the deprectaed output path placeholders for
-        backwards compatibility with old step implementation.
-        '''
-
-        def inner(self, *args):
-            run = self.get_run()
-            working_dir = run.get_temp_output_directory()
-            abs_dest = run.get_step().get_pipeline().config['destination_path']
-            rel_path = os.path.relpath(abs_dest, working_dir)
-
-            def repl(text):
-                if isinstance(text, str):
-                    return text.replace(abs_dest, rel_path)
-                elif isinstance(text, list) or isinstance(text, set):
-                    return [repl(element) for element in text]
-                elif text is None:
-                    return None
-                else:
-                    raise UAPError("Function %s does not return string or "
-                                   "list of strings." % func.__name__)
-            return repl(func(self, *args))
-        return inner
-
     def get_run(self):
         if isinstance(self._eop, pipeline_info.PipelineInfo):
             run_info = self._eop.get_exec_group().get_run()
@@ -113,6 +87,32 @@ class CommandInfo(object):
                 tool = tool.replace(path, tool)
         return quote([tool] + cmd[1:]) + out
 
+
+def abs2rel_path(func):
+    '''
+    A decoraror function to replace absolute paths with relative paths.
+    It also removes the deprectaed output path placeholders for
+    backwards compatibility with old step implementation.
+    '''
+
+    def inner(self, *args):
+        run = self.get_run()
+        working_dir = run.get_temp_output_directory()
+        abs_dest = run.get_step().get_pipeline().config['destination_path']
+        rel_path = os.path.relpath(abs_dest, working_dir)
+
+        def repl(text):
+            if isinstance(text, str):
+                return text.replace(abs_dest, rel_path)
+            elif isinstance(text, list) or isinstance(text, set):
+                return [repl(element) for element in text]
+            elif text is None:
+                return None
+            else:
+                raise UAPError("Function %s does not return string or "
+                               "list of strings." % func.__name__)
+        return repl(func(self, *args))
+    return inner
 
 def quote(cmd_args):
     """

@@ -26,9 +26,13 @@ class mergeNumpyZipArrays(AbstractStep):
         self.add_connection('in/read-coverage')
         self.add_connection('out/read-coverage')
 
+        self.add_option('subcommand', str, optional=False,
+                        description='The arguments to multiBamSummary.')
+
         self.require_tool('merge_numpy_arrays.py')
 
     def runs(self, run_ids_connections_files):
+        subcommand = self.get_option('subcommand')
         for run_id in run_ids_connections_files.keys():
             # Collect input_paths and labels for multiBamSummary
             input_paths = run_ids_connections_files[run_id]['in/alignments']
@@ -45,7 +49,6 @@ class mergeNumpyZipArrays(AbstractStep):
                 # Let's compile the command
                 with run.new_exec_group() as multi_bam_summary_eg:
                     # 1. multiBamSummary command
-                    # TODO: where is subcommand coming from???
                     multi_bam_summary = [
                         self.get_tool('multiBamSummary'), subcommand]
                     # Append list of input BAM files
@@ -70,9 +73,6 @@ class mergeNumpyZipArrays(AbstractStep):
                     # Append number of processors
                     multi_bam_summary.extend(['--numberOfProcessors',
                                               str(self.get_cores())])
-                    # Append list of options
-                    # TODO: optionlist dont exists!!!
-                    multi_bam_summary.extend(option_list)
 
                     # Add multiBamSummary to execution group
                     multi_bam_summary_eg.add_command(multi_bam_summary)

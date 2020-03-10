@@ -23,6 +23,24 @@ from uaperrors import UAPError
 logger = getLogger("uap_logger")
 
 
+def cache(func):
+    '''
+    A decorator to cache a functions return value with self.fsc.
+    '''
+    function_name = [func.__name__, inspect.signature(func)]
+    @wraps(func)
+    def inner(self, *args, **kwargs):
+        key = str(function_name + [args, kwargs])
+        cache = self.fsc.cache
+        if key in cache:
+            result = cache[key]
+        else:
+            result = func(self, *args, **kwargs)
+            cache[key] = result
+        return result
+    return inner
+
+
 class Run(object):
     '''
     The Run class is a helper class which represents a run in a step. Declare
@@ -85,23 +103,6 @@ class Run(object):
         Contains path to currently used temporary directory if set.
         '''
         self._known_paths = dict()
-
-    def cache(func):
-        '''
-        A decorator to cache a functions return value with self.fsc.
-        '''
-        function_name = [func.__name__, inspect.signature(func)]
-        @wraps(func)
-        def inner(self, *args, **kwargs):
-            key = str(function_name + [args, kwargs])
-            cache = self.fsc.cache
-            if key in cache:
-                result = cache[key]
-            else:
-                result = func(self, *args, **kwargs)
-                cache[key] = result
-            return result
-        return inner
 
     def __enter__(self):
         return self
@@ -863,12 +864,12 @@ class Run(object):
         try:
             with open(self.get_queued_ping_file(), 'r') as buff:
                 current.update(yaml.load(buff, Loader=yaml.FullLoader))
-        except IOError as e:
+        except IOError:
             pass
         try:
             with open(self.get_executing_ping_file(), 'r') as buff:
                 current.update(yaml.load(buff, Loader=yaml.FullLoader))
-        except IOError as e:
+        except IOError:
             pass
         if current:
             result['run current'] = current

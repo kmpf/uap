@@ -794,7 +794,7 @@ class Pipeline(object):
             except BaseException:
                 # swallow all exception that happen here, failing notifications
                 # are no reason to crash the entire thing
-                logger.warning('Notification of "%s" failed with:' %
+                logger.warning('Notification of "%s" failed with: %s' %
                                (self.config['notify'], sys.exc_info()[0]))
                 pass
 

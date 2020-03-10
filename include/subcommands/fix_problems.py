@@ -2,6 +2,7 @@
 
 import sys
 import os
+import errno
 import logging
 import string
 import yaml
@@ -40,7 +41,7 @@ def main(args):
         try:
             process = subprocess.call(cmd)
         except OSError as e:
-            if e.errno == os.errno.ENOENT:
+            if e.errno == errno.ENOENT:
                 raise UAPError('The configured first error report script "%s" '
                                'closed with an error.' % report_script)
             else:

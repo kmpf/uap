@@ -77,7 +77,7 @@ def check_parents_and_run(task, states, turn_bad):
             error = "Cannot run %s because a parent job " \
                 "%s is %s when it should be %s." % \
                 (task, parent_task, parent_state, should)
-            log_task_error(task, error)
+            log_task_error(task, error, False)
     task.run()
 
 
@@ -92,10 +92,3 @@ def log_task_error(task, error, turn_bad):
         task.move_ping_file(bad_copy=False)
     raise UAPError(error)
 
-
-if __name__ == '__main__':
-    try:
-        main()
-    finally:
-        # make sure all child processes get terminated
-        process_pool.ProcessPool.kill_all_child_processes()

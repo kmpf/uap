@@ -81,7 +81,6 @@ class Pear(AbstractStep):
                         'bases.')
 
     def runs(self, run_ids_connections_files):
-        param_list = self.get_param_list()
         out_files = ('assembled', 'unassembled.forward', 'unassembled.reverse',
                      'discarded')
         for run_id in run_ids_connections_files.keys():
@@ -112,7 +111,6 @@ class Pear(AbstractStep):
 
                         pear = [self.get_tool('pear')]
                         pear.extend(option_list)
-                        pear.extend(param_list)
                         pear_exec_group.add_command(
                             pear,
                             stdout_path=run.add_output_file(
