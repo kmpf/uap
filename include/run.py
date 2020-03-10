@@ -849,29 +849,31 @@ class Run(object):
         del result['output']
         anno = self.written_anno_data()
         if anno and anno.get('run'):
-            result['run'] = OrderedDict([
+            result['run annotation'] = OrderedDict([
                 ('start_time', anno['start_time']),
                 ('end_time', anno['end_time'])
             ])
             for key, value in anno['run'].items():
                 if key in list(result.keys()) + ['known_paths', 'structure']:
                     continue
-                result['run'][key] = value
+                result['run annotation'][key] = value
         else:
-            info = dict()
-            result['run'] = 'not yet run'
-            try:
-                with open(self.get_queued_ping_file(), 'r') as buff:
-                    info.update(yaml.load(buff, Loader=yaml.FullLoader))
-            except IOError as e:
-                pass
-            try:
-                with open(self.get_executing_ping_file(), 'r') as buff:
-                    info.update(yaml.load(buff, Loader=yaml.FullLoader))
-            except IOError as e:
-                pass
-            if info:
-                result['run'] = info
+            result['run annotation'] = 'no completed run yet'
+        current = dict()
+        try:
+            with open(self.get_queued_ping_file(), 'r') as buff:
+                current.update(yaml.load(buff, Loader=yaml.FullLoader))
+        except IOError as e:
+            pass
+        try:
+            with open(self.get_executing_ping_file(), 'r') as buff:
+                current.update(yaml.load(buff, Loader=yaml.FullLoader))
+        except IOError as e:
+            pass
+        if current:
+            result['run current'] = current
+        else:
+            result['run current'] = 'not currently running'
         return result
 
     @cache
