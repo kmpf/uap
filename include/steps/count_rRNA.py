@@ -46,7 +46,7 @@ class SamToFastq(AbstractStep):
                     "%s_%s-rRNA_count.txt" % (run_id, 'R1'),
                     input_paths)
 
-                 samtools = [self.get_tool('samtools'), 'view', '-S']
+                samtools = [self.get_tool('samtools'), 'view', '-S']
 
                 with run.new_exec_group() as exec_group:
                     with exec_group.add_pipeline() as pipe:
