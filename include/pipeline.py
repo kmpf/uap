@@ -247,7 +247,8 @@ class Pipeline(object):
                 logger.error("Execution of %s failed." % " ".join(command))
 
             if self.git_diff != '':
-                logger.warning('THE GIT REPOSITORY HAS UNCOMMITED CHANGES!')
+                logger.warning('THE GIT REPOSITORY HAS UNCOMMITED CHANGES:\n'
+                               '%s' % self.git_diff)
 
         """
         check if we got passed an 'arguments' parameter
