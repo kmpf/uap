@@ -590,18 +590,20 @@ class AbstractStep(object):
                 pass
             self.remove_ping_file(executing_ping_path)
 
+        p = self.get_pipeline()
         def ping_on_term(signum, frame):
             logger.warning('Recived SIGTERM and moving execution ping file...')
             kill_exec_ping()
             self.remove_ping_file(queued_ping_path, bad_copy=True)
-            original_term_handler(signum, frame)
+            p.caught_signal = signum
+            process_pool.ProcessPool.kill()
             raise UAPError('Recived TERM signal (canceled job).')
-
         def ping_on_int(signum, frame):
             logger.warning('Recived SIGINT and moving execution ping file...')
             kill_exec_ping()
             self.remove_ping_file(queued_ping_path, bad_copy=True)
-            original_int_handler(signum, frame)
+            p.caught_signal = signum
+            process_pool.ProcessPool.kill()
             raise UAPError('Recived INT signal (keybord interrupt).')
         original_term_handler = signal.signal(signal.SIGTERM, ping_on_term)
         original_int_handler = signal.signal(signal.SIGINT, ping_on_int)
@@ -611,7 +613,6 @@ class AbstractStep(object):
             (self, run_id, socket.gethostname())
         if job_id:
             message += " with job id %s" % job_id
-        p = self.get_pipeline()
         p.notify(message)
         caught_exception = None
         self._state = AbstractStep.states.EXECUTING
@@ -619,9 +620,6 @@ class AbstractStep(object):
         os.chdir(run.get_temp_output_directory())
         try:
             self.execute(run_id, run)
-        except UAPError:
-            process_pool.ProcessPool.kill()
-            caught_exception = sys.exc_info()
         except BaseException:
             # Oh my. We have a situation. This is awkward. Tell the process
             # pool to wrap up. This way, we can try to get process stats before

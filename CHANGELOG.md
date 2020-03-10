@@ -116,6 +116,7 @@
  * PEP8 adjustments
  * configure some GNU Core Utilities by default and ignore theire version (#161)
  * removed the already deprecated `io_step`
+ * catch and log more errors in annotation file during run-locally
 
 ## 1.1 (20.01.2020)
 

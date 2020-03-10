@@ -70,6 +70,10 @@ class Run(object):
         '''
         Identifier of this run.
         '''
+        self.annotation_written = False
+        '''
+        Flag to mark if an annotation file was written during this uap execution.
+        '''
         self._private_info = dict()
         self._public_info = dict()
         self._input_files = set()
@@ -971,6 +975,8 @@ class Run(object):
         # overwrite the annotation if it already exists
         with open(annotation_path, 'w') as f:
             f.write(annotation_yaml)
+
+        self.annotation_written = True
 
         return annotation_path
 

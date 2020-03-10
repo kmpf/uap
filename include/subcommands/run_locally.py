@@ -20,11 +20,17 @@ logger = logging.getLogger("uap_logger")
 def main(args):
     p = pipeline.Pipeline(arguments=args)
 
+    task = None
     def handle_signal(signum, frame):
         logger.warning("Catching %s!" %
                        process_pool.ProcessPool.SIGNAL_NAMES[signum])
         p.caught_signal = signum
         process_pool.ProcessPool.kill()
+        if task:
+            signame = process_pool.ProcessPool.SIGNAL_NAMES[signum]
+            error = 'UAP stopped because it caught signal %d - %s' % \
+                        (signum, signame)
+            log_task_error(task, error, True)
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
 
@@ -77,8 +83,15 @@ def check_parents_and_run(task, states, turn_bad):
             error = "Cannot run %s because a parent job " \
                 "%s is %s when it should be %s." % \
                 (task, parent_task, parent_state, should)
-            log_task_error(task, error, False)
-    task.run()
+            log_task_error(task, error, turn_bad)
+    error = 'Task failed write a detailed annotation'
+    try:
+        task.run()
+    except BaseException:
+        error += ' and crashed with:\n%s' % \
+                ''.join(traceback.format_exception(
+                *sys.exc_info())[-2:]).strip()
+    log_task_error(task, error, True)
 
 
 def log_task_error(task, error, turn_bad):
@@ -86,7 +99,8 @@ def log_task_error(task, error, turn_bad):
         run = task.get_run()
         run.get_step().start_time = datetime.now()
         run.get_step().end_time = datetime.now()
-        run.write_annotation_file(error=error)
+        if not run.annotation_written:
+            run.write_annotation_file(error=error)
         task.move_ping_file()
     else:
         task.move_ping_file(bad_copy=False)
