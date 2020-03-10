@@ -82,6 +82,7 @@
  * show output hashing progress
  * warn if unused tools are configured
  * git status --porcelain output with changes and untracked files in annotation files
+ * more info on running task in `status <task name>`
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings

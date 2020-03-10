@@ -858,7 +858,20 @@ class Run(object):
                     continue
                 result['run'][key] = value
         else:
-            result['run'] = 'not run yet'
+            info = dict()
+            result['run'] = 'not yet run'
+            try:
+                with open(self.get_queued_ping_file(), 'r') as buff:
+                    info.update(yaml.load(buff, Loader=yaml.FullLoader))
+            except IOError as e:
+                pass
+            try:
+                with open(self.get_executing_ping_file(), 'r') as buff:
+                    info.update(yaml.load(buff, Loader=yaml.FullLoader))
+            except IOError as e:
+                pass
+            if info:
+                result['run'] = info
         return result
 
     @cache
@@ -922,7 +935,7 @@ class Run(object):
             try:
                 with open(self.get_queued_ping_file(), 'r') as buff:
                     info = yaml.load(buff, Loader=yaml.FullLoader)
-                log['run']['cluster job id'] = info['job_id']
+                log['run']['cluster job id'] = info['cluster job id']
             except (IOError, KeyError):
                 pass
 

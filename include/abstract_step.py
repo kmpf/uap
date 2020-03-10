@@ -519,7 +519,7 @@ class AbstractStep(object):
         try:
             with open(queued_ping_path, 'r') as buff:
                 info = yaml.load(buff, Loader=yaml.FullLoader)
-            job_id = info['job_id']
+            job_id = info['cluster job id']
         except (IOError, KeyError):
             job_id = None
 
@@ -561,7 +561,7 @@ class AbstractStep(object):
         executing_ping_info['cwd'] = os.getcwd()
         executing_ping_info['temp_directory'] = run.get_temp_output_directory()
         if job_id:
-            executing_ping_info['cluster_job_id'] = job_id
+            executing_ping_info['cluster job id'] = job_id
 
         with open(executing_ping_path, 'w') as f:
             f.write(yaml.dump(executing_ping_info, default_flow_style=False))

@@ -274,7 +274,7 @@ def main(args):
 
         queued_ping_info = dict()
         queued_ping_info['step'] = step_name
-        queued_ping_info['job_id'] = job_id
+        queued_ping_info['cluster job id'] = job_id
         queued_ping_info['submit_time'] = datetime.datetime.now()
         for task in tasks:
             queued_ping_info['run_id'] = task.run_id
@@ -307,7 +307,7 @@ def main(args):
                     try:
                         parent_info = yaml.load(
                             open(parent_queued_ping_path), Loader=yaml.FullLoader)
-                        parent_job_ids.add(parent_info['job_id'])
+                        parent_job_ids.add(parent_info['cluster job id'])
                     except BaseException:
                         print(
                             "Couldn't determine job_id of %s while trying to load %s." %

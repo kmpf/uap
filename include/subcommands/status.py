@@ -151,7 +151,7 @@ def main(args):
                     print('%s is queued but seems to stop just now' % task)
                 else:
                     print('%s is queued with id %s since %s' %
-                          (task, info['job_id'], info['submit_time']))
+                          (task, info['cluster job id'], info['submit_time']))
 
             elif state == p.states.VOLATILIZED:
                 print('%s was volatilized and must be re-run if the data is '

@@ -810,7 +810,7 @@ class Pipeline(object):
             try:
                 with open(queued_ping_file, 'r') as fl:
                     info = yaml.load(fl, Loader=yaml.FullLoader)
-                ids.add(info['job_id'])
+                ids.add(info['cluster job id'])
             except (IOError, TypeError) as e:
                 if os.path.exists(queued_ping_file):
                     raise UAPError('Could not read ping file %s: %s' %
@@ -819,7 +819,7 @@ class Pipeline(object):
                     try:
                         with open(failed_qpf, 'r') as fl:
                             info = yaml.load(fl, Loader=yaml.FullLoader)
-                        ids.add(info['job_id'])
+                        ids.add(info['cluster job id'])
                     except (IOError, TypeError) as e:
                         if os.path.exists(failed_qpf):
                             raise UAPError('Could not read ping file %s: %s' %
@@ -916,10 +916,10 @@ class Pipeline(object):
                     if os.path.exists(queued_ping_file):
                         raise e
                 else:
-                    if not str(info['job_id']) in running_jids:
+                    if not str(info['cluster job id']) in running_jids:
                         queue_problems.append((task, queued_ping_file,
                                                info['submit_time'],
-                                               info['job_id']))
+                                               info['cluster job id']))
             try:
                 info = yaml.load(open(bad_queued_ping_file, 'r'),
                                  Loader=yaml.FullLoader)
@@ -928,7 +928,7 @@ class Pipeline(object):
                     raise e
             else:
                 bad_problems.append((task, bad_queued_ping_file,
-                                     info['submit_time'], info['job_id']))
+                                     info['submit_time'], info['cluster job id']))
 
         show_hint = False
 
