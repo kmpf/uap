@@ -1,7 +1,3 @@
-from logging import getLogger
-logger = getLogger('uap_logger')
-
-
 class UAPError(Exception):
     """Exception raised for any error in the UAP.
 

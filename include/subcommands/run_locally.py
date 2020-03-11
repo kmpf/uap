@@ -8,6 +8,7 @@ import signal
 import socket
 import yaml
 from datetime import datetime
+import traceback
 
 import misc
 import pipeline
@@ -84,25 +85,32 @@ def check_parents_and_run(task, states, turn_bad):
                 "%s is %s when it should be %s." % \
                 (task, parent_task, parent_state, should)
             log_task_error(task, error, turn_bad)
-    error = 'Task failed write a detailed annotation'
     try:
         task.run()
     except BaseException:
-        error += ' and crashed with:\n%s' % \
+        error = 'Task crashed with:\n%s' % \
                 ''.join(traceback.format_exception(
                 *sys.exc_info())[-2:]).strip()
-    log_task_error(task, error, True)
+        log_task_error(task, error, True, False)
+        raise
+    log_task_error(task, None, True)
 
 
-def log_task_error(task, error, turn_bad):
+def log_task_error(task, error, turn_bad, raiseit=None):
     if turn_bad:
         run = task.get_run()
         run.get_step().start_time = datetime.now()
         run.get_step().end_time = datetime.now()
         if not run.annotation_written:
+            if error is None:
+                error = 'Task failed write an annotation without ' \
+                        'raising an exception.'
             run.write_annotation_file(error=error)
+            if raiseit is None:
+                raiseit = True
         task.move_ping_file()
     else:
         task.move_ping_file(bad_copy=False)
-    raise UAPError(error)
+    if raiseit:
+        raise UAPError(error)
 

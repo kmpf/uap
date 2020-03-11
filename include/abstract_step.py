@@ -629,7 +629,7 @@ class AbstractStep(object):
             caught_exception = sys.exc_info()
             error = ''.join(traceback.format_exception(
                     *caught_exception)[-2:]).strip()
-            logger.error(error)
+            logger.debug(error)
         finally:
             signal.signal(signal.SIGTERM, original_term_handler)
             signal.signal(signal.SIGINT, original_int_handler)
