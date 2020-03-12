@@ -833,20 +833,23 @@ class Pipeline(object):
         task_wish_list = list()
         args = list()
         if hasattr(self.args, 'run'):
-            args = self.args.run
-        for arg in args:
-            if arg in self.task_for_task_id:
-                task = self.task_for_task_id[arg]
+            specified_tasks = self.args.run
+        for task_id in specified_tasks:
+            if task_id in self.task_for_task_id:
+                task = self.task_for_task_id[task_id]
                 if as_string:
                     task = str(task)
                 task_wish_list.append(task)
             else:
                 for task in self.all_tasks_topologically_sorted:
-                    if str(task)[0:len(arg)] == arg:
+                    if str(task).startswith(task_id):
                         if as_string:
                             task = str(task)
                         task_wish_list.append(task)
-        if not task_wish_list and exclusive is False:
+        if specified_tasks and not task_wish_list:
+            raise UAPError("No task matches the requested pattern(s) '%s'." %
+                           ' '.join(specified_tasks))
+        if not specified_tasks and exclusive is False:
             if not as_string:
                 return self.all_tasks_topologically_sorted
             return [str(t) for t in self.all_tasks_topologically_sorted]
