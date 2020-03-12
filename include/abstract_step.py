@@ -187,7 +187,8 @@ class AbstractStep(object):
                     message = "Unknown option in %s (%s): %s." % \
                         (self.get_step_name(), self.get_step_type(), key)
                     logger.error(message + "\nAvailable options are:\n%s" %
-                                 yaml.dump(self._defined_options))
+                                 yaml.dump(self._defined_options,
+                                           Dumper=misc.UAPDumper))
                     raise UAPError(message)
                 if value is not None and type(
                         value) not in self._defined_options[key]['types']:
@@ -1090,7 +1091,7 @@ class AbstractStep(object):
                     (self, key, type(kwargs['default']), option_types))
 
         info = dict()
-        info['types'] = type_tuple(option_types)
+        info['types'] = misc.type_tuple(option_types)
         for _ in ['optional', 'default', 'description', 'choices']:
             info[_] = kwargs[_]
 
@@ -1235,21 +1236,3 @@ class AbstractSourceStep(AbstractStep):
     def __init__(self, pipeline):
         super(AbstractSourceStep, self).__init__(pipeline)
 
-
-def type_presenter(dumper, data):
-    return dumper.represent_scalar('tag:yaml.org,2002:str', data.__name__)
-
-
-yaml.add_representer(type, type_presenter)
-
-
-class type_tuple(tuple):
-    pass
-
-
-def type_tuple_presenter(dumper, data):
-    strings = [ty.__name__ for ty in data]
-    return dumper.represent_scalar('tag:yaml.org,2002:str', ', '.join(strings))
-
-
-yaml.add_representer(type_tuple, type_tuple_presenter)
