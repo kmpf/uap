@@ -18,7 +18,7 @@
  * steps now run within their temp directory (#29, #31)
  * explicit and comlete lmod config in annotation files
  * raise exeption if an unknown configuration key is used
- * fix race condition in `samtools_index` step
+ * fix race condition in `samtools_index` step (#163)
  * a task is only finished when hashing and annotation file are done (#152)
  * exceptions during hashing or renaming are now caught and logged
  * output hash not sensitive to order of commands within an execution group
