@@ -144,7 +144,7 @@ class AdapterRemoval(AbstractStep):
                         contamination is trimmed [current: 0].")
 
         self.add_option('identify-adapters', bool, default=None, optional=True)
-        self.add_option('seed', int, default=22595, optional=True)
+        self.add_option('seed', int, default=None, optional=True)
 
     def runs(self, cc):
 
@@ -156,8 +156,8 @@ class AdapterRemoval(AbstractStep):
                 'seed') is not None and self.get_option('cores') > 1:
             logger.warning(
                 'AdapterRemoval can not work deterministically on '
-                'multiple threads. Please pass a blank `seed:` option '
-                'to deactivate the seed or set `cores:` to 1.')
+                'multiple threads. Please unset the `seed:` option '
+                'or set `cores:` to 1.')
 
         if not cc.all_runs_have_connection('in/first_read'):
             read_name = '' if self.__treat_as_paired else ' first'
