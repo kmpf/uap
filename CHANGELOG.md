@@ -28,6 +28,7 @@
  * `count_rRNA` doese not fail silently for uncomressed input (#156)
  * detect uncommitded changes even if they are staged
  * no default seed for adapterRemoval (#149)
+ * fix `fastx_reverse_complement` naming issue (#162)
 
 **Features**
  * use relative paths; uap output can now be moved (#115)
