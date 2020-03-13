@@ -870,6 +870,7 @@ class AbstractStep(object):
         count = {}
         runs = self.get_runs()
         run_iter = tqdm(runs, total=len(runs), desc='runs',
+                        bar_format='{desc}:{percentage:3.0f}%|{bar:10}{r_bar}',
                         disable=not progress, leave=False)
         try:
             for run in run_iter:
