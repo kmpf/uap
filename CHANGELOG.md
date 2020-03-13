@@ -84,6 +84,7 @@
  * warn if unused tools are configured
  * git status --porcelain output with changes and untracked files in annotation files
  * more info on running task in `status <task name>`
+ * include the script `collect_scs.py` in the uap (#164)
 
 **additional stuff**
  * updated documentation and resolved sphinx warnings
