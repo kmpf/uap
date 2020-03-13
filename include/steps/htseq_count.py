@@ -79,25 +79,25 @@ class HtSeqCount(AbstractStep):
             self.set_cores(self.get_option('threads'))
 
         # look for reference assembly in in-connections
-        if self.is_option_set_in_config('feature-file'):
-            features_path = os.path.abspath(self.get_option('feature-file'))
-            if not os.path.isfile(features_path):
-                raise StepError(self, '[HTSeq-Count]: %s is no file.' %
+        option_ref_assembly = self.get_option('feature-file')
+        if option_ref_assembly is not None:
+            option_ref_assembly = os.path.abspath(option_ref_assembly)
+            if not os.path.isfile(option_ref_assembly):
+                raise StepError(self, '%s is no file.' %
                                 self.get_option('feature-file'))
-        else:
-            features_path = None
-        features_path = cc.look_for_unique('in/features', features_path)
+        ref_assembly = cc.look_for_unique('in/features', option_ref_assembly)
         ref_per_run = cc.all_runs_have_connection('in/features')
-        if features_path is None and ref_per_run is False:
-            raise StepError(self, '[HTSeq-Count]: no feature file given')
 
         allignment_runs = cc.get_runs_with_connections('in/alignments')
         for run_id in allignment_runs:
 
             input_paths = cc[run_id]['in/alignments']
-            if ref_per_run is True:
-                features_path = cc['in/features'][0]
-            input_paths.append(features_path)
+            if ref_per_run:
+                # all runs come with their own reference assembly
+                ref_assembly = cc['in/features'][0]
+            if option_ref_assembly is None:
+                # include the file in the dependencies
+                input_paths.append(ref_assembly)
 
             # Is the alignment gzipped?
             root, ext = os.path.splitext(input_paths[0])
@@ -160,7 +160,7 @@ class HtSeqCount(AbstractStep):
 
                         htseq_count.extend(['--format=sam'])
 
-                        htseq_count.extend(['-', features_path])
+                        htseq_count.extend(['-', ref_assembly])
                         # sys.stderr.write("hts-cmd: %s\n" % htseq_count)
 
                         pipe.add_command(

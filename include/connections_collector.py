@@ -209,21 +209,19 @@ class ConnectionsCollector(object):
         runs_with_any = self.get_runs_with_any(connections)
         return runs.difference(runs_with_any)
 
-    def look_for_unique(self, connection, default=None):
+    def look_for_unique(self, connection, include=None):
         '''
         Looks for a unique file in the connection and returns it.
         E.g., to find a reference assembly among all parent runs.
-        If all runs come with the file and no default is set it returns None.
-        If more then one but not all runs come with the connection an UAPError is raised.
+        If NO runs come with the connection it returns None and if
+        MORE THAN ONE run comes with the connection an UAPError is raised.
+        The value passed with include is also counted.
         '''
-        if self.connection_exists(connection) and default is not None:
+        if self.connection_exists(connection) and include is not None:
             raise UAPError(
                 'In step %s runs come with %s but it is set '
-                'to %s in the config.' %
-                (self.step_name, connection, default))
-
-        if self.all_runs_have_connection(connection):
-            return default
+                'to %s through an option.' %
+                (self.step_name, connection, include))
 
         ref_run = self.get_runs_with_connections(connection, with_empty=False)
         if len(ref_run) > 1:
@@ -231,19 +229,19 @@ class ConnectionsCollector(object):
                 'More then one but not all runs come with %s.' %
                 connection)
         elif len(ref_run) == 1:
-            if default is not None:
+            if include is not None:
                 raise UAPError(
                     'In step %s, value supplied by connection %s but'
                     'option is set to %s.' %
-                    (self.step_name, connection, default))
-            ref_run = ref_run.pop()
+                    (self.step_name, connection, include))
+            ref_run = ref_run.pop() # ref_run is a temporary set
             con_value = self.connections[ref_run][connection]
             if len(con_value) > 1:
                 raise UAPError(
-                    'In step %s more than one file is passed with %s.' %
+                    'In step %s more than one file is passed through %s.' %
                     (self.step_name, connection))
             return con_value[0]
-        return default
+        return include
 
     def connection_exists(self, connection):
         '''
@@ -264,6 +262,15 @@ class ConnectionsCollector(object):
         if isinstance(connection, list):
             return all(con in self._con_of_all_runs for con in connection)
         return connection in self._con_of_all_runs
+
+    def any_runs_have_connection(self, connection):
+        '''
+        Returns a logical indication whether any saved runs have the queried
+        ``connection``.
+        '''
+        if self.connections.get(connection):
+            return True
+        return False
 
     def __getitem__(self, run_id):
         if run_id not in self.connections.keys():

@@ -127,20 +127,20 @@ class StringtieMerge(AbstractStep):
                 option_list.append('-%s' % option)
                 option_list.append(value)
 
-        ref_assembly = self.get_option('G')
-        if ref_assembly is not None:
-            ref_assembly = os.path.abspath(ref_assembly)
-        con_ref_assembly = cc.look_for_unique('in/reference', ref_assembly)
+        option_ref_assembly = self.get_option('G')
+        if option_ref_assembly is not None:
+            option_ref_assembly = os.path.abspath(option_ref_assembly)
+        ref_assembly = cc.look_for_unique('in/reference', option_ref_assembly)
         if cc.all_runs_have_connection('in/reference'):
             raise StepError(
                 self, 'For stringtieMerge only one reference assmbly can be used.')
 
         input_files = []
-        if con_ref_assembly is not None:
-            option_list.extend(['-G', con_ref_assembly])
-            if ref_assembly is None:
+        if ref_assembly is not None:
+            option_list.extend(['-G', ref_assembly])
+            if option_ref_assembly is None:
                 # include dependency
-                input_files.append(con_ref_assembly)
+                input_files.append(ref_assembly)
 
         # get all paths to the stringtie assemblies from each sample
 

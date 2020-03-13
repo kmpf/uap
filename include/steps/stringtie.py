@@ -279,20 +279,20 @@ class Stringtie(AbstractStep):
             option_list.append('--rf')
 
         # look for reference assembly in in-connections
-        ref_assembly = self.get_option('G')
-        if ref_assembly is not None:
-            ref_assembly = os.path.abspath(ref_assembly)
-            if not os.path.isfile(ref_assembly):
-                raise StepError(self, '[Stringtie]: %s is no file.' %
+        option_ref_assembly = self.get_option('G')
+        if option_ref_assembly is not None:
+            option_ref_assembly = os.path.abspath(option_ref_assembly)
+            if not os.path.isfile(option_ref_assembly):
+                raise StepError(self, '%s is no file.' %
                                 self.get_option('G'))
-        con_ref_assembly = cc.look_for_unique('in/features', ref_assembly)
+        ref_assembly = cc.look_for_unique('in/features', option_ref_assembly)
         ref_per_run = cc.all_runs_have_connection('in/features')
 
         alignment_runs = cc.get_runs_with_connections('in/alignments')
         for run_id in alignment_runs:
             connection = cc[run_id]
-            if ref_per_run is True:
-                con_ref_assembly = connection['in/features'][0]
+            if ref_per_run:
+                ref_assembly = connection['in/features'][0]
 
             alignments = connection['in/alignments']
             # check, if only a single input file is provided
@@ -345,15 +345,15 @@ class Stringtie(AbstractStep):
                 stringtie = [self.get_tool('stringtie'), alignments[0]]
 
             stringtie.extend(['-o', assembling, '-A', abundances])
-            if con_ref_assembly is not None:
+            if ref_assembly is not None:
                 cov_refs = run.add_output_file(
                     'coverage',
                     '%s-cov_refs.gtf' % run_id,
                     alignments)
-                stringtie.extend(['-C', cov_refs, '-G', ref_assembly])
-                if ref_assembly is None:
+                stringtie.extend(['-C', cov_refs, '-G', option_ref_assembly])
+                if option_ref_assembly is None:
                     # include dependency
-                    alignments.append(con_ref_assembly)
+                    alignments.append(ref_assembly)
             elif self.is_option_set_in_config('B') \
                     or self.is_option_set_in_config('b') \
                     or self.is_option_set_in_config('e'):
