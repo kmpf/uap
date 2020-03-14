@@ -246,15 +246,15 @@ def main(args):
                             print('  stderr: %s' % err)
                     else:
                         print('No failed commands found in the annotation file.\n')
+                        print(
+                            "Run 'uap %s fix-problems --first-error' to investigate.'" %
+                            args.config.name)
                     run_data = anno_data.get('run', [])
                     if 'error' in run_data:
                         found_error = True
                         print('## ERROR ##\n%s\n' % run_data['error'])
                     if not found_error:
                         print('No errors found.')
-                        print(
-                            "Run 'uap %s fix-problems --first-error' to investigate.'" %
-                            args.config.name)
                         print('')
 
             else:
