@@ -497,13 +497,30 @@ class ProcessPool(object):
 
                 # write block to output file
                 if fdout is not None:
-                    bytes_written = os.write(fdout, block)
+                    tries = 0
+                    bytes_written = None
+                    while not bytes_written:
+                        try:
+                            bytes_written = os.write(fdout, block)
+                        except OSError:
+                            tries += 1
+                            if tries == 5:
+                                raise
+                            time.sleep(.1)
                     if bytes_written != len(block):
                         os._exit(1)
 
                 # write block to pipe
                 if pipe is not None:
-                    bytes_written = os.write(pipe[1], block)
+                    bytes_written = None
+                    while not bytes_written:
+                        try:
+                            bytes_written = os.write(pipe[1], block)
+                        except OSError:
+                            tries += 1
+                            if tries == 5:
+                                raise
+                            time.sleep(.1)
                     if bytes_written != len(block):
                         os._exit(2)
 
