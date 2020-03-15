@@ -512,6 +512,7 @@ class ProcessPool(object):
 
                 # write block to pipe
                 if pipe is not None:
+                    tries = 0
                     bytes_written = None
                     while not bytes_written:
                         try:
