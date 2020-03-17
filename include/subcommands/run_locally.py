@@ -31,7 +31,7 @@ def main(args):
             signame = process_pool.ProcessPool.SIGNAL_NAMES[signum]
             error = 'UAP stopped because it caught signal %d - %s' % \
                         (signum, signame)
-            log_task_error(task, error, True)
+            log_task_error(task, error, True, True)
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
 
@@ -84,7 +84,7 @@ def check_parents_and_run(task, states, turn_bad):
             error = "Cannot run %s because a parent job " \
                 "%s is %s when it should be %s." % \
                 (task, parent_task, parent_state, should)
-            log_task_error(task, error, turn_bad)
+            log_task_error(task, error, turn_bad, True)
     try:
         task.run()
     except BaseException:
