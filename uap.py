@@ -128,7 +128,9 @@ def main():
 
     subparsers = parser.add_subparsers(
         title="subcommands",
+        dest="subcommand",
         description="Available subcommands.")
+    subparsers.required=True
 
     '''
     The argument parser for 'fix-problems.py' is created here."
