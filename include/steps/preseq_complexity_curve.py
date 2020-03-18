@@ -1,9 +1,11 @@
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class PreseqComplexityCurve(AbstractStep):
     '''
@@ -19,6 +21,11 @@ class PreseqComplexityCurve(AbstractStep):
     file, then simply type::
 
         preseq c_curve -o output.txt input.sort.bed
+
+    Documentation::
+
+        http://smithlabresearch.org/software/preseq/
+
     '''
 
     def __init__(self, pipeline):
@@ -32,24 +39,38 @@ class PreseqComplexityCurve(AbstractStep):
         self.require_tool('preseq')
 
         # c_curve specific options
-        self.add_option('step', int, optional = True, description =
-                        'step size gin extrapolations (default: 1e+06)')
-        self.add_option('pe', bool, optional = False, description =
-                        'input is paired end read file')
-        self.add_option('hist', bool, optional = True, default = False,
-                        description = 'input is a text file containing the '
+        self.add_option(
+            'step',
+            int,
+            optional=True,
+            description='step size in extrapolations (default: 1e+06)')
+        self.add_option(
+            'verbose',
+            bool,
+            optional=True,
+            description='print more information')
+        self.add_option(
+            'pe',
+            bool,
+            optional=False,
+            description='input is paired end read file')
+        self.add_option('hist', bool, optional=True, default=False,
+                        description='input is a text file containing the '
                         'observed histogram')
-        self.add_option('vals', bool, optional = True, default = False,
-                        description = 'input is a text file containing only '
+        self.add_option('vals', bool, optional=True, default=False,
+                        description='input is a text file containing only '
                         'the observed counts')
-        self.add_option('seg_len', int, optional = True, description =
-                        'maximum segment length when merging paired end bam '
-                        'reads (default: 5000)')
+        self.add_option(
+            'seg_len',
+            int,
+            optional=True,
+            description='maximum segment length when merging paired end bam '
+            'reads (default: 5000)')
 
     def runs(self, run_ids_connections_files):
-        options = ['step', 'pe', 'hist', 'vals', 'seg_len']
+        options = ['step', 'verbose', 'pe', 'hist', 'vals', 'seg_len']
 
-        set_options = [option for option in options if \
+        set_options = [option for option in options if
                        self.is_option_set_in_config(option)]
 
         option_list = list()
@@ -66,19 +87,19 @@ class PreseqComplexityCurve(AbstractStep):
             with self.declare_run(run_id) as run:
                 input_paths = run_ids_connections_files[run_id]["in/alignments"]
                 is_bam = True if os.path.splitext(input_paths[0])[1]\
-                                 in ['.bam'] else False
+                    in ['.bam'] else False
                 is_bed = True if os.path.splitext(input_paths[0])[1]\
-                                 in ['.bed'] else False
+                    in ['.bed'] else False
 
                 if input_paths == [None]:
                     run.add_empty_output_connection("complexity_curve")
                 elif len(input_paths) != 1:
-                    logger.error("Expected exactly one alignments file.")
-                    sys.exit(1)
+                    raise StepError(
+                        self, "Expected exactly one alignments file.")
                 elif not is_bam and not is_bed:
-                    logger.error("Input file %s is niether BAM nor BED." %
-                                 input_paths[0])
-                    sys.exit(1)
+                    raise StepError(
+                        self, "Input file %s is niether BAM nor BED." %
+                        input_paths[0])
                 else:
                     with run.new_exec_group() as cc_group:
                         c_curve_out = run.add_output_file(

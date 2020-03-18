@@ -1,10 +1,18 @@
 #!/usr/bin/env python
 import sys
 import os
+import argparse
 seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
-execfile(activate_this_file, dict(__file__=activate_this_file))
+exec(
+    compile(
+        open(activate_this_file).read(),
+        activate_this_file,
+        'exec'),
+    dict(
+        __file__=activate_this_file))
 CHECK_QNAMES = False
+
 
 class Filter:
     def __init__(self, source, destination):
@@ -23,7 +31,7 @@ class Filter:
     def handle(self):
         if len(self.lines) > 0:
             if CHECK_QNAMES and self.current_qname in self.seen_qnames:
-                raise StandardError("Input is not sorted by qname. KA-BLAM.")
+                raise Exception("Input is not sorted by qname. KA-BLAM.")
 
             if len(self.lines) <= 2:
                 skip = False
@@ -79,13 +87,23 @@ class Filter:
 
         self.handle()
         self.wpercent = self.wcount * 100.0 / self.rcount
-        keys = ['rcount', 'wcount', 'wpercent', 'discard_gt_2', 'discard_40_80']
+        keys = [
+            'rcount',
+            'wcount',
+            'wpercent',
+            'discard_gt_2',
+            'discard_40_80']
         sys.stderr.write("#%s\n" % "\t".join(keys))
-        sys.stderr.write("%s\n" % "\t".join([str(getattr(self, k)) for k in keys]))
+        sys.stderr.write("%s\n" %
+                         "\t".join([str(getattr(self, k)) for k in keys]))
+
 
 def main():
+    parser = argparse.ArgumentParser(description='No documentation available.')
+    args = parser.parse_args()
     filter = Filter(sys.stdin, sys.stdout)
     filter.run()
+
 
 if __name__ == '__main__':
     main()

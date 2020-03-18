@@ -1,3 +1,4 @@
+from uaperrors import StepError
 import os
 from logging import getLogger
 import tarfile
@@ -5,6 +6,7 @@ import tarfile
 from abstract_step import AbstractStep
 
 logger = getLogger('uap_logger')
+
 
 class ChromHmmLearnModel(AbstractStep):
     '''
@@ -23,51 +25,51 @@ class ChromHmmLearnModel(AbstractStep):
         super(ChromHmmLearnModel, self).__init__(pipeline)
 
         self.set_cores(8)
-        
+
         self.add_connection('in/cellmarkfiletable')
         self.add_connection('in/chromhmm_binarization')
         self.add_connection('out/chromhmm_model')
-        
+
         self.require_tool('ChromHMM')
         self.require_tool('ls')
         self.require_tool('mkdir')
         self.require_tool('rm')
         self.require_tool('tar')
         self.require_tool('xargs')
-        
+
         # ChromHMM LearnModel Required Parameters
-        self.add_option('numstates', int, optional = False,
-                        descritpion = "This parameter specifies the number of "
+        self.add_option('numstates', int, optional=False,
+                        descritpion="This parameter specifies the number of "
                         "states to include in the model.")
-        self.add_option('assembly', str, optional = False,
-                        description = "specifies the genome assembly. overlap "
+        self.add_option('assembly', str, optional=False,
+                        description="specifies the genome assembly. overlap "
                         "and neighborhood enrichments will be called with "
                         "default parameters using this genome assembly."
                         "Assembly names are e.g. hg18, hg19, GRCh38")
         # ChromHMM LearnModel Optional Parameters
         # [-b binsize]
-        self.add_option('b', int, optional = True,
-                        description = "The number of base pairs in a bin "
+        self.add_option('b', int, optional=True,
+                        description="The number of base pairs in a bin "
                         "determining the resolution of the model learning and "
                         "segmentation. By default this parameter value is set "
                         "to 200 base pairs.")
         # [-color r,g,b]
-        self.add_option('color', str, optional = True,
-                        description = 'This specifies the color of the heat '
+        self.add_option('color', str, optional=True,
+                        description='This specifies the color of the heat '
                         'map. "r,g,b" are integer values between 0 and 255 '
                         'separated by commas. By default this parameter value '
                         'is 0,0,255 corresponding to blue.')
         # [-d convergedelta]
-        self.add_option('d', float, optional = True,
-                        description = "The threshold on the change on the "
-                        "estimated log likelihood that if it falls below this "
-                        "value, then parameter training will terminate. If "
-                        "this value is less than 0 then it is not used as part "
-                        "of the stopping criteria. The default value for this "
-                        "parameter is 0.001.")
+        self.add_option(
+            'd', float, optional=True, description="The threshold on the change on the "
+            "estimated log likelihood that if it falls below this "
+            "value, then parameter training will terminate. If "
+            "this value is less than 0 then it is not used as part "
+            "of the stopping criteria. The default value for this "
+            "parameter is 0.001.")
         # [-e loadsmoothemission]
-        self.add_option('e', float, optional = True,
-                        description = "This parameter is only applicable if "
+        self.add_option('e', float, optional=True,
+                        description="This parameter is only applicable if "
                         "the load option is selected for the init parameter. "
                         "This parameter controls the smoothing away from 0 "
                         "when loading a model. The emission value used in the "
@@ -79,22 +81,22 @@ class ChromHmmLearnModel(AbstractStep):
                         "parameter is 0.02.")
         # [-f inputfilelist]: Unnecessary due to the use of inputdir
         # [-h informationsmooth]
-        self.add_option('h', float, optional = True,
-                        description = "A smoothing constant away from 0 for "
+        self.add_option('h', float, optional=True,
+                        description="A smoothing constant away from 0 for "
                         "all parameters in the information based "
                         "initialization. This option is ignored if random or "
                         "load are selected for the initialization method. The "
                         "default value of this parameter is 0.02.")
         # [-holdcolumnorder]
-        self.add_option('holdcolumnorder', bool, optional = True,
-                        description = "Including this flag suppresses the "
+        self.add_option('holdcolumnorder', bool, optional=True,
+                        description="Including this flag suppresses the "
                         "reordering of the mark columns in the emission "
                         "parameter table display.")
         # [-i outfileID]: If set is set programmatically
         # [-init information|random|load]
-        self.add_option('init', str, optional = True,
-                        choices = ["information","random","load"],
-                        description = "This specifies the method for parameter "
+        self.add_option('init', str, optional=True,
+                        choices=["information", "random", "load"],
+                        description="This specifies the method for parameter "
                         "initialization method. 'information' is the default "
                         "method described in (Ernst and Kellis, Nature Methods "
                         "2012). 'random' - randomly initializes the parameters "
@@ -104,8 +106,8 @@ class ChromHmmLearnModel(AbstractStep):
                         "'loadsmoothemission' and 'loadsmoothtransition' "
                         "parameters. The default is information.")
         # [-l chromosomelengthfile] Should this be Mandatory???
-        self.add_option('l', str, optional = True,
-                        description = 'This file specifies the length of the '
+        self.add_option('l', str, optional=True,
+                        description='This file specifies the length of the '
                         'chromosomes. It is a two column tab delimited file '
                         'with the first column specifying the chromosome name '
                         'and the second column the length. If this file is '
@@ -116,35 +118,35 @@ class ChromHmmLearnModel(AbstractStep):
                         'files then this file should be included to give a '
                         'valid end coordinate for the last interval.')
         # [-m modelinitialfile]
-        self.add_option('m', str, optional = True,
-                        description = "This specifies the model file "
+        self.add_option('m', str, optional=True,
+                        description="This specifies the model file "
                         "containing the initial parameters which can then be "
                         "used with the load option")
         # [-nobed]
-        self.add_option('nobed', bool, optional = True,
-                        description = "If this flag is present, then this "
+        self.add_option('nobed', bool, optional=True,
+                        description="If this flag is present, then this "
                         "suppresses the printing of segmentation information "
                         "in the four column format. The default is to generate "
                         "a four column segmentation file")
         # [-nobrowser]
-        self.add_option('nobrowser', bool, optional = True,
-                        description = "If this flag is present, then browser "
+        self.add_option('nobrowser', bool, optional=True,
+                        description="If this flag is present, then browser "
                         "files are not printed. If -nobed is requested then "
                         "browserfile writing is also suppressed.")
         # [-noenrich]
-        self.add_option('noenrich', bool, optional = True,
-                        description = "If this flag is present, then "
+        self.add_option('noenrich', bool, optional=True,
+                        description="If this flag is present, then "
                         "enrichment files are not printed. If -nobed is "
                         "requested then enrichment file writing is also "
                         "suppressed.")
         # [-r maxiterations]
-        self.add_option('r', int, optional = True,
-                        description = "This option specifies the maximum "
+        self.add_option('r', int, optional=True,
+                        description="This option specifies the maximum "
                         "number of iterations over all the input data in the "
                         "training. By default this is set to 200.")
         # [-s seed]
-        self.add_option('s', int, optional = True,
-                        description = "This allows the specification of the "
+        self.add_option('s', int, optional=True,
+                        description="This allows the specification of the "
                         "random seed. Randomization is used to determine the "
                         "visit order of chromosomes in the incremental "
                         "expectation-maximization algorithm used to train the "
@@ -152,15 +154,15 @@ class ChromHmmLearnModel(AbstractStep):
                         "values of the parameters if random is specified for "
                         "the init method.")
         # [-stateordering emission|transition]
-        self.add_option('stateordering', str, optional = True,
-                        choices = ["emission", "transition"],
-                        description = "This determines whether the states are "
+        self.add_option('stateordering', str, optional=True,
+                        choices=["emission", "transition"],
+                        description="This determines whether the states are "
                         "ordered based on the emission or transition "
                         "parameters. See (Ernst and Kellis, Nature Methods) "
                         "for details. Default is 'emission'.")
         # [-t loadsmoothtransition]
-        self.add_option('t', float, optional = True,
-                        description = "This parameter is only applicable if "
+        self.add_option('t', float, optional=True,
+                        description="This parameter is only applicable if "
                         "the load option is selected for the init parameter. "
                         "This parameter controls the smoothing away from 0 "
                         "when loading a model. The transition value used in "
@@ -170,16 +172,16 @@ class ChromHmmLearnModel(AbstractStep):
                         "(1-loadsmoothtransition) while uniform gets weight "
                         "loadsmoothtransition. The default value is 0.5.")
         # [-x maxseconds]
-        self.add_option('x', int, optional = True,
-                        description = "This parameter specifies the maximum "
+        self.add_option('x', int, optional=True,
+                        description="This parameter specifies the maximum "
                         "number of seconds that can be spent optimizing the "
                         "model parameters. If it is less than 0, then there "
                         "is no limit and termination is based on maximum "
                         "number of iterations or a log likelihood change "
                         "criteria. The default value of this parameter is -1.")
         # [-z zerotransitionpower]
-        self.add_option('z', int, optional = True,
-                        description = "This parameter determines the threshold "
+        self.add_option('z', int, optional=True,
+                        description="This parameter determines the threshold "
                         "at which to set extremely low transition "
                         "probabilities to 0 durining training. Setting "
                         "extremely low transition probabilities makes model "
@@ -197,8 +199,9 @@ class ChromHmmLearnModel(AbstractStep):
                    'm', 'nobed', 'nobrowser', 'noenrich',
                    # 'printposterior', 'printstatebyline',
                    'r', 's', 'stateordering', 't', 'x', 'z']
+        file_options = ['assembly', 'l', 'm']
 
-        set_options = [option for option in options if \
+        set_options = [option for option in options if
                        self.is_option_set_in_config(option)]
 
         option_list = list()
@@ -208,20 +211,22 @@ class ChromHmmLearnModel(AbstractStep):
                 if self.get_option(option):
                     option_list.append('-%s' % option)
             else:
+                value = str(self.get_option(option))
+                if option in file_options:
+                    value = os.path.abspath(value)
                 option_list.append('-%s' % option)
-                option_list.append(str(self.get_option(option)))
+                option_list.append(value)
 
         for run_id in run_ids_connections_files.keys():
             # The input_paths should be a single tar.gz file
-            input_paths = run_ids_connections_files[run_id]\
-                          ['in/chromhmm_binarization']
+            input_paths = run_ids_connections_files[run_id]['in/chromhmm_binarization']
             # Test the input_paths (at least a bit)
             if len(input_paths) != 1 or not input_paths[0].endswith('.tar.gz'):
-                logger.error("Expected single tar.gz file via "
-                             "'in/chromhmm_binarization' for run %s, but got "
-                             "this %s" % (run_id, ", ".join(input_paths)))
-                sys.exit(1)
-
+                raise StepError(
+                    self, "Expected single tar.gz file via "
+                    "'in/chromhmm_binarization' for run %s, but got "
+                    "this %s" %
+                    (run_id, ", ".join(input_paths)))
 
             # read tar file and get names of included files
 #            with tarfile.open(name = input_paths[0], mode = 'r:gz') as tar:
@@ -231,12 +236,13 @@ class ChromHmmLearnModel(AbstractStep):
                 with run.new_exec_group() as pre_chromhmm:
                     # 1. Extract the binary files into a directory
                     # 1.1 Get name of temporary input directory
-                    input_dir =  run.add_temporary_directory(
+                    input_dir = run.add_temporary_directory(
                         '%s_binary_files' % run_id)
                     # 1.2 Create temporary input directory
                     mkdir = [self.get_tool('mkdir'), input_dir]
                     pre_chromhmm.add_command(mkdir)
-                    # 1.3 Extract the binary files into temporary input directory
+                    # 1.3 Extract the binary files into temporary input
+                    # directory
                     tar = [self.get_tool('tar'),
                            '--extract',
                            '--gzip',
@@ -244,7 +250,7 @@ class ChromHmmLearnModel(AbstractStep):
                            '--directory',
                            input_dir,
                            '--file',
-                           input_paths[0] ]
+                           input_paths[0]]
                     pre_chromhmm.add_command(tar)
                     # 1.4 Get name of temporary output directory
                     output_dir = run.add_temporary_directory(
@@ -261,7 +267,9 @@ class ChromHmmLearnModel(AbstractStep):
                     chromhmm.append(input_dir)
                     chromhmm.append(output_dir)
                     chromhmm.append(str(self.get_option('numstates')))
-                    chromhmm.append(self.get_option('assembly'))
+                    chromhmm.append(
+                        os.path.abspath(
+                            self.get_option('assembly')))
                     learnmodel.add_command(chromhmm)
 
                 with run.new_exec_group() as pack_model:
@@ -271,7 +279,8 @@ class ChromHmmLearnModel(AbstractStep):
                         ls = [self.get_tool('ls'), '-1', output_dir]
                         # 3.2 Pipe ls output
                         pack_model_pipe.add_command(ls)
-                        # 3.3 Use xargs to call tar (circumventing glob pattern)
+                        # 3.3 Use xargs to call tar (circumventing glob
+                        # pattern)
                         xargs = [self.get_tool('xargs'),
                                  '--delimiter', '\n',
                                  self.get_tool('tar'),
@@ -295,12 +304,13 @@ class ChromHmmLearnModel(AbstractStep):
                         ls = [self.get_tool('ls'), '-1', input_dir]
                         # 4.2 Pipe ls output
                         rm_binary_pipe.add_command(ls)
-                        # 4.3 Use xargs to call tar (circumventing glob pattern)
+                        # 4.3 Use xargs to call tar (circumventing glob
+                        # pattern)
                         xargs = [self.get_tool('xargs'),
                                  '--delimiter', '\n',
                                  '-I', '*',
                                  self.get_tool('rm'),
                                  '--verbose',
                                  os.path.join(input_dir, '*')
-                        ]
+                                 ]
                         rm_binary_pipe.add_command(xargs)

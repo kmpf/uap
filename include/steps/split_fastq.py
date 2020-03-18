@@ -1,4 +1,4 @@
-from itertools import (takewhile,repeat)
+from itertools import (takewhile, repeat)
 import math
 
 from logging import getLogger
@@ -42,7 +42,8 @@ class SplitFastq(AbstractStep):
     def get_line_count(self, filename):
         # TODO: if file is gzipped, first unzip!
         f = open(filename, 'rb')
-        bufgen = takewhile(lambda x: x, (f.read(1024 * 1024) for _ in repeat(None)))
+        bufgen = takewhile(lambda x: x, (f.read(1024 * 1024)
+                                         for _ in repeat(None)))
         return sum(buf.count(b'\n') for buf in bufgen)
 
     def runs(self, run_ids_connections_files):
@@ -53,7 +54,7 @@ class SplitFastq(AbstractStep):
 
         for run_id in run_ids_connections_files.keys():
 
-            index_list = range(1, outfile_count+1)
+            index_list = list(range(1, outfile_count + 1))
 
             for index in index_list:
                 new_run_id = '%s_%s' % (run_id, str(index))
@@ -64,7 +65,7 @@ class SplitFastq(AbstractStep):
                     paired_end = False
 
                     # add r2 if exists
-                    if run_ids_connections_files[run_id]['in/second_read'][0] != None:
+                    if run_ids_connections_files[run_id]['in/second_read'][0] is not None:
                         r2 = run_ids_connections_files[run_id]['in/second_read'][0]
                         input_fileset.append(r2)
                         paired_end = True
@@ -78,11 +79,13 @@ class SplitFastq(AbstractStep):
                     for i in range(1, outfile_count + 1):
                         if i == index:
                             file_name = '%s_%s_r1.fastq' % (new_run_id, i)
-                            run.add_output_file('first_read', file_name, input_fileset)
+                            run.add_output_file(
+                                'first_read', file_name, input_fileset)
 
                             if paired_end:
                                 file_name = '%s_%s_r2.fastq' % (new_run_id, i)
-                                run.add_output_file('second_read', file_name, input_fileset)
+                                run.add_output_file(
+                                    'second_read', file_name, input_fileset)
 
                     stderr_file = "%s-split-log_stderr.txt" % (new_run_id)
                     log_stderr = run.add_output_file("log_stderr",
@@ -93,31 +96,30 @@ class SplitFastq(AbstractStep):
                                                      stdout_file,
                                                      input_fileset)
 
-                    basename = run.get_output_directory_du_jour_placeholder()
                     split_fastq_r1 = [
                         self.get_tool('split_fastqn'),
                         '-i', r1,
                         '-n', str(readcount),
-                        '-o', basename,
+                        '-o', '.',
                         '-p', new_run_id,
                         '-s', str(index),
                         '-m', 'r1'
                     ]
                     sf_exec_group = run.new_exec_group()
                     sf_exec_group.add_command(split_fastq_r1,
-                        stdout_path=log_stdout,
-                        stderr_path=log_stderr)
+                                              stdout_path=log_stdout,
+                                              stderr_path=log_stderr)
 
                     if paired_end:
                         split_fastq_r2 = [
                             self.get_tool('split_fastqn'),
                             '-i', r2,
                             '-n', str(readcount),
-                            '-o', basename,
+                            '-o', '.',
                             '-p', new_run_id,
                             '-s', str(index),
                             '-m', 'r2'
                         ]
                         sf_exec_group.add_command(split_fastq_r2,
-                            stdout_path=log_stdout,
-                            stderr_path=log_stderr)
+                                                  stdout_path=log_stdout,
+                                                  stderr_path=log_stderr)

@@ -8,13 +8,15 @@ import logging
 import os
 import re
 import socket
-import StringIO
+import io
 import subprocess
 import textwrap
 import yaml
 
 import pipeline
 import misc
+import process_pool
+from uaperrors import UAPError
 '''
 This script uses graphviz to produce graphs that display information about the
 tasks processed by the pipeline.
@@ -88,42 +90,26 @@ def main(args):
         with open(os.devnull, 'w') as devnull:
             subprocess.check_call(dot_version, stdout=devnull)
     except subprocess.CalledProcessError as e:
-        raise StandardError("Execution of %s failed. GraphViz seems to be "
-                            "unavailable." % " ".join(dot_version))
+        raise Exception("Execution of %s failed. GraphViz seems to be "
+                        "unavailable." % " ".join(dot_version))
 
     if args.files:
         msg = "Going to plot the graph containing all files of the analysis"
         logger.info(msg)
-        raise StandardError("Sorry, feature not implemented yet!")
+        raise Exception("Sorry, feature not implemented yet!")
     elif args.steps:
         logger.info("Create a graph showing the DAG of the analysis")
 
         render_graph_for_all_steps(p, args)
 
     else:
-        # Compile a list of all tasks
-        task_list = list()
-        # Only use tasks listed in args.run
-        if args.run and len(args.run) >= 1:
-            for task_id in args.run:
-                if '/' in task_id:
-                    task = p.task_for_task_id[task_id]
-                    task_list.append(task)
-                else:
-                    for task in p.all_tasks_topologically_sorted:
-                        if str(task)[0:len(task_id)] == task_id:
-                            task_list.append(task)
-        # or take all available tasks
-        else:
-            task_list = p.all_tasks_topologically_sorted
-
-        for task in task_list:
+        for task in p.get_task_with_list():
             outdir = task.get_run().get_output_directory()
             anno_files = glob.glob(os.path.join(
                 outdir, ".%s*.annotation.yaml" % task.get_run().get_run_id()
             ))
 
-            yaml_files = {os.path.realpath(f) for f in anno_files \
+            yaml_files = {os.path.realpath(f) for f in anno_files
                           if os.path.islink(f)}
             for y in yaml_files:
                 log_level = logger.getEffectiveLevel()
@@ -134,16 +120,23 @@ def main(args):
 
 
 def render_graph_for_all_steps(p, args):
-    configuration_path = p.get_config_filepath()
+    configuration_path = p.config_name
     if args.simple:
+        dot_file = configuration_path.replace('.yaml', '.simple.dot')
         svg_file = configuration_path.replace('.yaml', '.simple.svg')
     else:
+        dot_file = configuration_path.replace('.yaml', '.dot')
         svg_file = configuration_path.replace('.yaml', '.svg')
 
+
+#    if args.format == "svg":
     dot = subprocess.Popen(['dot', '-Tsvg'],
                            stdin=subprocess.PIPE,
                            stdout=subprocess.PIPE)
-
+#    elif args.format == "png":
+#    dot = subprocess.Popen(['dot', '-Tpng'],
+#                           stdin = subprocess.PIPE,
+#                           stdout = subprocess.PIPE)
     f = dot.stdin
 
     f.write("digraph {\n")
@@ -154,15 +147,16 @@ def render_graph_for_all_steps(p, args):
     elif args.orientation == "right-to-left":
         f.write("  rankdir = RL;\n")
     f.write("  splines = true;\n")
-    f.write("    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", "
-            "nodesep = 0.2, ranksep = 0.3];\n")
+    f.write(
+        "    graph [fontname = Helvetica, fontsize = 12, size = \"14, 11\", "
+        "nodesep = 0.2, ranksep = 0.3];\n")
     f.write("    node [fontname = Helvetica, fontsize = 12, shape = rect];\n")
     f.write("    edge [fontname = Helvetica, fontsize = 12];\n")
     for step_name, step in p.get_steps().items():
         total_runs = len(step.get_run_ids())
         finished_runs = 0
-        for _ in step.get_run_ids():
-            if step.get_run_state(_) == p.states.FINISHED:
+        for run in step.get_runs():
+            if run.get_state() == p.states.FINISHED:
                 finished_runs += 1
 
         f.write("subgraph cluster_%s {\n" % step_name)
@@ -170,8 +164,9 @@ def render_graph_for_all_steps(p, args):
         label = step_name
         if step_name != step.__module__:
             label = "%s\\n(%s)" % (step_name, step.__module__)
-        f.write("    %s [label=\"%s\", style = filled, fillcolor = \"#fce94f\"];\n"
-                % (step_name, label))
+        f.write(
+            "    %s [label=\"%s\", style = filled, fillcolor = \"#fce94f\"];\n" %
+            (step_name, label))
         color = gradient(float(finished_runs) / total_runs
                          if total_runs > 0
                          else 0.0, GRADIENTS['traffic_lights'])
@@ -187,8 +182,9 @@ def render_graph_for_all_steps(p, args):
             for c in step._connections:
                 connection_key = escape(('%s/%s'
                                          % (step_name, c)).replace('/', '__'))
-                f.write("    %s [label=\"%s\", shape = ellipse, fontsize = 10];\n"
-                        % (connection_key, c))
+                f.write(
+                    "    %s [label=\"%s\", shape = ellipse, fontsize = 10];\n" %
+                    (connection_key, c))
                 if c[0:3] == 'in/':
                     f.write("    %s -> %s;\n" % (connection_key, step_name))
                 else:
@@ -211,7 +207,8 @@ def render_graph_for_all_steps(p, args):
                     allowed_steps = None
                     if '_connect' in step.get_options():
                         if in_key in step.get_options()['_connect']:
-                            declaration = step.get_options()['_connect'][in_key]
+                            declaration = step.get_options()[
+                                '_connect'][in_key]
                             if isinstance(declaration, str):
                                 if '/' in declaration:
                                     parts = declaration.split('/')
@@ -231,17 +228,17 @@ def render_graph_for_all_steps(p, args):
                                         else:
                                             out_key = 'out/' + connection
                             else:
-                                raise StandardError(
+                                raise UAPError(
                                     "Invalid _connect value: %s"
                                     % yaml.dump(declaration))
-
                     for real_outkey in other_step._connections:
                         if real_outkey[0:4] != 'out/':
                             continue
                         if out_key == real_outkey:
                             connection_key = escape(
-                                ('%s/%s' % (step_name, in_key)).replace('/', '__')
-                            )
+                                ('%s/%s' %
+                                 (step_name, in_key)).replace(
+                                    '/', '__'))
                             other_connection_key = escape(
                                 ('%s/%s' % (other_step.get_step_name(),
                                             out_key)).replace('/', '__')
@@ -257,11 +254,16 @@ def render_graph_for_all_steps(p, args):
     with open(svg_file, 'w') as f:
         f.write(svg)
 
+    gv = f.getvalue()
+    f.close()
+    return gv
+
 
 def render_single_annotation(annotation_path, args):
     logger.info("Start rendering %s" % annotation_path)
     dot_file = annotation_path.replace('.yaml', '.dot')
     # Replace leading dot to make graphs easier to find
+#    if args.format == "svg":
     (head, tail) = os.path.split(annotation_path.replace('.yaml', '.svg'))
     logger.debug("Path: %s, SVG: %s" % (head, tail))
     tail = ''.join([tail[0].replace('.', ''), tail[1:]])
@@ -271,24 +273,36 @@ def render_single_annotation(annotation_path, args):
     tail = ''.join([tail[0].replace('.', ''), tail[1:]])
     png_file = os.path.join(head, tail)
     logger.debug("SVG file: %s" % svg_file)
-    logger.debug("PNG file: %s" % png_file)
+#    elif args.format == "png":
+#    (head, tail) = os.path.split(annotation_path.replace('.yaml', '.png'))
+#    logger.debug("Path: %s, PNG: %s" % (head, tail))
+#    tail = ''.join([tail[0].replace('.', ''), tail[1:]])
+#    png_file = os.path.join(head, tail)
+#    logger.debug("PNG file: %s" % png_file)
 
     log = dict()
     with open(annotation_path, 'r') as f:
         log = yaml.load(f, Loader=yaml.FullLoader)
+
+    gv = create_dot_file_from_annotations([log], args)
+
+    run_dot(gv, dot_file, png_file, svg_file)
+
+
+def run_dot(gv, dot_file, png_file, svg_file):
     try:
-        gv = create_dot_file_from_annotations([log], args)
         with open(dot_file, 'w') as f:
             f.write(gv)
 
-        subprocess.Popen(['dot', '-Tsvg', '-o%s' % svg_file, dot_file],
-                         stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE)
-
-        subprocess.Popen(['dot', '-Tpng', '-o%s' % png_file, dot_file],
-                         stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE)
-    except:
+#        if args.format == "svg":
+        dot = subprocess.Popen(['dot', '-Tsvg', '-o%s' % svg_file, dot_file],
+                               stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE)
+#        elif args.format == "png":
+#        dot = subprocess.Popen(['dot', '-Tpng', '-o%s' % png_file, dot_file],
+#                               stdin = subprocess.PIPE,
+#                               stdout = subprocess.PIPE)
+    except BaseException:
         print(sys.exc_info())
         import traceback
         traceback.print_tb(sys.exc_info()[2])
@@ -302,7 +316,7 @@ def create_dot_file_from_annotations(logs, args):
         for _ in ['nodes', 'edges', 'clusters', 'graph_labels']:
             hash[_].update(temp[_])
 
-    f = StringIO.StringIO()
+    f = io.StringIO()
     f.write("digraph {\n")
     if args.orientation == "top-to-bottom":
         f.write("    rankdir = TB;\n")
@@ -329,7 +343,7 @@ def create_dot_file_from_annotations(logs, args):
         key=lambda node: hash['nodes'][node]['start_time'], reverse=True
     )
     node_keys_ordered.extend([node for node in hash['nodes'].keys()
-                             if node not in node_keys_ordered])
+                              if node not in node_keys_ordered])
     for node_key in node_keys_ordered:
         node_info = hash['nodes'][node_key]
         f.write("    _%s" % node_key)
@@ -365,13 +379,13 @@ def create_hash_from_annotation(log):
         hashtag = "%s/%s/%d/%s" % (log['step']['name'],
                                    log['run']['run_id'],
                                    pid, suffix)
-        return misc.str_to_sha1(hashtag)
+        return misc.str_to_sha256(hashtag)
 
     def file_hash(path):
         if path in log['step']['known_paths']:
             if 'real_path' in log['step']['known_paths'][path]:
                 path = log['step']['known_paths'][path]['real_path']
-        return misc.str_to_sha1(path)
+        return misc.str_to_sha256(path)
 
     pipe_hash = dict()
     pipe_hash['nodes'] = dict()
@@ -398,7 +412,7 @@ def create_hash_from_annotation(log):
                 if 'size' in log['step']['known_paths'][path]:
                     label += "\\nFilesize: %s" % misc.bytes_to_str(
                         log['step']['known_paths'][path]['size'])
-        pipe_hash['nodes'][misc.str_to_sha1(path)] = {
+        pipe_hash['nodes'][misc.str_to_sha256(path)] = {
             'label': label,
             'fillcolor': color
         }
@@ -471,8 +485,7 @@ def create_hash_from_annotation(log):
                                arg in proc_info['hints']['writes']:
                                 io_type = 'output'
                             if io_type is None:
-                                io_type = log['step']['known_paths']\
-                                    [known_path]['designation']
+                                io_type = log['step']['known_paths'][known_path]['designation']
                                 if io_type is None:
                                     io_type = 'input'
 
@@ -643,7 +656,7 @@ def create_hash_from_annotation(log):
             step_file_nodes[file_hash(path)] = path_info['designation']
 
     task_name = "%s/%s" % (log['step']['name'], log['run']['run_id'])
-    cluster_hash = misc.str_to_sha1(task_name)
+    cluster_hash = misc.str_to_sha256(task_name)
     pipe_hash['clusters'][cluster_hash] = dict()
     pipe_hash['clusters'][cluster_hash]['task_name'] = task_name
     pipe_hash['clusters'][cluster_hash]['group'] = list()

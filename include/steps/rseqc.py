@@ -17,10 +17,7 @@ class RSeQC(AbstractStep):
 
         self.set_cores(4)
 
-        self.add_connection(
-            'in/alignments',
-            constraints={'min_files_per_run': 1, 'max_files_per_run': 1}
-        )
+        self.add_connection('in/alignments')
 
         self.add_connection('out/bam_stat')
         self.add_connection('out/infer_experiment')
@@ -31,17 +28,15 @@ class RSeQC(AbstractStep):
         self.add_connection('out/geneBody_coverage_stdout')
         self.add_connection('out/geneBody_coverage_stderr')
 
-        self.add_connection('out/inner_distance_freq')
-        self.add_connection('out/inner_distance_plot')
-        self.add_connection('out/inner_distance')
-        self.add_connection('out/inner_distance_stdout')
-        self.add_connection('out/inner_distance_stderr')
+        self.add_connection('out/inner_distance_freq', optional=True)
+        self.add_connection('out/inner_distance_plot', optional=True)
+        self.add_connection('out/inner_distance', optional=True)
+        self.add_connection('out/inner_distance_stdout', optional=True)
+        self.add_connection('out/inner_distance_stderr', optional=True)
 
         self.add_connection('out/junction_bed')
         self.add_connection('out/junction_plot')
         self.add_connection('out/junction_xls')
-
-        self.add_connection('out/splice_junction')
 
         self.add_connection('out/junction_annotation_stdout')
         self.add_connection('out/junction_annotation_stderr')
@@ -77,10 +72,15 @@ class RSeQC(AbstractStep):
                         description="Reference gene model in bed fomat. "
                         "[required]")
 
-        self.add_option('treatAs', str, optional=False,
-                        choices = ["single", "paired"],
-                        description="Some modules in rseqc  need paired end data"
-                        "an fail otherwise on single end [required]")
+        self.add_option(
+            'treatAs',
+            str,
+            optional=False,
+            choices=[
+                "single",
+                "paired"],
+            description="Some modules in rseqc  need paired end data"
+            "an fail otherwise on single end [required]")
 
     def runs(self, run_ids_connections_files):
 
@@ -89,9 +89,8 @@ class RSeQC(AbstractStep):
             alignments = run_ids_connections_files[run_id]['in/alignments']
 
             with self.declare_run(run_id) as run:
-                out = run.get_output_directory_du_jour_placeholder() \
-                    + '/' + run_id
-
+                # redundant log.txt should be deleted after run
+                run.add_temporary_file('log.txt')
                 with run.new_exec_group() as exec_group:
                     bam_stat = [
                         self.get_tool('bam_stat.py'),
@@ -108,7 +107,7 @@ class RSeQC(AbstractStep):
                     infer_experiment = [
                         self.get_tool('infer_experiment.py'),
                         '-i', alignments[0],
-                        '-r', self.get_option('reference')
+                        '-r', os.path.abspath(self.get_option('reference'))
                     ]
                     exec_group.add_command(
                         infer_experiment,
@@ -122,7 +121,7 @@ class RSeQC(AbstractStep):
                     read_distribution = [
                         self.get_tool('read_distribution.py'),
                         '-i', alignments[0],
-                        '-r', self.get_option('reference')
+                        '-r', os.path.abspath(self.get_option('reference'))
                     ]
                     exec_group.add_command(
                         read_distribution,
@@ -138,8 +137,8 @@ class RSeQC(AbstractStep):
                     geneBody_coverage = [
                         self.get_tool('geneBody_coverage.py'),
                         '-i', alignments[0],
-                        '-r', self.get_option('reference'),
-                        '-o', out
+                        '-r', os.path.abspath(self.get_option('reference')),
+                        '-o', run_id
                     ]
                     gbc_txt = run_id + '.geneBodyCoverage.txt'
                     run.add_output_file('geneBody_coverage.txt',
@@ -159,16 +158,19 @@ class RSeQC(AbstractStep):
                                            stdout_path=log_stdout,
                                            stderr_path=log_stderr)
 
-
                     if self.get_option('treatAs') == 'paired':
                         inner_distance = [
                             self.get_tool('inner_distance.py'),
-                            '-i', alignments[0],
-                            '-r', self.get_option('reference'),
-                            '-o', out
-                        ]
+                            '-i',
+                            alignments[0],
+                            '-r',
+                            os.path.abspath(
+                                self.get_option('reference')),
+                            '-o',
+                            run_id]
                         id_txt = run_id + '.inner_distance.txt'
-                        run.add_output_file('inner_distance', id_txt, alignments)
+                        run.add_output_file(
+                            'inner_distance', id_txt, alignments)
                         id_freq = run_id + '.inner_distance_freq.txt'
                         run.add_output_file('inner_distance_freq',
                                             id_freq, alignments)
@@ -177,30 +179,23 @@ class RSeQC(AbstractStep):
                                             id_plot, alignments)
 
                         stdout_file = "%s-inner_distance_stdout.txt" % (run_id)
-                        log_stdout = run.add_output_file("inner_distance_stdout",
-                                                     stdout_file, alignments)
+                        log_stdout = run.add_output_file(
+                            "inner_distance_stdout", stdout_file, alignments)
 
                         stderr_file = "%s-inner_distance_stderr.txt" % (run_id)
-                        log_stderr = run.add_output_file("inner_distance_stderr",
-                                                     stderr_file, alignments)
+                        log_stderr = run.add_output_file(
+                            "inner_distance_stderr", stderr_file, alignments)
 
                         exec_group.add_command(inner_distance,
                                                stdout_path=log_stdout,
                                                stderr_path=log_stderr)
-                    else:
-
-                        run.add_empty_output_connection('inner_distance_freq')
-                        run.add_empty_output_connection('inner_distance_plot')
-                        run.add_empty_output_connection('inner_distance')
-                        run.add_empty_output_connection('inner_distance_stdout')
-                        run.add_empty_output_connection('inner_distance_stderr')
 
                 with run.new_exec_group() as exec_group:
                     junction_annotation = [
                         self.get_tool('junction_annotation.py'),
                         '-i', alignments[0],
-                        '-r', self.get_option('reference'),
-                        '-o', out
+                        '-r', os.path.abspath(self.get_option('reference')),
+                        '-o', run_id
                     ]
                     ja_bed = run_id + '.junction.bed'
                     run.add_output_file('junction_bed', ja_bed, alignments)
@@ -226,8 +221,8 @@ class RSeQC(AbstractStep):
                     junction_saturation = [
                         self.get_tool('junction_saturation.py'),
                         '-i', alignments[0],
-                        '-r', self.get_option('reference'),
-                        '-o', out
+                        '-r', os.path.abspath(self.get_option('reference')),
+                        '-o', run_id
                     ]
                     js_r = run_id + '.junctionSaturation_plot.r'
                     run.add_output_file('junctionSaturation_r',
@@ -250,7 +245,7 @@ class RSeQC(AbstractStep):
                     read_duplication = [
                         self.get_tool('read_duplication.py'),
                         '-i', alignments[0],
-                        '-o', out
+                        '-o', run_id
                     ]
                     rd_r = run_id + '.DupRate_plot.r'
                     run.add_output_file('DupRate_plot_r', rd_r, alignments)
@@ -274,7 +269,7 @@ class RSeQC(AbstractStep):
                     read_gc = [
                         self.get_tool('read_GC.py'),
                         '-i', alignments[0],
-                        '-o', out
+                        '-o', run_id
                     ]
                     gc_r = run_id + '.GC_plot.r'
                     run.add_output_file('gc_r', gc_r, alignments)
@@ -291,4 +286,3 @@ class RSeQC(AbstractStep):
                     exec_group.add_command(read_gc,
                                            stdout_path=log_stdout,
                                            stderr_path=log_stderr)
-

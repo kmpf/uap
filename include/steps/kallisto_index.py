@@ -27,19 +27,26 @@ class KallistoIndex(AbstractStep):
         self.add_option('index', str, optional=False, default=None,
                         description="Filename for the kallisto index")
 
-        self.add_option('kmer-size', int, optional=True, default=31,
-                        description="k-mer (odd) length (default: 31, max value: 31)")
+        self.add_option(
+            'kmer-size',
+            int,
+            optional=True,
+            default=31,
+            description="k-mer (odd) length (default: 31, max value: 31)")
 
-        self.add_option('make-unique', bool, optional=True, default=None,
-                        description="Replace repeated target names with unique names")
+        self.add_option(
+            'make-unique',
+            bool,
+            optional=True,
+            default=None,
+            description="Replace repeated target names with unique names")
 
     def runs(self, run_ids_connections_files):
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 kallisto = [self.get_tool('kallisto'), 'index']
 
-                path = run.get_output_directory_du_jour_placeholder()
-                kallisto.extend(['-i', path + '/' + self.get_option('index')])
+                kallisto.extend(['-i', self.get_option('index')])
 
                 kallisto.extend(['-k', str(self.get_option('kmer-size'))])
 

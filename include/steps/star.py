@@ -1,6 +1,8 @@
+from uaperrors import StepError
 import sys
 from logging import getLogger
 from abstract_step import AbstractStep
+import os
 
 logger = getLogger('uap_logger')
 
@@ -9,13 +11,14 @@ class Star(AbstractStep):
     '''
 
     '''
+
     def __init__(self, pipeline):
         super(Star, self).__init__(pipeline)
 
         # input connections
         self.add_connection('in/first_read')
         self.add_connection('in/second_read')
-        #self.add_connection('in/index')
+        # self.add_connection('in/index')
 
         # output connections
         self.add_connection('out/aligned')
@@ -68,23 +71,25 @@ class Star(AbstractStep):
 
                 # get genomeDir from config or from input files
                 if self.is_option_set_in_config('genomeDir'):
-                    genome_dir = str(self.get_option('genomeDir'))
+                    genome_dir = os.path.abspath(
+                        str(self.get_option('genomeDir')))
                 else:
                     if 'in/genome_dir' not in run_ids_connections_files[run_id]:
-                        logger.error('Required parameter "GenomDir" wasnt found!')
-                        sys.exit(1)
+                        raise StepError(
+                            self, 'Required parameter "GenomDir" wasnt found!')
                     genome_dir = run_ids_connections_files[run_id]['in/genome_dir'][0]
 
                 star.extend(['--genomeDir', genome_dir])
 
-                out_path = run.get_output_directory_du_jour_placeholder()
-                star.extend(['--outFileNamePrefix', out_path + '/'])
+                star.extend(['--outFileNamePrefix', './'])
 
                 if self.is_option_set_in_config('readFilesCommand'):
-                    star.extend(['--readFilesCommand', self.get_option('readFilesCommand')])
+                    star.extend(
+                        ['--readFilesCommand', self.get_option('readFilesCommand')])
 
                 if self.is_option_set_in_config('cores'):
-                    star.extend(['--runThreadN', str(self.get_option('runThreadN'))])
+                    star.extend(
+                        ['--runThreadN', str(self.get_option('runThreadN'))])
 
                 star.append('--readFilesIn')
                 star.extend(input_fileset)
@@ -96,10 +101,15 @@ class Star(AbstractStep):
                 log_stdout = run.add_output_file("log_stdout",
                                                  stdout_file, input_fileset)
 
-                run.add_output_file("aligned", "Aligned.out.sam", input_fileset)
-                run.add_output_file("log.final", "Log.final.out", input_fileset)
+                run.add_output_file(
+                    "aligned", "Aligned.out.sam", input_fileset)
+                run.add_output_file(
+                    "log.final", "Log.final.out", input_fileset)
                 run.add_output_file("log.out", "Log.out", input_fileset)
-                run.add_output_file("log.progess", "Log.progress.out", input_fileset)
+                run.add_output_file(
+                    "log.progess",
+                    "Log.progress.out",
+                    input_fileset)
                 run.add_output_file("sj.out", "SJ.out.tab", input_fileset)
 
                 star_eg = run.new_exec_group()
@@ -107,7 +117,7 @@ class Star(AbstractStep):
                                     stderr_path=log_stderr)
 
                 # delete _STARtmp @ tmp directory if its not removed by STAR
-                # ADDITIONAL COMMENT: this lines makes the result ambiguous 
+                # ADDITIONAL COMMENT: this lines makes the result ambiguous
                 # because of the tmp_dir which uses the current time so
                 # the uap want to produces the results repeatedly
                 #tmp_dir = run.get_temp_output_directory() + '/_STARtmp'

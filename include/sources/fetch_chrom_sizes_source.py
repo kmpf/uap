@@ -1,3 +1,4 @@
+from uaperrors import UAPError
 import sys
 import logging
 import traceback
@@ -6,6 +7,7 @@ import os
 from abstract_step import *
 
 logger = logging.getLogger("uap_logger")
+
 
 class FetchChromSizesSource(AbstractSourceStep):
 
@@ -17,10 +19,10 @@ class FetchChromSizesSource(AbstractSourceStep):
         self.require_tool('fetchChromSizes')
         self.require_tool('cp')
 
-        self.add_option('ucsc-database', str, optional = False,
-                        description = "Name of UCSC database e.g. hg38, mm9")
-        self.add_option('path', str, optional = False,
-                        description = "directory to move file to")
+        self.add_option('ucsc-database', str, optional=False,
+                        description="Name of UCSC database e.g. hg38, mm9")
+        self.add_option('path', str, optional=False,
+                        description="directory to move file to")
 
     def runs(self, run_ids_connections_files):
         '''
@@ -35,10 +37,10 @@ class FetchChromSizesSource(AbstractSourceStep):
                 tb += "\n"
                 tb += " %s, line %s, %s %s" % (stack_entries)
 
-            logger.debug( tb )
-            logger.error('Output directory (%s) does not exist. Please create it.'
-                         % output_dir)
-            sys.exit(1)
+            logger.debug(tb)
+            raise UAPError(
+                'Output directory (%s) does not exist. Please create it.' %
+                output_dir)
 
         ucsc_database = self.get_option('ucsc-database')
 
@@ -48,7 +50,7 @@ class FetchChromSizesSource(AbstractSourceStep):
 
         # Declare a new run
         with self.declare_run(ucsc_database) as run:
-            temp_filename = run.add_temporary_file(suffix = output_filename)
+            temp_filename = run.add_temporary_file(suffix=output_filename)
             with run.new_exec_group() as exec_group:
                 fetch_chrom_sizes = [
                     self.get_tool('fetchChromSizes'),
@@ -56,7 +58,7 @@ class FetchChromSizesSource(AbstractSourceStep):
                 ]
                 exec_group.add_command(
                     fetch_chrom_sizes,
-                    stdout_path = temp_filename
+                    stdout_path=temp_filename
                 )
 
                 cp = [self.get_tool('cp'), '--update', temp_filename, out_file]

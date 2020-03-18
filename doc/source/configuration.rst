@@ -1,6 +1,6 @@
 ..
   This is the documentation for uap. Please keep lines under
-  80 characters if you can and start each sentence on a new line as it 
+  80 characters if you can and start each sentence on a new line as it
   decreases maintenance and makes diffs more readable.
 
 .. title:: Configuration of uap
@@ -28,8 +28,9 @@ although technically, they are keys):
     annotations and temporary files are written to
   * ``constants`` -- defines constants for later use (define repeatedly used
     values as constants to increase readability of the following sections)
-  * ``steps`` -- defines the source and processing steps and their order 
-  * ``tools`` -- defines all tools used in the analysis and how to determine 
+  * ``steps`` -- defines the source and processing steps and their order
+  * ``lmod`` -- if lmod is used paths can be specified here to ignor user env
+  * ``tools`` -- defines all tools used in the analysis and how to determine
     their versions (for later reference)
 
 **Optional Sections**
@@ -58,6 +59,19 @@ to store the created files.
     destination_path: "/path/to/workflow/output"
 
 
+``base_working_directory`` Section
+----------------------------------
+
+The value of ``base_working_directory`` is the directory where **uap**
+changes to before declaring all steps and it defaults to the location
+of the configuration file. All configured paths can be set relatively
+to this directory.
+
+.. code-block:: yaml
+
+    base_working_directory: "/path/to/workflow/output"
+
+
 ``constants`` Section
 ---------------------
 
@@ -80,7 +94,7 @@ Later on the value can be reused by typing ``*genome_faidx``.
 
 The ``steps`` section is the core of the analysis file, because it defines when
 steps are executed and how they depend on each other.
-All available steps are described in detail in the steps documentation: 
+All available steps are described in detail in the steps documentation:
 :doc:`steps`.
 The ``steps`` section contains an entry (technically a key) for every step.
 Every step name **must** be unique.
@@ -101,12 +115,12 @@ still ensure unique naming:
         # called 'cutadapt'
         cutadapt:
             ... # options following
-            
+
         # here, we also insert a cutadapt step, but we give it a different name:
         # 'clip_adapters'
         clip_adapters (cutadapt):
             ... # options following
-            
+
 
 Now let's have a look at the two different types of steps which constitute
 an **uap** analaysis.
@@ -153,7 +167,7 @@ Processing steps depend upon one or more preceding steps.
 They use their output files and process them.
 Output files of processing steps are automatically named and saved by **uap**.
 A complete list of available options per step can be found at :doc:`steps`
-or by using the subcommand :ref:`uap-steps`.
+or by using the :ref:`uap-steps`.
 
 .. _config_file_keywords:
 
@@ -166,21 +180,21 @@ Reserved Keywords for Steps
 
   Dependencies are defined via the ``_depends`` key which may either be ``null``,
   a step name, or a list of step names.
-  
+
 .. code-block:: yaml
 
     steps:
         # the source step which depends on nothing
         fastq_source:
             # ...
-            
+
         run_folder_source:
             # ...
 
         # the first processing step, which depends on the source step
         cutadapt:
             _depends: [fastq_source, run_folder_source]
-        
+
         # the second processing step, which depends on the cutadapt step
         fix_cutadapt:
             _depends: cutadapt
@@ -211,11 +225,6 @@ Reserved Keywords for Steps
             ...
 
         merge_fasta_files:
-            _depends:
-                - chr1
-                - chr2
-            # Equivalent to:
-            # _depends: [chr1, chr2]
             _connect:
                 in/sequence:
                     - chr1/raw
@@ -232,21 +241,21 @@ Reserved Keywords for Steps
 
 **_BREAK:**
 
-  If you want to cut off entire branches of the step graph, set the ``_BREAK`` 
+  If you want to cut off entire branches of the step graph, set the ``_BREAK``
   flag in a step definition, which will force the step to produce no runs
-  (which will in turn give all following steps nothing to do, thereby 
+  (which will in turn give all following steps nothing to do, thereby
   effectively disabling these steps):
-        
+
 
 .. code-block:: yaml
 
     steps:
         fastq_source:
             # ...
-            
+
         cutadapt:
             _depends: fastq_source
-        
+
         # this step and all following steps will not be executed
         fix_cutadapt:
             _depends: cutadapt
@@ -259,14 +268,14 @@ Reserved Keywords for Steps
   Steps can be marked with ``_volatile: yes``.
   This flag tells **uap** that the output files of the marked step are only
   intermediate results.
-  
+
 .. code-block:: yaml
 
     steps:
         # the source step which depends on nothing
         fastq_source:
             # ...
-            
+
         # this steps output can be deleted if all depending steps are finished
         cutadapt:
             _depends: fastq_source
@@ -296,7 +305,7 @@ executes the :ref:`volatilize <uap-volatilize>` command.
 
     This string contains the entire submit options which will be set in the
     submit script.
-    This option allows to overwrite the values set in 
+    This option allows to overwrite the values set in
     :ref:`default_submit_options <config_file_default_submit_options>`.
 
 .. _config_file_cluster_pre_job_command:
@@ -305,7 +314,7 @@ executes the :ref:`volatilize <uap-volatilize>` command.
 
     This string contains command(s) that are executed **BEFORE uap** is started
     on the cluster.
-    This option allows to overwrite the values set in 
+    This option allows to overwrite the values set in
     :ref:`default_pre_job_command <config_file_default_pre_job_command>`.
 
 .. _config_file_cluster_post_job_command:
@@ -314,7 +323,7 @@ executes the :ref:`volatilize <uap-volatilize>` command.
 
     This string contains command(s) that are executed **AFTER uap** did finish
     on the cluster.
-    This option allows to overwrite the values set in 
+    This option allows to overwrite the values set in
     :ref:`default_post_job_command <config_file_default_post_job_command>`.
 
 .. _config_file_cluster_job_quota:
@@ -323,10 +332,10 @@ executes the :ref:`volatilize <uap-volatilize>` command.
 
     This option defines the number of jobs of the same type that can
     run simultaneously on a cluster.
-    This option allows to overwrite the values set in 
+    This option allows to overwrite the values set in
     :ref:`default_job_quota <config_file_default_job_quota>`.
 
-.. _uap_config_tools:
+.. _config_file_tools:
 
 ``tools`` Section
 -----------------
@@ -341,14 +350,17 @@ An example tool configuration looks like this:
 
         # you don't have to specify a path if the tool can be found in $PATH
         cat:
-            path: cat 
+            path: cat
             get_version: --version
-            module_load: 
 
         # you have to specify a path if the tool can not be found in $PATH
         some-tool:
             path: /path/to/some-tool
             get_version: --version
+
+       # if the output is not sesetive to the tool version it can be ignored
+       mv:
+          ignore_version: True
 
        pigz:
            path: pigz
@@ -367,88 +379,58 @@ version by calling the program without command-line arguments.
 get the version information.
 ``exit_code`` is the value returned by ``echo $?`` after trying to determine
 the version e.g. by running ``pigz --version``.
-If not set ``exit_code`` defaults to 0.
+If not set ``exit_code`` defaults to 0, ``get_version`` to ``--version``,
+``ignore_version`` to ``False`` and ``path`` to the tool name.
 
-**uap** can use the module system if you are working on a cluster system (e.g.
-|uge_link| or |slurm_link|).
-The configuration for ``pigz`` would change a bit:
+Some tools are configured by default. Theire configuration will be logged
+in the result annotation but they do not have to be made explicitly in the
+configuration yaml. These are tools that come with the UAP installation
+in ``<UAP path>/tools`` and these |coreutils|: basename, cat, cp, cut, date,
+dd, dirname, du, head, ln, ls, mkdir, mkfifo, mv, paste, printf, pwd, seq,
+sleep, sort, rm, tail, tee, tr, uniq, wc. The ``ignore_version`` of these
+|coreutils| defaults to ``True``.
 
-.. code-block:: yaml
-
-   tools:
-       
-       pigz:
-           path: pigz
-           get_version: --version
-           exit_code: 0
-           module_load: /path/to/modulecmd python load pigz
-           module_unload: /path/to/modulecmd python unload pigz
-
-As you can see you need to get the ``/path/to/modulecmd``.
-So let's investigate what happens when a module is loaded or unloaded::
-
-  $ module load <module-name>
-  $ module unload <module-name>
-
-As far as I know is ``module`` neither a command nor an alias.
-It is a BASH function. So use ``declare -f`` to find out what it is actually
-doing::
-
-  $ declare -f module
-
-The output should look like this:
-
-.. code-block:: bash
-
-    module ()
-        {
-            eval `/usr/local/modules/3.2.10-1/Modules/$MODULE_VERSION/bin/modulecmd bash $*`
-        }
-
-An other possible output is:
-
-.. code-block:: bash
-
-    module () 
-        { 
-            eval $($LMOD_CMD bash "$@");
-            [ $? = 0 ] && eval $(${LMOD_SETTARG_CMD:-:} -s sh)
-        }
-
-In this case you have to look in ``$LMOD_CMD`` for the required path::
-
-    $ echo $LMOD_CMD
-    /usr/local/modules/3.2.10-1/Modules/$MODULE_VERSION/bin/modulecmd
-
-You can use this path to assemble the ``module_load`` and ``module_unload``
-options for ``pigz``.
-Just replace the ``$MODULE_VERSION`` with the current version of the module
-system.
+To use |lmod_link| to load an unload a tool you can specify the
+``module_name`` option:
 
 .. code-block:: yaml
 
    tools:
-       
+
        pigz:
            path: pigz
            get_version: --version
            exit_code: 0
-           module_load: /usr/local/modules/3.2.10-1/Modules/$MODULE_VERSION/bin/modulecmd python load pigz
-           module_unload: /usr/local/modules/3.2.10-1/Modules/$MODULE_VERSION/bin/modulecmd python unload pigz
+           module_name: pigz/version
 
 
-.. NOTE:: Use ``python`` instead of ``bash`` for loading modules via **uap**.
-          Because the module is loaded from within a python environment and
-          not within a BASH shell.
+.. _config_file_lmod:
 
-.. _config_file_cluster: 
+``lmod`` Section
+-------------------
+
+This section is optional and specifies the |lmod_link| utility. It is
+only required if |lmod_link| is not loaded and ``module_name`` is
+used in the ``tools`` section.
+
+.. code-block:: yaml
+
+    lmod:
+        path: /path/to/lmod/executable
+        module_path: /colon/seperated/paths/to/the/used/modules
+
+``path`` defaults to ``$LMOD_CMD`` and ``module_path`` to ``$MODULEPATH``
+of the user environment.
+
+
+.. _config_file_cluster:
 
 ``cluster`` Section
 -------------------
 
 The ``cluster`` section is required only if the analysis is executed on a
 system using a cluster engine like |uge_link| or |slurm_link|.
-This section interacts tightly with the  
+This section interacts tightly with the
 An example ``cluster`` section looks like this:
 
 .. code-block:: yaml
@@ -498,10 +480,9 @@ An example ``cluster`` section looks like this:
 
     This option defines the number of jobs of the same type that can
     run simultaneously on a cluster.
-    The number influences the way **uap** sets the job dependencies of
-    submitted jobs.
-    It is **optional** to set this value, if the value is not provided it is
-    set to *5*.
+    A value *0* means no limit is applied.
+    It is **optional** to set this value, if the value is not provided it
+    defaults to *0*.
 
 Example Configurations
 ======================
@@ -538,12 +519,16 @@ An example file is shown here:
        # Relative path to submit script template
        # The path has to be relative to:
        # $ dirname $(which uap)
-       template: 'cluster/submit-scripts/qsub-template.sh' 
+       template: 'cluster/submit-scripts/qsub-template.sh'
        # way to define job dependencies
        hold_jid: '-hold_jid'
        # Separator for job dependencies
        hold_jid_separator: ';'
        # Option to set job names
+       array_job: '-t 1-%s'
+       # Option to submit an array job
+       array_job_wquota: '-t 1-%s -tc %s'
+       # Options to submit an array job with a quota
        set_job_name: '-N'
        # Option to set path of stderr file
        set_stderr: '-e'
@@ -561,6 +546,8 @@ An example file is shown here:
        template: 'cluster/submit-scripts/sbatch-template.sh'
        hold_jid: '--dependency=afterany:%s'
        hold_jid_separator: ':'
+       array_job: '--array=1-%s'
+       array_job_wquota: '--array=1-%s%%%s'
        set_job_name: '--job-name=%s'
        set_stderr: '-e'
        set_stdout: '-o'
@@ -581,7 +568,7 @@ Let's browse over the options which need to be set per cluster engine:
 ``submit:``
     Command to submit a job onto the cluster e.g. ``sbatch``.
 
-``stat:`` 
+``stat:``
     Command to check the status of jobs on the cluster e.g. ``squeue``.
 
 ``template:``
@@ -598,8 +585,26 @@ Let's browse over the options which need to be set per cluster engine:
 ``hold_jid_separator:``
     Separator used to concatenate multiple jobs for ``hold_jid`` e.g. ``:``.
 
+``array_job``:
+    Option given to the ``submit`` command to use array jobs e.g.
+    ``--array=1-%s``.
+    ``%s`` is replaced by the number of jobs.
+
+``array_job_wquota``:
+    Option given to the ``submit`` command to use array jobs with quota
+    e.g. ``--array=1-%s%%%s`` (will be ``--array=1-100%5`` for *100*
+    jobs with a quota of *5*).
+    The first ``%s`` is replaced by the number of jobs and the second
+    ``%s`` by the quota (if above 0). A literal "%" has to be written
+    as ``%%``.
+
+``array_task_id``
+    The name of the environment variable set by the resource manager
+    that contains the job array id e.g.
+    ``SLURM_ARRAY_TASK_ID`` or ``SGE_TASK_ID``.
+
 ``set_job_name:``
-    Option given to the ``submit`` command to set the job name e.g. 
+    Option given to the ``submit`` command to set the job name e.g.
     ``--job-name=%s``.
     ``%s`` is replaced by the job name if present.
 
@@ -646,6 +651,13 @@ The templates need to contain the following placeholders:
    :ref:`_cluster_pre_job_command <_config_file_cluster_pre_job_command>`), if
    present, or the ``default_pre_job_command`` value.
 
+.. _submit_template_array_jobs:
+
+``#{ARRAY_JOBS}``
+   Will be replaced with a space seperated list of tasks. The resulting array
+   will be used in the command for the ``<run ID>`` if the submitted job is
+   an array job.
+
 .. _submit_template_command:
 
 ``#{COMMAND}``
@@ -684,3 +696,11 @@ cluster.
 .. |pythex_link| raw:: html
 
    <a href="http://pythex.org" target="_blank">pythex.org</a>
+
+.. |lmod_link| raw:: html
+
+   <a href="https://lmod.readthedocs.io/en/latest/" target="_blank">lmod</a>
+
+.. |coreutils| raw:: html
+
+    <a href="https://www.gnu.org/software/coreutils/manual/coreutils.html" target="_blank">GNU Core Utilities</a>

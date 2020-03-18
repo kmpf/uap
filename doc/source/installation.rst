@@ -33,7 +33,7 @@ Downloading the Software
 
 Download the software from |github_uap_link| like this::
 
-  $ git clone https://github.com/kmpf/uap.git
+  $ git clone https://github.com/yigbt/uap.git
 
 *****************************    
 Setting Up Python Environment

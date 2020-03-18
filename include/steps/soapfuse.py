@@ -1,3 +1,4 @@
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -45,12 +46,12 @@ class SOAPfuse(AbstractStep):
                         description="The step you want to end at 1-9")
 
         self.add_option('c', str, optional=False,
-                        description="""SOAPfuse config;
+                        description=r"""SOAPfuse config;
                         In the config file following variables are overwritten:
                         path to index: DB_db_dir
                         path to soapfuse bin: PG_pg_dir
                         path to soapfuse source: PS_ps_dir
-                        suffix for fastq: PA_all_fq_postfix (i.e.: *fastq.gz)
+                        suffix for fastq: PA_all_fq_postfix (i.e.: \*fastq.gz)
                         cores: PA_all_process_of_align_software
                         """)
 
@@ -63,8 +64,11 @@ class SOAPfuse(AbstractStep):
         self.add_option('path_to_sf_source', str, optional=False,
                         description="Sets 'PS_ps_dir' in SOAPfuse config")
 
-        self.add_option('suffix_for_fq_file', str, optional=False,
-                        description="Sets 'PA_all_fq_postfix' in SOAPfuse config")
+        self.add_option(
+            'suffix_for_fq_file',
+            str,
+            optional=False,
+            description="Sets 'PA_all_fq_postfix' in SOAPfuse config")
 
         self.add_option('read_length', int, optional=False,
                         description="Sets read length for the sample list")
@@ -85,18 +89,16 @@ class SOAPfuse(AbstractStep):
                 input_paths = [fr_input]
 
                 if sr_input is None:
-                    logger.error("Not paired end")
-                    sys.exit(1)
+                    raise StepError(self, "Not paired end")
                 else:
                     input_paths.append(sr_input)
 
                 # create folder structure
-                my_temp_dir = run.get_output_directory_du_jour_placeholder()
-
-                my_input = os.path.join(my_temp_dir, 'input')
-                my_output = os.path.join(my_temp_dir, 'output')
-                my_config = os.path.join(my_temp_dir, 'input',
-                                         os.path.basename(self.get_option('c')))
+                my_input = 'input'
+                my_output = 'output'
+                my_config = os.path.join(
+                    'input', os.path.basename(
+                        self.get_option('c')))
 
                 my_sample_dir = os.path.join(my_input, "A", "L")
                 read1 = run_id + "_1." + self.get_option('suffix_for_fq_file')
@@ -140,7 +142,7 @@ class SOAPfuse(AbstractStep):
 
                         # copy config
                         cp_cmd = [self.get_tool('cp'),
-                                  self.get_option('c'),
+                                  os.path.abspath(self.get_option('c')),
                                   my_config]
 
                         pseudo_init.add_command(cp_cmd)
@@ -162,13 +164,22 @@ class SOAPfuse(AbstractStep):
 
                 with run.new_exec_group() as exec_group:
                     # add content  to sample list
-                    sample_line = ['A', 'L', run_id, str(self.get_option('read_length'))]
+                    sample_line = [
+                        'A', 'L', run_id, str(
+                            self.get_option('read_length'))]
                     sf_list = '\t'.join(sample_line)
 
                     echo_sf_list = [self.get_tool('echo'),
                                     sf_list]
 
-                    exec_group.add_command(echo_sf_list, stdout_path=sample_list)
+                    exec_group.add_command(
+                        echo_sf_list, stdout_path=sample_list)
+
+                sed_replace = {
+                    'DB_db_dir': 'path_to_index_dir',
+                    'PG_pg_dir': 'path_to_sf_bin_dir',
+                    'PS_ps_dir': 'path_to_sf_source'
+                }
 
                 with run.new_exec_group() as exec_group:
                     # replace variables in config
@@ -176,23 +187,13 @@ class SOAPfuse(AbstractStep):
                         cat_cmd = ['cat', my_config]
                         replace_vars.add_command(cat_cmd)
 
-                        text = ' '.join(['DB_db_dir', '=',
-                                         self.get_option('path_to_index_dir').replace("/", "\\/")])
-                        sed_arg = 's/DB_db_dir.*/' + text + '/'
-                        sed_cmd = ['sed', sed_arg]
-                        replace_vars.add_command(sed_cmd)
-
-                        text = ' '.join(['PG_pg_dir', '=',
-                                         self.get_option('path_to_sf_bin_dir').replace("/", "\\/")])
-                        sed_arg = 's/PG_pg_dir.*/' + text + '/'
-                        sed_cmd = ['sed', sed_arg]
-                        replace_vars.add_command(sed_cmd)
-
-                        text = ' '.join(['PS_ps_dir', '=',
-                                         self.get_option('path_to_sf_source').replace("/", "\\/")])
-                        sed_arg = 's/PS_ps_dir.*/' + text + '/'
-                        sed_cmd = ['sed', sed_arg]
-                        replace_vars.add_command(sed_cmd)
+                        for tag, option in sed_replace.items():
+                            new_path = os.path.abspath(
+                                self.get_option('path_to_index_dir'))
+                            new_path = new_path.replace("/", "\\/")
+                            sed_arg = 's/' + tag + '.*/' + tag + ' = ' + new_path + '/'
+                            sed_cmd = ['sed', sed_arg]
+                            replace_vars.add_command(sed_cmd)
 
                         text = ' '.join(['PA_all_fq_postfix', '=',
                                          self.get_option('suffix_for_fq_file')])
@@ -207,7 +208,7 @@ class SOAPfuse(AbstractStep):
                         replace_vars.add_command(sed_cmd, stdout_path=res)
 
                 with run.new_exec_group() as exec_group:
-                        # Assemble soapfuse command
+                    # Assemble soapfuse command
                     soapfuse = [
                         self.get_tool('soapfuse'),
                         '-fd', my_input,
@@ -221,10 +222,10 @@ class SOAPfuse(AbstractStep):
                                            stdout_path=log_stdout)
 
                 with run.new_exec_group() as exec_group:
-                        # pack outfolder into tar/zip
+                    # pack outfolder into tar/zip
                     out_archive = run.add_output_file(
                         'tar_archive',
-                        '%s-soapfuse-out.tar.gz'% run_id,
+                        '%s-soapfuse-out.tar.gz' % run_id,
                         input_paths)
 
                     tar_output = [self.get_tool('tar'),
@@ -234,7 +235,7 @@ class SOAPfuse(AbstractStep):
                     exec_group.add_command(tar_output)
 
                 with run.new_exec_group() as exec_group:
-                        # remove temp dir
+                    # remove temp dir
                     rm_temp = [self.get_tool('rm'),
                                '-r', my_input, my_output]
 

@@ -19,15 +19,5 @@ The documentation of **uap** is available as [Giltab Page](https://onebutton.rib
 # Local Testing
 
 In order to use the testing repo [uap_test](https://ribogit.izi.fraunhofer.de/oneButton/uap_test)
-locally you have to change the file .gitmodules
-by replacing `url = ../uap_test.git` with `url = git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git`.
-The entry for `uap_test` looks like this:
-```
-[submodule "uap_test"]
-        path = uap_test
-        url = git@ribogit.izi.fraunhofer.de:oneButton/uap_test.git
-```
-
-Then you can run `git submodule sync && git checkout -- .gitmodules && git submodule update`
-to have the testing repo in `uap_test`. Please consult tutorials for submodules for further info.
-E.g., https://git-scm.com/book/en/v2/Git-Tools-Submodules.
+you can use the submodule with `git submodule update --init --recursive`. The tests will be in
+the `uap_test` folder.

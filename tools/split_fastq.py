@@ -1,13 +1,20 @@
+from Bio import SeqIO
+import argparse
 import os
 seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
-execfile(activate_this_file, dict(__file__=activate_this_file))
-import argparse
-from Bio import SeqIO
+exec(
+    compile(
+        open(activate_this_file).read(),
+        activate_this_file,
+        'exec'),
+    dict(
+        __file__=activate_this_file))
 
 '''
 
 '''
+
 
 def read_args():
     parser = argparse.ArgumentParser(
@@ -56,6 +63,7 @@ def read_args():
 
     return args
 
+
 def batch_iterator(iterator, batch_size):
     """Returns lists of length batch_size.
 
@@ -75,7 +83,7 @@ def batch_iterator(iterator, batch_size):
         batch = []
         while len(batch) < batch_size:
             try:
-                entry = iterator.next()
+                entry = next(iterator)
             except StopIteration:
                 entry = None
             if entry is None:
@@ -84,6 +92,7 @@ def batch_iterator(iterator, batch_size):
             batch.append(entry)
         if batch:
             yield batch
+
 
 def main(args):
     # TODO: Exception if its not a fastq
@@ -101,10 +110,12 @@ def main(args):
 
     record_iter = SeqIO.parse(open(infile), "fastq")
     for i, batch in enumerate(batch_iterator(record_iter, read_count)):
-        if int(sample_index) == (i+1):
-            filename = outpath + "%s_%i_%s.fastq" % (out_file_pattern, int(sample_index), mate)
+        if int(sample_index) == (i + 1):
+            filename = outpath + \
+                "%s_%i_%s.fastq" % (out_file_pattern, int(sample_index), mate)
             with open(filename, "w") as handle:
                 SeqIO.write(batch, handle, "fastq")
+
 
 if __name__ == '__main__':
     args = read_args()

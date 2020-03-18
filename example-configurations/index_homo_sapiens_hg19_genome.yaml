@@ -1,4 +1,12 @@
-# This is the uap configuration file.
+# This configuration downloads the sequence of chromosome 21 and creates
+# bowtie2, BWA, and fasta indices.
+
+################################################################################
+## Cluster Section                                                            ##
+## ===============                                                            ##
+##                                                                            ##
+## - uncomment/adapt as required                                              ##
+################################################################################
 
 # cluster:
 #     example for SLURM grid engine
@@ -9,153 +17,171 @@
 #     default_post_job_command: "echo 'Run Finished!'"
 #     default_job_quota: 5
 
+################################################################################
+## Destination Path Section                                                   ##
+## ========================                                                   ##
+##                                                                            ##
+## - directory where analysis results get stored                              ##
+################################################################################
+
 destination_path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19
 
+################################################################################
+## Steps Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define analysis steps here                                               ##
+################################################################################
+
 steps:
+    ##################
+    ## Source steps ##
+    ##################
+
     # Download all chromosomal sequences
     hg19_UCSC (raw_url_sources):
         _cluster_job_quota: 1
         run-download-info:
-            #chr1:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr1.fa.gz
-            #    secure-hash:  e103808b81f7d0a52353dee92d2ff164
-            #    hashing-algorithm: md5
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr1.fa
-            #    uncompress: yes
-            #chr2:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr2.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: 1946d3b6b9cf0e8f15f014fe63c75eac
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr2.fa
-            #    uncompress: yes
-            #chr3:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr3.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: 9f199c648332571687e8c64e4c584397
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr3.fa
-            #    uncompress: yes
-            #chr4:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr4.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: da9d6307ffedb6f7dd44713ac17e65e5
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr4.fa
-            #    uncompress: yes
-            #chr5:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr5.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: 95488cfaab43ddd45985d88c6666dad0
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr5.fa
-            #    uncompress: yes
-            #chr6:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr6.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: bd20fdafbdce6e7c09a6fdc05d8ee639
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr6.fa
-            #    uncompress: yes
-            #chr7:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr7.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: 9cae8bfb66ff722942b2618eb5f4a776
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr7.fa
-            #    uncompress: yes
-            #chr8:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr8.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: db70cc0a9cef32f3a09ba5e5348a0475
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr8.fa
-            #    uncompress: yes
-            #chr9:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr9.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: cfef5926429a288174197e40c5e3c190
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr9.fa
-            #    uncompress: yes
-            #chr10:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr10.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: 508a1e86cc0f64257dd0c9775462eebf
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr10.fa
-            #    uncompress: yes
-            #chr11:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr11.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: 63201d72077ec57d03582be7104d483f
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr11.fa
-            #    uncompress: yes
-            #chr12:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr12.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: 3580abf7788b335755f4172aff5c343b
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr12.fa
-            #    uncompress: yes
-            #chr13:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr13.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: a48e9c56b167edc089df7ab141001e5d
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr13.fa
-            #    uncompress: yes
-            #chr14:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr14.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: 4376df28ef2090e079581ea81a7dd2e6
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr14.fa
-            #    uncompress: yes
-            #chr15:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr15.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: 2e8a6f32e876aad1e431fde3d296f1a3
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr15.fa
-            #    uncompress: yes
-            #chr16:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr16.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: 48466e0aa58f3be5802ad8e6b692cbec
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr16.fa
-            #    uncompress: yes
-            #chr17:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr17.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: ee98e8346d23ccd91fb7ef60e9ccede9
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr17.fa
-            #    uncompress: yes
-            #chr18:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr18.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: 571f5e0300b79a95c47849851ae191ff
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr18.fa
-            #    uncompress: yes
-            #chr19:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr19.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: 173b9cc2ec39c73668480f4f25701bc3
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr19.fa
-            #    uncompress: yes
-            #chr20:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr20.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: f8205d1d1758b5d6c6f5a27130c8e339
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr20.fa
-            #    uncompress: yes
+            chr1:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr1.fa.gz
+                secure-hash:  e103808b81f7d0a52353dee92d2ff164
+                hashing-algorithm: md5
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr1.fa
+                uncompress: yes
+            chr2:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr2.fa.gz
+                hashing-algorithm: md5
+                secure-hash: 1946d3b6b9cf0e8f15f014fe63c75eac
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr2.fa
+                uncompress: yes
+            chr3:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr3.fa.gz
+                hashing-algorithm: md5
+                secure-hash: 9f199c648332571687e8c64e4c584397
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr3.fa
+                uncompress: yes
+            chr4:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr4.fa.gz
+                hashing-algorithm: md5
+                secure-hash: da9d6307ffedb6f7dd44713ac17e65e5
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr4.fa
+                uncompress: yes
+            chr5:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr5.fa.gz
+                hashing-algorithm: md5
+                secure-hash: 95488cfaab43ddd45985d88c6666dad0
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr5.fa
+                uncompress: yes
+            chr6:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr6.fa.gz
+                hashing-algorithm: md5
+                secure-hash: bd20fdafbdce6e7c09a6fdc05d8ee639
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr6.fa
+                uncompress: yes
+            chr7:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr7.fa.gz
+                hashing-algorithm: md5
+                secure-hash: 9cae8bfb66ff722942b2618eb5f4a776
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr7.fa
+                uncompress: yes
+            chr8:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr8.fa.gz
+                hashing-algorithm: md5
+                secure-hash: db70cc0a9cef32f3a09ba5e5348a0475
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr8.fa
+                uncompress: yes
+            chr9:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr9.fa.gz
+                hashing-algorithm: md5
+                secure-hash: cfef5926429a288174197e40c5e3c190
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr9.fa
+                uncompress: yes
+            chr10:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr10.fa.gz
+                hashing-algorithm: md5
+                secure-hash: 508a1e86cc0f64257dd0c9775462eebf
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr10.fa
+                uncompress: yes
+            chr11:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr11.fa.gz
+                hashing-algorithm: md5
+                secure-hash: 63201d72077ec57d03582be7104d483f
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr11.fa
+                uncompress: yes
+            chr12:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr12.fa.gz
+                hashing-algorithm: md5
+                secure-hash: 3580abf7788b335755f4172aff5c343b
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr12.fa
+                uncompress: yes
+            chr13:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr13.fa.gz
+                hashing-algorithm: md5
+                secure-hash: a48e9c56b167edc089df7ab141001e5d
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr13.fa
+                uncompress: yes
+            chr14:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr14.fa.gz
+                hashing-algorithm: md5
+                secure-hash: 4376df28ef2090e079581ea81a7dd2e6
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr14.fa
+                uncompress: yes
+            chr15:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr15.fa.gz
+                hashing-algorithm: md5
+                secure-hash: 2e8a6f32e876aad1e431fde3d296f1a3
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr15.fa
+                uncompress: yes
+            chr16:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr16.fa.gz
+                hashing-algorithm: md5
+                secure-hash: 48466e0aa58f3be5802ad8e6b692cbec
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr16.fa
+                uncompress: yes
+            chr17:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr17.fa.gz
+                hashing-algorithm: md5
+                secure-hash: ee98e8346d23ccd91fb7ef60e9ccede9
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr17.fa
+                uncompress: yes
+            chr18:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr18.fa.gz
+                hashing-algorithm: md5
+                secure-hash: 571f5e0300b79a95c47849851ae191ff
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr18.fa
+                uncompress: yes
+            chr19:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr19.fa.gz
+                hashing-algorithm: md5
+                secure-hash: 173b9cc2ec39c73668480f4f25701bc3
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr19.fa
+                uncompress: yes
+            chr20:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr20.fa.gz
+                hashing-algorithm: md5
+                secure-hash: f8205d1d1758b5d6c6f5a27130c8e339
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr20.fa
+                uncompress: yes
             chr21:
                 url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr21.fa.gz
                 hashing-algorithm: md5
@@ -163,27 +189,31 @@ steps:
                 path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
                 filename: chr21.fa
                 uncompress: yes
-            #chr22:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr22.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: 2baab477ebcc5a0f4163608ec93e4744
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chr22.fa
-            #    uncompress: yes
-            #chrX:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chrX.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: fc72202e734abafb9aaf19c4c9539e58
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chrX.fa
-            #    uncompress: yes
-            #chrY:
-            #    url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chrY.fa.gz
-            #    hashing-algorithm: md5
-            #    secure-hash: 4cb6af23d522f96f2e42f32c2ab242fa
-            #    path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
-            #    filename: chrY.fa
-            #    uncompress: yes
+            chr22:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr22.fa.gz
+                hashing-algorithm: md5
+                secure-hash: 2baab477ebcc5a0f4163608ec93e4744
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chr22.fa
+                uncompress: yes
+            chrX:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chrX.fa.gz
+                hashing-algorithm: md5
+                secure-hash: fc72202e734abafb9aaf19c4c9539e58
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chrX.fa
+                uncompress: yes
+            chrY:
+                url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chrY.fa.gz
+                hashing-algorithm: md5
+                secure-hash: 4cb6af23d522f96f2e42f32c2ab242fa
+                path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
+                filename: chrY.fa
+                uncompress: yes
+
+    ######################
+    ## Processing steps ##
+    ######################
 
     # Merge downloaded sequences into single fasta file
     hg19_UCSC_complete_genome (merge_fasta_files):
@@ -222,6 +252,14 @@ steps:
         ucsc-database: hg19
         path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
 
+################################################################################
+## Tools Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define used tools here                                                   ##
+## - for module system usage see documentation                                ##
+################################################################################
+
 tools:
     ##################
     # External Tools #
@@ -252,6 +290,7 @@ tools:
         exit_code: 0
 
     # URL: http://www.htslib.org/
+    # NOTE: uap requires samtools version 1.0 or greater
     samtools:
         path: samtools
         get_version: --version

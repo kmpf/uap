@@ -1,5 +1,6 @@
 from logging import getLogger
 from abstract_step import AbstractStep
+import os
 
 logger = getLogger('uap_logger')
 
@@ -7,6 +8,7 @@ logger = getLogger('uap_logger')
 class Gsnap(AbstractStep):
     '''
     '''
+
     def __init__(self, pipeline):
         super(Gsnap, self).__init__(pipeline)
 
@@ -51,8 +53,8 @@ class Gsnap(AbstractStep):
                     input_fileset.append(r2)
 
                 gsnap = [self.get_tool('gsnap'), '--gunzip']
-                gsnap.extend(['-D', self.get_option('D')])
-                gsnap.extend(['-d', self.get_option('d')])
+                gsnap.extend(['-D', os.path.abspath(self.get_option('D'))])
+                gsnap.extend(['-d', os.path.abspath(self.get_option('d'))])
                 if self.is_option_set_in_config('t'):
                     gsnap.extend(['-t', str(self.get_option('t'))])
                 # Batch-Mode
@@ -65,7 +67,7 @@ class Gsnap(AbstractStep):
                 gsnap.extend(['-N', '1'])
 
                 # Maximum number of mismatches allowed
-                #(if not specified, then
+                # (if not specified, then
                 # defaults to the ultrafast level of ((readlength+index_interval-1)/kmer - 2))
                 # (By default, the genome index interval is 3, but this can be changed
                 # by providing a different value for -q to gmap_build when processing
@@ -77,11 +79,11 @@ class Gsnap(AbstractStep):
                 gsnap.extend(['-A', 'sam'])
 
                 # output
-                out_path = run.get_output_directory_du_jour_placeholder()
-                gsnap.extend(['-o', out_path + '/gsnap_out.sam'])
+                gsnap.extend(['-o', 'gsnap_out.sam'])
                 gsnap.extend(input_fileset)
 
-                run.add_output_file("alignments", "gsnap_out.sam", input_fileset)
+                run.add_output_file(
+                    "alignments", "gsnap_out.sam", input_fileset)
 
                 stderr_file = "%s-gsnap-log_stderr.txt" % (run_id)
                 log_stderr = run.add_output_file("log_stderr",
@@ -92,4 +94,4 @@ class Gsnap(AbstractStep):
 
                 gsnap_eg = run.new_exec_group()
                 gsnap_eg.add_command(gsnap, stdout_path=log_stdout,
-                                    stderr_path=log_stderr)
+                                     stderr_path=log_stderr)

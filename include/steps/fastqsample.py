@@ -1,3 +1,4 @@
+from uaperrors import StepError
 import logging
 from abstract_step import AbstractStep
 import os
@@ -23,9 +24,9 @@ class FastqSample(AbstractStep):
         self.set_cores(1)  # muss auch in den Decorator
 
         self.add_connection('in/first_read')
-        self.add_connection('in/second_read')
+        self.add_connection('in/second_read', optional=True)
         self.add_connection('out/first_read')
-        self.add_connection('out/second_read')
+        self.add_connection('out/second_read', optional=True)
 
         self.require_tool('fastq-sample')
         self.require_tool('pigz')
@@ -65,9 +66,8 @@ class FastqSample(AbstractStep):
         isset_p = self.is_option_set_in_config('p')
 
         if isset_n and isset_p:
-            logger.error("Option n AND p are set in config.yaml. "
-                         "Only one is allowed.")
-            sys.exit(1)
+            raise StepError(self, "Option n AND p are set in config.yaml. "
+                            "Only one is allowed.")
 
         config_options = self.get_options()
 
@@ -76,17 +76,16 @@ class FastqSample(AbstractStep):
             new_run_id = run_id
             # create new run id if option o isset
             if self.is_option_set_in_config('o'):
-               new_run_id = config_options['o'] + '_' + run_id
+                new_run_id = config_options['o'] + '_' + run_id
 
             with self.declare_run(new_run_id) as run:
 
                 for read in read_types:
                     connection = 'in/%s' % read
-                    input_paths = run_ids_connections_files[run_id][connection]
+                    input_paths = run_ids_connections_files[run_id].get(
+                        connection)
 
-                    if input_paths == [None]:
-                        run.add_empty_output_connection("second_read")
-                    else:
+                    if input_paths:
                         for input_path in input_paths:
                             # Get base name of input file
                             root, ext = os.path.splitext(
@@ -107,6 +106,7 @@ class FastqSample(AbstractStep):
                                 temp_file = run.add_temporary_file()
                                 pigz_decompress_eg = run.new_exec_group()
                                 pigz = [self.get_tool('pigz'),
+                                        '--processes', str(self.get_cores()),
                                         '--decompress', '--keep',
                                         '--stdout', input_path]
 
@@ -118,23 +118,22 @@ class FastqSample(AbstractStep):
                             # @todo: its impossible to get a shorter line at
                             # this position for pep8-compatibility...
                             # maybe rename method?
-                            outfile_path = run.get_output_directory_du_jour_placeholder()
-                            outfile = outfile_path + "/sample"
+                            outfile = "sample"
 
                             fastqsample = [self.get_tool('fastq-sample')]
 
-                            for option, value in config_options.iteritems():
+                            for option, value in config_options.items():
                                 if option in self.possible_options:
-                                    if option == 'o':
+                                    if option == 'o' or value is None:
                                         continue
                                     fastqsample.extend(['-%s' % (option),
-                                                       str(value)])
+                                                        str(value)])
 
                             fastqsample.extend(['-o', outfile])
                             fastqsample.append(temp_file)
                             fastqsample_eg.add_command(fastqsample)
 
-                            #output compress subsample
+                            # output compress subsample
                             filename_params = (new_run_id,
                                                read_types[read])
 
@@ -145,6 +144,8 @@ class FastqSample(AbstractStep):
 
                             pigz_compress_eg = run.new_exec_group()
                             pigz_compress = [self.get_tool('pigz'),
+                                             '--processes',
+                                             str(self.get_cores()),
                                              '--best', '--stdout',
                                              outfile + '.fastq']
                             pigz_compress_eg.add_command(

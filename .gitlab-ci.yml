@@ -9,26 +9,18 @@ variables:
 prepare:
   stage: build
   script:
-    - module load Python/2.7.15-foss-2018b
+    - module load Python/3.6.6-foss-2018b
     - ./bootstrap.sh
     - source python_env/bin/activate
-    - pip install sphinx sphinx_rtd_theme
-    - deactivate
-    - module load Python/3.6.6-foss-2018b
-    - python3 -m venv venv
-    - source venv/bin/activate
-    - pip install --upgrade pip
-    - pip install pyaml pyyaml
+    - python -m pip install sphinx sphinx_rtd_theme pyyaml
   cache:
-    key: python-envs
+    key: python3-envs
     paths:
       - python_env
-      - venv
       - pip
   artifacts:
     paths:
       - python_env
-      - venv
     expire_in: 24 hours
 
 
@@ -36,18 +28,25 @@ steptests:
   stage: test
   script:
     - module load Python/3.6.6-foss-2018b
-    - source venv/bin/activate
+    - source python_env/bin/activate
     - cd uap_test
-    - python3 scripts/uap_test.py run-tests --uap-test-dir . --uap-path ../uap
+    - python scripts/uap_test.py run-tests --uap-test-dir . --uap-path ../uap
   dependencies:
     - prepare
+  artifacts:
+    name: output
+    when: always
+    paths:
+      - uap_test/output
 
 pages:
   stage: test
   script:
-    - module load Python/2.7.15-foss-2018b
+    - module load Python/3.6.6-foss-2018b
     - source python_env/bin/activate
+    - rm -r public/$CI_COMMIT_REF_SLUG || echo "First doc for $CI_COMMIT_REF_SLUG"
     - sphinx-build -b html doc/source public/$CI_COMMIT_REF_SLUG
+    - cp doc/supp/* public/
     - doc/make_pages_index.sh public
   cache:
     key: pages-cache
