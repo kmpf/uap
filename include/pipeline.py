@@ -309,6 +309,8 @@ class Pipeline(object):
         User working directory.
         '''
 
+        if not self.args.config:
+            raise UAPError('No <project-config>.yaml specified.')
         self._config_path, self.config_name = os.path.split(
             self.args.config.name)
         '''

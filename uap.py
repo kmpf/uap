@@ -500,6 +500,7 @@ def main():
 
     # create logger object
     logger = _configure_logger(args.verbose)
+
     # call subcommand
     try:
         if args.profiling is True:
