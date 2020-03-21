@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from logging import getLogger
 import os
@@ -54,7 +54,7 @@ class RawUrlSource(AbstractSourceStep):
         root, ext = os.path.splitext(url_filename)
         is_gzipped = True if ext in ['.gz', '.gzip'] else False
         if not is_gzipped and self.get_option('uncompress'):
-            raise UAPError("Uncompression of non-gzipped file %s requested."
+            raise StepError(self, "Uncompression of non-gzipped file %s requested."
                            % url_filename)
 
         # Handle the filename to have the proper ending
@@ -68,7 +68,7 @@ class RawUrlSource(AbstractSourceStep):
 
             if is_gzipped and self.get_option('uncompress') and \
                ext in ['.gz', '.gzip']:
-                raise UAPError("The filename %s should NOT end on '.gz' or "
+                raise StepError(self, "The filename %s should NOT end on '.gz' or "
                                "'.gzip'." % conf_filename)
             filename = conf_filename
 
@@ -82,7 +82,7 @@ class RawUrlSource(AbstractSourceStep):
             if os.path.exists(path):
                 # Fail if it is not a directory
                 if not os.path.isdir(path):
-                    raise UAPError(
+                    raise StepError(self,
                         "Path %s already exists but is not a directory" % path)
             else:
                 # Create the directory

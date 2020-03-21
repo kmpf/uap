@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import logging
 import traceback
@@ -38,7 +38,7 @@ class FetchChromSizesSource(AbstractSourceStep):
                 tb += " %s, line %s, %s %s" % (stack_entries)
 
             logger.debug(tb)
-            raise UAPError(
+            raise StepError(self,
                 'Output directory (%s) does not exist. Please create it.' %
                 output_dir)
 

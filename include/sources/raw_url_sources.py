@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from logging import getLogger
 import os
@@ -51,13 +51,13 @@ class RawUrlSource(AbstractSourceStep):
             # Control input for unknown options
             unknown_opts = set(downloads.keys()).difference(download_opts)
             if len(unknown_opts) > 0:
-                raise UAPError("Unknown option(s) %s for download of %s"
+                raise StepError(self, "Unknown option(s) %s for download of %s"
                                % (" ".join(unknown_opts), files))
             # Control input for missing mandatory options
             missing_mandatory_opts = mandatory_opts.difference(set(
                 downloads.keys()))
             if len(missing_mandatory_opts) > 0:
-                raise UAPError("Download of %s misses mandatory option(s): %s"
+                raise StepError(self, "Download of %s misses mandatory option(s): %s"
                                % (files, " ".join(missing_mandatory_opts)))
 
             # Check the optional parameters and set default if not available
@@ -74,7 +74,7 @@ class RawUrlSource(AbstractSourceStep):
                 'sha384',
                 'sha512']
             if downloads['hashing-algorithm'] not in hash_algos:
-                raise UAPError("Option 'hashing-algorithm' for download %s "
+                raise StepError(self, "Option 'hashing-algorithm' for download %s "
                                "has invalid value %s. Has to be one of %s."
                                % (files, downloads['hashing-algorithm'],
                                   ", ".join(hash_algos)))
@@ -82,7 +82,7 @@ class RawUrlSource(AbstractSourceStep):
             # 2. Check the 'secure-hash'
             if isinstance(downloads['secure-hash'], str) and not \
                     downloads['hashing-algorithm']:
-                raise UAPError("Option 'secure-hash' set for download %s "
+                raise StepError(self, "Option 'secure-hash' set for download %s "
                                "but option 'hashing-algorithm' is missing."
                                % files)
 
@@ -94,7 +94,7 @@ class RawUrlSource(AbstractSourceStep):
             root, ext = os.path.splitext(url_filename)
             is_gzipped = True if ext in ['.gz', '.gzip'] else False
             if not is_gzipped and downloads['uncompress']:
-                raise UAPError(
+                raise StepError(self,
                     "Uncompression of non-gzipped file %s requested." %
                     url_filename)
             # Handle the filename to have the proper ending
@@ -107,7 +107,7 @@ class RawUrlSource(AbstractSourceStep):
 
             if is_gzipped and downloads['uncompress'] and \
                ext in ['.gz', '.gzip']:
-                raise UAPError("The filename %s should NOT end on '.gz' or "
+                raise StepError(self, "The filename %s should NOT end on '.gz' or "
                                "'.gzip'." % conf_filename)
             filename = conf_filename
 
@@ -121,7 +121,7 @@ class RawUrlSource(AbstractSourceStep):
                 if os.path.exists(path):
                     # Fail if it is not a directory
                     if not os.path.isdir(path):
-                        raise UAPError(
+                        raise StepError(self,
                             "Path %s already exists but is not a directory" %
                             path)
                 else:

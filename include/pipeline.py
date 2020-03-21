@@ -489,7 +489,7 @@ class Pipeline(object):
         if 'id' not in self.config:
             self.config['id'] = self.config_name
 
-        # sew workin directory to work with relative paths
+        # new workin directory to work with relative paths
         self.config.setdefault('base_working_directory', self._config_path)
         os.chdir(self.config['base_working_directory'])
 
