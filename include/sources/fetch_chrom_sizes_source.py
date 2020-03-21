@@ -46,7 +46,7 @@ class FetchChromSizesSource(AbstractSourceStep):
 
         output_filename = "%s.chrom.sizes" % ucsc_database
 
-        out_file = os.path.join(output_dir, output_filename)
+        out_file = os.path.abspath(os.path.join(output_dir, output_filename))
 
         # Declare a new run
         with self.declare_run(ucsc_database) as run:

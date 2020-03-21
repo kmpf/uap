@@ -96,9 +96,9 @@ class RunFolderSource(AbstractSourceStep):
         path = self.get_option('path')
         if not self.is_option_set_in_config('unaligned_included'):
             os.path.join(path, 'Unaligned')
-        path = os.path.abspath(path)
         if not os.path.exists(path):
-            raise Exception("Source path does not exist: " + path)
+            raise StepError(self, "Source path does not exist: " + path)
+        path = os.path.abspath(path)
 
         # find all samples
         project = 'Project_' + self.get_option('project')

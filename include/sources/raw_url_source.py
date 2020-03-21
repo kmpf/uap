@@ -87,7 +87,7 @@ class RawUrlSource(AbstractSourceStep):
             else:
                 # Create the directory
                 with run.new_exec_group() as mkdir_exec_group:
-                    mkdir = [self.get_tool('mkdir'), '-p', path]
+                    mkdir = [self.get_tool('mkdir'), '-p', os.path.abspath(path)]
                     mkdir_exec_group.add_command(mkdir)
             out_file = run.add_output_file('raw', final_abspath, [])
 
