@@ -722,8 +722,9 @@ class Pipeline(object):
         '''
         If lmod is configured this functions sets the required environmental variables.
         '''
-        if 'lmod' in self.config:
-            os.environ['MODULEPATH'] = self.config['lmod']['module_path']
+        module_path = self.config.get('lmod', dict()).get('module_path')
+        if module_path:
+            os.environ['MODULEPATH'] = module_path
 
     def check_tools(self):
         '''
