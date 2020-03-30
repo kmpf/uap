@@ -44,7 +44,6 @@ steps:
         url: ftp://ftp.ncbi.nih.gov/genomes/genbank/bacteria/Mycoplasma_genitalium/latest_assembly_versions/GCA_000027325.1_ASM2732v1/GCA_000027325.1_ASM2732v1_genomic.fna.gz
         hashing-algorithm: md5
         secure-hash: f02c78b5f9e756031eeaa51531517f24
-        path: genomes/bacteria/Mycoplasma_genitalium/
         filename: 'Mycoplasma_genitalium.ASM2732v1.fa'
         uncompress: yes
 
@@ -118,15 +117,6 @@ tools:
         path: segemehl.x
         get_version: ''
         exit_code: 255
-                
-    ##################
-    # Internal Tools #
-    ##################
-
-    compare_secure_hashes:
-        path: ../tools/compare_secure_hashes.py
-        get_version: --version
-        exit_code: 0
 
     ##############
     # Unix Tools #
