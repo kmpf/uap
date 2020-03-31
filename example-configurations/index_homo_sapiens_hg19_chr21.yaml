@@ -41,7 +41,6 @@ steps:
     # Download chrom sizes file from UCSC
     download_hg19_chrom_sizes (fetch_chrom_sizes_source):
         ucsc-database: hg19
-        path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
 
     # Download sequence of chromosome 21
     download_hg19_chr21 (raw_url_source):
