@@ -12,7 +12,7 @@ logger = logging.getLogger("uap_logger")
 class FetchChromSizes(AbstractStep):
 
     def __init__(self, pipeline):
-        super(FetchChromSizesSource, self).__init__(pipeline)
+        super(FetchChromSizes, self).__init__(pipeline)
 
         self.add_connection('out/chromosome_sizes')
 
