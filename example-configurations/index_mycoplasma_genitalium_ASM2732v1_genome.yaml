@@ -122,11 +122,6 @@ tools:
     # Unix Tools #
     ##############
 
-    cat:
-        path: cat
-        get_version: --version
-        exit_code: 0
-
     cp:
         path: cp
         get_version: --version

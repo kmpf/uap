@@ -154,11 +154,6 @@ tools:
         get_version: --version
         exit_code: 0
         
-    mkfifo:
-        path: mkfifo
-        get_version: --version
-        exit_code: 0
-
     mv:
         path: mv
         get_version: --version
