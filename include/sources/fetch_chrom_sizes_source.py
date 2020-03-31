@@ -28,20 +28,20 @@ class FetchChromSizes(AbstractStep):
         '''
 
         '''
-        output_dir = self.get_option('path')
-        if not os.path.exists(output_dir):
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-
-            tb = "Stack trace:"
-            for stack_entries in traceback.extract_tb(exc_traceback, 4):
-                tb += "\n"
-                tb += " %s, line %s, %s %s" % (stack_entries)
-
-            logger.debug(tb)
-            raise StepError(self,
-                'Output directory (%s) does not exist. Please create it.' %
-                output_dir)
-
+#         output_dir = self.get_option('path')
+#         if not os.path.exists(output_dir):
+#             exc_type, exc_value, exc_traceback = sys.exc_info()
+# 
+#             tb = "Stack trace:"
+#             for stack_entries in traceback.extract_tb(exc_traceback, 4):
+#                 tb += "\n"
+#                 tb += " %s, line %s, %s %s" % (stack_entries)
+# 
+#             logger.debug(tb)
+#             raise StepError(self,
+#                 'Output directory (%s) does not exist. Please create it.' %
+#                 output_dir)
+# 
         ucsc_database = self.get_option('ucsc-database')
 
         output_filename = "%s.chrom.sizes" % ucsc_database
