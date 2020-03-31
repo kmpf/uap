@@ -65,21 +65,21 @@ steps:
 #    ## only enable if your machine possesses enough RAM (~60GB)
 #    ## otherwise this step is going to crash
 #    segemehl_generate_index:
-#        _depends: download_hg19_data_UCSC
+#        _depends: download_hg19_chr21
 #        _connect:
-#            in/reference_sequence:download_hg19_data_UCSC/raw
+#            in/reference_sequence:download_hg19_chr21/raw
 #        index-basename: segemehl_index
 
     bwa_generate_index:
         _depends: download_hg19_chr21
         _connect:
-            in/reference_sequence: download_hg19_data_UCSC/raw
+            in/reference_sequence: download_hg19_chr21/raw
         index-basename: bwa_index
 
     samtools_faidx:
         _depends: download_hg19_chr21
         _connect:
-            in/sequence: download_hg19_data_UCSC/raw
+            in/sequence: download_hg19_chr21/raw
 
 ################################################################################
 ## Tools Section                                                              ##
