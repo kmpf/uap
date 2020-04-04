@@ -43,37 +43,30 @@ steps:
 
     SRR001414_download (raw_url_source):
         url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001414/SRR001414.fastq.gz
-        path: example-out/2007-Barski_et_al_download
         uncompress: yes
 
     SRR001419_download (raw_url_source):
         url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001419/SRR001419.fastq.gz
-        path: example-out/2007-Barski_et_al_download
         uncompress: yes
 
     SRR001420_download (raw_url_source):
         url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001420/SRR001420.fastq.gz
-        path: example-out/2007-Barski_et_al_download
         uncompress: yes
 
     SRR001421_download (raw_url_source):
         url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001421/SRR001421.fastq.gz
-        path: example-out/2007-Barski_et_al_download
         uncompress: yes
 
     SRR001430_download (raw_url_source):
         url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001430/SRR001430.fastq.gz
-        path: example-out/2007-Barski_et_al_download
         uncompress: yes
 
     SRR001431_download (raw_url_source):
         url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001431/SRR001431.fastq.gz
-        path: example-out/2007-Barski_et_al_download
         uncompress: yes
 
     SRR001432_download (raw_url_source):
         url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001432/SRR001432.fastq.gz
-        path: example-out/2007-Barski_et_al_download
         uncompress: yes
 
 ################################################################################
@@ -95,15 +88,6 @@ tools:
         get_version: --version
         exit_code: 0
                 
-    ##################
-    # Internal Tools #
-    ##################
-
-    compare_secure_hashes:
-        path: ../tools/compare_secure_hashes.py
-        get_version: --version
-        exit_code: 0
-
     ##############
     # Unix Tools #
     ##############
