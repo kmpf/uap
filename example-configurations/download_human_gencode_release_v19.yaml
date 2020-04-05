@@ -71,22 +71,3 @@ tools:
         path: pigz
         get_version: --version
         exit_code: 0
-
-    ##############
-    # Unix Tools #
-    ##############
-
-    cp:
-        path: cp
-        get_version: --version
-        exit_code: 0
-
-    dd:
-        path: dd
-        get_version: --version
-        exit_code: 0
-
-    mkdir:
-        path: mkdir
-        get_version: --version
-        exit_code: 0
