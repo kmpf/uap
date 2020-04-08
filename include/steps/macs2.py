@@ -31,9 +31,15 @@ class Macs2(AbstractStep):
         self.set_cores(4)
 
         self.add_connection('in/alignments')
-        self.add_connection('out/log')
-        self.add_connection('out/diagnosis')
-        self.add_connection('out/model')
+        self.add_connection(
+            'out/log',
+            optional = True)
+        self.add_connection(
+            'out/diagnosis',
+            optional = True)
+        self.add_connection(
+            'out/model',
+            optional = True)
 
         # Narrow peak information
         self.add_connection(
