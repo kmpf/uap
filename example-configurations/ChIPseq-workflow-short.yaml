@@ -47,11 +47,11 @@ constants:
     # 2.  Mapping indices:
     # 2.1 Bowtie2
     - &bowtie2_genome_index
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/bowtie2_generate_index/bowtie2_index-download-FgvWLBqA/bowtie2_index-download
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/bowtie2_generate_index/bowtie2_index-download/bowtie2_index-download
 
     ## 2.2 BWA
     - &bwa_genome_index
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/bwa_generate_index/bwa_index-download-BsAeGUho/bwa_index-download
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/bwa_generate_index/bwa_index-download/bwa_index-download
 
     ## Control vs. Treatment information needed for MACS2
     - control: &control-treatment-hash
@@ -73,13 +73,13 @@ steps:
     fastq_source:
         sample_to_files_map:
             H3K4me3:
-               - example-out/2007-Barski_et_al_download/SRR001414.fastq
-               - example-out/2007-Barski_et_al_download/SRR001419.fastq
-               - example-out/2007-Barski_et_al_download/SRR001420.fastq
-               - example-out/2007-Barski_et_al_download/SRR001421.fastq
-               - example-out/2007-Barski_et_al_download/SRR001430.fastq
-               - example-out/2007-Barski_et_al_download/SRR001431.fastq
-               - example-out/2007-Barski_et_al_download/SRR001432.fastq
+               - example-out/2007-Barski_et_al_download/SRR001414_download/download/SRR001414.fastq
+               - example-out/2007-Barski_et_al_download/SRR001419_download/download/SRR001419.fastq
+               - example-out/2007-Barski_et_al_download/SRR001420_download/download/SRR001420.fastq
+               - example-out/2007-Barski_et_al_download/SRR001421_download/download/SRR001421.fastq
+               - example-out/2007-Barski_et_al_download/SRR001430_download/download/SRR001430.fastq
+               - example-out/2007-Barski_et_al_download/SRR001431_download/download/SRR001431.fastq
+               - example-out/2007-Barski_et_al_download/SRR001432_download/download/SRR001432.fastq
         paired_end: no
         first_read: .fastq
 
@@ -126,11 +126,13 @@ steps:
     sort_bowtie2 (sam_to_sorted_bam):
         _depends: bowtie2
         genome-faidx: *genome_faidx
+        sort-by-name: yes
         temp-sort-dir: /tmp
 
     sort_bwa_backtrack (sam_to_sorted_bam):
         _depends: bwa_backtrack
         genome-faidx: *genome_faidx
+        sort-by-name: yes
         temp-sort-dir: /tmp
 
     rmdup_bowtie2 (picard_markduplicates):
@@ -211,9 +213,9 @@ tools:
     # URL: http://broadinstitute.github.io/picard/
     picard-tools:
         ## Settings below work for picard-tools installed via apt-get/aptitude
-        path: picard-tools
-        get_version: --version
-        exit_code: 0
+        path: PicardCommandLine
+        get_version: -h 
+        exit_code: 1
         ## Settings below work if path to Picard JAR file is changed and
         ## lines are uncommented (lines above have to be commented out)
         # path: ['java', '-jar', '/path/to/picard.jar']
@@ -233,54 +235,37 @@ tools:
         get_version: '--version'
         exit_code: 0
 
-    ##################
-    # Internal Tools #
-    ##################
-
-    fix_cutadapt:
-        path: ../tools/fix_cutadapt.py
-        get_version: --version
-        exit_code: 0
-
-    fix_qnames:
-        path: ../tools/fix_qnames.py
-        exit_code: 0
-
-    mate_pair_strand_switch:
-        path: ../tools/mate_pair_strand_switch.py
-        get_version: --version 
-        exit_code: 0
-
-    ##############
-    # Unix Tools #
-    ##############
-
-    cat:
-        path: cat
-        get_version: --version
-        exit_code: 0
-
-    dd:
-        path: dd
-        get_version: --version
-        exit_code: 0
-        
-    mkdir:
-        path: mkdir
-        get_version: --version
-        exit_code: 0
-
-    mkfifo:
-        path: mkfifo
-        get_version: --version
-        exit_code: 0
-
-    mv:
-        path: mv
-        get_version: --version
-        exit_code: 0
-
-    tar:
-        path: tar
-        get_version: --version
-        exit_code: 0
+#     ##############
+#     # Unix Tools #
+#     ##############
+# 
+#     cat:
+#         path: cat
+#         get_version: --version
+#         exit_code: 0
+# 
+#     dd:
+#         path: dd
+#         get_version: --version
+#         exit_code: 0
+#         
+#     mkdir:
+#         path: mkdir
+#         get_version: --version
+#         exit_code: 0
+# 
+#     mkfifo:
+#         path: mkfifo
+#         get_version: --version
+#         exit_code: 0
+# 
+#     mv:
+#         path: mv
+#         get_version: --version
+#         exit_code: 0
+# 
+#     tar:
+#         path: tar
+#         get_version: --version
+#         exit_code: 0
+# 
