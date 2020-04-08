@@ -36,13 +36,25 @@ class Macs2(AbstractStep):
         self.add_connection('out/model')
 
         # Narrow peak information
-        self.add_connection('out/narrowpeaks')
-        self.add_connection('out/narrowpeaks-xls')
-        self.add_connection('out/summits')
+        self.add_connection(
+            'out/narrowpeaks',
+            optional = True)
+        self.add_connection(
+            'out/narrowpeaks-xls',
+            optional = True)
+        self.add_connection(
+            'out/summits',
+            optional = True)
         # Broad peak information
-        self.add_connection('out/broadpeaks')
-        self.add_connection('out/broadpeaks-xls')
-        self.add_connection('out/gappedpeaks')
+        self.add_connection(
+            'out/broadpeaks',
+            optional = True)
+        self.add_connection(
+            'out/broadpeaks-xls',
+            optional = True)
+        self.add_connection(
+            'out/gappedpeaks',
+            optional = True)
 
         # Step was tested for macs2 release 2.1.1.20160309
         self.require_tool('macs2')
@@ -412,10 +424,6 @@ class Macs2(AbstractStep):
                             'model', '%s-macs2-model.r' % run_id, input_paths)
 
                     if not self.get_option('broad'):
-                        # ... if we compute narrow peaks ...
-                        run.add_empty_output_connection("broadpeaks")
-                        run.add_empty_output_connection("broadpeaks-xls")
-                        run.add_empty_output_connection("summits")
                         # Result files for narrow peaks
                         narrow_peak = "%s_peaks.narrowPeak" % run_id
                         result_files[narrow_peak] = run.add_output_file(
@@ -436,10 +444,6 @@ class Macs2(AbstractStep):
                             input_paths
                         )
                     else:
-                        # ... or we compute broad peaks.
-                        run.add_empty_output_connection("narrowpeaks")
-                        run.add_empty_output_connection("narrowpeaks-xls")
-                        run.add_empty_output_connection("gappedpeaks")
                         # Files which are created by using --broad
                         broad_peak = "%s_peaks.broadPeak" % run_id
                         result_files[broad_peak] = run.add_output_file(
