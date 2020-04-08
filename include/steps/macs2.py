@@ -61,6 +61,7 @@ class Macs2(AbstractStep):
         self.add_option(
             'format',
             str,
+            optional = True,
             default='AUTO',
             choices=[
                 'AUTO',
@@ -84,30 +85,40 @@ class Macs2(AbstractStep):
             "with 'AUTO', and you have to implicitly specify the "
             "format for 'BAMPE' and 'BEDPE'. For more information "
             "about the formats see https://github.com/taoliu/MACS/")
-        self.add_option('gsize', str, default='2.7e9',
-                        description="PLEASE assign this parameter to fit "
-                        "your needs! It's the mappable genome size or effective "
-                        "genome size which is defined as the genome size which "
-                        "can be sequenced. Because of the repetitive features "
-                        "on the chromsomes, the actual mappable genome size "
-                        "will be smaller than the original size, about 90% or "
-                        "70% of the genome size. The default hs -- 2.7e9 is "
-                        "recommended for UCSC human hg18 assembly. Here are "
-                        "all precompiled parameters for effective genome size: "
-                        "hs:2.7e9; mm:1.87e9; ce:9e7; dm:1.2e8")
-        self.add_option('tsize', int, optional=True,
-                        description="The size of sequencing tags. If you "
-                        "don't specify it, MACS will try to use the first 10 "
-                        "sequences from your input treatment file to determine "
-                        "the tag size. Specifying it will override the "
-                        "automatically determined tag size.")
-        self.add_option('bw', int, optional=True,
-                        description="The band width which is used to scan "
-                        "the genome ONLY for model building. You can set this "
-                        "parameter as the sonication fragment size expected "
-                        "from wet experiment. The previous side effect on the "
-                        "peak detection process has been removed. So this "
-                        "parameter only affects the model building.")
+        self.add_option(
+            'gsize',
+            str,
+            optional = True,
+            default='2.7e9',
+            description="PLEASE assign this parameter to fit "
+            "your needs! It's the mappable genome size or effective "
+            "genome size which is defined as the genome size which "
+            "can be sequenced. Because of the repetitive features "
+            "on the chromsomes, the actual mappable genome size "
+            "will be smaller than the original size, about 90% or "
+            "70% of the genome size. The default hs -- 2.7e9 is "
+            "recommended for UCSC human hg18 assembly. Here are "
+            "all precompiled parameters for effective genome size: "
+            "hs:2.7e9; mm:1.87e9; ce:9e7; dm:1.2e8")
+        self.add_option(
+            'tsize',
+            int,
+            optional=True,
+            description="The size of sequencing tags. If you "
+            "don't specify it, MACS will try to use the first 10 "
+            "sequences from your input treatment file to determine "
+            "the tag size. Specifying it will override the "
+            "automatically determined tag size.")
+        self.add_option(
+            'bw',
+            int,
+            optional=True,
+            description="The band width which is used to scan "
+            "the genome ONLY for model building. You can set this "
+            "parameter as the sonication fragment size expected "
+            "from wet experiment. The previous side effect on the "
+            "peak detection process has been removed. So this "
+            "parameter only affects the model building.")
         self.add_option(
             'qvalue',
             float,
@@ -116,47 +127,62 @@ class Macs2(AbstractStep):
             "significant regions. Default is 0.05. For broad marks, "
             "you can try 0.05 as cutoff. Q-values are calculated "
             "from p-values using Benjamini-Hochberg procedure.")
-        self.add_option('pvalue', float, optional=True,
-                        description="The pvalue cutoff. If 'pvalue' is "
-                        "specified, MACS2 will use pvalue instead of qvalue.")
-        self.add_option('mfold', str, optional=True,
-                        description="This parameter is used to select the "
-                        "regions within MFOLD range of high-confidence "
-                        "enrichment ratio against background to build model. "
-                        "The regions must be lower than upper limit, and higher "
-                        "than the lower limit of fold enrichment. DEFAULT:5,50 "
-                        "means using all regions not too low (>5) and not too "
-                        "high (<50) to build paired-peaks model. If MACS can "
-                        "not find more than 100 regions to build model, it will "
-                        "use the --extsize parameter to continue the peak "
-                        "detection ONLY if --fix-bimodal is set.")
-        self.add_option('nolambda', bool, optional=True,
-                        description="With this flag on, MACS will use the "
-                        "background lambda as local lambda. This means MACS "
-                        "will not consider the local bias at peak candidate "
-                        "regions.")
-        self.add_option('slocal', str, optional=True,
-                        description="'slocal' and 'llocal' control which two "
-                        "levels of regions will be checked around the peak "
-                        "regions to calculate the maximum lambda as local "
-                        "lambda. By default, MACS considers 1000bp for small "
-                        "local region(--slocal), and 10000bps for large local "
-                        "region(--llocal) which captures the bias from a long "
-                        "range effect like an open chromatin domain. You can "
-                        "tweak these according to your project. Remember that "
-                        "if the region is set too small, a sharp spike in the "
-                        "input data may kill the significant peak.")
-        self.add_option('llocal', str, optional=True,
-                        description="'slocal' and 'llocal' control which two "
-                        "levels of regions will be checked around the peak "
-                        "regions to calculate the maximum lambda as local "
-                        "lambda. By default, MACS considers 1000bp for small "
-                        "local region(--slocal), and 10000bps for large local "
-                        "region(--llocal) which captures the bias from a long "
-                        "range effect like an open chromatin domain. You can "
-                        "tweak these according to your project. Remember that "
-                        "if the region is set too small, a sharp spike in the "
-                        "input data may kill the significant peak.")
+        self.add_option(
+            'pvalue',
+            float,
+            optional=True,
+            description="The pvalue cutoff. If 'pvalue' is "
+            "specified, MACS2 will use pvalue instead of qvalue.")
+        self.add_option(
+            'mfold',
+            str,
+            optional=True,
+            description="This parameter is used to select the "
+            "regions within MFOLD range of high-confidence "
+            "enrichment ratio against background to build model. "
+            "The regions must be lower than upper limit, and higher "
+            "than the lower limit of fold enrichment. DEFAULT:5,50 "
+            "means using all regions not too low (>5) and not too "
+            "high (<50) to build paired-peaks model. If MACS can "
+            "not find more than 100 regions to build model, it will "
+            "use the --extsize parameter to continue the peak "
+            "detection ONLY if --fix-bimodal is set.")
+        self.add_option(
+            'nolambda',
+            bool,
+            optional=True,
+            description="With this flag on, MACS will use the "
+            "background lambda as local lambda. This means MACS "
+            "will not consider the local bias at peak candidate "
+            "regions.")
+        self.add_option(
+            'slocal',
+            str,
+            optional=True,
+            description="'slocal' and 'llocal' control which two "
+            "levels of regions will be checked around the peak "
+            "regions to calculate the maximum lambda as local "
+            "lambda. By default, MACS considers 1000bp for small "
+            "local region(--slocal), and 10000bps for large local "
+            "region(--llocal) which captures the bias from a long "
+            "range effect like an open chromatin domain. You can "
+            "tweak these according to your project. Remember that "
+            "if the region is set too small, a sharp spike in the "
+            "input data may kill the significant peak.")
+        self.add_option(
+            'llocal',
+            str,
+            optional=True,
+            description="'slocal' and 'llocal' control which two "
+            "levels of regions will be checked around the peak "
+            "regions to calculate the maximum lambda as local "
+            "lambda. By default, MACS considers 1000bp for small "
+            "local region(--slocal), and 10000bps for large local "
+            "region(--llocal) which captures the bias from a long "
+            "range effect like an open chromatin domain. You can "
+            "tweak these according to your project. Remember that "
+            "if the region is set too small, a sharp spike in the "
+            "input data may kill the significant peak.")
         self.add_option(
             'fix-bimodal',
             bool,
@@ -167,9 +193,12 @@ class Macs2(AbstractStep):
             "'--extsize' parameter to extend each tags. If set, "
             "MACS will be terminated if paried-peak model is "
             "failed.")
-        self.add_option('nomodel', bool, optional=True,
-                        description="While on, MACS will bypass building the "
-                        "shifting model.")
+        self.add_option(
+            'nomodel',
+            bool,
+            optional=True,
+            description="While on, MACS will bypass building the "
+            "shifting model.")
         self.add_option(
             'extsize',
             int,
@@ -229,14 +258,18 @@ class Macs2(AbstractStep):
             "number of tags will be kept at the same location. The "
             "default is to keep one tag at the same location. "
             "Default: 1")
-        self.add_option('broad', bool, default=False, optional=True,
-                        description="When this flag is on, MACS will try to "
-                        "composite broad regions in BED12 ( a gene-model-like "
-                        "format ) by putting nearby highly enriched regions "
-                        "into a broad region with loose cutoff. The broad "
-                        "region is controlled by another cutoff through "
-                        "--broad-cutoff. The maximum length of broad region "
-                        "length is 4 times of d from MACS. DEFAULT: False")
+        self.add_option(
+            'broad',
+            bool,
+            optional=True,
+            default=False,
+            description="When this flag is on, MACS will try to "
+            "composite broad regions in BED12 ( a gene-model-like "
+            "format ) by putting nearby highly enriched regions "
+            "into a broad region with loose cutoff. The broad "
+            "region is controlled by another cutoff through "
+            "--broad-cutoff. The maximum length of broad region "
+            "length is 4 times of d from MACS. DEFAULT: False")
         # use "broad-cutoff" only in conjuction with "broad"
         self.add_option(
             'broad-cutoff',
@@ -246,22 +279,31 @@ class Macs2(AbstractStep):
             "is not available unless --broad is set. If -p is set, "
             "this is a pvalue cutoff, otherwise, it's a qvalue "
             "cutoff. DEFAULT: 0.1")
-        self.add_option('to-large', bool, optional=True,
-                        description="When set, linearly scale the smaller "
-                        "dataset to the same depth as larger dataset, by "
-                        "default, the larger dataset will be scaled towards "
-                        "the smaller dataset. Beware, to scale up small data "
-                        "would cause more false positives.")
-        self.add_option('down-sample', bool, optional=True,
-                        description="When set, random sampling method will "
-                        "scale down the bigger sample. By default, MACS uses "
-                        "linear scaling. This option will make the results "
-                        "unstable and irreproducible since each time, random "
-                        "reads would be selected, especially the numbers "
-                        "(pileup, pvalue, qvalue) would change. Consider to "
-                        "use 'randsample' script before MACS2 runs instead.")
         self.add_option(
-            'bdg', bool, optional=True, description="If this flag is on, MACS will store the "
+            'to-large',
+            bool,
+            optional=True,
+            description="When set, linearly scale the smaller "
+            "dataset to the same depth as larger dataset, by "
+            "default, the larger dataset will be scaled towards "
+            "the smaller dataset. Beware, to scale up small data "
+            "would cause more false positives.")
+        self.add_option(
+            'down-sample',
+            bool,
+            optional=True,
+            description="When set, random sampling method will "
+            "scale down the bigger sample. By default, MACS uses "
+            "linear scaling. This option will make the results "
+            "unstable and irreproducible since each time, random "
+            "reads would be selected, especially the numbers "
+            "(pileup, pvalue, qvalue) would change. Consider to "
+            "use 'randsample' script before MACS2 runs instead.")
+        self.add_option(
+            'bdg',
+            bool,
+            optional=True,
+            description="If this flag is on, MACS will store the "
             "fragment pileup, control lambda, -log10pvalue and "
             "-log10qvalue scores in bedGraph files. The bedGraph "
             "files will be stored in current directory named "
@@ -284,19 +326,29 @@ class Macs2(AbstractStep):
             "output subpeaks of a big peak region will have the "
             "same peak boundaries, and different scores and peak "
             "summit positions.")
-        self.add_option('verbose', int, default=0, choices=[0, 1, 2, 3],
-                        optional=True,
-                        description="If you don't want to see any message "
-                        "during the running of MACS, set it to 0. But the "
-                        "CRITICAL messages will never be hidden. If you want "
-                        "to see rich information like how many peaks are "
-                        "called for every chromosome, you can set it to 3 or "
-                        "larger than 3.")
+        self.add_option(
+            'verbose',
+            int,
+            default=0,
+            choices=[0, 1, 2, 3],
+            optional=True,
+            description="If you don't want to see any message "
+            "during the running of MACS, set it to 0. But the "
+            "CRITICAL messages will never be hidden. If you want "
+            "to see rich information like how many peaks are "
+            "called for every chromosome, you can set it to 3 or "
+            "larger than 3.")
         # LEGACY options
-        self.add_option('buffer-size', int, optional=True,
-                        description="LEGACY option.")
-        self.add_option('read-length', int, optional=True,
-                        description="LEGACY option.")
+        self.add_option(
+            'buffer-size',
+            int,
+            optional=True,
+            description="LEGACY option.")
+        self.add_option(
+            'read-length',
+            int,
+            optional=True,
+            description="LEGACY option.")
 
     def runs(self, run_ids_connections_files):
         # Compile the list of options

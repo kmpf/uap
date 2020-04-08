@@ -19,9 +19,13 @@ class FixCutadapt(AbstractStep):
         self.set_cores(4)
 
         self.add_connection('in/first_read')
-        self.add_connection('in/second_read')
+        self.add_connection(
+            'in/second_read',
+            optional = True)
         self.add_connection('out/first_read')
-        self.add_connection('out/second_read')
+        self.add_connection(
+            'out/second_read',
+            optional = True)
 
         # [Options for 'dd':]
         self.add_option('dd-blocksize', str, optional=True, default="2M")
@@ -37,20 +41,23 @@ class FixCutadapt(AbstractStep):
         # Step was tested for pigz release 2.3.1
         self.require_tool('pigz')
 
-    def runs(self, run_ids_connections_files):
+    def runs(self, cc):
 
         read_types = {'first_read': '-R1', 'second_read': '-R2'}
-        for run_id in run_ids_connections_files.keys():
+        for run_id in cc.keys():
+            cc.switch_run_id(run_id)
             with self.declare_run(run_id) as run:
                 temp_fifos = dict()
                 exec_group = run.new_exec_group()
                 for read in read_types:
-                    connection = 'in/%s' % read
-                    input_paths = run_ids_connections_files[run_id][connection]
-                    temp_fifos["%s_in" % read] = None
-                    temp_fifos["%s_out" % read] = None
+                    if not cc.connection_exists(f"in/{read}"):
+                        continue
+                    connection = f"in/{read}"
+                    input_paths = cc[run_id][connection]
+                    temp_fifos[f"{read}_in"] = None
+                    temp_fifos[f"{read}_out"] = None
                     if input_paths == [None]:
-                        run.add_empty_output_connection("%s" % read)
+                        run.add_empty_output_connection(f"{read}")
 
                     elif len(input_paths) != 1:
                         raise StepError(
@@ -60,17 +67,17 @@ class FixCutadapt(AbstractStep):
                     else:
                         # 1. Create temporary fifos
                         # 1.1 Input fifo
-                        temp_fifos["%s_in" % read] = run.add_temporary_file(
+                        temp_fifos[f"{read}_in"] = run.add_temporary_file(
                             "in-fifo-%s" %
                             os.path.basename(input_paths[0]))
                         mkfifo_in = [self.get_tool('mkfifo'),
-                                     temp_fifos["%s_in" % read]]
+                                     temp_fifos[f"{read}_in"]]
                         exec_group.add_command(mkfifo_in)
                         # 1.2 Output fifo
-                        temp_fifos["%s_out" % read] = run.add_temporary_file(
-                            "%s-out-fifo" % read)
+                        temp_fifos[f"{read}_out"] = run.add_temporary_file(
+                            f"{read}-out-fifo")
                         mkfifo_out = [self.get_tool('mkfifo'),
-                                      temp_fifos["%s_out" % read]]
+                                      temp_fifos[f"{read}_out"]]
                         exec_group.add_command(mkfifo_out)
 
                         # 2. Output files to fifo
@@ -122,8 +129,7 @@ class FixCutadapt(AbstractStep):
                 fix_cutadapt = [self.get_tool('fix_cutadapt'),
                                 temp_fifos["first_read_in"],
                                 temp_fifos["first_read_out"]]
-                if temp_fifos["second_read_in"] is not None and \
-                   temp_fifos["second_read_out"] is not None:
+                if cc.connection_exists("in/second_read"):
                     fix_cutadapt.extend([
                         '--R2-in', temp_fifos["second_read_in"],
                         '--R2-out', temp_fifos["second_read_out"]
@@ -147,7 +153,7 @@ class FixCutadapt(AbstractStep):
                         "first_read",
                         "%s%s.fastq.gz" %
                         (run_id, read_types["first_read"]),
-                        run_ids_connections_files[run_id]["in/first_read"])
+                        cc[run_id]["in/first_read"])
                     dd = [self.get_tool('dd'),
                           'obs=%s' % self.get_option('dd-blocksize'),
                           'of=%s' % fr_stdout_path]
@@ -157,8 +163,7 @@ class FixCutadapt(AbstractStep):
                     fr_pigz_pipe.add_command(dd)
 
                 # 5. Read data from second_read fifo if there is one
-                if temp_fifos["second_read_in"] is not None and \
-                   temp_fifos["second_read_out"] is not None:
+                if cc.connection_exists("in/second_read"):
                     with exec_group.add_pipeline() as sr_pigz_pipe:
                         # 5.1  command: Read from first_read fifos
                         cat = [self.get_tool('cat'),
@@ -176,7 +181,7 @@ class FixCutadapt(AbstractStep):
                             "second_read",
                             "%s%s.fastq.gz" %
                             (run_id, read_types["second_read"]),
-                            run_ids_connections_files[run_id]["in/second_read"])
+                            cc[run_id]["in/second_read"])
                         dd = [self.get_tool('dd'),
                               'obs=%s' % self.get_option('dd-blocksize'),
                               'of=%s' % sr_stdout_path]
