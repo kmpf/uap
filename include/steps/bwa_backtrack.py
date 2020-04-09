@@ -36,7 +36,9 @@ class BwaBacktrack(AbstractStep):
         self.set_cores(8)
 
         self.add_connection('in/first_read')
-        self.add_connection('in/second_read')
+        self.add_connection(
+            'in/second_read',
+            optional = True)
         self.add_connection('out/alignments')
 
         # Step was tested for dd (coreutils) release 8.25
@@ -206,7 +208,7 @@ class BwaBacktrack(AbstractStep):
         self.add_option('pigz-blocksize', str, optional=True,
                         default="2048")
 
-    def runs(self, run_ids_connections_files):
+    def runs(self, cc):
 
         # Check if index is valid
         if not os.path.exists(self.get_option('index') + '.bwt'):
@@ -273,11 +275,15 @@ class BwaBacktrack(AbstractStep):
         option_list_bwa_sampe = make_option_list(set_bwa_sampe_options,
                                                  prefix="sampe-")
 
-        for run_id in run_ids_connections_files.keys():
+        for run_id in cc.keys():
+            cc.switch_run_id(run_id)
             with self.declare_run(run_id) as run:
                 # Get list of files for first/second read
-                fr_input = run_ids_connections_files[run_id]['in/first_read']
-                sr_input = run_ids_connections_files[run_id]['in/second_read']
+                fr_input = cc[run_id]['in/first_read']
+                if not cc.connection_exists(connection = 'in/second_read'):
+                    sr_input = [None]
+                else:
+                    sr_input = cc[run_id]['in/second_read']
 
                 input_paths = [y for x in [fr_input, sr_input]
                                for y in x if y is not None]

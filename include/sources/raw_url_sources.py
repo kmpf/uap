@@ -3,12 +3,12 @@ import sys
 from logging import getLogger
 import os
 import urllib.parse
-from abstract_step import AbstractSourceStep
+from abstract_step import AbstractStep
 
 logger = getLogger("uap_logger")
 
 
-class RawUrlSource(AbstractSourceStep):
+class RawUrlSource(AbstractStep):
 
     def __init__(self, pipeline):
         super(RawUrlSource, self).__init__(pipeline)
@@ -30,7 +30,7 @@ class RawUrlSource(AbstractSourceStep):
                         "<name>:\n"
                         "    filename: <filename>\n"
                         "    hashing-algorithm: <hashing-algorithm>\n"
-                        "    path: <path>\n"
+#                        "    path: <path>\n"
                         "    secure-hash: <secure-hash>\n"
                         "    uncompress: <uncompress>\n"
                         "    url: <url>")
@@ -43,9 +43,9 @@ class RawUrlSource(AbstractSourceStep):
         file_download = self.get_option('run-download-info')
 
         # List with valid download options
-        download_opts = {'filename', 'hashing-algorithm', 'path',
+        download_opts = {'filename', 'hashing-algorithm',
                          'secure-hash', 'uncompress', 'url'}
-        mandatory_opts = {'filename', 'path', 'url'}
+        mandatory_opts = {'filename', 'url'}
 
         for files, downloads in file_download.items():
             # Control input for unknown options
@@ -72,7 +72,8 @@ class RawUrlSource(AbstractSourceStep):
                 'sha224',
                 'sha256',
                 'sha384',
-                'sha512']
+                'sha512',
+                None]
             if downloads['hashing-algorithm'] not in hash_algos:
                 raise StepError(self, "Option 'hashing-algorithm' for download %s "
                                "has invalid value %s. Has to be one of %s."
@@ -101,38 +102,19 @@ class RawUrlSource(AbstractSourceStep):
             filename = root if downloads['uncompress'] and is_gzipped \
                 else url_filename
 
-            conf_filename = downloads['filename']
+            filename = downloads['filename']
             root, ext = os.path.splitext(
-                os.path.basename(conf_filename))
+                os.path.basename(filename))
 
             if is_gzipped and downloads['uncompress'] and \
                ext in ['.gz', '.gzip']:
                 raise StepError(self, "The filename %s should NOT end on '.gz' or "
-                               "'.gzip'." % conf_filename)
-            filename = conf_filename
-
-            # Get directory to move downloaded file to
-            path = downloads['path']
-            # Absolute path to downloaded file
-            final_abspath = os.path.join(path, filename)
+                               "'.gzip'." % filename)
 
             with self.declare_run(files) as run:
-                # Test if path exists
-                if os.path.exists(path):
-                    # Fail if it is not a directory
-                    if not os.path.isdir(path):
-                        raise StepError(self,
-                            "Path %s already exists but is not a directory" %
-                            path)
-                else:
-                    # Create the directory
-                    with run.new_exec_group() as mkdir_exec_group:
-                        mkdir = [self.get_tool('mkdir'), '-p', os.path.abspath(path)]
-                        mkdir_exec_group.add_command(mkdir)
+                out_file = run.add_output_file('raw', filename, [])
 
-                out_file = run.add_output_file('raw', final_abspath, [])
-
-                temp_filename = run.add_temporary_file(suffix=url_filename)
+                temp_filename = run.add_temporary_file(suffix = url_filename)
                 with run.new_exec_group() as curl_exec_group:
                     # 1. download file
                     curl = [self.get_tool('curl'), downloads['url']]
