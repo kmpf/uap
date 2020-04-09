@@ -22,8 +22,8 @@ def abs2rel_path(func):
 
         def repl(text):
             if isinstance(text, str):
-                if text == abs_dest:
-                    return rel_path
+                if text.endswith(abs_dest):
+                    return text.replace(abs_dest, rel_path)
                 return text.replace(abs_dest+os.sep, rel_path+os.sep)
             elif isinstance(text, list) or isinstance(text, set):
                 return [repl(element) for element in text]
