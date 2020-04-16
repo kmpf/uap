@@ -439,6 +439,10 @@ class Bowtie2(AbstractStep):
             raise StepError(self, "Could not find index file: %s.*" %
                             self.get_option('index'))
 
+        index_path = os.path.join(
+            os.path.abspath(os.path.dirname(self.get_option('index'))),
+            os.path.basename(self.get_option('index')))
+                            
         # compile all options set
         # 1st all options that are given via --
         options1 = ['phred33', 'phred64',
@@ -577,7 +581,7 @@ class Bowtie2(AbstractStep):
                         bowtie2 = [self.get_tool('bowtie2')]
 
                         bowtie2.extend(option_list)
-                        bowtie2.extend(['-x', self.get_option('index')])
+                        bowtie2.extend(['-x', index_path])
 
                         if self.get_option('unaligned'):
                             out_file = run.add_output_file(
