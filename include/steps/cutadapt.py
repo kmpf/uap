@@ -466,10 +466,9 @@ class Cutadapt(AbstractStep):
                                             % adapter)
                     # Or do we have a adapter sequence fasta file?
                     elif self.is_option_set_in_config('adapter-file'):
-                        adapter = "file:" + self.get_option(
-                            'adapter-file')
-                        if not os.path.exists(
-                                self.get_option('adapter-file')):
+                        adapter_file = os.path.abspath(self.get_option('adapter-file'))
+                        adapter = "file:" + adapter_file
+                        if not os.path.exists(adapter_file):
                             raise StepError(
                                 self, "File %s containing adapter sequences "
                                 "does not exist." %
