@@ -167,60 +167,9 @@ tools:
         get_version: -h
         exit_code: 1
 
-#    ##################
-#    # Internal Tools #
-#    ##################
-#
-#    fix_cutadapt:
-#        path: ../tools/fix_cutadapt.py
-#        get_version: --version
-#        exit_code: 0
-#
-#    fix_s2c:
-#        path: ../tools/fix_s2c.py
-#        exit_code: 1
-#
-#    fix_qnames:
-#        path: ../tools/fix_qnames.py
-#        exit_code: 0
-#
-#    s2c:
-#        path: ['python', '../tools/s2c.py']
-#        exit_code: 2
-
     ##############
     # Unix Tools #
     ##############
-
-    cat:
-        path: cat
-        get_version: --version
-        exit_code: 0
-
-#    cp:
-#        path: 'cp'
-#        get_version: '--version'
-#        exit_code: 0
-
-    mkdir:
-        path: 'mkdir'
-        get_version: '--version'
-        exit_code: 0
-
-    mv:
-        path: 'mv'
-        get_version: '--version'
-        exit_code: 0
-
-    dd:
-        path: 'dd'
-        get_version: '--version'
-        exit_code: 0
-
-    mkfifo:
-        path: 'mkfifo'
-        get_version: '--version'
-        exit_code: 0
 
     tar:
         path: 'tar'
