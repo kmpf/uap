@@ -215,9 +215,7 @@ class BwaBacktrack(AbstractStep):
             raise StepError(self, "Could not find index: %s.*" %
                             self.get_option('index'))
 
-        index_path = os.path.join(
-            os.path.abspath(os.path.dirname(self.get_option('index'))),
-            os.path.basename(self.get_option('index')))
+        index_path = os.path.abspath(self.get_option('index'))
 
         # Compile the list of options
         options_bwa_aln = [

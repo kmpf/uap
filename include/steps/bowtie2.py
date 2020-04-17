@@ -439,9 +439,7 @@ class Bowtie2(AbstractStep):
             raise StepError(self, "Could not find index file: %s.*" %
                             self.get_option('index'))
 
-        index_path = os.path.join(
-            os.path.abspath(os.path.dirname(self.get_option('index'))),
-            os.path.basename(self.get_option('index')))
+        index_path = os.path.abspath(self.get_option('index'))
                             
         # compile all options set
         # 1st all options that are given via --
