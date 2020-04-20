@@ -446,7 +446,7 @@ class ProcessPool(object):
                     with open(report_path, 'w') as freport:
                         report = dict()
                         report['sha256'] = checksum.hexdigest()
-                        report['tail'] = tail
+                        report['tail'] = tail.decode('utf-8', errors='ignore')
                         report['length'] = length
                         report['lines'] = newline_count
                         freport.write(yaml.dump(report))
