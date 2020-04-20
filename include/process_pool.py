@@ -701,8 +701,21 @@ class ProcessPool(object):
                         if pid in self.proc_details.keys():
                             name = self.proc_details[pid]['name']
                         logger.debug('PID %s (%s) was expected to fail '
-                                     'because the kill signal was send.' %
+                                     'because the kill signal was send. '
+                                     'Now killing its copy processes.' %
                                      (pid, name))
+                        for kpid in self.copy_processes_for_pid[pid]:
+                            try:
+                                os.kill(kpid, signal.SIGTERM)
+                            except OSError as e:
+                                if e.errno == errno.ESRCH:
+                                    # the copy process already exited
+                                    pass
+                                else:
+                                    raise
+                            else:
+                                logger.debug("Killed copy process of %d (%s): %d" %
+                                             (pid, name, kpid))
 
         # now wait for the watcher process, if it still exists
         try:
