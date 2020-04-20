@@ -214,6 +214,9 @@ class BwaBacktrack(AbstractStep):
         if not os.path.exists(self.get_option('index') + '.bwt'):
             raise StepError(self, "Could not find index: %s.*" %
                             self.get_option('index'))
+
+        index_path = os.path.abspath(self.get_option('index'))
+
         # Compile the list of options
         options_bwa_aln = [
             'aln-n',
@@ -344,7 +347,7 @@ class BwaBacktrack(AbstractStep):
                                 'aln'
                             ]
                             bwa_aln.extend(option_list_bwa_aln)
-                            bwa_aln.append(self.get_option('index'))
+                            bwa_aln.append(index_path)
                             bwa_aln.append(temp_fifo)
                             # 3.1.1 Add 'bwa aln' to pipeline
                             bwa_aln_pipe.add_command(bwa_aln)
@@ -394,7 +397,7 @@ class BwaBacktrack(AbstractStep):
                                 'sampe'
                             ]
                             bwa_sampe.extend(option_list_bwa_sampe)
-                            bwa_sampe.append(self.get_option('index'))
+                            bwa_sampe.append(index_path)
                             bwa_sampe.append(fr_sai_fifo)
                             bwa_sampe.append(sr_sai_fifo)
                             bwa_sampe.append(temp_fr_fifo)
@@ -430,7 +433,7 @@ class BwaBacktrack(AbstractStep):
                                 'samse'
                             ]
                             bwa_samse.extend(option_list_bwa_samse)
-                            bwa_samse.append(self.get_option('index'))
+                            bwa_samse.append(index_path)
                             bwa_samse.append(fr_sai_fifo)
                             bwa_samse.append(temp_fr_fifo)
                             # 1.1 Add 'bwa samse' to pipeline

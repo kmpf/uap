@@ -276,51 +276,12 @@ tools:
 #        path: segemehl.x
 #        get_version: ''
 #        exit_code: 255
-                
-    ##################
-    # Internal Tools #
-    ##################
-
-    compare_secure_hashes:
-        path: ../tools/compare_secure_hashes.py
-        get_version: --version
-        exit_code: 0
 
     ##############
     # Unix Tools #
     ##############
 
-    cat:
-        path: cat
-        get_version: --version
-        exit_code: 0
-
-    cp:
-        path: cp
-        get_version: --version
-        exit_code: 0
-
     curl:
         path: curl
-        get_version: --version
-        exit_code: 0
-
-    dd:
-        path: dd
-        get_version: --version
-        exit_code: 0
-
-    mkdir:
-        path: mkdir
-        get_version: --version
-        exit_code: 0
-        
-    mkfifo:
-        path: mkfifo
-        get_version: --version
-        exit_code: 0
-
-    mv:
-        path: mv
         get_version: --version
         exit_code: 0

@@ -1,3 +1,4 @@
+from uaperrors import StepError
 import sys
 from abstract_step import *
 import copy

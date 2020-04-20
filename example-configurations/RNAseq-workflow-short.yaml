@@ -47,12 +47,12 @@ constants:
     # 2.  Mapping Indices:
     # 2.1 Bowtie2
     - &bowtie2_genome_index
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/bowtie2_generate_index/bowtie2_index-download-FgvWLBqA/bowtie2_index-download
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/bowtie2_generate_index/bowtie2_index-download/bowtie2_index-download
 
     # 3.  Gencode Annotation:
     # 3.1 Version 24
     - &gencode_v19_annotation_gtf
-        genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode/gencode.v19.annotation.gtf
+        genomes/animalia/chordata/mammalia/primates/homo_sapiens/gencode/v19/gencode_v19_annotation/gencode.v19.annotation.gtf
 
 ################################################################################
 ## Steps Section                                                              ##
@@ -68,9 +68,9 @@ steps:
     fastq_source:
         sample_to_files_map:
             capture_RNA:
-                - example-out/2014-Mercer_et_al_download/SRR1032214_1.fastq
-                - example-out/2014-Mercer_et_al_download/SRR1032214_2.fastq
-        paired_end: no
+                - example-out/2014-Mercer_et_al_download/SRR1032214_1_download/download/SRR1032214_1.fastq
+                - example-out/2014-Mercer_et_al_download/SRR1032214_2_download/download/SRR1032214_2.fastq
+        paired_end: yes
         first_read: _1.fastq
         second_read: _2.fastq
 
@@ -87,6 +87,7 @@ steps:
 
     sort_tophat2_by_pos (sam_to_sorted_bam):
         _depends: tophat2
+        sort-by-name: no
         genome-faidx: *genome_faidx
         temp-sort-dir: '/tmp/'
 
@@ -123,11 +124,11 @@ tools:
         get_version: --version
         exit_code: 1
 
-    # URL: https://github.com/marcelm/cutadapt
-    cutadapt:
-        path: cutadapt
-        get_version: --version
-        exit_code: 0
+#    # URL: https://github.com/marcelm/cutadapt
+#    cutadapt:
+#        path: cutadapt
+#        get_version: --version
+#        exit_code: 0
 
     # URL: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
     fastqc:
@@ -166,60 +167,9 @@ tools:
         get_version: -h
         exit_code: 1
 
-    ##################
-    # Internal Tools #
-    ##################
-
-    fix_cutadapt:
-        path: ../tools/fix_cutadapt.py
-        get_version: --version
-        exit_code: 0
-
-    fix_s2c:
-        path: ../tools/fix_s2c.py
-        exit_code: 1
-
-    fix_qnames:
-        path: ../tools/fix_qnames.py
-        exit_code: 0
-
-    s2c:
-        path: ['python', '../tools/s2c.py']
-        exit_code: 2
-
     ##############
     # Unix Tools #
     ##############
-
-    cat:
-        path: cat
-        get_version: --version
-        exit_code: 0
-
-    cp:
-        path: 'cp'
-        get_version: '--version'
-        exit_code: 0
-
-    mkdir:
-        path: 'mkdir'
-        get_version: '--version'
-        exit_code: 0
-
-    mv:
-        path: 'mv'
-        get_version: '--version'
-        exit_code: 0
-
-    dd:
-        path: 'dd'
-        get_version: '--version'
-        exit_code: 0
-
-    mkfifo:
-        path: 'mkfifo'
-        get_version: '--version'
-        exit_code: 0
 
     tar:
         path: 'tar'
