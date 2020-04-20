@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 import re
@@ -52,7 +52,7 @@ class RawFileSource(AbstractSourceStep):
             for path in glob.glob(os.path.abspath(self.get_option('pattern'))):
                 match = regex.match(os.path.basename(path))
                 if match is None:
-                    raise UAPError("Couldn't match regex /%s/ to file %s."
+                    raise StepError(self, "Couldn't match regex /%s/ to file %s."
                                    % (self.get_option('group'),
                                       os.path.basename(path)))
 
@@ -71,14 +71,14 @@ class RawFileSource(AbstractSourceStep):
                     'sample_to_files_map').items():
                 for path in paths:
                     if not os.path.isfile(path):
-                        raise UAPError("[raw_file_source]: %s is no file. "
+                        raise StepError(self, "[raw_file_source]: %s is no file. "
                                        "Please provide correct path." % path)
                 if run_id not in found_files:
                     found_files[run_id] = list()
                 found_files[run_id] = paths
 
         else:
-            raise UAPError(
+            raise StepError(self,
                 "[raw_file_source]: Either 'group' AND 'pattern'"
                 " OR 'sample_to_files_map' options have to be set. ")
         # declare a run for every sample

@@ -960,10 +960,10 @@ class Run(object):
         log['end_time'] = self.get_step().end_time
 
         log['uap_version'] = p.args.uap_version
-        log['git_tag'] = p.git_tag
-        log['git_status'] = p.git_status
-        log['git_diff'] = p.git_diff
-        log['git_version'] = p.git_version
+        log['git_tag'] = p.git_tag.decode('utf-8')
+        log['git_status'] = p.git_status.decode('utf-8')
+        log['git_diff'] = p.git_diff.decode('utf-8')
+        log['git_version'] = p.git_version.decode('utf-8')
 
         if p.caught_signal is not None:
             log['signal'] = p.caught_signal

@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import copy
 import csv
@@ -49,7 +49,7 @@ class RawFileSources(AbstractSourceStep):
         for path in glob.glob(os.path.abspath(self.get_option('pattern'))):
             match = regex.match(os.path.basename(path))
             if match is None:
-                raise UAPError("Couldn't match regex /%s/ to file %s."
+                raise StepError(self, "Couldn't match regex /%s/ to file %s."
                                % (self.get_option('group'),
                                   os.path.basename(path)))
 

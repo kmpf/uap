@@ -1,3 +1,4 @@
+from uaperrors import StepError
 import sys
 from abstract_step import *
 import copy
@@ -86,10 +87,10 @@ class FastqSource(AbstractSourceStep):
         paired_end = self.is_option_set_in_config('second_read')
         if self.is_option_set_in_config('paired_end'):
             if paired_end and not self.get_option('paired_end'):
-                raise UAPError(
+                raise StepError(self,
                     'Second read passed but paired_end set to False.')
             elif not paired_end and self.get_option('paired_end'):
-                raise UAPError(
+                raise StepError(self,
                     'No second read passed but paired_end set to True.')
         if paired_end:
             read_types['second_read'] = self.get_option('second_read')
