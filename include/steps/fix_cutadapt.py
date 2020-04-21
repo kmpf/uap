@@ -50,7 +50,7 @@ class FixCutadapt(AbstractStep):
                 temp_fifos = dict()
                 exec_group = run.new_exec_group()
                 for read in read_types:
-                    if not cc.connection_exists(f"in/{read}"):
+                    if not cc.exists_connection_for_run(f"in/{read}"):
                         continue
                     connection = f"in/{read}"
                     input_paths = cc[run_id][connection]

@@ -283,7 +283,7 @@ class BwaBacktrack(AbstractStep):
             with self.declare_run(run_id) as run:
                 # Get list of files for first/second read
                 fr_input = cc[run_id]['in/first_read']
-                if not cc.connection_exists(connection = 'in/second_read'):
+                if not cc.exists_connection_for_run('in/second_read'):
                     sr_input = [None]
                 else:
                     sr_input = cc[run_id]['in/second_read']
