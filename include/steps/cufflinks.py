@@ -371,6 +371,11 @@ class CuffLinks(AbstractStep):
             if isinstance(self.get_option(option), bool):
                 if self.get_option(option):
                     option_list.append('--%s' % option)
+            elif option in ['mask-file', 'frag-bias-correct']:
+                option_list.append(f"--{option}")
+                option_list.append(
+                    os.path.abspath(str(self.get_option(option)))
+                )
             else:
                 option_list.append('--%s' % option)
                 option_list.append(str(self.get_option(option)))

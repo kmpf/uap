@@ -1,27 +1,8 @@
-#!/bin/bash
+#! /usr/bin/env python
 import hashlib
 import sys
 import argparse
-"exec" "`dirname $0`/../python_env/bin/python" "$0" "$@"
-
-# ^^^
-# the cmd above ensures that the correct python environment is
-# selected to execute this script.
-# The correct environment is the one belonging to uap, since all
-# neccessary python modules are installed there.
-
-
 import os
-seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
-activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
-exec(
-    compile(
-        open(activate_this_file).read(),
-        activate_this_file,
-        'exec'),
-    dict(
-        __file__=activate_this_file))
-
 
 def main():
 
@@ -39,7 +20,7 @@ def main():
 
     parser.add_argument("file_to_hash",
                         help="file to compare checksums for",
-                        type=argparse.FileType('r')
+                        type=argparse.FileType('rb')
                         )
 
     parser.add_argument("--algorithm",

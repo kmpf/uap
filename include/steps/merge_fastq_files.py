@@ -20,9 +20,13 @@ class MergeFastqFiles(AbstractStep):
         self.set_cores(4)
 
         self.add_connection('in/first_read')
-        self.add_connection('in/second_read')
+        self.add_connection(
+            'in/second_read',
+            optional = True)
         self.add_connection('out/first_read')
-        self.add_connection('out/second_read')
+        self.add_connection(
+            'out/second_read',
+            optional = True)
 
         # Step was tested for cat (GNU coreutils) release 8.25
         self.require_tool('cat')
@@ -33,21 +37,21 @@ class MergeFastqFiles(AbstractStep):
         # Step was tested for pigz release 2.3.1
         self.require_tool('pigz')
 
-        # self.add_option('compress-output', bool, optional = True,
-        #                default = True)
-
         # [Options for 'dd':]
         self.add_option('dd-blocksize', str, optional=True, default="2M")
         self.add_option('pigz-blocksize', str, optional=True, default="2048")
 
-    def runs(self, run_ids_connections_files):
+    def runs(self, cc):
 
         read_types = {'first_read': '_R1', 'second_read': '_R2'}
-        for run_id in run_ids_connections_files.keys():
+        for run_id in cc.keys():
+            cc.switch_run_id(run_id)
             with self.declare_run(run_id) as run:
                 for read in read_types:
+                    if not cc.exists_connection_for_run(f'in/{read}'):
+                        continue
                     connection = 'in/%s' % read
-                    input_paths = run_ids_connections_files[run_id][connection]
+                    input_paths = cc[run_id][connection]
 
                     if input_paths == [None]:
                         run.add_empty_output_connection("%s" % read)

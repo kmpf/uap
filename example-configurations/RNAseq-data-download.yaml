@@ -31,29 +31,24 @@ steps:
     # Download the actual sequencing data
     SRR1032214_1_download (raw_url_source):
         url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/004/SRR1032214/SRR1032214_1.fastq.gz
-        path: example-out/2014-Mercer_et_al_download
         uncompress: yes
 
     SRR1032214_2_download (raw_url_source):
         url: http://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/004/SRR1032214/SRR1032214_2.fastq.gz
-        path: example-out/2014-Mercer_et_al_download
         uncompress: yes
 
     # Download supplementary files
     # (see https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM1267958)
     GSM1267958_LncRNAdesign_probes_download (raw_url_source):
         url: ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1267nnn/GSM1267958/suppl/GSM1267958_LncRNAdesign_probes.bed.gz
-        path: example-out/2014-Mercer_et_al_download
         uncompress: yes
 
     GSM1267958_README_gtf_download (raw_url_source):
         url: ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1267nnn/GSM1267958/suppl/GSM1267958_README_gtf.txt.gz
-        path: example-out/2014-Mercer_et_al_download
         uncompress: yes
 
     GSM1267958_captured_transcripts_noERCC_download (raw_url_source):
         url: ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1267nnn/GSM1267958/suppl/GSM1267958_captured_transcripts_noERCC.gtf.gz
-        path: example-out/2014-Mercer_et_al_download-full
         uncompress: yes
 
 ################################################################################
@@ -75,35 +70,7 @@ tools:
         get_version: --version
         exit_code: 0
                 
-    ##################
-    # Internal Tools #
-    ##################
-
-    compare_secure_hashes:
-        path: ../tools/compare_secure_hashes.py
-        get_version: --version
-        exit_code: 0
-
-    ##############
-    # Unix Tools #
-    ##############
-
-    cp:
-        path: cp
-        get_version: --version
-        exit_code: 0
-
     curl:
         path: curl
-        get_version: --version
-        exit_code: 0
-
-    dd:
-        path: dd
-        get_version: --version
-        exit_code: 0
-
-    mkdir:
-        path: mkdir
         get_version: --version
         exit_code: 0

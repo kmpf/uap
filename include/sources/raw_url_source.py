@@ -1,14 +1,14 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from logging import getLogger
 import os
 import urllib.parse
-from abstract_step import AbstractSourceStep
+from abstract_step import AbstractStep
 
 logger = getLogger("uap_logger")
 
 
-class RawUrlSource(AbstractSourceStep):
+class RawUrlSource(AbstractStep):
 
     def __init__(self, pipeline):
         super(RawUrlSource, self).__init__(pipeline)
@@ -33,8 +33,6 @@ class RawUrlSource(AbstractSourceStep):
                         choices=['md5', 'sha1', 'sha224', 'sha256',
                                  'sha384', 'sha512'],
                         description="hashing algorithm to use")
-        self.add_option('path', str, optional=False,
-                        description="directory to move downloaded file to")
         self.add_option('secure-hash', str, optional=True,
                         description="expected secure hash of downloaded file")
         self.add_option('uncompress', bool, optional=True, default=False,
@@ -54,7 +52,7 @@ class RawUrlSource(AbstractSourceStep):
         root, ext = os.path.splitext(url_filename)
         is_gzipped = True if ext in ['.gz', '.gzip'] else False
         if not is_gzipped and self.get_option('uncompress'):
-            raise UAPError("Uncompression of non-gzipped file %s requested."
+            raise StepError(self, "Uncompression of non-gzipped file %s requested."
                            % url_filename)
 
         # Handle the filename to have the proper ending
@@ -68,28 +66,12 @@ class RawUrlSource(AbstractSourceStep):
 
             if is_gzipped and self.get_option('uncompress') and \
                ext in ['.gz', '.gzip']:
-                raise UAPError("The filename %s should NOT end on '.gz' or "
+                raise StepError(self, "The filename %s should NOT end on '.gz' or "
                                "'.gzip'." % conf_filename)
             filename = conf_filename
 
-        # Get directory to move downloaded file to
-        path = self.get_option('path')
-        # Absolute path to downloaded file
-        final_abspath = os.path.join(path, filename)
-
         with self.declare_run('download') as run:
-            # Test if path exists
-            if os.path.exists(path):
-                # Fail if it is not a directory
-                if not os.path.isdir(path):
-                    raise UAPError(
-                        "Path %s already exists but is not a directory" % path)
-            else:
-                # Create the directory
-                with run.new_exec_group() as mkdir_exec_group:
-                    mkdir = [self.get_tool('mkdir'), '-p', path]
-                    mkdir_exec_group.add_command(mkdir)
-            out_file = run.add_output_file('raw', final_abspath, [])
+            out_file = run.add_output_file('raw', filename, [])
 
             temp_filename = run.add_temporary_file(suffix=url_filename)
             with run.new_exec_group() as curl_exec_group:

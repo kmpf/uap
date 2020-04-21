@@ -8,7 +8,7 @@ import yaml
 
 from abstract_step import *
 import misc
-from uaperrors import UAPError
+from uaperrors import StepError
 
 logger = logging.getLogger("uap_logger")
 
@@ -84,10 +84,10 @@ class RunFolderSource(AbstractSourceStep):
         paired_end = self.is_option_set_in_config('second_read')
         if self.is_option_set_in_config('paired_end'):
             if paired_end and not self.get_option('paired_end'):
-                raise UAPError(
+                raise StepError(self,
                     'Second read passed but paired_end set to False.')
             elif not paired_end and self.get_option('paired_end'):
-                raise UAPError(
+                raise StepError(self,
                     'No second read passed but paired_end set to True.')
         if paired_end:
             read_types['second_read'] = self.get_option('second_read')
@@ -96,9 +96,9 @@ class RunFolderSource(AbstractSourceStep):
         path = self.get_option('path')
         if not self.is_option_set_in_config('unaligned_included'):
             os.path.join(path, 'Unaligned')
-        path = os.path.abspath(path)
         if not os.path.exists(path):
-            raise Exception("Source path does not exist: " + path)
+            raise StepError(self, "Source path does not exist: " + path)
+        path = os.path.abspath(path)
 
         # find all samples
         project = 'Project_' + self.get_option('project')
