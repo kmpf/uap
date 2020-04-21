@@ -48,7 +48,7 @@ class MergeFastqFiles(AbstractStep):
             cc.switch_run_id(run_id)
             with self.declare_run(run_id) as run:
                 for read in read_types:
-                    if not cc.connection_exists(connection = f'in/{read}'):
+                    if not cc.exists_connection_for_run(f'in/{read}'):
                         continue
                     connection = 'in/%s' % read
                     input_paths = cc[run_id][connection]

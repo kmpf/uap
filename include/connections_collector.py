@@ -249,6 +249,14 @@ class ConnectionsCollector(object):
         '''
         return connection in self.existing_connections
 
+    def exists_connection_for_run(self, connection, run_id=None):
+        '''
+        Returns a logical indication whether the requested connection exists
+        for the given/current run.
+        '''
+        run_id = self._init_run_id(run_id)
+        return connection in self.connections[run_id]
+
     def all_runs_have_connection(self, connection):
         '''
         Returns a logical indication whether all saved runs have the queried
