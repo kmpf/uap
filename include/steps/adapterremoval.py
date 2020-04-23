@@ -1,5 +1,6 @@
 from logging import getLogger
 from abstract_step import AbstractStep
+from uaperrors import StepError
 
 logger = getLogger('uap_logger')
 
@@ -28,33 +29,34 @@ class AdapterRemoval(AbstractStep):
         super(AdapterRemoval, self).__init__(pipeline)
 
         self.add_connection('in/first_read')
-        self.add_connection('in/second_read')
+        self.add_connection('in/second_read', optional=True)
 
-        self.add_connection('out/collapsed')
-        self.add_connection('out/collapsed.truncated')
+        self.add_connection('out/collapsed', optional=True)
+        self.add_connection('out/collapsed.truncated', optional=True)
         self.add_connection('out/discarded')
-        self.add_connection('out/truncated')
-        self.add_connection('out/pair1.truncated')
-        self.add_connection('out/pair2.truncated')
-        self.add_connection('out/singleton.truncated')
+        self.add_connection('out/truncated', optional=True, format='fastq',
+                            description='Truncated single end reads.')
+        self.add_connection(
+            'out/pair1.truncated',
+            optional=True,
+            format='fastq',
+            description='Truncated first read of paired end reads.')
+        self.add_connection(
+            'out/pair2.truncated',
+            optional=True,
+            format='fastq',
+            description='Truncated first secind of paired end reads.')
+        self.add_connection('out/singleton.truncated', optional=True)
         self.add_connection('out/settings')
         self.add_connection('out/log_stderr')
         self.add_connection('out/log_stdout')
 
         self.require_tool('adapterremoval')
-        self.require_tool('pwd')
         self.require_tool('mv')
 
         self.add_option('cores', int, optional=True, default=1,
                         description="workaround to specify cores for grid \
                                     engine and threads ie")
-
-        self.add_option('treatAs', str, optional=False, default=None,
-                        choices=['paired', 'single'],
-                        description="Pipeline specific: Sets how input is \
-                        fastq files are treated: paired R1 and R2 in one \
-                        command, single r1 and r2 get clipped independently \
-                        if none r2 just empty")
 
         self.add_option('qualitybase', str, optional=True, default=None,
                         choices=['33', '64', 'solexa'],
@@ -66,7 +68,7 @@ class AdapterRemoval(AbstractStep):
                         mate 1 reads [current: \
                         AGATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNATCTCGTATGCCGTCTTCTGCTTG]")
 
-        self.add_option('adapter2', str, optional=False,
+        self.add_option('adapter2', str, optional=True,
                         description="Adapter sequence expected to be found in \
                         mate 2 reads [current: \
                         AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT]")
@@ -142,20 +144,46 @@ class AdapterRemoval(AbstractStep):
                         contamination is trimmed [current: 0].")
 
         self.add_option('identify-adapters', bool, default=None, optional=True)
-        self.add_option('seed', int, default=22595, optional=True)
-        self.add_option('threads', int, default=1, optional=True)
+        self.add_option('seed', int, default=None, optional=True)
 
-    def runs(self, run_ids_connections_files):
-
-        self.__treat_as_paired = True if \
-            self.get_option('treatAs') == 'paired' \
-            else False
+    def runs(self, cc):
 
         self.set_cores(self.get_option('cores'))
 
-        for run_id in run_ids_connections_files.keys():
-            if 'in/first_read' not in run_ids_connections_files[run_id]:
-                continue
+        self.__treat_as_paired = cc.connection_exists('in/second_read')
+
+        if self.get_option(
+                'seed') is not None and self.get_option('cores') > 1:
+            logger.warning(
+                'AdapterRemoval can not work deterministically on '
+                'multiple threads. Please unset the `seed:` option '
+                'or set `cores:` to 1.')
+
+        if not cc.all_runs_have_connection('in/first_read'):
+            read_name = '' if self.__treat_as_paired else ' first'
+            run_ids = list(cc.get_runs_without_any('in/first_read'))
+            if len(run_ids) > 5:
+                run_ids = run_ids[0:5] + ['...']
+            raise StepError(self, '[adapterremoval] No%s read passed by runs '
+                            '%s.' % (read_name, list(run_ids)))
+
+        if self.__treat_as_paired and not cc.all_runs_have_connection(
+                'in/second_read'):
+            run_ids = list(cc.get_runs_without_any('in/second_read'))
+            if len(run_ids) > 5:
+                run_ids = run_ids[0:5] + ['...']
+            raise StepError(
+                self,
+                '[adapterremoval] No second read passed by runs '
+                '%s.' %
+                run_ids)
+
+        if self.__treat_as_paired \
+                and not self.is_option_set_in_config('adapter2'):
+            raise StepError(self, '[adapterremoval] Paired end mode requires '
+                            'option `adapter2`.')
+
+        for run_id in cc.keys():
             with self.declare_run(run_id) as run:
                 # set everything empty
                 out_connections = ['collapsed', 'collapsed.truncated',
@@ -169,9 +197,9 @@ class AdapterRemoval(AbstractStep):
                 else:
                     out_connections.append('truncated')
 
-                r1 = run_ids_connections_files[run_id]['in/first_read'][0]
+                r1 = cc[run_id]['in/first_read'][0]
                 if self.__treat_as_paired:
-                    r2 = run_ids_connections_files[run_id]['in/second_read'][0]
+                    r2 = cc[run_id]['in/second_read'][0]
 
                 ar_exec_group = run.new_exec_group()
                 ar = [self.get_tool('adapterremoval')]
@@ -185,13 +213,13 @@ class AdapterRemoval(AbstractStep):
                 if self.__treat_as_paired:
                     ar.extend(['--adapter2', self.get_option('adapter2')])
 
-                basename = run.get_output_directory_du_jour_placeholder() + '/' + run_id
-                ar.extend(['--basename', basename])
+                ar.extend(['--basename', run_id])
 
                 ar.extend(['--gzip'])
 
-                if self.is_option_set_in_config('threads'):
-                    ar.extend(['--threads', str(self.get_option('threads'))])
+                if self.is_option_set_in_config('cores') \
+                        and self.get_option('cores') > 1:
+                    ar.extend(['--threads', str(self.get_option('cores'))])
 
                 if self.is_option_set_in_config('qualitybase'):
                     ar.extend(['--qualitybase',
@@ -201,13 +229,13 @@ class AdapterRemoval(AbstractStep):
                     ar.extend(['--collapse'])
 
                 if self.is_option_set_in_config('mm'):
-                    ar.extend(['--mm',  str(self.get_option('mm'))])
+                    ar.extend(['--mm', str(self.get_option('mm'))])
 
                 if self.is_option_set_in_config('maxns'):
-                    ar.extend(['--maxns',  str(self.get_option('maxns'))])
+                    ar.extend(['--maxns', str(self.get_option('maxns'))])
 
                 if self.is_option_set_in_config('shift'):
-                    ar.extend(['--shift',  str(self.get_option('shift'))])
+                    ar.extend(['--shift', str(self.get_option('shift'))])
 
                 if self.is_option_set_in_config('trimns'):
                     ar.extend(['--trimns'])
@@ -266,7 +294,7 @@ class AdapterRemoval(AbstractStep):
                         iswanted = run.add_output_file(connection,
                                                        out_file,
                                                        output_fileset)
-                        isproduced = run.get_output_directory_du_jour_placeholder() + '/' + run_id + '.' + connection + '.gz'
+                        isproduced = run_id + '.' + connection + '.gz'
 
                         mv_exec_group.add_command([self.get_tool('mv'),
                                                    isproduced, iswanted])

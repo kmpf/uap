@@ -1,0 +1,362 @@
+################################################################################
+## Destination Path Section                                                   ##
+## ========================                                                   ##
+##                                                                            ##
+## - directory where analysis results get stored                              ##
+################################################################################
+
+destination_path: output_data
+
+################################################################################
+## Constants Section                                                          ##
+## =================                                                          ##
+##                                                                            ##
+## - define constants for later use here                                      ##
+################################################################################
+
+constants:
+    - &chromosome_sizes
+        constants/hg19.chrom.sizes
+
+    - &genome
+        constants/hg19_all_chr_UCSC-all_sequences.fasta
+
+    - &genome_faidx 
+        constants/hg19_all_chr_UCSC-all_sequences.fasta.fai
+
+    - &bowtie2_genome_index
+        constants/bowtie2_index/bowtie2_index-chr21
+
+    - &bwa_genome_index
+        constants/bwa_index
+
+    - &segemehl_genome_index
+        constants/segemehl_index-hg19_all_chr_UCSC-all_sequences.idx
+
+    - &gencode_v19_annotation_gtf
+        constants/gencode.v19.annotation.gtf
+
+################################################################################
+## Steps Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define analysis steps here                                               ##
+################################################################################
+
+steps:
+    ##################
+    ## Source steps ##
+    ##################
+
+    fastq_source:
+        sample_to_files_map:
+            Sample1:
+                - Sample_lane1/Replicate1_CellType1_Condition1_ATCACG_L001_R1_001.fastq.gz
+                - Sample_lane1/Replicate1_CellType1_Condition1_ATCACG_L001_R2_001.fastq.gz
+            Sample2:
+                - Sample_lane1/Replicate1_CellType1_Condition1_ATCACG_L001_R1_002.fastq.gz
+                - Sample_lane1/Replicate1_CellType1_Condition1_ATCACG_L001_R2_002.fastq.gz
+            Sample3:
+                - Sample_lane1/Replicate1_CellType1_Condition1_ATCACG_L001_R1_003.fastq.gz
+                - Sample_lane1/Replicate1_CellType1_Condition1_ATCACG_L001_R2_003.fastq.gz
+        paired_end: no
+        first_read: _R1_
+        second_read: _R2_
+
+    # Download sequence of chromosome 21
+    download_hg19_chr21_UCSC (raw_url_source):
+        url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr21.fa.gz
+        hashing-algorithm: md5
+        secure-hash: 26cdd5a3a539b63930752604feb2912b
+        path: dummy_files
+        filename: chr21.fa
+        uncompress: yes
+
+    ######################
+    ## Processing steps ##
+    ######################
+
+    bowtie2_generate_index:
+        _depends: download_hg19_chr21_UCSC
+        _connect:
+            in/reference_sequence: download_hg19_chr21_UCSC/raw
+        index-basename: bowtie2_index
+
+    bowtie2:
+        _depends: fastq_source
+        index: *bowtie2_genome_index
+        dd-blocksize: 4M
+
+    bwa_backtrack:
+        _depends: fastq_source
+        index: *bwa_genome_index
+        dd-blocksize: 4M
+
+    bwa_generate_index:
+        _depends: download_hg19_chr21_UCSC
+        _connect:
+            in/reference_sequence: download_hg19_chr21_UCSC/raw
+        index-basename: bwa_index
+
+    cufflinks_tophat2 (cufflinks):
+        _depends: tophat2
+        library-type: fr-secondstrand
+        mask-file: *gencode_v19_annotation_gtf
+
+#    cufflinks_segemehl (cufflinks):
+#        _depends: segemehl
+#        library-type: fr-secondstrand
+#        mask-file: *gencode_v19_annotation_gtf
+
+    cutadapt:
+        _depends: fastq_source
+        adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+        adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+
+    fastqc:
+      _depends: fastq_source
+
+    fastx_quality_stats:
+      _depends: fastq_source
+
+#    fix_cutadapt:
+
+    htseq_count:
+        _depends: tophat2
+        feature-file: *gencode_v19_annotation_gtf
+        order: pos
+        stranded: 'yes'
+        mode: intersection-strict
+        type: exon
+        idattr: gene_id
+
+#    htseq_count:
+#        _depends: segemehl
+#        feature-file: *gencode_v19_annotation_gtf
+#        order: pos
+#        stranded: 'yes'
+#        mode: intersection-strict
+#        type: exon
+#        idattr: gene_id
+
+#    macs2:
+#    merge_fasta_files:
+#    merge_fastq_files:
+#    picard_markduplicates:
+
+#    s2c:
+#        _depends: segemehl
+#        tmp_dir: /tmp/
+
+#    samtools_faidx:
+
+    sort_tophat2 (sam_to_sorted_bam):
+        _depends: tophat2
+        genome-faidx: *genome_faidx
+        temp-sort-dir: '/tmp/'
+
+#    sort_s2c (sam_to_sorted_bam):
+#        _depends: s2c
+#        genome-faidx: *genome_faidx
+#        temp-sort-dir: /tmp/
+
+
+#    segemehl_generate_index:
+
+#    segemehl:
+#        _depends: fastq_source
+#        genome: *genome
+#        index: *segemehl_genome_index
+
+    tophat2:
+        _depends: fastq_source
+        library_type: fr-secondstrand
+        index: *bowtie2_genome_index
+
+################################################################################
+## Tools Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define used tools here                                                   ##
+## - for module system usage see documentation                                ##
+################################################################################
+
+tools:
+    ###################################
+    # All Tools Refer To ./dummy_tool #
+    ###################################
+
+    bedGraphToBigWig:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    bedToBigBed:    
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    bedtools:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    bowtie2:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    bowtie2-build:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    bwa:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    cat:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    ChromHMM:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    compare_secure_hashes:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    cp:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    cufflinks:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    curl:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    cutadapt:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    dd:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    fastqc:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    fastx_quality_stats:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    fix_cutadapt:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    fix_s2c:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    fix_qnames:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    htseq-count:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    ln:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    ls:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    mkdir:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    mkfifo:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    mv:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    picard-tools:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    pigz:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    printf:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    samtools:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    segemehl: 
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    sort:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    s2c:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    tar:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    tophat2:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0
+
+    xargs:
+        path: ./dummy_tool
+        get_version: --version
+        exit_code: 0

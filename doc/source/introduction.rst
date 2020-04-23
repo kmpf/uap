@@ -103,7 +103,6 @@ Connections: Propagation of Data
 **Connections** are like tubes that connect steps.
 A step can have any number of connections.
 Run have to assign output file(s) to each connection of the step.
-If a run can not assign files to a connection it has to define it as empty.
 Downstream steps can access the connections to get the information which run
 created which file.
 The names of the connections can be arbitrarily chosen.
@@ -156,7 +155,7 @@ A **finished** analysis leaves the user with:
   even make it publicly available along with your input files for anybody to
   re-run the entire data analysis or parts thereof.
 * *The output files and comprehensive annotations of the analysis*
-(see :doc:`annotation`).
+  (see :doc:`annotation`).
   These files are stored in the destination path defined in the configuration
   file.
 

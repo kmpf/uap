@@ -4,18 +4,29 @@ cd "$1"
 
 printf '
 <html>
+<head>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
+</head>
 <body>
-<h2>UAP Sphinx docu per branch</h2>
-<p>
+	<div>
+	<h2>UAP Sphinx docu per branch</h2>
+	<p>
 ' > index.html
 
 for file in $(ls -1); do
     [[ "$file" == "index.html" ]] && continue
-    printf '<li><a href=%s>%s</a></li>' "$file" "$file" >> index.html
+    [[ ! -d "$file" ]] && continue
+    printf '		<li><a href=%s>%s</a></li>\n' \
+		"$file" "$file" >> index.html
 done
 
 printf '
-</p>
+	</p>
+	</div>
 </body>
 </html>
 ' >> index.html

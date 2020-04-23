@@ -23,8 +23,11 @@ class MergeGenecounts(AbstractStep):
                         description="workaround to specify cores for grid \
                                            engine and threads ie")
 
-        self.add_option('t', str, optional=False,
-                        description="tool name (htseq_count: htc, featureCounts: fc)")
+        self.add_option(
+            't',
+            str,
+            optional=False,
+            description="tool name (htseq_count: htc, featureCounts: fc)")
 
         # required tools
         self.require_tool('merge_genecounts')
@@ -46,11 +49,10 @@ class MergeGenecounts(AbstractStep):
         with self.declare_run(new_run_id) as run:
             file_name = '%s_%s.txt' % (new_run_id, tool_name)
             run.add_output_file('merged_counts', file_name, gc_files)
-            basename = run.get_output_directory_du_jour_placeholder()
             merge_command = [
                 self.get_tool('merge_genecounts'),
                 '-t', tool_name,
-                '-o', basename,
+                '-o', '.',
                 '-p', file_name,
                 ' '.join(gc_files)
             ]

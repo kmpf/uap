@@ -1,10 +1,11 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class BamToBedgraph(AbstractStep):
 
@@ -13,9 +14,7 @@ class BamToBedgraph(AbstractStep):
 
         self.set_cores(8)
 
-        self.add_connection('in/alignments',
-                            constraints = {'min_files_per_run': 1,
-                                           'max_files_per_run': 1})
+        self.add_connection('in/alignments')
         self.add_connection('out/alignments')
 
         self.require_tool('dd')
@@ -27,38 +26,37 @@ class BamToBedgraph(AbstractStep):
 
         # General Options
         self.add_option('output-format', str,
-                        choices = ['bed', 'bigBed', 'bedGraph', 'bigWig'],
-                        default = 'bigWig',
-                        optional = False)
-        self.add_option('chromosome-sizes', str, optional = False)
+                        choices=['bed', 'bigBed', 'bedGraph', 'bigWig'],
+                        default='bigWig',
+                        optional=False)
+        self.add_option('chromosome-sizes', str, optional=False)
         # Options for bedtools bamtobed
-        self.add_option('bedtools-bamtobed-tag', str, optional = True)
-        self.add_option('bedtools-bamtobed-color', str, optional = True)
+        self.add_option('bedtools-bamtobed-tag', str, optional=True)
+        self.add_option('bedtools-bamtobed-color', str, optional=True)
 
         # Options for bedtools genomecov (that make sense for BAM to BG)
         self.add_option('bedtools-genomecov-report-zero-coverage',
-                        bool, optional = False)
-        self.add_option('bedtools-genomecov-max', int, optional = True)
-        self.add_option('bedtools-genomecov-split', bool, default = True)
-        self.add_option('bedtools-genomecov-strand', str, choices = ['+', '-'],
-                        optional = True)
-        self.add_option('bedtools-genomecov-scale', float, optional = True)
+                        bool, optional=False, default=False)
+        self.add_option('bedtools-genomecov-max', int, optional=True)
+        self.add_option('bedtools-genomecov-split', bool, default=True)
+        self.add_option('bedtools-genomecov-strand', str, choices=['+', '-'],
+                        optional=True)
+        self.add_option('bedtools-genomecov-scale', float, optional=True)
         self.add_option('bedtools-genomecov-5', bool,
-                        default = False, optional = True)
+                        default=False, optional=True)
         self.add_option('bedtools-genomecov-3', bool,
-                        default = False, optional = True)
+                        default=False, optional=True)
 
-
-        self.add_option('trackline', dict, optional = True)
-        self.add_option('trackopts', dict, optional = True)
+        self.add_option('trackline', dict, optional=True)
+        self.add_option('trackopts', dict, optional=True)
 
         # Options for dd
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        self.add_option('dd-blocksize', str, optional=True, default="256k")
 
     def runs(self, run_ids_connections_files):
         def compile_option_list(prefix, options):
             options = ['%s%s' % (prefix, x) for x in options]
-            set_options = [option for option in options if \
+            set_options = [option for option in options if
                            self.is_option_set_in_config(option)]
 
             option_list = list()
@@ -81,8 +79,10 @@ class BamToBedgraph(AbstractStep):
 
         # Check if chromosome sizes points to a real file
         if not os.path.isfile(self.get_option('chromosome-sizes')):
-            raise UAPError("Value for option 'chromosome-sizes' is not a "
-                         "file: %s" % self.get_option('chromosome-sizes'))
+            raise StepError(
+                self, "Value for option 'chromosome-sizes' is not a "
+                "file: %s" %
+                self.get_option('chromosome-sizes'))
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 input_paths = run_ids_connections_files[run_id]["in/alignments"]
@@ -91,9 +91,11 @@ class BamToBedgraph(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    raise UAPError("Expected exactly one alignments file.")
+                    raise StepError(
+                        self, "Expected exactly one alignments file.")
                 else:
-                    root, ext = os.path.splitext(os.path.basename(input_paths[0]))
+                    root, ext = os.path.splitext(
+                        os.path.basename(input_paths[0]))
                     if ext in ['.gz', '.gzip']:
                         is_gzipped = True
                     elif ext in ['.bam']:
@@ -104,14 +106,15 @@ class BamToBedgraph(AbstractStep):
                             is_bam = True
 
                     if not is_bam:
-                        raise UAPError("The file %s does not appear to be any "
-                                     "of bam.gz, bam.gzip, or bam"
-                                     % input_paths[0]
-                        )
+                        raise StepError(
+                            self, "The file %s does not appear to be any "
+                            "of bam.gz, bam.gzip, or bam" %
+                            input_paths[0])
                     with run.new_exec_group() as exec_group:
-                        # Create FIFO for use with bedToBigBed, bedGraphToBigWig
+                        # Create FIFO for use with bedToBigBed,
+                        # bedGraphToBigWig
                         big_fifo = run.add_temporary_file(
-                            'big_fifo', designation = 'ouput')
+                            'big_fifo', designation='ouput')
                         if self.get_option('output-format') in \
                            ['bigBed', 'bigWig']:
                             mkfifo = [self.get_tool('mkfifo'), big_fifo]
@@ -119,9 +122,12 @@ class BamToBedgraph(AbstractStep):
 
                         with exec_group.add_pipeline() as pipe:
                             # 1. command: Read file in 4MB chunks
-                            dd_in = [self.get_tool('dd'),
-                                     'ibs=%s' % self.get_option('dd-blocksize'),
-                                     'if=%s' % input_paths[0]]
+                            dd_in = [
+                                self.get_tool('dd'),
+                                'ibs=%s' %
+                                self.get_option('dd-blocksize'),
+                                'if=%s' %
+                                input_paths[0]]
                             pipe.add_command(dd_in)
 
                             if is_gzipped:
@@ -154,10 +160,11 @@ class BamToBedgraph(AbstractStep):
                                 # 2. command: Convert BAM to BedGraph
                                 genomecov = [
                                     self.get_tool('bedtools'), 'genomecov']
-                                genomecov.extend( bedtools_genomecov_options)
-                                genomecov.extend( ['-ibam', 'stdin'] )
+                                genomecov.extend(bedtools_genomecov_options)
+                                genomecov.extend(['-ibam', 'stdin'])
 
-                                if self.get_option('bedtools-genomecov-report-zero-coverage'):
+                                if self.get_option(
+                                        'bedtools-genomecov-report-zero-coverage'):
                                     genomecov.append('-bga')
                                 else:
                                     genomecov.append('-bg')
@@ -174,7 +181,7 @@ class BamToBedgraph(AbstractStep):
                                     'obs=%s' % self.get_option('dd-blocksize')]
                                 pipe.add_command(
                                     dd_out,
-                                    stdout_path = run.add_output_file(
+                                    stdout_path=run.add_output_file(
                                         'alignments',
                                         output_file,
                                         input_paths)
@@ -212,7 +219,7 @@ class BamToBedgraph(AbstractStep):
 
                                 pipe.add_command(
                                     dd_out,
-                                    stdout_path = run.add_output_file(
+                                    stdout_path=run.add_output_file(
                                         'alignments',
                                         output_file,
                                         input_paths)

@@ -1,27 +1,55 @@
 # This is the uap configuration file.
 
-cluster:
-    # example for SLURM grid engine
-    # default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
-    # example for UGE/SGE respectively OGS
-    # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
-    default_pre_job_command: "echo 'Run Started!'"
-    default_post_job_command: "echo 'Run Finished!'"
-    default_job_quota: 5
+################################################################################
+## Cluster Section                                                            ##
+## ===============                                                            ##
+##                                                                            ##
+## - uncomment/adapt as required                                              ##
+################################################################################
+
+# cluster:
+#     # example for SLURM grid engine
+#     # default_submit_options: "--cpus-per-task=#{CORES} --ntasks=1"
+#     # example for UGE/SGE respectively OGS
+#     # default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -l h_rt=24:00:00 -l h_vmem=6G"
+#     default_pre_job_command: "echo 'Run Started!'"
+#     default_post_job_command: "echo 'Run Finished!'"
+#     default_job_quota: 5
+
+################################################################################
+## Destination Path Section                                                   ##
+## ========================                                                   ##
+##                                                                            ##
+## - directory where analysis results get stored                              ##
+################################################################################
 
 destination_path: genomes/bacteria/Mycoplasma_genitalium/
 
 constants:
     - &some_constant some_value
 
+################################################################################
+## Steps Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define analysis steps here                                               ##
+################################################################################
+
 steps:
+    ##################
+    ## Source steps ##
+    ##################
+
     M_genitalium_genome (raw_url_source):
         url: ftp://ftp.ncbi.nih.gov/genomes/genbank/bacteria/Mycoplasma_genitalium/latest_assembly_versions/GCA_000027325.1_ASM2732v1/GCA_000027325.1_ASM2732v1_genomic.fna.gz
         hashing-algorithm: md5
         secure-hash: f02c78b5f9e756031eeaa51531517f24
-        path: genomes/bacteria/Mycoplasma_genitalium/
         filename: 'Mycoplasma_genitalium.ASM2732v1.fa'
         uncompress: yes
+
+    ######################
+    ## Processing steps ##
+    ######################
 
     bowtie2_index (bowtie2_generate_index):
         _depends: M_genitalium_genome
@@ -45,6 +73,14 @@ steps:
         _depends: M_genitalium_genome
         _connect: 
             in/sequence: M_genitalium_genome/raw
+
+################################################################################
+## Tools Section                                                              ##
+## =============                                                              ##
+##                                                                            ##
+## - define used tools here                                                   ##
+## - for module system usage see documentation                                ##
+################################################################################
 
 tools:
     ##################
@@ -70,6 +106,7 @@ tools:
         exit_code: 0
 
     # URL: http://www.htslib.org/
+    # NOTE: uap requires samtools version 1.0 or greater
     samtools:
         path: samtools
         get_version: --version
@@ -80,24 +117,10 @@ tools:
         path: segemehl.x
         get_version: ''
         exit_code: 255
-                
-    ##################
-    # Internal Tools #
-    ##################
-
-    compare_secure_hashes:
-        path: ../tools/compare_secure_hashes.py
-        get_version: --version
-        exit_code: 0
 
     ##############
     # Unix Tools #
     ##############
-
-    cat:
-        path: cat
-        get_version: --version
-        exit_code: 0
 
     cp:
         path: cp

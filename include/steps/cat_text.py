@@ -3,7 +3,8 @@ import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class CatText(AbstractStep):
     '''
@@ -12,9 +13,9 @@ class CatText(AbstractStep):
 
     def __init__(self, pipeline):
         super(CatText, self).__init__(pipeline)
-        
+
         self.set_cores(8)
-        
+
         self.add_connection('in/text')
         self.add_connection('out/text')
         self.add_option('filenameEnding', str, optional=False)
@@ -37,30 +38,19 @@ class CatText(AbstractStep):
 
             if input_paths == [None]:
                 run.add_empty_output_connection("text")
-            
 
-            out = run.add_output_file("text",
-                                      "%s-combined.%s" %  
-                                      (run_id, self.get_option('filenameEnding')),
-                                       input_paths) 
+            out = run.add_output_file(
+                "text", "%s-combined.%s" %
+                (run_id, self.get_option('filenameEnding')), input_paths)
 
 
+#            out = run.add_output_file("text","foo", input_paths)
 
-
-#            out = run.add_output_file("text","foo", input_paths) 
-                    
             with run.new_exec_group() as exec_group:
                 cat = [self.get_tool('cat')]
                 if self.is_option_set_in_config('additionalFiles'):
-                    files = [os.path.abspath(f) for f in self.get_option('additionalFiles')]
+                    files = [
+                        os.path.abspath(f) for f in self.get_option('additionalFiles')]
                     cat.extend(files)
                 cat.extend(input_paths)
                 exec_group.add_command(cat, stdout_path=out)
-
-
-
-
-                            
-
-
-

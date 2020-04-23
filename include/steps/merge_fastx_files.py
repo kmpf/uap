@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 from logging import getLogger
 import os
@@ -39,9 +39,9 @@ class MergeFastxFiles(AbstractStep):
         fast_format = '.' + example_file.split('.')[format_index]
 
         if fast_format not in required_file_extensions:
-            raise UAPError("File %s does not end with any "
-                         "expected suffix (%s). Please fix that issue." %
-                         (fast_file, ' | '.join(required_file_extensions)))
+            raise StepError(self, "File %s does not end with any "
+                            "expected suffix (%s). Please fix that issue." %
+                            (fast_file, ' | '.join(required_file_extensions)))
 
         fast_char = fast_format[-1]
         return fast_char
@@ -127,8 +127,8 @@ class MergeFastxFiles(AbstractStep):
                                                        stdout_path=p_out)
                         else:
 
-                                pigz_output = [self.get_tool('pigz'),
-                                               '--stdout']
-                                pigz_output.extend(input_paths)
-                                exec_group.add_command(pigz_output,
-                                                       stdout_path=p_out)
+                            pigz_output = [self.get_tool('pigz'),
+                                           '--stdout']
+                            pigz_output.extend(input_paths)
+                            exec_group.add_command(pigz_output,
+                                                   stdout_path=p_out)

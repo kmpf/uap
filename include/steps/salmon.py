@@ -17,7 +17,7 @@ class Salmon(AbstractStep):
 
         # input connections
         self.add_connection('in/first_read')
-        self.add_connection('in/second_read')
+        self.add_connection('in/second_read', optional=True)
 
         # output connections
         self.add_connection('out/cmd_info.json')
@@ -56,26 +56,26 @@ class Salmon(AbstractStep):
                         description="Salmon index")
 
         self.add_option('g', str, optional=True, default=None,
-                        description="File containing a mapping of transcripts " \
-                                    "to genes.  If this file is provided " \
-                                    "Salmon will output both quant.sf and " \
-                                    "quant.genes.sf files, where the latter " \
-                                    "contains aggregated gene-level abundance " \
-                                    "estimates. The transcript to gene mapping " \
-                                    "should be provided as either a GTF file, " \
-                                    "or a in a simple tab-delimited format " \
-                                    "where each line contains the name of a " \
-                                    "transcript and the gene to which it " \
-                                    "belongs separated by a tab. The " \
-                                    "extension of the file is used to " \
-                                    "determine how the file should be parsed. " \
-                                    "Files ending in '.gtf', '.gff' or '.gff3'" \
-                                    "are assumed to be in GTF format; files " \
-                                    "with any other extension are assumed to " \
-                                    "be in the simple format. In GTF / GFF " \
-                                    "format, the 'transcript_id' is assumed " \
-                                    "to contain the transcript identifier and " \
-                                    "the 'gene_id' is assumed to contain the " \
+                        description="File containing a mapping of transcripts "
+                                    "to genes.  If this file is provided "
+                                    "Salmon will output both quant.sf and "
+                                    "quant.genes.sf files, where the latter "
+                                    "contains aggregated gene-level abundance "
+                                    "estimates. The transcript to gene mapping "
+                                    "should be provided as either a GTF file, "
+                                    "or a in a simple tab-delimited format "
+                                    "where each line contains the name of a "
+                                    "transcript and the gene to which it "
+                                    "belongs separated by a tab. The "
+                                    "extension of the file is used to "
+                                    "determine how the file should be parsed. "
+                                    "Files ending in '.gtf', '.gff' or '.gff3'"
+                                    "are assumed to be in GTF format; files "
+                                    "with any other extension are assumed to "
+                                    "be in the simple format. In GTF / GFF "
+                                    "format, the 'transcript_id' is assumed "
+                                    "to contain the transcript identifier and "
+                                    "the 'gene_id' is assumed to contain the "
                                     "corresponding gene identifier.")
 
     def runs(self, run_ids_connections_files):
@@ -99,11 +99,13 @@ class Salmon(AbstractStep):
                     salmon_eg.add_command(mkdir)
 
                     salmon = [self.get_tool('salmon'), 'quant']
-                    salmon.extend(['-i', os.path.abspath(str(self.get_option('i')))])
+                    salmon.extend(
+                        ['-i', os.path.abspath(str(self.get_option('i')))])
                     salmon.extend(['-l', 'ISF'])
 
                     if self.is_option_set_in_config('g'):
-                        salmon.extend(['-g', os.path.abspath(self.get_option('g'))])
+                        salmon.extend(
+                            ['-g', os.path.abspath(self.get_option('g'))])
 
                     salmon.extend(['-o', temp_dir])
 
@@ -113,14 +115,14 @@ class Salmon(AbstractStep):
                     (r2 is not None) and (salmon.extend(['-2', r2]))
 
                     stderr_file = "%s-salmon-log_stderr.txt" % (run_id)
-                    log_stderr = run.add_output_file("log_stderr",
-                                                     stderr_file, input_fileset)
+                    log_stderr = run.add_output_file(
+                        "log_stderr", stderr_file, input_fileset)
                     stdout_file = "%s-salmon-log_stdout.txt" % (run_id)
-                    log_stdout = run.add_output_file("log_stdout",
-                                                     stdout_file, input_fileset)
+                    log_stdout = run.add_output_file(
+                        "log_stdout", stdout_file, input_fileset)
 
                 salmon_eg.add_command(salmon, stdout_path=log_stdout,
-                                            stderr_path=log_stderr)
+                                      stderr_path=log_stderr)
 
                 result_files = dict()
                 result_files["cmd_info.json"] = run.add_output_file(
@@ -155,17 +157,21 @@ class Salmon(AbstractStep):
 
                 # move file from temp directory to expected position
                 with run.new_exec_group() as mv_exec_group:
-                    for orig, dest_path in result_files.iteritems():
+                    for orig, dest_path in result_files.items():
                         orig_path = os.path.join(temp_dir, orig)
                         if orig in self.dir_files:
-                            orig_path = os.path.join(temp_dir, self.dir_files[orig], orig)
+                            orig_path = os.path.join(
+                                temp_dir, self.dir_files[orig], orig)
                             # TODO: how to modify dest_path?
                         mv = [self.get_tool('mv'), orig_path, dest_path]
                         mv_exec_group.add_command(mv)
 
                 # remove directories in temp
                 with run.new_exec_group() as rm_exec_group:
-                    dirs = [temp_dir + '/aux_info', temp_dir + '/libParams', temp_dir + '/logs']
+                    dirs = [
+                        temp_dir + '/aux_info',
+                        temp_dir + '/libParams',
+                        temp_dir + '/logs']
                     rm = [self.get_tool('rm'), '-r']
                     rm.extend(dirs)
                     rm_exec_group.add_command(rm)

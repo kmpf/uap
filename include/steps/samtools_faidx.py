@@ -1,10 +1,11 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class SamtoolsFaidx(AbstractStep):
     '''
@@ -12,6 +13,11 @@ class SamtoolsFaidx(AbstractStep):
     indexed reference sequence. If no region is specified, faidx will index the
     file and create <ref.fasta>.fai on the disk. If regions are specified, the
     subsequences will be retrieved and printed to stdout in the FASTA format.
+
+    The sequences in the input file should all have different names. If they do
+    not, indexing will emit a warning about duplicate sequences and retrieval
+    will only produce subsequences from the first sequence with the duplicated
+    name.
     '''
 
     def __init__(self, pipeline):
@@ -25,6 +31,9 @@ class SamtoolsFaidx(AbstractStep):
         self.require_tool('samtools')
         self.require_tool('mv')
 
+        # Use of optional '[region1 [...]]' argument is not supported, as it
+        # changes the behaviour of the command
+
     def runs(self, run_ids_connections_files):
 
         for run_id in run_ids_connections_files.keys():
@@ -34,11 +43,14 @@ class SamtoolsFaidx(AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("sequence")
                 elif len(input_paths) != 1:
-                    raise UAPError("Expected exactly one sequence file.")
+                    raise StepError(
+                        self, "Expected exactly one sequence file.")
                 elif os.path.splitext(os.path.basename(input_paths[0]))[1] \
-                not in ['.fa', '.fna', '.fasta']:
-                    raise UAPError("The input file %s does not seem to be "
-                                 "a FASTA file." % input_paths[0])
+                        not in ['.fa', '.fna', '.fasta']:
+                    raise StepError(
+                        self, "The input file %s does not seem to be "
+                        "a FASTA file." %
+                        input_paths[0])
                 else:
                     with run.new_exec_group() as faidx_group:
                         samtools_faidx = [
@@ -53,7 +65,6 @@ class SamtoolsFaidx(AbstractStep):
                                   "indices",
                                   "%s.fai" % os.path.basename(input_paths[0]),
                                   input_paths
-                              )
+                        )
                         ]
-
                         mv_group.add_command(mv)

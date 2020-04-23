@@ -35,9 +35,20 @@ These example configurations differ in their usage of computational
 resources.
 Some example configurations download or work on small datasets and are
 thus feasible for machines with limited resources.
-Others require a very powerful stand-alone machine or a cluster system.
-The examples are marked accordingly in the examples below.
+Most examples can be extended by uncommenting additional steps.
+This might change their computational requirements in such a way that a
+very powerful stand-alone machine or a cluster system is required.
+The examples are marked accordingly in the sections below.
 
+.. NOTE:: Before **computing an example on a cluster**, you need to uncomment
+          the :ref:`config_file_cluster` and adapt the settings as required.
+          Please check also if the :ref:`cluster_configuration` fits your
+          cluster system.
+
+.. NOTE:: The examples contain information where users can obtain 
+          **required external/bioinformatics tools**.
+          If **uap** fails due to a missing tool, please check the
+          provided URLs for installation instructions.
 
 Handle Genomic Data
 -------------------
@@ -52,33 +63,87 @@ Other publicly available data sets (such as reference annotations or the
 chromosome sizes) might also be required for an analysis.
 The following configurations showcase how to get or generate that data:
 
+.. _example_index_mycoplasma:
+
 ``index_mycoplasma_genitalium_ASM2732v1_genome.yaml``
     Downloads the *Mycoplasma genitalium* genome, generates the indices for
     |bowtie2_link|, |bwa_link|, |segemehl_link|, and |samtools_link|.
     This workflow is quite fast because it uses the very small genome of
     *Mycoplasma genitalium*.
 
+    :Max. memory: ~0,5 GB
+    :Disk usage: ~20 MB
+    :Run time: minutes 
+
+    Required tools:
+
+        * |bwa_link|
+        * |bowtie2_link|
+        * |curl_link|
+        * |pigz_link|
+        * |samtools_link|
+        * |segemehl_link|
+
+.. _example_index_hg19:    
+
 ``index_homo_sapiens_hg19_genome.yaml``
-    Downloads the *Homo sapiens* genome, generates the indices for
-    |bowtie2_link|, |bwa_link|, and |samtools_link|.
+    Downloads chromosome 21 of the *Homo sapiens* genome, generates the indices
+    for |bowtie2_link|, |bwa_link|, and |samtools_link|.
+    This minimal version should work just fine.
+    Users can uncomment steps to download the complete genome.
+    This would substantially increase the required computational resources.
+    The |segemehl_link| index creation is commented out due to its high
+    memory consumption (~50-60 GB), if working with the whole genome.
+
+    :Max. memory: ~2 GB
+    :Disk usage: ~240 MB
+    :Run time: several minutes
+
+    Downloads *Homo sapiens* chromosome 21, generates the indices for
+    |bowtie2_link|, |bwa_link|, and |samtools_link| (and |segemehl_link| if
+    you uncomment it).
     This workflow requires substantial computational resources due to the
     size of the human genome.
     The |segemehl_link| index creation is commented out due to its high
-    memory consumption (~50-60 GB).
+    memory consumption.
     Please make sure to only run it on well equipped machines.
 
+    Required tools:
+
+        * |bwa_link|
+        * |bowtie2_link|
+        * |curl_link|
+        * |fetchChromsizes_link|
+        * |pigz_link|
+        * |samtools_link|
+        * |segemehl_link| (if uncommented)
+    
+.. _example_download_gencode:
+    
 ``download_human_gencode_release.yaml``
-    Downloads the human Gencode main annotation v24 and a subset for long
+    Downloads the human Gencode main annotation v19 and a subset for long
     non-coding RNA genes.
     This workflow only downloads files from the internet and and thus should
     work on any machine.
 
+    :Max. memory: depends on your machine
+    :Disk usage: ~1,2 GB
+    :Run time: depends on your internet connection
+
+    Required tools:
+
+        * |bwa_link|
+        * |bowtie2_link|
+        * |curl_link|
+        * |fetchChromsizes_link|
+        * |pigz_link|
+        * |samtools_link|
+               
 Let's have a look at the *Mycoplasma genitalium* example workflow by checking
 its :ref:`uap_status`::
 
   $ cd <uap-path>/example-configurations/
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status
-  [uap] Set log level to ERROR
   [uap][ERROR]: index_mycoplasma_genitalium_ASM2732v1_genome.yaml: Destination path does not exist: genomes/bacteria/Mycoplasma_genitalium/
   
 Oops, the ``destination_path`` does not exist (see :ref:`config-file-destination-path`).
@@ -108,10 +173,12 @@ A run is always in one of these states:
 * ``[q]ueued``
 * ``[e]xecuting``
 * ``[f]inished``
+* ``[c]hanged``
+* ``[b]ad``
 
 If the command still fails, please check that the tools defined in
 ``index_mycoplasma_genitalium_ASM2732v1_genome.yaml`` are available in your
-environment (see :ref:`uap_config_tools_section`).
+environment (see :ref:`config_file_tools`).
 If you really want to download and index the genome tell **uap** to start
 the workflow::
 
@@ -168,7 +235,6 @@ Most examples require the human genome so you might turn your head towards the
 ``index_homo_sapiens_hg19_genome.yaml`` workflow from her::
 
   $ uap index_homo_sapiens_hg19_genome.yaml status
-  [uap] Set log level to ERROR
   [uap][ERROR]: Output directory (genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes) does not exist. Please create it.
   $ mkdir -p genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
   $ uap index_homo_sapiens_hg19_genome.yaml run-locally
@@ -222,9 +288,21 @@ B. *De novo* Transcript Assembly
    
    4. Apply transcript assembly tool on mapped reads
 
+.. _example_mercer_download:
       
 ``2014-RNA_CaptureSeq-Mercer_et_al_download.yaml``
     Downloads the data published in the paper |Mercer_link|.
+
+    :Max. memory: ~? GB
+    :Disk usage: ~12 GB
+    :Run time: minutes (depending on your internet connection)
+
+    Required tools:
+
+        * |curl_link|
+        * |pigz_link|
+
+.. _example_mercer:
 
 ``2014-RNA_CaptureSeq-Mercer_et_al.yaml``
     The downloaded FASTQ files get analysed by |fastqc_link| and
@@ -238,8 +316,25 @@ B. *De novo* Transcript Assembly
     But it can be enabled and combined with |cufflinks_link| *de novo*
     transcript assembly employing our **s2c** python script.
 
-    **This workflow is not going to work, because the initial data set is
-    to small.**
+    :Max. memory: ~? GB
+    :Disk usage: ~3 GB
+    :Run time: several hours
+
+        * |cufflinks_link|
+        * |cutadapt_link|
+        * |fastqc_link|
+        * |fastx_toolkit_link|
+        * |htseq_count_link|
+        * |pigz_link|
+        * |samtools_link|
+        * |segemehl_link| (if uncommented)
+        * |tophat2_link|
+               
+.. NOTE:: Before computing ``2014-RNA_CaptureSeq-Mercer_et_al.yaml``
+          please make sure that, the following examples were executed:
+
+          - ``index_homo_sapiens_hg19_genome.yaml``
+          - ``download_human_gencode_release.yaml``
 
 ChIPseq Example -- Reanalysing Data from |Barski_link|
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -256,12 +351,27 @@ low amounts of input DNA. So these steps follow the basic ones:
 The analysis of data published in the paper |Barski_link| is contained in these
 files:
 
+.. _example_barski_download:
+
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml``
     Downloads the data published in the paper |Barski_link|.
+
+    :Max. memory: ~? GB
+    :Disk usage: ~17 GB
+    :Run time: depends on your internet connection
+
+    Downloads the data published in the paper |Barski_link|.
+
+    Required tools:
+
+        * |curl_link|
+        * |pigz_link|
+
+.. _example_barski:
     
 ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
     At first the downloaded FASTQ files are grouped by sample.
-    All files per sample are merged.
+    All files per sample are merged. 
     Sequencing quality is controlled by |fastqc_link| and |fastx_toolkit_link|.
     Adapter sequences are removed from the reads before they are mapped to 
     the human genome.
@@ -271,9 +381,43 @@ files:
     Library complexity is estimated using |preseq_link|.
     After the mapping duplicate reads are removed using |picard_link|.
     Finally enriched regions are detected with |macs2_link|.
-    
-    **This workflow will take some time due to the number of steps and
-    multiple mapping tools used.**
+
+    :Max. memory: ~? GB
+    :Disk usage: ~51 GB
+    :Run time: ~several hours (on a cluster), ~1 day (on a single machine)
+
+    Required tools:
+
+        * |bowtie2_link|
+        * |bwa_link|
+        * |cutadapt_link|
+        * |fastqc_link|
+        * |fastx_toolkit_link|
+        * |macs2_link|
+        * |picard_link|
+        * |pigz_link|
+        * |preseq_link|
+        * |samtools_link|
+        * |segemehl_link|
+        * |tophat2_link|
+
+.. hint:: The usage of |picard_link| can differ a lot between systems.
+          On Ubuntu systems it can be called like this::
+
+            $ picard-tools --version
+
+          If you use it as recommended at |picard_link|, it is called like this::
+
+            $ java -jar /path/to/picard.jar -h
+
+          Please check how to use it on your system and adjust the example
+          configuration accordingly (see :ref:`config_file_tools`).
+            
+.. NOTE:: Before computing ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
+          please make sure that, the following examples were executed:
+
+          - ``index_homo_sapiens_hg19_genome.yaml``
+          - ``download_human_gencode_release.yaml``
 
 Create Your Own Workflow
 ========================
@@ -301,7 +445,16 @@ on another page (see :ref:`analysis_configuration`).
 
 .. |cufflinks_link| raw:: html
    
-   <a href="" target="_blank">cufflinks</a>
+   <a href="http://cufflinks.cbcb.umd.edu/" target="_blank">cufflinks</a>
+
+.. |curl_link| raw:: html
+   
+   <a href="https://curl.haxx.se/" target="_blank">curl</a>
+   
+.. |cutadapt_link| raw:: html
+   
+   <a href="https://github.com/marcelm/cutadapt" target="_blank">cutadapt</a>
+
 
 .. |fastqc_link| raw:: html
       
@@ -310,6 +463,10 @@ on another page (see :ref:`analysis_configuration`).
 .. |fastx_toolkit_link| raw:: html
       
    <a href="http://hannonlab.cshl.edu/fastx_toolkit/" target="_blank">FASTX-Toolkit</a>
+
+.. |fetchChromsizes_link| raw:: html
+
+   <a href="http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/fetchChromSizes" target="_blank">fetchChromSizes</a>
 
 .. |htseq_count_link| raw:: html
       
@@ -326,6 +483,10 @@ on another page (see :ref:`analysis_configuration`).
 .. |picard_link| raw:: html
       
    <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard</a>
+
+.. |pigz_link| raw:: html
+
+   <a href="http://zlib.net/pigz/" target=_blank">pigz</a>
 
 .. |preseq_link| raw:: html
       

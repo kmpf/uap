@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import os
 import sys
 from logging import getLogger
@@ -45,13 +45,11 @@ class FusionCatcher(AbstractStep):
 
         self.add_option('cores', str, default='6')
 
+        self.add_option('keep-unmapped-read', bool, optional=True)
 
-        self.add_option('keep-unmapped-read' , bool, optional=True)
+        self.add_option('skip-filter-adapter', bool, optional=True)
 
-        self.add_option('skip-filter-adapter' , bool, optional=True)
-
-        self.add_option('extract-buffer-size' , str, optional=True)
-
+        self.add_option('extract-buffer-size', str, optional=True)
 
     def runs(self, run_ids_connections_files):
         self.set_cores(self.get_option('cores'))
@@ -67,16 +65,14 @@ class FusionCatcher(AbstractStep):
                 input_paths = [fr_input]
 
                 if sr_input is None:
-                    raise UAPError("Not paired end")
+                    raise StepError(self, "Not paired end")
                 else:
                     input_paths.append(sr_input)
 
                 # create folder structure
 
-                my_temp_dir = run.get_output_directory_du_jour_placeholder()
-
-                my_input = os.path.join(my_temp_dir, 'input')
-                my_output = os.path.join(my_temp_dir, 'output')
+                my_input = 'input'
+                my_output = 'output'
 
                 # create logfiles
                 log_stderr = run.add_output_file(
@@ -114,8 +110,9 @@ class FusionCatcher(AbstractStep):
                         fusioncatcher.extend(['--skip-filter-adapter'])
 
                     if self.is_option_set_in_config('extract-buffer-size'):
-                        fusioncatcher.extend(['--extract-buffer-size=' + self.get_option('extract-buffer-size')])
-                   
+                        fusioncatcher.extend(
+                            ['--extract-buffer-size=' + self.get_option('extract-buffer-size')])
+
                     exec_group.add_command(fusioncatcher,
                                            stderr_path=log_stderr,
                                            stdout_path=log_stdout)

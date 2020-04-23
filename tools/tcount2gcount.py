@@ -1,15 +1,22 @@
+import json
+import sys
+from collections import defaultdict
+import argparse
 import os
 seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
-execfile(activate_this_file, dict(__file__=activate_this_file))
-import argparse
-from collections import defaultdict
-import sys
-import json
+exec(
+    compile(
+        open(activate_this_file).read(),
+        activate_this_file,
+        'exec'),
+    dict(
+        __file__=activate_this_file))
 '''
 calculates gene counts from transcript counts
 tcount2gcounts.py -m <transcript_gene_mapping.csv> -i <transcript_counts.csv> -o <gene_counts.csv>
 '''
+
 
 def read_args():
     parser = argparse.ArgumentParser(
@@ -20,9 +27,8 @@ def read_args():
         '-m',
         type=str,
         nargs=1,
-        help='transcript to gene mapping file. Required Format example (per row): ' \
-             'ENST00000527779.1\tENSG00000137692.11'
-    )
+        help='transcript to gene mapping file. Required Format example (per row): '
+        'ENST00000527779.1\tENSG00000137692.11')
     parser.add_argument(
         '--infile',
         '-i',
@@ -44,7 +50,6 @@ def read_args():
         default=sys.stdout
     )
 
-
     parser.add_argument(
         '--kallisto-extended',
         action='store_true',
@@ -55,13 +60,14 @@ def read_args():
     args = parser.parse_args()
     return args
 
+
 def read_mapping_file(mapping_file):
     mapping_data = dict()
-    
+
     with open(mapping_file, 'r') as f:
         for line in f:
             if line.startswith('#'):
-                continue 
+                continue
 
             line_data = line.rstrip('\n').split('\t')
             if mapping_file.endswith('gtf'):
@@ -72,8 +78,7 @@ def read_mapping_file(mapping_file):
                     g_id = d['gene_id'].rstrip(';').replace('"', '')
                 else:
                     continue
-            
-                    
+
             else:
                 t_id = line_data[0]
                 g_id = line_data[1]
@@ -81,6 +86,7 @@ def read_mapping_file(mapping_file):
 
     # TODO: mapping data empty after extracting?
     return mapping_data
+
 
 def read_input_file(input_file, mapping_data, tool_name):
     result_data = dict()
@@ -103,52 +109,62 @@ def read_input_file(input_file, mapping_data, tool_name):
 
 
 def read_input_file_k(input_file, mapping_data):
-    res =  defaultdict(dict)
+    res = defaultdict(dict)
 
-    info = ['t_target_id', 't_length', 't_eff_length', 't_est_count', 't_tpm'] 
+    info = ['t_target_id', 't_length', 't_eff_length', 't_est_count', 't_tpm']
 
     with open(input_file, 'r') as f:
         for lnum, line in enumerate(f):
-            
+
             if lnum != 0:
-                data  = line.strip('"').rstrip('\n').split('\t')
+                data = line.strip('"').rstrip('\n').split('\t')
 
                 transcript = data[0]
 
                 if mapping_data[transcript] not in res:
                     for i in range(5):
                         res[mapping_data[transcript]][info[i]] = str(data[i])
-                    res[mapping_data[transcript]]['target_id'] = str(mapping_data[transcript])
+                    res[mapping_data[transcript]]['target_id'] = str(
+                        mapping_data[transcript])
                     res[mapping_data[transcript]]['length'] = 'NA'
                     res[mapping_data[transcript]]['eff_length'] = 'NA'
                     res[mapping_data[transcript]]['est_count'] = float(data[3])
                     res[mapping_data[transcript]]['tpm'] = float(data[4])
-                        
+
                 else:
                     for i in range(5):
-                        res[mapping_data[transcript]][info[i]] += ',' + str(data[i])
-                    res[mapping_data[transcript]]['est_count'] += float(data[3])
+                        res[mapping_data[transcript]
+                            ][info[i]] += ',' + str(data[i])
+                    res[mapping_data[transcript]
+                        ]['est_count'] += float(data[3])
                     res[mapping_data[transcript]]['tpm'] += float(data[4])
 
-
     return res
-
 
 
 def write_output_file(output_file, result_data):
     for g_id, count in result_data.items():
         output_file.write('%s\t%f\n' % (g_id, count))
 
+
 def write_output_file_k(output_file, result_data):
 
-    header = ['target_id', 'length', 'eff_length', 'est_count', 'tpm',
-              't_target_id', 't_length', 't_eff_length', 't_est_count', 't_tpm'] 
-    
+    header = [
+        'target_id',
+        'length',
+        'eff_length',
+        'est_count',
+        'tpm',
+        't_target_id',
+        't_length',
+        't_eff_length',
+        't_est_count',
+        't_tpm']
+
     output_file.write("\t".join(header) + '\n')
     for g_id, entry in result_data.items():
         out = [str(entry[x]) for x in header]
         output_file.write("\t".join(out) + "\n")
-
 
 
 def main(args):
@@ -159,7 +175,6 @@ def main(args):
     # TODO: tool_name kallisto or salmon?
     tool_name = args.tool_name[0]
 
-
     mapping_data = read_mapping_file(mapping_file)
 
     if args.kallisto_extended:
@@ -168,6 +183,7 @@ def main(args):
     else:
         result_data = read_input_file(input_file, mapping_data, tool_name)
         write_output_file(args.outfile, result_data)
+
 
 if __name__ == '__main__':
     args = read_args()

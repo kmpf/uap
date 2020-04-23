@@ -1,4 +1,4 @@
-from uaperrors import UAPError
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
@@ -57,8 +57,11 @@ class ChimPipe(AbstractStep):
 
         self.add_option('cores', str, default='6')
 
-        self.add_option('consensus_seq', str, optional=True,
-                        description="Sequence pair of consensus splice site bases")
+        self.add_option(
+            'consensus_seq',
+            str,
+            optional=True,
+            description="Sequence pair of consensus splice site bases")
 
         self.add_option('library_type', str, optional=True,
                         description="Type of sequence library")
@@ -80,7 +83,7 @@ class ChimPipe(AbstractStep):
                 input_paths = [fr_input]
 
                 if sr_input is None:
-                    raise UAPError("Not paired end")
+                    raise StepError(self, "Not paired end")
                 else:
                     input_paths.append(sr_input)
 

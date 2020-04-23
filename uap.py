@@ -1,17 +1,23 @@
+import traceback
+import sys
+import logging
+import argparse
 import os
 uap_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/python_env/bin/activate_this.py' % uap_path
-execfile(activate_this_file, dict(__file__=activate_this_file))
-import argparse
-import logging
-import string
-import sys
-import yaml
+exec(
+    compile(
+        open(activate_this_file).read(),
+        activate_this_file,
+        'exec'),
+    dict(
+        __file__=activate_this_file))
 
 '''
 Adjust sys.path so everything we need can be found
 '''
 
+uap_version = 2.0
 if uap_path not in sys.path:
     sys.path.append(uap_path)
 include_path = '%s/include' % uap_path
@@ -26,9 +32,9 @@ if steps_path not in sys.path:
 subcommand_path = '%s/include/subcommands' % uap_path
 if subcommand_path not in sys.path:
     sys.path.append(subcommand_path)
-
+from uaperrors import *
 from include.subcommands import *
-from uaperrors import UAPError
+
 
 def main():
     '''
@@ -58,6 +64,14 @@ def main():
         "contains uncommited changes.\n"
         "Otherwise uap will not run.")
 
+    common_parser.add_argument(
+        "--no-tool-checks",
+        dest="no_tool_checks",
+        action="store_true",
+        default=False,
+        help="This option disables the otherwise mandatory checks for "
+        "tool availability and version")
+
     # Definition of the final parser
 
     parser = argparse.ArgumentParser(
@@ -68,7 +82,7 @@ def main():
         "For source code see: https://github.com/yigbt/uap",
         formatter_class=argparse.RawTextHelpFormatter,
         prog='uap'
-        )
+    )
 
     parser.add_argument(
         "config",
@@ -86,22 +100,37 @@ def main():
         help="Increase output verbosity")
 
     parser.add_argument(
+        "--path",
+        action="version",
+        version=uap_path,
+        help="Report the path of the UAP installation and exit.")
+
+    parser.add_argument(
         "--debugging",
         dest="debugging",
         action="store_true",
         default=False,
-        help="Print traceback on UAPError.")
+        help="Print traceback on UAPError and keep backup of all ping files.")
+
+    parser.add_argument(
+        "--profiling",
+        dest="profiling",
+        action="store_true",
+        default=False,
+        help="Enable profiling save report in uap.cprof.")
 
     parser.add_argument(
         "--version",
         dest="version",
         action="version",
-        version="%(prog)s 1.1",
-        help = "Display version information.")
+        version="%%(prog)s %s" % uap_version,
+        help="Display version information.")
 
     subparsers = parser.add_subparsers(
         title="subcommands",
+        dest="subcommand",
         description="Available subcommands.")
+    subparsers.required=True
 
     '''
     The argument parser for 'fix-problems.py' is created here."
@@ -122,6 +151,20 @@ def main():
         help="Specify the cluster type. Default: [auto].")
 
     fix_problems_parser.add_argument(
+        "--first-error",
+        dest="first_error",
+        action="store_true",
+        default=False,
+        help="Print stderr of the first failed cluster job.")
+
+    fix_problems_parser.add_argument(
+        "--file-modification-date",
+        dest="file_modification_date",
+        action="store_true",
+        default=False,
+        help="If the sha256sum of the result is correct, reset the modification date.")
+
+    fix_problems_parser.add_argument(
         "--details",
         dest="details",
         action="store_true",
@@ -133,7 +176,7 @@ def main():
         dest="srsly",
         action="store_true",
         default=False,
-        help="Delete problematic files.")
+        help="Delete problematic files or do change modification dates.")
 
     fix_problems_parser.set_defaults(func=fix_problems.main)
 
@@ -191,29 +234,6 @@ def main():
 
     render_parser.set_defaults(func=render.main)
 
-#    '''
-#    The argument parser for 'report.py' is created here."
-#    '''
-#
-#    report_parser = subparsers.add_parser(
-#        "report",
-#        help="Generates reports of steps which can do so.",
-#        description="",
-#        formatter_class=argparse.RawTextHelpFormatter,
-#        parents=[common_parser])
-#
-#    report_parser.add_argument(
-#        "run",
-#        nargs='*',
-#        default=list(),
-#        type=str,
-#        help="Can take multiple step names as input. A step name is the name "
-#        "of any entry in the 'steps:' section as defined in "
-#        "'<project-config>.yaml'. To get a list of all run IDs please "
-#        "run 'uap <project-config>.yaml status'.")
-#
-#    report_parser.set_defaults(func=report.main)
-
     '''
     The argument parser for 'run_locally.py' is created here."
     '''
@@ -239,6 +259,20 @@ def main():
         "$ uap <project-config>.yaml status",
         formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
+
+    run_locally_parser.add_argument(
+        "--force",
+        dest="force",
+        action="store_true",
+        default=False,
+        help="Force to overwrite changed tasks.")
+
+    run_locally_parser.add_argument(
+        "--ignore",
+        dest="ignore",
+        action="store_true",
+        default=False,
+        help="Ignore chages of tasks and consider them finished.")
 
     run_locally_parser.add_argument(
         "run",
@@ -273,6 +307,20 @@ def main():
         help="Specify the cluster type. Default: [auto].")
 
     status_parser.add_argument(
+        "--details",
+        dest="details",
+        action="store_true",
+        default=False,
+        help="Displays more information about task states.")
+
+    status_parser.add_argument(
+        "--job-ids",
+        dest="job_ids",
+        action="store_true",
+        default=False,
+        help="Prints space seperated cluster job ids of all submitted jobs.")
+
+    status_parser.add_argument(
         "--summarize",
         dest="summarize",
         action="store_true",
@@ -287,6 +335,13 @@ def main():
         help="Displays the dependency graph of the analysis.")
 
     status_parser.add_argument(
+        "--hash",
+        dest="hash",
+        action="store_true",
+        default=False,
+        help="Validate sha256sums to detect file changes.")
+
+    status_parser.add_argument(
         "--sources",
         dest="sources",
         action="store_true",
@@ -294,8 +349,7 @@ def main():
         help="Displays only information about the source runs.")
 
     status_parser.add_argument(
-        "-r","--run",
-        dest="run",
+        "run",
         nargs='*',
         default=list(),
         type=str,
@@ -314,6 +368,13 @@ def main():
         "steps the pipeline can use.\n",
         formatter_class=argparse.RawTextHelpFormatter,
         parents=[common_parser])
+
+    steps_parser.add_argument(
+        "--details",
+        dest="details",
+        action="store_true",
+        default=False,
+        help="Display description per step.")
 
     steps_parser.add_argument(
         "--show",
@@ -349,6 +410,27 @@ def main():
         help="Specify the cluster type. Default: [auto].")
 
     submit_to_cluster_parser.add_argument(
+        "--legacy",
+        dest="legacy",
+        action="store_true",
+        default=False,
+        help="Use none array cluster submission.")
+
+    submit_to_cluster_parser.add_argument(
+        "--force",
+        dest="force",
+        action="store_true",
+        default=False,
+        help="Force to overwrite changed tasks.")
+
+    submit_to_cluster_parser.add_argument(
+        "--ignore",
+        dest="ignore",
+        action="store_true",
+        default=False,
+        help="Ignore chages of tasks and consider them finished.")
+
+    submit_to_cluster_parser.add_argument(
         "run",
         nargs='*',
         default=list(),
@@ -369,15 +451,14 @@ def main():
         parents=[common_parser])
 
     run_info_parser.add_argument(
-         "--sources",
+        "--sources",
         dest="sources",
         action="store_true",
         default=False,
         help="Displays only information about the source runs.")
 
     run_info_parser.add_argument(
-        "-r","--run",
-        dest="run",
+        "run",
         nargs='*',
         default=list(),
         type=str,
@@ -413,63 +494,41 @@ def main():
 
     volatilize_parser.set_defaults(func=volatilize.main)
 
-    '''
-    The argument parser for 'runtime_info.py' is created here."
-    '''
-
-    runtime_info_parser = subparsers.add_parser(
-        "runtime-info",
-        help="Provides Information about the runtime",
-        description="Provides Information about the runtime.",
-        formatter_class=argparse.RawTextHelpFormatter,
-        parents=[common_parser])
-
-    runtime_info_parser.add_argument(
-        "--to-screen",
-        dest="to_screen",
-        action="store_true",
-        default=False,
-        help="Displays information to the screen instead of writing to file.")
-
-    runtime_info_parser.add_argument(
-        "--run_id",
-        dest="run_id",
-        action="store_true",
-        default=False,
-        help="Get information for a specific run-id.")
-
-    runtime_info_parser.add_argument(
-        "--file-path",
-        dest="file_path",
-        type=str,
-        default='runtime_info.csv',
-        help="Path of the output file. [runtime_info.csv]")
-
-    runtime_info_parser.set_defaults(func=runtime_info.main)
-
     # get arguments and call the appropriate function
     args = parser.parse_args()
     # Add the path to this very file
     args.uap_path = uap_path
+    args.uap_version = uap_version
 
     # create logger object
     logger = _configure_logger(args.verbose)
+
     # call subcommand
     try:
-        args.func(args)
-    except UAPError as e:
+        if args.profiling is True:
+            import cProfile
+            cProfile.runctx('args.func(args)', {'args': args}, {},
+                            filename='uap.cprof')
+        else:
+            args.func(args)
+    except (Exception, KeyboardInterrupt) as e:
+        error = traceback.format_exception(*sys.exc_info())[-1]
+        logger.error(error.strip())
         if args.debugging is True:
             raise
+        else:
+            sys.exit(1)
+
 
 def _configure_logger(verbosity):
     logger = logging.getLogger("uap_logger")
 
     # create formatter for different log level
     debug_formatter = logging.Formatter(
-        fmt = '[uap][%(levelname)s] %(funcName)s in %(filename)s: %(message)s '
+        fmt='[uap][%(levelname)s] %(funcName)s in %(filename)s: %(message)s '
     )
     info_formatter = logging.Formatter(
-        fmt = '[uap][%(levelname)s]: %(message)s '
+        fmt='[uap][%(levelname)s]: %(message)s '
     )
     # create console handler
     ch = logging.StreamHandler()
@@ -482,33 +541,31 @@ def _configure_logger(verbosity):
         ch.setFormatter(info_formatter)
         # set logger logging level
         logger.setLevel(logging.ERROR)
-        sys.stderr.write("[uap] Set log level to ERROR\n")
+        lvl = 'ERROR'
     elif verbosity == 1:
         # add formatter to ch
         ch.setFormatter(info_formatter)
         # set logger logging level
         logger.setLevel(logging.WARNING)
-        sys.stderr.write("[uap] Set log level to WARNING\n")
+        lvl = 'WARNING'
     elif verbosity == 2:
         # add formatter to ch
         ch.setFormatter(info_formatter)
         # set logger logging level
         logger.setLevel(logging.INFO)
-        sys.stderr.write("[uap] Set log level to INFO\n")
+        lvl = 'INFO'
     elif verbosity >= 3:
         # add formatter to ch
         ch.setFormatter(debug_formatter)
         # set logger logging level
         logger.setLevel(logging.DEBUG)
-        sys.stderr.write("[uap] Set log level to DEBUG\n")
-
-    sys.stderr.flush()
+        lvl = 'DEBUG'
 
     # add ch to logger
     logger.addHandler(ch)
+    logger.info("Set log level to %s" % lvl)
 
     return logger
-
 
 
 if __name__ == '__main__':

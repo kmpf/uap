@@ -52,16 +52,19 @@ logger object.
 
    # Thirdly import local application files
    from abstract_step import AbstractStep # or AbstractSourceStep
+   from uaperrors import UAPError
 
    # Get application wide logger
    logger = getLogger("uap_logger")
 
 
-Essential imports are the ``from logging import getLogger`` and
-``from abstract_step import ...``.
-The former is necessary to get access to the application wide logger and
-the latter to be able to inherit either from ``AbstractStep`` or
-``AbstractSourceStep``.
+Essential imports are the ``from logging import getLogger``,
+``from abstract_step import ...`` and ``from uaperrors import UAPError``.
+The ``logger`` can be used to log messages on different verbosity levels
+(e.g. ``logger.debug``, ``logger.info``, ``logger.warning``). The ``UAPError``
+can be used to raise UAÜ specific errors with ``raise UAPError(<message>)``.
+``AbstractStep`` and ``AbstractSourceStep`` are available parent classes
+from which the new implementation musst inherit its methods.
 
 .. _extending_class_def:
 
@@ -114,19 +117,34 @@ Connections via ``add_connection(...)``:
   Please name connection in a way that they describe the data itself and
   **NOT** the data type.
   For instance, use ``in/genome`` over ``in/fasta``.
-  The data type of the received input data should be checked by the steps
-  to make sure to execute the correct commands.
 
-  **TODO**: Reanimate the constraints feature. It would often save some lines
-  of code to be able to define constraints on the connections.
+  The first parameters of the method musst be a ``tag`` and all other
+  parameter should be passed with their respective keyword:
+
+  1. ``tag``
+        The name of the connection. It musst start with ``in/`` to declare an
+        input connection or ``out/`` to declare an output connection.
+
+  2. ``optional`` (Boolean, default ``False``)
+        Defines if the connection is mandatory (``False``) or optional
+        (``True``). A mendatory connection will be checked more
+        rigorously.
+
+  3. ``format``
+        Descripes the expected file formats to aid the user.
+
+  4. ``description``
+        Descripes the content to aid the user. The string is used in
+        for the documentation with |sphinx| and |reStructuredText|
+        markups can be used.
+
 
 Options via ``self.add_option()``:
   Options allow to influence the commands executed by a step.
   It is advisable to provide as many meaningful options as possible to keep
   steps flexible.
-  Steps can have any number of options.
   Options are defined via the method ``add_option()``.
-  
+
   The ``add_option()`` method allows to specify various information about
   the option.
   The method parameters are these:
@@ -139,18 +157,20 @@ Options via ``self.add_option()``:
          The option type has to be at least one of ``int``, ``float``, ``str``,
          ``bool``, ``list``, or ``dict``.
 
-  3. ``optional`` (Boolean)
+  3. ``optional`` (Boolean, default ``False``)
          Defines if the option is mandatory (``False``) or optional (``True``).
 
   4. ``choices``
          List of valid values for the option.
 
-  5. ``default``
+  5. ``default`` (default ``None``)
          Defines the default value for the option.
 
   6. ``description``
          The description of the functionality of the option.
-         
+         The string is used in for the documentation with |sphinx|
+         and |reStructuredText| markups can be used.
+
 
 
 .. code-block:: python
@@ -158,8 +178,11 @@ Options via ``self.add_option()``:
    ..
 
            # Define connections
-           self.add_connection('in/text')
-           self.add_connection('out/text')
+           self.add_connection('in/text', optional=False,
+               format=['txt', 'text'],
+               description='Contains certain information.')
+           self.add_connection('out/text', optional=False,
+                format='txt', description='The result.')
 
            # Request tools
            self.require_tool('cat')
@@ -172,7 +195,7 @@ Options via ``self.add_option()``:
            # Options for 'cat' (see manpage)
            self.add_option('show-all', bool, optional=True,
                            description="Show all characters")
-                           
+
            self.add_option('number-nonblank', int, optional=True,
                            description="number nonempty output lines, "
                            "overrides --number")
@@ -201,32 +224,35 @@ Step 4: ``runs`` Method
 =======================
 
 The ``runs`` method is where all the work is done.
-This method gets handed over a dictionary of dictionaries.
+This method gets handed over an instance of the
+:ref:`ConnectionsCollector <ConnectionsCollector>`
+which can be used like a dictionary of dictionaries.
 The keys of the first dictionary are the run IDs (often resembling the samples).
 The values of the first dictionary is another dictionary.
 The keys of that second dictionary are the connections e.g. "in/text" and the
 values are the corresponding files belonging to that connection.
 
 Let's inspect all the run IDs, connections, and input files we got from our
-upstream steps.
+upstream steps for all runs that have the connection ``in/testconnection``.
 And let's tore all files we received in a list for later use.
 
 .. code-block:: python
 
    ..
 
-       def runs(self, run_ids_connections_files):
+       def runs(self, cc):
            all_files = list()
-           # Let's inspect the run_ids_connections_files data structure
-           for run_id in run_ids_connections_files.keys():
+           # Let's inspect the cc data structure
+           run_ids = cc.get_runs_with_connections('in/testconnection')
+           for run_id in run_ids:
                logger.info("Run ID: %s" % run_id)
-               for connection in run_ids_connections_files[run_id].keys():
+               for connection in cc[run_id].keys():
                    logger.info("Connection: %s" % connection)
-                   for in_file in run_ids_connections_files[run_id][connection]:
+                   for in_file in cc[run_id][connection]:
                        logger.info("Input file: %s" % in_file)
                        # Collect all files
                        all_files.append(in_file)
-   
+
    ..
 
 It comes in handy to assemble a list with all options for ``cat`` here.
@@ -255,7 +281,7 @@ It comes in handy to assemble a list with all options for ``cat`` here.
                 cat_option_list.append('--%s' % option)
                 # ... make sure to cast the values to string
                 cat_option_list.append(str(self.get_option(option)))
-                
+
    ..
 
 What should happen if we are told to concatenate all files from all input runs?
@@ -271,15 +297,14 @@ The run consists of a ``exec_group`` that runs the ``cat`` command.
    They can be added like this:
 
    .. code-block:: python
-                   
+
       # Add a single command
       exec_group.add_command(...)
 
       # Add a pipeline to an exec_group
-      with exec_group.add_pipeline as pipe:
-         ...
-         # Add a command to a pipeline
-         pipe.add_command(...)
+      pipe = exec_group.add_pipeline()
+      # Add a command to a pipeline
+      pipe.add_command(...)
 
 The result of the concatenation is written to an output file.
 The run object needs to know about each output file that is going to be created.
@@ -301,27 +326,26 @@ The run object needs to know about each output file that is going to be created.
 
         # Okay let's concatenate all files we get
         if self.get_option('concatenate_all_files'):
-            run_id = 'all_files'
 
             # New run named 'all_files' is created here
-            with self.declare_run(run_id) as run:
+            run = self.declare_run('all_files')
 
-                # Create an exec
-                with run.new_exec_group() as exec_group:
-                    # Assemble the cat command
-                    cat = [ self.get_tool('cat') ]
-                    # Add the options to the command
-                    cat.extend( cat_option_list )
-                    cat.extend( all_files )
-                    
-                    # Now add the command to the execution group
-                    exec_group.add_command(
-                        cat,
-                        stdout_path = run.add_output_file(
-                            'text',
-                            "%s_concatenated.txt" % run_id,
-                            all_files)
-                    )
+            # Create an exec
+            exec_group = run.new_exec_group()
+            # Assemble the cat command
+            cat = [ self.get_tool('cat') ]
+            # Add the options to the command
+            cat.extend( cat_option_list )
+            cat.extend( all_files )
+
+            # Now add the command to the execution group
+            exec_group.add_command(
+                cat,
+                stdout_path = run.add_output_file(
+                    'text',
+                    "%s_concatenated.txt" % run_id,
+                    all_files)
+            )
 
    ..
 
@@ -334,25 +358,24 @@ belong to the input run.
         # Concatenate all files from a runs 'in/text' connection
         else:
             # iterate over all run IDs ...
-            for run_id in run_ids_connections_files.keys():
-                input_paths = run_ids_connections_files[run_id]['in/text']
+            for run_id in cc.keys():
+                input_paths = cc[run_id]['in/text']
                 # ... and declare a new run for each of them.
-                with self.declare_run(run_id) as run:
-                    with run.new_exec_group() as exec_group:
-                        # Assemble the cat command
-                        cat = [ self.get_tool('cat') ]
-                        # Add the options to the command
-                        cat.extend( cat_option_list )
-                        cat.extend( input_paths )
-                        
-                        # Now add the command to the execution group
-                        exec_group.add_command(
-                            cat,
-                            stdout_path = run.add_output_file(
-                                'text',
-                                "%s_concatenated.txt" % run_id,
-                                input_paths)
-                        )
+                exec_group = self.declare_run(run_id).new_exec_group()
+                # Assemble the cat command
+                cat = [ self.get_tool('cat') ]
+                # Add the options to the command
+                cat.extend( cat_option_list )
+                cat.extend( input_paths )
+
+                # Now add the command to the execution group
+                exec_group.add_command(
+                    cat,
+                    stdout_path = run.add_output_file(
+                        'text',
+                        "%s_concatenated.txt" % run_id,
+                        input_paths)
+                )
 
 That's it.
 You created your first **uap** processing step.
@@ -369,10 +392,10 @@ and source step files at **uap**'s ``include/sources/`` folder.
 You can control that your step is correctly "installed" if its included in the
 list of all source and processing steps::
 
-  $ ls -la $(dirname $(which uap))/include/sources
+  $ ls -la $(uap --path)/include/sources
   ... Lists all available source step files
 
-  $ ls -la $(dirname $(which uap))/include/steps
+  $ ls -la $(uap --path)/include/steps
   ... Lists all available processing step files
 
 You can also use **uap**'s :ref:`steps <uap-steps>` subcommand to get
@@ -386,27 +409,27 @@ A potential example YAML file named ``test.yaml`` could look like this:
 .. code-block:: yaml
 
     destination_path: example-out/test/
-    
+
     steps:
         ##################
         ## Source steps ##
         ##################
-    
+
         raw_file_source:
             pattern: example-data/text-files/*.txt
             group: (.*).txt
-    
+
         ######################
         ## Processing steps ##
         ######################
-    
+
         cat:
             _depends: raw_file_source
             _connect:
                 in/text:
                     - raw_file_source/raw
             concatenate_all_files: False
-    
+
     tools:
         cat:
             path: cat
@@ -425,7 +448,7 @@ Check the status of the configured analysis::
   [r] cat/Hello_asia
   [r] cat/Hello_europe
   [r] cat/Hello_world
-  
+
   runs: 4 total, 4 ready
 
 
@@ -436,30 +459,31 @@ Check the status of the configured analysis::
 Best Practices
 **************
 
-There are a couple of things you should keep in mind while implementing new 
+There are a couple of things you should keep in mind while implementing new
 steps or modifying existing ones:
 
 * **NEVER**  remove files!
   If files need to be removed report the issue and exit **uap** or force the
   user to call a specific subcommand.
   Never delete files without permission by the user.
-* Make sure errors already show up in when the steps ``runs()`` method is
-  called the first time.
-  So, look out for things that may fail in ``runs``.
+* Make sure errors already show up when the steps ``runs()`` method is
+  called.
   Stick to *fail early, fail often*.
-  That way errors show up before submitting jobs to the cluster and wasting 
-  precious cluster waiting time is avoided.
-* Make sure that all tools which you request inside the ``runs()`` method
-  are also required by the step via ``self.require_tool()``.
+  That way errors show up before submitting jobs to the cluster and
+  cluster waiting time is not wasted.
+* Make sure that all tools which you request with ``self.require_tool()``
+  are also used in the ``runs()`` method.
   Use the ``__init__()`` method to request tools.
-* Make sure your disk access is as cluster-friendly as possible (which 
-  primarily means using large block sizes and preferably no seek operations). 
+* Always call ``os.path.abspath`` on files that are passed via an option
+  to enable files references relativ to an uap config for your step.
+* Make sure your disk access is as cluster-friendly as possible (which
+  primarily means using large block sizes and preferably no seek operations).
   If possible, use pipelines to wrap your commands in ``pigz`` or ``dd``
   commands.
-  Make the used block size configurable. 
-  Although this is not possible in every case (for example when seeking 
-  in files is involved), it is straightforward with tools that read a 
-  continuous stream from ``stdin`` and write a continuous stream to 
+  Make the used block size configurable.
+  Although this is not possible in every case (for example when seeking
+  in files is involved), it is straightforward with tools that read a
+  continuous stream from ``stdin`` and write a continuous stream to
   ``stdout``.
 * Always use ``os.path.join(...)`` to handle paths.
 * Use bash commands like ``mkfifo`` over python library equivalents like
@@ -478,3 +502,12 @@ Please provide a step option to adjust the ``dd`` blocksize (this option
 is usually called ``dd-blocksize``).
 Create your steps in a way that they perform the least filesystem operations.
 Some systems might be very sensitive to huge numbers of read-write operations.
+
+
+.. |sphinx| raw:: html
+
+   <a href="https://www.sphinx-doc.org/" target="_blank">sphinx</a>
+
+.. |reStructuredText| raw:: html
+
+   <a href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html" target="_blank">reStructuredText</a>

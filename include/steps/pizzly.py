@@ -102,10 +102,16 @@ class Pizzly(AbstractStep):
                 with run.new_exec_group() as exec_group:
                     pizzly = [
                         self.get_tool('pizzly'),
-                        '-k', self.get_option('k-mer_size'),
-                        '--gtf', os.path.abspath(self.get_option('gtf-file')),
-                        '--fasta', os.path.abspath(self.get_option('fasta-file')),
-                        '--output', run_id]
+                        '-k',
+                        self.get_option('k-mer_size'),
+                        '--gtf',
+                        os.path.abspath(
+                            self.get_option('gtf-file')),
+                        '--fasta',
+                        os.path.abspath(
+                            self.get_option('fasta-file')),
+                        '--output',
+                        run_id]
 
                     if self.is_option_set_in_config('cache'):
                         pizzly.extend([
@@ -123,8 +129,6 @@ class Pizzly(AbstractStep):
 
                     pizzly.extend([my_input])
 
-
                     exec_group.add_command(pizzly,
                                            stderr_path=log_stderr,
                                            stdout_path=log_stdout)
-
