@@ -1,5 +1,13 @@
 # uap -- Universal Analysis Pipeline
 
+
+## Authors
+
+Christoph Kämpf, Michael Specht, Sven-Holger Puppel, Gero Doose, Kristin Reiche, Jana Schor, Jörg Hackermüller
+
+
+## Introduction
+
 The **uap** package is a framework to configure, run, and control
 large data multi-step analyses.
 Its main focus is on the analysis of high-throughput sequencing data.
@@ -10,6 +18,10 @@ It is implemented in Python, runs under GNU/Linux and can be controlled from the
 command-line interface.
 Although the primary focus is the evaluation of sequencing data, its design
 allows for a variety of other applications.
+
+## Documentation
+
+The documentation of **uap** is available at [Read the Docs](http://uap.readthedocs.org/en/latest/index.html).
 
 ## About this Repository
 
