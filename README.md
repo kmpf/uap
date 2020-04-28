@@ -1,12 +1,10 @@
 # uap -- Universal Analysis Pipeline
 
-
 ## Authors
 
 Christoph Kämpf, Michael Specht, Sven-Holger Puppel, Gero Doose, Kristin Reiche, Jana Schor, Jörg Hackermüller
 
 [uap: reproducible and robust HTS data analysis. BMC Bioinformatics 20, 664 (2019)](https://doi.org/10.1186/s12859-019-3219-1)
-
 
 ## Introduction
 
@@ -49,3 +47,12 @@ Please note, the version [v2.0.0rc2](https://github.com/fraunhofer-izi/uap/relea
 
 Christoph Kämpf [christoph.kaempf@izi.fraunhofer.de](mailto:christoph.kaempf@izi.fraunhofer.de)
 
+## License
+
+Copyright (C) 2019 Gesellschaft zur Foerderung der angewandten Forschung e.V. acting on behalf of its Fraunhofer Institute for Cell Therapy and Immunology (IZI).
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
