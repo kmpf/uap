@@ -31,7 +31,7 @@ def doc_module(module_name, fout, uap_tools):
     out_con = step.get_out_connections()
     if in_con:
         fout.write("**Input Connection**\n")
-        for con in in_con:
+        for con in sorted(in_con):
             fout.write("  - **%s**" % con)
             if con in step._optional_connections:
                 fout.write(" (optional)")
@@ -44,7 +44,7 @@ def doc_module(module_name, fout, uap_tools):
         fout.write("\n")
     if out_con:
         fout.write("**Output Connection**\n")
-        for con in out_con:
+        for con in sorted(out_con):
             fout.write("  - **%s**" % con)
             if con in step._optional_connections:
                 fout.write(" (optional)")
