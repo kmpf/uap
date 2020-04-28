@@ -16,7 +16,7 @@ allows for a variety of other applications.
 This repository contains the development status of **uap** at Fraunhofer IZI.
 It is based on the **uap** repository as published in [Kämpf, C., Specht, M.,Scholz, A. et al. uap: reproducible and robust HTS data analysis. BMC Bioinformatics 20, 664 (2019)](https://doi.org/10.1186/s12859-019-3219-1), which is located [here](https://github.com/yigbt/uap).
  
-The current version [v1.0](https://github.com/yigbt/uap/releases/tag/v1.0) has been extended:
+The current version [v2.0.0rc2](https://github.com/fraunhofer-izi/uap/releases/tag/v2.0.0rc2) contains the following changes (for a complete list see the [CHANGELOG](CHANGELOG.md)):
 
 * code conversion from Python2 to Python3
 * improved user interaction
