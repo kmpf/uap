@@ -49,8 +49,3 @@ Please note, the version [v2.0.0rc2](https://github.com/fraunhofer-izi/uap/relea
 
 Christoph Kämpf [christoph.kaempf@izi.fraunhofer.de](mailto:christoph.kaempf@izi.fraunhofer.de)
 
-## License
-
-Copyright (C) 2019 Gesellschaft zur Förderung der angewandten Forschung e.V. acting on behalf of its Fraunhofer Institut für [Name des Instituts] AND XXX. (ja genau – das Gleiche für das andere Institut) 
-
-All rights reserved. Contact [Kontaktadresse IZI] AND [Kontaktadresse XXX]“. 
