@@ -21,10 +21,6 @@ command-line interface.
 Although the primary focus is the evaluation of sequencing data, its design
 allows for a variety of other applications.
 
-## Documentation
-
-The documentation of **uap** is available at [Read the Docs](http://uap.readthedocs.org/en/latest/index.html).
-
 ## About this Repository
 
 This repository contains the development status of **uap** at Fraunhofer IZI.
