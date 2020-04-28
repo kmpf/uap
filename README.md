@@ -44,3 +44,13 @@ This version [v2.0.0rc2](https://github.com/fraunhofer-izi/uap/releases/tag/v2.0
 * error fixing and code improvement
 
 Please note, the version [v2.0.0rc2](https://github.com/fraunhofer-izi/uap/releases/tag/v2.0.0rc2) of **uap** requires Python >= 3.5 and is only tested on [SLURM](https://slurm.schedmd.com/documentation.html).
+
+## Contacts
+
+Christoph Kämpf [christoph.kaempf@izi.fraunhofer.de](mailto:christoph.kaempf@izi.fraunhofer.de)
+
+## License
+
+Copyright (C) 2019 Gesellschaft zur Förderung der angewandten Forschung e.V. acting on behalf of its Fraunhofer Institut für [Name des Instituts] AND XXX. (ja genau – das Gleiche für das andere Institut) 
+
+All rights reserved. Contact [Kontaktadresse IZI] AND [Kontaktadresse XXX]“. 
