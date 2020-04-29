@@ -45,22 +45,18 @@ Gero Doose, Kristin Reiche, Jana Schor, Jörg Hackermüller
   **uap** does **NOT** include all tools necessary for the data analysis.
   It expects that the required tools are **already installed**.
 
-## Table of contents
+## Table of Content
 
 [Consistency](./introduction.md#consistency)
 
 1. [Introducing uap](./introduction.md)
-2. [Quick Start uap](./how-to.md)
-3. [](./installation.md)
-4. [](./configuration.md)
-5. [](./interaction.md)
-6. [](./extension.md)
-7. [](./platforms.md)
-8. [](./annotation.md)
-9. [](./steps.md)
-10. [](./api.md)
-11. [](./developers.md)
-
-## Remarks
-
-This documentation uses [GitHub Pages]() and is written in [Markdown]().
+2. [Quick Start](./how-to.md)
+3. [Installation](./installation.md)
+4. [Analysis Configuration File](./configuration.md)
+5. [Command-Line Usage](./interaction.md)
+6. [Add New Functionality](./extension.md)
+7. [Tested Platforms](./platforms.md)
+8. [Annotation Files](./annotation.md)
+9. [Available Steps](./steps.md)
+10. [API Documentation](./api.md)
+11. [Information for developers](./developers.md)
