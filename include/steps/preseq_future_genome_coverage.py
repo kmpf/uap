@@ -1,8 +1,11 @@
+from uaperrors import StepError
 import sys
 from logging import getLogger
 from abstract_step import AbstractStep
+import os
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class PreseqFutureGenomeCoverage(AbstractStep):
     '''
@@ -19,41 +22,62 @@ class PreseqFutureGenomeCoverage(AbstractStep):
 
     def __init__(self, pipeline):
         super(PreseqFutureGenomeCoverage, self).__init__(pipeline)
-        
+
         self.set_cores(4)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/future_genome_coverage')
-        
+
         self.require_tool('preseq')
 
         # gc_extrap specific options
 
-        self.add_option('max_width', int, optional = True, description =
-                        'max fragment length, set equal to read length for '
-                        'single end reads')
-        self.add_option('bin_size', int, optional = True,
-                        description = 'bin size (default: 10)')
-        self.add_option('extrap', int, optional = True, description =
-                        'maximum extrapolation in base pairs (default: 1e+12)')
-        self.add_option('step', int, optional = True, description =
-                        'step size in bases between extrapolations (default: '
-                        '1e+08)')
-        self.add_option('bootstraps', int, optional = True, description =
-                        'number of bootstraps (default: 100)')
-        self.add_option('cval', float, optional = True, description =
-                        'level for confidence intervals (default: 0.95)')
-        self.add_option('terms', int, optional = True, description =
-                        'maximum number of terms')
-        self.add_option('quick', bool, optional = True, description =
-                        'quick mode: run gc_extrap without bootstrapping for '
-                        'confidence intervals')
+        self.add_option(
+            'max_width',
+            int,
+            optional=True,
+            description='max fragment length, set equal to read length for '
+            'single end reads')
+        self.add_option('bin_size', int, optional=True,
+                        description='bin size (default: 10)')
+        self.add_option(
+            'extrap',
+            int,
+            optional=True,
+            description='maximum extrapolation in base pairs (default: 1e+12)')
+        self.add_option(
+            'step',
+            int,
+            optional=True,
+            description='step size in bases between extrapolations (default: '
+            '1e+08)')
+        self.add_option(
+            'bootstraps',
+            int,
+            optional=True,
+            description='number of bootstraps (default: 100)')
+        self.add_option(
+            'cval',
+            float,
+            optional=True,
+            description='level for confidence intervals (default: 0.95)')
+        self.add_option(
+            'terms',
+            int,
+            optional=True,
+            description='maximum number of terms')
+        self.add_option(
+            'quick',
+            bool,
+            optional=True,
+            description='quick mode: run gc_extrap without bootstrapping for '
+            'confidence intervals')
 
     def runs(self, run_ids_connections_files):
         options = ['max_width', 'bin_size', 'extrap', 'step', 'bootstraps',
                    'cval', 'terms', 'quick']
 
-        set_options = [option for option in options if \
+        set_options = [option for option in options if
                        self.is_option_set_in_config(option)]
 
         option_list = list()
@@ -70,20 +94,20 @@ class PreseqFutureGenomeCoverage(AbstractStep):
             with self.declare_run(run_id) as run:
                 input_paths = run_ids_connections_files[run_id]["in/alignments"]
                 is_bam = True if os.path.splitext(input_paths[0])[1]\
-                                 in ['.bam'] else False
+                    in ['.bam'] else False
                 is_bed = True if os.path.splitext(input_paths[0])[1]\
-                                 in ['.bed'] else False
+                    in ['.bed'] else False
 
                 if input_paths == [None]:
                     run.add_empty_output_connection("complexity_curve")
                     run.add_empty_output_connection("future_yield")
                 elif len(input_paths) != 1:
-                    logger.error("Expected exactly one alignments file.")
-                    sys.exit(1)
+                    raise StepError(
+                        self, "Expected exactly one alignments file.")
                 elif not is_bam and not is_bed:
-                    logger.error("Input file %s is niether BAM nor BED." %
-                                 input_paths[0])
-                    sys.exit(1)
+                    raise StepError(
+                        self, "Input file %s is niether BAM nor BED." %
+                        input_paths[0])
                 else:
                     with run.new_exec_group() as gc_group:
                         gc_extrap_out = run.add_output_file(

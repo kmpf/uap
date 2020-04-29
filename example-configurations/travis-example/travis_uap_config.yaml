@@ -21,7 +21,7 @@ constants:
     - &genome
         constants/hg19_all_chr_UCSC-all_sequences.fasta
 
-    - &genome_faidx 
+    - &genome_faidx
         constants/hg19_all_chr_UCSC-all_sequences.fasta.fai
 
     - &bowtie2_genome_index
@@ -59,7 +59,6 @@ steps:
             Sample3:
                 - Sample_lane1/Replicate1_CellType1_Condition1_ATCACG_L001_R1_003.fastq.gz
                 - Sample_lane1/Replicate1_CellType1_Condition1_ATCACG_L001_R2_003.fastq.gz
-        paired_end: no
         first_read: _R1_
         second_read: _R2_
 
@@ -68,7 +67,6 @@ steps:
         url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr21.fa.gz
         hashing-algorithm: md5
         secure-hash: 26cdd5a3a539b63930752604feb2912b
-        path: dummy_files
         filename: chr21.fa
         uncompress: yes
 
@@ -112,6 +110,8 @@ steps:
         _depends: fastq_source
         adapter-R1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
         adapter-R2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+        use_reverse_complement: False
+        fix_qnames: False
 
     fastqc:
       _depends: fastq_source
@@ -154,6 +154,7 @@ steps:
         _depends: tophat2
         genome-faidx: *genome_faidx
         temp-sort-dir: '/tmp/'
+        sort-by-name: False
 
 #    sort_s2c (sam_to_sorted_bam):
 #        _depends: s2c
@@ -186,177 +187,47 @@ tools:
     # All Tools Refer To ./dummy_tool #
     ###################################
 
-    bedGraphToBigWig:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    bedToBigBed:    
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    bedtools:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
     bowtie2:
         path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
 
     bowtie2-build:
         path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
 
     bwa:
         path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    cat:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    ChromHMM:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
 
     compare_secure_hashes:
         path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    cp:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
 
     cufflinks:
         path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
 
     curl:
         path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
 
     cutadapt:
         path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    dd:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
 
     fastqc:
         path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
 
     fastx_quality_stats:
         path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    fix_cutadapt:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    fix_s2c:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
 
     fix_qnames:
         path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
 
     htseq-count:
         path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    ln:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    ls:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    mkdir:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    mkfifo:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    mv:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    picard-tools:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
 
     pigz:
         path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    printf:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
 
     samtools:
         path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    segemehl: 
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    sort:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    s2c:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
 
     tar:
         path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
 
     tophat2:
         path: ./dummy_tool
-        get_version: --version
-        exit_code: 0
-
-    xargs:
-        path: ./dummy_tool
-        get_version: --version
-        exit_code: 0

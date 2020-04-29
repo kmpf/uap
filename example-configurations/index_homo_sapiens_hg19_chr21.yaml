@@ -39,16 +39,14 @@ steps:
     ##################
 
     # Download chrom sizes file from UCSC
-    download_chrom_sizes_homo_sapiens (fetch_chrom_sizes_source):
+    download_hg19_chrom_sizes (fetch_chrom_sizes_source):
         ucsc-database: hg19
-        path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/chromosome_sizes
 
     # Download sequence of chromosome 21
-    download_hg19_data_UCSC (raw_url_source):
+    download_hg19_chr21 (raw_url_source):
         url: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr21.fa.gz
         hashing-algorithm: md5
         secure-hash: 26cdd5a3a539b63930752604feb2912b
-        path: genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/fasta
         filename: chr21.fa
         uncompress: yes
 
@@ -57,30 +55,30 @@ steps:
     ######################
 
     bowtie2_generate_index:
-        _depends: download_hg19_data_UCSC
+        _depends: download_hg19_chr21
         _connect:
-            in/reference_sequence: download_hg19_data_UCSC/raw
+            in/reference_sequence: download_hg19_chr21/raw
         index-basename: bowtie2_index
 
 #    ## !ATTENTION! 
 #    ## only enable if your machine possesses enough RAM (~60GB)
 #    ## otherwise this step is going to crash
 #    segemehl_generate_index:
-#        _depends: download_hg19_data_UCSC
+#        _depends: download_hg19_chr21
 #        _connect:
-#            in/reference_sequence:download_hg19_data_UCSC/raw
+#            in/reference_sequence:download_hg19_chr21/raw
 #        index-basename: segemehl_index
 
     bwa_generate_index:
-        _depends: download_hg19_data_UCSC
+        _depends: download_hg19_chr21
         _connect:
-            in/reference_sequence: download_hg19_data_UCSC/raw
+            in/reference_sequence: download_hg19_chr21/raw
         index-basename: bwa_index
 
     samtools_faidx:
-        _depends: download_hg19_data_UCSC
+        _depends: download_hg19_chr21
         _connect:
-            in/sequence: download_hg19_data_UCSC/raw
+            in/sequence: download_hg19_chr21/raw
 
 ################################################################################
 ## Tools Section                                                              ##
@@ -131,24 +129,10 @@ tools:
 #        path: segemehl.x
 #        get_version: ''
 #        exit_code: 255
-                
-    ##################
-    # Internal Tools #
-    ##################
-
-    compare_secure_hashes:
-        path: ../tools/compare_secure_hashes.py
-        get_version: --version
-        exit_code: 0
 
     ##############
     # Unix Tools #
     ##############
-
-    cat:
-        path: cat
-        get_version: --version
-        exit_code: 0
 
     cp:
         path: cp
@@ -170,11 +154,6 @@ tools:
         get_version: --version
         exit_code: 0
         
-    mkfifo:
-        path: mkfifo
-        get_version: --version
-        exit_code: 0
-
     mv:
         path: mv
         get_version: --version

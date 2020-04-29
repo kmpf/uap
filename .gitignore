@@ -1,17 +1,19 @@
 # uap specific
-uap
 python_env
 python3_venv
 *.pyc
 out
-doc/doctrees
-doc/html
-doc/build
 _monitor_disk_io
 steps.svg
 *~
 data/test
 data/adapter_sequences
+
+# sphinx and documentation
+public/
+doc/doctrees
+doc/html
+doc/build
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -76,3 +78,5 @@ example-configurations/example-out/
 example-configurations/genomes/
 example-configurations/travis-example/output_data
 *-out
+
+.idea/

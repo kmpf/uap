@@ -38,7 +38,7 @@ class Pear(AbstractStep):
                         'after trimming the low quality part.')
 
         self.add_option('q', int, optional=True, default=0,
-                        choices=[0] + range(33, 158),
+                        choices=[0] + list(range(33, 158)),
                         description='Specify the quality score threshold '
                         'for trimming the low quality part of a read.')
 
@@ -67,7 +67,7 @@ class Pear(AbstractStep):
                         description='Specify the amount of memory to be used.')
 
         self.add_option('cap', int, optional=True, default=40,
-                        choices=[0] + range(33, 158),
+                        choices=[0] + list(range(33, 158)),
                         description='Specify the upper bound for the '
                         'resulting quality score.')
 
@@ -81,15 +81,14 @@ class Pear(AbstractStep):
                         'bases.')
 
     def runs(self, run_ids_connections_files):
-        param_list = self.get_param_list()
         out_files = ('assembled', 'unassembled.forward', 'unassembled.reverse',
                      'discarded')
         for run_id in run_ids_connections_files.keys():
             with self.declare_run(run_id) as run:
                 if len(run_ids_connections_files[run_id]['in/first_read']) !=\
                    len(run_ids_connections_files[run_id]['in/second_read']):
-                    raise StandardError("Incorrect pairing of paired-end-files "
-                                        "in run %s" % run_id)
+                    raise Exception("Incorrect pairing of paired-end-files "
+                                    "in run %s" % run_id)
                 for file_no in range(len(run_ids_connections_files[run_id]
                                          ['in/first_read'])):
                     option_list = list()
@@ -108,14 +107,10 @@ class Pear(AbstractStep):
 
                     with run.new_exec_group() as pear_exec_group:
                         option_list.append('--output')
-                        option_list.append(
-                            os.path.join(
-                                run.get_output_directory_du_jour_placeholder(),
-                                file_id))
+                        option_list.append(file_id)
 
                         pear = [self.get_tool('pear')]
                         pear.extend(option_list)
-                        pear.extend(param_list)
                         pear_exec_group.add_command(
                             pear,
                             stdout_path=run.add_output_file(
@@ -128,9 +123,9 @@ class Pear(AbstractStep):
 
                         for output_file in out_files:
                             run.add_output_file(
-                                    output_file,
-                                    '%s.%s.fastq' % (file_id, output_file),
-                                    [run_ids_connections_files[run_id]
-                                    ['in/first_read'][file_no],
-                                    run_ids_connections_files[run_id]
-                                    ['in/second_read'][file_no]])
+                                output_file,
+                                '%s.%s.fastq' % (file_id, output_file),
+                                [run_ids_connections_files[run_id]
+                                 ['in/first_read'][file_no],
+                                 run_ids_connections_files[run_id]
+                                 ['in/second_read'][file_no]])

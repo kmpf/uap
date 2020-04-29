@@ -1,29 +1,34 @@
 #!/bin/bash
+import argparse
+import sys
 "exec" "`dirname $0`/../python_env/bin/python" "$0" "$@"
 
 # ^^^
-# the cmd above ensures that the correct python environment is 
+# the cmd above ensures that the correct python environment is
 # selected to execute this script.
-# The correct environment is the one belonging to uap, since all 
+# The correct environment is the one belonging to uap, since all
 # neccessary python modules are installed there.
-
-
 
 
 import os
 seq_pipeline_path = os.path.dirname(os.path.realpath(__file__))
 activate_this_file = '%s/../python_env/bin/activate_this.py' % seq_pipeline_path
-execfile(activate_this_file, dict(__file__=activate_this_file))
-import sys
-import argparse
+exec(
+    compile(
+        open(activate_this_file).read(),
+        activate_this_file,
+        'exec'),
+    dict(
+        __file__=activate_this_file))
+
 
 def main():
     parser = argparse.ArgumentParser(
-        description='This script reads one or two fastq files, line-by-line '+
+        description='This script reads one or two fastq files, line-by-line ' +
         'and removes reads or read pairs if at least one read is empty.',
-        prog = 'fix_cutadapt',
+        prog='fix_cutadapt',
         formatter_class=argparse.RawTextHelpFormatter)
-    
+
     parser.add_argument('--version',
                         action='version',
                         version='%(prog)s 0.01')
@@ -48,7 +53,7 @@ def main():
                         help="This file or fifo contains the " +
                         "second set of reads.")
 
-    args = parser.parse_args()        
+    args = parser.parse_args()
 
     fin1 = open(args.r1_in, 'r')
     fin2 = None
@@ -83,7 +88,7 @@ def main():
         fin2.close()
         fout1.close()
         fout2.close()
-        
+
     else:
         while True:
             lines1 = []
@@ -96,9 +101,12 @@ def main():
                     fout1.write(lines1[_])
                 wcount += 1
             rcount += 1
-            sys.stderr.write("Read %d entries, wrote %d entries.\n" % (rcount, wcount))
+            sys.stderr.write(
+                "Read %d entries, wrote %d entries.\n" %
+                (rcount, wcount))
 
     sys.stderr.write("Read %d entries, wrote %d entries.\n" % (rcount, wcount))
-        
+
+
 if __name__ == '__main__':
     main()

@@ -1,9 +1,11 @@
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class mergeNumpyZipArrays(AbstractStep):
     '''
@@ -11,31 +13,33 @@ class mergeNumpyZipArrays(AbstractStep):
     the output of deepTools multiBamSummary subcommand.
 
     Usage example::
-    
+
         merge_numpy_arrays.py [-h] [file-1.npz file-2.npz ... file-n.npz]  files
 
     '''
 
     def __init__(self, pipeline):
         super(mergeNumpyZipArrays, self).__init__(pipeline)
-        
+
         self.set_cores(10)
 
         self.add_connection('in/read-coverage')
         self.add_connection('out/read-coverage')
 
+        self.add_option('subcommand', str, optional=False,
+                        description='The arguments to multiBamSummary.')
+
         self.require_tool('merge_numpy_arrays.py')
 
-
     def runs(self, run_ids_connections_files):
+        subcommand = self.get_option('subcommand')
         for run_id in run_ids_connections_files.keys():
             # Collect input_paths and labels for multiBamSummary
             input_paths = run_ids_connections_files[run_id]['in/alignments']
             labels = list()
             for f in input_paths:
                 if not f.endswith(".bam"):
-                    logger.error("Not a BAM file: %s" % bam_files[i])
-                    sys.exit(1)
+                    raise StepError(self, "Not a BAM file: %s" % f)
                 if len(input_paths) > 1:
                     labels.append("%s-%s" % (run_id, input_paths.index(f)))
                 else:
@@ -47,10 +51,10 @@ class mergeNumpyZipArrays(AbstractStep):
                     # 1. multiBamSummary command
                     multi_bam_summary = [
                         self.get_tool('multiBamSummary'), subcommand]
-                    ## Append list of input BAM files
+                    # Append list of input BAM files
                     multi_bam_summary.append('--bamfiles')
                     multi_bam_summary.extend(input_paths)
-                    ## Append name of the output file
+                    # Append name of the output file
                     multi_bam_summary.append('--outFileName')
                     multi_bam_summary.append(
                         run.add_output_file(
@@ -59,18 +63,16 @@ class mergeNumpyZipArrays(AbstractStep):
                             input_paths
                         )
                     )
-                    ## Append list of BED files for BED-file subcommand
+                    # Append list of BED files for BED-file subcommand
                     if subcommand == "BED-file":
                         multi_bam_summary.append('--BED')
                         multi_bam_summary.extend(self.get_option('bed-file'))
-                    ## Append list of labels
+                    # Append list of labels
                     multi_bam_summary.append('--labels')
                     multi_bam_summary.extend(labels)
-                    ## Append number of processors
+                    # Append number of processors
                     multi_bam_summary.extend(['--numberOfProcessors',
                                               str(self.get_cores())])
-                    ## Append list of options
-                    multi_bam_summary.extend(option_list)
 
                     # Add multiBamSummary to execution group
                     multi_bam_summary_eg.add_command(multi_bam_summary)

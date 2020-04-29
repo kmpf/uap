@@ -1,18 +1,20 @@
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class PePr(AbstractStep):
     '''
-        
+
     '''
 
     def __init__(self, pipeline):
         super(PePr, self).__init__(pipeline)
-        
+
         self.set_cores(4)
 
         self.add_connection('in/alignments')
@@ -30,7 +32,7 @@ class PePr(AbstractStep):
         self.require_tool('mv')
 
         # Options for PePr
-        ## Required options
+        # Required options
         self.add_option('chip_vs_input', dict, optional=False,
                         description='A YAML dictionary that contains: '
                         'runID:                        \n'
@@ -46,8 +48,8 @@ class PePr(AbstractStep):
                         'file format. Currently support bed, sam, bam, sampe '
                         '(sam paired-end), bampe (bam paired-end)')
 
-        ## Optional options
-        self.add_option('normalization', str, optional = True,
+        # Optional options
+        self.add_option('normalization', str, optional=True,
                         choices=['inter-group', 'intra-group', 'scale', 'no'],
                         description='inter-group, intra-group, scale, or no. '
                         'Default is intra-group for peak-calling and '
@@ -64,21 +66,21 @@ class PePr(AbstractStep):
                         'the total library sizes are the same. no '
                         'normalization will not do normalization.')
         self.add_option('peaktype', str, choices=['sharp', 'broad'],
-                        optional = True,
+                        optional=True,
                         description='sharp or broad. Default is broad. PePr '
                         'treats broad peaks (like H3K27me3) and sharp peaks '
                         '(like most transcriptions factors) slightly '
                         'different. Specify this option if you know the '
                         'feature of the peaks.')
-        self.add_option('shiftsize', str, optional = True,
-                        description='Half the fragment size. '
-                        'The number of bases to shift forward and reverse '
-                        'strand reads toward each other. If not specified by '
-                        'user, PePr will empirically estimate this number from '
-                        'the data for each ChIP sample.')
-        self.add_option('threshold', float, optional = True,
+        self.add_option(
+            'shiftsize', str, optional=True, description='Half the fragment size. '
+            'The number of bases to shift forward and reverse '
+            'strand reads toward each other. If not specified by '
+            'user, PePr will empirically estimate this number from '
+            'the data for each ChIP sample.')
+        self.add_option('threshold', float, optional=True,
                         description='p-value cutoff. Default:1e-5.')
-        self.add_option('windowsize', int, optional = True,
+        self.add_option('windowsize', int, optional=True,
                         description='Sliding window size. '
                         'If not specified by user, PePr will estimate this by '
                         'calculating the average width of potential peaks. '
@@ -89,10 +91,10 @@ class PePr(AbstractStep):
 
     def runs(self, run_ids_connections_files):
         # Compile the list of options
-        options = ['file-format','normalization', 'peaktype', 
+        options = ['file-format', 'normalization', 'peaktype',
                    'shiftsize', 'threshold', 'windowsize']
 
-        set_options = [option for option in options if \
+        set_options = [option for option in options if
                        self.is_option_set_in_config(option)]
 
         option_list = list()
@@ -101,8 +103,8 @@ class PePr(AbstractStep):
                 if self.get_option(option):
                     option_list.append('--%s' % option)
             else:
-                option_list.append( '--%s' % option )
-                option_list.append( str(self.get_option(option)) )
+                option_list.append('--%s' % option)
+                option_list.append(str(self.get_option(option)))
 
         # Get the essential dictionary with information about the relationship
         # between Input and ChIP samples
@@ -115,13 +117,13 @@ class PePr(AbstractStep):
             # Are we going to perform differential peak calling yes or no?
             if not self.get_option('diff'):
                 # If not we only use chip1 and input1
-                config_to_option = {'rep1': 'chip1','inputs1': 'input1'}
+                config_to_option = {'rep1': 'chip1', 'inputs1': 'input1'}
             else:
                 # Else we require chip1+input1 and chip2+input2
                 config_to_option = {'rep1': 'chip1', 'inputs1': 'input1',
                                     'rep2': 'chip2', 'inputs2': 'input2'}
             # Check the input from the chip_vs_input dict
-            for key, opt in config_to_option.iteritems():
+            for key, opt in config_to_option.items():
                 experiment = chip_vs_input[run_id]
                 in_files[opt] = list()
                 try:
@@ -129,18 +131,19 @@ class PePr(AbstractStep):
                     #            are used for pepr's --[chip[12]|input[12]]
                     for in_run_id in experiment[key]:
                         in_files[opt].extend(
-                            run_ids_connections_files[in_run_id]\
+                            run_ids_connections_files[in_run_id]
                             ['in/alignments'])
-                        if run_ids_connections_files[in_run_id]\
-                           ['in/alignments'] == [None]:
-                            logger.error("Upstream run %s provides no "
-                                         "alignments for run %s"
-                                         % (in_run_id, run_id))
-                            sys.exit(1)
+                        if run_ids_connections_files[in_run_id]['in/alignments'] == [
+                                None]:
+                            raise StepError(
+                                self, "Upstream run %s provides no "
+                                "alignments for run %s" %
+                                (in_run_id, run_id))
                 except KeyError as e:
-                    logger.error("Required key %s missing in 'chip_vs_input' "
-                                 "for run %s" % (key, run_id))
-                    sys.exit(1)
+                    raise StepError(
+                        self, "Required key %s missing in 'chip_vs_input' "
+                        "for run %s" %
+                        (key, run_id))
 
             # Create a new run named run_id
             with self.declare_run(run_id) as run:
@@ -148,8 +151,8 @@ class PePr(AbstractStep):
                 input_paths = [f for k in in_files for f in in_files[k]]
 
                 # result_files dict:
-                ## keys = temporary file names
-                ## values = final file names
+                # keys = temporary file names
+                # values = final file names
                 result_files = dict()
 
                 # Is differential peak calling happening?
@@ -180,9 +183,7 @@ class PePr(AbstractStep):
                 temp_dir = str()
                 with run.new_exec_group() as pepr_exec_group:
                     # 1. Create temporary directory for PePr output
-                    temp_dir = os.path.join(
-                        run.get_output_directory_du_jour_placeholder(),
-                        'pepr-out')
+                    temp_dir = 'pepr-out'
                     mkdir = [self.get_tool('mkdir'), temp_dir]
                     pepr_exec_group.add_command(mkdir)
 
@@ -192,20 +193,20 @@ class PePr(AbstractStep):
                             '--file-format',
                             self.get_option('file-format'),
                             '--name', run_id]
-                    ## Add '--[chip[12]|input[12]]' and comma separated list of
-                    ## alignment files
+                    # Add '--[chip[12]|input[12]]' and comma separated list of
+                    # alignment files
                     for opt in in_files.keys():
                         pepr.append('--%s' % opt)
                         pepr.append(','.join(in_files[opt]))
 
                     if self.get_option('diff'):
                         pepr.append('--diff')
-                    ## Add additional options
+                    # Add additional options
                     pepr.extend(option_list)
                     pepr_exec_group.add_command(pepr)
 
                 with run.new_exec_group() as mv_exec_group:
-                    for orig, dest_path in result_files.iteritems():
+                    for orig, dest_path in result_files.items():
                         # 3. Move file from temp directory to expected
                         #    position
                         orig_path = os.path.join(temp_dir, orig)
@@ -213,17 +214,18 @@ class PePr(AbstractStep):
                         mv_exec_group.add_command(mv)
 
                 with run.new_exec_group() as tar_exec_group:
-                    # 
+                    #
                     log_file = run.add_output_file(
-                        'log', '%s__PePr_debug_log.tar.gz' % run_id, input_paths)
+                        'log', '%s__PePr_debug_log.tar.gz' %
+                        run_id, input_paths)
                     # We need to compress the temp directory (which should only
                     # contain the log file) and delete all files in there
                     tar = [self.get_tool('tar'),
-                            '--create',
-                            '--gzip',
-                            '--verbose',
-                            '--remove-files',
-                            '--file=%s' % log_file,
-                            temp_dir
-                    ]
+                           '--create',
+                           '--gzip',
+                           '--verbose',
+                           '--remove-files',
+                           '--file=%s' % log_file,
+                           temp_dir
+                           ]
                     tar_exec_group.add_command(tar)

@@ -3,7 +3,8 @@ import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class SamtoolsMerge(AbstractStep):
 
@@ -51,31 +52,45 @@ class SamtoolsMerge(AbstractStep):
                         description='compression level, from 0 to 9 [-1]')
         self.add_option('threads', int, optional=True,
                         description='Number of additional threads to use [0]')
-        self.add_option('R', str, optional=True,
-                        description='merge file in the specified region STR [all]')
-        self.add_option('c', bool, optional=True,
-                        description='Combine @RG headers with colliding IDs [alter IDs to be distinct]')
-        self.add_option('p', bool, optional=True,
-                        description='Combine @PG headers with colliding IDs [alter IDs to be distinct]')
+        self.add_option(
+            'R',
+            str,
+            optional=True,
+            description='merge file in the specified region STR [all]')
+        self.add_option(
+            'c',
+            bool,
+            optional=True,
+            description='Combine @RG headers with colliding IDs [alter IDs to be distinct]')
+        self.add_option(
+            'p',
+            bool,
+            optional=True,
+            description='Combine @PG headers with colliding IDs [alter IDs to be distinct]')
         self.add_option('s', str, optional=True,
                         description='override random seed')
         # options -h (which header is copied to output) and -b a list with input bam filenames are
         # not implemented, because it is taken care of inside uap
-        # in/output format options are not implemented. We stick to BAM for now.
+        # in/output format options are not implemented. We stick to BAM for
+        # now.
 
-        self.add_option('run_id', str, optional=True, default="mergeSBam",
-                        description="A name for the run. Since this step merges multiple samples "
-                        "into a single one, the run_id cannot be the sample name anymore.")
+        self.add_option(
+            'run_id',
+            str,
+            optional=True,
+            default="mergeSBam",
+            description="A name for the run. Since this step merges multiple samples "
+            "into a single one, the run_id cannot be the sample name anymore.")
 
         # [Options for 'dd' and 'pigz':]
-        self.add_option('dd-blocksize', str, optional = True, default = "4M")
-        self.add_option('pigz-blocksize', str, optional = True, default = "4096")
+        self.add_option('dd-blocksize', str, optional=True, default="4M")
+        self.add_option('pigz-blocksize', str, optional=True, default="4096")
 
     def runs(self, run_ids_connections_files):
 
-        options = ['n','r','u','f','1','l','R','c','p','s']
+        options = ['n', 'r', 'u', 'f', '1', 'l', 'R', 'c', 'p', 's']
 
-        set_options = [option for option in options if \
+        set_options = [option for option in options if
                        self.is_option_set_in_config(option)]
 
         option_list = list()
@@ -101,20 +116,19 @@ class SamtoolsMerge(AbstractStep):
             input_paths = run_ids_connections_files[sample_id]["in/alignments"]
             input_list.append(input_paths[0])
 
-
         with self.declare_run(run_id) as run:
 
             out_file = run.add_output_file('alignments',
                                            '%s-samtools-merged.bam' % run_id,
                                            input_paths)
             # log files
-            log_outfile = run.add_output_file('log',
-                                              '%s-samtools-merged-stdout.txt' % run_id,
-                                              input_paths)
-            ## let's see what's provided here
-            err_outfile = run.add_output_file('err',
-                                              '%s-samtools-merged-stderr.txt' % run_id,
-                                              input_paths)
+            log_outfile = run.add_output_file(
+                'log', '%s-samtools-merged-stdout.txt' %
+                run_id, input_paths)
+            # let's see what's provided here
+            err_outfile = run.add_output_file(
+                'err', '%s-samtools-merged-stderr.txt' %
+                run_id, input_paths)
 
             with run.new_exec_group() as exec_group:
 
@@ -124,6 +138,5 @@ class SamtoolsMerge(AbstractStep):
                 samtools_merge.extend(input_list)
 
                 exec_group.add_command(samtools_merge,
-                                       stdout_path = log_outfile,
-                                       stderr_path = err_outfile)
-
+                                       stdout_path=log_outfile,
+                                       stderr_path=err_outfile)

@@ -1,3 +1,4 @@
+from uaperrors import StepError
 import sys
 from abstract_step import *
 import process_pool
@@ -5,7 +6,8 @@ import yaml
 import os
 from logging import getLogger
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class discardLargeSplitsAndPairs (AbstractStep):
 
@@ -26,7 +28,7 @@ class discardLargeSplitsAndPairs (AbstractStep):
         self.set_cores(4)
 
         self.add_connection('in/alignments')  # sam aln
-        self.add_connection('out/alignments') # contains the kept reads
+        self.add_connection('out/alignments')  # contains the kept reads
         self.add_connection('out/log')        # contains the discarded reads
         self.add_connection('out/stats')      # contains a statistic
 
@@ -34,11 +36,17 @@ class discardLargeSplitsAndPairs (AbstractStep):
         self.require_tool('pigz')
         self.require_tool('samtools')
         self.require_tool('discardLargeSplitsAndPairs')
-        
-        self.add_option('N_splits', str, optional = False,
-                        description='Size of the skipped region within a split read (in nucleotides). Split Reads that skip more nt than this value are discarded.')
-        self.add_option('M_mates', str, optional=False,
-                        description='Size of template (in nucleotides) that would arise from a read pair. Read pairs that exceed this value are discarded. ')
+
+        self.add_option(
+            'N_splits',
+            str,
+            optional=False,
+            description='Size of the skipped region within a split read (in nucleotides). Split Reads that skip more nt than this value are discarded.')
+        self.add_option(
+            'M_mates',
+            str,
+            optional=False,
+            description='Size of template (in nucleotides) that would arise from a read pair. Read pairs that exceed this value are discarded. ')
 
     def runs(self, run_ids_connections_files):
 
@@ -49,11 +57,11 @@ class discardLargeSplitsAndPairs (AbstractStep):
                 if input_paths == [None]:
                     run.add_empty_output_connection("alignments")
                 elif len(input_paths) != 1:
-                    logger.error("Expected exactly one alignments file.")
-                    sys.exit(1)
+                    raise StepError(
+                        self, "Expected exactly one alignments file.")
                 else:
                     is_gzipped = True if os.path.splitext(input_paths[0])[1]\
-                                 in ['.gz', '.gzip'] else False
+                        in ['.gz', '.gzip'] else False
 
                 with run.new_exec_group() as exec_group:
 
@@ -70,34 +78,40 @@ class discardLargeSplitsAndPairs (AbstractStep):
                                     '--decompress',
                                     '--processes', str(self.get_cores()),
                                     '--stdout'
-                            ]
+                                    ]
                             pipe.add_command(pigz)
 
                         # 1.2 call samtools to handle also .bam files
                         samtools_view = [self.get_tool('samtools'),
                                          'view', '-h', '-'
-                        ]
+                                         ]
                         pipe.add_command(samtools_view)
-                            
+
                         # 2. command: Process sam file
                         # create the names of the out connections
-                        logfile = run.add_output_file('log',
-                                                      '%s.discarded.sam' % run_id,
-                                                      input_paths)
-                        statsfile = run.add_output_file('stats',
-                                                        '%s.statistics.txt' % run_id,
-                                                        input_paths)
-                        outfile = run.add_output_file('alignments',
-                                                      '%s.reduced.sam' % run_id,
-                                                      input_paths)
+                        logfile = run.add_output_file(
+                            'log', '%s.discarded.sam' %
+                            run_id, input_paths)
+                        statsfile = run.add_output_file(
+                            'stats', '%s.statistics.txt' %
+                            run_id, input_paths)
+                        outfile = run.add_output_file(
+                            'alignments', '%s.reduced.sam' %
+                            run_id, input_paths)
                         # construct cmd
-                        discard_cmd = [self.get_tool('discardLargeSplitsAndPairs'),
-                                       '--N_splits', self.get_option('N_splits'),
-                                       '--M_mates', self.get_option('M_mates'),
-                                       '--statsfile', statsfile,
-                                       '--logfile', logfile,
-                                       '-', outfile]
-                        # execute cmd                              
+                        discard_cmd = [
+                            self.get_tool('discardLargeSplitsAndPairs'),
+                            '--N_splits',
+                            self.get_option('N_splits'),
+                            '--M_mates',
+                            self.get_option('M_mates'),
+                            '--statsfile',
+                            statsfile,
+                            '--logfile',
+                            logfile,
+                            '-',
+                            outfile]
+                        # execute cmd
                         pipe.add_command(discard_cmd)
 
 
@@ -109,11 +123,10 @@ class discardLargeSplitsAndPairs (AbstractStep):
 #                                         stdout_path = outfile)
 
                         # 3. gzip the outfile again
-                        #pigz2 = [self.get_tool('pigz'),
+                        # pigz2 = [self.get_tool('pigz'),
                         #         '--processes', str(self.get_cores()),
                         #         '--stdout']
-                        #outfile = run.add_output_file('alignments',
+                        # outfile = run.add_output_file('alignments',
                         #                              '%s.reduced.sam.gz' % run_id,
                         #                              input_paths)
                         #pipe.add_command(pigz2, stdout_path = outfile)
-                        

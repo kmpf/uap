@@ -1,15 +1,17 @@
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class HtSeqCount(AbstractStep):
     '''
     The htseq-count script counts the number of reads overlapping a feature.
     Input needs to be a file with aligned sequencing reads and a list of genomic
-    features. For more information see::
+    features. For more information see:
 
     http://www-huber.embl.de/users/anders/HTSeq/doc/count.html
     '''
@@ -21,15 +23,12 @@ class HtSeqCount(AbstractStep):
 
         #        self.add_connection('in/alignments')
         # the BAM files
-        self.add_connection(
-            'in/alignments',
-            constraints = {'min_files_per_run': 1, 'max_files_per_run': 1}
-        )
+        self.add_connection('in/alignments')
 
         # the feature file provided by another step (e.g. cuffmerge)
-        self.add_connection('in/features',
-                            constraints = {'total_files': 1}
-        )
+        self.add_connection('in/features', optional=True, format='gtf',
+                            description='reference assembly'
+                            )
 
         # the counts per alignment
         self.add_connection('out/counts')
@@ -39,38 +38,32 @@ class HtSeqCount(AbstractStep):
         self.require_tool('htseq-count')
         self.require_tool('samtools')
 
-
-        self.add_option('merge_id', str, optional=True,
-                        description='The name of the run from assembly merging'
-                        'steps (stringtie_merge, or cuffmerge)',
-                        default = 'magic')
-
         # Path to external feature file if necessary
-        self.add_option('feature-file', str, optional = True)
+        self.add_option('feature-file', str, optional=True)
 
         # [Options for 'htseq-count':]
-        self.add_option('order', str, choices = ['name', 'pos'],
-                        optional = False)
-        self.add_option('stranded', str, choices = ['yes', 'no', 'reverse'],
+        self.add_option('order', str, choices=['name', 'pos'],
                         optional=False)
-        self.add_option('a', int, optional = True)
-        self.add_option('type', str, default = 'exon', optional = True)
-        self.add_option('idattr', str, default='gene_id', optional = True)
-        self.add_option('mode', str, choices = ['union', 'intersection-strict',\
-                                                'intersection-nonempty'],
-                        default = 'union', optional = True)
+        self.add_option('stranded', str, choices=['yes', 'no', 'reverse'],
+                        optional=False)
+        self.add_option('a', int, optional=True)
+        self.add_option('type', str, default='exon', optional=True)
+        self.add_option('idattr', str, default='gene_id', optional=True)
+        self.add_option('mode', str, choices=['union', 'intersection-strict',
+                                              'intersection-nonempty'],
+                        default='union', optional=True)
 
         # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "2M")
-        self.add_option('pigz-blocksize', str, optional = True, default = "2048")
+        self.add_option('dd-blocksize', str, optional=True, default="2M")
+        self.add_option('pigz-blocksize', str, optional=True, default="2048")
         self.add_option('threads', int, default=2, optional=True,
                         description="start <n> threads (default:2)")
 
-    def runs(self, run_ids_connections_files):
+    def runs(self, cc):
         # Compile the list of options
         options = ['order', 'stranded', 'a', 'type', 'idattr', 'mode']
 
-        set_options = [option for option in options if \
+        set_options = [option for option in options if
                        self.is_option_set_in_config(option)]
 
         option_list = list()
@@ -85,27 +78,26 @@ class HtSeqCount(AbstractStep):
         if 'threads' in set_options:
             self.set_cores(self.get_option('threads'))
 
-        merge_id = self.get_option('merge_id')
+        # look for reference assembly in in-connections
+        option_ref_assembly = self.get_option('feature-file')
+        if option_ref_assembly is not None:
+            option_ref_assembly = os.path.abspath(option_ref_assembly)
+            if not os.path.isfile(option_ref_assembly):
+                raise StepError(self, '%s is no file.' %
+                                self.get_option('feature-file'))
+        ref_assembly = cc.look_for_unique('in/features', option_ref_assembly)
+        ref_per_run = cc.all_runs_have_connection('in/features')
 
-        features_path = str
+        allignment_runs = cc.get_runs_with_connections('in/alignments')
+        for run_id in allignment_runs:
 
-        for run_id in run_ids_connections_files.keys():
-            try:
-                features_path = run_ids_connections_files[run_id]['in/features'][0]
-            except KeyError:
-                if self.is_option_set_in_config('feature-file'):
-                    features_path = self.get_option('feature-file')
-
-        if not features_path:
-            features_path = ""
-
-        for run_id in run_ids_connections_files.keys():
-
-            try:
-                input_paths = run_ids_connections_files[run_id]['in/alignments']
-            except KeyError:
-                continue # this happens if feature path is provided by 
-                         # another step instead of via the respective option
+            input_paths = cc[run_id]['in/alignments']
+            if ref_per_run:
+                # all runs come with their own reference assembly
+                ref_assembly = cc['in/features'][0]
+            if option_ref_assembly is None:
+                # include the file in the dependencies
+                input_paths.append(ref_assembly)
 
             # Is the alignment gzipped?
             root, ext = os.path.splitext(input_paths[0])
@@ -121,14 +113,16 @@ class HtSeqCount(AbstractStep):
             elif ext in ['.sam']:
                 is_sam = True
             else:
-                logger.error("Input file not in [SB]am format: %s" % input_paths[0])
-                sys.exit(1)
-
+                raise StepError(
+                    self, "Input file not in [SB]am format: %s" %
+                    input_paths[0])
 
             if not (bool(is_bam) ^ bool(is_sam)):
-                logger.error("Alignment file '%s' is neither SAM nor BAM "
-                             "format" % input_paths[0])
-                sys.exit(1)
+                raise StepError(
+                    self,
+                    "Alignment file '%s' is neither SAM nor BAM "
+                    "format" %
+                    input_paths[0])
 
             alignments_path = input_paths[0]
 
@@ -145,14 +139,16 @@ class HtSeqCount(AbstractStep):
                             # 2. Uncompress file to STDOUT
                             pigz = [self.get_tool('pigz'),
                                     '--decompress',
-                                    '--blocksize', self.get_option('pigz-blocksize'),
-                                    '--processes', str(self.get_cores()),
+                                    '--blocksize',
+                                    self.get_option('pigz-blocksize'),
+                                    '--processes',
+                                    str(self.get_cores()),
                                     '--stdout']
                             pipe.add_command(pigz)
 
                         # 3. Use samtools to generate SAM output
                         if is_bam:
-                            samtools = [self.get_tool('samtools'), 'view', 
+                            samtools = [self.get_tool('samtools'), 'view',
                                         '-']
                             pipe.add_command(samtools)
 
@@ -164,12 +160,12 @@ class HtSeqCount(AbstractStep):
 
                         htseq_count.extend(['--format=sam'])
 
-                        htseq_count.extend(['-', features_path])
+                        htseq_count.extend(['-', ref_assembly])
                         # sys.stderr.write("hts-cmd: %s\n" % htseq_count)
 
                         pipe.add_command(
                             htseq_count,
-                            stdout_path = run.add_output_file(
+                            stdout_path=run.add_output_file(
                                 'counts',
                                 '%s-htseq_counts.txt' % run_id,
                                 input_paths

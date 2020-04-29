@@ -1,9 +1,11 @@
+from uaperrors import StepError
 import sys
 import os
 from logging import getLogger
 from abstract_step import AbstractStep
 
-logger=getLogger('uap_logger')
+logger = getLogger('uap_logger')
+
 
 class SamtoolsStats(AbstractStep):
     '''
@@ -17,30 +19,29 @@ class SamtoolsStats(AbstractStep):
 
     def __init__(self, pipeline):
         super(SamtoolsStats, self).__init__(pipeline)
-        
+
         self.set_cores(1)
-        
+
         self.add_connection('in/alignments')
         self.add_connection('out/stats')
-                
+
         self.require_tool('dd')
         self.require_tool('samtools')
         self.require_tool('pigz')
 
-        # [Options for 'dd':]
-        self.add_option('dd-blocksize', str, optional = True, default = "256k")
+        # Options for dd
+        self.add_option('dd-blocksize', str, optional=True, default="256k")
 
     def runs(self, run_ids_connections_files):
 
         for run_id in run_ids_connections_files.keys():
             # Get input alignments
-            input_paths = run_ids_connections_files[run_id]\
-                          ['in/alignments']
+            input_paths = run_ids_connections_files[run_id]['in/alignments']
+
             if input_paths == [None]:
                 run.add_empty_output_connection("alignments")
             elif len(input_paths) != 1:
-                logger.error("Expected exactly one alignments file.")
-                sys.exit(1)
+                raise StepError(self, "Expected exactly one alignments file.")
 
             with self.declare_run(run_id) as run:
                 for input_path in input_paths:
@@ -55,11 +56,9 @@ class SamtoolsStats(AbstractStep):
                         pipe.add_command(dd)
                         # Assemble samtools stats command
                         samtools = [self.get_tool('samtools'), 'stats']
-                        outfile = basename + '.bam.stats'
-
                         pipe.add_command(samtools,
-                                         stdout_path = run.add_output_file(
+                                         stdout_path=run.add_output_file(
                                              'stats',
                                              basename + '.bam.stats',
-                                             input_paths)
-                                     )
+                                             input_path)
+                                         )

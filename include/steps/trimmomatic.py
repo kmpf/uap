@@ -44,7 +44,7 @@ class Trimmomatic(AbstractStep):
                         description="Path to trimmomatic.jar")
 
     def runs(self, run_ids_connections_files):
-         for run_id in run_ids_connections_files.keys():
+        for run_id in run_ids_connections_files.keys():
             trimmomatic_base = [self.get_tool('java')]
             trimmomatic_base.extend(('-jar', self.get_option('jar_path')))
 
@@ -57,7 +57,7 @@ class Trimmomatic(AbstractStep):
 
             if self.is_option_set_in_config('threads'):
                 trimmomatic_base.extend(('-threads',
-                                        str(self.get_option('threads'))))
+                                         str(self.get_option('threads'))))
 
             if self.is_option_set_in_config('phred-base'):
                 if self.get_option('phred-base') == 64:
@@ -71,31 +71,31 @@ class Trimmomatic(AbstractStep):
                 if option[0] == 'ILLUMINACLIP':
                     assert(len(option) in range(4, 7))
                     if option[1][-6:] != '.fasta':
-                        raise StandardError("Adapters should be provided as "
-                                            "FASTA-file.")
-                    if int(option[2]) not in range(17):
-                        raise StandardError("The alignment-seed can contain up "
-                                            "to 17 mismatches.")
+                        raise Exception("Adapters should be provided as "
+                                        "FASTA-file.")
+                    if int(option[2]) not in list(range(17)):
+                        raise Exception("The alignment-seed can contain up "
+                                        "to 17 mismatches.")
                 elif option[0] == 'SLIDINGWINDOW':
                     assert(len(option[1:]) == 2)
-                    if int(option[2]) not in range(33, 158):
-                        raise StandardError("SLIDINGWINDOW: Specify a valid "
-                                            "PHRED-score.")
+                    if int(option[2]) not in list(range(33, 158)):
+                        raise Exception("SLIDINGWINDOW: Specify a valid "
+                                        "PHRED-score.")
                 elif option[0] == 'MAXINFO':
                     assert(len(option[1:]) == 2)
                     if not 0 <= float(option[2]) <= 1:
-                        raise StandardError("Strictness should be set between "
-                                            " 0.0 and 1.0")
+                        raise Exception("Strictness should be set between "
+                                        " 0.0 and 1.0")
                 elif option[0] == 'LEADING':
                     assert(len(option[1:]) == 1)
-                    if int(option[1]) not in range(33, 158):
-                        raise StandardError("LEADING: Specify a valid "
-                                            "PHRED-score.")
+                    if int(option[1]) not in list(range(33, 158)):
+                        raise Exception("LEADING: Specify a valid "
+                                        "PHRED-score.")
                 elif option[0] == 'TRAILING':
                     assert(len(option[1:]) == 1)
-                    if int(option[1]) not in range(33, 158):
-                        raise StandardError("TRAILING: Specify a valid "
-                                            "PHRED-score.")
+                    if int(option[1]) not in list(range(33, 158)):
+                        raise Exception("TRAILING: Specify a valid "
+                                        "PHRED-score.")
                 elif option[0] == 'CROP':
                     assert(len(option[1:]) == 1)
                     assert(str(option[1]).isdigit())
@@ -107,14 +107,14 @@ class Trimmomatic(AbstractStep):
                     assert(str(option[1]).isdigit())
                 elif option[0] == 'AVGQUAL':
                     assert(len(option[1:]) == 1)
-                    if int(option[1]) not in range(33, 158):
-                        raise StandardError("Specify a valid PHRED-score.")
+                    if int(option[1]) not in list(range(33, 158)):
+                        raise Exception("Specify a valid PHRED-score.")
                 elif option[0] == 'TOPHRED33':
                     assert(len(option) == 1)
                 elif option[0] == 'TOPHRED64':
                     assert(len(option) == 1)
                 else:
-                    raise StandardError("TRIMMOMATIC: Invalid step declared")
+                    raise Exception("TRIMMOMATIC: Invalid step declared")
                 for i in range(len(option)):
                     option[i] = str(option[i])
                 step_list.append(':'.join(option))
@@ -125,8 +125,8 @@ class Trimmomatic(AbstractStep):
                            ['in/first_read']) !=\
                         len(run_ids_connections_files[run_id]
                             ['in/second_read']):
-                        raise StandardError("Incorrect pairing of paired-end-"
-                                            "files in run %s" % run_id)
+                        raise Exception("Incorrect pairing of paired-end-"
+                                        "files in run %s" % run_id)
                 for file_no in range(len(run_ids_connections_files[run_id]
                                          ['in/first_read'])):
 
@@ -140,11 +140,7 @@ class Trimmomatic(AbstractStep):
 
                     with run.new_exec_group() as trimmomatic_exec_group:
                         option_list = list()
-                        option_list.extend(
-                            ('-trimlog',
-                             os.path.join(
-                                 run.get_output_directory_du_jour_placeholder(),
-                                 '%s.log' % file_id)))
+                        option_list.extend(['-trimlog', '%s.log' % file_id])
 
                         option_list.append(
                             run_ids_connections_files[run_id]
@@ -154,22 +150,15 @@ class Trimmomatic(AbstractStep):
                                 run_ids_connections_files[run_id]
                                 ['in/second_read'][file_no])
 
-                        option_list.append(
-                            os.path.join(
-                                run.
-                                get_output_directory_du_jour_placeholder(),
-                                '%s.forward.fastq' % file_id))
+                        option_list.append('%s.forward.fastq' % file_id)
 
                         if paired_end:
                             pe_out_files = ('forward.unpaired',
                                             'reverse',
                                             'reverse.unpaired')
                             for output_file in pe_out_files:
-                                option_list.append(
-                                    os.path.join(
-                                     run.
-                                     get_output_directory_du_jour_placeholder(),
-                                     '%s.%s.fastq' % (file_id, output_file)))
+                                option_list.append('%s.%s.fastq' %
+                                                   (file_id, output_file))
 
                         trimmomatic = trimmomatic_base[:]
                         trimmomatic.extend(option_list)
