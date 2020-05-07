@@ -58,11 +58,3 @@ Gero Doose, Kristin Reiche, Jana Schor, Jörg Hackermüller
 9. [Available Steps](./steps.md)
 10. [API Documentation](./api.md)
 11. [Information for developers](./developers.md)
-
-<dl>
-  <dt>First Term</dt>
-  <dd>This is the definition of the first term.</dd>
-  <dt>Second Term</dt>
-  <dd>This is one definition of the second term. </dd>
-  <dd>This is another definition of the second term.</dd>
-</dl>

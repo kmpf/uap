@@ -1,22 +1,19 @@
-..
+<!--
   This is the documentation for uap. Please keep lines under 80 characters if
   you can and start each sentence on a new line as it decreases maintenance
   and makes diffs more readable.
+-->
 
-.. title:: Command-Line Usage of uap
-
-..
+<!--
   This document aims to describe how to use **uap** via the command-line.
+-->
 
-.. _cli_usage_uap:
+# Command-Line Usage of **uap**
 
-*****************************
-Command-Line Usage of **uap**
-*****************************
+**uap** uses Python's [argparse](https://docs.python.org/2.7/library/argparse.html).
+Therefore, **uap** provides help information on the command-line:
 
-**uap** uses Python's |argparse_link|.
-Therefore, **uap** provides help information on the command-line::
-
+```bash
     $ uap -h
     usage: uap [-h] [-v] [--path] [--debugging] [--profiling] [--version]
                [<project-config>.yaml]
@@ -55,9 +52,10 @@ Therefore, **uap** provides help information on the command-line::
     For complete documentation see: http://uap.readthedocs.org/en/latest/
     For citation use: ...
     For source code see: https://github.com/yigbt/uap
+```
 
 Almost all subcommands require a YAML configuration file (see
-:ref:`analysis_configuration`) **except** for ``uap steps``, which works
+:ref:`analysis_configuration`) **except** for `uap steps`, which works
 independent of an analysis configuration file.
 
 Everytime **uap** is started with a
@@ -105,22 +103,17 @@ scripts:
     user working directory.
 
 
-.. _subcommands:
-
-Subcommands
-===========
+## Subcommands
 
 Here an overview of all the available subcommands are given.
 
-.. _uap-steps:
+### Subcommand: `steps`
 
-``steps`` Subcommand
---------------------
-
-The ``steps`` subcommand lists all available :ref:`source
+The `steps` subcommand lists all available :ref:`source
 <config_file_source_steps>` and :ref:`processing <config_file_processing_steps>`
 steps::
 
+```bash
   $ uap steps -h
   usage: uap [<project-config>.yaml] steps [-h] [--even-if-dirty] [--show STEP]
 
@@ -132,19 +125,17 @@ steps::
                      contains uncommited changes.
                      Otherwise uap will not run.
     --show STEP      Show the details of a specific step.
+```
 
+### Subcommand: `status`
 
-.. _uap-status:
-
-``status`` Subcommand
----------------------
-
-The ``status`` subcommand lists all runs of an analysis.
+The `status` subcommand lists all runs of an analysis.
 A run is describes the concrete processing of a sample by a step.
 Samples are usually defined at the source steps and are then propagated through
 the analysis.
-Here is the help message::
+Here is the help message:
 
+```bash
   $ uap <project-config>.yaml status -h
   usage: uap [<project-config>.yaml] status [-h] [--even-if-dirty]
                                             [--no-tool-checks]
@@ -171,26 +162,28 @@ Here is the help message::
     --graph            Displays the dependency graph of the analysis.
     --hash             Validate sha256sums to detect file changes.
     --sources          Displays only information about the source runs.
+```
 
 At any time, each run is in one of the following states:
 
-* ``[w]aiting`` -- the run is waiting for input files to appear, or its input
+* `[w]aiting` -- the run is waiting for input files to appear, or its input
   files are not up-to-date regarding their respective dependencies
-* ``[r]eady`` -- all input files are present and up-to-date regarding their
+* `[r]eady` -- all input files are present and up-to-date regarding their
   upstream input files (and so on, recursively), the run is ready and can
   be started
-* ``[q]ueued`` -- the run is currently queued and will be started "soon"
+* `[q]ueued` -- the run is currently queued and will be started "soon"
   (only available if you use a compute cluster)
-* ``[e]xecuting`` -- the run is currently running on this or another machine
-* ``[f]inished`` -- all output files are in place and up-to-date
-* ``[c]hanged`` -- all output files are in place but the configuration,
+* `[e]xecuting` -- the run is currently running on this or another machine
+* `[f]inished` -- all output files are in place and up-to-date
+* `[c]hanged` -- all output files are in place but the configuration,
   parent or the commands to execute changed
-* ``[b]ad`` -- an error was caught during execution
-* ``[v]olatilized`` -- the output was uap-volatilize_
+* `[b]ad` -- an error was caught during execution
+* `[v]olatilized` -- the output was uap-volatilize_
 
 
-Here is an example output::
+Here is an example output:
 
+```bash
     $ uap <project-config>.yaml status
     Waiting tasks
     -------------
@@ -207,9 +200,11 @@ Here is an example output::
     [f] M_genitalium_genome/download
 
     tasks: 5 total, 2 waiting, 2 ready, 1 finished
+```
 
-To get a more concise summary, specify ``--summarize``::
+To get a more concise summary, specify `--summarize`:
 
+```bash
     $ uap <project-config>.yaml status --summarize
     Waiting tasks
     -------------
@@ -226,19 +221,23 @@ To get a more concise summary, specify ``--summarize``::
     [f]   1 M_genitalium_genome
 
     tasks: 5 total, 2 waiting, 2 ready, 1 finished
+```
 
-... or print a fancy ASCII art graph with ``--graph``::
+... or print a fancy ASCII art graph with `--graph`:
 
+```bash
     $ uap <project-config>.yaml status --graph
     M_genitalium_genome (raw_url_source) [1 finished]
     └─│─│─│─bowtie2_index (bowtie2_generate_index) [1 ready]
       └─│─│─bwa_index (bwa_generate_index) [1 ready]
         └─│─fasta_index (samtools_faidx) [1 waiting]
           └─segemehl_index (segemehl_generate_index) [1 waiting]
+```
 
 Detailed information about a specific task can be obtained by specifying the
-run ID on the command line::
+run ID on the command line:
 
+```bash
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml status \
     bowtie2_index/Mycoplasma_genitalium_index-download
   output_directory: genomes/bacteria/Mycoplasma_genitalium/bowtie2_index/Mycoplasma_genitalium_index-download-ZsvbSjtK
@@ -254,29 +253,30 @@ run ID on the command line::
   private_info: {}
   public_info: {}
   run_id: Mycoplasma_genitalium_index-download
+```
 
 This is the known data for run
-``bowtie2_index/Mycoplasma_genitalium_index-download``.
+`bowtie2_index/Mycoplasma_genitalium_index-download`.
 It contains information about the output folder, the output files and the
 input files they depend on as well as the run ID and the run state.
 
-Source steps can be viewed separately by specifying ``--sources``::
+Source steps can be viewed separately by specifying `--sources`:
 
+```bash
     $ uap <project-config>.yaml status --sources
     M_genitalium_genome/download
+```
 
-.. _uap-run-info:
+### Subcommand: `run-info`
 
-``run-info`` Subcommand
------------------------
-
-The ``run-info`` subcommand displays the commands issued for a given run.
+The `run-info` subcommand displays the commands issued for a given run.
 The output looks like a BASH script, but might not be functional.
 This is due to the fact that output redirections for some commands
 are missing in the BASH script.
 
-An example output showing the download of the *Mycoplasma genitalium* genome::
+An example output showing the download of the *Mycoplasma genitalium* genome:
 
+```bash
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml run-info --even M_genitalium_genome/download
   #!/usr/bin/env bash
 
@@ -308,26 +308,24 @@ An example output showing the download of the *Mycoplasma genitalium* genome::
   # -----------------------------------
 
   pigz --decompress --stdout --processes 1 genomes/bacteria/Mycoplasma_genitalium/M_genitalium_genome/download-7RncJ4tr/L9PXBmbPKlemghJGNM97JwVuzMdGCA_000027325.1_ASM2732v1_genomic.fna.gz | dd bs=4M of=/home/hubert/develop/uap/example-configurations/genomes/bacteria/Mycoplasma_genitalium/Mycoplasma_genitalium.ASM2732v1.fa
-
+```
 
 This subcommand enables the user to manually run parts of the analysis without
 **uap**.
 That can be helpful for debugging steps during development.
 
-.. _uap-run-locally:
+### Subcommand: `run-locally`
 
-``run-locally`` Subcommand
---------------------------
-
-The ``run-locally`` subcommand runs all non-finished runs (or a specified
+The `run-locally` subcommand runs all non-finished runs (or a specified
 subset) sequentially on the local machine.
 The execution can be cancelled at any time, it won't put your project in a
 unstable state.
-However, if the ``run-locally`` subcommand receives a |sigkill_link| signal, the
+However, if the `run-locally` subcommand receives a
+[SIGKILL](https://en.wikipedia.org/wiki/Unix_signal#SIGKILL) signal, the
 currently executing job will continue to run and the corresponding run
-will be reported as ``executing`` by calling ``status`` subcommand for five more
-minutes (|sigterm_link| should be fine and exit gracefully but
-*doesn't just yet*).
+will be reported as `executing` by calling `status` subcommand for five more
+minutes ([SIGTERM](https://en.wikipedia.org/wiki/Unix_signal#SIGTERM) should be
+fine and exit gracefully but *doesn't just yet*).
 After that time, you will be warned that a job is marked as being currently
 run but no activity has been seen for a while, along with further
 instructions about what to do in such a case (don't worry, it shouldn't
@@ -336,8 +334,9 @@ happen by accident).
 Specify a set of run IDs to execute only those runs.
 Specify the name of a step to execute all ready runs of that step.
 
-This subcommands usage information::
+This subcommands usage information:
 
+```bash
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml run-locally -h
   usage: uap [<project-config>.yaml] run-locally [-h] [--even-if-dirty]
                                                  [--no-tool-checks] [--force]
@@ -367,22 +366,20 @@ This subcommands usage information::
     --no-tool-checks  This option disables the otherwise mandatory checks for tool availability and version
     --force           Force to overwrite changed tasks.
     --ignore          Ignore chages of tasks and consider them finished.
+```
 
-.. NOTE:: Why is it safe to cancel the pipeline?
-    The pipeline is written in a way which expects processes to fail or
-    cluster jobs to disappear without notice.
-    This problem is mitigated by a design which relies on file presence and
-    file timestamps to determine whether a run is finished or not.
-    Output files are automatically written to temporary locations and later
-    moved to their real target directory, and it is not until the last file
-    rename operation has finished that a run is regarded as finished.
+> **NOTE**: Why is it safe to cancel the pipeline?
+  The pipeline is written in a way which expects processes to fail or
+  cluster jobs to disappear without notice.
+  This problem is mitigated by a design which relies on file presence and
+  file timestamps to determine whether a run is finished or not.
+  Output files are automatically written to temporary locations and later
+  moved to their real target directory, and it is not until the last file
+  rename operation has finished that a run is regarded as finished.
 
-.. _uap-submit-to-cluster:
+### Subcommand: `submit-to-cluster`
 
-``submit-to-cluster`` Subcommand
---------------------------------
-
-The ``submit-to-cluster`` subcommand determines which runs still need to be
+The `submit-to-cluster` subcommand determines which runs still need to be
 executed and which supported cluster engine is available.
 It submits a job for every run to the cluster if a cluster engine could be
 detected.
@@ -394,8 +391,9 @@ For more information read about the
 Each submitted job calls **uap** with the ``run-locally`` subcommand on the
 executing cluster node.
 
-Here is the usage information::
+Here is the usage information:
 
+```bash
   $ uap index_mycoplasma_genitalium_ASM2732v1_genome.yaml submit-to-cluster -h
   usage: uap [<project-config>.yaml] submit-to-cluster [-h] [--even-if-dirty]
                                                        [--no-tool-checks]
@@ -418,17 +416,16 @@ Here is the usage information::
     --legacy           Use none array cluster submission.
     --force            Force to overwrite changed tasks.
     --ignore           Ignore chages of tasks and consider them finished.
+```
 
-.. _uap-fix-problems:
+### Subcommand: `fix-problems`
 
-``fix-problems`` Subcommand
----------------------------
-
-The ``fix-problems`` subcommand removes temporary files written by **uap** if
+The `fix-problems` subcommand removes temporary files written by **uap** if
 they are not required anymore.
 
-Here is the usage information::
+Here is the usage information:
 
+```bash
   $ uap <project-config>.yaml fix-problems -h
   usage: uap [<project-config>.yaml] fix-problems [-h] [--even-if-dirty]
                                                   [--no-tool-checks]
@@ -448,28 +445,25 @@ Here is the usage information::
                           If the sha256sum of the result is correct, reset the modification date.
     --details             Displays information about the files causing problems.
     --srsly               Delete problematic files.
-
+```
 
 **uap** writes temporary files to indicate if a job is queued or executed.
 Sometimes (especially on the compute cluster) jobs fail, without even starting
 **uap**.
 This leaves the temporary file, written on job submission, indicating that a run
 was queued on the cluster without process (because it already failed).
-The ``status`` subcommand will inform the user if ``fix-problems`` needs to be
+The `status` subcommand will inform the user if `fix-problems` needs to be
 executed to clean up these files.
 
 In another scenario the output of the **uap** was copied to a new location.
 This may have changed the modification dates the output files and the **uap**
 will not consider them finished if the order of modification contradicts
-the dependencies. ``--file-modification-date`` changes them to when the task completed
-but only if the sha256sums are still correct and the ``--srsly`` argument is passed.
+the dependencies. `--file-modification-date` changes them to when the task completed
+but only if the sha256sums are still correct and the `--srsly` argument is passed.
 
-.. _uap-volatilize:
+### Subcommand: `volatilize`
 
-``volatilize`` Subcommand
--------------------------
-
-The ``volatilize`` subcommand is useful to reduce the required disk space of
+The `volatilize` subcommand is useful to reduce the required disk space of
 your analysis.
 It works only if the :ref:`_volatile <config_file_volatile>` keyword is set in
 the :ref:`analysis configuration file <analysis_configuration>` for.
@@ -477,8 +471,9 @@ As already mentioned there, steps marked as ``_volatile`` compute their output
 files as normal but can be replaced by placeholder files if their dependent
 steps are finished.
 
-This subcommand provides usage information::
+This subcommand provides usage information:
 
+```bash
   $ uap <project-config>.yaml volatilize -h
 
   usage: uap [<project-config>.yaml] volatilize [-h] [--even-if-dirty]
@@ -493,23 +488,22 @@ This subcommand provides usage information::
                      Otherwise uap will not run.
     --details        Shows which files can be volatilized.
     --srsly          Replaces files marked for volatilization with a placeholder.
+```
 
-After running ``volatilize --srsly`` the output files of the volatilized step
+After running `volatilize --srsly` the output files of the volatilized step
 are replaced by placeholder files.
 The placeholder files have the same name as the original files suffixed with
-``.volatile.placeholder.yaml``.
+`.volatile.placeholder.yaml`.
 
-.. _uap-render:
+### Subcommand: `render`
 
-``render`` Subcommand
----------------------
-
-The ``render`` subcommand generates graphs using graphviz.
+The `render` subcommand generates graphs using graphviz.
 The graphs either show the complete analysis or the execution of a single run.
-At the moment ``--simple`` only has an effect in combination with ``--steps``.
+At the moment `--simple` only has an effect in combination with `--steps`.
 
-This subcommand provides usage information::
+This subcommand provides usage information:
 
+```bash
   $ uap <project-config>.yaml render -h
   usage: uap [<project-config>.yaml] render [-h] [--even-if-dirty] [--files]
                                             [--steps] [--simple]
@@ -536,15 +530,4 @@ This subcommand provides usage information::
     --orientation {left-to-right,right-to-left,top-to-bottom}
                           Defines orientation of the graph.
                           Default: 'top-to-bottom'
-
-.. |argparse_link| raw:: html
-
-   <a href="https://docs.python.org/2.7/library/argparse.html" target="_blank">argparse</a>
-
-.. |sigkill_link| raw:: html
-
-   <a href="https://en.wikipedia.org/wiki/Unix_signal#SIGKILL" target="_blank">SIGKILL</a>
-
-.. |sigterm_link| raw:: html
-
-   <a href="https://en.wikipedia.org/wiki/Unix_signal#SIGTERM" target="_blank">SIGTERM</a>
+```

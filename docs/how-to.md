@@ -12,7 +12,8 @@
 
 At first, you need to install **uap** (see [Installation](./installation.md)).
 After successfully finishing the installation of **uap** example
-analysis can be found in the folder ``example-configurations``.
+analysis can be found in the folder
+[`example-configurations`](../example-configurations).
 
 Let's jump head first into **uap** and have a look at some examples:
 
@@ -153,7 +154,8 @@ its :ref:`uap_status`:
   [uap][ERROR]: index_mycoplasma_genitalium_ASM2732v1_genome.yaml: Destination path does not exist: genomes/bacteria/Mycoplasma_genitalium/
 ```
 
-Oops, the ``destination_path`` does not exist (see :ref:`config-file-destination-path`).
+Oops, the `destination_path` does not exist (see
+[`destination_path`](./configuration.md#section-destination-path)).
 Create it and start again:
 
 ```bash
@@ -187,7 +189,8 @@ A run is always in one of these states:
 
 If the command still fails, please check that the tools defined in
 `index_mycoplasma_genitalium_ASM2732v1_genome.yaml` are available in your
-environment (see :ref:`config_file_tools`).
+environment (see
+[section `tools`](./configuration.md#section-tools)).
 If you really want to download and index the genome tell **uap** to start
 the workflow:
 
@@ -342,8 +345,8 @@ B. *De novo* Transcript Assembly
 .. NOTE:: Before computing ``2014-RNA_CaptureSeq-Mercer_et_al.yaml``
           please make sure that, the following examples were executed:
 
-          - ``index_homo_sapiens_hg19_genome.yaml``
-          - ``download_human_gencode_release.yaml``
+          - `index_homo_sapiens_hg19_genome.yaml`
+          - `download_human_gencode_release.yaml`
 
 ### ChIPseq Example: Reanalysing Data from [Barski *et al.*, Cell (2007)](http://www.ncbi.nlm.nih.gov/pubmed/17512414)
 
@@ -362,63 +365,66 @@ contained in these files:
 
 .. _example_barski_download:
 
-`2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml`
-    Downloads the data published in the paper [Barski *et al.*, Cell (2007)](http://www.ncbi.nlm.nih.gov/pubmed/17512414).
+### `2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml`
 
-    :Max. memory: ~? GB
-    :Disk usage: ~17 GB
-    :Run time: depends on your internet connection
+Downloads the data published in the paper
+[Barski *et al.*, Cell (2007)](http://www.ncbi.nlm.nih.gov/pubmed/17512414).
 
-    Downloads the data published in the paper [Barski *et al.*, Cell (2007)](http://www.ncbi.nlm.nih.gov/pubmed/17512414).
+Max. memory: ~? GB
+Disk usage: ~17 GB
+Run time: depends on your internet connection
 
-    Required tools:
+Downloads the data published in the paper
+[Barski *et al.*, Cell (2007)](http://www.ncbi.nlm.nih.gov/pubmed/17512414).
 
-        * [curl](https://curl.haxx.se/)
+Required tools:
 
-        * [pigz](http://zlib.net/pigz/)
+* [curl](https://curl.haxx.se/)
+* [pigz](http://zlib.net/pigz/)
 
 .. _example_barski:
-    
-`2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml`
-    At first the downloaded FASTQ files are grouped by sample.
-    All files per sample are merged. 
-    Sequencing quality is controlled by
-    [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
-    and [FASTX-Toolkit](http://hannonlab.cshl.edu/fastx_toolkit/).
-    Adapter sequences are removed from the reads before they are mapped to 
-    the human genome.
-    Reads are mapped with
-    [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml),
-    [bwa](http://bio-bwa.sourceforge.net/), and
-    [tophat2](https://ccb.jhu.edu/software/tophat/index.shtml).
-    Again mapping with
-    [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/)
-    is disabled by default due to its high resource requirements.
-    Library complexity is estimated using
-    [preseq](http://smithlabresearch.org/software/preseq/).
-    After the mapping duplicate reads are removed using
-    [Picard](http://broadinstitute.github.io/picard/).
-    Finally enriched regions are detected with
-    [MACS2](https://github.com/taoliu/MACS).
 
-    :Max. memory: ~? GB
-    :Disk usage: ~51 GB
-    :Run time: ~several hours (on a cluster), ~1 day (on a single machine)
+### `2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml`
 
-    Required tools:
+At first the downloaded FASTQ files are grouped by sample.
+All files per sample are merged. 
+Sequencing quality is controlled by
+[FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+and [FASTX-Toolkit](http://hannonlab.cshl.edu/fastx_toolkit/).
+Adapter sequences are removed from the reads before they are mapped to 
+the human genome.
+Reads are mapped with
+[bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml),
+[bwa](http://bio-bwa.sourceforge.net/), and
+[tophat2](https://ccb.jhu.edu/software/tophat/index.shtml).
+Again mapping with
+[segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/)
+is disabled by default due to its high resource requirements.
+Library complexity is estimated using
+[preseq](http://smithlabresearch.org/software/preseq/).
+After the mapping duplicate reads are removed using
+[Picard](http://broadinstitute.github.io/picard/).
+Finally enriched regions are detected with
+[MACS2](https://github.com/taoliu/MACS).
 
-        * [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml)
-        * [bwa](http://bio-bwa.sourceforge.net/)
-        * [cutadapt](https://github.com/marcelm/cutadapt)
-        * [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
-        * [FASTX-Toolkit](http://hannonlab.cshl.edu/fastx_toolkit/)
-        * [MACS2](https://github.com/taoliu/MACS)
-        * [Picard](http://broadinstitute.github.io/picard/)
-        * [pigz](http://zlib.net/pigz/)
-        * [preseq](http://smithlabresearch.org/software/preseq/)
-        * [samtools](http://www.htslib.org/)
-        * [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/)
-        * [tophat2](https://ccb.jhu.edu/software/tophat/index.shtml)
+Max. memory: ~? GB
+Disk usage: ~51 GB
+Run time: ~several hours (on a cluster), ~1 day (on a single machine)
+
+Required tools:
+
+* [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml)
+* [bwa](http://bio-bwa.sourceforge.net/)
+* [cutadapt](https://github.com/marcelm/cutadapt)
+* [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+* [FASTX-Toolkit](http://hannonlab.cshl.edu/fastx_toolkit/)
+* [MACS2](https://github.com/taoliu/MACS)
+* [Picard](http://broadinstitute.github.io/picard/)
+* [pigz](http://zlib.net/pigz/)
+* [preseq](http://smithlabresearch.org/software/preseq/)
+* [samtools](http://www.htslib.org/)
+* [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/)
+* [tophat2](https://ccb.jhu.edu/software/tophat/index.shtml)
 
 HINT: The usage of [Picard](http://broadinstitute.github.io/picard/) can differ
 a lot between systems.
@@ -429,20 +435,21 @@ On Ubuntu systems it can be called like this:
 $ picard-tools --version
 ```
 
-If you use it as recommended at [Picard](http://broadinstitute.github.io/picard/), it is called like this:
+If you use it as recommended at
+[Picard](http://broadinstitute.github.io/picard/), it is called like this:
 
 ```bash
 $ java -jar /path/to/picard.jar -h
 ```
 
 Please check how to use it on your system and adjust the example
-configuration accordingly (see :ref:`config_file_tools`).
+configuration accordingly (see [`tools`](./configuration.md#section-tools)).
             
-NOTE: Before computing ``2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml``
+NOTE: Before computing `2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml`
 please make sure that, the following examples were executed:
 
-- ``index_homo_sapiens_hg19_genome.yaml``
-- ``download_human_gencode_release.yaml``
+- `index_homo_sapiens_hg19_genome.yaml`
+- `download_human_gencode_release.yaml`
 
 ## Create Your Own Workflow
 
@@ -452,7 +459,5 @@ If you are fine with what you saw.
 Although writing the configuration may seem a bit complicated, the trouble 
 pays off later because further interaction with the pipeline is quite simple.
 The structure and content of the configuration files is very detailed described
-on another page (see :ref:`analysis_configuration`).
-
-
-
+on another page (see
+[Analysis Configuration File](./configuration.md#analsis-configuration-file)).

@@ -100,13 +100,16 @@ sequencing reads, genome sequences, genome annotations, etc..
 The recommended workflow to analyse data with **uap** is:
 
 1. Install **uap** (see :doc:`installation`)
-2. Optionally: Extend **uap** by adding new steps (see :doc:`extension`)
+2. Optionally: Extend **uap** by adding new steps (see
+   [Add New Functionality](./extension.md))
 3. Write a configuration file to setup your analysis (see
-   :doc:`configuration`)
-4. Start the analysis locally (see :ref:`run-locally <uap-run-locally>`) or
+   [Analysis Configuration File](./configuration.md))
+4. Start the analysis locally (see
+   [`run-locally`](./interaction.md#subcommand-run-locally)) or
    submit it to a cluster (see
-   :ref:`submit-to-cluster <uap-submit-to-cluster>`)
-5. Follow the progress of the analysis (see :ref:`status <uap-status>`)
+   [`submit-to-cluster`](./interaction.md#subcommand-submit-to-cluster))
+5. Follow the progress of the analysis (see
+   [`status`](./interaction.md#subcommand-status))
 6. Share your extensions with the public (send us a pull request via github)
 
 A **finished** analysis leaves the user with:

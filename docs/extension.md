@@ -268,7 +268,7 @@ What should happen if we are told to concatenate all files from all input runs?
 We have to create a single run with a new run ID 'all_files'.
 The run consists of a `exec_group` that runs the `cat` command.
 
-.. note::
+> **NOTE**:
 
    An `exec_group` is a list of commands which are executed in one go.
    You might create multiple `exec_group` if you need to make sure a set of
@@ -360,22 +360,23 @@ That's it.
 You created your first **uap** processing step.
 
 
-Step 5: Add the new step to **uap**
-===================================
+### Step 5: Add the new step to **uap**
 
 You have to make the new step known to **uap**.
-Save the complete file into **uap**'s ``include/steps`` folder.
-Processing step files are located at **uap**'s ``include/steps/`` folder
-and source step files at **uap**'s ``include/sources/`` folder.
+Save the complete file into **uap**'s `include/steps` folder.
+Processing step files are located at **uap**'s `include/steps/` folder
+and source step files at **uap**'s `include/sources/` folder.
 
 You can control that your step is correctly "installed" if its included in the
-list of all source and processing steps::
+list of all source and processing steps:
 
+```bash
   $ ls -la $(uap --path)/include/sources
   ... Lists all available source step files
 
   $ ls -la $(uap --path)/include/steps
   ... Lists all available processing step files
+```
 
 You can also use **uap**'s :ref:`steps <uap-steps>` subcommand to get
 information about installed steps.
@@ -385,7 +386,7 @@ in an :ref:`analysis configuration file <analysis_configuration>`.
 
 A potential example YAML file named ``test.yaml`` could look like this:
 
-.. code-block:: yaml
+```yaml
 
     destination_path: example-out/test/
 
@@ -414,12 +415,14 @@ A potential example YAML file named ``test.yaml`` could look like this:
             path: cat
             get_version: '--version'
             exit_code: 0
+```
 
 You need to create the destination path and some text files matching the
-pattern ``example-data/text-files/*.txt``.
-Also you see the work of the ``_connect`` keyword in play.
-Check the status of the configured analysis::
+pattern `example-data/text-files/*.txt`.
+Also you see the work of the `_connect` keyword in play.
+Check the status of the configured analysis:
 
+```bash
   $ uap test.yaml status
   Ready runs
   ----------
@@ -429,14 +432,9 @@ Check the status of the configured analysis::
   [r] cat/Hello_world
 
   runs: 4 total, 4 ready
+```
 
-
-
-.. _extending_best_practices:
-
-**************
-Best Practices
-**************
+## Best Practices
 
 There are a couple of things you should keep in mind while implementing new
 steps or modifying existing ones:
@@ -451,42 +449,32 @@ steps or modifying existing ones:
   That way errors show up before submitting jobs to the cluster and
   cluster waiting time is not wasted.
 * Make sure that all tools which you request with ``self.require_tool()``
-  are also used in the ``runs()`` method.
-  Use the ``__init__()`` method to request tools.
-* Always call ``os.path.abspath`` on files that are passed via an option
+  are also used in the `runs()` method.
+  Use the `__init__()` method to request tools.
+* Always call `os.path.abspath` on files that are passed via an option
   to enable files references relativ to an uap config for your step.
 * Make sure your disk access is as cluster-friendly as possible (which
   primarily means using large block sizes and preferably no seek operations).
-  If possible, use pipelines to wrap your commands in ``pigz`` or ``dd``
+  If possible, use pipelines to wrap your commands in `pigz` or `dd`
   commands.
   Make the used block size configurable.
   Although this is not possible in every case (for example when seeking
   in files is involved), it is straightforward with tools that read a
-  continuous stream from ``stdin`` and write a continuous stream to
-  ``stdout``.
-* Always use ``os.path.join(...)`` to handle paths.
-* Use bash commands like ``mkfifo`` over python library equivalents like
-  ``os.mkfifo()``.
-  The ``mkfifo`` command is hashed while an ``os.mkfifo()`` is not.
+  continuous stream from `stdin` and write a continuous stream to
+  `stdout`.
+* Always use `os.path.join(...)` to handle paths.
+* Use bash commands like `mkfifo` over python library equivalents like
+  `os.mkfifo()`.
+  The `mkfifo` command is hashed while an `os.mkfifo()` is not.
 * Keep your steps as flexible as possible.
   You don't know what other user might need, so let them decide.
 
 
-Usage of ``dd`` and ``mkfifo``
-==============================
+### Usage of `dd` and `mkfifo`
 
-**uap** relies often on ``dd`` and FIFOs to process data with fewer
+**uap** relies often on `dd` and FIFOs to process data with fewer
 disk read-write operations.
-Please provide a step option to adjust the ``dd`` blocksize (this option
-is usually called ``dd-blocksize``).
+Please provide a step option to adjust the `dd` blocksize (this option
+is usually called `dd-blocksize`).
 Create your steps in a way that they perform the least filesystem operations.
 Some systems might be very sensitive to huge numbers of read-write operations.
-
-
-.. |sphinx| raw:: html
-
-   <a href="https://www.sphinx-doc.org/" target="_blank">sphinx</a>
-
-.. |reStructuredText| raw:: html
-
-   <a href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html" target="_blank">reStructuredText</a>
