@@ -85,9 +85,10 @@ This workflow is quite fast because it uses the very small genome of
 
 ### `index_homo_sapiens_hg19_chr21.yaml`
 
-Downloads chromosome 21 of the *Homo sapiens* genome, generates the indices
-for [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml),
-[bwa](http://bio-bwa.sourceforge.net/), and [samtools](http://www.htslib.org/).
+Downloads chromosome 21 of the *Homo sapiens* genome, generates the indices for
+[bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml),
+[bwa](http://bio-bwa.sourceforge.net/), and
+[samtools](http://www.htslib.org/).
 This minimal version should work just fine.
 Users can uncomment steps to download the complete genome.
 This would substantially increase the required computational resources.
@@ -95,9 +96,18 @@ The [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/) index
 creation is commented out due to its high memory consumption (~50-60 GB), if
 working with the whole genome.
 
-Max. memory: ~2 GB
-Disk usage: ~240 MB
-Run time: several minutes
+* Max. memory: ~2 GB
+* Disk usage: ~240 MB
+* Run time: several minutes
+* Required tools:
+  * [bwa](http://bio-bwa.sourceforge.net/)
+  * [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml)
+  * [curl](https://curl.haxx.se/)
+  * [fetchChromSizes](http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/fetchChromSizes)
+  * [pigz](http://zlib.net/pigz/)
+  * [samtools](http://www.htslib.org/)
+  * [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/) (if uncommented)
+
 
 ### `index_homo_sapiens_hg19_genome.yaml`
 
@@ -113,15 +123,14 @@ The [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/) index
 creation is commented out due to its high memory consumption.
 Please make sure to only run it on well equipped machines.
 
-Required tools:
-
-* [bwa](http://bio-bwa.sourceforge.net/)
-* [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml)
-* [curl](https://curl.haxx.se/)
-* [fetchChromSizes](http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/fetchChromSizes)
-* [pigz](http://zlib.net/pigz/)
-* [samtools](http://www.htslib.org/)
-* [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/) (if uncommented)
+* Required tools:
+  * [bwa](http://bio-bwa.sourceforge.net/)
+  * [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml)
+  * [curl](https://curl.haxx.se/)
+  * [fetchChromSizes](http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/fetchChromSizes)
+  * [pigz](http://zlib.net/pigz/)
+  * [samtools](http://www.htslib.org/)
+  * [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/) (if uncommented)
     
 ### `download_human_gencode_release.yaml`
 
@@ -130,23 +139,19 @@ non-coding RNA genes.
 This workflow only downloads files from the internet and and thus should
 work on any machine.
 
-Max. memory: depends on your machine
-
-Disk usage: ~1,2 GB
-
-Run time: depends on your internet connection
-
-Required tools:
-
-* [bwa](http://bio-bwa.sourceforge.net/)
-* [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml)
-* [curl](https://curl.haxx.se/)
-* [fetchChromSizes](http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/fetchChromSizes)
-* [pigz](http://zlib.net/pigz/)
-* [samtools](http://www.htslib.org/)
+* Max. memory: depends on your machine
+* Disk usage: ~1,2 GB
+* Run time: depends on your internet connection
+* Required tools:
+  * [bwa](http://bio-bwa.sourceforge.net/)
+  * [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml)
+  * [curl](https://curl.haxx.se/)
+  * [fetchChromSizes](http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/fetchChromSizes)
+  * [pigz](http://zlib.net/pigz/)
+  * [samtools](http://www.htslib.org/)
 
 Let's have a look at the *Mycoplasma genitalium* example workflow by checking
-its :ref:`uap_status`:
+its [status](./interaction.md#subcommand-status):
 
 ```bash
   $ cd <uap-path>/example-configurations/
@@ -155,7 +160,7 @@ its :ref:`uap_status`:
 ```
 
 Oops, the `destination_path` does not exist (see
-[`destination_path`](./configuration.md#section-destination-path)).
+[section `destination_path`](./configuration.md#section-destination-path)).
 Create it and start again:
 
 ```bash
