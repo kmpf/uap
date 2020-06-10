@@ -280,9 +280,9 @@ a look at some example analysis.
 The analysis of high-throughput sequencing (HTS) data usually start with some
 basic steps.
 
-1. Conversion of the raw sequencing data to, most likely, fastq(.gz) files
-2. Removal of adapter sequences from the sequencing reads
-3. Alignment of the sequencing reads onto the reference genome
+**Step 1**: Conversion of the raw sequencing data to, most likely, fastq(.gz) files
+**Step 2**: Removal of adapter sequences from the sequencing reads
+**Step 3**: Alignment of the sequencing reads onto the reference genome
 
 These basic steps can be followed up with a lot of different analysis steps.
 The following analysis examples illustrate how to perform the basic as well as
@@ -294,64 +294,70 @@ RNAseq analysis often aims at the discovery of differentially expressed
 (known) transcripts. Therefore mappped reads for at least two different samples
 have to be available.
 
-A. Differential Expression Analysis
+#### Differential Expression Analysis
 
-   4. Get annotation set (for e.g. genes, transcripts, ...)
-   5. Count the number of reads overlapping the annotation
-   6. Perform statistical analysis, based on counts 
+**Step 4**: Get annotation set (for e.g. genes, transcripts, ...)
+**Step 5**: Count the number of reads overlapping the annotation
+**Step 6**: Perform statistical analysis, based on counts 
 
 Another common analysis performed with RNAseq data is the identification of
 novel tarnscripts. This approach is useful to identify tissue-specific
 transcipts.
-      
-B. *De novo* Transcript Assembly
-   
-   4. Apply transcript assembly tool on mapped reads
+
+#### *De novo* Transcript Assembly
+
+**Step 4**: Apply transcript assembly tool on mapped reads
 
 `2014-RNA_CaptureSeq-Mercer_et_al_download.yaml`
-    Downloads the data published in the paper
-    [Mercer *et al.*, Nature Protoc. (2014)](https://www.ncbi.nlm.nih.gov/pubmed/24705597).
 
-    :Max. memory: ~? GB
-    :Disk usage: ~12 GB
-    :Run time: minutes (depending on your internet connection)
+Downloads the data published in the paper
+[Mercer *et al.*, Nature Protoc. (2014)](https://www.ncbi.nlm.nih.gov/pubmed/24705597).
 
-    Required tools:
-
-        * [curl](https://curl.haxx.se/)
-        * [pigz](http://zlib.net/pigz/)
+* Max. memory: ~? GB
+* Disk usage: ~12 GB
+* Run time: minutes (depending on your internet connection)
+* Required tools:
+  * [curl](https://curl.haxx.se/)
+  * [pigz](http://zlib.net/pigz/)
 
 `2014-RNA_CaptureSeq-Mercer_et_al.yaml`
-    The downloaded FASTQ files get analysed by [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) and
-    [FASTX-Toolkit](http://hannonlab.cshl.edu/fastx_toolkit/).
-    The reads are afterwards mapped to the human genome with [tophat2](https://ccb.jhu.edu/software/tophat/index.shtml).
-    The mapped reads are afterwards sorted by position using [samtools](http://www.htslib.org/).
-    [htseq-count](http://www-huber.embl.de/users/anders/HTSeq/doc/count.html) is used to count the mapped reads for every exon of
-    the annotation.
-    [cufflinks](http://cufflinks.cbcb.umd.edu/) is used to perform *de novo* transcript assembly.
-    The usage of [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/) is **disabled** by default.
-    But it can be enabled and combined with [cufflinks](http://cufflinks.cbcb.umd.edu/) *de novo*
-    transcript assembly employing our **s2c** python script.
 
-    :Max. memory: ~? GB
-    :Disk usage: ~3 GB
-    :Run time: several hours
+The downloaded FASTQ files get analysed by
+[FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) and
+[FASTX-Toolkit](http://hannonlab.cshl.edu/fastx_toolkit/).
+The reads are afterwards mapped to the human genome with
+[tophat2](https://ccb.jhu.edu/software/tophat/index.shtml).
+The mapped reads are afterwards sorted by position using
+[samtools](http://www.htslib.org/).
+[htseq-count](http://www-huber.embl.de/users/anders/HTSeq/doc/count.html) is
+used to count the mapped reads for every exon of the annotation.
+[cufflinks](http://cufflinks.cbcb.umd.edu/) is used to perform *de novo*
+transcript assembly.
+The usage of [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/) is
+**disabled** by default.
+But it can be enabled and combined with
+[cufflinks](http://cufflinks.cbcb.umd.edu/) *de novo* transcript assembly
+employing our **s2c** python script.
 
-        * [cufflinks](http://cufflinks.cbcb.umd.edu/)
-        * [cutadapt](https://github.com/marcelm/cutadapt)
-        * [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
-        * [FASTX-Toolkit](http://hannonlab.cshl.edu/fastx_toolkit/)
-        * [htseq-count](http://www-huber.embl.de/users/anders/HTSeq/doc/count.html)
-        * [pigz](http://zlib.net/pigz/)
-        * [samtools](http://www.htslib.org/)
-        * [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/) (if uncommented)
-        * [tophat2](https://ccb.jhu.edu/software/tophat/index.shtml)
+* Max. memory: ~? GB
+* Disk usage: ~3 GB
+* Run time: several hours
+* Required tools:
+  * [cufflinks](http://cufflinks.cbcb.umd.edu/)
+  * [cutadapt](https://github.com/marcelm/cutadapt)
+  * [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+  * [FASTX-Toolkit](http://hannonlab.cshl.edu/fastx_toolkit/)
+  * [htseq-count](http://www-huber.embl.de/users/anders/HTSeq/doc/count.html)
+  * [pigz](http://zlib.net/pigz/)
+  * [samtools](http://www.htslib.org/)
+  * [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/) (if uncommented)
+  * [tophat2](https://ccb.jhu.edu/software/tophat/index.shtml)
                
-.. NOTE:: Before computing ``2014-RNA_CaptureSeq-Mercer_et_al.yaml``
-          please make sure that, the following examples were executed:
+**NOTE**: Before computing ``2014-RNA_CaptureSeq-Mercer_et_al.yaml``
+please make sure that, the following examples were executed:
 
-          - `index_homo_sapiens_hg19_genome.yaml`
-          - `download_human_gencode_release.yaml`
+* `index_homo_sapiens_hg19_genome.yaml`
+* `download_human_gencode_release.yaml`
 
 ### ChIPseq Example: Reanalysing Data from [Barski *et al.*, Cell (2007)](http://www.ncbi.nlm.nih.gov/pubmed/17512414)
 
@@ -361,35 +367,27 @@ antibodies. The enrichment detection is normally performed by so called peak
 calling programs. The data is prone to duplicate reads from PCR due to relatively
 low amounts of input DNA. So these steps follow the basic ones:
 
-4. Duplicate removal
-5. Peak calling
+**Step 4**: Duplicate removal
+**Step 5**: Peak calling
 
 The analysis of data published in the paper
 [Barski *et al.*, Cell (2007)](http://www.ncbi.nlm.nih.gov/pubmed/17512414) is
 contained in these files:
 
-.. _example_barski_download:
-
-### `2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml`
+`2007-CD4+_T_Cell_ChIPseq-Barski_et_al_download.yaml`
 
 Downloads the data published in the paper
 [Barski *et al.*, Cell (2007)](http://www.ncbi.nlm.nih.gov/pubmed/17512414).
 
-Max. memory: ~? GB
-Disk usage: ~17 GB
-Run time: depends on your internet connection
+* Max. memory: ~? GB
+* Disk usage: ~17 GB
+* Run time: depends on your internet connection
+* Required tools:
+  * [curl](https://curl.haxx.se/)
+  * [pigz](http://zlib.net/pigz/)
 
-Downloads the data published in the paper
-[Barski *et al.*, Cell (2007)](http://www.ncbi.nlm.nih.gov/pubmed/17512414).
 
-Required tools:
-
-* [curl](https://curl.haxx.se/)
-* [pigz](http://zlib.net/pigz/)
-
-.. _example_barski:
-
-### `2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml`
+`2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml`
 
 At first the downloaded FASTQ files are grouped by sample.
 All files per sample are merged. 
@@ -412,26 +410,24 @@ After the mapping duplicate reads are removed using
 Finally enriched regions are detected with
 [MACS2](https://github.com/taoliu/MACS).
 
-Max. memory: ~? GB
-Disk usage: ~51 GB
-Run time: ~several hours (on a cluster), ~1 day (on a single machine)
+* Max. memory: ~? GB
+* Disk usage: ~51 GB
+* Run time: ~several hours (on a cluster), ~1 day (on a single machine)
+* Required tools:
+  * [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml)
+  * [bwa](http://bio-bwa.sourceforge.net/)
+  * [cutadapt](https://github.com/marcelm/cutadapt)
+  * [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+  * [FASTX-Toolkit](http://hannonlab.cshl.edu/fastx_toolkit/)
+  * [MACS2](https://github.com/taoliu/MACS)
+  * [Picard](http://broadinstitute.github.io/picard/)
+  * [pigz](http://zlib.net/pigz/)
+  * [preseq](http://smithlabresearch.org/software/preseq/)
+  * [samtools](http://www.htslib.org/)
+  * [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/)
+  * [tophat2](https://ccb.jhu.edu/software/tophat/index.shtml)
 
-Required tools:
-
-* [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml)
-* [bwa](http://bio-bwa.sourceforge.net/)
-* [cutadapt](https://github.com/marcelm/cutadapt)
-* [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
-* [FASTX-Toolkit](http://hannonlab.cshl.edu/fastx_toolkit/)
-* [MACS2](https://github.com/taoliu/MACS)
-* [Picard](http://broadinstitute.github.io/picard/)
-* [pigz](http://zlib.net/pigz/)
-* [preseq](http://smithlabresearch.org/software/preseq/)
-* [samtools](http://www.htslib.org/)
-* [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/)
-* [tophat2](https://ccb.jhu.edu/software/tophat/index.shtml)
-
-HINT: The usage of [Picard](http://broadinstitute.github.io/picard/) can differ
+**HINT**: The usage of [Picard](http://broadinstitute.github.io/picard/) can differ
 a lot between systems.
 
 On Ubuntu systems it can be called like this:
@@ -449,12 +445,12 @@ $ java -jar /path/to/picard.jar -h
 
 Please check how to use it on your system and adjust the example
 configuration accordingly (see [`tools`](./configuration.md#section-tools)).
-            
-NOTE: Before computing `2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml`
+
+**NOTE**: Before computing `2007-CD4+_T_Cell_ChIPseq-Barski_et_al.yaml`
 please make sure that, the following examples were executed:
 
-- `index_homo_sapiens_hg19_genome.yaml`
-- `download_human_gencode_release.yaml`
+* `index_homo_sapiens_hg19_genome.yaml`
+* `download_human_gencode_release.yaml`
 
 ## Create Your Own Workflow
 
@@ -465,4 +461,4 @@ Although writing the configuration may seem a bit complicated, the trouble
 pays off later because further interaction with the pipeline is quite simple.
 The structure and content of the configuration files is very detailed described
 on another page (see
-[Analysis Configuration File](./configuration.md#analsis-configuration-file)).
+[Analysis Configuration File](./configuration.md#analysis-configuration-file)).
