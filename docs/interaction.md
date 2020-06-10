@@ -55,8 +55,9 @@ Therefore, **uap** provides help information on the command-line:
 ```
 
 Almost all subcommands require a YAML configuration file (see
-:ref:`analysis_configuration`) **except** for `uap steps`, which works
-independent of an analysis configuration file.
+[analysis configuration file](./configuration.md#analysis-configuration-file))
+**except** for `uap steps`, which works independent of an analysis configuration
+file.
 
 Everytime **uap** is started with a
 :ref:`analysis configuration file <analysis_configuration>` the following actions
@@ -109,9 +110,9 @@ Here an overview of all the available subcommands are given.
 
 ### Subcommand: `steps`
 
-The `steps` subcommand lists all available :ref:`source
-<config_file_source_steps>` and :ref:`processing <config_file_processing_steps>`
-steps::
+The `steps` subcommand lists all available
+[source](./configuration.md#source-steps) and
+[processing](./configuration.md#processing-steps) steps:
 
 ```bash
   $ uap steps -h
@@ -202,7 +203,7 @@ Here is an example output:
     tasks: 5 total, 2 waiting, 2 ready, 1 finished
 ```
 
-To get a more concise summary, specify `--summarize`:
+To get a more concise summary, specify `--summarize` ...
 
 ```bash
     $ uap <project-config>.yaml status --summarize

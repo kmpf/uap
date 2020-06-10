@@ -50,12 +50,13 @@ The plugins are called steps because they resemble steps of the analysis.
 
 There are two different types of steps: source and processing steps.
 **Source steps** are used to include data from outside the destination path
-(see :ref:`config-file-destination-path`) into the analysis.
+(see [destination_path section](./configuration.md#section-destination-path))
+into the analysis.
 **Processing steps** are blueprints that describe how to process input to
 output data.
 Processing steps describe what needs to be done on an abstract level.
 **uap** controls the ordered execution of the steps as defined in the
-:ref:`analysis configuration file<analysis_configuration>`.
+[analysis configuration file](./configuration.md#analysis-configuration-file).
 
 ## Runs: Atomic Units of the Analysis
 
@@ -99,7 +100,7 @@ sequencing reads, genome sequences, genome annotations, etc..
 
 The recommended workflow to analyse data with **uap** is:
 
-1. Install **uap** (see :doc:`installation`)
+1. Install **uap** (see [Installation](./installation.md))
 2. Optionally: Extend **uap** by adding new steps (see
    [Add New Functionality](./extension.md))
 3. Write a configuration file to setup your analysis (see

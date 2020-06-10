@@ -39,7 +39,7 @@ very powerful stand-alone machine or a cluster system is required.
 The examples are marked accordingly in the sections below.
 
 NOTE: Before **computing an example on a cluster**, you need to uncomment
-the [`cluster` section](./configuration.md#cluster-section) and adapt
+the [`cluster` section](./configuration.md#section-cluster) and adapt
 the settings as required.
 Please check also if the
 [Cluster Configuration File](./configuration#cluster-configuration-file)
