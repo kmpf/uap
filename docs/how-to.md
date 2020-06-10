@@ -160,7 +160,7 @@ its [status](./interaction.md#subcommand-status):
 ```
 
 Oops, the `destination_path` does not exist (see
-[section `destination_path`](./configuration.md#section-destination-path)).
+[section `destination_path`](./configuration.md#section-destination_path)).
 Create it and start again:
 
 ```bash
