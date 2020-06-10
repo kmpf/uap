@@ -60,11 +60,11 @@ Almost all subcommands require a YAML configuration file (see
 file.
 
 Everytime **uap** is started with a
-:ref:`analysis configuration file <analysis_configuration>` the following actions
-happen:
+[analysis configuration file](./configuration.md#analysis-configuration-file)
+the following actions happen:
 
 1. Configuration file is read
-2. Tools given in the :ref:`tools section <uap_config_tools_section>` are
+2. Tools given in the [tools section](configuration.md#section-tools) are
    checked
 3. Input files are checked
 4. State of all runs are calculated
@@ -72,7 +72,7 @@ happen:
 If any of these steps fail, **uap** will exit and print an error message.
 
 **uap** will create a symbolic link, if it does not exist already, pointing to
-the :ref:`destination path <config-file-destination-path>` called
+the [destination path](./configuration.md#section-destination_path) called
 ``<project-config>.yaml-out``.
 The symbolic link is created in the directory containing the
 ``<project-config>.yaml``.
@@ -369,14 +369,14 @@ This subcommands usage information:
     --ignore          Ignore chages of tasks and consider them finished.
 ```
 
-> **NOTE**: Why is it safe to cancel the pipeline?
-  The pipeline is written in a way which expects processes to fail or
-  cluster jobs to disappear without notice.
-  This problem is mitigated by a design which relies on file presence and
-  file timestamps to determine whether a run is finished or not.
-  Output files are automatically written to temporary locations and later
-  moved to their real target directory, and it is not until the last file
-  rename operation has finished that a run is regarded as finished.
+**NOTE**: Why is it safe to cancel the pipeline?
+The pipeline is written in a way which expects processes to fail or
+cluster jobs to disappear without notice.
+This problem is mitigated by a design which relies on file presence and
+file timestamps to determine whether a run is finished or not.
+Output files are automatically written to temporary locations and later
+moved to their real target directory, and it is not until the last file
+rename operation has finished that a run is regarded as finished.
 
 ### Subcommand: `submit-to-cluster`
 
@@ -387,8 +387,8 @@ detected.
 Dependencies are passed to cluster engine in a way that jobs that depend on
 other jobs won't get scheduled until their dependencies have been satisfied.
 For more information read about the
-:ref:`cluster configuration <cluster_configuration>` and the
-:ref:`submit script template <submit_template>`.
+[cluster configuration](./configuration.md#cluster-configuration-file) and the
+[submit script template](./configuration.md#submit-script-template).
 Each submitted job calls **uap** with the ``run-locally`` subcommand on the
 executing cluster node.
 
