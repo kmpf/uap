@@ -10,8 +10,8 @@
 
 # Analysis Configuration File
 
-**uap** requires a [YAML](http://www.yaml.org/) file which contains all information
-about the data analysis.
+**uap** requires a [YAML](http://www.yaml.org/) file which contains all
+information about the data analysis.
 These files are called configuration files.
 
 A configuration file describes a complete analysis.
@@ -41,13 +41,14 @@ that file.
 
 ### Section: `destination_path`
 
-The value of `destination_path` is the directory where **uap** is going
-to store the analysis results.
+The value of `destination_path` is the directory where **uap** is going to store
+the analysis results.
 
-.. It is possible to use a different directory for volatile files (see ).
+**NOTE**: It is possible to use a different directory for volatile files
+(see ???).
 
 ```yaml
-destination_path: "/path/to/workflow/output"
+   destination_path: "/path/to/workflow/output"
 ```
 
 ### Section: `base_working_directory`
@@ -58,7 +59,7 @@ of the configuration file. All configured paths can be set relatively
 to this directory.
 
 ```yaml
-    base_working_directory: "/path/to/workflow/output"
+   base_working_directory: "/path/to/workflow/output"
 ```
 
 ### Section: `constants`
@@ -68,12 +69,12 @@ For instance absolute paths to the genome index files can be defined as
 constant.
 
 ```yaml
-
    - &genome_faidx
         genomes/animalia/chordata/mammalia/primates/homo_sapiens/hg19/samtools_faidx/hg19_all_chr_UCSC-download-B7ceRp9K/hg19_all_chr_UCSC-download.fasta.fai
 ```
 
 Later on the value can be reused by typing `*genome_faidx`.
+
 **There are no restrictions about what can be defined here.**
 
 ### Section: `steps`
@@ -85,18 +86,15 @@ All available steps are described in detail in the steps documentation:
 The `steps` section contains an entry (technically a key) for every step.
 Every step name **must** be unique.
 
-.. note::
-
-   Please be aware that PyYAML, the YAML parser used by uap, does not
-   complain about keys with the same name (see
-   [PyYAML ticket 128](http://pyyaml.org/ticket/128)).
-   But drops one of the duplicates without giving an error.
+**NOTE**: Please be aware that PyYAML, the YAML parser used by uap, does not
+complain about keys with the same name (see
+[PyYAML ticket 128](http://pyyaml.org/ticket/128)).
+But drops one of the duplicates without giving an error.
 
 There are two ways to name a step to allow multiple steps of the same type and
 still ensure unique naming:
 
 ```yaml
-
     steps:
         # here, the step name is unchanged, it's a cutadapt step which is also
         # called 'cutadapt'
@@ -147,22 +145,18 @@ You can test your regular expression at [pythex.org](http://pythex.org).
 Processing steps depend upon one or more preceding steps.
 They use their output files and process them.
 Output files of processing steps are automatically named and saved by **uap**.
-A complete list of available options per step can be found at :doc:`steps`
-or by using the :ref:`uap-steps`.
-
-.. _config_file_keywords:
+A complete list of available options per step can be found at
+[available steps][./steps.md) or by using the
+[`steps` subcommand](./interaction.md#subcommand-steps).
 
 ##### Reserved Keywords for Steps
 
-.. _config_file_depends:
-
-**_depends:**
+###### **_depends**
 
   Dependencies are defined via the ``_depends`` key which may either be ``null``,
   a step name, or a list of step names.
 
 ```yaml
-
     steps:
         # the source step which depends on nothing
         fastq_source:
@@ -179,9 +173,6 @@ or by using the :ref:`uap-steps`.
         fix_cutadapt:
             _depends: cutadapt
 ```
-
-
-.. _config_file_connect:
 
 **_connect:**
 
