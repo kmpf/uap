@@ -153,8 +153,8 @@ A complete list of available options per step can be found at
 
 ###### **_depends**
 
-  Dependencies are defined via the ``_depends`` key which may either be ``null``,
-  a step name, or a list of step names.
+Dependencies are defined via the ``_depends`` key which may either be ``null``,
+a step name, or a list of step names.
 
 ```yaml
     steps:
@@ -174,20 +174,19 @@ A complete list of available options per step can be found at
             _depends: cutadapt
 ```
 
-**_connect:**
+###### **_connect**
 
-  Normally steps connected with `_depends` do pass data along by defining
-  so called connections.
-  If the name of an output connection matches the name of an input connection
-  of a succeeding step the data gets passed on automatically.
-  But, sometimes the user wants to force the connection of differently named
-  connections.
-  This can be done with the `_connect` keyword.
-  A common usage is to connect downloaded data with a
-  :ref:`config_file_processing_steps`.
+Normally steps connected with `_depends` do pass data along by defining
+so called connections.
+If the name of an output connection matches the name of an input connection
+of a succeeding step the data gets passed on automatically.
+But, sometimes the user wants to force the connection of differently named
+connections.
+This can be done with the `_connect` keyword.
+A common usage is to connect downloaded data with a
+[processing step](./configuration.md#processing-steps).
 
 ```yaml
-
     steps:
         # Source step to download i.e. sequence of chr1 of some species
         chr1 (raw_url_source):
@@ -207,22 +206,19 @@ A complete list of available options per step can be found at
             #     in/sequence: [chr1/raw, chr2/raw]
 ```
 
-  The examples shows how the `raw_url_source` output connection `raw` is
-  connected to the input connection `sequence` of the `merge_fasta_files`
-  step.
+The examples shows how the `raw_url_source` output connection `raw` is
+connected to the input connection `sequence` of the `merge_fasta_files`
+step.
 
-.. _config_file_break:
+###### **_BREAK**
 
-**_BREAK:**
-
-  If you want to cut off entire branches of the step graph, set the ``_BREAK``
-  flag in a step definition, which will force the step to produce no runs
-  (which will in turn give all following steps nothing to do, thereby
-  effectively disabling these steps):
+If you want to cut off entire branches of the step graph, set the ``_BREAK``
+flag in a step definition, which will force the step to produce no runs
+(which will in turn give all following steps nothing to do, thereby
+effectively disabling these steps):
 
 
 ```yaml
-
     steps:
         fastq_source:
             # ...
@@ -236,16 +232,13 @@ A complete list of available options per step can be found at
             _BREAK: true
 ```
 
-.. _config_file_volatile:
+###### **_volatile**
 
-**_volatile:**
-
-  Steps can be marked with `_volatile: yes`.
-  This flag tells **uap** that the output files of the marked step are only
-  intermediate results.
+Steps can be marked with `_volatile: yes`.
+This flag tells **uap** that the output files of the marked step are only
+intermediate results.
 
 ```yaml
-
     steps:
         # the source step which depends on nothing
         fastq_source:
@@ -266,52 +259,45 @@ A complete list of available options per step can be found at
 
 If all steps depending on the intermediate step are finished **uap** tells the
 user that he can free disk space.
-The message is output if the :ref:`status <uap-status>` is checked and looks
+The message is output if the
+[`status` subcommand](./interaction.md#subcommand-status) is checked and looks
 like this:
 
-> Hint: You could save 156.9 GB of disk space by volatilizing 104 output files.
-  Call 'uap <project-config>.yaml volatilize --srsly' to purge the files.
+**Hint**:
+You could save 156.9 GB of disk space by volatilizing 104 output files.
+Call 'uap <project-config>.yaml volatilize --srsly' to purge the files.
 
 **uap** is going to replace the output files by placeholder files if the user
-executes the :ref:`volatilize <uap-volatilize>` command.
+executes the [`volatilize` subcommand](./interaction.md#subcommand-volatilize)
+command.
 
-.. _config_file_cluster_submit_options:
+###### **_cluster_submit_options**
 
-**_cluster_submit_options**
+This string contains the entire submit options which will be set in the
+submit script.
+This option allows to overwrite the values set in
+[default_submit_options](./configuration.md#default_submit_options).
 
-    This string contains the entire submit options which will be set in the
-    submit script.
-    This option allows to overwrite the values set in
-    :ref:`default_submit_options <config_file_default_submit_options>`.
+###### **_cluster_pre_job_command**
 
-.. _config_file_cluster_pre_job_command:
+This string contains command(s) that are executed **BEFORE uap** is started
+on the cluster.
+This option allows to overwrite the values set in
+[default_pre_job_command](./configuration.md#default_pre_job_command).
 
-**_cluster_pre_job_command**
+###### **_cluster_post_job_command**
 
-    This string contains command(s) that are executed **BEFORE uap** is started
-    on the cluster.
-    This option allows to overwrite the values set in
-    :ref:`default_pre_job_command <config_file_default_pre_job_command>`.
+This string contains command(s) that are executed **AFTER uap** did finish
+on the cluster.
+This option allows to overwrite the values set in
+[default_post_job_command](./configuration.md#default_post_job_command).
 
-.. _config_file_cluster_post_job_command:
+###### **_cluster_job_quota**
 
-**_cluster_post_job_command**
-
-    This string contains command(s) that are executed **AFTER uap** did finish
-    on the cluster.
-    This option allows to overwrite the values set in
-    :ref:`default_post_job_command <config_file_default_post_job_command>`.
-
-.. _config_file_cluster_job_quota:
-
-**_cluster_job_quota**
-
-    This option defines the number of jobs of the same type that can
-    run simultaneously on a cluster.
-    This option allows to overwrite the values set in
-    :ref:`default_job_quota <config_file_default_job_quota>`.
-
-.. _config_file_tools:
+This option defines the number of jobs of the same type that can
+run simultaneously on a cluster.
+This option allows to overwrite the values set in
+[default_job_quota](./configuration.md#default_job_quota).
 
 ### Section: `tools`
 
@@ -320,7 +306,6 @@ particular analysis.
 An example tool configuration looks like this:
 
 ```yaml
-
    tools:
 
         # you don't have to specify a path if the tool can be found in $PATH
@@ -372,7 +357,6 @@ To use [lmod](https://lmod.readthedocs.io/en/latest/) to load an unload a tool
 you can specify the `module_name` option:
 
 ```yaml
-
    tools:
 
        pigz:
@@ -380,9 +364,7 @@ you can specify the `module_name` option:
            get_version: --version
            exit_code: 0
            module_name: pigz/version
-
-
-.. _config_file_lmod:
+```
 
 #### Section: `lmod`
 
@@ -401,9 +383,6 @@ loaded and `module_name` is used in the `tools` section.
 `path` defaults to `$LMOD_CMD` and `module_path` to `$MODULEPATH` of the user
 environment.
 
-
-.. _config_file_cluster:
-
 ### Section: `cluster`
 
 The `cluster` section is required only if the analysis is executed on a system
@@ -412,7 +391,6 @@ using a cluster engine like [UGE](http://www.univa.com/products/) or
 An example `cluster` section looks like this:
 
 ```yaml
-
     cluster:
         default_submit_options: "-pe smp #{CORES} -cwd -S /bin/bash -m as -M me@example.com -l h_rt=1:00:00 -l h_vmem=2G"
         default_pre_job_command: "echo 'Started the run!'"
@@ -420,56 +398,46 @@ An example `cluster` section looks like this:
         default_job_quota: 5
 ```
 
-.. _config_file_default_submit_options:
+###### **default_submit_options**
 
-**default_submit_options**
+This is the default submit options string which replaces the
+[`#{SUBMIT_OPTIONS}](./configuration.md#submit_options) placeholder in the
+[submit script template](./configuration.md#submit-script-template).
+It is **mandatory** to set this value.
 
-    This is the default submit options string which replaces the
-    :ref:`#{SUBMIT_OPTIONS} <submit_template_submit_options>` placeholder in
-    the :ref:`submit script template <submit_template>`.
-    It is **mandatory** to set this value.
+###### **default_pre_job_command**
 
-.. _config_file_default_pre_job_command:
+This string contains the default commands which will be executed
+**BEFORE uap** is started on the cluster.
+It will replace the
+:ref:`#{PRE_JOB_COMMAND} <submit_template_pre_job_command>` placeholder in
+the :ref:`submit script template <submit_template>`.
+If mutliple commands shall be executed separate those with ``\n``.
+It is **optional** to set this value.
 
-**default_pre_job_command**
+###### **default_post_job_command**
 
-    This string contains the default commands which will be executed
-    **BEFORE uap** is started on the cluster.
-    It will replace the
-    :ref:`#{PRE_JOB_COMMAND} <submit_template_pre_job_command>` placeholder in
-    the :ref:`submit script template <submit_template>`.
-    If mutliple commands shall be executed separate those with ``\n``.
-    It is **optional** to set this value.
+This string contains the default commands which will be executed
+**AFTER uap** is started on the cluster.
+It will replace the
+:ref:`#{POST_JOB_COMMAND} <submit_template_post_job_command>` placeholder in
+the :ref:`submit script template <submit_template>`.
+If mutliple commands shall be executed separate those with ``\n``.
+It is **optional** to set this value.
 
-.. _config_file_default_post_job_command:
+###### **default_job_quota**
 
-**default_post_job_command**
-
-    This string contains the default commands which will be executed
-    **AFTER uap** is started on the cluster.
-    It will replace the
-    :ref:`#{POST_JOB_COMMAND} <submit_template_post_job_command>` placeholder in
-    the :ref:`submit script template <submit_template>`.
-    If mutliple commands shall be executed separate those with ``\n``.
-    It is **optional** to set this value.
-
-.. _config_file_default_job_quota:
-
-**default_job_quota:**
-
-    This option defines the number of jobs of the same type that can
-    run simultaneously on a cluster.
-    A value *0* means no limit is applied.
-    It is **optional** to set this value, if the value is not provided it
-    defaults to *0*.
+This option defines the number of jobs of the same type that can
+run simultaneously on a cluster.
+A value *0* means no limit is applied.
+It is **optional** to set this value, if the value is not provided it
+defaults to *0*.
 
 ### Example Configurations
 
 Example configurations can be found in **uap**'s `example-configurations`
 folder.
 More information about these examples can be found in :doc:`how-to`.
-
-.. _cluster_configuration:
 
 # Cluster Configuration File
 
@@ -483,7 +451,6 @@ This YAML file contains a dictionary for every cluster type.
 An example file is shown here:
 
 ```yaml
-
    # Configuration for a UGE cluster engine
    uge:
        # Command to get version information
@@ -616,27 +583,34 @@ The templates need to contain the following placeholders:
 .. _submit_template_submit_options:
 .. _submit_template_pre_job_command:
 
-<dl>
-  <dt>#{SUBMIT_OPTIONS}</dt>
-  <dd>Will be replaced with the steps `_cluster_submit_options` value (see
-      :ref:`_cluster_submit_options <_config_file_cluster_submit_options>`), if
-      present, or the `default_submit_options` value.</dd>
-  <dt>#{PRE_JOB_COMMAND}</dt>
-  <dd>Will be replaced with the steps ``_cluster_pre_job_command`` value (see
-      :ref:`_cluster_pre_job_command <_config_file_cluster_pre_job_command>`),
-      if present, or the ``default_pre_job_command`` value.</dd>
-  <dt>#{ARRAY_JOBS}</dt>
-  <dd>Will be replaced with a space seperated list of tasks. The resulting array
-  will be used in the command for the ``<run ID>`` if the submitted job is
-  an array job.</dd>
-  <dt>#{COMMAND}</dt>
-  <dd>Will be replaced with ``uap <project-config>.yaml run-locally <run ID>``.
-  </dd>
-  <dt>#{POST_JOB_COMMAND}</dt>
-  <dd>Will be replaced with the steps ``_cluster_post_job_command`` value (see
-  :ref:`_cluster_post_job_command <_config_file_cluster_post_job_command>`), if
-  present, or the ``default_post_job_command`` value.</dd>
-</dl>
+###### **#{SUBMIT_OPTIONS}**
+
+Will be replaced with the steps `_cluster_submit_options` value (see
+:ref:`_cluster_submit_options <_config_file_cluster_submit_options>`), if
+present, or the `default_submit_options` value.
+
+###### **#{PRE_JOB_COMMAND}**
+
+Will be replaced with the steps ``_cluster_pre_job_command`` value (see
+:ref:`_cluster_pre_job_command <_config_file_cluster_pre_job_command>`),
+if present, or the ``default_pre_job_command`` value.
+
+###### **#{ARRAY_JOBS}**
+
+Will be replaced with a space seperated list of tasks. The resulting array
+will be used in the command for the ``<run ID>`` if the submitted job is
+an array job.
+
+###### **#{COMMAND}**
+
+Will be replaced with ``uap <project-config>.yaml run-locally <run ID>``.
+
+###### **#{POST_JOB_COMMAND}**
+
+Will be replaced with the steps ``_cluster_post_job_command`` value (see
+:ref:`_cluster_post_job_command <_config_file_cluster_post_job_command>`), if
+present, or the ``default_post_job_command`` value.
+
 
 The submit script template is required by
 :ref:`submit-to-cluster <uap-submit-to-cluster>` for job submission to the
