@@ -281,7 +281,9 @@ The analysis of high-throughput sequencing (HTS) data usually start with some
 basic steps.
 
 **Step 1**: Conversion of the raw sequencing data to, most likely, fastq(.gz) files
+
 **Step 2**: Removal of adapter sequences from the sequencing reads
+
 **Step 3**: Alignment of the sequencing reads onto the reference genome
 
 These basic steps can be followed up with a lot of different analysis steps.
@@ -297,7 +299,9 @@ have to be available.
 #### Differential Expression Analysis
 
 **Step 4**: Get annotation set (for e.g. genes, transcripts, ...)
+
 **Step 5**: Count the number of reads overlapping the annotation
+
 **Step 6**: Perform statistical analysis, based on counts 
 
 Another common analysis performed with RNAseq data is the identification of
@@ -368,6 +372,7 @@ calling programs. The data is prone to duplicate reads from PCR due to relativel
 low amounts of input DNA. So these steps follow the basic ones:
 
 **Step 4**: Duplicate removal
+
 **Step 5**: Peak calling
 
 The analysis of data published in the paper
