@@ -63,7 +63,7 @@ Processing steps describe what needs to be done on an abstract level.
 Steps define **runs** which represent the concrete commands for a part of the
 analysis.
 You can think of steps as objects and runs as instances like in object-oriented
-programming. 
+programming.
 A **run** is an atomic unit of the analysis.
 It can only succeed or fail entirely.
 Typically a single run computes data of a single sample.
@@ -106,11 +106,11 @@ The recommended workflow to analyse data with **uap** is:
 3. Write a configuration file to setup your analysis (see
    [Analysis Configuration File](./configuration.md))
 4. Start the analysis locally (see
-   [`run-locally`](./interaction.md#subcommand-run-locally)) or
+   [subcommand `run-locally`](./interaction.md#subcommand-run-locally)) or
    submit it to a cluster (see
-   [`submit-to-cluster`](./interaction.md#subcommand-submit-to-cluster))
+   [subcommand `submit-to-cluster`](./interaction.md#subcommand-submit-to-cluster))
 5. Follow the progress of the analysis (see
-   [`status`](./interaction.md#subcommand-status))
+   [subcommand `status`](./interaction.md#subcommand-status))
 6. Share your extensions with the public (send us a pull request via github)
 
 A **finished** analysis leaves the user with:

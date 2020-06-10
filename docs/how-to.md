@@ -13,7 +13,7 @@
 At first, you need to install **uap** (see [Installation](./installation.md)).
 After successfully finishing the installation of **uap** example
 analysis can be found in the folder
-[`example-configurations`](../example-configurations).
+`example-configurations`.
 
 Let's jump head first into **uap** and have a look at some examples:
 
@@ -38,14 +38,14 @@ This might change their computational requirements in such a way that a
 very powerful stand-alone machine or a cluster system is required.
 The examples are marked accordingly in the sections below.
 
-NOTE: Before **computing an example on a cluster**, you need to uncomment
+**NOTE**: Before **computing an example on a cluster**, you need to uncomment
 the [`cluster` section](./configuration.md#section-cluster) and adapt
 the settings as required.
 Please check also if the
-[Cluster Configuration File](./configuration#cluster-configuration-file)
+[Cluster Configuration File](./configuration.md#cluster-configuration-file)
 fits your cluster system.
 
-NOTE: The examples contain information where users can obtain
+**NOTE**: The examples contain information where users can obtain
 **required external/bioinformatics tools**.
 If **uap** fails due to a missing tool, please check the
 provided URLs for installation instructions.
@@ -72,18 +72,16 @@ Downloads the *Mycoplasma genitalium* genome, generates the indices for
 This workflow is quite fast because it uses the very small genome of
 *Mycoplasma genitalium*.
 
-Max. memory: ~0,5 GB
-Disk usage: ~20 MB
-Run time: minutes 
-
-Required tools:
-
-* [bwa](http://bio-bwa.sourceforge.net/)
-* [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml)
-* [curl](https://curl.haxx.se/)
-* [pigz](http://zlib.net/pigz/)
-* [samtools](http://www.htslib.org/)
-* [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/)
+* Max. memory: ~0,5 GB
+* Disk usage: ~20 MB
+* Run time: minutes 
+* Required tools:
+  * [bwa](http://bio-bwa.sourceforge.net/)
+  * [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml)
+  * [curl](https://curl.haxx.se/)
+  * [pigz](http://zlib.net/pigz/)
+  * [samtools](http://www.htslib.org/)
+  * [segemehl](http://www.bioinf.uni-leipzig.de/Software/segemehl/)
 
 ### `index_homo_sapiens_hg19_chr21.yaml`
 
@@ -133,7 +131,9 @@ This workflow only downloads files from the internet and and thus should
 work on any machine.
 
 Max. memory: depends on your machine
+
 Disk usage: ~1,2 GB
+
 Run time: depends on your internet connection
 
 Required tools:
