@@ -17,9 +17,7 @@ The installation requires [virtualenv](https://pypi.python.org/pypi/virtualenv),
 So, please install it if its not already installed.
 
 ```bash
-  
 $ sudo apt-get install python-virtualenv git graphviz
-
 ```
 
 **uap** does **NOT** include any tools necessary for the data analysis.
@@ -27,12 +25,10 @@ It is expected that the required tools are **already installed**.
 
 ## Clone the Repository
 
-Clone the repository from https://github.com/kmpf/uap like this:
+Clone the repository from https://github.com/fraunhofer-izi/uap like this:
 
 ```bash
-
-$ git clone https://github.com/kmpf/uap.git
-
+$ git clone https://github.com/fraunhofer-izi/uap.git
 ```
 
 ## Set Up Python Environment
@@ -40,10 +36,8 @@ $ git clone https://github.com/kmpf/uap.git
 Change into the created directory and execute the script `bootstrap.sh`:
 
 ```bash
-
 $ cd uap
 $ ./bootstrap.sh
-
 ```
 
 The script creates the required Python environment (which will be located in
@@ -51,7 +45,7 @@ The script creates the required Python environment (which will be located in
 Afterwards it installs [PyYAML](https://pypi.python.org/pypi/PyYAML),
 [NumPy](https://pypi.python.org/pypi/numpy),
 [biopython](https://pypi.python.org/pypi/biopython)
-and [psutil](https://pypi.python.org/pypi/psutil)|psutil_link| into the freshly
+and [psutil](https://pypi.python.org/pypi/psutil) into the freshly
 created environment.
 There is no harm in accidentally running this script multiple times.
 
@@ -60,14 +54,16 @@ There is no harm in accidentally running this script multiple times.
 **uap** can be used globally.
 On Unix-type operating systems it is advised to add the installation path to
 your ``$PATH`` variable.
-Therefore change into the **uap** directory and execute::
+Therefore change into the **uap** directory and execute:
 
-  $ echo ""PATH=$PATH:$(pwd)" >> ~/.bashrc 
-  $ source ~/.bashrc
-  OR
-  $ echo ""PATH=$PATH:$(pwd)" >> ~/.bash_profile
-  $ source ~/.bash_profile
+```bash
+$ echo ""PATH=$PATH:$(pwd)" >> ~/.bashrc 
+$ source ~/.bashrc
+```
 
+OR
 
-
-
+```bash
+$ echo ""PATH=$PATH:$(pwd)" >> ~/.bash_profile
+$ source ~/.bash_profile
+```
