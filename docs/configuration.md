@@ -401,7 +401,7 @@ An example `cluster` section looks like this:
 ###### **default_submit_options**
 
 This is the default submit options string which replaces the
-[`#{SUBMIT_OPTIONS}](./configuration.md#submit_options) placeholder in the
+[#{SUBMIT_OPTIONS}](./configuration.md#submit_options) placeholder in the
 [submit script template](./configuration.md#submit-script-template).
 It is **mandatory** to set this value.
 
@@ -410,8 +410,8 @@ It is **mandatory** to set this value.
 This string contains the default commands which will be executed
 **BEFORE uap** is started on the cluster.
 It will replace the
-:ref:`#{PRE_JOB_COMMAND} <submit_template_pre_job_command>` placeholder in
-the :ref:`submit script template <submit_template>`.
+[#{PRE_JOB_COMMAND}](./configuration.md#pre_job_command) placeholder in the
+[submit script template](./configuration.md#submit-script-template).
 If mutliple commands shall be executed separate those with ``\n``.
 It is **optional** to set this value.
 
@@ -420,8 +420,8 @@ It is **optional** to set this value.
 This string contains the default commands which will be executed
 **AFTER uap** is started on the cluster.
 It will replace the
-:ref:`#{POST_JOB_COMMAND} <submit_template_post_job_command>` placeholder in
-the :ref:`submit script template <submit_template>`.
+[#{POST_JOB_COMMAND}](./configuration.md#post_job_command) placeholder in
+the [submit script template](./configuration.md#submit-script-template).
 If mutliple commands shall be executed separate those with ``\n``.
 It is **optional** to set this value.
 
@@ -437,7 +437,7 @@ defaults to *0*.
 
 Example configurations can be found in **uap**'s `example-configurations`
 folder.
-More information about these examples can be found in :doc:`how-to`.
+More information about these examples can be found in [Quick Start uap](./how-to.md).
 
 # Cluster Configuration File
 
@@ -501,67 +501,80 @@ An example file is shown here:
 
 Let's browse over the options which need to be set per cluster engine:
 
-`identity_test:`
-    Command used to determine if **uap** has been started on a system running
-    a cluster engine e.g. `sbatch --version`.
+###### **identity_test**
 
-`identity_answer:`
-    **uap** checks if the output of the `identity_test` command starts with
-    this value e.g. `slurm`.
-    If that is true the cluster type has been detected.
+Command used to determine if **uap** has been started on a system running
+a cluster engine e.g. `sbatch --version`.
 
-`submit:`
-    Command to submit a job onto the cluster e.g. `sbatch`.
+###### **identity_answer**
 
-`stat:`
-    Command to check the status of jobs on the cluster e.g. `squeue`.
+**uap** checks if the output of the `identity_test` command starts with
+this value e.g. `slurm`.
+If that is true the cluster type has been detected.
 
-`template:`
-    Path to the submit script template which has to be used for this cluster
-    type e.g. `cluster/submit-scripts/sbatch-template.sh`.
+###### **submit**
 
+Command to submit a job onto the cluster e.g. `sbatch`.
 
-`hold_jid:`
-    Option given to the `submit` command to define dependencies between jobs
-    e.g. `--dependency=afterany:%s`.
-    Placeholder `%s` gets replaced with the jobs this job depends on if present.
+###### **stat**
 
-`hold_jid_separator:`
-    Separator used to concatenate multiple jobs for `hold_jid` e.g. `:`.
+Command to check the status of jobs on the cluster e.g. `squeue`.
 
-`array_job`:
-    Option given to the `submit` command to use array jobs e.g. `--array=1-%s`.
-    `%s` is replaced by the number of jobs.
+###### **template**
 
-`array_job_wquota`:
-    Option given to the `submit` command to use array jobs with quota
-    e.g. `--array=1-%s%%%s` (will be `--array=1-100%5` for *100*
-    jobs with a quota of *5*).
-    The first `%s` is replaced by the number of jobs and the second
-    `%s` by the quota (if above 0). A literal "%" has to be written
-    as `%%`.
+Path to the submit script template which has to be used for this cluster
+type e.g. `cluster/submit-scripts/sbatch-template.sh`.
 
-`array_task_id`
-    The name of the environment variable set by the resource manager
-    that contains the job array id e.g.
-    `SLURM_ARRAY_TASK_ID` or `SGE_TASK_ID`.
+###### **hold_jid**
 
-`set_job_name:`
-    Option given to the `submit` command to set the job name e.g.
-    `--job-name=%s`.
-    ``%s`` is replaced by the job name if present.
+Option given to the `submit` command to define dependencies between jobs
+e.g. `--dependency=afterany:%s`.
+Placeholder `%s` gets replaced with the jobs this job depends on if present.
 
-`set_stderr:`
-    Option given to the ``submit`` command to set the name of the stderr file
-    e.g. `-e`.
+###### **hold_jid_separator**
 
-`set_stdout:`
-    Option given to the `submit` command to set the name of the stdout file
-    e.g. `-o`.
+Separator used to concatenate multiple jobs for `hold_jid` e.g. `:`.
 
-`parse_job_id:`
-    Python regular expression whose first parenthesized subgroup represents
-    the cluster job ID e.g. `Submitted batch job (\d+)`.
+###### **array_job**
+
+Option given to the `submit` command to use array jobs e.g. `--array=1-%s`.
+`%s` is replaced by the number of jobs.
+
+###### **array_job_wquota**
+
+Option given to the `submit` command to use array jobs with quota
+e.g. `--array=1-%s%%%s` (will be `--array=1-100%5` for *100*
+jobs with a quota of *5*).
+The first `%s` is replaced by the number of jobs and the second
+`%s` by the quota (if above 0). A literal "%" has to be written
+as `%%`.
+
+###### **array_task_id**
+
+The name of the environment variable set by the resource manager
+that contains the job array id e.g.
+`SLURM_ARRAY_TASK_ID` or `SGE_TASK_ID`.
+
+###### **set_job_name**
+
+Option given to the `submit` command to set the job name e.g.
+`--job-name=%s`.
+``%s`` is replaced by the job name if present.
+
+###### **set_stderr**
+
+Option given to the ``submit`` command to set the name of the stderr file
+e.g. `-e`.
+
+###### **set_stdout**
+
+Option given to the `submit` command to set the name of the stdout file
+e.g. `-o`.
+
+###### **parse_job_id**
+
+Python regular expression whose first parenthesized subgroup represents
+the cluster job ID e.g. `Submitted batch job (\d+)`.
 
 
 ## Submit Script Template
@@ -580,19 +593,16 @@ The submit script templates reside at:
 Feel free to add your own templates.
 The templates need to contain the following placeholders:
 
-.. _submit_template_submit_options:
-.. _submit_template_pre_job_command:
-
 ###### **#{SUBMIT_OPTIONS}**
 
 Will be replaced with the steps `_cluster_submit_options` value (see
-:ref:`_cluster_submit_options <_config_file_cluster_submit_options>`), if
+[_cluster_submit_options](./configuration.md#_cluster_submit_options)), if
 present, or the `default_submit_options` value.
 
 ###### **#{PRE_JOB_COMMAND}**
 
 Will be replaced with the steps ``_cluster_pre_job_command`` value (see
-:ref:`_cluster_pre_job_command <_config_file_cluster_pre_job_command>`),
+[_cluster_pre_job_command](./configuration.md#_cluster_pre_job_command)),
 if present, or the ``default_pre_job_command`` value.
 
 ###### **#{ARRAY_JOBS}**
@@ -608,10 +618,10 @@ Will be replaced with ``uap <project-config>.yaml run-locally <run ID>``.
 ###### **#{POST_JOB_COMMAND}**
 
 Will be replaced with the steps ``_cluster_post_job_command`` value (see
-:ref:`_cluster_post_job_command <_config_file_cluster_post_job_command>`), if
+[_cluster_post_job_command](./configuration.md#_cluster_post_job_command)), if
 present, or the ``default_post_job_command`` value.
 
 
 The submit script template is required by
-:ref:`submit-to-cluster <uap-submit-to-cluster>` for job submission to the
-cluster.
+[submit-to-cluster](./interaction.md#subcommand-submit-to-cluster) for job
+submission to the cluster.
