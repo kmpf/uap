@@ -15,8 +15,8 @@
 ## Implement New Steps
 
 **uap** can be easily extended by implementing new
-:ref:`source <config_file_source_steps>` or
-:ref:`processing <config_file_processing_steps>` steps.
+[source](./configuration.md#source-steps) or
+[processing](./configuration.md#processing-steps) steps.
 This requires basic python programming skills.
 New steps are added to **uap** by placing a single Python file into one of these
 folders in the **uap** installation directory:
@@ -207,7 +207,7 @@ Options via `self.add_option()`:
 
 The `runs` method is where all the work is done.
 This method gets handed over an instance of the
-:ref:`ConnectionsCollector <ConnectionsCollector>`
+[ConnectionsCollector](./api.md#connections_collector)
 which can be used like a dictionary of dictionaries.
 The keys of the first dictionary are the run IDs (often resembling the samples).
 The values of the first dictionary is another dictionary.
@@ -378,16 +378,15 @@ list of all source and processing steps:
   ... Lists all available processing step files
 ```
 
-You can also use **uap**'s :ref:`steps <uap-steps>` subcommand to get
-information about installed steps.
+You can also use **uap**'s [steps](./interaction.md#subcommand-steps) subcommand
+to get information about installed steps.
 
-If the step file exists at the correct location that step can be used
-in an :ref:`analysis configuration file <analysis_configuration>`.
+If the step file exists at the correct location that step can be used in an
+[analysis configuration file](./configuration.md#analysis-configuration-file).
 
 A potential example YAML file named ``test.yaml`` could look like this:
 
 ```yaml
-
     destination_path: example-out/test/
 
     steps:
