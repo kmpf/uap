@@ -466,8 +466,10 @@ but only if the sha256sums are still correct and the `--srsly` argument is passe
 
 The `volatilize` subcommand is useful to reduce the required disk space of
 your analysis.
-It works only if the :ref:`_volatile <config_file_volatile>` keyword is set in
-the :ref:`analysis configuration file <analysis_configuration>` for.
+The subcommand requires the [_volatile](./configuration.md#_volatile) keyword to
+be set in the
+[analysis configuration file](./configuration.md#analysis-configuration-file)
+for the particular [processing steps](./configuration.md#processing-steps).
 As already mentioned there, steps marked as ``_volatile`` compute their output
 files as normal but can be replaced by placeholder files if their dependent
 steps are finished.
