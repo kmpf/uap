@@ -268,13 +268,12 @@ What should happen if we are told to concatenate all files from all input runs?
 We have to create a single run with a new run ID 'all_files'.
 The run consists of a `exec_group` that runs the `cat` command.
 
-> **NOTE**:
-
-   An `exec_group` is a list of commands which are executed in one go.
-   You might create multiple `exec_group` if you need to make sure a set of
-   commands finished before another set is started.
-   An `exec_group` can contain commands and pipelines.
-   They can be added like this:
+**NOTE**:
+An `exec_group` is a list of commands which are executed in one go.
+You might create multiple `exec_group` if you need to make sure a set of
+commands finished before another set is started.
+An `exec_group` can contain commands and pipelines.
+They can be added like this:
 
    ```python
 
@@ -290,16 +289,15 @@ The run consists of a `exec_group` that runs the `cat` command.
 The result of the concatenation is written to an output file.
 The run object needs to know about each output file that is going to be created.
 
-.. note::
+**NOTE**:
+An output file is announced via the run objects
+`add_output_file(tag, out_path, in_paths)` method.
+The method parameters are:
 
-   An output file is announced via the run objects
-   `add_output_file(tag, out_path, in_paths)` method.
-   The method parameters are:
-
-   1. `tag`: The name of the out connection e.g. 'text' for 'out/text'
-   2. `out_path`: The name of the output file (best practice is to add the
-      run ID to the file name)
-   3. `in_paths`: The input files this output file is based on
+1. `tag`: The name of the out connection e.g. 'text' for 'out/text'
+2. `out_path`: The name of the output file (best practice is to add the
+   run ID to the file name)
+3. `in_paths`: The input files this output file is based on
 
 ```python
 
