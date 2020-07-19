@@ -45,21 +45,28 @@ Please note, the version [v2.0.0rc2](https://github.com/fraunhofer-izi/uap/relea
 
 ## Contacts
 
-Christoph Kämpf, [christoph.kaempf@izi.fraunhofer.de](mailto:christoph.kaempf@izi.fraunhofer.de)
-Kristin Reiche, [kristin.reiche@izi.fraunhofer.de](mailto:kristin.reiche@izi.fraunhofer.de)
-Jana Schor, [jana.schor@ufz.de](mailto:jana.schor@ufz.de)
-Jörg Hackermüller, [joerg.hackermueller@ufz.de](mailto:joerg.hackermueller@ufz.de)
+* Christoph Kämpf, [christoph.kaempf@izi.fraunhofer.de](mailto:christoph.kaempf@izi.fraunhofer.de)
+* Kristin Reiche, [kristin.reiche@izi.fraunhofer.de](mailto:kristin.reiche@izi.fraunhofer.de)
+* Jana Schor, [jana.schor@ufz.de](mailto:jana.schor@ufz.de)
+* Jörg Hackermüller, [joerg.hackermueller@ufz.de](mailto:joerg.hackermueller@ufz.de)
 
-Helmholtz Centre for Environmental Research - UFZ
+Helmholtz Centre for Environmental Research - UFZ</br>
 Permoserstr. 15, 04318 Leipzig, Germany
 
-Fraunhofer Institute for Cell Therapy and Immunology (IZI)
+Fraunhofer Institute for Cell Therapy and Immunology (IZI)</br>
 Perlickstraße 1, 04103 Leipzig, Germany
 
 ## Main contributors:
 
-Christoph Kämpf, Dominik Otto, Michael Specht, Alexander Scholz, Sven-Holger Puppel, Gero Doose, Kristin Reiche, Jana Schor, Jörg Hackermüller
-
+* Christoph Kämpf
+* Dominik Otto
+* Michael Specht
+* Alexander Scholz
+* Sven-Holger Puppel
+* Gero Doose
+* Kristin Reiche
+* Jana Schor
+* Jörg Hackermüller
 
 ## Copyright Notice
 
@@ -70,20 +77,20 @@ acting on behalf of its *Fraunhofer Institute for Cell Therapy and Immunology
 
 ### The code is a property of:
 
-*Helmholtz-Zentrum für Umweltforschung GmbH – UFZ*
-Registered Office: Leipzig 
-Registration Office: Amtsgericht Leipzig 
-Trade Register Nr. B 4703 
-Chairman of the Supervisory Board: MinDirig'in Oda Keppler 
-Scientific Director: Prof. Dr. Georg Teutsch 
+*Helmholtz-Zentrum für Umweltforschung GmbH – UFZ*</br>
+Registered Office: Leipzig</br>
+Registration Office: Amtsgericht Leipzig</br> 
+Trade Register Nr. B 4703</br>
+Chairman of the Supervisory Board: MinDirig'in Oda Keppler</br>
+Scientific Director: Prof. Dr. Georg Teutsch</br>
 Administrative Director: Dr. Sabine König
 
 and 
 
-*Fraunhofer-Gesellschaft zur Foerderung der angewandten Forschung e.V.*
-Hansastraße 27c, 80686 München
-acting on behalf of its 
-*Fraunhofer Institute for Cell Therapy and Immunology (IZI)*
+*Fraunhofer-Gesellschaft zur Foerderung der angewandten Forschung e.V.*</br>
+Hansastraße 27c, 80686 München</br>
+acting on behalf of its</br>
+*Fraunhofer Institute for Cell Therapy and Immunology (IZI)*</br>
 Perlickstraße 1, 04103 Leipzig
 
 This program is free software; you can redistribute it and/or modify it under
