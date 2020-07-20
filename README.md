@@ -43,6 +43,10 @@ This version [v2.0.0rc2](https://github.com/fraunhofer-izi/uap/releases/tag/v2.0
 
 Please note, the version [v2.0.0rc2](https://github.com/fraunhofer-izi/uap/releases/tag/v2.0.0rc2) of **uap** requires Python >= 3.5 and is only tested on [SLURM](https://slurm.schedmd.com/documentation.html).
 
+## Documentation
+
+Find the documentation [here](https://fraunhofer-izi.github.io/uap/).
+
 ## Contacts
 
 * Christoph Kämpf, [christoph.kaempf@izi.fraunhofer.de](mailto:christoph.kaempf@izi.fraunhofer.de)
