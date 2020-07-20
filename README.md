@@ -113,15 +113,15 @@ are permitted provided that the following conditions are met:
 
 * Redistributions of source code must retain the above copyright notice, the
   list of conditions for redistribution and modification as well as the
-  following GNU General Public License.
+  [GNU General Public License](./LICENSE).
 * Redistributions in binary form must reproduce the above copyright notice, this
-  list of conditions, the following GNU General Public License and the
+  list of conditions, the [GNU General Public License](./LICENSE) and the
   modification conditions in the documentation and/or other materials provided
   with the distribution.
-* Neither the name of *Helmholtz-Zentrum für Umweltforschung GmbH – UFZ*, the name
-  of the *Fraunhofer Institute for Cell Therapy and Immunology (IZI)* nor the
-  names of its contributors may be used to endorse or promote products derived
-  from this software without specific prior written permission.
+* Neither the name of *Helmholtz-Zentrum für Umweltforschung GmbH – UFZ*, the
+  name of the *Fraunhofer Institute for Cell Therapy and Immunology (IZI)* nor
+  the names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
 
 ## Modification
 
